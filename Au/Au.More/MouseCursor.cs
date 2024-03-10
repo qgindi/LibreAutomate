@@ -77,7 +77,7 @@ namespace Au.More
 		/// <summary>
 		/// Creates <see cref="System.Windows.Forms.Cursor"/> object that shares native cursor handle with this object.
 		/// </summary>
-		/// <returns><c>null</c> if <i>Handle</i> is <c>default(IntPtr)</c>.</returns>
+		/// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c>.</returns>
 		public System.Windows.Forms.Cursor ToGdipCursor() {
 			if (_handle == default) return null;
 			var R = new System.Windows.Forms.Cursor(_handle);
@@ -90,7 +90,7 @@ namespace Au.More
 		///// <summary>
 		///// Creates WPF <b>Cursor</b> object from this native cursor.
 		///// </summary>
-		///// <returns><c>null</c> if <i>Handle</i> is <c>default(IntPtr)</c>.</returns>
+		///// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c>.</returns>
 		///// <param name="destroyCursor">If <c>true</c> (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If <c>false</c>, the returned variable just uses the cursor handle and will not destroy; later will need to dispose this variable.</param>
 		//public System.Windows.Input.Cursor ToWpfCursor(bool destroyCursor = true) {
 		//	if (_handle == default) return null;
@@ -138,8 +138,8 @@ namespace Au.More
 
 		/// <summary>
 		/// Workaround for brief "wait" cursor when mouse enters a window of current thread first time.
-		/// Reason: default thread's cursor is "wait". OS shows it before the first WM_SETCURSOR sets correct cursor.
-		/// Call eg on WM_CREATE.
+		/// Reason: default thread's cursor is "wait". OS shows it before the first <b>WM_SETCURSOR</b> sets correct cursor.
+		/// Call eg on <b>WM_CREATE</b>.
 		/// </summary>
 		internal static void SetArrowCursor_() {
 			var h = Api.LoadCursor(default, MCursor.Arrow);

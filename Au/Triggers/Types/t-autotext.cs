@@ -11,7 +11,7 @@ namespace Au.Triggers;
 /// Flags of autotext triggers.
 /// </summary>
 /// <remarks>
-/// To avoid passing flags to each trigger as the <i>flags</i> parameter, use <see cref="AutotextTriggers.DefaultFlags"/>; its initial value is 0, which means: case-insensitive, erase the typed text with Backspace, modify the replacement text depending on the case of the typed text.
+/// To avoid passing flags to each trigger as the <i>flags</i> parameter, use <see cref="AutotextTriggers.DefaultFlags"/>; its initial value is 0, which means: case-insensitive, erase the typed text with <c>Backspace</c>, modify the replacement text depending on the case of the typed text.
 /// </remarks>
 [Flags]
 public enum TAFlags : byte {
@@ -22,7 +22,7 @@ public enum TAFlags : byte {
 
 	/// <summary>
 	/// Let <see cref="AutotextTriggerArgs.Replace"/> don't erase the user-typed text.
-	/// Without this flag it erases text with the Backspace key or selects with Shift+Left. If <b>Replace</b> not called, text is not erased/selected regardless of this flag.
+	/// Without this flag it erases text with the <c>Backspace</c> key or selects with <c>Shift+Left</c>. If <b>Replace</b> not called, text is not erased/selected regardless of this flag.
 	/// </summary>
 	DontErase = 2,
 
@@ -48,7 +48,7 @@ public enum TAFlags : byte {
 	Confirm = 16,
 
 	/// <summary>
-	/// Let <see cref="AutotextTriggerArgs.Replace"/> select text with Shift+Left instead of erasing with Backspace. Except in console windows.
+	/// Let <see cref="AutotextTriggerArgs.Replace"/> select text with <c>Shift+Left</c> instead of erasing with <c>Backspace</c>. Except in console windows.
 	/// See also <see cref="AutotextTriggerArgs.ShiftLeft"/>.
 	/// </summary>
 	ShiftLeft = 32,
@@ -66,7 +66,7 @@ public enum TAPostfix : byte {
 	/// <summary>A postfix character specified in the <i>postfixChars</i> parameter or <see cref="AutotextTriggers.DefaultPostfixChars"/> property. If not specified - any non-word character.</summary>
 	Char,
 
-	/// <summary>The Ctrl or Shift key. Default is Ctrl. You can change it with <see cref="AutotextTriggers.PostfixKey"/>.</summary>
+	/// <summary>The <c>Ctrl</c> or <c>Shift</c> key. Default is <c>Ctrl</c>. You can change it with <see cref="AutotextTriggers.PostfixKey"/>.</summary>
 	Key,
 
 	/// <summary>Don't need a postfix. The action runs immediately when the user types the autotext.</summary>
@@ -143,7 +143,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	/// </summary>
 	/// <param name="text">The action runs when the user types this text and a postfix character or key. By default case-insensitive.</param>
 	/// <param name="flags">Options. If omitted or <c>null</c>, uses <see cref="DefaultFlags"/>. Some flags are used by <see cref="AutotextTriggerArgs.Replace"/>.</param>
-	/// <param name="postfixType">Postfix type (character, key, any or none). If omitted or <c>null</c>, uses <see cref="DefaultPostfixType"/>; default - a non-word character or the Ctrl key.</param>
+	/// <param name="postfixType">Postfix type (character, key, any or none). If omitted or <c>null</c>, uses <see cref="DefaultPostfixType"/>; default - a non-word character or the <c>Ctrl</c> key.</param>
 	/// <param name="postfixChars">Postfix characters used when postfix type is <b>Char</b> or <b>CharOrKey</b> (default). If omitted or <c>null</c>, uses <see cref="DefaultPostfixChars"/>; default - non-word characters.</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
@@ -210,7 +210,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	/// <remarks>
 	/// If <c>null</c> (default), postfix characters are all except alpha-numeric (see <see cref="char.IsLetterOrDigit"/>).
 	/// The value cannot contain alpha-numeric characters (exception) and <see cref="WordCharsPlus"/> characters (triggers will not work).
-	/// For Enter use \r.
+	/// For <c>Enter</c> use <c>'\r'</c>.
 	/// </remarks>
 	/// <exception cref="ArgumentException">The value contains letters or digits.</exception>
 	public string DefaultPostfixChars {
@@ -234,9 +234,9 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 
 	/// <summary>
 	/// The postfix key for all triggers where postfix type is <see cref="TAPostfix.Key"/> or <see cref="TAPostfix.CharOrKey"/> (default).
-	/// Can be Ctrl (default), Shift, LCtrl, RCtrl, LShift or RShift.
+	/// Can be <c>Ctrl</c> (default), <c>Shift</c>, <c>LCtrl</c>, <c>RCtrl</c>, <c>LShift</c> or <c>RShift</c>.
 	/// </summary>
-	/// <exception cref="ArgumentException">The value is not Ctrl or Shift.</exception>
+	/// <exception cref="ArgumentException">The value is not <c>Ctrl</c> or <c>Shift</c>.</exception>
 	/// <remarks>
 	/// This property is applied to all triggers, not just to those added afterwards.
 	/// </remarks>
@@ -588,7 +588,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	}
 
 	/// <summary>
-	/// Used by foreach to enumerate added triggers.
+	/// Used by <c>foreach</c> to enumerate added triggers.
 	/// </summary>
 	public IEnumerator<AutotextTrigger> GetEnumerator() {
 		foreach (var kv in _d) {
@@ -630,8 +630,8 @@ public class AutotextTriggerArgs : TriggerArgs {
 	public bool HasPostfixChar { get; }
 
 	/// <summary>
-	/// If <c>true</c>, <see cref="Replace"/> will select text with Shift+Left instead of erasing with Backspace. Except in console windows.
-	/// Initially <c>true</c> if flag <see cref="TAFlags.ShiftLeft"/> is set. Can be changed by a callback function, for example to use or not use Shift+Left only with some windows.
+	/// If <c>true</c>, <see cref="Replace"/> will select text with <c>Shift+Left</c> instead of erasing with <c>Backspace</c>. Except in console windows.
+	/// Initially <c>true</c> if flag <see cref="TAFlags.ShiftLeft"/> is set. Can be changed by a callback function, for example to use or not use <c>Shift+Left</c> only with some windows.
 	/// </summary>
 	public bool ShiftLeft { get; set; }
 
@@ -660,7 +660,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// <remarks>
 	/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>.
 	/// 
-	/// If the replacement text contains substring <c>"[[|]]"</c>, removes it and moves the text cursor (caret) there with the Left key. See example. Not if <i>html</i> specified.
+	/// If the replacement text contains substring <c>"[[|]]"</c>, removes it and moves the text cursor (caret) there with the <c>Left</c> key. See example. Not if <i>html</i> specified.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -813,18 +813,18 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// <summary>
 	/// Shows a 1-item menu below the text cursor (caret) or mouse cursor.
 	/// </summary>
-	/// <returns>Returns <c>true</c> if the user clicked the item or pressed Enter or Tab.</returns>
+	/// <returns>Returns <c>true</c> if the user clicked the item or pressed <c>Enter</c> or <c>Tab</c>.</returns>
 	/// <param name="text">Text to display. This function limits it to 300 characters. Default: <c>"Replace"</c>.</param>
 	/// <remarks>
 	/// This function is used by <see cref="Replace"/> when used flag <see cref="TAFlags.Confirm"/>.
 	/// 
-	/// The user can close the menu with Enter, Tab or Esc. Other keys close the menu and are passed to the active window.
+	/// The user can close the menu with <c>Enter</c>, <c>Tab</c> or <c>Esc</c>. Other keys close the menu and are passed to the active window.
 	/// </remarks>
 	/// <seealso cref="AutotextTriggers.MenuOptions"/>
 	/// <seealso cref="popupMenu.DefaultFont"/>
 	/// <seealso cref="popupMenu.DefaultMetrics"/>
 	/// <example>
-	/// Code in file "Autotext triggers".
+	/// Code in file <c>Autotext triggers</c>.
 	/// <code><![CDATA[
 	/// //var tt = Triggers.Autotext;
 	/// tt["con1", TAFlags.Confirm] = o => o.Replace("Flag Confirm");
@@ -857,9 +857,9 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// </param>
 	/// <remarks>
 	/// Keyboard:
-	/// - Esc - close the menu.
-	/// - Enter, Tab - select the focused or the first item.
-	/// - Down, Up, End, Home, PageDown, PageUp - focus menu items.
+	/// - <c>Esc</c> - close the menu.
+	/// - <c>Enter</c>, <c>Tab</c> - select the focused or the first item.
+	/// - <c>Down</c>, <c>Up</c>, <c>End</c>, <c>Home</c>, <c>PageDown</c>, <c>PageUp</c> - focus menu items.
 	/// - Also to select menu items can type the number characters displayed at the right.
 	/// - Other keys close the menu and are passed to the active window.
 	/// </remarks>
@@ -867,7 +867,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// <seealso cref="popupMenu.DefaultFont"/>
 	/// <seealso cref="popupMenu.DefaultMetrics"/>
 	/// <example>
-	/// Code in file "Autotext triggers".
+	/// Code in file <c>Autotext triggers</c>.
 	/// <code><![CDATA[
 	/// //var tt = Triggers.Autotext;
 	/// tt["m1"] = o => o.Menu(
@@ -972,7 +972,7 @@ public class TAMenuItem {
 	/// <summary>
 	/// Sets menu item label and replacement text.
 	/// </summary>
-	/// <param name="label">Menu item label. If <c>null</c>, uses <i>Text</i>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
+	/// <param name="label">Menu item label. If <c>null</c>, uses <b>Text</b>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
 	/// <param name="text">The replacement text. Can be <c>null</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="html">The replacement HTML. Can be <c>null</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>

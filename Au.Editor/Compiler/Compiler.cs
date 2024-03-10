@@ -185,7 +185,7 @@ partial class Compiler {
 #if DEBUG //temp test debugger with non-user-code dll
 			if (!(_meta.Role == MCRole.classLibrary && (_meta.Optimize || _meta.Name == "Au"))) //TODO: delete
 #endif
-			eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
+				eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 			
 			if (_meta.XmlDoc) //allowed if role is classLibrary or exeProgram, but in Properties hidden if exeProgram (why could need it?)
 				xdStream = filesystem.waitIfLocked(() => File.Create(xdFile = outPath + "\\" + _meta.Name + ".xml"));
@@ -293,15 +293,21 @@ partial class Compiler {
 		
 		if (_meta.StartFaster) r.flags |= MiniProgram_.MPFlags.Preloaded;
 		
-		if (needOutputFiles && reason != CCReason.WpfPreview && !addMetaFlags.Has(MCFlags.Publish)) {
-			cache.AddCompiled(f, outFile, _meta, r.flags);
-			
-			if (_meta.Role == MCRole.classLibrary) {
-				MetaReferences.UncacheOldFiles();
-				if (MetaReferences.IsDefaultRef(_meta.Name)) print.warning($"Library name '{_meta.Name}' should not be used. Rename the C# file.", -1);
+		if (reason != CCReason.WpfPreview && !addMetaFlags.Has(MCFlags.Publish)) {
+			if (needOutputFiles) {
+				cache.AddCompiled(f, outFile, _meta, r.flags);
+				
+				if (_meta.Role == MCRole.classLibrary) {
+					MetaReferences.UncacheOldFiles();
+					if (MetaReferences.IsDefaultRef(_meta.Name)) print.warning($"Library name '{_meta.Name}' should not be used. Rename the C# file.", -1);
+				}
+				
+				if (notInCache) print.it($"<>Compiled {f.SciLink()}. Output folder: <link>{_meta.OutputPath}<>");
 			}
 			
-			if (notInCache) print.it($"<>Compiled {f.SciLink()}. Output folder: <link>{_meta.OutputPath}<>");
+			if (App.Settings.comp_printCompiled != false && !notInCache)
+				if (App.Settings.comp_printCompiled == true || reason == CCReason.CompileAlways)
+					print.it($"<>Compiled {f.SciLink()}.");
 		}
 		
 		r.name = _meta.Name;

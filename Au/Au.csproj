@@ -23,12 +23,15 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<Version>1.1.6</Version>
 		<!--
-		For the NuGet package need multiple target frameworks (currently 6 and 8). But it makes compilation slow.
-		Workaround - temporarily use different TargetFrameworks when creating NuGet package.
-		Possible problem: error when building after changing TargetFrameworks. Missing target framework in the assets json file.
-			Workaround: delete obj folder (or just assets file, not tested). Could do it in a conditional prebuild event (not tested).
-		Possible problem: VS may not build for multiple frameworks soon after editing this file.
-			Make sure the output files have correct date. Build again if need.
+		To create NuGet package is used script "Create NuGet package".
+		Notes if creating manually:
+			Update <Version>.
+			For NuGet package need multiple target frameworks (currently 6 and 8). But it makes compilation slow.
+			Workaround - temporarily use different TargetFrameworks when creating NuGet package.
+			Possible problem: error when building after changing TargetFrameworks. Missing target framework in the assets json file.
+				Workaround: delete obj folder.
+			Possible problem: VS may not build for multiple frameworks soon after editing this file.
+				Make sure the output files have correct date. Build again if need.
 		-->
 		
 		<PackageId>LibreAutomate</PackageId>

@@ -159,7 +159,7 @@ public static partial class ExtString
 	///// </summary>
 	///// <param name="t">This string.</param>
 	///// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-	///// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
+	///// <exception cref="ArgumentException">Invalid regular expression. Or used a <b>PARTIAL_</b> flag.</exception>
 	///// <exception cref="AuException">Failed (unlikely).</exception>
 	///// <remarks>More info and examples: <see cref="regexp"/>.</remarks>
 	///// <example></example>
@@ -308,8 +308,8 @@ public static partial class ExtString
 		const int c_maxCount = 15;
 
 		/// <summary>
-		/// If rx/flags is in the cache, returns the cached code.
-		/// Else compiles rx/flags, adds to the cache and returns the code.
+		/// If <i>rx</i>/<i>flags</i> is in the cache, returns the cached code.
+		/// Else compiles <i>rx</i>/<i>flags</i>, adds to the cache and returns the code.
 		/// </summary>
 		/// <param name="rx"></param>
 		/// <param name="flags"></param>

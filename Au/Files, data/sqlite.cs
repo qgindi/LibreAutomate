@@ -5,7 +5,7 @@ namespace Au {
 	/// </summary>
 	/// <remarks>
 	/// This class wraps a SQLite API object <b>sqlite3*</b> and related <b>sqlite3_x</b> functions. They are documented in the SQLite website.
-	/// Uses this unmanaged dll: <c>folders.ThisApp + @"64\sqlite3.dll"</c>. In 32-bit process - <c>"32"</c> instead of <c>"64"</c>.
+	/// Uses this unmanaged dll: <c>folders.ThisApp + @"64\sqlite3.dll"</c>. In 32-bit process - <c>32</c> instead of <c>64</c>.
 	/// 
 	/// To correctly close the database file, at first need to dispose all child objects, such as <see cref="sqliteStatement"/>, then dispose the <b>sqlite</b> object. To dispose a static <b>sqlite</b> variable, you may want to use <see cref="process.thisProcessExit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
 	/// </remarks>
@@ -65,7 +65,7 @@ namespace Au {
 		/// </param>
 		/// <param name="flags"><google>sqlite3_open_v2</google> flags. Default: read-write, create file if does not exist (and parent directory).</param>
 		/// <param name="sql">
-		/// SQL to execute. For example, one or more ;-separated PRAGMA statements to configure the database connection. Or even <c>"CREATE TABLE IF NOT EXISTS ..."</c>.
+		/// SQL to execute. For example, one or more ;-separated <c>PRAGMA</c> statements to configure the database connection. Or even <c>"CREATE TABLE IF NOT EXISTS ..."</c>.
 		/// This function also always executes <c>"PRAGMA foreign_keys=ON;PRAGMA secure_delete=ON;"</c>.
 		/// </param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
@@ -120,7 +120,7 @@ namespace Au {
 		/// <summary>
 		/// Calls <sqlite>sqlite3_exec</sqlite> to execute one or more SQL statements that don't return data.
 		/// </summary>
-		/// <param name="sql">SQL statement, or several ;-separated statements.</param>
+		/// <param name="sql">SQL statement, or several <c>;</c>-separated statements.</param>
 		/// <exception cref="SLException">Failed to execute <i>sql</i>.</exception>
 		public void Execute(string sql) {
 			var b = Convert2.Utf8Encode(sql);
@@ -579,7 +579,7 @@ namespace Au {
 		//	=> _Err(SLApi.sqlite3_bind_zeroblob(_st, _B(sqlParam), nBytes), "sqlite3_bind_zeroblob");
 
 		//rejected. DateTime can be stored in many ways. Let users decide how they want to store it, and explicitly convert to long, string, etc.
-		///// <summary>Calls sqlite3_bind_int64(value.ToBinary()).</summary>
+		///// <summary>Calls <c>sqlite3_bind_int64(value.ToBinary())</c>.</summary>
 		///// <returns>this.</returns>
 		///// <exception cref="SLException">Failed.</exception>
 		//public Statement Bind(SLIndexOrName sqlParam, DateTime value, bool convertToUtc = false)
@@ -642,7 +642,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>this.</returns>
 		/// <param name="values">
-		/// Values that will replace <c>?</c> characters in sql.
+		/// Values that will replace <c>?</c> characters in SQL.
 		/// Read about SQL parameters in SQLite website. Example: <see cref="sqlite"/>.
 		/// Supported types:
 		/// <br/>• <b>int</b>, <b>uint</b>, <b>byte</b>, <b>sbyte</b>, <b>short</b>, <b>ushort</b> - calls <sqlite>sqlite3_bind_int</sqlite>.
@@ -670,7 +670,6 @@ namespace Au {
 				}
 			return this;
 		}
-		///// DateTime - calls sqlite3_bind_int64(value.ToBinary()).
 
 		#endregion
 
@@ -719,7 +718,7 @@ namespace Au {
 		public bool GetBool(SLIndexOrName column) => GetLong(column) != 0;
 
 		///// <summary>
-		///// Calls <google>DateTime.FromBinary(sqlite3_column_int64(column))</c>.
+		///// Calls <c>DateTime.FromBinary(sqlite3_column_int64(column))</c>.
 		///// </summary>
 		///// <param name="column">Column name of 0-based index in results.</param>
 		///// <param name="convertToLocal">If the value in database is stored as UTC, convert to local.</param>

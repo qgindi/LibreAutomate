@@ -17,7 +17,7 @@ namespace Au.More
 		/// </summary>
 		/// <returns><c>null</c> if failed, eg the point is not in the menu or the window is hung.</returns>
 		/// <param name="pScreen">Point in screen coordinates.</param>
-		/// <param name="w">Popup menu window, class name "#32768".</param>
+		/// <param name="w">Popup menu window, class name <c>"#32768"</c>.</param>
 		/// <param name="msTimeout">Timeout (ms) to use when the window is busy or hung.</param>
 		public static MenuItemInfo FromXY(POINT pScreen, wnd w, int msTimeout = 5000) {
 			if (!w.SendTimeout(msTimeout, out var hm, Api.MN_GETHMENU)) return null;

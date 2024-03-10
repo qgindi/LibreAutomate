@@ -5,7 +5,7 @@ using System.Drawing.Imaging;
 namespace Au.More;
 
 /// <summary>
-/// This OCR engine uses tesseract.exe from Tesseract installed on this computer.
+/// This OCR engine uses <c>tesseract.exe</c> from Tesseract installed on this computer.
 /// </summary>
 /// <remarks>
 /// Slower than <see cref="OcrWin10"/> (the default engine). The accuracy is poor.
@@ -25,7 +25,7 @@ public class OcrTesseract : IOcrEngine {
 	readonly string _tesseractPath, _tesseractExe;
 
 	/// <summary>
-	/// One or more of installed languages, like "deu" or "eng+deu". If <c>null</c> (default), uses "eng".
+	/// One or more of installed languages, like <c>"deu"</c> or <c>"eng+deu"</c>. If <c>null</c> (default), uses <c>"eng"</c>.
 	/// </summary>
 	public string Language { get; set; }
 
@@ -43,7 +43,7 @@ public class OcrTesseract : IOcrEngine {
 	}
 
 	///// <summary>
-	///// Adds command line --psm (page segmentation mode).
+	///// Adds command line <c>--psm</c> (page segmentation mode).
 	///// Valid values are 0-13, but documented only 3 (default) and 6 (no segmentation).
 	///// </summary>
 	//public int Psm { get; set; } = 3;

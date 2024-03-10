@@ -162,7 +162,7 @@ namespace Au.Types {
 		/// <param name="time">
 		/// Timeout, in seconds.
 		/// Negative value means "don't throw exception when timed out".
-		/// Value 0 means "wait indefinitely" when used with <b>WaitX</b> functions; with "FindX" functions it means "don't wait".
+		/// Value 0 means "wait indefinitely" when used with <b>WaitX</b> functions; with <b>FindX</b> functions it means "don't wait".
 		/// More info: [](xref:wait_timeout).
 		/// </param>
 		public Seconds(double time) {
@@ -176,7 +176,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Timeout, in seconds.
 		/// Negative value means "don't throw exception when timed out".
-		/// Value 0 means "wait indefinitely" when used with <b>WaitX</b> functions; with "FindX" functions it means "don't wait".
+		/// Value 0 means "wait indefinitely" when used with <b>WaitX</b> functions; with <b>FindX</b> functions it means "don't wait".
 		/// More info: [](xref:wait_timeout).
 		/// </summary>
 		public double Time {

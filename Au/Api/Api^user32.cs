@@ -136,7 +136,7 @@ static unsafe partial class Api {
 		public IntPtr hIconSm;
 		
 		/// <summary>
-		/// If ex <c>null</c>, sets arrow cursor and style CS_VREDRAW | CS_HREDRAW.
+		/// If ex <c>null</c>, sets arrow cursor and style <c>CS_VREDRAW | CS_HREDRAW</c>.
 		/// </summary>
 		public WNDCLASSEX(RWCEtc ex) {
 			cbSize = sizeof(WNDCLASSEX);
@@ -335,11 +335,11 @@ static unsafe partial class Api {
 	internal static extern bool UnionRect(out RECT lprcDst, in RECT lprcSrc1, in RECT lprcSrc2);
 	
 	/// <summary>
-	/// GetPhysicalCursorPos.
+	/// <b>GetPhysicalCursorPos</b>.
 	/// </summary>
 	/// <remarks>
 	/// Gets DPI physical cursor pos, ie always in pixels.
-	/// The classic GetCursorPos API behavior is undefined. Sometimes physical, sometimes logical.
+	/// The classic <b>GetCursorPos</b> API behavior is undefined. Sometimes physical, sometimes logical.
 	/// Make sure the process is fully DPI-aware.
 	/// </remarks>
 	[DllImport("user32.dll", EntryPoint = "GetPhysicalCursorPos", SetLastError = true)]
@@ -371,7 +371,7 @@ static unsafe partial class Api {
 	
 	internal struct WINDOWPLACEMENT {
 		public int length;
-		/// <summary>WPF_x</summary>
+		/// <summary><b>WPF_x</b></summary>
 		public uint flags;
 		public int showCmd;
 		public POINT ptMinPosition;
@@ -796,7 +796,7 @@ static unsafe partial class Api {
 	}
 	
 	/// <summary>
-	/// Gets BOOL value. Returns <c>false</c> if failed.
+	/// Gets <b>BOOL</b> value. Returns <c>false</c> if failed.
 	/// </summary>
 	internal static bool SystemParametersInfo(uint uiAction) {
 		int r = 0;
@@ -823,7 +823,7 @@ static unsafe partial class Api {
 	#endregion
 	
 	/// <summary>
-	/// WindowFromPhysicalPoint. On Win8.1 + it is the same as WindowFromPoint.
+	/// <b>WindowFromPhysicalPoint</b>. On Win8.1+ it is the same as <b>WindowFromPoint</b>.
 	/// </summary>
 	[DllImport("user32.dll", EntryPoint = "WindowFromPhysicalPoint")]
 	internal static extern wnd WindowFromPoint(POINT pt);
@@ -1364,7 +1364,7 @@ static unsafe partial class Api {
 	[DllImport("user32.dll")]
 	internal static extern bool RedrawWindow(wnd hWnd, RECT* lprcUpdate = null, IntPtr hrgnUpdate = default, uint flags = 0);
 	
-	/// <param name="flags">Au.Controls.PopupAlignment</param>
+	/// <param name="flags"><b>Au.Controls.PopupAlignment</b></param>
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern bool CalculatePopupWindowPosition(in POINT anchorPoint, in SIZE windowSize, uint flags, in RECT excludeRect, out RECT popupWindowPosition);
 	

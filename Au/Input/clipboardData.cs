@@ -114,9 +114,9 @@ namespace Au {
 		/// <param name="image">Image. Must be <see cref="Bitmap"/>, else exception.</param>
 		/// <param name="png">
 		/// Use PNG format (it supports transparency):
-		/// <br/>• <c>false</c> - no, only CF_BITMAP.
+		/// <br/>• <c>false</c> - no, only <b>CF_BITMAP</b>.
 		/// <br/>• <c>true</c> - yes, only PNG.
-		/// <br/>• <c>null</c> (default) - add PNG and CF_BITMAP.
+		/// <br/>• <c>null</c> (default) - add PNG and <b>CF_BITMAP</b>.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		public clipboardData AddImage(Image image, bool? png = null) {
@@ -255,7 +255,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Converts HTML string to <b>byte[]</b> containing data in clipboard format "HTML Format".
+		/// Converts HTML string to <b>byte[]</b> containing data in clipboard format <c>"HTML Format"</c>.
 		/// </summary>
 		/// <param name="html">Full HTML or HTML fragment. If full HTML, a fragment in it can be optionally specified. See examples.</param>
 		/// <exception cref="ArgumentNullException"></exception>
@@ -350,7 +350,7 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets clipboard text without open/close.
-		/// If format is 0, tries CF_UNICODETEXT and CF_HDROP.
+		/// If format is 0, tries <b>CF_UNICODETEXT</b> and <b>CF_HDROP</b>.
 		/// </summary>
 		internal static unsafe string GetText_(int format) {
 			IntPtr h = default;
@@ -435,7 +435,7 @@ EndFragment:0000000000
 		/// Gets clipboard data of any format without copying to array. Uses a callback function.
 		/// </summary>
 		/// <param name="get">Callback function that receives data. The clipboard is open until it returns. The data is read-only.</param>
-		/// <returns>The return value of the callback function. Returns default(T) if there is no data of this format.</returns>
+		/// <returns>The return value of the callback function. Returns <c>default(T)</c> if there is no data of this format.</returns>
 		/// <inheritdoc cref="getBinary(int)"/>
 		public static T getBinary<T>(int format, Func<IntPtr, int, T> get) {
 			_CheckFormat(format);
@@ -471,9 +471,9 @@ EndFragment:0000000000
 		/// <returns><c>null</c> if there is no data of this format.</returns>
 		/// <param name="png">
 		/// Use PNG format (it supports transparency):
-		/// <br/>• <c>false</c> - no, only CF_BITMAP.
+		/// <br/>• <c>false</c> - no, only <b>CF_BITMAP</b>.
 		/// <br/>• <c>true</c> - yes, only PNG.
-		/// <br/>• <c>null</c> (default) - yes, but get CF_BITMAP if there is no PNG.
+		/// <br/>• <c>null</c> (default) - yes, but get <b>CF_BITMAP</b> if there is no PNG.
 		/// </param>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Image.FromHbitmap"/> or <see cref="Image.FromStream"/>.</exception>
@@ -559,7 +559,7 @@ EndFragment:0000000000
 		}
 
 		/// <summary>
-		/// Gets file paths from HDROP.
+		/// Gets file paths from <b>HDROP</b>.
 		/// </summary>
 		/// <returns>Array of zero or more non-<c>null</c> elements.</returns>
 		internal static unsafe string[] HdropToFiles_(IntPtr hdrop) {
@@ -617,20 +617,20 @@ namespace Au.Types {
 		/// <summary>The file-list format. Standard, API constant <b>CF_HDROP</b>. Used by <see cref="clipboardData"/> add/get files functions.</summary>
 		public const int Files = Api.CF_HDROP;
 
-		/// <summary>The HTML format. Registered, name "HTML Format". Used by <see cref="clipboardData"/> add/get HTML functions.</summary>
+		/// <summary>The HTML format. Registered, name <c>"HTML Format"</c>. Used by <see cref="clipboardData"/> add/get HTML functions.</summary>
 		public static int Html { get; } = Api.RegisterClipboardFormat("HTML Format");
 
-		/// <summary>The PNG format. Registered, name "PNG". Used by <see cref="clipboardData"/> add/get image functions.</summary>
+		/// <summary>The PNG format. Registered, name <c>"PNG"</c>. Used by <see cref="clipboardData"/> add/get image functions.</summary>
 		public static int Png { get; } = Api.RegisterClipboardFormat("PNG");
 
-		/// <summary>Registered "Shell IDList Array" format.</summary>
+		/// <summary>Registered format <c>"Shell IDList Array"</c>.</summary>
 		internal static int ShellIDListArray_ { get; } = Api.RegisterClipboardFormat("Shell IDList Array");
 
-		/// <summary>Registered "FileGroupDescriptorW" format.</summary>
+		/// <summary>Registered format <c>"FileGroupDescriptorW"</c>.</summary>
 		internal static int FileGroupDescriptorW_ { get; } = Api.RegisterClipboardFormat("FileGroupDescriptorW");
 
 		/// <summary>
-		/// The "Clipboard Viewer Ignore" registered format.
+		/// Registered format <c>"Clipboard Viewer Ignore"</c>.
 		/// </summary>
 		/// <remarks>
 		/// Some clipboard viewer/manager programs don't try to get clipboard data if this format is present. For example Ditto, Clipdiary.
@@ -654,7 +654,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Gets text encoding for format.
-		/// Returns <c>null</c> if UTF-16 or if the format is unknown and not in s_textEncoding.
+		/// Returns <c>null</c> if UTF-16 or if the format is unknown and not in <b>s_textEncoding</b>.
 		/// </summary>
 		internal static Encoding GetTextEncoding_(int format, out bool unknown) {
 			unknown = false;

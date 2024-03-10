@@ -36,7 +36,7 @@ namespace Au.Types {
 		ChildOfLast = 1,
 		
 		/// <summary>
-		/// Don't adjust some properties (padding, aligning, specified in <see cref="wpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <i>ChildOfLast</i>.
+		/// Don't adjust some properties (padding, aligning, specified in <see cref="wpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <b>ChildOfLast</b>.
 		/// </summary>
 		DontSetProperties = 2,
 	}
@@ -202,21 +202,21 @@ namespace Au.Types {
 	/// </summary>
 	[Flags]
 	public enum WBBFlags {
-		/// <summary>It is OK button (<see cref="Button.IsDefault"/>, closes window, validates, <see cref="wpfBuilder.OkApply"/> event).</summary>
+		/// <summary>It is <b>OK</b> button (<see cref="Button.IsDefault"/>, closes window, validates, <see cref="wpfBuilder.OkApply"/> event).</summary>
 		OK = 1,
 		
-		/// <summary>It is Cancel button (<see cref="Button.IsCancel"/>, closes window).</summary>
+		/// <summary>It is <b>Cancel</b> button (<see cref="Button.IsCancel"/>, closes window).</summary>
 		Cancel = 2,
 		
-		/// <summary>It is Apply button (size like OK/Cancel, validates, <see cref="wpfBuilder.OkApply"/> event).</summary>
+		/// <summary>It is <b>Apply</b> button (size like <b>OK</b>/<b>Cancel</b>, validates, <see cref="wpfBuilder.OkApply"/> event).</summary>
 		Apply = 4,
 		
-		/// <summary>Perform validation like OK and Apply buttons.</summary>
+		/// <summary>Perform validation like <b>OK</b> and <b>Apply</b> buttons.</summary>
 		Validate = 8,
 	}
 	
 	/// <summary>
-	/// [Obsolete]
+	/// Obsolete.
 	/// Can be used with <see cref="wpfBuilder.Text"/> to add a hyperlink.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
@@ -450,7 +450,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Always resize only the nearest resizable row/column at each side.
-		/// If <c>false</c> (default), may resize multiple star-sized rows/columns, unless with Ctrl key.
+		/// If <c>false</c> (default), may resize multiple star-sized rows/columns, unless with <c>Ctrl</c> key.
 		/// </summary>
 		public bool ResizeNearest { get; set; }
 		
@@ -561,7 +561,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Sets events to show/hide the adorner depending on control text.
-		/// The control must be TextBox or editable ComboBox.
+		/// The control must be <b>TextBox</b> or editable <b>ComboBox</b>.
 		/// </summary>
 		public void SetAdornerVisibility() {
 			if (_c is TextBox t) {

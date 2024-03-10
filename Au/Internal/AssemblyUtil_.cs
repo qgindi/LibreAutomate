@@ -33,7 +33,7 @@ internal static class AssemblyUtil_ {
 	//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
 
 	/// <summary>
-	/// Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
+	/// Returns flags for loaded assemblies: 1 <c>System.Windows.Forms</c>, 2 <c>WindowsBase</c> (WPF).
 	/// </summary>
 	internal static int IsLoadedWinformsWpf() {
 		if (s_isLoadedWinformsWpf == 0) {

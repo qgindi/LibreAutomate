@@ -571,9 +571,9 @@ namespace Au.More {
 		bool _ignoreModExceptThisHook;
 
 		/// <summary>
-		/// Let all hooks (in all processes) ignore LShift and CapsLock for <i>timeMS</i> milliseconds. If 0 - restore.
+		/// Let all hooks (in all processes) ignore <c>LShift</c> and <c>CapsLock</c> for <i>timeMS</i> milliseconds. If 0 - restore.
 		/// Returns the timeout time (<c>Environment.TickCount64 + timeMS</c>) or 0.
-		/// Used when turning off CapsLock with Shift.
+		/// Used when turning off <c>CapsLock</c> with <c>Shift</c>.
 		/// </summary>
 		internal static unsafe long IgnoreLShiftCaps_(long timeMS) {
 			var r = timeMS > 0 ? Environment.TickCount64 + timeMS : 0;
@@ -627,7 +627,7 @@ namespace Au.Types {
 			public bool IsInjectedByAu => 0 != (_x->flags & Api.LLKHF_INJECTED) && _x->dwExtraInfo == Api.AuExtraInfo;
 
 			/// <summary>
-			/// Key Alt is pressed.
+			/// Key <c>Alt</c> is pressed.
 			/// </summary>
 			public bool IsAlt => 0 != (_x->flags & Api.LLKHF_ALTDOWN);
 
@@ -637,12 +637,12 @@ namespace Au.Types {
 			public bool IsUp => 0 != (_x->flags & Api.LLKHF_UP);
 
 			/// <summary>
-			/// If the key is a modifier key (Shift, Ctrl, Alt, Win), returns the modifier flag. Else returns 0.
+			/// If the key is a modifier key (<c>Shift</c>, <c>Ctrl</c>, <c>Alt</c>, <c>Win</c>), returns the modifier flag. Else returns 0.
 			/// </summary>
 			public KMod Mod => keys.Internal_.KeyToMod((KKey)_x->vkCode);
 
 			/// <summary>
-			/// If <b>vkCode</b> is a left or right modifier key code (LShift, LCtrl, LAlt, RShift, RCtrl, RAlt, RWin), returns the common modifier key code (Shift, Ctrl, Alt, Win). Else returns <b>vkCode</b>.
+			/// If <b>vkCode</b> is a left or right modifier key code (<c>LShift</c>, <c>LCtrl</c>, <c>LAlt</c>, <c>RShift</c>, <c>RCtrl</c>, <c>RAlt</c>, <c>RWin</c>), returns the common modifier key code (<c>Shift</c>, <c>Ctrl</c>, <c>Alt</c>, <c>Win</c>). Else returns <b>vkCode</b>.
 			/// </summary>
 			public KKey Key {
 				get {
@@ -658,7 +658,7 @@ namespace Au.Types {
 			}
 
 			/// <summary>
-			/// Returns <c>true</c> if <i>key</i> == <b>vkCode</b> or <i>key</i> is Shift, Ctrl, Alt or Win and <b>vkCode</b> is LShift/RShift, LCtrl/RCtrl, LAlt/RAlt or RWin.
+			/// Returns <c>true</c> if <i>key</i> == <b>vkCode</b> or <i>key</i> is <c>Shift</c>, <c>Ctrl</c>, <c>Alt</c> or <c>Win</c> and <b>vkCode</b> is <c>LShift</c>/<c>RShift</c>, <c>LCtrl</c>/<c>RCtrl</c>, <c>LAlt</c>/<c>RAlt</c> or <c>RWin</c>.
 			/// </summary>
 			public bool IsKey(KKey key) {
 				var vk = (KKey)_x->vkCode;
@@ -673,7 +673,7 @@ namespace Au.Types {
 			}
 
 			/// <summary>
-			/// Converts flags to API SendInput flags KEYEVENTF_KEYUP and KEYEVENTF_EXTENDEDKEY.
+			/// Converts flags to API <b>SendInput</b> flags <b>KEYEVENTF_KEYUP</b> and <b>KEYEVENTF_EXTENDEDKEY</b>.
 			/// </summary>
 			internal byte SendInputFlags_ {
 				get {
@@ -778,7 +778,7 @@ namespace Au.Types {
 			/// <summary>
 			/// Converts <see cref="Event"/> to <see cref="MButton"/>.
 			/// </summary>
-			/// <value><b>Left</b>, <b>Right</b>, <b>Middle</b>, <b>X1</b>, <b>X2</b> or 0. Thow down/up/double flags not used.</value>
+			/// <value><b>Left</b>, <b>Right</b>, <b>Middle</b>, <b>X1</b>, <b>X2</b> or 0. The down/up/double flags not used.</value>
 			public MButton Button {
 				get {
 					return _event switch {
@@ -917,7 +917,7 @@ namespace Au.Types {
 			///// Gets <see cref="CbtEvent.CLICKSKIPPED"/> event info. Returns the mouse message.
 			///// </summary>
 			///// <param name="m"><msdn>MOUSEHOOKSTRUCT</msdn>.</param>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CLICKSKIPPED.</exception>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.CLICKSKIPPED</b>.</exception>
 			//public unsafe uint MouseInfo(out MOUSEHOOKSTRUCT* m) {
 			//	if (code != CbtEvent.CLICKSKIPPED) throw new InvalidOperationException();
 			//	m = (MOUSEHOOKSTRUCT*)lParam;
@@ -928,7 +928,7 @@ namespace Au.Types {
 			///// Gets <see cref="CbtEvent.KEYSKIPPED"/> event info. Returns the key code.
 			///// </summary>
 			///// <param name="lParam"><i>lParam</i> of the key message. Specifies the repeat count, scan code, etc. See API <msdn>WM_KEYDOWN</msdn>.</param>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.KEYSKIPPED.</exception>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.KEYSKIPPED</b>.</exception>
 			//public KKey KeyInfo(out uint lParam) {
 			//	if (code != CbtEvent.KEYSKIPPED) throw new InvalidOperationException();
 			//	lParam = (uint)this.lParam;
@@ -939,7 +939,7 @@ namespace Au.Types {
 			///// Gets <see cref="CbtEvent.SETFOCUS"/> event info. Returns the window handle.
 			///// </summary>
 			///// <param name="wLostFocus">The previously focused window, or <c>default(wnd)</c>.</param>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.SETFOCUS.</exception>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.SETFOCUS</b>.</exception>
 			//public wnd FocusInfo(out wnd wLostFocus) {
 			//	if (code != CbtEvent.SETFOCUS) throw new InvalidOperationException();
 			//	wLostFocus = (wnd)lParam;
@@ -949,13 +949,14 @@ namespace Au.Types {
 			///// <summary>
 			///// Gets <see cref="CbtEvent.MOVESIZE"/> event info.
 			///// </summary>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MOVESIZE.</exception>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.MOVESIZE</b>.</exception>
 			//public unsafe RECT* MoveSizeInfo => code == CbtEvent.MOVESIZE ? (RECT*)lParam : throw new InvalidOperationException();
 
 			///// <summary>
 			///// Gets <see cref="CbtEvent.MINMAX"/> event info.
 			///// Returns the new show state. See API <msdn>ShowWindow</msdn>. Minimized 6, maximized 3, restored 9.
-			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MINMAX.</exception>
+			///// </summary>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.MINMAX</b>.</exception>
 			//public int MinMaxInfo => code == CbtEvent.MINMAX ? (int)lParam & 0xffff : throw new InvalidOperationException();
 		}
 

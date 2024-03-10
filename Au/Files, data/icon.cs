@@ -375,7 +375,7 @@ namespace Au {
 		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="file"><c>.ico</c>, <c>.exe</c>, <c>.dll</c> or other file that contains one or more icons. Also supports cursor files - <c>.cur</c>, <c>.ani</c>. Must be full path, without icon index. Supports environment variables (see <see cref="pathname.expand"/>).</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
-		/// <param name="index">Icon index or negative icon resource id in the <c>.exe</c>/.dll file.</param>
+		/// <param name="index">Icon index or negative icon resource id in the <c>.exe</c>/<c>.dll</c> file.</param>
 		public static icon load(string file, int size = 16, int index = 0) {
 			using var ds = new _DebugSpeed(file);
 			return _Load(file, _NormalizeIconSizeArgument(size), index);
@@ -429,7 +429,7 @@ namespace Au {
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
 		/// <remarks>
-		/// If role miniProgram (default), at first looks in main assembly (.dll); if not found there, looks in <c>.exe</c> file. Else only in <c>.exe</c> file.
+		/// If role <b>miniProgram</b> (default), at first looks in main assembly (<c>.dll</c>); if not found there, looks in <c>.exe</c> file. Else only in <c>.exe</c> file.
 		/// 
 		/// The icon is cached and protected from destroying. Don't need to destroy it, and not error to do it.
 		/// </remarks>
@@ -459,7 +459,7 @@ namespace Au {
 		/// <remarks>
 		/// Calls API <msdn>LoadIconMetric</msdn>.
 		/// 
-		/// The icon can be in main assembly (if role miniProgram) or in the program file (.exe). If not found, loads standard icon, see API <b>LoadIconMetric</b>.
+		/// The icon can be in main assembly (if role <b>miniProgram</b>) or in the program file (<c>.exe</c>). If not found, loads standard icon, see API <b>LoadIconMetric</b>.
 		/// </remarks>
 		public static icon trayIcon(int resourceId = Api.IDI_APPLICATION/*, bool big = false*/) {
 #if true
@@ -489,7 +489,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Gets native module handle of exe or dll that contains specified icon. Returns default if no icon.
-		/// If role miniProgram, at first looks in main assembly (.dll).
+		/// If role <b>miniProgram</b>, at first looks in main assembly (<c>.dll</c>).
 		/// </summary>
 		internal static IntPtr GetAppIconModuleHandle_(int resourceId) {
 			if (script.role == SRole.MiniProgram) {
@@ -567,7 +567,7 @@ namespace Au {
 		/// <summary>
 		/// Creates <see cref="System.Drawing.Icon"/> object that shares native icon handle with this object.
 		/// </summary>
-		/// <returns><c>null</c> if <i>Handle</i> is <c>default(IntPtr)</c>.</returns>
+		/// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c>.</returns>
 		public Icon ToGdipIcon() {
 			if (_handle == default) return null;
 			var R = Icon.FromHandle(_handle);
@@ -579,7 +579,7 @@ namespace Au {
 		/// <summary>
 		/// Converts native icon to GDI+ bitmap object.
 		/// </summary>
-		/// <returns><c>null</c> if <i>Handle</i> is <c>default(IntPtr)</c> or if fails to convert.</returns>
+		/// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c> or if fails to convert.</returns>
 		/// <param name="destroyIcon">
 		/// If <c>true</c> (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If <c>false</c>, later will need to dispose this variable.
@@ -599,7 +599,7 @@ namespace Au {
 		/// <summary>
 		/// Converts native icon to WPF image object.
 		/// </summary>
-		/// <returns><c>null</c> if <i>Handle</i> is <c>default(IntPtr)</c> or if fails to convert.</returns>
+		/// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c> or if fails to convert.</returns>
 		/// <param name="destroyIcon">
 		/// If <c>true</c> (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If <c>false</c>, later will need to dispose this variable.

@@ -3,13 +3,13 @@ namespace Au;
 public partial struct wnd {
 	/// <summary>
 	/// Gets related windows and controls.
-	/// Use like <c>wnd w2 = w1.Get.Owner;</c> (here w1 is a <b>wnd</b> variable).
+	/// Use like <c>wnd w2 = w1.Get.Owner;</c> (here <i>w1</i> is a <b>wnd</b> variable).
 	/// </summary>
 	public getwnd Get => new(this);
 
 	/// <summary>
 	/// Static functions of this class are used to get special windows (used like <c>wnd w = wnd.getwnd.top;</c>) and all windows.
-	/// Instances of this class are used to get related windows and controls, like <c>wnd w2 = w1.Get.FirstChild;</c> (here w1 is a <b>wnd</b> variable).
+	/// Instances of this class are used to get related windows and controls, like <c>wnd w2 = w1.Get.FirstChild;</c> (here <i>w1</i> is a <b>wnd</b> variable).
 	/// </summary>
 	public partial struct getwnd {
 		wnd _w;
@@ -265,7 +265,7 @@ public partial struct wnd {
 		///// Calls API <msdn>GetParent</msdn>.
 		///// </summary>
 		///// <remarks>
-		///// The API function is fast but unreliable. It can get parent or owner window, and fails in some cases. Read more in the API documentation. It is reliable only if you know that this window is a child window and has WS_CHILD style.
+		///// The API function is fast but unreliable. It can get parent or owner window, and fails in some cases. Read more in the API documentation. It is reliable only if you know that this window is a child window and has <b>WS_CHILD</b> style.
 		///// Supports <see cref="lastError"/>.
 		///// </remarks>
 		//[Obsolete("Unreliable")]
@@ -406,7 +406,7 @@ public partial struct wnd {
 			/// Can be called multiple times for different owner windows; uses arrays created in ctor (the slowest part).
 			/// </summary>
 			/// <param name="owner">Owner window.</param>
-			/// <param name="skip">A callback function that receives descendant indice and can return <c>true</c> to skip that window and its descendants.</param>
+			/// <param name="skip">A callback function that receives descendant index and can return <c>true</c> to skip that window and its descendants.</param>
 			/// <param name="andOwner">Add <i>owner</i> to the list too, at the position matching the Z order.</param>
 			/// <returns>List of <see cref="all"/> indices of owned windows. Sorted like in the Z order. Not <c>null</c>.</returns>
 			public List<int> GetIndices(wnd owner, Func<int, bool> skip = null, bool andOwner = false) {
@@ -474,7 +474,7 @@ public partial struct wnd {
 		public static wnd root { get; } = Api.GetDesktopWindow();
 
 		/// <summary>
-		/// Calls API <msdn>GetShellWindow</msdn>. It gets a window of the shell process (usually process "explorer", class name "Progman").
+		/// Calls API <msdn>GetShellWindow</msdn>. It gets a window of the shell process (usually process <c>"explorer"</c>, class name <c>"Progman"</c>).
 		/// </summary>
 		/// <returns><c>default(wnd)</c> if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.</returns>
 		/// <remarks>
@@ -486,8 +486,8 @@ public partial struct wnd {
 		/// Gets the desktop window and its child control that displays desktop icons and wallpaper.
 		/// </summary>
 		/// <returns><c>false</c> if failed.</returns>
-		/// <param name="desktopWindow">Receives the top-level desktop window. Class name "Progman" or "WorkerW".</param>
-		/// <param name="control">Receives the control of "SysListView32" class that contains icons and wallpaper.</param>
+		/// <param name="desktopWindow">Receives the top-level desktop window. Class name <c>"Progman"</c> or <c>"WorkerW"</c>.</param>
+		/// <param name="control">Receives the control of <c>"SysListView32"</c> class that contains icons and wallpaper.</param>
 		/// <remarks>
 		/// This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.
 		/// Fails if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
@@ -611,12 +611,12 @@ public partial struct wnd {
 	}
 
 	/// <summary>
-	/// Activates next non-minimized main window, like with Alt+Tab.
+	/// Activates next non-minimized main window, like with <c>Alt+Tab</c>.
 	/// </summary>
 	/// <returns><c>true</c> if activated; <c>false</c> if there is no such window or if failed to activate.</returns>
 	/// <remarks>
 	/// Uses <see cref="getwnd.nextMain"/>, <see cref="getwnd.LastActiveOwnedOrThis"/>, <see cref="Activate"/>.
-	/// An alternative way - send Alt+Tab keys, but it works not everywhere.
+	/// An alternative way - send <c>Alt+Tab</c> keys, but it works not everywhere.
 	/// </remarks>
 	public static bool switchActiveWindow() {
 		try {
@@ -735,7 +735,7 @@ public partial struct wnd {
 
 	/// <summary>
 	/// This version is used by "find window" functions.
-	/// Uses tid to avoid getting w thread id (slow) for each window; let it be 0 initially.
+	/// Uses <i>tid</i> to avoid getting <i>w</i> thread id (slow) for each window; let it be 0 initially.
 	/// </summary>
 	internal bool IsOwnedBy2_(wnd w, int level, ref int tid) {
 		for (var o = Get.Owner; !o.Is0; o = o.Get.Owner) {

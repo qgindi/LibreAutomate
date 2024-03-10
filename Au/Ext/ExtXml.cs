@@ -96,7 +96,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets attribute value as enum type T.
+		/// Gets attribute value as enum type <b>T</b>.
 		/// If the attribute does not exist, sets <i>value</i> = <c>default</c> and returns <c>false</c>.
 		/// If the attribute value is not a valid enum member name, sets <i>value</i> = <i>default</i> and returns <c>true</c>.
 		/// </summary>

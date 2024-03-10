@@ -1,6 +1,6 @@
 namespace Au {
 	/// <summary>
-	/// Creates shell shortcuts (.lnk files) and gets shortcut properties.
+	/// Creates shell shortcuts (<c>.lnk</c> files) and gets shortcut properties.
 	/// </summary>
 	public unsafe sealed class shortcutFile : IDisposable {
 		Api.IShellLink _isl;
@@ -36,9 +36,9 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Opens a shortcut file (.lnk) for getting shortcut properties.
+		/// Opens a shortcut file (<c>.lnk</c>) for getting shortcut properties.
 		/// </summary>
-		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
+		/// <param name="lnkPath">Shortcut file (<c>.lnk</c>) path.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="AuException">Failed to open <c>.lnk</c> file.</exception>
 		public static shortcutFile open(string lnkPath) {
@@ -48,7 +48,7 @@ namespace Au {
 		/// <summary>
 		/// Creates a new <see cref="shortcutFile"/> instance that can be used to create or replace a shortcut file.
 		/// </summary>
-		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
+		/// <param name="lnkPath">Shortcut file (<c>.lnk</c>) path.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
 		/// You can set properties and finally call <see cref="Save"/>.
@@ -61,7 +61,7 @@ namespace Au {
 		/// <summary>
 		/// Creates a new <see cref="shortcutFile"/> instance that can be used to create or modify a shortcut file.
 		/// </summary>
-		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
+		/// <param name="lnkPath">Shortcut file (<c>.lnk</c>) path.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="AuException">Failed to open existing <c>.lnk</c> file.</exception>
 		/// <remarks>
@@ -74,7 +74,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Saves to the shortcut file (.lnk).
+		/// Saves to the shortcut file (<c>.lnk</c>).
 		/// </summary>
 		/// <exception cref="AuException">Failed to save.</exception>
 		/// <remarks>
@@ -177,7 +177,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets or sets the working directory path (Start in).
+		/// Gets or sets the working directory path.
 		/// </summary>
 		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		/// <exception cref="ArgumentException">The <c>set</c> function allows max length 259.</exception>
@@ -187,8 +187,8 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Throws if s longer than 259.
-		/// SetPath then would throw without error description. SetIconLocation would limit to 260. SetWorkingDirectory and SetDescription succeed but corrupt the <c>.lnk</c> file. SetArguments OK. Others not tested, rare, never mind.
+		/// Throws if <i>s</i> longer than 259.
+		/// <b>SetPath</b> then would throw without error description. <b>SetIconLocation</b> would limit to 260. <b>SetWorkingDirectory</b> and <b>SetDescription</b> succeed but corrupt the <c>.lnk</c> file. <b>SetArguments</b> OK. Others not tested, rare, never mind.
 		/// </summary>
 		static string _Max259(string s) => s.Lenn() <= 259 ? s : throw new ArgumentException("max length 259");
 
@@ -202,7 +202,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets or sets the description text (Comment).
+		/// Gets or sets the description text (comment).
 		/// </summary>
 		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		/// <exception cref="ArgumentException">The <c>set</c> function allows max length 259.</exception>
@@ -214,7 +214,7 @@ namespace Au {
 		/// <summary>
 		/// Gets or sets hotkey.
 		/// </summary>
-		/// <exception cref="ArgumentException">The value for the <c>set</c> function includes Win.</exception>
+		/// <exception cref="ArgumentException">The value for the <c>set</c> function includes <c>Win</c>.</exception>
 		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		public (KMod, KKey) Hotkey {
 			get {
@@ -251,7 +251,7 @@ namespace Au {
 		/// Gets shortcut target path or URL or virtual shell object <b>ITEMIDLIST</b>.
 		/// Uses <see cref="open"/> and <see cref="TargetAnyType"/>.
 		/// </summary>
-		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
+		/// <param name="lnkPath">Shortcut file (<c>.lnk</c>) path.</param>
 		/// <exception cref="AuException">Failed to open.</exception>
 		public static string getTarget(string lnkPath) {
 			return open(lnkPath).TargetAnyType;

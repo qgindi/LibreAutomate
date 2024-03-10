@@ -22,7 +22,7 @@ namespace Au.More {
 		public static byte* Alloc(nint size, bool zeroInit = false)
 			=> _ReAllocBytes(null, size, zeroInit);
 		
-		/// <param name="count">Count of elements of type T.</param>
+		/// <param name="count">Count of elements of type <b>T</b>.</param>
 		/// <inheritdoc cref="Alloc(nint, bool)"/>
 		public static T* Alloc<T>(nint count, bool zeroInit = false) where T : unmanaged
 			=> (T*)_ReAllocBytes(null, count * sizeof(T), zeroInit);
@@ -55,7 +55,7 @@ namespace Au.More {
 		/// Reallocates a memory block to make it bigger or smaller.
 		/// </summary>
 		/// <param name="mem">Input: old memory address; if <c>null</c>, allocates new memory like <see cref="Alloc{T}"/>. Output: new memory address. Unchanged if exception.</param>
-		/// <param name="count">New count of elements of type T.</param>
+		/// <param name="count">New count of elements of type <b>T</b>.</param>
 		/// <param name="zeroInit">When size is growing, set all added bytes = 0.</param>
 		/// <exception cref="OutOfMemoryException">Failed. Probably <i>count</i> is too big.</exception>
 		/// <remarks>
@@ -81,7 +81,7 @@ namespace Au.More {
 		/// Frees a memory block (if not <c>null</c>) and allocates new.
 		/// </summary>
 		/// <param name="mem">Input: old memory address or <c>null</c>. Output: new memory address; <c>null</c> if exception (it prevents freeing twice).</param>
-		/// <param name="count">New count of elements of type T.</param>
+		/// <param name="count">New count of elements of type <b>T</b>.</param>
 		/// <param name="zeroInit">Set all bytes = 0.</param>
 		/// <exception cref="OutOfMemoryException">Failed. Probably <i>count</i> is too big.</exception>
 		/// <remarks>

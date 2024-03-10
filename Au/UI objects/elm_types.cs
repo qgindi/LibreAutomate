@@ -12,14 +12,14 @@ namespace Au.Types {
 
 		/// <summary>
 		/// The UI element can be invisible.
-		/// Without this flag skips UI elements that are invisible (have state <b>INVISIBLE</b>) or are descendants of invisible WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
-		/// Regardless of this flag, always skips invisible standard UI elements of nonclient area: TITLEBAR, MENUBAR, SCROLLBAR, GRIP.
+		/// Without this flag skips UI elements that are invisible (have state <b>INVISIBLE</b>) or are descendants of invisible <b>WINDOW</b>, <b>DOCUMENT</b>, <b>PROPERTYPAGE</b>, <b>GROUPING</b>, <b>ALERT</b>, <b>MENUPOPUP</b>.
+		/// Regardless of this flag, always skips invisible standard UI elements of nonclient area: <b>TITLEBAR</b>, <b>MENUBAR</b>, <b>SCROLLBAR</b>, <b>GRIP</b>.
 		/// </summary>
 		HiddenToo = 2,
 
 		/// <summary>
-		/// Always search in MENUITEM.
-		/// Without this flag skips MENUITEM descendant elements (for speed), unless <i>role</i> argument is MENUITEM or MENUPOPUP or searching in web page.
+		/// Always search in <b>MENUITEM</b>.
+		/// Without this flag skips <b>MENUITEM</b> descendant elements (for speed), unless <i>role</i> argument is <b>MENUITEM</b> or <b>MENUPOPUP</b> or searching in web page.
 		/// </summary>
 		MenuToo = 4,
 
@@ -60,12 +60,12 @@ namespace Au.Types {
 	/// </summary>
 	internal static partial class Enum_ {
 		/// <summary>
-		/// Used by tools like "Find UI element", together with ElmMiscFlags_Marked.
+		/// Used by tools like <b>Find UI element</b>, together with <b>ElmMiscFlags_Marked</b>.
 		/// </summary>
 		internal static EFFlags EFFlags_Mark = (EFFlags)0x10000;
 
 		/// <summary>
-		/// Used by tools like "Find UI element", together with AFFlags_Mark.
+		/// Used by tools like <b>Find UI element</b>, together with <b>AFFlags_Mark</b>.
 		/// </summary>
 		internal static EMiscFlags EMiscFlags_Marked = (EMiscFlags)128;
 
@@ -107,8 +107,8 @@ namespace Au.Types {
 		UIA = 2,
 
 		/// <summary>
-		/// Get the direct parent UI element if probably it would be much more useful, for example if its role is LINK or BUTTON.
-		/// Usually links have one or more children of type TEXT, STATICTEXT, IMAGE or other.
+		/// Get the direct parent UI element if probably it would be much more useful, for example if its role is <b>LINK</b> or <b>BUTTON</b>.
+		/// Usually links have one or more children of type <b>TEXT</b>, <b>STATICTEXT</b>, <b>IMAGE</b> or other.
 		/// </summary>
 		PreferLink = 4,
 
@@ -117,21 +117,21 @@ namespace Au.Types {
 		/// 1. Try to get a smaller UI Automation element from point.
 		/// 2. Try to find a descendant that is smaller. Because some incorrectly implemented UI elements don't give a child element from point.
 		/// 
-		/// Note: this flag is for UI element capturing tools, not for automation scripts. Its bahavior may change in the future.
+		/// Note: this flag is for UI element capturing tools, not for automation scripts. Its behavior may change in the future.
 		/// 
 		/// UI element capturing tools should use this flag only with user consent, because:
 		/// 1. It's impossible to get perfect UI element in all cases. Can get wrong element.
 		/// 2. In some cases can be slow.
 		/// 3. In some apps some elements have bugs and the process can crash. Rare.
 		/// 
-		/// The "Find UI element" tool uses this flag when checked <b>Smaller</b>.
+		/// The <b>Find UI element</b> tool uses this flag when checked <b>Smaller</b>.
 		/// This flag is ignored when not in-process, because could be too slow. Also ignored in some windows, eg web browsers and Java apps.
 		/// </summary>
 		TrySmaller = 8,
 
 		/// <summary>
 		/// Use UI Automation API if the default API fails and in some other cases.
-		/// The "Find UI element" tool uses this flag when <b>UIA</b> is in indeterminate state.
+		/// The <b>Find UI element</b> tool uses this flag when <b>UIA</b> is in indeterminate state.
 		/// </summary>
 		OrUIA = 16,
 
@@ -193,7 +193,7 @@ namespace Au.Types {
 	/// Used with <see cref="elm.fromWindow"/>
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix OBJID_.
+	/// Most names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix <b>OBJID_</b>.
 	/// </remarks>
 	public enum EObjid {
 		WINDOW = 0,
@@ -218,7 +218,7 @@ namespace Au.Types {
 		//ours
 
 		/// <summary>
-		/// The root Java UI element. Can be used when the window's class name starts with "SunAwt".
+		/// The root Java UI element. Can be used when the window's class name starts with <c>"SunAwt"</c>.
 		/// </summary>
 		Java = -100,
 
@@ -234,7 +234,7 @@ namespace Au.Types {
 	/// Used with <see cref="elm.RoleInt"/>
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>IAccessible.get_accRole Object Roles</msdn> documentation but without prefix ROLE_SYSTEM_. These are renamed: PUSHBUTTON to BUTTON, CHECKBUTTON to CHECKBOX, GRAPHIC to IMAGE, OUTLINE to TREE, OUTLINEITEM to TREEITEM, OUTLINEBUTTON to TREEBUTTON.
+	/// Most names are as in API <msdn>IAccessible.get_accRole Object Roles</msdn> documentation but without prefix <b>ROLE_SYSTEM_</b>. These are renamed: <b>PUSHBUTTON</b> to <b>BUTTON</b>, <b>CHECKBUTTON</b> to <b>CHECKBOX</b>, <b>GRAPHIC</b> to <b>IMAGE</b>, <b>OUTLINE</b> to <b>TREE</b>, <b>OUTLINEITEM</b> to <b>TREEITEM</b>, <b>OUTLINEBUTTON</b> to <b>TREEBUTTON</b>.
 	/// </remarks>
 	public enum ERole {
 		TITLEBAR = 0x1,
@@ -314,7 +314,7 @@ namespace Au.Types {
 	/// Used by <see cref="elm.State"/>.
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>IAccessible.get_accState Object State Constants</msdn> documentation but without prefix STATE_SYSTEM_.
+	/// Most names are as in API <msdn>IAccessible.get_accState Object State Constants</msdn> documentation but without prefix <b>STATE_SYSTEM_</b>.
 	/// </remarks>
 	[Flags]
 	public enum EState {
@@ -357,7 +357,7 @@ namespace Au.Types {
 	/// Used by <see cref="elm.Select"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix SELFLAG_.
+	/// The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix <b>SELFLAG_</b>.
 	/// </remarks>
 	[Flags]
 	public enum ESelect {
@@ -372,7 +372,7 @@ namespace Au.Types {
 	/// Event constants for <see cref="More.WinEventHook"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>SetWinEventHook Event Constants</msdn> documentation but without prefix EVENT_.
+	/// The names are as in API <msdn>SetWinEventHook Event Constants</msdn> documentation but without prefix <b>EVENT_</b>.
 	/// </remarks>
 	public enum EEvent {
 		MIN = 0x1,
@@ -508,7 +508,7 @@ namespace Au.Types {
 	/// Flags for <see cref="More.WinEventHook"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>SetWinEventHook</msdn> documentation but without prefix WINEVENT_.
+	/// The names are as in API <msdn>SetWinEventHook</msdn> documentation but without prefix <b>WINEVENT_</b>.
 	/// There are no flags for <b>OUTOFCONTEXT</b> and <b>INCONTEXT</b>. <b>OUTOFCONTEXT</b> is default (0). <b>INCONTEXT</b> cannot be used in managed code.
 	/// </remarks>
 	[Flags]

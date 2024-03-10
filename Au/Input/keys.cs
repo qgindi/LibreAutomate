@@ -300,15 +300,15 @@ public partial class keys {
 	/// </summary>
 	/// <param name="vk"></param>
 	/// <param name="scan"></param>
-	/// <param name="siFlags">SendInput flags.</param>
+	/// <param name="siFlags"><b>SendInput</b> flags.</param>
 	internal keys AddRaw_(KKey vk, ushort scan, byte siFlags) {
 		_ThrowIfSending();
 		return _AddKEvent(new _KEvent(false, vk, (_KFlags)(siFlags & 0xf), scan));
 	}
 
 	/// <summary>
-	/// Sends key events added by inputBlocker -> AddRaw_.
-	/// Simply calls Api.SendInput. No options, no sleep, etc.
+	/// Sends key events added by <b>AddRaw_</b> (called by <b>inputBlocker</b>).
+	/// Simply calls <b>Api.SendInput</b>. No options, no sleep, etc.
 	/// If new events added while sending, sends them too, until there are no new events added.
 	/// </summary>
 	/// <param name="onlyUp">Send only "up" events.</param>
@@ -493,7 +493,7 @@ public partial class keys {
 	/// Sends keys, text and executes other events added with the <b>AddX</b> functions.
 	/// </summary>
 	/// <param name="canSendAgain">Don't clear the internal collection. If <c>true</c>, this function then can be called again (eg in loop) to send/execute the same keys etc. If <c>false</c> (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
-	/// <exception cref="ArgumentException"><i>canSendAgain</i> is <c>true</c> and <i>keys_</i> end with + or (.</exception>
+	/// <exception cref="ArgumentException"><i>canSendAgain</i> is <c>true</c> and <i>keys_</i> end with <c>+</c> or <c>(</c>.</exception>
 	/// <exception cref="AuException">Failed. For example there is no focused window when sending text.</exception>
 	/// <exception cref="InputDesktopException"></exception>
 	public void SendNow(bool canSendAgain = false) {
@@ -663,18 +663,19 @@ public partial class keys {
 		int speed = optk.KeySpeed; if (count > 4) speed = Math.Min(speed, optk.TextSpeed + 2);
 		KMod prevMod = 0;
 		try {
-			_SendChar2((char)ke.ch, OKeyText.KeysOrChar, speed, count, hkl, ref prevMod);
+			_SendChar2((char)ke.ch, OKeyText.KeysOrChar, speed, count, hkl, ref prevMod, false); //note: don't use optk.TextShiftEnter
 		}
 		finally {
 			Internal_.ModPressRelease(false, prevMod);
 		}
 	}
 
-	static unsafe void _SendChar2(char c, OKeyText textHow, int sleep, int count, nint hkl, ref KMod prevMod) {
+	static unsafe void _SendChar2(char c, OKeyText textHow, int sleep, int count, nint hkl, ref KMod prevMod, bool shiftEnter) {
 		KKey vk = 0; KMod mod = 0;
 		if (c is '\n' or '\r') { //many apps don't support these as VK_PACKET
 			vk = KKey.Enter;
-		} else if (c is ' ' or '\t') { //some don't support these as VK_PACKET
+			if (shiftEnter) mod = KMod.Shift;
+		} else if (c is ' ' or '\t') { //some apps don't support these as VK_PACKET
 			vk = (KKey)c;
 		} else if (textHow != OKeyText.Characters) {
 			(vk, mod) = _CharToKey(c, hkl);
@@ -738,7 +739,8 @@ public partial class keys {
 		string s = data as string;
 
 		OKeyText textHow; int flags = (byte)ke.vk;
-		if (0 != (flags & 0x80)) textHow = (OKeyText)(flags & 0xf); //textHow specified
+		bool textHowSpecified = 0 != (flags & 0x80); //"^text" or AddText(string, OKeyText)
+		if (textHowSpecified) textHow = (OKeyText)(flags & 0xf);
 		else if (s != null && s.Length < optk.PasteLength) textHow = optk.TextHow;
 		else textHow = OKeyText.Paste;
 
@@ -781,7 +783,7 @@ public partial class keys {
 
 				if (c == '\r' && s.Eq(i + 1, '\n')) continue; //\r\n -> \n -> key Enter
 
-				_SendChar2(c, textHow, sleep, 1, hkl, ref prevMod);
+				_SendChar2(c, textHow, sleep, 1, hkl, ref prevMod, textHowSpecified ? false : optk.TextShiftEnter);
 			}
 		}
 		finally {
@@ -831,7 +833,7 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Returns <c>true</c> if Shift is set to turn off CapsLock (system setting).
+	/// Returns <c>true</c> if <c>Shift</c> is set to turn off <c>CapsLock</c> (system setting).
 	/// </summary>
 	internal static bool IsCapsLockShiftOff_() => s_isCapsLockShiftOff ??= Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Keyboard Layout", "Attributes", 0) is int r1 && 0 != (r1 & 0x10000);
 	static bool? s_isCapsLockShiftOff;

@@ -639,7 +639,7 @@ public partial class toolbar {
 	
 	/// <summary>
 	/// Gets the cached rectangle of the owner window, screen, control, etc.
-	/// If is owned and anchor has flag Screen, the rectangle is of toolbar's screen.
+	/// If is owned and anchor has flag <b>Screen</b>, the rectangle is of toolbar's screen.
 	/// Also gets previous size.
 	/// The values are cached by <b>UpdateRect</b> of <b>_OwnerWindow</b> etc.
 	/// </summary>

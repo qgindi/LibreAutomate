@@ -175,7 +175,7 @@ public static unsafe class Hash {
 			fixed (byte* p = data) Add(p, data.Length); //note: p null if data empty
 		}
 		
-		/// <summary>Adds string converted to UTF8.</summary>
+		/// <summary>Adds string converted to UTF-8.</summary>
 		/// <exception cref="ArgumentNullException"><i>data</i> is <c>null</c>.</exception>
 		public void Add(string data) => Add(Encoding.UTF8.GetBytes(data));
 		
@@ -220,7 +220,7 @@ public static unsafe class Hash {
 	
 	/// <summary>
 	/// Result of <see cref="MD5Context.Hash"/>.
-	/// It is 16 bytes stored in 2 long fields r1 and r2.
+	/// It is 16 bytes stored in 2 <c>long</c> fields <b>r1</b> and <b>r2</b>.
 	/// If need, can be converted to <b>byte[]</b> with <see cref="MD5Result.ToArray"/> or to hex string with <see cref="MD5Result.ToString"/>.
 	/// </summary>
 	public record struct MD5Result {
@@ -277,7 +277,7 @@ public static unsafe class Hash {
 	//	=> MD5(MemoryMarshal.AsBytes(data));
 	
 	/// <summary>
-	/// Computes MD5 hash of string converted to UTF8.
+	/// Computes MD5 hash of string converted to UTF-8.
 	/// Uses <see cref="MD5Context"/>.
 	/// </summary>
 	public static MD5Result MD5(string data) {
@@ -305,7 +305,7 @@ public static unsafe class Hash {
 	//	=> MD5(MemoryMarshal.AsBytes(data), base64);
 	
 	/// <summary>
-	/// Computes MD5 hash of string converted to UTF8. Returns result as hex or base64 string.
+	/// Computes MD5 hash of string converted to UTF-8. Returns result as hex or base64 string.
 	/// Uses <see cref="MD5Context"/>.
 	/// </summary>
 	public static string MD5(string data, bool base64) {
@@ -330,7 +330,7 @@ public static unsafe class Hash {
 	}
 	
 	/// <summary>
-	/// Computes hash of string converted to UTF8, using the specified cryptographic algorithm.
+	/// Computes hash of string converted to UTF-8, using the specified cryptographic algorithm.
 	/// </summary>
 	/// <param name="data"></param>
 	/// <param name="algorithm">Algorithm name, eg <c>"SHA256"</c>. See <see cref="CryptoConfig"/>.</param>
@@ -349,7 +349,7 @@ public static unsafe class Hash {
 	}
 	
 	/// <summary>
-	/// Computes hash of string converted to UTF8, using the specified cryptographic algorithm. Returns result as hex or base64 string.
+	/// Computes hash of string converted to UTF-8, using the specified cryptographic algorithm. Returns result as hex or base64 string.
 	/// </summary>
 	/// <param name="data"></param>
 	/// <param name="algorithm">Algorithm name, eg <c>"SHA256"</c>. See <see cref="CryptoConfig"/>.</param>

@@ -1,7 +1,5 @@
-namespace Au
-{
-	public partial struct wnd
-	{
+namespace Au {
+	public partial struct wnd {
 		/// <summary>
 		/// Sets window transparency attributes (opacity and/or transparent color).
 		/// </summary>
@@ -13,17 +11,17 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>SetLayeredWindowAttributes</msdn>.
 		/// On Windows 7 works only with top-level windows, not with controls.
-		/// Fails with WPF windows, class name "HwndWrapper*".
+		/// Fails with WPF windows (class name starts with <c>"HwndWrapper"</c>).
 		/// </remarks>
 		public void SetTransparency(bool allowTransparency, int? opacity = null, ColorInt? colorKey = null, bool noException = false) {
 			var est = ExStyle;
 			bool layered = est.Has(WSE.LAYERED);
-
+			
 			if (allowTransparency) {
 				uint col = 0, f = 0; byte op = 0;
 				if (colorKey != null) { f |= 1; col = (uint)colorKey.Value.ToBGR(); }
 				if (opacity != null) { f |= 2; op = (byte)Math.Clamp(opacity.Value, 0, 255); }
-
+				
 				if (!layered) SetExStyle(est | WSE.LAYERED, noException ? WSFlags.NoException : 0);
 				if (!Api.SetLayeredWindowAttributes(this, col, op, f) && !noException) ThrowUseNative();
 			} else if (layered) {
@@ -31,7 +29,7 @@ namespace Au
 				//tested: resets attributes, ie after adding WSE.LAYERED the window will be normal
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets window transparency attributes (opacity and transparency color).
 		/// </summary>
@@ -50,16 +48,16 @@ namespace Au
 			}
 			return false;
 		}
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if this is a full-screen window and not desktop.
 		/// </summary>
 		public bool IsFullScreen => IsFullScreen_(out _);
-
+		
 		internal unsafe bool IsFullScreen_(out screen scrn) {
 			scrn = default;
 			if (Is0) return false;
-
+			
 			//is client rect equal to window rect (no border)?
 			RECT r, rc, rm;
 			r = Rect; //fast
@@ -69,61 +67,60 @@ namespace Au
 			if (rc.right != cx || rc.bottom != cy) {
 				if (cx - rc.right > 2 || cy - rc.bottom > 2) return false; //some windows have 1-pixel border
 			}
-
+			
 			//covers whole screen rect?
 			scrn = screen.of(this, SODefault.Zero); if (scrn.IsEmpty) return false;
 			rm = scrn.Rect;
-
+			
 			if (r.left > rm.left || r.top > rm.top || r.right < rm.right || r.bottom < rm.bottom - 1) return false; //info: -1 for inactive Chrome
-
+			
 			//is it desktop?
 			if (IsOfShellThread_) return false;
 			if (this == getwnd.root) return false;
-
+			
 			return true;
-
+			
 			//This is the best way to test for fullscreen (FS) window. Fast.
 			//Window and client rect was equal of almost all my tested FS windows. Except Winamp visualization.
 			//Most FS windows are same size as screen, but some slightly bigger.
 			//Don't look at window styles. For some FS windows they are not as should be.
 			//Returns false if the active window is owned by a fullscreen window. This is different than appbar API interprets it. It's OK for our purposes.
 		}
-
+		
 		/// <summary>
-		/// Returns <c>true</c> if this belongs to GetShellWindow's thread (usually it is the desktop window).
+		/// Returns <c>true</c> if this belongs to <b>GetShellWindow</b>'s thread (usually it is the desktop window).
 		/// </summary>
 		internal bool IsOfShellThread_ {
 			get => 1 == s_isShellWindow.IsShellWindow(this);
 		}
-
+		
 		/// <summary>
-		/// Returns <c>true</c> if this belongs to GetShellWindow's process (eg a folder window, desktop, taskbar).
+		/// Returns <c>true</c> if this belongs to <b>GetShellWindow</b>'s process (eg a folder window, desktop, taskbar).
 		/// </summary>
 		internal bool IsOfShellProcess_ {
 			get => 0 != s_isShellWindow.IsShellWindow(this);
 		}
-
-		struct _ISSHELLWINDOW
-		{
+		
+		struct _ISSHELLWINDOW {
 			int _tidW, _tidD, _pidW, _pidD;
 			IntPtr _w, _wDesk; //not wnd because then TypeLoadException
-
+			
 			public int IsShellWindow(wnd w) {
 				if (w.Is0) return 0;
 				wnd wDesk = getwnd.shellWindow; //fast
 				if (w == wDesk) return 1; //Progman. Other window (WorkerW) may be active when desktop active.
-
+				
 				//cache because GetWindowThreadProcessId quite slow
 				if (w.Handle != _w) { _w = w.Handle; _tidW = w.GetThreadProcessId(out _pidW); }
 				if (wDesk.Handle != _wDesk) { _wDesk = wDesk.Handle; _tidD = wDesk.GetThreadProcessId(out _pidD); }
-
+				
 				if (_tidW == _tidD) return 1;
 				if (_pidW == _pidD) return 2;
 				return 0;
 			}
 		}
 		static _ISSHELLWINDOW s_isShellWindow;
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if this window has Metro style, ie is not a classic desktop window.
 		/// On Windows 8/8.1 most Windows Store app windows and many shell windows have Metro style.
@@ -141,9 +138,9 @@ namespace Au
 				//could use IsImmersiveProcess, but this is better
 			}
 		}
-
+		
 		/// <summary>
-		/// On Windows 10 and later returns non-zero if this top-level window is a UWP app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
+		/// On Windows 10 and later returns non-zero if this top-level window is a UWP app window: 1 if class name is <c>"ApplicationFrameWindow"</c>, 2 if <c>"Windows.UI.Core.CoreWindow"</c>.
 		/// </summary>
 		/// <seealso cref="WndUtil.GetWindowsStoreAppId"/>
 		public int IsUwpApp {
@@ -154,10 +151,10 @@ namespace Au
 				//could use IsImmersiveProcess, but this is better
 			}
 		}
-
+		
 		//This is too litle tested to be public. Tested only with WinUI 3 Controls Gallery. Also WinUI3 is still kinda experimental and rare (2021).
 		/// <summary>
-		/// On Windows 10 and later returns <c>true</c> if this top-level window is a WinUI app window (class name "WinUIDesktopWin32WindowClass").
+		/// On Windows 10 and later returns <c>true</c> if this top-level window is a WinUI app window (class name <c>"WinUIDesktopWin32WindowClass"</c>).
 		/// </summary>
 		internal bool IsWinUI_ {
 			get {
@@ -166,7 +163,7 @@ namespace Au
 				return ClassNameIs("WinUIDesktopWin32WindowClass");
 			}
 		}
-
+		
 		/// <summary>
 		/// If this control is (or is based on) a standard control provided by Windows, such as button or treeview, returns the control type. Else returns <b>None</b>.
 		/// </summary>
@@ -177,13 +174,11 @@ namespace Au
 	}
 }
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// <see cref="wnd.CommonControlType"/>
 	/// </summary>
-	public enum WControlType
-	{
+	public enum WControlType {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		None,
 		Listbox = 65536,

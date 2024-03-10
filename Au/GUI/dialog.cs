@@ -431,8 +431,8 @@ namespace Au {
 			}
 
 			/// <summary>
-			/// Sets c.pButtons, c.cButtons, c.pRadioButtons and c.cRadioButtons.
-			/// Later call MarshalFreeButtons.
+			/// Sets <c>c.pButtons</c>, <c>c.cButtons</c>, <c>c.pRadioButtons</c> and <c>c.cRadioButtons</c>.
+			/// Later call <b>MarshalFreeButtons</b>.
 			/// </summary>
 			public unsafe void MarshalButtons(ref _Api.TASKDIALOGCONFIG c) {
 				c.pButtons = _MarshalButtons(false, out c.cButtons);
@@ -442,7 +442,7 @@ namespace Au {
 			}
 
 			/// <summary>
-			/// Frees memory allocated by MarshalButtons and sets the c members to <c>null</c>/0.
+			/// Frees memory allocated by <b>MarshalButtons</b> and sets the <i>c</i> members to <c>null</c>/0.
 			/// </summary>
 			public unsafe void MarshalFreeButtons(ref _Api.TASKDIALOGCONFIG c) {
 				MemoryUtil.Free(c.pButtons);
@@ -492,7 +492,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Specifies which button responds to the Enter key.
+		/// Specifies which button responds to the <c>Enter</c> key.
 		/// If 0 or not set, auto-selects.
 		/// </summary>
 		/// <value>Button id.</value>
@@ -501,7 +501,7 @@ namespace Au {
 		/// <summary>
 		/// Adds radio buttons.
 		/// </summary>
-		/// <param name="buttons">A list of strings <c>"id text"</c> separated by |, like <c>"1 One|2 Two|3 Three"</c>.</param>
+		/// <param name="buttons">A list of strings <c>"id text"</c> separated by <c>|</c>, like <c>"1 One|2 Two|3 Three"</c>.</param>
 		/// <param name="defaultId">Check the radio button that has this id. If omitted or 0, checks the first. If negative, does not check.</param>
 		/// <remarks>
 		/// To get selected radio button id after closing the dialog, use <see cref="Controls"/>.
@@ -555,7 +555,7 @@ namespace Au {
 		/// <summary>
 		/// Adds text and common icon at the bottom of the dialog.
 		/// </summary>
-		/// <param name="text">Text, optionally preceded by an icon character and |, like <c>"i|Text"</c>. Icons: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="text">Text, optionally preceded by an icon character and <c>|</c>, like <c>"i|Text"</c>. Icons: <c>x</c> error, <c>!</c> warning, <c>i</c> info, <c>v</c> shield, <c>a</c> app.</param>
 		public void SetFooter(string text) {
 			DIcon i = 0;
 			if (text?.Eq(1, '|') ?? false) {
@@ -590,11 +590,11 @@ namespace Au {
 		object _iconFooterGC; //GC
 
 		/// <summary>
-		/// Adds Edit or Combo control.
+		/// Adds <b>Edit</b> or <b>Combo</b> control.
 		/// </summary>
 		/// <param name="editType">Control type/style.</param>
 		/// <param name="editText">Initial edit field text.</param>
-		/// <param name="comboItems">Combo box items used when <i>editType</i> is Combo.</param>
+		/// <param name="comboItems">Combo box items used when <i>editType</i> is <b>Combo</b>.</param>
 		/// <remarks>
 		/// To get control text after closing the dialog, use <see cref="Controls"/>.
 		/// 
@@ -675,7 +675,7 @@ namespace Au {
 		public bool RtlLayout { set; get; }
 
 		/// <summary>
-		/// Add "Minimize" button to the title bar.
+		/// Add <b>Minimize</b> button to the title bar.
 		/// </summary>
 		public bool CanBeMinimized { set; get; }
 
@@ -1014,7 +1014,7 @@ namespace Au {
 		public event Action<DEventArgs> HyperlinkClicked;
 
 		/// <summary>
-		/// When the user presses F1.
+		/// When the user presses <c>F1</c>.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -1357,18 +1357,18 @@ namespace Au {
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">
 		/// Button ids and labels. Examples: <c>"OK|Cancel"</c>, <c>"1 &amp;Save|2 Do&amp;n't Save|0 Cancel"</c>.
-		/// If omitted, <c>null</c> or <c>""</c>, the dialog will have OK button, id 1.
-		/// Common buttons: OK, Yes, No, Retry, Cancel, Close.
+		/// If omitted, <c>null</c> or <c>""</c>, the dialog will have <b>OK</b> button, id 1.
+		/// Common buttons: <b>OK</b>, <b>Yes</b>, <b>No</b>, <b>Retry</b>, <b>Cancel</b>, <b>Close</b>.
 		/// More info in Remarks.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="icon"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where <c>i</c> is: <c>x</c> error, <c>!</c> warning, <c>i</c> info, <c>v</c> shield, <c>a</c> app.</param>
 		/// <param name="title">Title bar text. If omitted, <c>null</c> or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
-		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
+		/// <param name="defaultButton">id of button that responds to the <c>Enter</c> key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - center.</param>
 		/// <param name="screen"><see cref="Screen"/>. Examples: <c>screen.ofMouse</c>, <c>screen.index(1)</c>.</param>
@@ -1389,18 +1389,18 @@ namespace Au {
 		/// 
 		/// Missing ids are auto-generated, for example <c>"OK|Cancel|100 Custom1|Custom2"</c> is the same as <c>"1 OK|2 Cancel|100 Custom1|101 Custom2"</c>.
 		/// 
-		/// The first in the list button is default, ie responds to the Enter key. For example, <c>"2 No|1 Yes"</c> adds Yes and No buttons and makes No default.
+		/// The first in the list button is default, ie responds to the <c>Enter</c> key. For example, <c>"2 No|1 Yes"</c> adds <b>Yes</b> and <b>No</b> buttons and makes <b>No</b> default.
 		/// 
-		/// To create keyboard shortcuts, use &amp; character in custom button labels. Use &amp;&amp; for literal &amp;. Example: <c>"1 &amp;Tuesday[]2 T&amp;hursday[]3 Saturday &amp;&amp; Sunday"</c>.
+		/// To create keyboard shortcuts, use <c>&amp;</c> character in custom button labels. Use <c>&amp;&amp;</c> for literal <c>&amp;</c>. Example: <c>"1 &amp;Tuesday[]2 T&amp;hursday[]3 Saturday &amp;&amp; Sunday"</c>.
 		/// 
 		/// Trims newlines around ids and labels. For example, <c>"\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n"</c> is the same as <c>"1 One|2 Two"</c>.
 		/// 
-		/// There are 6 <i>common buttons</i>: OK, Yes, No, Retry, Cancel, Close. Buttons that have other labels are <i>custom buttons</i>.
+		/// There are 6 <i>common buttons</i>: <b>OK</b>, <b>Yes</b>, <b>No</b>, <b>Retry</b>, <b>Cancel</b>, <b>Close</b>. Buttons that have other labels are <i>custom buttons</i>.
 		/// How common buttons are different:
 		/// 1. <see cref="DFlags.CommandLinks"/> does not change their style.
-		/// 2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
-		/// 3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
-		/// 4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use <c>"2 No|1 Yes"</c> to set default button = No.
+		/// 2. They have keyboard shortcuts that cannot be changed. Inserting <c>&amp;</c> in a label makes it a custom button.
+		/// 3. Button <b>Cancel</b> can be selected with the <c>Esc</c> key. It also adds <b>X</b> (Close) button in title bar, which selects <b>Cancel</b>.
+		/// 4. Always displayed in standard order (eg <b>Yes</b> <b>No</b>, never <b>No</b> <b>Yes</b>). But you can for example use <c>"2 No|1 Yes"</c> to set default button = <b>No</b>.
 		/// 5. The displayed button label is localized, ie different when the Windows UI language is not English.
 		/// 
 		/// You can use flag <see cref="DFlags.CommandLinks"/> to change the style of custom buttons.
@@ -1473,9 +1473,9 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Shows dialog with OK and Cancel buttons.
+		/// Shows dialog with <b>OK</b> and <b>Cancel</b> buttons.
 		/// </summary>
-		/// <returns><c>true</c> if selected OK.</returns>
+		/// <returns><c>true</c> if selected <b>OK</b>.</returns>
 		/// <remarks>Calls <see cref="show"/>.</remarks>
 		/// <example></example>
 		/// <inheritdoc cref="show"/>
@@ -1484,9 +1484,9 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Shows dialog with Yes and No buttons.
+		/// Shows dialog with <b>Yes</b> and <b>No</b> buttons.
 		/// </summary>
-		/// <returns><c>true</c> if selected Yes.</returns>
+		/// <returns><c>true</c> if selected <b>Yes</b>.</returns>
 		/// <remarks>Calls <see cref="show"/>.</remarks>
 		/// <example></example>
 		/// <inheritdoc cref="show"/>
@@ -1502,7 +1502,7 @@ namespace Au {
 		/// <summary>
 		/// Shows dialog with a text edit field and gets that text.
 		/// </summary>
-		/// <returns><c>true</c> if selected OK (or a custom button with id 1).</returns>
+		/// <returns><c>true</c> if selected <b>OK</b> (or a custom button with id 1).</returns>
 		/// <param name="s">Variable that receives the text.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
@@ -1512,7 +1512,7 @@ namespace Au {
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where <c>i</c> is: <c>x</c> error, <c>!</c> warning, <c>i</c> info, <c>v</c> shield, <c>a</c> app.</param>
 		/// <param name="title">Title bar text. If omitted, <c>null</c> or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
@@ -1521,7 +1521,7 @@ namespace Au {
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>
 		/// <param name="buttons">
-		/// Buttons. A list of strings <c>"id text"</c> separated by |, like <c>"1 OK|2 Cancel|10 Browse..."</c>. See <see cref="show"/>.
+		/// Buttons. A list of strings <c>"id text"</c> separated by <c>|</c>, like <c>"1 OK|2 Cancel|10 Browse..."</c>. See <see cref="show"/>.
 		/// Note: this function returns <c>true</c> only when clicked button with id 1.
 		/// Usually custom buttons are used with <i>onButtonClick</i> function, which for example can get button id or disable closing the dialog.
 		/// </param>
@@ -1592,7 +1592,7 @@ namespace Au {
 		/// <summary>
 		/// Shows dialog with a number edit field and gets that number.
 		/// </summary>
-		/// <returns><c>true</c> if selected OK.</returns>
+		/// <returns><c>true</c> if selected <b>OK</b>.</returns>
 		/// <param name="i">Variable that receives the number.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
@@ -1627,17 +1627,17 @@ namespace Au {
 		/// <summary>
 		/// Shows dialog with a list of command-link buttons, and returns 1-based button index or 0.
 		/// </summary>
-		/// <returns>1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.</returns>
+		/// <returns>1-based index of the selected button. Returns 0 if clicked the <b>X</b> (close window) button or pressed <c>Esc</c>.</returns>
 		/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="footer">Text at the bottom of the dialog. Icon can be specified like <c>"i|Text"</c>, where <c>i</c> is: <c>x</c> error, <c>!</c> warning, <c>i</c> info, <c>v</c> shield, <c>a</c> app.</param>
 		/// <param name="title">Title bar text. If omitted, <c>null</c> or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
-		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
+		/// <param name="defaultButton">id (1-based index) of button that responds to the <c>Enter</c> key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center.</param>
 		/// <param name="screen"><see cref="Screen"/>. Examples: <c>screen.ofMouse</c>, <c>screen.index(1)</c>.</param>
@@ -1835,9 +1835,9 @@ namespace Au.Types {
 		Wider = 1 << 2,
 
 		/// <summary>
-		/// Allow to cancel even if there is no Cancel button.
-		/// It adds X (Close) button to the title bar, and also allows to close the dialog with the Esc key.
-		/// When the dialog is closed with the X button or Esc, the returned result button id is 0 if there is no Cancel button; else the same as when clicked the Cancel button.
+		/// Allow to cancel even if there is no <b>Cancel</b> button.
+		/// It adds <b>X</b> (Close) button to the title bar, and also allows to close the dialog with the <c>Esc</c> key.
+		/// When the dialog is closed with the <b>X</b> button or <c>Esc</c>, the returned result button id is 0 if there is no <c>Cancel</c> button; else the same as when clicked the <c>Cancel</c> button.
 		/// </summary>
 		XCancel = 1 << 3,
 
@@ -1885,7 +1885,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Adds radio buttons.
-		/// A list of strings <c>"id text"</c> separated by |, like <c>"1 One|2 Two|3 Three"</c>.
+		/// A list of strings <c>"id text"</c> separated by <c>|</c>, like <c>"1 One|2 Two|3 Three"</c>.
 		/// </summary>
 		public Strings RadioButtons { get; set; }
 
@@ -1907,7 +1907,7 @@ namespace Au.Types {
 		public string EditText { get; set; }
 
 		/// <summary>
-		/// Sets combo box list items used when <see cref="EditType"/> is Combo.
+		/// Sets combo box list items used when <see cref="EditType"/> is <b>Combo</b>.
 		/// </summary>
 		public Strings ComboItems { get; set; }
 	}
@@ -1935,7 +1935,7 @@ namespace Au.Types {
 #pragma warning restore 1591 //missing XML documentation
 
 		/// <summary>
-		/// Clicked hyperlink href attribute value. Use in <see cref="dialog.HyperlinkClicked"/> event handler.
+		/// Clicked hyperlink <c>href</c> attribute value. Use in <see cref="dialog.HyperlinkClicked"/> event handler.
 		/// </summary>
 		public string LinkHref { get; private set; }
 

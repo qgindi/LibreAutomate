@@ -69,7 +69,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Same as GetName, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
+		/// Same as <b>GetName</b>, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
 		/// </summary>
 		internal static string GetNameCached_(wnd w, int processId, bool fullPath = false) {
 			if (processId == 0) return null;
@@ -450,7 +450,7 @@ namespace Au {
 		/// 
 		/// Does not try to end process "softly" (close main window). Unsaved data will be lost.
 		/// 
-		/// Alternatives: run taskkill.exe or pskill.exe (download). See <see cref="run.console"/>. More info on the internet.
+		/// Alternatives: run <c>taskkill.exe</c> or <c>pskill.exe</c> (download). See <see cref="run.console"/>. More info on the internet.
 		/// </remarks>
 		/// <example>
 		/// Restart the shell process (explorer).
@@ -565,10 +565,10 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Provides process started/ended triggers in foreach loop. See examples.
+		/// Provides process started/ended triggers in <c>foreach</c> loop. See examples.
 		/// </summary>
 		/// <returns>
-		/// An object that retrieves process trigger info (started/ended, name, id, session id) when used with foreach.
+		/// An object that retrieves process trigger info (started/ended, name, id, session id) when used with <c>foreach</c>.
 		/// If need more process properties, your code can call <see cref="process"/> class functions with the process id.
 		/// </returns>
 		/// <param name="started">Trigger events: <c>true</c> - started, <c>false</c> - ended, <c>null</c> (default) - both.</param>

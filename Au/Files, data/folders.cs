@@ -27,32 +27,32 @@ namespace Au {
 	/// <tr>
 	/// <td>32-bit Windows</td>
 	/// <td>
-	/// System, SystemX86, SystemX64: <c>@"C:\WINDOWS\system32"</c>
-	/// <br/>ProgramFiles, ProgramFilesX86, ProgramFilesX64: <c>@"C:\Program Files"</c>
-	/// <br/>ProgramFilesCommon, ProgramFilesCommonX86, ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
+	/// <b>System</b>, <b>SystemX86</b>, <b>SystemX64</b>: <c>@"C:\WINDOWS\system32"</c>
+	/// <br/><b>ProgramFiles</b>, <b>ProgramFilesX86</b>, <b>ProgramFilesX64</b>: <c>@"C:\Program Files"</c>
+	/// <br/><b>ProgramFilesCommon</b>, <b>ProgramFilesCommonX86</b>, <b>ProgramFilesCommonX64</b>: <c>@"C:\Program Files\Common Files"</c>
 	/// </td>
 	/// </tr>
 	/// <tr>
 	/// <td>64-bit Windows, 64-bit process</td>
 	/// <td>
-	/// System, SystemX64: <c>@"C:\WINDOWS\system32"</c>
-	/// <br/>SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
-	/// <br/>ProgramFiles, ProgramFilesX64: <c>@"C:\Program Files"</c>
-	/// <br/>ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
-	/// <br/>ProgramFilesCommon, ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
-	/// <br/>ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
+	/// <b>System</b>, <b>SystemX64</b>: <c>@"C:\WINDOWS\system32"</c>
+	/// <br/><b>SystemX86</b>: <c>@"C:\WINDOWS\SysWOW64"</c>
+	/// <br/><b>ProgramFiles</b>, <b>ProgramFilesX64</b>: <c>@"C:\Program Files"</c>
+	/// <br/><b>ProgramFilesX86</b>: <c>@"C:\Program Files (x86)"</c>
+	/// <br/><b>ProgramFilesCommon</b>, <b>ProgramFilesCommonX64</b>: <c>@"C:\Program Files\Common Files"</c>
+	/// <br/><b>ProgramFilesCommonX86</b>: <c>@"C:\Program Files (x86)\Common Files"</c>
 	/// </td>
 	/// </tr>
 	/// <tr>
 	/// <td>64-bit Windows, 32-bit process</td>
 	/// <td>
-	/// System: <c>@"C:\WINDOWS\system32"</c>. However the OS in most cases redirects this path to <c>@"C:\WINDOWS\SysWOW64"</c>.
-	/// <br/>SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
-	/// <br/>SystemX64: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path, not in Explorer.
-	/// <br/>ProgramFiles, ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
-	/// <br/>ProgramFilesX64: <c>@"C:\Program Files"</c>
-	/// <br/>ProgramFilesCommon, ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
-	/// <br/>ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
+	/// <b>System</b>: <c>@"C:\WINDOWS\system32"</c>. However the OS in most cases redirects this path to <c>@"C:\WINDOWS\SysWOW64"</c>.
+	/// <br/><b>SystemX86</b>: <c>@"C:\WINDOWS\SysWOW64"</c>
+	/// <br/><b>SystemX64</b>: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path, not in Explorer.
+	/// <br/><b>ProgramFiles</b>, <b>ProgramFilesX86</b>: <c>@"C:\Program Files (x86)"</c>
+	/// <br/><b>ProgramFilesX64</b>: <c>@"C:\Program Files"</c>
+	/// <br/><b>ProgramFilesCommon</b>, <b>ProgramFilesCommonX86</b>: <c>@"C:\Program Files (x86)\Common Files"</c>
+	/// <br/><b>ProgramFilesCommonX64</b>: <c>@"C:\Program Files\Common Files"</c>
 	/// </td>
 	/// </tr>
 	/// </table>
@@ -308,10 +308,10 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - miniProgram and exeProgram - <c>folders.Temp + @"LibreAutomate\_script"</c>. Or <c>folders.Temp + "Au"</c>, if exists (for backward compatibility).
-		/// - editorExtension - <c>folders.Temp + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\temp\_script"</c>. Note: exeProgram launched not from editor isn't portable.
-		/// - Portable editorExtension - <c>folders.ThisApp + @"data\temp"</c>. Cannot be changed.
+		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.Temp + @"LibreAutomate\_script"</c>. Or <c>folders.Temp + "Au"</c>, if exists (for backward compatibility).
+		/// - <b>editorExtension</b> - <c>folders.Temp + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\temp\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
+		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\temp"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
@@ -328,10 +328,10 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/>) and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - miniProgram and exeProgram - <c>folders.Documents + @"LibreAutomate\_script"</c>. Or <c>folders.Documents + "Au"</c>, if exists (for backward compatibility).
-		/// - editorExtension - <c>folders.Documents + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\doc\_script"</c>. Note: exeProgram launched not from editor isn't portable.
-		/// - Portable editorExtension - <c>folders.ThisApp + @"data\doc"</c>. Cannot be changed.
+		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.Documents + @"LibreAutomate\_script"</c>. Or <c>folders.Documents + "Au"</c>, if exists (for backward compatibility).
+		/// - <b>editorExtension</b> - <c>folders.Documents + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\doc\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
+		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\doc"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
@@ -348,10 +348,10 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - miniProgram and exeProgram - <c>folders.LocalAppData + @"LibreAutomate\_script"</c>. Or <c>folders.LocalAppData + "Au"</c>, if exists (for backward compatibility).
-		/// - editorExtension - <c>folders.LocalAppData + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appLocal\_script"</c>. Note: exeProgram launched not from editor isn't portable.
-		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appLocal"</c>. Cannot be changed.
+		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.LocalAppData + @"LibreAutomate\_script"</c>. Or <c>folders.LocalAppData + "Au"</c>, if exists (for backward compatibility).
+		/// - <b>editorExtension</b> - <c>folders.LocalAppData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\appLocal\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
+		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\appLocal"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
@@ -368,10 +368,10 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - miniProgram and exeProgram - <c>folders.RoamingAppData + @"LibreAutomate\_script"</c>. Or <c>folders.RoamingAppData + "Au"</c>, if exists (for backward compatibility).
-		/// - editorExtension - <c>folders.RoamingAppData + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appRoaming\_script"</c>. Note: exeProgram launched not from editor isn't portable.
-		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appRoaming"</c>. Cannot be changed.
+		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.RoamingAppData + @"LibreAutomate\_script"</c>. Or <c>folders.RoamingAppData + "Au"</c>, if exists (for backward compatibility).
+		/// - <b>editorExtension</b> - <c>folders.RoamingAppData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\appRoaming\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
+		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\appRoaming"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
@@ -394,14 +394,14 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - miniProgram and exeProgram - <c>folders.ProgramData + @"LibreAutomate\_script"</c>. Or <c>folders.ProgramData + "Au"</c>, if exists (for backward compatibility).
-		/// - editorExtension - <c>folders.ProgramData + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable miniProgram and exeProgram - <c>folders.ThisApp + @"data\appCommon\_script"</c>. Note: exeProgram launched not from editor isn't portable.
-		/// - Portable editorExtension - <c>folders.ThisApp + @"data\appCommon"</c>. Cannot be changed.
+		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ProgramData + @"LibreAutomate\_script"</c>. Or <c>folders.ProgramData + "Au"</c>, if exists (for backward compatibility).
+		/// - <b>editorExtension</b> - <c>folders.ProgramData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\appCommon\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
+		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\appCommon"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// This function does not auto-create the folder; usually it is created when installing the application; the script editor does not use and does not install it.
-		/// Note: the ProgramData folder has special security permissions. Programs running not as administrator usually cannot write there, unless your installer changed folder security permissions.
+		/// Note: the <b>ProgramData</b> folder has special security permissions. Programs running not as administrator usually cannot write there, unless your installer changed folder security permissions.
 		/// </remarks>
 		public static FolderPath ThisAppDataCommon {
 			get => new(__thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, _DefThisApp(ProgramData, "appCommon"), create: false));
@@ -605,7 +605,7 @@ namespace Au {
 		/// Gets removable/external/USB drive name (like <c>@"F:\"</c>) by its volume label.
 		/// </summary>
 		/// <returns><c>null</c> if unavailable.</returns>
-		/// <param name="volumeLabel">Volume label. You can see it in drive Properties dialog; it is not the drive name that is displayed in File Explorer.</param>
+		/// <param name="volumeLabel">Volume label. You can see it in drive <b>Properties</b> dialog; it is not the drive name that is displayed in File Explorer.</param>
 		public static FolderPath removableDrive(string volumeLabel) {
 			foreach (DriveInfo di in DriveInfo.GetDrives()) {
 				if (di.DriveType == DriveType.Removable) {
@@ -776,7 +776,7 @@ namespace Au {
 		/// These names can be used with <see cref="getFolder"/>.
 		/// </summary>
 		/// <remarks>
-		/// Paths of virtual and unavailable folders are returnsed as <![CDATA["<virtual>"]]> and <![CDATA["<unavailable>"]]>.
+		/// Paths of virtual and unavailable folders are returned as <c><![CDATA["<virtual>"]]></c> and <c><![CDATA["<unavailable>"]]></c>.
 		/// </remarks>
 		public static unsafe Dictionary<string, string> getKnownFolders() {
 			var dict = new Dictionary<string, string>();

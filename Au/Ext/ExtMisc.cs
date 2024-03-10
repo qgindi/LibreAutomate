@@ -116,7 +116,7 @@ public static unsafe partial class ExtMisc {
 	
 	//rare
 	///// <summary>
-	///// Returns <c>true</c> if t.Width &lt;= 0 || t.Height &lt;= 0.
+	///// Returns <c>true</c> if <c>t.Width &lt;= 0 || t.Height &lt;= 0</c>.
 	///// Note: <b>Rectangle.IsEmpty</b> returns <c>true</c> only when all fields are 0.
 	///// </summary>
 	//[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -164,7 +164,7 @@ public static unsafe partial class ExtMisc {
 	
 	//rejected: too simple. We have print.it(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 	///// <summary>
-	///// Converts <b>int</b> to hexadecimal string like "0x3A".
+	///// Converts <b>int</b> to hexadecimal string like <c>"0x3A"</c>.
 	///// </summary>
 	//public static string ToHex(this int t)
 	//{
@@ -706,7 +706,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Calls b.LockBits in ctor and b.UnlockBits in Dispose.
+	/// Calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <b>Dispose</b>.
 	/// </summary>
 	internal struct BitmapData_ : IDisposable {
 		Bitmap _b;
@@ -736,16 +736,16 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Creates a BitmapData_ object that calls b.LockBits in ctor and b.UnlockBits in Dispose.
+	/// Creates a <b>BitmapData_</b> object that calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <b>Dispose</b>.
 	/// </summary>
-	/// <param name="pf">If <c>null</c>, uses b.PixelFormat.</param>
+	/// <param name="pf">If <c>null</c>, uses <c>b.PixelFormat</c>.</param>
 	internal static BitmapData_ Data(this Bitmap b, ImageLockMode mode, PixelFormat? pf = null)
 		=> new BitmapData_(b, mode, pf);
 	
 	/// <summary>
-	/// Creates a BitmapData_ object that calls b.LockBits in ctor and b.UnlockBits in Dispose.
+	/// Creates a <b>BitmapData_</b> object that calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <b>Dispose</b>.
 	/// </summary>
-	/// <param name="pf">If <c>null</c>, uses b.PixelFormat.</param>
+	/// <param name="pf">If <c>null</c>, uses <c>b.PixelFormat</c>.</param>
 	internal static BitmapData_ Data(this Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null)
 		=> new BitmapData_(b, r, mode, pf);
 	

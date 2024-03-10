@@ -9,7 +9,7 @@ static unsafe class Not_ {
 	
 	/// <summary>
 	/// Same as <b>ArgumentNullException.ThrowIfNull</b>.
-	/// It's pitty, they removed operator !! from C# 11.
+	/// It's pity, they removed operator <b>!!</b> from C# 11.
 	/// </summary>
 	internal static void Null(object o,
 		[CallerArgumentExpression("o")] string paramName = null) {
@@ -52,9 +52,9 @@ static unsafe class Not_ {
 
 static class WpfUtil_ {
 	/// <summary>
-	/// Parses icon string like "[*&lt;library&gt;]*pack.name[ etc]".
+	/// Parses icon string like <c>"[*&lt;library&gt;]*pack.name[ etc]"</c>.
 	/// </summary>
-	/// <returns><c>true</c> if starts with "*pack.name" (possibly with library).</returns>
+	/// <returns><c>true</c> if starts with <c>"*pack.name"</c> (possibly with library).</returns>
 	public static bool DetectIconString(RStr s, out (int pack, int endPack, int name, int endName) r) {
 		r = default;
 		if (s.Length < 8 || s[0] != '*') return false;
@@ -72,9 +72,9 @@ static class WpfUtil_ {
 	}
 	
 	/// <summary>
-	/// Parses icon string like "[*&lt;library&gt;]*pack.name[ color][ @size]".
+	/// Parses icon string like <c>"[*&lt;library&gt;]*pack.name[ color][ @size]"</c>.
 	/// </summary>
-	/// <returns><c>true</c> if starts with "*pack.name" (possibly with library).</returns>
+	/// <returns><c>true</c> if starts with <c>"*pack.name"</c> (possibly with library).</returns>
 	public static bool ParseIconString(string s, out (string pack, string name, string color, int size) r) {
 		r = default;
 		if (!DetectIconString(s, out var d)) return false;
@@ -92,8 +92,8 @@ static class WpfUtil_ {
 	}
 	
 	/// <summary>
-	/// Eg "*pack.name color" -> "*pack.name".
-	/// Supports library prefix, @size, no-color.
+	/// Eg <c>"*pack.name color"</c> -> <c>"*pack.name"</c>.
+	/// Supports library prefix, <c>@size</c>, no-color.
 	/// </summary>
 	public static string RemoveColorFromIconString(string s) {
 		int i = 0;
@@ -102,11 +102,11 @@ static class WpfUtil_ {
 	}
 	
 	/// <summary>
-	/// From icon string like "*name color|color2" or "color|color2" removes "|color2" or "color|" depending on high contrast.
-	/// Does nothing if s does not contain '|'.
+	/// From icon string like <c>"*name color|color2"</c> or <c>"color|color2"</c> removes <c>"|color2"</c> or <c>"color|"</c> depending on high contrast.
+	/// Does nothing if <i>s</i> does not contain <c>'|'</c>.
 	/// </summary>
 	/// <param name="s"></param>
-	/// <param name="onlyColor"><c>true</c> - s is like "color|color2". <c>false</c> - s is like "*name color|color2".</param>
+	/// <param name="onlyColor"><c>true</c> - <i>s</i> is like <c>"color|color2"</c>. <c>false</c> - <i>s</i> is like <c>"*name color|color2"</c>.</param>
 	public static string NormalizeIconStringColor(string s, bool onlyColor) {
 		int i = s.IndexOf('|');
 		if (i >= 0) {
@@ -137,7 +137,7 @@ static class WpfUtil_ {
 	static regexp s_rxColor;
 	
 	/// <summary>
-	/// <c>true</c> if SystemParameters.HighContrast and ColorInt.GetPerceivedBrightness(SystemColors.ControlColor)&lt;=0.5.
+	/// <c>true</c> if <b>SystemParameters.HighContrast</b> and <c>ColorInt.GetPerceivedBrightness(SystemColors.ControlColor)&lt;=0.5</c>.
 	/// </summary>
 	public static bool IsHighContrastDark {
 		get {
@@ -162,7 +162,7 @@ public struct TestDoc
 	/// </summary>
 	/// <param name="i">Iiii.</param>
 	/// <returns>Retto.</returns>
-	/// <exception cref="ArgumentException">i is invalid.</exception>
+	/// <exception cref="ArgumentException"><i>i</i> is invalid.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>Remmo.</remarks>
 	/// <example>

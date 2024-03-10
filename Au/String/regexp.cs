@@ -20,7 +20,7 @@ namespace Au;
 /// - <i>groups</i> - regular expression parts enclosed in <c>()</c>. Except non-capturing parts, like <c>(?:...)</c> and <c>(?options)</c>. Also known as <i>capturing group</i>, <i>capturing subpattern</i>. Often term <i>group</i> also is used for group matches.
 /// - <i>group match</i> - the part (substring) of the subject string that matches the group. Also known as <i>captured substring</i>.
 /// 
-/// This library uses an unmanaged code dll AuCpp.dll that contains PCRE code. This class is a managed wrapper for it. The main PCRE API functions used by this class are <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2_compile and pcre2_match</see>. The <b>regexp</b> constructor calls <b>pcre2_compile</b> and stores the compiled code in the variable. Other <b>regexp</b> functions call <b>pcre2_match</b>. Compiling to native code (JIT) is not supported.
+/// This library uses an unmanaged code dll <c>AuCpp.dll</c> that contains PCRE code. This class is a managed wrapper for it. The main PCRE API functions used by this class are <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2_compile and pcre2_match</see>. The <b>regexp</b> constructor calls <b>pcre2_compile</b> and stores the compiled code in the variable. Other <b>regexp</b> functions call <b>pcre2_match</b>. Compiling to native code (JIT) is not supported.
 /// 
 /// A <b>regexp</b> variable can be used by multiple threads simultaneously.
 /// 
@@ -298,7 +298,7 @@ public unsafe class regexp
 	/// </param>
 	/// <param name="range">
 	/// Start and end offsets in the subject string. If <c>null</c> (default), uses whole string.
-	/// Examples: <c>i..j</c> (from i to j), <c>i..</c> (from i to the end), <c>..j</c> (from 0 to j).
+	/// Examples: <c>i..j</c> (from <c>i</c> to <c>j</c>), <c>i..</c> (from <c>i </c>to the end), <c>..j</c> (from 0 to <c>j</c>).
 	/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c> or flag <b>RXFlags.ANCHORED</b>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
 	/// The subject part after the end index is always ignored.
 	/// </param>
@@ -511,7 +511,7 @@ public unsafe class regexp
 	/// <summary>
 	/// Finds all match instances of the regular expression.
 	/// </summary>
-	/// <returns>A lazy <b>IEnumerable&lt;RXMatch&gt;</b> that can be used with foreach.</returns>
+	/// <returns>A lazy <b>IEnumerable&lt;RXMatch&gt;</b> that can be used with <c>foreach</c>.</returns>
 	/// <param name="s">Subject string. Cannot be <c>null</c>.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
@@ -536,7 +536,7 @@ public unsafe class regexp
 		while (e.Next()) yield return e.Match;
 	}
 
-	/// <returns>A lazy <b>IEnumerable&lt;string&gt;</b> that can be used with foreach.</returns>
+	/// <returns>A lazy <b>IEnumerable&lt;string&gt;</b> that can be used with <c>foreach</c>.</returns>
 	/// <param name="group">
 	/// Group number (1-based index) of results. If 0 - whole match.
 	/// See also <see cref="GetGroupNumberOf"/>.
@@ -561,7 +561,7 @@ public unsafe class regexp
 		while (e.Next()) yield return e.GroupS;
 	}
 
-	/// <returns>A lazy <b>IEnumerable&lt;RXGroup&gt;</b> that can be used with foreach.</returns>
+	/// <returns>A lazy <b>IEnumerable&lt;RXGroup&gt;</b> that can be used with <c>foreach</c>.</returns>
 	/// <example>
 	/// <code><![CDATA[
 	/// var s = "one two three";
@@ -894,8 +894,8 @@ public unsafe class regexp
 	/// Useful when there is no way to use <b>Replace</b> overloads with a <i>replFunc</i> parameter. For example in Find/Replace UI.
 	/// </remarks>
 	/// <example>
-	/// Create new script in editor and add this code. In Properties set role editorExtension. Run.
-	/// Then in the Find panel in the replacement field you can use <c>${+Lower}</c>, <c>${+Lower(1)}</c>, <c>${+Lower(2)}</c> etc.
+	/// Create new script in editor and add this code. In <b>Properties</b> set role <b>editorExtension</b>. Run.
+	/// Then in the <b>Find</b> panel in the replacement field you can use <c>${+Lower}</c>, <c>${+Lower(1)}</c>, <c>${+Lower(2)}</c> etc.
 	/// <code><![CDATA[
 	/// regexp.addReplaceFunc("Lower", (m, g, v) => m[g].Value.Lower()); //make lowercase
 	/// ]]></code>
@@ -1021,10 +1021,10 @@ public unsafe class regexp
 	/// Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if <i>always</i> == <c>true</c>.
 	/// </summary>
 	/// <param name="s">Can be <c>null</c>.</param>
-	/// <param name="always">Enclose always, even if the string does not contain metacharacters. Should be <c>true</c> if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and # is a special character too.</param>
+	/// <param name="always">Enclose always, even if the string does not contain metacharacters. Should be <c>true</c> if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and <c>#</c> is a special character too.</param>
 	/// <remarks>
 	/// Such enclosed substring in a regular expression is interpreted as a literal string.
-	/// This function also escapes \E, so that it does not end the literal string.
+	/// This function also escapes <c>\E</c>, so that it does not end the literal string.
 	/// </remarks>
 	public static string escapeQE(string s, bool always = false) {
 		if (s == null) return s;

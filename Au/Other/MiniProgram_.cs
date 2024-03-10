@@ -51,7 +51,7 @@ using System.Runtime.Loader;
 namespace Au.More;
 
 /// <summary>
-/// Prepares to quickly start and execute a script with role miniProgram in this preloaded task process. Or starts/executes in this non-preloaded process.
+/// Prepares to quickly start and execute a script with role <b>miniProgram</b> in this preloaded task process. Or starts/executes in this non-preloaded process.
 /// </summary>
 static unsafe class MiniProgram_ {
 	struct _TaskInit {
@@ -220,9 +220,9 @@ static unsafe class MiniProgram_ {
 	}
 
 	/// <summary>
-	/// Used by exeProgram.
+	/// Used by <b>exeProgram</b>.
 	/// </summary>
-	/// <param name="rootDir">Directory that may contain subdir "runtimes".</param>
+	/// <param name="rootDir">Directory that may contain subdir <c>"runtimes"</c>.</param>
 	internal static void ResolveNugetRuntimes_(string rootDir) {
 		var runtimesDir = pathname.combine(rootDir, "runtimes");
 		if (!filesystem.exists(runtimesDir).Directory) return;
@@ -294,22 +294,22 @@ static unsafe class MiniProgram_ {
 
 	[Flags]
 	public enum MPFlags {
-		/// <summary>Has [RefPaths] attribute. It is when using meta r or nuget.</summary>
+		/// <summary>Has <c>[RefPaths]</c> attribute. It is when using meta <b>r</b> or <b>nuget</b>.</summary>
 		RefPaths = 1,
 
-		/// <summary>Main() with [MTAThread].</summary>
+		/// <summary><b>Main</b> with <c>[MTAThread]</c>.</summary>
 		MTA = 2,
 
-		/// <summary>Has meta console true.</summary>
+		/// <summary>Has meta <b>console</b> true.</summary>
 		Console = 4,
 
-		/// <summary>Uses System.Console assembly.</summary>
+		/// <summary>Uses <c>System.Console</c> assembly.</summary>
 		RedirectConsole = 8,
 
-		/// <summary>Has [NativePaths] attribute. It is when using nuget packages with native dlls.</summary>
+		/// <summary>Has <c>[NativePaths]</c> attribute. It is when using NuGet packages with native dlls.</summary>
 		NativePaths = 16,
 
-		/// <summary>Started from editor with the Run button or menu command. Used for <see cref="script.testing"/>.</summary>
+		/// <summary>Started from editor with the <b>Run</b> button or menu command. Used for <see cref="script.testing"/>.</summary>
 		FromEditor = 32,
 
 		/// <summary>Started from portable editor.</summary>

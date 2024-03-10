@@ -192,7 +192,9 @@ static class ModifyCode {
 		
 		var span = TextSpan.FromBounds(from, to);
 		var services = cd.document.Project.Solution.Services;
-		var a1 = Formatter.GetFormattedTextChanges(root, span, services, FormattingOptions);
+		IList<TextChange> a1;
+		try { a1 = Formatter.GetFormattedTextChanges(root, span, services, FormattingOptions); }
+		catch (Exception e1) { print.it("Failed to format code", e1); return null; } //https://www.libreautomate.com/forum/showthread.php?tid=7622
 		//perf.next();
 		
 		string code2 = code;

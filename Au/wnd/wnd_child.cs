@@ -11,7 +11,7 @@ namespace Au {
 		/// 
 		/// By default to get control names this function uses <see cref="Name"/>.
 		/// Can start with these prefix strings:
-		/// <br/>• <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with Alt, insert <c>'&amp;'</c> before it.
+		/// <br/>• <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with <c>Alt</c>, insert <c>'&amp;'</c> before it.
 		/// <br/>• <c>"***elmName "</c> - use <see cref="NameElm"/>. Slower.
 		/// <br/>• <c>"***wfName "</c> - use .NET Forms control name (see <see cref="WinformsControlNames"/>). Slower and can fail because of [](xref:uac).
 		/// </param>
@@ -38,7 +38,7 @@ namespace Au {
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window".
+		/// To create code for this function, use tool <b>Find window</b>.
 		/// </remarks>
 		public wnd Child(
 			[ParamString(PSFormat.Wildex)] string name = null,
@@ -153,7 +153,7 @@ namespace Au {
 		///// <param name="flags">This function supports flags <b>DirectChild</b> and <b>HiddenToo</b>. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		///// <remarks>
-		///// To create code for this function, use dialog "Find window".
+		///// To create code for this function, use tool <b>Find window</b>.
 		///// 
 		///// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		///// </remarks>
@@ -210,7 +210,7 @@ namespace Au {
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
 		/// <c>null</c> means "can be any". <c>""</c> means "no name".
-		/// Must include the invisible <c>'&amp;'</c> characters that are used to underline keyboard shortcuts with the Alt key.
+		/// Must include the invisible <c>'&amp;'</c> characters that are used to underline keyboard shortcuts with the <c>Alt</c> key.
 		/// </param>
 		/// <param name="cn">
 		/// Class name.
@@ -287,7 +287,7 @@ namespace Au {
 			//rejected: unreliable.
 			///// <summary>
 			///// Gets list of direct child controls.
-			///// Faster than API EnumChildWindows.
+			///// Faster than API <b>EnumChildWindows</b>.
 			///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
 			///// </summary>
 			//public wnd[] DirectChildrenFastUnsafe(string cn = null)
@@ -362,9 +362,9 @@ namespace Au {
 		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>itemId</i>.</exception>
 		/// <remarks>
-		/// Works only with classic menus. The drop-down menu window class name must be "#32768". Works with menu items in window menu bar, system menu and some context menus.
+		/// Works only with classic menus. The drop-down menu window class name must be <c>"#32768"</c>. Works with menu items in window menu bar, system menu and some context menus.
 		/// Does not use the menu itself. Just posts <b>WM_COMMAND</b> or <b>WM_SYSCOMMAND</b> message. Even if a menu item with this id does not exist.
-		/// This variable is the window that contains the menu bar or system menu. Or the drop-down menu window (class "#32768") that contains the menu item.
+		/// This variable is the window that contains the menu bar or system menu. Or the drop-down menu window (class <c>"#32768"</c>) that contains the menu item.
 		/// </remarks>
 		public void MenuClick(int itemId, bool systemMenu = false) {
 			if ((uint)(itemId - 1) >= 0xffff) throw new ArgumentOutOfRangeException();
@@ -427,7 +427,7 @@ namespace Au.Types {
 	public struct WButton
 	{
 		/// <summary>
-		/// Button handle as wnd.
+		/// Button handle as <b>wnd</b>.
 		/// </summary>
 		public wnd W { get; }
 
@@ -497,7 +497,7 @@ namespace Au.Types {
 		/// Sets checkbox state. Does not use the mouse.
 		/// </summary>
 		/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <msdn>BM_SETCHECK</msdn> message and also <b>BN_CLICKED</b> notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>

@@ -51,6 +51,7 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<_>text</_>` or `<\a>text</\a>` | Literal text. Tags in it are ignored.<br/>Here `\a` is escape sequence for character code 7.
 | `<code>var s="example";</code>` | Colored C# code. Tags in it are ignored.
 | `<fold>text</fold>` | Folded (hidden) lines. Adds a link to unfold (show).
+| `<fold link text>text</fold>` | Folded lines with custom link text.
 | `<nonl>` | No new line. Next time will write in the same line.<br/>Must be at the end of string.
 
 ### Images

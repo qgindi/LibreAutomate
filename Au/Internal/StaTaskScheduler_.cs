@@ -19,7 +19,7 @@ namespace Au.More
 		/// <summary>The STA threads used by the scheduler.</summary>
 		private readonly List<Thread> _threads;
 
-		/// <summary>Initializes a new instance of the StaTaskScheduler class with the specified concurrency level.</summary>
+		/// <summary>Initializes a new instance of the <b>StaTaskScheduler</b> class with the specified concurrency level.</summary>
 		/// <param name="numberOfThreads">The number of threads that should be created and used by this scheduler.</param>
 		public StaTaskScheduler_(int numberOfThreads) {
 			// Validate arguments

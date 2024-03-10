@@ -183,7 +183,6 @@ namespace Au.More
 		///// <summary>
 		///// Clears <i>oldFlags</i> bits specified in <i>mask</i> and adds <i>newFlags</i> bits specified in <i>mask</i>.
 		///// </summary>
-		///// <returns><c>(oldFlags&~mask) | (newFlags&mask);</c></returns>
 		//int SetFlagsMasked(int oldFlags, int newFlags, int mask) => (oldFlags&~mask) | (newFlags&mask);
 
 		/// <summary>

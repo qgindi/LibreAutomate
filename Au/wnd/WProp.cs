@@ -23,7 +23,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="atom">Property name atom in the global atom table.</param>
 		/// <remarks>
-		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
+		/// This overload uses atom instead of string. It's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
 		/// </remarks>
 		public nint this[ushort atom] => Api.GetProp(_w, atom);
 
@@ -49,7 +49,7 @@ namespace Au.Types
 		/// <param name="atom">Property name atom in the global atom table.</param>
 		/// <param name="value">Property value.</param>
 		/// <remarks>
-		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
+		/// This overload uses atom instead of string. It's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
 		/// </remarks>
 		public bool Set(ushort atom, nint value) {
 			return Api.SetProp(_w, atom, value);

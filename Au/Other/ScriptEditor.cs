@@ -8,7 +8,7 @@ namespace Au.More;
 /// </remarks>
 public static class ScriptEditor {
 	/// <summary>
-	/// Finds editor's message-only window used with WM_COPYDATA etc.
+	/// Finds editor's message-only window used with <b>WM_COPYDATA</b> etc.
 	/// Uses <see cref="script.s_wndEditorMsg"/> or <see cref="wnd.Cached_"/>.
 	/// </summary>
 	internal static wnd WndMsg_ {
@@ -62,7 +62,7 @@ public static class ScriptEditor {
 	/// <param name="dontWait">Don't wait until the command finishes executing. For example, if it shows a modal dialog, don't wait until it is closed.</param>
 	/// <param name="activateWindow">Activate the main window. Default <c>true</c>. Some commands may not work correctly if the window isn't active.</param>
 	/// <remarks>
-	/// Shows the main window, regardless of <i>activateWindow</i>. Waits while it is disabled or not finished loading, unless script role is editorExtension and it runs in the editor's main thread (then not invoke the command).
+	/// Shows the main window, regardless of <i>activateWindow</i>. Waits while it is disabled or not finished loading, unless script role is <b>editorExtension</b> and it runs in the editor's main thread (then not invoke the command).
 	/// Does not invoke the command if the menu item is disabled or if it's a submenu-item.
 	/// </remarks>
 	public static void InvokeCommand(string command, bool? check = null, bool dontWait = false, bool activateWindow = true) {
@@ -84,7 +84,7 @@ public static class ScriptEditor {
 	/// </summary>
 	/// <param name="command">Command name. If <c>""</c> or invalid, prints all names.</param>
 	/// <remarks>
-	/// Shows the main window. Waits while it is disabled or not finished loading, unless script role is editorExtension and it runs in the editor's main thread (then returns <b>Disabled</b>).
+	/// Shows the main window. Waits while it is disabled or not finished loading, unless script role is <b>editorExtension</b> and it runs in the editor's main thread (then returns <b>Disabled</b>).
 	/// </remarks>
 	public static ECommandState GetCommandState(string command) {
 		var w = WndMsg_; if (w.Is0) return 0;
@@ -118,7 +118,7 @@ public static class ScriptEditor {
 	/// <param name="file">Script file/folder path etc, or icon name. See <see cref="EGetIcon"/>, <see cref="ImageUtil.LoadWpfImageElement"/>.</param>
 	/// <param name="what">The format of input and output strings.</param>
 	/// <remarks>
-	/// If <i>what</i> is <see cref="EGetIcon.IconNameToXaml"/>, this function tries to get icon XAML from assembly resources (passes <i>file</i> to <see cref="ResourceUtil.GetString"/>, with color removed); if not found - from editor. By default the LibreAutomate compiler finds literal icon-like strings in code and adds icon XAML to assembly resources; see Properties -> Resource -> Options.
+	/// If <i>what</i> is <see cref="EGetIcon.IconNameToXaml"/>, this function tries to get icon XAML from assembly resources (passes <i>file</i> to <see cref="ResourceUtil.GetString"/>, with color removed); if not found - from editor. By default the LibreAutomate compiler finds literal icon-like strings in code and adds icon XAML to assembly resources; see <b>Properties > Resource > Options</b>.
 	/// </remarks>
 	public static string GetIcon(string file, EGetIcon what) => GetIcon_(file, what, false);
 	
@@ -144,7 +144,7 @@ public static class ScriptEditor {
 	}
 	
 	/// <summary>
-	/// Editor sets this. Library uses it to avoid sendmessage when role editorExtension.
+	/// Editor sets this. Library uses it to avoid sendmessage when role <b>editorExtension</b>.
 	/// </summary>
 	internal static Func<string, EGetIcon, string> IconNameToXaml_;
 	

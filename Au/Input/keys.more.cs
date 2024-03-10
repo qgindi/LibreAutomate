@@ -63,7 +63,7 @@ partial class keys
 		/// <returns><c>false</c> if the string is invalid.</returns>
 		/// <remarks>
 		/// Key names are like with <see cref="keys.send"/>.
-		/// Must be single non-modifier key, preceded by zero or more of modifier keys Ctrl, Shift, Alt, Win, all joined with +.
+		/// Must be single non-modifier key, preceded by zero or more of modifier keys <c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>, all joined with <c>+</c>.
 		/// Valid hotkey examples: <c>"A"</c>, <c>"a"</c>, <c>"7"</c>, <c>"F12"</c>, <c>"."</c>, <c>"End"</c>, <c>"Ctrl+D"</c>, <c>"Ctrl+Alt+Shift+Win+Left"</c>, <c>" Ctrl + U "</c>.
 		/// Invalid hotkey examples: <c>null</c>, <c>""</c>, <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
 		/// </remarks>
@@ -135,7 +135,7 @@ partial class keys
 		/// <param name="mod"></param>
 		/// <param name="modAny"></param>
 		/// <param name="key"></param>
-		/// <param name="noKey">Modifiers only. If <c>true</c>, s must be "modifiers" or <c>null</c>/<c>""</c>. If <c>false</c>, <i>s</i> must be "key" or "modifiers+key".</param>
+		/// <param name="noKey">Modifiers only. If <c>true</c>, <i>s</i> must be <c>"modifiers"</c> or <c>null</c>/<c>""</c>. If <c>false</c>, <i>s</i> must be <c>"key"</c> or <c>"modifiers+key"</c>.</param>
 		public static bool parseTriggerString(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey) {
 			key = 0; mod = 0; modAny = 0;
 			if (s.NE()) return noKey;
@@ -496,7 +496,7 @@ print.it(b.ToString());
 		/// Converts modifier key flags from <b>KMod</b> to winforms <b>Keys</b>.
 		/// </summary>
 		/// <remarks>
-		/// For Win returns flag (Keys)0x80000.
+		/// For <c>Win</c> returns flag <c>(Keys)0x80000</c>.
 		/// </remarks>
 		public static System.Windows.Forms.Keys KModToWinforms(KMod mod) => (System.Windows.Forms.Keys)((int)mod << 16);
 
@@ -504,7 +504,7 @@ print.it(b.ToString());
 		/// Converts modifier key flags from winforms <b>Keys</b> to <b>KMod</b>.
 		/// </summary>
 		/// <remarks>
-		/// For Win can be used flag (Keys)0x80000.
+		/// For <c>Win</c> can be used flag <c>(Keys)0x80000</c>.
 		/// </remarks>
 		public static KMod KModFromWinforms(System.Windows.Forms.Keys mod) => (KMod)((int)mod >> 16);
 

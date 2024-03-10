@@ -173,7 +173,7 @@ public static partial class print {
 	/// </summary>
 	/// <remarks>
 	/// If a value is <c>null</c>, writes <c>"null"</c>.
-	/// If a value is unsigned integer (uint, <b>ulong</b>, <b>ushort</b>, <b>byte</b>, <b>nuint</b>), writes in hexadecimal format with prefix <c>"0x"</c>.
+	/// If a value is unsigned integer (<b>uint</b>, <b>ulong</b>, <b>ushort</b>, <b>byte</b>, <b>nuint</b>), writes in hexadecimal format with prefix <c>"0x"</c>.
 	/// </remarks>
 	public static void it(object value1, object value2, params object[] more) {
 		it(util.toList(", ", value1, value2, more));
@@ -287,7 +287,7 @@ public static partial class print {
 	/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="it"/>.
 	/// </summary>
 	/// <remarks>
-	/// The default value is <c>true</c> in non-console scripts with role miniProgram (default) that use <see cref="Console"/> functions.
+	/// The default value is <c>true</c> in non-console scripts with role <b>miniProgram</b> (default) that use <see cref="Console"/> functions.
 	/// 
 	/// If <b>Console.Write</b> text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <b>Console.WriteLine</b>.
 	/// 
@@ -411,8 +411,8 @@ public static partial class print {
 		string _name;
 		
 		/// <summary>
-		/// Opens LogFile file handle for writing.
-		/// Uses CREATE_ALWAYS, GENERIC_WRITE, FILE_SHARE_READ.
+		/// Opens <b>LogFile</b> file handle for writing.
+		/// Uses <b>CREATE_ALWAYS</b>, <b>GENERIC_WRITE</b>, <b>FILE_SHARE_READ</b>.
 		/// </summary>
 		public static _LogFile Open() {
 			var path = logFile;
@@ -475,10 +475,10 @@ public static partial class print {
 	}
 	
 	/// <summary>
-	/// Calls Api.CreateFile to open file or mailslot.
+	/// Calls <b>Api.CreateFile</b> to open file or mailslot.
 	/// </summary>
 	/// <param name="name">File path or mailslot name.</param>
-	/// <param name="openExisting">Use OPEN_EXISTING. If <c>false</c>, uses CREATE_ALWAYS.</param>
+	/// <param name="openExisting">Use <b>OPEN_EXISTING</b>. If <c>false</c>, uses <b>CREATE_ALWAYS</b>.</param>
 	internal static Handle_ CreateFile_(string name, bool openExisting) {
 		return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
 		
@@ -506,7 +506,7 @@ public static partial class print {
 		public static void write(object o) => _WriteToQM2(o?.ToString() ?? "");
 		
 		/// <summary>
-		/// Writes multiple arguments of any type to the output, using separator ", ".
+		/// Writes multiple arguments of any type to the output, using separator <c>", "</c>.
 		/// </summary>
 		/// <remarks>
 		/// If a value is <c>null</c>, writes <c>"null"</c>.

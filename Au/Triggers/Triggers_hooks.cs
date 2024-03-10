@@ -116,7 +116,7 @@ class HooksThread : IDisposable {
 	}
 	
 	/// <summary>
-	/// Sends key/mouse event data (copied to _keyData etc) to the main thread.
+	/// Sends key/mouse event data (copied to <b>_keyData</b> etc) to the main thread.
 	/// Returns <c>true</c> to eat (block, discard) the event.
 	/// On 1100 ms timeout returns <c>false</c>.
 	/// </summary>
@@ -142,7 +142,7 @@ class HooksThread : IDisposable {
 	MouseTriggers.EdgeMoveDetector_.Result _emData;
 	
 	/// <summary>
-	/// Called by the main thread to resume the hooks thread (_Send) and pass the return value (eat).
+	/// Called by the main thread to resume the hooks thread (<b>_Send</b>) and pass the return value (eat).
 	/// Returns <c>false</c> on timeout.
 	/// </summary>
 	public bool Return(int messageId, bool eat) {
@@ -155,7 +155,7 @@ class HooksThread : IDisposable {
 	}
 	
 	/// <summary>
-	/// Called by the main thread to get key event data sent by _Send.
+	/// Called by the main thread to get key event data sent by <b>_Send</b>.
 	/// Returns <c>false</c> on timeout.
 	/// </summary>
 	public bool GetKeyData(int messageId, out Api.KBDLLHOOKSTRUCT data) {
@@ -164,7 +164,7 @@ class HooksThread : IDisposable {
 	}
 	
 	/// <summary>
-	/// Called by the main thread to get mouse click/wheel event data sent by _Send.
+	/// Called by the main thread to get mouse click/wheel event data sent by <b>_Send</b>.
 	/// Returns <c>false</c> on timeout.
 	/// </summary>
 	public bool GetClickWheelData(int messageId, out Api.MSLLHOOKSTRUCT data, out int message) {
@@ -174,7 +174,7 @@ class HooksThread : IDisposable {
 	}
 	
 	/// <summary>
-	/// Called by the main thread to get mouse edge/move event data sent by _Send.
+	/// Called by the main thread to get mouse edge/move event data sent by <b>_Send</b>.
 	/// Returns <c>false</c> on timeout.
 	/// </summary>
 	public bool GetEdgeMoveData(int messageId, out MouseTriggers.EdgeMoveDetector_.Result data) {

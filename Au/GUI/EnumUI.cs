@@ -12,7 +12,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	bool _isFlags;
 
 	/// <summary>
-	/// Adds enum members to a <see cref="popupMenu"/> menu as checkbox-items (if it's a [Flags] enum) or radio-items.
+	/// Adds enum members to a <see cref="popupMenu"/> menu as checkbox-items (if it's a <c>[Flags]</c> enum) or radio-items.
 	/// </summary>
 	/// <param name="m"></param>
 	/// <param name="init">Initial value.</param>
@@ -66,7 +66,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	}
 
 	/// <summary>
-	/// Adds members of a [Flags] enum to a WPF <b>StackPanel</b> as checkboxes.
+	/// Adds members of a <c>[Flags]</c> enum to a WPF <b>StackPanel</b> as checkboxes.
 	/// </summary>
 	/// <param name="container"></param>
 	/// <param name="init">Initial value.</param>
@@ -101,7 +101,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	}
 
 	/// <summary>
-	/// Adds members of a non-[Flags] enum to a WPF <b>ComboBox</b> or other <b>Selector</b> control.
+	/// Adds members of a non-<c>[Flags]</c> enum to a WPF <b>ComboBox</b> or other <b>Selector</b> control.
 	/// </summary>
 	/// <param name="container"></param>
 	/// <param name="init">Initial value.</param>

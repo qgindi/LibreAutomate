@@ -16,7 +16,7 @@ public static class ComUtil {
 	/// <remarks>
 	/// Calls API <msdn>GetActiveObject</msdn>.
 	///
-	/// This process must have the same [](xref:uac) integrity level as the target process (of the COM object). In script Properties select uac user.
+	/// This process must have the same [](xref:uac) integrity level as the target process (of the COM object). In script <b>Properties</b> select <b>uac user</b>.
 	/// </remarks>
 	/// <seealso cref="Marshal.BindToMoniker(string)"/>
 	/// <example>
@@ -41,7 +41,7 @@ public static class ComUtil {
 	}
 
 	/// <summary>
-	/// Gets COM object from a window using API <msdn>AccessibleObjectFromWindow</msdn>(OBJID_NATIVEOM, IID_IDispatch).
+	/// Gets COM object from a window using API <msdn>AccessibleObjectFromWindow</msdn><c>(OBJID_NATIVEOM, IID_IDispatch</c>).
 	/// </summary>
 	/// <param name="w">Window or control.</param>
 	/// <param name="cnChild">Child window class name. Format: [wildcard expression](xref:wildcard_expression). If used, gets COM object from the first found child or descendant window where it succeeds. If <c>null</c>, gets COM object from <i>w</i>.</param>

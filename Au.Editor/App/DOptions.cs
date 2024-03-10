@@ -20,7 +20,7 @@ class DOptions : KDialogWindow {
 	DOptions() {
 		InitWinProp("Options", App.Wmain);
 		
-		_b = new wpfBuilder(this).WinSize(550);
+		_b = new wpfBuilder(this).WinSize(600);
 		_b.Row(-1).Add(out _tc).Height(300..);
 		_b.R.AddOkCancel(out var bOK, out var bCancel, out _, apply: "_Apply");
 		bOK.IsDefault = false; bCancel.IsCancel = false;
@@ -29,6 +29,7 @@ class DOptions : KDialogWindow {
 		_Workspace();
 		_FontAndColors();
 		_CodeEditor();
+		_Compiler();
 		_Templates();
 		_Hotkeys();
 		_OS();
@@ -504,6 +505,17 @@ Example:
 		};
 		
 		//CONSIDER: completion list: option to single-click.
+	}
+	
+	void _Compiler() {
+		var b = _Page("Compiler");
+		b.R.Add(out CheckBox printCompiled, "Always print \"Compiled\"").Checked(App.Settings.comp_printCompiled, threeState: true)
+			.Tooltip("Always print a \"Compiled\" message when a script etc compiled successfully.\nIf unchecked, prints only if role is exeProgram or classLibrary.\nIf 3-rd state, prints only when executing the Compile command.");
+		b.End();
+		
+		_b.OkApply += e => {
+			App.Settings.comp_printCompiled = printCompiled.IsChecked;
+		};
 	}
 	
 	void _Templates() {

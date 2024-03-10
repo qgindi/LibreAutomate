@@ -45,7 +45,7 @@ namespace Au.Types {
 		
 		//maybe in the future
 		///// <summary>
-		///// Converts <see cref="Coord"/> coordinates into real coodinates.
+		///// Converts <see cref="Coord"/> coordinates into real coordinates.
 		///// Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> <c>true</c>.
 		///// </summary>
 		//public static POINT Normalize(Coord x, Coord y, bool workArea = false, screen screen = default)
@@ -272,7 +272,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Replaces this rectangle with the union of itself and the specified rectangle.
 		/// Union is the smallest rectangle that contains two full rectangles.
-		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+		/// If either rectangle is empty (<b>Width</b> or <b>Height</b> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
 		/// <returns><c>true</c> if finally this rectangle is not empty.</returns>
 		public bool Union(RECT r2) => Api.UnionRect(out this, this, r2);
@@ -280,7 +280,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Returns the union of two rectangles.
 		/// Union is the smallest rectangle that contains two full rectangles.
-		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+		/// If either rectangle is empty (<b>Width</b> or <b>Height</b> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
 		public static RECT Union(RECT r1, RECT r2) { Api.UnionRect(out RECT r, r1, r2); return r; }
 		
@@ -424,7 +424,7 @@ namespace Au.Types {
 		public BSTR ValueBstr { get { Debug.Assert(vt == Api.VARENUM.VT_BSTR); return BSTR.AttachBSTR((char*)value); } }
 		
 		/// <summary>
-		/// Calls VariantClear.
+		/// Calls <b>VariantClear</b>.
 		/// </summary>
 		public void Dispose() {
 			_Clear();
@@ -457,7 +457,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Converts to string.
-		/// Disposes this VARIANT.
+		/// Disposes this <b>VARIANT</b>.
 		/// </summary>
 		public string ToStringAndDispose() {
 			var r = _ToString();

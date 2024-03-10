@@ -225,7 +225,7 @@ namespace Au.Types {
 		/// OSD window name. Optional, default <c>null</c>.
 		/// </summary>
 		/// <remarks>
-		/// This text is invisible. Can be used to find OSD window. The class name is "Au.OSD"; if with shadow - "Au.OSD2".
+		/// This text is invisible. Can be used to find OSD window. The class name is <c>"Au.OSD"</c>; if with shadow - <c>"Au.OSD2"</c>.
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
 		public string Name { get; set; }
@@ -317,7 +317,7 @@ namespace Au.Types {
 	/// <summary>
 	/// Used by <see cref="osdRect.SetRects"/>.
 	/// </summary>
-	/// <param name="Placement">Label placement relative to rectangle: 'L' (left), 'R' (right), 'T' (top), 'B' (bottom) or 'I' (inside). Default: 'L'.</param>
+	/// <param name="Placement">Label placement relative to rectangle: <c>'L'</c> (left), <c>'R'</c> (right), <c>'T'</c> (top), <c>'B'</c> (bottom) or <c>'I'</c> (inside). Default: <c>'L'</c>.</param>
 	public record class ORLabelOptions(char Placement, ColorInt? BackgroundColor = null, ColorInt? TextColor = null) {
 		///
 		public static implicit operator ORLabelOptions(char placement) => new(placement);
@@ -425,7 +425,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="rects">Rectangles.</param>
 		/// <param name="indexLabels">Draw labels. The label text is the rectangle index in <i>rects</i>.</param>
-		/// <param name="labelOptions">Label options. If <b>char</b> - label placement relative to rectangle: 'L' (left), 'R' (right), 'T' (top), 'B' (bottom) or 'I' (inside). Default: 'L'.</param>
+		/// <param name="labelOptions">Label options. If <b>char</b> - label placement relative to rectangle: <c>'L'</c> (left), <c>'R'</c> (right), <c>'T'</c> (top), <c>'B'</c> (bottom) or <c>'I'</c> (inside). Default: <c>'L'</c>.</param>
 		/// <remarks>
 		/// If this function called, will draw multiple rectangles instead of single (unless <i>rects</i> is <c>null</c>). <b>Opacity</b> should be 0 (default).
 		/// </remarks>
@@ -951,12 +951,12 @@ namespace Au {
 			return o;
 		}
 		
-		/// <summary>Default font for <see cref="showText"/> and <b>osdText</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
+		/// <summary>Default font for <see cref="showText"/> and <b>osdText</b>. Default: standard GUI font (usually <b>Segoe UI</b>), size 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static FontNSS defaultSmallFont { get => s_smallFont; set => s_smallFont = value ?? throw new ArgumentNullException(); }
 		static FontNSS s_smallFont = new(12);
 		
-		/// <summary>Default font for <see cref="showTransparentText"/>. Default: standard GUI font (usually Segoe UI), size 24.</summary>
+		/// <summary>Default font for <see cref="showTransparentText"/>. Default: standard GUI font (usually <b>Segoe UI</b>), size 24.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static FontNSS defaultBigFont { get => s_bigFont; set => s_bigFont = value ?? throw new ArgumentNullException(); }
 		static FontNSS s_bigFont = new(24);

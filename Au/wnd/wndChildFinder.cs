@@ -166,8 +166,8 @@ public class wndChildFinder {
 	/// <summary>
 	/// Returns index of matching element or -1.
 	/// </summary>
-	/// <param name="wParent">Parent window. Can be <c>default(wnd)</c> if inList is <c>true</c> and no DirectChild flag and not using winforms name.</param>
-	/// <param name="a">List of wnd. Does not dispose it.</param>
+	/// <param name="wParent">Parent window. Can be <c>default(wnd)</c> if <i>inList</i> and no <b>DirectChild</b> flag and not using winforms name.</param>
+	/// <param name="a">List of <b>wnd</b>. Does not dispose it.</param>
 	/// <param name="getAll">If not <c>null</c>, calls it for all matching and returns -1.</param>
 	int _FindInList(wnd wParent, WndList_ a, Action<wnd> getAll = null) {
 		Result = default;

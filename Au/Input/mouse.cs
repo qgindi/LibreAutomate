@@ -32,12 +32,12 @@ namespace Au {
 		public static POINT xy { get { Api.GetCursorPos(out var p); return p; } }
 
 		///// <summary>
-		///// Gets cursor (mouse pointer) X coordinate (mouse.xy.x).
+		///// Gets cursor (mouse pointer) X coordinate (<b>mouse.xy.x</b>).
 		///// </summary>
 		//public static int x => xy.x;
 
 		///// <summary>
-		///// Gets cursor (mouse pointer) Y coordinate (mouse.xy.y).
+		///// Gets cursor (mouse pointer) Y coordinate (<b>mouse.xy.y</b>).
 		///// </summary>
 		//public static int y => xy.y;
 
@@ -388,8 +388,8 @@ namespace Au {
 		/// <summary>
 		/// Sends single mouse button down or up event.
 		/// Does not use the action flags of button.
-		/// Applies SM_SWAPBUTTON.
-		/// Also moves to p in the same API SendInput call.
+		/// Applies <b>SM_SWAPBUTTON</b>.
+		/// Also moves to <i>p</i> in the same API <b>SendInput</b> call.
 		/// </summary>
 		internal static void SendButton_(MButton button, bool down, POINT p) {
 			//CONSIDER: release user-pressed modifier keys, like keys class does.
@@ -425,10 +425,10 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Calls Api.SendInput to send single mouse movement or/and button down or up or wheel event.
-		/// Converts x, y as need for MOUSEINPUT.
-		/// For X buttons use Api.IMFlag.XDown|Api.IMFlag.X1 etc.
-		/// If Api.IMFlag.Move, adds Api.IMFlag.Absolute.
+		/// Calls <b>Api.SendInput</b> to send single mouse movement or/and button down or up or wheel event.
+		/// Converts <i>x</i>, <i>y</i> as need for <b>MOUSEINPUT</b>.
+		/// For X buttons use <c>Api.IMFlag.XDown|Api.IMFlag.X1</c> etc.
+		/// If <b>Api.IMFlag.Move</b>, adds <b>Api.IMFlag.Absolute</b>.
 		/// </summary>
 		static unsafe void _SendRaw(Api.IMFlags flags, int x = 0, int y = 0, int wheel = 0) {
 			if (0 != (flags & Api.IMFlags.Move)) {
@@ -917,7 +917,7 @@ namespace Au {
 		/// <param name="x2">X offset in <i>o2</i> rectangle. Default: center.</param>
 		/// <param name="y2">Y offset in <i>o2</i> rectangle. Default: center.</param>
 		/// <param name="button">Mouse button. Default: left.</param>
-		/// <param name="mod">Modifier keys (Ctrl etc).</param>
+		/// <param name="mod">Modifier keys (<c>Ctrl</c> etc).</param>
 		/// <param name="sleep">Wait this number of milliseconds after pressing the mouse button.</param>
 		/// <param name="speed">The drag speed. See <see cref="OMouse.MoveSpeed"/>.</param>
 		/// <inheritdoc cref="clickEx(MButton, MObject, Coord, Coord)" path="/exception"/>
@@ -938,7 +938,7 @@ namespace Au {
 		/// <param name="dx">X offset from the start position.</param>
 		/// <param name="dy">Y offset from the start position.</param>
 		/// <param name="button">Mouse button. Default: left.</param>
-		/// <param name="mod">Modifier keys (Ctrl etc).</param>
+		/// <param name="mod">Modifier keys (<c>Ctrl</c> etc).</param>
 		/// <param name="sleep">Wait this number of milliseconds after pressing the mouse button.</param>
 		/// <param name="speed">The drag speed. See <see cref="OMouse.MoveSpeed"/>.</param>
 		/// <inheritdoc cref="clickEx(MButton, MObject, Coord, Coord)" path="/exception"/>
@@ -954,7 +954,7 @@ namespace Au {
 		/// <param name="y">Y offset in <i>obj</i> rectangle. Default: center.</param>
 		/// <param name="offsets">String containing multiple x y offsets from the start position. See <see cref="moveBy(string, double)"/>.</param>
 		/// <param name="button">Mouse button. Default: left.</param>
-		/// <param name="mod">Modifier keys (Ctrl etc).</param>
+		/// <param name="mod">Modifier keys (<c>Ctrl</c> etc).</param>
 		/// <param name="sleep">Wait this number of milliseconds after pressing the mouse button.</param>
 		/// <inheritdoc cref="clickEx(MButton, MObject, Coord, Coord)" path="/exception"/>
 		public static void drag(MObject obj, Coord x, Coord y, string offsets, MButton button = MButton.Left, KMod mod = 0, int sleep = 0) {
@@ -999,7 +999,7 @@ namespace Au {
 
 		//not used
 		///// <summary>
-		///// Releases mouse buttons pressed by this thread (t_pressedButtons).
+		///// Releases mouse buttons pressed by this thread (<b>t_pressedButtons</b>).
 		///// </summary>
 		///// <param name="p">If not <c>null</c>, and XY is different, moves to this point. Used for reliability.</param>
 		//static void _ReleaseButtons(POINT? p = null)
@@ -1016,7 +1016,7 @@ namespace Au {
 		/// <summary>
 		/// Returns <c>true</c> if some mouse buttons are pressed.
 		/// </summary>
-		/// <param name="buttons">Return <c>true</c> if some of these buttons are down. Default: any (Left, Right, Middle, X1 or X2).</param>
+		/// <param name="buttons">Return <c>true</c> if some of these buttons are down. Default: any.</param>
 		/// <remarks>
 		/// Uses API <msdn>GetAsyncKeyState</msdn>.
 		/// When processing user input in UI code (forms, WPF), instead use class <see cref="keys.gui"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
@@ -1036,7 +1036,7 @@ namespace Au {
 		///// <summary>
 		///// Returns a value indicating which mouse buttons are pressed.
 		///// </summary>
-		///// <param name="buttons">Check only these buttons. Default: Left, Right, Middle, X1, X2.</param>
+		///// <param name="buttons">Check only these buttons. Default: all.</param>
 		///// <remarks>See <see cref="IsPressed"/>.</remarks>
 		//public static MButtons buttons(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		//{
@@ -1258,8 +1258,8 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Workaround for the documented BM_CLICK/WM_LBUTTONDOWN bug of classic button controls: randomly fails if inactive window.
-		/// If c is a button in a dialog box, posts WM_ACTIVATE messages to the dialog box.
+		/// Workaround for the documented <b>BM_CLICK</b>/<b>WM_LBUTTONDOWN</b> bug of classic button controls: randomly fails if inactive window.
+		/// If <i>c</i> is a button in a dialog box, posts <b>WM_ACTIVATE</b> messages to the dialog box.
 		/// </summary>
 		internal ref struct ButtonPostClickWorkaround_ {
 			readonly wnd _w;
@@ -1314,7 +1314,7 @@ namespace Au {
 			}
 
 			/// <summary>
-			/// Sends a mouse wheel message (WM_MOUSEWHEEL) directly to window or control.
+			/// Sends a mouse wheel message (<b>WM_MOUSEWHEEL</b>) directly to window or control.
 			/// </summary>
 			/// <param name="w">Window or control.</param>
 			/// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
@@ -1334,9 +1334,9 @@ namespace Au {
 			//rejected:
 			///// <param name="waitMS">
 			///// Maximal time to wait, milliseconds. Also which API to use.
-			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits opt.mouse.<see cref="OMouse.ClickSpeed"/> ms.
-			///// If less than 0 (eg Timeout.Infinite), calls API <msdn>SendMessage</msdn> which usually waits until the window finishes to process the message.
-			///// Else calls API <msdn>SendMessageTimeout</msdn> which waits max waitMS milliseconds, then throws AuException.
+			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits <c>opt.mouse.ClickSpeed</c> ms.
+			///// If less than 0 (eg <b>Timeout.Infinite</b>), calls API <msdn>SendMessage</msdn> which usually waits until the window finishes to process the message.
+			///// Else calls API <msdn>SendMessageTimeout</msdn> which waits max <i>waitMS</i> milliseconds, then throws <b>AuException</b>.
 			///// The SendX functions are not natural and less likely to work.
 			///// If the window shows a dialog, the SendX functions usually wait until the dialog is closed.
 			///// </param>
@@ -1366,11 +1366,11 @@ namespace Au.Types {
 	/// </summary>
 	/// <remarks>
 	/// There are two groups of values:
-	/// 1. Button (Left, Right, Middle, X1, X2). Default or 0: Left.
-	/// 2. Action (Down, Up, DoubleClick). Default: click.
+	/// 1. Button (<b>Left</b>, <b>Right</b>, <b>Middle</b>, <b>X1</b>, <b>X2</b>). Default or 0: <b>Left</b>.
+	/// 2. Action (<b>Down</b>, <b>Up</b>, <b>DoubleClick</b>). Default: click.
 	/// 
-	/// Multiple values from the same group cannot be combined. For example Left|Right is invalid.
-	/// Values from different groups can be combined. For example Right|Down.
+	/// Multiple values from the same group cannot be combined. For example <c>Left|Right</c> is invalid.
+	/// Values from different groups can be combined. For example <c>Right|Down</c>.
 	/// </remarks>
 	[Flags]
 	public enum MButton {

@@ -448,7 +448,7 @@ public class csvTable {
 	/// Creates 2-column CSV table from dictionary keys and values of any type, using a callback function to convert values to <b>string</b>.
 	/// </summary>
 	/// <param name="d"></param>
-	/// <param name="valueToString">Callback function that converts value of type T to <b>string</b>.</param>
+	/// <param name="valueToString">Callback function that converts value of type <b>T</b> to <b>string</b>.</param>
 	/// <exception cref="ArgumentNullException"></exception>
 	public static csvTable fromDictionary<T>(Dictionary<string, T> d, Func<T, string> valueToString) {
 		Not_.Null(d, valueToString);
@@ -465,7 +465,7 @@ public class csvTable {
 	/// </summary>
 	/// <param name="d"></param>
 	/// <param name="columnCount">CSV column count. Must be 2 or more.</param>
-	/// <param name="valueToCells">Callback function that converts value of type T to one or more strings and puts them in row array elements starting from index 1. At index 0 is key.</param>
+	/// <param name="valueToCells">Callback function that converts value of type <b>T</b> to one or more strings and puts them in row array elements starting from index 1. At index 0 is key.</param>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentOutOfRangeException"><i>columnCount</i> less than 2.</exception>
 	public static csvTable fromDictionary<T>(Dictionary<string, T> d, int columnCount, Action<T, string[]> valueToCells) {
@@ -503,7 +503,7 @@ public class csvTable {
 	/// </summary>
 	/// <param name="ignoreCase">Case-insensitive dictionary keys.</param>
 	/// <param name="ignoreDuplicates">Don't throw exception if column 0 contains duplicate strings. Replace old value with new value.</param>
-	/// <param name="rowToValue">Callback function that converts one or more cell strings to single value of type T. The array is whole row; element 0 is key, and usually is not used.</param>
+	/// <param name="rowToValue">Callback function that converts one or more cell strings to single value of type <b>T</b>. The array is whole row; element 0 is key, and usually is not used.</param>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="InvalidOperationException"><b>ColumnCount</b> less than 2.</exception>
 	/// <exception cref="ArgumentException">Column 0 contains duplicate strings.</exception>
@@ -524,7 +524,7 @@ public class csvTable {
 	///// Creates dictionary from this 2-column CSV table, using a callback function to convert cell strings to dictionary values of any type.
 	///// </summary>
 	///// <param name="ignoreCase">Case-insensitive dictionary keys.</param>
-	///// <param name="stringToValue">Callback function that converts cell string to value of type T.</param>
+	///// <param name="stringToValue">Callback function that converts cell string to value of type <b>T</b>.</param>
 	///// <exception cref="ArgumentNullException"></exception>
 	///// <exception cref="InvalidOperationException"><b>ColumnCount</b> not 2.</exception>
 	///// <exception cref="ArgumentException">Column 0 contains duplicate values.</exception>
@@ -614,7 +614,7 @@ public class csvTable {
 	public bool Get(Index row, int column, out int value) => this[row, column].ToInt(out value);
 	
 	/// <summary>
-	/// Gets a field value converted to uint. See <see cref="ExtString.ToInt(string, out uint, int, STIFlags)"/>.
+	/// Gets a field value converted to <b>uint</b>. See <see cref="ExtString.ToInt(string, out uint, int, STIFlags)"/>.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out uint value) => this[row, column].ToInt(out value);

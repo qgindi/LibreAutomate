@@ -95,7 +95,7 @@ public enum TBBorder {
 	/// <summary>Title bar and standard window border.</summary>
 	Caption,
 
-	/// <summary>Title bar, [x] button and standard window border.</summary>
+	/// <summary>Title bar, <b>X</b> button and standard window border.</summary>
 	CaptionX,
 }
 

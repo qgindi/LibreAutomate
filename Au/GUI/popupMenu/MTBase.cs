@@ -7,10 +7,10 @@ namespace Au.Types;
 /// </summary>
 /// <remarks>
 /// <i>image</i> argument of "add item" functions can be:
-/// - icon name, like <c>"*Pack.Icon color"</c> (you can get it from the Icons dialog). See <see cref="ImageUtil.LoadWpfImageElement"/>.
+/// - icon name, like <c>"*Pack.Icon color"</c> (you can get it from the <b>Icons</b> tool). See <see cref="ImageUtil.LoadWpfImageElement"/>.
 /// - file/folder path (string) - the "show" function calls <see cref="icon.of"/> to get its icon. It also supports file type icons like <c>".txt"</c>, etc.
 /// - file path with prefix <c>"imagefile:"</c> or resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - the "show" function loads <c>.png</c> or <c>.xaml</c> image file or resource.
-/// - string with prefix <c>"image:"</c> - Base64 encoded image file. Can be created with the "Find image..." dialog.
+/// - string with prefix <c>"image:"</c> - Base64 encoded image file. Can be created with the <b>Find image</b> tool.
 /// - <see cref="FolderPath"/> - same as folder path string.
 /// - <see cref="Image"/> - image.
 /// - <see cref="icon"/> - icon. The "add item" function disposes it.
@@ -24,7 +24,7 @@ namespace Au.Types;
 /// 
 /// For icon/image files use full path, unless they are in <see cref="folders.ThisAppImages"/>
 /// 
-/// To add an image resource in Visual Studio, use build action "Resource" for the image file.
+/// To add an image resource in Visual Studio, use build action <b>Resource</b> for the image file.
 /// </remarks>
 public abstract partial class MTBase {
 	private protected readonly string _name;
@@ -70,7 +70,7 @@ public abstract partial class MTBase {
 	/// Gets path from code that contains a string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell or <c>@"\folder\script.cs"</c>.
 	/// Also supports code patterns like <c>folders.System + "notepad.exe"</c>, <c>folders.shell.RecycleBin</c>.
 	/// 
-	/// If extracts path, also in the context menu adds item "Find file" which selects the file in Explorer or "Open script" which opens the script in editor.
+	/// If extracts path, also in the context menu adds item <b>Find file</b> which selects the file in Explorer or <b>Open script</b> which opens the script in editor.
 	/// </remarks>
 	public bool ExtractIconPathFromCode { get; set; }
 
@@ -115,7 +115,7 @@ public abstract partial class MTBase {
 	}
 
 	/// <summary>
-	/// Converts x.image (object containing string, Image, etc or <c>null</c>) to Image. Extracts icon path from code if need. Returns default if will extract async.
+	/// Converts <c>x.image</c> (object containing string, <b>Image</b>, etc or <c>null</c>) to <b>Image</b>. Extracts icon path from code if need. Returns default if will extract async.
 	/// </summary>
 	private protected (Image image, bool dispose) _GetImage(MTItem x) {
 		Image im = null; bool dontDispose = false;
@@ -218,7 +218,7 @@ public abstract partial class MTBase {
 public abstract class MTItem {
 	internal Delegate clicked;
 	internal object image;
-	/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted "script.cs"</summary>
+	/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted <c>"script.cs"</c></summary>
 	internal byte extractIconPath; //from MTBase.ExtractIconPathFromCode
 	internal bool actionThread; //from MTBase.ActionThread
 	internal bool actionException; //from MTBase.ActionException
@@ -254,7 +254,7 @@ public abstract class MTItem {
 	/// </summary>
 	/// <remarks>
 	/// Can be used to set file or script path when it cannot be extracted from action code.
-	/// When you set this property, the menu/toolbar item uses icon of the specified file, and its context menu contains "Find file" or "Open script".
+	/// When you set this property, the menu/toolbar item uses icon of the specified file, and its context menu contains <b>Find file</b> or <b>Open script</b>.
 	/// </remarks>
 	public string File {
 		get => file;
@@ -290,8 +290,8 @@ public abstract class MTItem {
 
 	/// <summary>
 	/// Call when adding menu/toolbar item.
-	/// Sets text and tooltip (from text). Sets clicked, image and sourceLine fields.
-	/// Sets extractIconPath, actionThread and actionException fields from mt properties.
+	/// Sets text and tooltip (from text). Sets <b>clicked</b>, <b>image</b> and <b>sourceLine</b> fields.
+	/// Sets <b>extractIconPath</b>, <b>actionThread</b> and <b>actionException</b> fields from <i>mt</i> properties.
 	/// </summary>
 	internal void Set_(MTBase mt, string text, Delegate click, MTImage im, int l_, string f_) {
 		if (!text.NE()) {

@@ -459,7 +459,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 
 	/// <summary>
-	/// Callback of EnumWindows used by Timer_ to get visible windows.
+	/// Callback of <b>EnumWindows</b> used by <b>Timer_</b> to get visible windows.
 	/// </summary>
 	Api.WNDENUMPROC _enumWinProc;
 	unsafe int _EnumWinProc(wnd w, void* _) {
@@ -468,8 +468,8 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 
 	/// <summary>
-	/// Called by Timer_ when it swaps _aVisible with _aVisibleOld and calls EnumWindows to populate _aVisible with visible windows.
-	/// Finds what windows became visible or invisible and runs Visible/Invisible triggers for them.
+	/// Called by <b>Timer_</b> when it swaps <b>_aVisible</b> with <b>_aVisibleOld</b> and calls <b>EnumWindows</b> to populate <b>_aVisible</b> with visible windows.
+	/// Finds what windows became visible or invisible and runs <b>Visible</b>/<b>Invisible</b> triggers for them.
 	/// </summary>
 	void _VisibleAddedRemoved() {
 		//perf.first();
@@ -522,7 +522,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 
 	/// <summary>
-	/// WinEventHook hook procedure.
+	/// <b>WinEventHook</b> hook procedure.
 	/// </summary>
 	/// <param name="k"></param>
 	void _HookProc(HookData.WinEvent k) {
@@ -593,7 +593,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 
 	/// <summary>
 	/// Processes events for main triggers (active, visible) and most "later" triggers.
-	/// Called from hook (_HookProc), timer (Timer_), at startup (StartStop) and SimulateActiveNew/SimulateVisibleNew.
+	/// Called from hook (<b>_HookProc</b>), timer (<b>Timer_</b>), at startup (<b>StartStop</b>) and <b>SimulateActiveNew</b>/<b>SimulateVisibleNew</b>.
 	/// </summary>
 	void _Proc(TWLater e, wnd w, _ProcCaller caller = _ProcCaller.Timer, string name = null) {
 		//e can be:
@@ -736,8 +736,8 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 
 	/// <summary>
-	/// Called to process "later" events from _Proc and timer.
-	/// iTriggered is w index in _aTriggered, or -1 if not found, or -2 (default) to let this func find.
+	/// Called to process "later" events from <b>_Proc</b> and timer.
+	/// <i>iTriggered</i> is <i>w</i> index in <b>_aTriggered</b>, or -1 if not found, or -2 (default) to let this func find.
 	/// </summary>
 	void _ProcLater(TWLater e, wnd w, int iTriggered = -2, string name = null) {
 		if (0 == (_laterEvents & e)) return;
@@ -825,11 +825,11 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// <li>Event (see <see cref="TWLater"/>).</li>
 	/// <li>Letters for window state etc:
 	/// <ul>
-	/// <li>A - the window is active.</li>
-	/// <li>H - the window is invisible (!<see cref="wnd.IsVisible"/>).</li>
-	/// <li>C - the window is cloaked (<see cref="wnd.IsCloaked"/>).</li>
-	/// <li>O - the window is considered old, ie created before calling <see cref="ActionTriggers.Run"/>.</li>
-	/// <li>T - the even has been detected using a timer, which means slower response time. Else detected using a hook.</li>
+	/// <li><c>A</c> - the window is active.</li>
+	/// <li><c>H</c> - the window is invisible (!<see cref="wnd.IsVisible"/>).</li>
+	/// <li><c>C</c> - the window is cloaked (<see cref="wnd.IsCloaked"/>).</li>
+	/// <li><c>O</c> - the window is considered old, ie created before calling <see cref="ActionTriggers.Run"/>.</li>
+	/// <li><c>T</c> - the even has been detected using a timer, which means slower response time. Else detected using a hook.</li>
 	/// </ul>
 	/// </li>
 	/// <li>Window (handle, class, name, program, rectangle).</li>
@@ -850,7 +850,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 
 	/// <summary>
-	/// Called by _Proc.
+	/// Called by <b>_Proc</b>.
 	/// </summary>
 	void _LogEvent(TWLater e, wnd w, _ProcCaller caller, bool oldWindow) {
 		string col = "0";
@@ -868,8 +868,8 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 
 	/// <summary>
-	/// For _aTriggered, _aVisible and _aVisibleOld we use resizable array, not List.
-	/// We access elements by index in time-critical code. With List it is much slower.
+	/// For <b>_aTriggered</b>, <b>_aVisible</b> and <b>_aVisibleOld</b> we use resizable array, not <b>List</b>.
+	/// We access elements by index in time-critical code. With <b>List</b> it is much slower.
 	/// </summary>
 	struct _WndArray {
 		public wnd[] a;
@@ -889,7 +889,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 
 	/// <summary>
-	/// Used by foreach to enumerate added triggers.
+	/// Used by <c>foreach</c> to enumerate added triggers.
 	/// </summary>
 	public IEnumerator<WindowTrigger> GetEnumerator() {
 		ActionTrigger last, v;
@@ -961,12 +961,12 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// The trigger must have argument <c>, later: TWLater.Name</c> (see <see cref="TWLater"/>) and match the window with any name.
 	/// </remarks>
 	/// <example>
-	/// Show toolbar Toolbar_Chrome1 on a Chrome window when window name starts with <c>"NuGet"</c>.
+	/// Show toolbar <b>Toolbar_Chrome1</b> on a Chrome window when window name starts with <c>"NuGet"</c>.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] =
 	/// 	ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome1, "NuGet*");
 	/// ]]></code>
-	/// Toolbar Toolbar_Chrome1 for the above example.
+	/// Toolbar <b>Toolbar_Chrome1</b> for the above example.
 	/// <code><![CDATA[
 	/// toolbar Toolbar_Chrome1(WindowTriggerArgs ta) { var t = new toolbar(); /* add buttons */ t.Show(ta); return t; }
 	/// ]]></code>
@@ -994,7 +994,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// <param name="tbFunc">Toolbar function. Let it create a window-attached toolbar and returns the <see cref="toolbar"/> object.</param>
 	/// <param name="windowName">Callback function that returns <c>true</c> if the toolbar should be visible.</param>
 	/// <example>
-	/// Show toolbar Toolbar_Chrome2 on a Chrome window when web page URL starts with <c>"https://www.youtube.com/"</c>.
+	/// Show toolbar <b>Toolbar_Chrome2</b> on a Chrome window when web page URL starts with <c>"https://www.youtube.com/"</c>.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] = ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome2, w => {
 	/// 	var e = w.Elm["web:DOCUMENT"].Find(-1);

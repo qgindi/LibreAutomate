@@ -17,8 +17,8 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Language tag, like "en-US". See <see cref="AvailableLanguages"/>. If <c>null</c> (default), uses the default OCR language of this computer.
-		/// You can install languages in Windows Settings -> Time and language -> Language and region. Not all languages are supported.
+		/// Language, like <c>"en-US"</c>. See <see cref="AvailableLanguages"/>. If <c>null</c> (default), uses the default OCR language of this computer.
+		/// You can install languages in Windows <b>Settings > Time and language > Language and region</b>. Not all languages are supported.
 		/// </summary>
 		public string Language { get; set; }
 

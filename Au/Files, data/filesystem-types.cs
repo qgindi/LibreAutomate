@@ -3,7 +3,7 @@ namespace Au.Types;
 
 /// <summary>
 /// File system entry type - file, directory, NTFS link, whether it exists and is accessible.
-/// The enum value NotFound is 0; AccessDenied is negative ((int)0x80000000); other values are greater than 0.
+/// The enum value <c>NotFound</c> is 0; <c>AccessDenied</c> is negative <c>((int)0x80000000)</c>; other values are greater than 0.
 /// </summary>
 internal enum FileIs_ {
 	/// <summary>Does not exist.</summary>
@@ -170,7 +170,7 @@ public enum FEFlags {
 	/// <summary>
 	/// Skip files and subdirectories that have <b>Hidden</b> and <b>System</b> attributes (both).
 	/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
-	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>"$Recycle.Bin"</c>, <c>"System Volume Information"</c>, <c>"Recovery"</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for D drive.
+	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for <c>D</c> drive.
 	/// </summary>
 	SkipHiddenSystem = 8, //note: must match FCFlags
 
@@ -187,7 +187,7 @@ public enum FEFlags {
 	OnlyFiles = 0x20,
 
 	/// <summary>
-	/// Don't call <see cref="pathname.normalize"/>(directoryPath) and don't throw exception for non-full path.
+	/// Don't call <see cref="pathname.normalize"/> and don't throw exception for non-full path.
 	/// </summary>
 	UseRawPath = 0x40,
 
@@ -201,7 +201,7 @@ public enum FEFlags {
 	///// Temporarily disable file system redirection in this thread of this 32-bit process running on 64-bit Windows.
 	///// Then you can enumerate the 64-bit System32 folder in your 32-bit process.
 	///// Uses API <msdn>Wow64DisableWow64FsRedirection</msdn>.
-	///// For vice versa (in 64-bit process enumerate the 32-bit System folder), instead use path folders.SystemX86.
+	///// For vice versa (in 64-bit process enumerate the 32-bit System folder), instead use path <b>folders.SystemX86</b>.
 	///// </summary>
 	//DisableRedirection = 0x100,
 }
@@ -218,7 +218,7 @@ public enum FCFlags {
 	/// Skip descendant files and directories that have <b>Hidden</b> and <b>System</b> attributes (both).
 	/// They usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
 	/// They often are protected and would fail to copy, ruining whole copy operation.
-	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: "$Recycle.Bin", "System Volume Information", "Recovery".
+	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>.
 	/// </summary>
 	SkipHiddenSystem = 8,
 
@@ -239,7 +239,7 @@ public enum FCFlags {
 [Flags]
 public enum FDFlags {
 	/// <summary>
-	/// Send to the Recycle Bin. If not possible, delete anyway, unless used <i>CanFail</i>.
+	/// Send to the Recycle Bin. If not possible, delete anyway, unless used <b>CanFail</b>.
 	/// Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
 	/// Note: it is much slower. To delete multiple, use <see cref="filesystem.delete(IEnumerable{string}, FDFlags)"/>.
 	/// </summary>
@@ -333,7 +333,7 @@ public class FEFile {
 
 	//This could be more dangerous than useful.
 	///// <summary>
-	///// Returns FullPath.
+	///// Returns <b>FullPath</b>.
 	///// </summary>
 	//public static implicit operator string(FEFile f) { return f?.FullPath; }
 }

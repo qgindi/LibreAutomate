@@ -103,9 +103,7 @@ namespace Au.Compiler {
 			//header line
 			_b.AppendFormat("<><lc #{0}>Compilation: ", ErrorCount != 0 ? "F0E080" : "A0E0A0");
 			if (ErrorCount != 0) _b.Append(ErrorCount).Append(" errors").Append(WarningCount != 0 ? ", " : "");
-			if (WarningCount != 0) _b.Append(WarningCount).Append(
-@" warnings <fold>	Warnings can be disabled in Properties -> noWarnings or warningLevel.
-	Warnings for part of code can be disabled with <google>C# #pragma warning<> (warningDisableSnippet).</fold>");
+			if (WarningCount != 0) _b.Append(WarningCount).Append(" warnings <fold>	Warnings can be disabled with <google>C# #pragma warning<> (<b>warningDisableSnippet<>) or in <b>Properties<>.</fold>");
 			_b.AppendLine("<>");
 
 			//errors and warnings

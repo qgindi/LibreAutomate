@@ -232,7 +232,7 @@ namespace Au {
 		/// Gets all screens.
 		/// </summary>
 		/// <remarks>
-		/// The order of array elements may be different than in Windows Settings (Control Panel). The primary screen is always at index 0.
+		/// The order of array elements may be different than in Windows Settings. The primary screen is always at index 0.
 		/// The array is not cached. Each time calls API <msdn>EnumDisplayMonitors</msdn>.
 		/// </remarks>
 		public static screen[] all => _All().ToArray();

@@ -172,7 +172,7 @@ public static unsafe class osVersion {
 	public static bool is32BitProcessAnd64BitOS => _isWow64;
 
 	/// <summary>
-	/// Gets string containing OS version, .NET version and Au.dll version, like <c>"10.0.22621-64|6.0.8|1.2.3.4"</c>.
+	/// Gets string containing OS version, .NET version and <c>Au.dll</c> version, like <c>"10.0.22621-64|6.0.8|1.2.3.4"</c>.
 	/// Can be used for example to rebuild various caches when it's changed.
 	/// </summary>
 	public static string onaString => _environment.Value;

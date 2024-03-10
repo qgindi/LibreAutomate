@@ -27,7 +27,7 @@ public class ocrFinder {
 	/// <summary>
 	/// Stores text to find and OCR parameters.
 	/// </summary>
-	/// <exception cref="ArgumentException"><i>text</i> is empty or conatins invalid regular expression.</exception>
+	/// <exception cref="ArgumentException"><i>text</i> is empty or contains invalid regular expression.</exception>
 	/// <inheritdoc cref="ocr.find(IFArea, string, OcrFlags, double, IOcrEngine, int)" path="/param"/>
 	public ocrFinder(string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0) {
 		//**r - regexp (PCRE)

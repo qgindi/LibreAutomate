@@ -97,7 +97,7 @@ public class wndFinder {
 	///// <param name="s">
 	///// One or more comma-separated window properties: name, class, program and/or a <i>contains</i> object. Empty name means <c>""</c> (for any use *); other empty parts mean <c>null</c>.
 	///// The same as parameters of <see cref="wnd.find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>of</i>. The last part is <i>contains</i> as string; can specify a UI element, control or image.
-	///// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like <c>"name\0"+"cn\0"+"program\0"+"object"</c>. Then parts can contain commas. Example: <c>"*one, two, three*\0"</c> (name with commas).
+	///// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by <c>'\0'</c> characters, like <c>"name\0"+"cn\0"+"program\0"+"object"</c>. Then parts can contain commas. Example: <c>"*one, two, three*\0"</c> (name with commas).
 	///// </param>
 	///// <exception cref="ArgumentException">See <see cref="wnd.find"/>.</exception>
 	///// <exception cref="Exception">If specifies a <i>contains</i> object: exceptions of constructor of <see cref="wndChildFinder"/> or <see cref="elmFinder"/> or <see cref="uiimageFinder"/>.</exception>
@@ -227,9 +227,9 @@ public class wndFinder {
 
 	/// <summary>
 	/// Returns index of matching element or -1.
-	/// Returns -1 if using getAll.
+	/// Returns -1 if using <i>getAll</i>.
 	/// </summary>
-	/// <param name="a">List of wnd. Does not dispose it.</param>
+	/// <param name="a">List of <b>wnd</b>. Does not dispose it.</param>
 	/// <param name="getAll">If not <c>null</c>, calls it for all matching and returns -1.</param>
 	/// <param name="cache"></param>
 	int _FindOrMatch(WndList_ a, Action<wnd> getAll = null, WFCache cache = null) {

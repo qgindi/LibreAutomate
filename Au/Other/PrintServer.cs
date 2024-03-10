@@ -191,7 +191,7 @@ namespace Au.More {
 		}
 		
 		/// <summary>
-		/// Calls Stop.
+		/// Calls <b>Stop</b>.
 		/// </summary>
 		~PrintServer() => Stop();
 		
@@ -289,9 +289,9 @@ namespace Au.More {
 		//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToS();
 		
 		/// <summary>
-		/// Adds s directly to _messages and sets timer.
-		/// If s is <c>null</c>, it is "Clear" command.
-		/// Else if !NoNewline, appends "\r\n".
+		/// Adds <i>s</i> directly to <b>_messages</b> and sets timer.
+		/// If <i>s</i> is <c>null</c>, it is "Clear" command.
+		/// Else if <c>!NoNewline</c>, appends <c>"\r\n"</c>.
 		/// Used with local server; also with global server when writes the server's process.
 		/// </summary>
 		internal void LocalWrite_(string s, long time = 0, string caller = null) {
@@ -302,7 +302,7 @@ namespace Au.More {
 		}
 		
 		/// <summary>
-		/// Adds action directly to _messages and sets timer.
+		/// Adds action directly to <b>_messages</b> and sets timer.
 		/// Used with local server; also with global server when writes the server's process.
 		/// </summary>
 		internal void LocalAction_(PrintServerMessageType action) {
@@ -346,22 +346,22 @@ namespace Au.More {
 		public bool NoNewline { get; set; }
 		
 #if NEED_CALLER
-			/// <summary>
-			/// Let clients provide the caller method of Write.
-			/// Note: It makes these methods much slower, especially when thread stack is big. Also generates much garbage. To find caller method is used <see cref="StackTrace"/> class.
-			/// See also: <see cref="IntroduceWriterClass"/>.
-			/// </summary>
-			public bool NeedCallerMethod
-			{
-				get => _isGlobal ? (SM_->needCaller != 0) : _localNeedCaller;
-				set { if(_isGlobal) SM_->needCaller = (byte)(value ? 1 : 0); else _localNeedCaller = value; }
-			}
-			bool _localNeedCaller;
+		/// <summary>
+		/// Let clients provide the caller method of "print" functions.
+		/// Note: It makes these methods much slower, especially when thread stack is big. Also generates much garbage. To find caller method is used <see cref="StackTrace"/> class.
+		/// See also: <see cref="IntroduceWriterClass"/>.
+		/// </summary>
+		public bool NeedCallerMethod
+		{
+			get => _isGlobal ? (SM_->needCaller != 0) : _localNeedCaller;
+			set { if(_isGlobal) SM_->needCaller = (byte)(value ? 1 : 0); else _localNeedCaller = value; }
+		}
+		bool _localNeedCaller;
 
-			internal static bool NeedCallerMethod_
-			{
-				get { var t = s_localServer; return (t != null) ? t.NeedCallerMethod : SM_->needCaller != 0; }
-			}
+		internal static bool NeedCallerMethod_
+		{
+			get { var t = s_localServer; return (t != null) ? t.NeedCallerMethod : SM_->needCaller != 0; }
+		}
 #endif
 		
 		/// <summary>
@@ -378,7 +378,7 @@ namespace Au.More {
 		static string _mailslotName;
 		
 		/// <summary>
-		/// Gets waitable timer name like "timer.Au.print".
+		/// Gets waitable timer name like <c>"timer.Au.print"</c>.
 		/// </summary>
 		internal static string TimerName_ => "timer.Au.print";
 		
@@ -440,8 +440,8 @@ namespace Au {
 		internal static PrintServer s_localServer; //null if we don't have a local server
 		
 		/// <summary>
-		/// Logs start/end/fail events of miniProgram trigger actions.
-		/// Editor displays it in the "Recent tasks" window, not in the output panel.
+		/// Logs start/end/fail events of <b>miniProgram</b> trigger actions.
+		/// Editor displays it in the <b>Recent tasks</b> window, not in the output panel.
 		/// Could also log other events. For example at first used for task start/end/fail events, but now it is implemented in editor.
 		/// </summary>
 		internal static void TaskEvent_(string s, long id, string sourceFile = null, int sourceLine = 0) {
@@ -576,7 +576,7 @@ namespace Au {
 		/// <summary>
 		/// Introduces a class that contain methods designed to write to the output.
 		/// Purpose - when server's <see cref="PrintServer.NeedCallerMethod"/> is <c>true</c>, skip methods of this class when searching for the caller method in the call stack.
-		/// For example, if you created class PrintColored that contains methods PrintRed, PrintGreen and PrintBlue, you should execute this code in its static constructor: <c>print.introduceWriterClass(typeof(PrintColored));</c>.
+		/// For example, if you created class <b>PrintColored</b> that contains methods <b>PrintRed</b>, <b>PrintGreen</b> and <b>PrintBlue</b>, you should execute this code in its static constructor: <c>print.introduceWriterClass(typeof(PrintColored));</c>.
 		/// Also use this if you redirect output using a writer class that calls directly().
 		/// Not used when writing to console or log file.
 		/// </summary>
@@ -625,8 +625,7 @@ namespace Au.Types {
 	/// </summary>
 	public class PrintServerMessage {
 		/// <summary>
-		/// Message type.
-		/// Currently there are 2 types - Write and Clear.
+		/// Message type (write, clear, etc).
 		/// </summary>
 		public PrintServerMessageType Type { get; }
 		
@@ -647,7 +646,7 @@ namespace Au.Types {
 		/// <summary>
 		/// The <see cref="script.name"/> property value of the process that called <see cref="print.it"/>.
 		/// Used with <see cref="PrintServerMessageType.Write"/>.
-		/// If <see cref="NeedCallerMethod"/> is <c>true</c>, also includes the caller method. Format: "scriptname:type.method".
+		/// If <see cref="NeedCallerMethod"/> is <c>true</c>, also includes the caller method. Format: <c>"scriptname:type.method"</c>.
 		/// </summary>
 		public string Caller { get; }
 

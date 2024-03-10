@@ -113,7 +113,7 @@ public partial class toolbar {
 	object _background;
 	
 	/// <summary>
-	/// Border color when <see cref="Border"/> is Width1 ... Width4.
+	/// Border color when <see cref="Border"/> is <b>TBBorder.Width1</b> ... <b>TBBorder.Width4</b>.
 	/// If <c>default</c>, uses system color.
 	/// </summary>
 	public ColorInt BorderColor {

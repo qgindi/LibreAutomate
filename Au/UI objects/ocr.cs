@@ -201,7 +201,7 @@ public class ocr {
 	/// <summary>
 	/// Gets the rectangle of the found word.
 	/// </summary>
-	/// <param name="inScreen">Convert to screen coordinates. If <c>false</c>, it's in <i>area</i> cooordinates (window client area, etc) without rectangle offset.</param>
+	/// <param name="inScreen">Convert to screen coordinates. If <c>false</c>, it's in <i>area</i> coordinates (window client area, etc) without rectangle offset.</param>
 	/// <param name="word">Word index offset from <see cref="FoundWordIndex"/>.</param>
 	public RECT GetRect(bool inScreen, int word = 0) {
 		int i = FoundWordIndex + word; if ((uint)i >= Words.Length) throw new ArgumentOutOfRangeException("word");

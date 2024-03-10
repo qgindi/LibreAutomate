@@ -166,13 +166,6 @@ default: return;
 			<![CDATA[var w = wnd.find(0, "$end$*Name$end$");]]>
 		</snippet>
 
-		<snippet name="copySnippet" info="Get the selected text using the clipboard and Ctrl+C.">
-			<list item="Copy">string s = clipboard.copy();</list>
-			<list item="Try copy">if (!clipboard.tryCopy(out var s)) return;</list>
-			<list item="Cut">string s = clipboard.copy(cut: true);</list>
-			<list item="Try cut">if (!clipboard.tryCopy(out var s, cut: true)) return;</list>
-		</snippet>
-
 		<snippet name="clickSnippet" info="Mouse click or move in window.">
 			<list item="Left click">
 				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
@@ -470,6 +463,12 @@ script.setup(trayIcon: true, sleepExit: true);
 
 		<snippet name="pasteSnippet" info="Paste text using the clipboard and Ctrl+V.">
 			<![CDATA[clipboard.paste($end$);]]>
+		</snippet>
+
+		<snippet name="copySnippet" info="Get the selected text using the clipboard and Ctrl+C.">
+			<list item="Copy">string s = clipboard.copy();</list>
+			<list item="Try copy">if (!clipboard.tryCopy(out var s, 500)) return;</list>
+			<list item="Cut">string s = clipboard.copy(cut: true);</list>
 		</snippet>
 
 		<snippet name="riRunItSnippet" info="Run a program or open a document, folder, web page." more="Tip: drag and drop.">

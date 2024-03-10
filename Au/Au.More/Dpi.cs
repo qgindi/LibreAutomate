@@ -3,7 +3,7 @@ namespace Au.More {
 	/// Functions for high-DPI screen support.
 	/// </summary>
 	/// <remarks>
-	/// To find DPI % on Windows 10: Settings -> System -> Display -> Scale and layout. If not 100%, it means high DPI. On older Windows versions it is in Control Panel -> Display.
+	/// To find DPI % on Windows 10 and 11: <b>Settings > System > Display > Scale and layout</b>. If not 100%, it means high DPI.
 	/// 
 	/// This program must be per-monitor-DPI-aware. Else results are undefined.
 	/// </remarks>
@@ -266,7 +266,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// If possible, gets whether the window is DPI-scaled/virtualized, and gets physical and logical rects if scaled.
-		/// Returns <c>false</c> if !osVersion.minWin10_1607 or if cannot get that info.
+		/// Returns <c>false</c> if <c>!osVersion.minWin10_1607</c> or if cannot get that info.
 		/// Gets that info in a fast and reliable way.
 		/// </summary>
 		internal static bool GetScalingInfo_(wnd w, out bool scaled, out RECT rPhysical, out RECT rLogical) {
@@ -375,7 +375,7 @@ namespace Au.More {
 			/// <summary>
 			/// If <see cref="Available"/>, calls API <msdn>SetThreadDpiAwarenessContext</msdn>.
 			/// </summary>
-			/// <param name="dpiContext">One of <msdn>DPI_AWARENESS_CONTEXT</msdn> constants: -1 unaware, -2 system, -3 per-monitor, -4 per-monitor-v2, -5 unaware-gdiscaled. Or a <b>DPI_AWARENESS_CONTEXT</b> handle.</param>
+			/// <param name="dpiContext">One of <msdn>DPI_AWARENESS_CONTEXT</msdn> constants: -1 <b>unaware</b>, -2 <b>system</b>, -3 <b>per-monitor</b>, -4 <b>per-monitor-v2</b>, -5 <b>unaware-gdiscaled</b>. Or a <b>DPI_AWARENESS_CONTEXT</b> handle.</param>
 			public AwarenessContext(nint dpiContext) {
 				_dac = osVersion.minWin10_1607 ? Api.SetThreadDpiAwarenessContext(dpiContext) : default;
 			}
@@ -419,7 +419,7 @@ namespace Au.More {
 
 namespace Au.Types {
 	/// <summary>
-	/// Used for <i>DPI</i> parameter of functions.
+	/// Used for <i>dpiOf</i> parameter of functions.
 	/// Has implicit conversions from <b>int</b> (DPI), <b>wnd</b> (DPI of window), <b>IntPtr</b> (DPI of screen handle), <b>POINT</b> (DPI of screen containing point), <b>RECT</b> (DPI of screen containing rectangle), forms <b>Control</b>, WPF <b>DependencyObject</b>. The conversion operators set the <see cref="Dpi"/> property and the function can use it.
 	/// </summary>
 	public struct DpiOf {

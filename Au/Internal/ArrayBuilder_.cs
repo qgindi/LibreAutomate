@@ -3,10 +3,10 @@
 namespace Au.More;
 
 /// <summary>
-/// Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
+/// Like <b>List</b> or <b>StringBuilder</b>, used as a temporary variable-size array to create final fixed-size array.
 /// To avoid much garbage (and many reallocations when growing), uses native memory heap. See <see cref="MemoryUtil"/>.
 /// Must be explicitly disposed to free the native memory. Does not have a finalizer because is struct (to avoid garbage).
-/// Does not support reference types. Does not call T.Dispose.
+/// Does not support reference types. Does not call <b>T.Dispose</b>.
 /// </summary>
 //[DebuggerStepThrough]
 internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
@@ -37,14 +37,14 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	public int Count => _len;
 	
 	/// <summary>
-	/// Gets the number of bytes in the array (Count*sizeof(T)).
+	/// Gets the number of bytes in the array (<c>Count*sizeof(T)</c>).
 	/// </summary>
 	public int ByteCount => _len * sizeof(T);
 	
 	/// <summary>
 	/// Gets or sets the total number of elements (not bytes) the internal memory can hold without resizing.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException">(the <c>set</c> function) value less than Count. Instead use ReAlloc or Free.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">(the <c>set</c> function) value less than <b>Count</b>. Instead use <b>ReAlloc</b> or <b>Free</b>.</exception>
 	public int Capacity {
 		get => _cap;
 		set {
@@ -57,13 +57,13 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	}
 	
 	/// <summary>
-	/// Allocates count elements. Sets Count=count.
+	/// Allocates count elements. Sets <c>Count=count</c>.
 	/// Frees previously allocated memory.
 	/// Returns memory address (address of element 0).
 	/// </summary>
 	/// <param name="count">Element count.</param>
 	/// <param name="zeroInit">Set all bytes = 0. If <c>false</c>, the memory is uninitialized, ie random byte values. Default <c>true</c>. Slower when <c>true</c>.</param>
-	/// <param name="noExtra">Set Capacity = count. If <c>false</c>, allocates more if count is less thah the minimal capacity for this type.</param>
+	/// <param name="noExtra">Set <b>Capacity</b> = count. If <c>false</c>, allocates more if count is less than the minimal capacity for this type.</param>
 	public T* Alloc(int count, bool zeroInit = true, bool noExtra = false) {
 		if (_cap != 0) Free();
 		int cap = count; if (cap < s_minCap && !noExtra) cap = s_minCap;
@@ -73,16 +73,16 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	}
 	
 	/// <summary>
-	/// Adds or removes elements at the end. Sets Count=count.
-	/// Preserves Math.Min(Count, count) existing elements.
+	/// Adds or removes elements at the end. Sets <c>Count=count</c>.
+	/// Preserves <c>Math.Min(Count, count)</c> existing elements.
 	/// Returns memory address (address of element 0).
 	/// </summary>
 	/// <param name="count">New element count.</param>
 	/// <param name="zeroInit">Set all added bytes = 0. If <c>false</c>, the added memory is uninitialized, ie random byte values. Default <c>true</c>. Slower when <c>true</c>.</param>
-	/// <param name="noExtra">Set Capacity = count. If <c>false</c>, allocates more if count is less thah the minimal capacity for this type.</param>
+	/// <param name="noExtra">Set <c>Capacity = count</c>. If <c>false</c>, allocates more if count is less than the minimal capacity for this type.</param>
 	/// <remarks>
 	/// The new memory usually is at a new location. The preserved elements are copied there.
-	/// Sets Count=count. To allocate more memory without changing Count, change Capacity instead.
+	/// Sets <c>Count=count</c>. To allocate more memory without changing <b>Count</b>, change <b>Capacity</b> instead.
 	/// </remarks>
 	public T* ReAlloc(int count, bool zeroInit = true, bool noExtra = false) {
 		int cap = count; if (cap < s_minCap && !noExtra) cap = s_minCap;
@@ -92,7 +92,7 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	}
 	
 	/// <summary>
-	/// Frees memory. Sets Count and Capacity = 0.
+	/// Frees memory. Sets <b>Count</b> and <b>Capacity</b> = 0.
 	/// </summary>
 	public void Free() {
 		if (_cap == 0) return;
@@ -103,7 +103,7 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	
 	/// <summary>
 	/// Adds one element.
-	/// The same as Add, but uses <c>in</c>. Use to avoid copying values of big types.
+	/// The same as <b>Add</b>, but uses <c>in</c>. Use to avoid copying values of big types.
 	/// </summary>
 	public void AddR(in T value) {
 		if (_len == _cap) _EnsureCapacity();
@@ -130,7 +130,7 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	}
 	
 	/// <summary>
-	/// Capacity = Math.Max(_cap * 2, s_minCap).
+	/// <c>Capacity = Math.Max(_cap * 2, s_minCap)</c>.
 	/// </summary>
 	void _EnsureCapacity() {
 		Capacity = Math.Max(_cap * 2, s_minCap);

@@ -261,7 +261,7 @@ public static unsafe partial class ExtString {
 	/// Finds substring in this string. Returns its 0-based index, or -1 if not found.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="s">Subtring to find.</param>
+	/// <param name="s">Substring to find.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <remarks>
@@ -275,7 +275,7 @@ public static unsafe partial class ExtString {
 	/// Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="s">Subtring to find.</param>
+	/// <param name="s">Substring to find.</param>
 	/// <param name="startIndex">The search start index.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
@@ -291,7 +291,7 @@ public static unsafe partial class ExtString {
 	/// Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="s">Subtring to find.</param>
+	/// <param name="s">Substring to find.</param>
 	/// <param name="range">The search range.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
@@ -455,7 +455,7 @@ public static unsafe partial class ExtString {
 	/// Finds whole word. Returns its 0-based index, or -1 if not found.
 	/// </summary>
 	/// <param name="t">This string.</param>
-	/// <param name="s">Subtring to find.</param>
+	/// <param name="s">Substring to find.</param>
 	/// <param name="range">The search range.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <param name="otherWordChars">Additional word characters. For example <c>"_"</c>.</param>
@@ -527,7 +527,7 @@ public static unsafe partial class ExtString {
 	//not public because probably too rarely used.
 	
 	/// <summary>
-	/// This function can be used with foreach to split this string into substrings as start/end offsets.
+	/// This function can be used with <c>foreach</c> to split this string into substrings as start/end offsets.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="SegSep"/> constants.</param>
@@ -846,7 +846,7 @@ public static unsafe partial class ExtString {
 	/// The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
 	/// The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
 	/// Fails if the number is greater than +- <b>uint.MaxValue</b> (0xffffffff).
-	/// The return value becomes negative if the number is greater than <b>int.MaxValue</b>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to uint (need cast).
+	/// The return value becomes negative if the number is greater than <b>int.MaxValue</b>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to <b>uint</b> (need cast).
 	/// Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
 	/// </remarks>
 	public static int ToInt(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
@@ -1238,8 +1238,8 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="result">Receives the result string. It is this string if there are no escape sequences or if failed.</param>
 	/// <remarks>
-	/// Supports all escape sequences of <see cref="Escape"/>: \\ \" \t \n \r \0 \uXXXX.
-	/// Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
+	/// Supports all escape sequences of <see cref="Escape"/>: <c>\\</c> <c>\"</c> <c>\t</c> <c>\n</c> <c>\r</c> <c>\0</c> <c>\uXXXX</c>.
+	/// Does not support <c>\a</c> <c>\b</c> <c>\f</c> <c>\v</c> <c>\'</c> <c>\xXXXX</c> <c>\UXXXXXXXX</c>.
 	/// </remarks>
 	public static bool Unescape(this string t, out string result) {
 		result = t;
@@ -1306,7 +1306,7 @@ public static unsafe partial class ExtString {
 	
 	//rejected. Rarely used.
 	///// <summary>
-	///// Converts this string to '\0'-terminated <b>char[]</b>.
+	///// Converts this string to <c>'\0'</c>-terminated <b>char[]</b>.
 	///// </summary>
 	//public static char[] ToArrayAnd0(this string t)
 	//{
@@ -1317,7 +1317,7 @@ public static unsafe partial class ExtString {
 	
 	//rejected. Better call Convert2.Utf8FromString directly.
 	///// <summary>
-	///// Converts this string to '\0'-terminated UTF8 string as <b>byte[]</b>.
+	///// Converts this string to <c>'\0'</c>-terminated UTF-8 string as <b>byte[]</b>.
 	///// </summary>
 	///// <remarks>
 	///// Calls <see cref="Convert2.Utf8FromString"/>.
@@ -1572,7 +1572,7 @@ public static unsafe partial class ExtString {
 	
 	/// <summary>
 	/// Splits string <i>s</i> into 2 strings.
-	/// Tip: there are 2 overloads: for string and for RStr.
+	/// Tip: there are 2 overloads: for string and for <b>RStr</b>.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="c">Separator character.</param>

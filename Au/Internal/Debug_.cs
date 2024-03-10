@@ -4,9 +4,9 @@ namespace Au.More;
 /// Functions useful to debug code.
 /// </summary>
 /// <remarks>
-/// The Debug_.PrintX functions write to the same output as <see cref="print.it"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
-/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
-/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(opt.warnings.Verbose) print.warning("text");</c>; see <see cref="print.warning"/>, opt.warnings.<see cref="OWarnings.Verbose"/>.
+/// The <b>Debug_.PrintX</b> functions write to the same output as <see cref="print.it"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
+/// Functions <b>Print</b>, <b>PrintIf</b>, <b>PrintFunc</b> and <b>Dialog</b> work only if <b>DEBUG</b> is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have <c>[ConditionalAttribute("DEBUG")]</c>.
+/// Note: when used in a library, the above functions depend on <b>DEBUG</b> of the library project and not on <b>DEBUG</b> of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(opt.warnings.Verbose) print.warning("text");</c>; see <see cref="print.warning"/>, <see cref="OWarnings.Verbose"/>.
 /// </remarks>
 internal static class Debug_ {
 	static void _Print(object text, string f_, int l_, string m_) {
@@ -26,7 +26,7 @@ internal static class Debug_ {
 	
 	/// <summary>
 	/// Calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
-	/// Works only if DEBUG is defined. Read more in class help.
+	/// Works only if <b>DEBUG</b> is defined. Read more in class help.
 	/// The 3 optional arguments are not used explicitly.
 	/// Text can contain output tags.
 	/// </summary>
@@ -36,9 +36,9 @@ internal static class Debug_ {
 	
 	/// <summary>
 	/// If condition is <c>true</c>, calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
-	/// Works only if DEBUG is defined. Read more in class help.
-	/// If <i>text</i> <c>null</c>, uses [CallerArgumentExpression("condition")]. Other optional parameters are not used explicitly.
-	/// If text starts with "&lt;&gt;", it can contain output tags.
+	/// Works only if <b>DEBUG</b> is defined. Read more in class help.
+	/// If <i>text</i> <c>null</c>, uses <c>[CallerArgumentExpression("condition")]</c>. Other optional parameters are not used explicitly.
+	/// If text starts with <c>"&lt;&gt;"</c>, it can contain output tags.
 	/// </summary>
 	[Conditional("DEBUG")]
 	public static void PrintIf(bool condition, object text = null, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null, [CallerArgumentExpression("condition")] string ae_ = null) {
@@ -47,7 +47,7 @@ internal static class Debug_ {
 	
 	/// <summary>
 	/// Calls <see cref="print.it"/> with current function name.
-	/// Works only if DEBUG is defined. Read more in class help.
+	/// Works only if <b>DEBUG</b> is defined. Read more in class help.
 	/// The optional argument is not used explicitly.
 	/// </summary>
 	[Conditional("DEBUG")]
@@ -55,7 +55,7 @@ internal static class Debug_ {
 		=> _Print2(m_);
 	
 	/// <summary>
-	/// In DEBUG config prints lastError.message. Only if condition <c>true</c> (default).
+	/// If <b>DEBUG</b> defined, prints <c>lastError.message</c>. Only if condition <c>true</c> (default).
 	/// </summary>
 	[Conditional("DEBUG")]
 	public static void PrintNativeError(bool condition = true, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
@@ -63,7 +63,7 @@ internal static class Debug_ {
 	}
 	
 	/// <summary>
-	/// In DEBUG config prints lastError.messageFor(code).
+	/// If <b>DEBUG</b> defined, prints <c>lastError.messageFor(code)</c>.
 	/// </summary>
 	[Conditional("DEBUG")]
 	public static void PrintNativeError(int code, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
@@ -71,7 +71,7 @@ internal static class Debug_ {
 	
 	/// <summary>
 	/// Calls <see cref="dialog.show"/> to show some debug info.
-	/// Works only if DEBUG is defined. Read more in class help.
+	/// Works only if <b>DEBUG</b> is defined. Read more in class help.
 	/// The 3 optional arguments are not used explicitly.
 	/// </summary>
 	[Conditional("DEBUG")]
@@ -82,7 +82,7 @@ internal static class Debug_ {
 	
 	//rejected: use if(opt.warnings.Verbose) dialog.showWarning(...). It adds stack trace.
 	///// <summary>
-	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == <c>true</c>, calls <see cref="dialog.show"/> with text and stack trace.
+	///// If <c>opt.warnings.Verbose</c>, calls <see cref="dialog.show"/> with text and stack trace.
 	///// Read more in class help.
 	///// </summary>
 	//[MethodImpl(MethodImplOptions.NoInlining)]
@@ -95,7 +95,7 @@ internal static class Debug_ {
 	
 	//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use print.warning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 	///// <summary>
-	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == <c>true</c>, calls <see cref="print.it(string)"/>.
+	///// If <c>opt.warnings.Verbose</c>, calls <see cref="print.it(string)"/>.
 	///// Read more in class help.
 	///// </summary>
 	//public static void PrintOpt(string text)
@@ -105,7 +105,7 @@ internal static class Debug_ {
 	
 	//rejected: Don't need multiple warning functions. Now print.warning does not show more than 1 warning/second if opt.warnings.Verbose is false.
 	///// <summary>
-	///// If opt.warnings.<see cref="OWarnings.Verbose"/> == <c>true</c>, calls <see cref="print.warning"/>.
+	///// If <c>opt.warnings.Verbose</c>, calls <see cref="print.warning"/>.
 	///// Read more in class help.
 	///// </summary>
 	//[MethodImpl(MethodImplOptions.NoInlining)]
@@ -115,13 +115,13 @@ internal static class Debug_ {
 	//}
 	
 	/// <summary>
-	/// Checks flags and throws ArgumentException if some flags are invalid. The error message includes valid flag names.
+	/// Checks flags and throws <b>ArgumentException</b> if some flags are invalid. The error message includes valid flag names.
 	/// </summary>
 	/// <param name="flags">Flags to check.</param>
 	/// <param name="goodFlags">Valid flags.</param>
 	/// <remarks>
 	/// Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
-	/// Does nothing if opt.warnings.<see cref="OWarnings.Verbose"/> == <c>false</c>.
+	/// Does nothing if <c>!opt.warnings.Verbose</c>.
 	/// When flags are valid, this function is fast.
 	/// </remarks>
 	public static unsafe void CheckFlagsOpt<T>(T flags, T goodFlags) where T : unmanaged, Enum {
@@ -149,7 +149,7 @@ internal static class Debug_ {
 	}
 	
 	/// <summary>
-	/// Returns <c>true</c> if using Debug configuration of Au.dll.
+	/// Returns <c>true</c> if using Debug configuration of <c>Au.dll</c>.
 	/// </summary>
 	public static bool IsAuDebugConfiguration {
 		get {
@@ -164,7 +164,7 @@ internal static class Debug_ {
 	//CONSIDER: move the MemoryX functions to perf as public.
 	
 	/// <summary>
-	/// Calls Marshal.AddRef(obj), then calls/returns Marshal.Release(obj).
+	/// Calls <c>Marshal.AddRef(obj)</c>, then calls/returns <c>Marshal.Release(obj)</c>.
 	/// </summary>
 	public static int GetComObjRefCount(IntPtr obj) {
 		Marshal.AddRef(obj);
@@ -172,7 +172,7 @@ internal static class Debug_ {
 	}
 	
 	/// <summary>
-	/// Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
+	/// Returns managed memory size as formatted string. Uses <b>GC.GetTotalMemory</b>.
 	/// </summary>
 	/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
 	public static string MemoryGet(bool fromAnchor = true) {
@@ -184,13 +184,13 @@ internal static class Debug_ {
 	static long s_mem0;
 	
 	/// <summary>
-	/// Prints managed memory size. Uses GC.GetTotalMemory.
+	/// Prints managed memory size. Uses <b>GC.GetTotalMemory</b>.
 	/// </summary>
 	/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
 	public static void MemoryPrint(bool fromAnchor = true) => _Print2(MemoryGet(fromAnchor));
 	
 	/// <summary>
-	/// Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=<c>true</c> (default) will get memory size difference from current memory size.
+	/// Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with <i>fromAnchor</i>=<c>true</c> (default) will get memory size difference from current memory size.
 	/// </summary>
 	public static void MemorySetAnchor() { s_mem0 = GC.GetTotalMemory(false); }
 	

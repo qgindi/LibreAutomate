@@ -1,7 +1,7 @@
 ﻿namespace Au.More;
 
 /// <summary>
-/// Activates our manifest which tells to use comctl32.dll version 6.
+/// Activates our manifest which tells to use <c>comctl32.dll</c> version 6.
 /// The manifest is embedded in this dll, resource id 2.
 /// </summary>
 internal sealed class ActCtx_ : IDisposable {

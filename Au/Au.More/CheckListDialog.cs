@@ -77,7 +77,7 @@ public class CheckListDialog {
 	}
 	
 	/// <summary>
-	/// Changes text of OK and Cancel buttons.
+	/// Changes text of <b>OK</b> and <b>Cancel</b> buttons.
 	/// </summary>
 	public void SetButtons(string ok = "OK", string cancel = "Cancel") {
 		_ok = ok;
@@ -103,13 +103,13 @@ public class CheckListDialog {
 	public wpfBuilder Builder => _b;
 	
 	/// <summary>
-	/// Adds OK/Cancel buttons, shows dialog, sets result properties.
+	/// Adds <b>OK</b>/<b>Cancel</b> buttons, shows dialog, sets result properties.
 	/// </summary>
 	/// <param name="owner">
 	/// Owner window, or an element in it.
 	/// If used, sets <b>ShowInTaskbar</b> = <c>false</c>. Else sets <b>Topmost</b> = <c>true</c>, unless <see cref="dialog.options.topmostIfNoOwnerWindow"/> is <c>false</c> or the active window belongs to this process.
 	/// </param>
-	/// <returns><c>true</c> if pressed OK.</returns>
+	/// <returns><c>true</c> if pressed <b>OK</b>.</returns>
 	public bool ShowDialog(DependencyObject owner = null) {
 		_b.R.AddOkCancel(_ok ?? "OK", _cancel ?? "Cancel");
 		_b.End();

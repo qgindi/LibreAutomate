@@ -3,8 +3,7 @@ using IAccessible = Au.Types.Api.IAccessible;
 using VarInt = Au.Types.Api.VarInt;
 using NAVDIR = Au.Types.Api.NAVDIR;
 
-namespace Au.Controls
-{
+namespace Au.Controls {
 	//public //if non-public, GetIDispatchForObject throws, and with GetIUnknownForObject does not work too.
 	//	See https://learn.microsoft.com/en-us/dotnet/standard/native-interop/qualify-net-types-for-interoperation.
 	//	But somehow works if implements IReflect, even if all functions just return default. Winforms use it.
@@ -39,7 +38,17 @@ namespace Au.Controls
 
 		#region IAccessible
 
-		IAccessible IAccessible.get_accParent() => _StdAO.get_accParent();
+		IAccessible IAccessible.get_accParent() => _StdAO?.get_accParent();
+
+		//Once was exception on process exit, while debugging. _StdAO returned null. Cannot reproduce. Replaced `.` with `?.` everywhere.
+		//IAccessible IAccessible.get_accParent() {
+		//	print.qm2.write("get_accParent");
+		//	print.qm2.write(_w);
+		//	print.qm2.write(_w.Get.DirectParent);
+		//	print.qm2.write(new StackTrace(true));
+		//	if (_StdAO is { } k) return k.get_accParent();
+		//	return null;
+		//}
 
 		/// <summary>
 		/// Returns 0.
@@ -129,8 +138,7 @@ namespace Au.Controls
 			return new _EnumSelected(a);
 		}
 
-		unsafe class _EnumSelected : IEnumVarInt
-		{
+		unsafe class _EnumSelected : IEnumVarInt {
 			List<int> _a;
 			int _i;
 			public _EnumSelected(List<int> a) { _a = a; }
@@ -155,8 +163,7 @@ namespace Au.Controls
 		}
 
 		[ComImport, Guid("00020404-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal unsafe interface IEnumVarInt
-		{
+		internal unsafe interface IEnumVarInt {
 			[PreserveSig] int Next(int celt, VarInt* rgVar, int* pCeltFetched);
 			[PreserveSig] int Skip(int celt);
 			void Reset();
@@ -193,7 +200,8 @@ namespace Au.Controls
 		void IAccessible.accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, VarInt varChild) {
 			int child = varChild;
 			if (child == -1) {
-				_StdAO.accLocation(out pxLeft, out pyTop, out pcxWidth, out pcyHeight, varChild);
+				pxLeft = pyTop = pcxWidth = pcyHeight = 0;
+				_StdAO?.accLocation(out pxLeft, out pyTop, out pcxWidth, out pcyHeight, varChild);
 			} else {
 				var r = ChildRect(child);
 				_w.MapClientToScreen(ref r);
@@ -211,7 +219,7 @@ namespace Au.Controls
 			if (navDir == NAVDIR.FIRSTCHILD || navDir == NAVDIR.LASTCHILD) {
 				if (i != -1) return null;
 			} else {
-				if (i == -1) return _StdAO.accNavigate(navDir, varStart); //never mind: gets some not adjacent UI element
+				if (i == -1) return _StdAO?.accNavigate(navDir, varStart); //never mind: gets some not adjacent UI element
 			}
 			var v = Navigate(navDir, i);
 			if (v == null) return null;
@@ -226,8 +234,9 @@ namespace Au.Controls
 		public virtual int HitTest(int x, int y) => -1;
 		VarInt IAccessible.accHitTest(int xLeft, int yTop) {
 			POINT p = (xLeft, yTop); _w.MapScreenToClient(ref p);
-			if (!_w.ClientRect.Contains(p)) return _StdAO.accHitTest(xLeft, yTop);
-			return HitTest(p.x, p.y);
+			if (_w.ClientRect.Contains(p)) return HitTest(p.x, p.y);
+			if (_StdAO is { } k) return k.accHitTest(xLeft, yTop);
+			return default;
 		}
 
 		/// <summary>

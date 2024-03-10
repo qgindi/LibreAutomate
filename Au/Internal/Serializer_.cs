@@ -41,7 +41,7 @@ internal static unsafe class Serializer_ {
 	/// <summary>
 	/// Serializes multiple values of types <b>int</b>, <b>string</b>, <b>string[]</b> and <c>null</c>.
 	/// Unlike <see cref="Serialize"/>, in the first 4 bytes writes the size of data that follows.
-	/// Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass b to <see cref="Deserialize"/>. 
+	/// Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass <c>b</c> to <see cref="Deserialize"/>. 
 	/// </summary>
 	public static byte[] SerializeWithSize(params Value[] a) => _Serialize(true, a);
 	

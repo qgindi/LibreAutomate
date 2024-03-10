@@ -103,7 +103,7 @@ internal /*abstract*/ class NativeScrollbar_ {
 	
 	/// <summary>
 	/// Gets or sets item count.
-	/// Use setter to set item count when there is no scrollbar; asserts !_visible.
+	/// Use setter to set item count when there is no scrollbar; asserts <c>!_visible</c>.
 	/// </summary>
 	public int NItems {
 		get => _nItems;
@@ -115,7 +115,7 @@ internal /*abstract*/ class NativeScrollbar_ {
 	
 	/// <summary>
 	/// When scrollbar position changed.
-	/// The <b>int</b> parameter is event source: if scrollbar, it is one of Api.SB_ constants; if <see cref="Pos"/>, it is -1; if wheel, it is -2 if down, -3 if up.
+	/// The <b>int</b> parameter is event source: if scrollbar, it is one of <b>Api.SB_</b> constants; if <see cref="Pos"/>, it is -1; if wheel, it is -2 if down, -3 if up.
 	/// </summary>
 	public event Action<NativeScrollbar_, int> PosChanged;
 	
@@ -167,7 +167,7 @@ internal /*abstract*/ class NativeScrollbar_ {
 	}
 	
 	/// <summary>
-	/// Calculates new focused item index when pressed key Down, Up, PageDown, PageUp, End or Home.
+	/// Calculates new focused item index when pressed key <c>Down</c>, <c>Up</c>, <c>PageDown</c>, <c>PageUp</c>, <c>End</c> or <c>Home</c>.
 	/// </summary>
 	/// <param name="i">Current focused item index. Can be -1.</param>
 	/// <param name="k"></param>

@@ -106,7 +106,7 @@ public enum PMFlags {
 	/// <summary>Show in the center of the active window.</summary>
 	WindowCenter = 0x4000000,
 	
-	/// <summary>Underline characters preceded by &amp;, regardless of Windows settings. More info: <see cref="StringUtil.RemoveUnderlineChar"/>.</summary>
+	/// <summary>Underline characters preceded by <c>&amp;</c>, regardless of Windows settings. More info: <see cref="StringUtil.RemoveUnderlineChar"/>.</summary>
 	Underline = 0x8000000,
 	
 	//TPM_ flags

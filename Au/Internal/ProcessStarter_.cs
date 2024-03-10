@@ -25,7 +25,7 @@ unsafe struct ProcessStarter_ {
 	/// - Else if <c>""</c>, calls <c>pathname.getDirectory(exe)</c>.
 	/// - Else calls <see cref="pathname.expand"/>.
 	/// </param>
-	/// <param name="envVar"><c>null</c> or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
+	/// <param name="envVar"><c>null</c> or environment variables to pass to the new process together with variables of this process. Format: <c>"var1=value1\0var2=value2\0"</c>. If ends with <c>"\0\0"</c>, will pass only these variables.</param>
 	/// <param name="rawExe">Don't normalize <i>exe</i>.</param>
 	/// <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
 	public ProcessStarter_(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) {
@@ -90,7 +90,7 @@ unsafe struct ProcessStarter_ {
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
 	/// Actually the process will have the same IL and user session as the shell process (normally explorer).
-	/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
+	/// Fails if there is no shell process (API <b>GetShellWindow</b> fails) for more than 2 s from calling this func.
 	/// Asserts and fails if this is not admin/system process. Caller should at first call <see cref="uacInfo.isAdmin"/> or <see cref="uacInfo.IntegrityLevel"/>.
 	/// </remarks>
 	public Result StartUserIL(Result.Need need = 0) {
@@ -197,7 +197,7 @@ unsafe struct ProcessStarter_ {
 	static class _NetProcessObject //FUTURE: remove if unused
 	{
 		/// <summary>
-		/// Returns <c>true</c> if can create such object in a fast/reliable way. Else <see cref="Create"/> will use Process.GetProcessById.
+		/// Returns <c>true</c> if can create such object in a fast/reliable way. Else <see cref="Create"/> will use <b>Process.GetProcessById</b>.
 		/// It depends on .NET framework version, because uses private methods of Process class through reflection.
 		/// </summary>
 		public static bool IsFast { get; } = _CanSetHandleId();

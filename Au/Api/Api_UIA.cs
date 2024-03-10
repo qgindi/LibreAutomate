@@ -145,11 +145,11 @@ static class UiaUtil {
 	}
 	
 	///// <summary>
-	///// Gets text of TextPattern paragraph from point.
+	///// Gets text of <b>TextPattern</b> paragraph from point.
 	///// </summary>
 	///// <param name="t"></param>
 	///// <param name="xy">Screen coordinates.</param>
-	///// <returns><c>null</c> if the element does not support TextPattern or if failed.</returns>
+	///// <returns><c>null</c> if the element does not support <b>TextPattern</b> or if failed.</returns>
 	//public static string PatternTextFromPoint(this UiaApi.IUIAutomationElement t, POINT xy) {
 	//	if (0 == t.GetCurrentPattern(UiaApi.UIA_TextPatternId, out var o) && o is UiaApi.IUIAutomationTextPattern p) {
 	//		if (0 == p.RangeFromPoint(xy, out var tr) && 0 == tr.ExpandToEnclosingUnit(UiaApi.TextUnit.TextUnit_Paragraph)) {
@@ -160,10 +160,10 @@ static class UiaUtil {
 	//}
 	
 	///// <summary>
-	///// Gets text of ValuePattern.
+	///// Gets text of <b>ValuePattern</b>.
 	///// </summary>
 	///// <param name="t"></param>
-	///// <returns><c>null</c> if the element does not support ValuePattern or if failed.</returns>
+	///// <returns><c>null</c> if the element does not support <b>ValuePattern</b> or if failed.</returns>
 	//public static string ValueText(this UiaApi.IUIAutomationElement t) {
 	//	if (0 == t.GetCurrentPattern(UiaApi.UIA_ValuePatternId, out var o) && o is UiaApi.IUIAutomationValuePattern p) {
 	//		if (0 == p.get_CurrentValue(out var s)) return s;

@@ -474,8 +474,8 @@ partial class SciCode : KScintilla {
 				var b = new StringBuilder("[code]");
 				if (isCS) {
 					if (!isFragment) {
-						var name = _fn.Name; if (name.RxIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
-						b.AppendFormat("// {0} \"{1}\"\r\n", _fn.IsScript ? "script" : "class", name);
+						var name = _fn.Name; if (name.RxIsMatch(_fn.IsScript ? @"(?i)^Script\d*\.cs$" : @"(?i)^Class\d*\.cs$")) name = null;
+						if (!(name == null && _fn.IsScript)) b.AppendFormat("// {0} \"{1}\"\r\n", _fn.IsScript ? "script" : "class", name);
 					}
 					s = CodeExporter.ExportForum(s);
 				}

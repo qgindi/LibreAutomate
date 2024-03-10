@@ -9,16 +9,16 @@ namespace Au;
 /// Can be used everywhere: in automation scripts, WPF apps, other apps, etc.
 /// Also can be used as a popup list and supports many items with scrollbar.
 /// 
-/// Menu item text can include hotkey after <c>'\t'</c> character and/or tooltip after <c>'|'</c> or <c>'\0'</c> character. Examples: <c>"Text\t Hotkey"</c>, <c>"Text|Tooltip"</c>, <c>"Text\t Hotkey\0 Tooltip"</c>. Character with prefix &amp; (eg <c>'A'</c> in <c>"Save &amp;As"</c>) will be underlined (depends on Windows settings and <see cref="PMFlags"/>) and can be used to select the item with keyboard.
+/// Menu item text can include hotkey after <c>'\t'</c> character and/or tooltip after <c>'|'</c> or <c>'\0'</c> character. Examples: <c>"Text\t Hotkey"</c>, <c>"Text|Tooltip"</c>, <c>"Text\t Hotkey\0 Tooltip"</c>. Character with prefix <c>&amp;</c> (eg <c>'A'</c> in <c>"Save &amp;As"</c>) will be underlined (depends on Windows settings and <see cref="PMFlags"/>) and can be used to select the item with keyboard.
 /// 
 /// Keyboard, mouse:
-/// - Enter, Tab, Space - close the menu and execute the focused item. Or show the submenu.
-/// - Esc - close the menu or current submenu.
-/// - Left - close current submenu.
-/// - Right - open submenu.
-/// - Down, Up, PageDown, PageUp, End, Home - focus other item.
+/// - <c>Enter</c>, <c>Tab</c>, <c>Space</c> - close the menu and execute the focused item. Or show the submenu.
+/// - <c>Esc</c> - close the menu or current submenu.
+/// - <c>Left</c> - close current submenu.
+/// - <c>Right</c> - open submenu.
+/// - <c>Down</c>, <c>Up</c>, <c>PageDown</c>, <c>PageUp</c>, <c>End</c>, <c>Home</c> - focus other item.
 /// - underlined menu item character - close the menu and execute the item. Or show the submenu. See <see cref="PMFlags.Underline"/>.
-/// - Alt, Win, F10, Apps, Back - close menus.
+/// - <c>Alt</c>, <c>Win</c>, <c>F10</c>, <c>Apps</c>, <c>Back</c> - close menus.
 /// - click outside - close the menu.
 /// - middle click - close the menu.
 /// - right click - show context menu (if used constructor with parameters).
@@ -283,13 +283,13 @@ public unsafe partial class popupMenu : MTBase {
 	}
 
 	/// <summary>
-	/// Don't use: &amp; character for keyboard shortcut; tab character for hotkey; | character for tooltip (but use \0).
+	/// Don't use: <c>&amp;</c> character for keyboard shortcut; tab character for hotkey; <c>|</c> character for tooltip (but use <c>\0</c>).
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
 	public bool RawText { get; set; }
 
 	/// <summary>
-	/// Adds enum members as checkbox-items (if it's a [Flags] enum) or radio-items.
+	/// Adds enum members as checkbox-items (if it's a <c>[Flags]</c> enum) or radio-items.
 	/// </summary>
 	/// <returns>Object for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</returns>
 	/// <param name="init">Initial value.</param>
@@ -315,9 +315,12 @@ public unsafe partial class popupMenu : MTBase {
 	#region show, close
 
 	/// <summary>
-	/// Shows the menu, waits until closed, and returns item id or 0.
+	/// Shows the menu and waits until closed.
 	/// </summary>
-	/// <returns>id of the selected item when closed, or 0 if canceled.</returns>
+	/// <returns>
+	/// id of the selected item, or 0 if canceled.
+	/// See also: <see cref="Result"/>.
+	/// </returns>
 	/// <param name="flags"></param>
 	/// <param name="xy">Menu position in screen. If <c>null</c> (default), uses mouse position by default. It depends on <i>flags</i>.</param>
 	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
@@ -880,7 +883,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// Gets or sets the focused menu item.
 	/// </summary>
 	/// <remarks>
-	/// The focused item visually shows the menu item that would be executed if clicked or pressed Enter, Tab or Space key. It changes when the user moves the mouse or presses navigation keys (arrows, End, Home, PageDown, PageUp).
+	/// The focused item visually shows the menu item that would be executed if clicked or pressed <c>Enter</c>, <c>Tab</c> or <c>Space</c> key. It changes when the user moves the mouse or presses navigation keys (arrows, <c>End</c>, <c>Home</c>, <c>PageDown</c>, <c>PageUp</c>).
 	/// This property can be set before showing the menu or when it is open.
 	/// </remarks>
 	public PMItem FocusedItem {
@@ -985,7 +988,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <returns>id of the selected item when closed, or 0 if canceled.</returns>
 	/// <param name="items">
 	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>.
-	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four"</c> //1|2|100|101.
+	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four"</c> (1|2|100|101).
 	/// For separators use <c>null</c> or empty strings: <c>"One|Two||Three|Four"</c>.
 	/// </param>
 	/// <param name="flags"></param>

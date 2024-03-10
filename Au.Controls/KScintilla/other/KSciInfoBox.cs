@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Au.Controls;
 
@@ -68,7 +69,7 @@ public class KSciInfoBox : KScintilla {
 	/// Temporarily suspends showing tooltips of elements in this control. See <see cref="AaAddElem"/>.
 	/// </summary>
 	/// <param name="timeMS">Suspend for this time interval, ms. If 0, resumes.</param>
-	public void AaSuspendElems(long timeMS = 5000) {
+	public void AaSuspendElems(long timeMS = 3000) {
 		_suspendElems = Environment.TickCount64 + timeMS;
 	}
 	long _suspendElems;

@@ -76,7 +76,7 @@ namespace Au.More
 		///// Returns <c>null</c> if it is not a Windows Forms control or if failed.
 		///// </summary>
 		///// <param name="c">The control. Can be top-level window too.</param>
-		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating WinformsControlNames instance each time and calling its <b>GetControlName</b> method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
+		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating <b>WinformsControlNames</b> instance each time and calling its <b>GetControlName</b> method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
 		//public static string GetSingleControlName(wnd c)
 		//{
 		//	if(!IsWinformsControl(c)) return null;

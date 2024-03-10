@@ -16,7 +16,7 @@ namespace Au {
 	/// </remarks>
 	public static unsafe class pathname { //BAD: why pathname? Better would be eg filepath.
 		/// <summary>
-		/// If <i>path</i> starts with <c>"%"</c> or <c>"\"%"</c>, expands environment variables enclosed in %, else just returns <i>path</i>.
+		/// If <i>path</i> starts with <c>"%"</c> or <c>"\"%"</c>, expands environment variables enclosed in <c>%</c>, else just returns <i>path</i>.
 		/// Also supports known folder names, like <c>"%folders.Documents%"</c>. More info in Remarks.
 		/// </summary>
 		/// <param name="path">Any string. Can be <c>null</c>.</param>
@@ -79,8 +79,8 @@ namespace Au {
 		/// <param name="orEnvVar">Also return <c>true</c> if starts with <c>"%environmentVariable%"</c> or <c>"%folders.Folder%"</c>. Note: this function does not check whether the variable/folder exists; for it use <see cref="isFullPathExpand"/> instead.</param>
 		/// <remarks>
 		/// Returns <c>true</c> if <i>path</i> matches one of these wildcard patterns:
-		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
-		/// - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here ? is A-Z, a-z.
+		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here <c>?</c> is A-Z, a-z.
+		/// - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here <c>?</c> is A-Z, a-z.
 		/// - <c>@"\\*"</c> - network path, like <c>@"\\server\share\..."</c>. Or has prefix <c>@"\\?\"</c>.
 		/// 
 		/// Supports <c>'/'</c> characters too.
@@ -115,8 +115,8 @@ namespace Au {
 		/// <param name="strict"><inheritdoc cref="expand(string, bool?)" path="/param[@name='strict']/node()"/></param>
 		/// <remarks>
 		/// Returns <c>true</c> if <i>path</i> matches one of these wildcard patterns:
-		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
-		/// - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here ? is A-Z, a-z.
+		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here <c>?</c> is A-Z, a-z.
+		/// - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here <c>?</c> is A-Z, a-z.
 		/// - <c>@"\\*"</c> - network path, like <c>@"\\server\share\..."</c>. Or has prefix <c>@"\\?\"</c>.
 		/// 
 		/// Supports <c>'/'</c> characters too.
@@ -147,8 +147,8 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Calls <b>Path.GetPathRoot</b>. If no '\\' or '/' at the end, appends "\\".
-		/// Tested: <b>Path.GetPathRoot</b> returns network path like @"\\server\share". API <b>PathSkipRoot</b> returns with '\\'.
+		/// Calls <b>Path.GetPathRoot</b>. If no <c>'\\'</c> or <c>'/'</c> at the end, appends <c>"\\"</c>.
+		/// Tested: <b>Path.GetPathRoot</b> returns network path like <c>@"\\server\share"</c>. API <b>PathSkipRoot</b> returns with <c>'\\'</c>.
 		/// </summary>
 		internal static string GetRootBS_(string s) {
 			s = Path.GetPathRoot(s);
@@ -259,18 +259,18 @@ namespace Au {
 		internal static bool IsSepChar_(char c) { return c is '\\' or '/'; }
 
 		/// <summary>
-		/// Returns <c>true</c> if s starts with "\\". Supports '/'.
+		/// Returns <c>true</c> if <i>s</i> starts with <c>"\\"</c>. Supports <c>'/'</c>.
 		/// </summary>
 		/// <param name="s">Can be <c>null</c>.</param>
 		internal static bool StartsWithTwoSlash_(string s) => s.Lenn() >= 2 && IsSepChar_(s[0]) && IsSepChar_(s[1]);
 
 		///// <summary>
-		///// Returns <c>true</c> if ends with '\\' or '/'.
+		///// Returns <c>true</c> if ends with <c>'\\'</c> or <c>'/'</c>.
 		///// </summary>
 		//internal static bool EndsWithSep_(RStr s) { return s.Length > 0 && s[^1] is '\\' or '/'; }
 
 		/// <summary>
-		/// Returns <c>true</c> if ends with <c>':'</c> preceded by a drive letter, like "C:" or "more\C:", but not like "moreC:".
+		/// Returns <c>true</c> if ends with <c>':'</c> preceded by a drive letter, like <c>"C:"</c> or <c>"more\C:"</c>, but not like <c>"moreC:"</c>.
 		/// </summary>
 		static bool _EndsWithDriveWithoutSep(RStr s) {
 			if (s == null) return false;
@@ -282,7 +282,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// If s is like "C:", returns "C:\", else returns s.
+		/// If <i>s</i> is like <c>"C:"</c>, returns <c>"C:\"</c>, else returns <i>s</i>.
 		/// </summary>
 		static string _AddSepToDrive(string s) => _EndsWithDriveWithoutSep(s) ? s + "\\" : s;
 
@@ -323,7 +323,7 @@ namespace Au {
 
 		/// <summary>
 		/// Same as <see cref="normalize"/>, but skips full-path checking.
-		/// s should be full path. If not full and not <c>null</c>/<c>""</c>, combines with current directory.
+		/// <i>s</i> should be full path. If not full and not <c>null</c>/<c>""</c>, combines with current directory.
 		/// </summary>
 		internal static string Normalize_(string s, PNFlags flags = 0, bool noExpandEV = false) {
 			if (!s.NE()) {
@@ -350,10 +350,10 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Prepares path for passing to API and .NET functions that support "..", DOS path etc.
-		/// Calls expand, _AddSepToDrive, prefixLongPathIfNeed. By default throws exception if !isFullPath(path).
+		/// Prepares path for passing to API and .NET functions that support <c>".."</c>, DOS path etc.
+		/// Calls expand, <b>_AddSepToDrive</b>, <b>prefixLongPathIfNeed</b>. By default throws exception if <c>!isFullPath(path)</c>.
 		/// </summary>
-		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is <c>true</c>).</exception>
+		/// <exception cref="ArgumentException">Not full path (only if <i>throwIfNotFullPath</i> is <c>true</c>).</exception>
 		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath = true) {
 			var s = expand(path);
 			Debug_.PrintIf(IsShellPathOrUrl_(s), s);
@@ -364,8 +364,8 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Calls API GetLongPathName.
-		/// Does not check whether s contains <c>'~'</c> character etc. Note: the API is slow.
+		/// Calls API <b>GetLongPathName</b>.
+		/// Does not check whether <i>s</i> contains <c>'~'</c> character etc. Note: the API is slow.
 		/// </summary>
 		/// <param name="s">Can be <c>null</c>.</param>
 		internal static string ExpandDosPath_(string s) {
@@ -376,7 +376,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if pathOrFilename looks like a DOS filename or path.
+		/// Returns <c>true</c> if <i>s</i> looks like a DOS filename or path.
 		/// Examples: <c>"abcde~12"</c>, <c>"abcde~12.txt"</c>, <c>@"c:\path\abcde~12.txt"</c>, <c>"c:\abcde~12\path"</c>.
 		/// </summary>
 		/// <param name="s">Can be <c>null</c>.</param>
@@ -400,7 +400,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if starts with "::".
+		/// Returns <c>true</c> if starts with <c>"::"</c>.
 		/// </summary>
 		/// <param name="s">Can be <c>null</c>.</param>
 		internal static bool IsShellPath_(RStr s) {
@@ -466,7 +466,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// If s starts with <c>@"\\?\UNC\"</c>, returns 8.
+		/// If <i>s</i> starts with <c>@"\\?\UNC\"</c>, returns 8.
 		/// Else if starts with <c>@"\\?\"</c>, returns 4.
 		/// Else returns 0.
 		/// </summary>
@@ -645,7 +645,7 @@ namespace Au {
 		/// <param name="path">Path or filename. Can be <c>null</c>.</param>
 		/// <param name="withSeparator">Don't remove separator character(s) (<c>'\\'</c> or <c>'/'</c>). See examples.</param>
 		/// <remarks>
-		/// Similar to <see cref="Path.GetDirectoryName"/>. Some differences: skips <c>'\\'</c> or <c>'/'</c> at the end (eg from <c>@"C:\A\B\"</c> gets <c>@"C:\A"</c>, not <c>@"C:\A\B"</c>); does not replace / with \.
+		/// Similar to <see cref="Path.GetDirectoryName"/>. Some differences: skips <c>'\\'</c> or <c>'/'</c> at the end (eg from <c>@"C:\A\B\"</c> gets <c>@"C:\A"</c>, not <c>@"C:\A\B"</c>); does not replace <c>'/'</c> with <c>'\\'</c>.
 		/// 
 		/// Parses raw string. You may want to <see cref="normalize"/> it at first.
 		/// 

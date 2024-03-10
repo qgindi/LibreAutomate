@@ -67,8 +67,8 @@ public struct RegisteredHotkey : IDisposable {
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 	/// <exception cref="InvalidOperationException">This variable already registered a hotkey.</exception>
 	/// <remarks>
-	/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
-	/// <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
+	/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if <c>F12</c>.
+	/// <note>Most single-key and <c>Shift+key</c> hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
 	/// A single variable cannot register multiple hotkeys simultaneously. Use multiple variables, for example array.
 	/// </remarks>
 	/// <seealso cref="keys.waitForHotkey"/>

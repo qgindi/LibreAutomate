@@ -2,7 +2,7 @@ namespace Au;
 
 /// <summary>
 /// Script task functions. Run, get properties, set options, etc.
-/// A script task is a running script, except if role editorExtension. Each script task is a separate process.
+/// A script task is a running script, except if role <b>editorExtension</b>. Each script task is a separate process.
 /// </summary>
 /// <seealso cref="process"/>
 public static class script {
@@ -10,14 +10,14 @@ public static class script {
 	/// Gets the script name, like <c>"Script123"</c>.
 	/// </summary>
 	/// <remarks>
-	/// If role miniProgram (default), returns the script file name without extension.
+	/// If role <b>miniProgram</b> (default), returns the script file name without extension.
 	/// Else returns <see cref="AppDomain.FriendlyName"/>, like <c>"MainAssemblyName"</c>.
 	/// </remarks>
 	public static string name => s_name ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 with ".exe", now without (now it is the entry assembly name)
 	static string s_name;
 	
 	/// <summary>
-	/// Gets the script role (miniProgram, exeProgram or editorExtension).
+	/// Gets the script role (<b>miniProgram</b>, <b>exeProgram</b> or <b>editorExtension</b>).
 	/// </summary>
 	public static SRole role { get; internal set; }
 	
@@ -50,7 +50,7 @@ public static class script {
 	/// Gets workspace path of the main source code file of this program, like <c>@"\Script1.cs"</c> or <c>@"\Folder1\Script1.cs"</c>.
 	/// Calls <see cref="sourcePath(bool, Assembly)"/>.
 	/// </summary>
-	[EditorBrowsableAttribute(EditorBrowsableState.Never)] //replaced with sourcePath. Limited and unclear.
+	[EditorBrowsable(EditorBrowsableState.Never)] //replaced with sourcePath. Limited and unclear.
 	public static string path => sourcePath(true);
 #else
 	/// <summary>
@@ -86,12 +86,12 @@ public static class script {
 	/// Gets workspace path of the main source code file of this program, like <c>@"\Script1.cs"</c> or <c>@"\Folder1\Script1.cs"</c>.
 	/// Calls <see cref="sourcePath(Assembly, bool, bool)"/>.
 	/// </summary>
-	[EditorBrowsableAttribute(EditorBrowsableState.Never)] //replaced with sourcePath. Limited and unclear.
+	[EditorBrowsable(EditorBrowsableState.Never)] //replaced with sourcePath. Limited and unclear.
 	public static string path => sourcePath(null, folder: false, inWorkspace: true);
 #endif
 	
 	/// <summary>
-	/// Returns <c>true</c> if this script task was started from editor with the Run button or menu command.
+	/// Returns <c>true</c> if this script task was started from editor with the <b>Run</b> button or menu command.
 	/// Always <c>false</c> if role <b>editorExtension</b>.
 	/// </summary>
 	public static bool testing { get; internal set; }
@@ -130,8 +130,8 @@ public static class script {
 	/// <returns>
 	/// Native process id of the task process.
 	/// Returns -1 if failed, for example if the script contains errors or cannot run second task instance.
-	/// Returns 0 if task start is deferred because the script is running (ifRunning wait/wait_restart).
-	/// If role editorExtension, waits until the script ends, then returns 0.
+	/// Returns 0 if task start is deferred because the script is running (<b>ifRunning</b> <b>wait</b>/<b>wait_restart</b>).
+	/// If role <b>editorExtension</b>, waits until the script ends, then returns 0.
 	/// </returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
 	public static int run([ParamString(PSFormat.CodeFile)] string script, params string[] args)
@@ -332,9 +332,9 @@ public static class script {
 	/// <remarks>
 	/// <see cref="runWait(Action{string}, string, string[])"/> can read the string in real time.
 	/// <see cref="runWait(out string, string, string[])"/> gets all strings joined when the task ends.
-	/// The program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c> can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF8; if you use a <c>.bat</c> file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
+	/// The program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c> can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF-8; if you use a <c>.bat</c> file or <c>cmd.exe</c> and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
 	/// 
-	/// Does not work if script role is editorExtension.
+	/// Does not work if script role is <b>editorExtension</b>.
 	/// </remarks>
 #if true
 	public static unsafe bool writeResult(string s) {
@@ -385,7 +385,7 @@ public static class script {
 	/// Native process id of the new process. Returns -1 if failed.
 	/// </returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
-	/// <exception cref="InvalidOperationException">This script has role editorExtension.</exception>
+	/// <exception cref="InvalidOperationException">This script has role <b>editorExtension</b>.</exception>
 	/// <remarks>
 	///	Does not end this process. The new process runs simultaneously, like with <c>/*/ ifRunning run; /*/</c>. Let this process exit as it wants, for example return from the main script code.
 	///
@@ -499,8 +499,8 @@ public static class script {
 	#endregion
 	
 	/// <summary>
-	/// If role miniProgram or exeProgram, default compiler adds module initializer that calls this with <i>auCompiler</i> <c>true</c>.
-	/// When compiling single-file exe with dotnet publish, adds module initializer that calls this with <i>auCompiler</i> <c>false</c>.
+	/// If role <b>miniProgram</b> or <b>exeProgram</b>, default compiler adds module initializer that calls this with <i>auCompiler</i> <c>true</c>.
+	/// When compiling single-file exe with <b>dotnet publish</b>, adds module initializer that calls this with <i>auCompiler</i> <c>false</c>.
 	/// If using other compiler, called from <b>script.setup</b> with <i>auCompiler</i> <c>false</c>.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
@@ -642,13 +642,13 @@ public static class script {
 	}
 	
 	/// <summary>
-	/// Adds various features to this script task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
+	/// Adds various features to this script task (running script): tray icon, exit on <c>Ctrl+Alt+Delete</c>, etc.
 	/// </summary>
 	/// <param name="trayIcon">Add tray icon. See <see cref="trayIcon"/>.</param>
 	/// <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
 	/// <param name="lockExit">
-	/// End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, etc, except UAC consent).
-	/// Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
+	/// End this process when the active desktop has been switched (PC locked, <c>Ctrl+Alt+Delete</c>, screen saver, etc, except UAC consent).
+	/// Then to end this process you can use hotkeys <c>Win+L</c> (lock computer) and <c>Ctrl+Alt+Delete</c>.
 	/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
 	/// </param>
 	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/> with <i>usePrint</i> <c>true</c>. It makes <see cref="Debug.Assert"/> etc useful when not debugging.</param>
@@ -657,24 +657,24 @@ public static class script {
 	/// If not 0, the script task will end when this key pressed. Will call <see cref="Environment.Exit"/>.
 	/// Example: <c>exitKey: KKey.MediaStop</c>.
 	/// <para>
-	/// Recommended keys: media, volume, browser and applaunch keys. They work even when the process of the active window is admin (UAC) and this script isn't; other keys then work only with Ctrl, Alt or Win. In any case, the key does not work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>.
+	/// Recommended keys: media, volume, browser and applaunch keys. They work even when the process of the active window is admin (UAC) and this script isn't; other keys then work only with <c>Ctrl</c>, <c>Alt</c> or <c>Win</c>. In any case, the key does not work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>.
 	/// </para>
 	/// </param>
 	/// <param name="pauseKey">
-	/// Let <see cref="pause"/> pause/resume when this key pressed. Default: ScrollLock (Fn+S, Fn+K or similar).
-	/// If CapsLock, pauses when it is toggled (even if was toggled at startup) and resumes when untoggled.
+	/// Let <see cref="pause"/> pause/resume when this key pressed. Default: <c>ScrollLock</c> (<c>Fn+S</c>, <c>Fn+K</c> or similar).
+	/// If <c>CapsLock</c>, pauses when it is toggled (even if was toggled at startup) and resumes when untoggled.
 	/// <para>
-	/// ScrollLock, CapsLock and NumLock are the most reliable. Other keys don't work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>. Also other keys (maybe except keys like MediaPlayPause) don't work when the process of the active window is admin (UAC) and this script isn't, unless pressed with Ctrl, Alt or Win. For other keys the function registers all hotkey combinations with Ctrl, Shift, Alt and Win, and they can be used when the key alone does not work because of UAC.
+	/// <c>ScrollLock</c>, <c>CapsLock</c> and <c>NumLock</c> are the most reliable. Other keys don't work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>. Also other keys (maybe except keys like <c>MediaPlayPause</c>) don't work when the process of the active window is admin (UAC) and this script isn't, unless pressed with <c>Ctrl</c>, <c>Alt</c> or <c>Win</c>. For other keys the function registers all hotkey combinations with <c>Ctrl</c>, <c>Shift</c>, <c>Alt</c> and <c>Win</c>, and they can be used when the key alone does not work because of UAC.
 	/// </para>
 	/// </param>
 	/// <param name="f_">[](xref:caller_info). Don't use. Or use like <c>f_: null</c> to disable script editing via tray icon.</param>
 	/// <exception cref="InvalidOperationException">Already called.</exception>
 	/// <remarks>
-	/// Tip: in Options -> Templates you can set default code for new scripts.
+	/// Tip: in <b>Options > Templates</b> you can set default code for new scripts.
 	/// 
 	/// If your program was compiled not in LibreAutomate, call this function (maybe with zero arguments) if you want the program behave like if it was compiled with LibreAutomate (invariant culture, <b>STAThread</b>, unhandled exception action).
 	/// 
-	/// Does nothing if role editorExtension or if running in WPF preview mode.
+	/// Does nothing if role <b>editorExtension</b> or if running in WPF preview mode.
 	/// </remarks>
 	public static void setup(bool trayIcon = false, bool sleepExit = false, bool lockExit = false, bool debug = false, UExcept exception = UExcept.Print, KKey exitKey = 0, KKey pauseKey = KKey.ScrollLock, [CallerFilePath] string f_ = null) {
 		if (role == SRole.EditorExtension || isWpfPreview) return;
@@ -748,7 +748,7 @@ public static class script {
 	/// <param name="silent">Don't print <c>"cannot run"</c>.</param>
 	/// <exception cref="InvalidOperationException">This function already called.</exception>
 	/// <remarks>
-	/// This function is useful when this script has role exeProgram and the compiled program is launched not from the script editor, because then the <c>/*/ ifRunning /*/</c> property is ignored.
+	/// This function is useful when this script has role <b>exeProgram</b> and the compiled program is launched not from the script editor, because then the <c>/*/ ifRunning /*/</c> property is ignored.
 	/// </remarks>
 	/// <seealso cref="AppSingleInstance"/>
 	public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false) {
@@ -778,7 +778,7 @@ public static class script {
 	/// <remarks>
 	/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
 	/// 
-	/// Does nothing if role editorExtension.
+	/// Does nothing if role <b>editorExtension</b>.
 	/// </remarks>
 	/// <example>
 	/// Shows how to change icon and tooltip.
@@ -833,13 +833,13 @@ public static class script {
 	/// When debugger is attached, this function returns and the script continues to run. The step mode begins when the script encounters one of:
 	/// - breakpoint (set in the debugger's IDE).
 	/// - exception.
-	/// - clicked Pause button in IDE.
+	/// - clicked <b>Pause</b> button in IDE.
 	/// - <see cref="Debugger.Break"/>, <see cref="Debug.Assert(bool)"/> etc.
 	/// 
 	/// If <i>showDialog</i> is <c>false</c> and LibreAutomate is running, attaches the LA debugger. Cannot attach if it's busy (debugging).
 	/// 
 	/// Some other programs that have a .NET debugger:
-	/// - Visual Studio. It's the best, but huge (~10 GB). The community edition is free. Use menu Debug -> Attach to process.
+	/// - Visual Studio. It's the best, but huge (~10 GB). The community edition is free. Use menu <b>Debug > Attach to process</b>.
 	/// - Visual Studio Code. It's much smaller. Free.
 	/// - JetBrains Rider.
 	/// 
@@ -1012,11 +1012,11 @@ public static class script {
 	/// <param name="text">Text to display in the "Paused script" UI.</param>
 	/// <param name="doEvents">Process Windows messages and other events while waiting. For example, windows of this thread can respond, and timers of this thread can run.</param>
 	/// <remarks>
-	/// The default pause key is ScrollLock (Fn+S, Fn+K or similar). To change, use <see cref="setup"/> parameter <i>pauseKey</i>. If <b>script.setup</b> not called, this function uses ScrollLock but does not pause when called the first time.
+	/// The default pause key is <c>ScrollLock</c> (<c>Fn+S</c>, <c>Fn+K</c> or similar). To change, use <see cref="setup"/> parameter <i>pauseKey</i>. If <b>script.setup</b> not called, this function uses <c>ScrollLock</c> but does not pause when called the first time.
 	///
 	/// A script can be paused only if it calls this function. Pausing at a random place would be dangerous and is not supported. Call this function in places where it is safe to pause, and where it makes sense, for example in a loop that preses keys or mouse buttons. To pause/resume, let the user press the pause key.
 	///
-	/// If the pause key is CapsLock, waits if it is toggled, even if was toggled when this script started.
+	/// If the pause key is <c>CapsLock</c>, waits if it is toggled, even if was toggled when this script started.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[

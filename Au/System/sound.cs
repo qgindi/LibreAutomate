@@ -11,7 +11,7 @@ namespace Au {
 		/// <exception cref="ArgumentException"></exception>
 		/// <remarks>
 		/// Used for speech and <c>.wav</c> files, but not for system sounds.
-		/// Sets volume for each program seperately. The program remembers it after restarting. Note: all scripts with role miniProgram (default) run in the same program (Au.Task.exe).
+		/// Sets volume for each program seperately. The program remembers it after restarting. Note: all scripts with role <i>miniProgram</i> (default) run in the same program (<c>Au.Task.exe</c>).
 		/// </remarks>
 		public static int volume {
 			get {
@@ -28,7 +28,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Plays a custom sound (.wav file).
+		/// Plays a custom sound (<c>.wav</c> file).
 		/// </summary>
 		/// <param name="wavFile"><c>.wav</c> file.</param>
 		/// <param name="async">Don't wait until the sound ends. Note: the sound ends when this process exits.</param>
@@ -114,7 +114,7 @@ namespace Au {
 		/// <param name="text">Text to speak. If <c>null</c>, stops speaking.</param>
 		/// <param name="async">Don't wait. Note: the sound ends when this process exits.</param>
 		/// <param name="voice">
-		/// A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>.
+		/// A voice name from <b>Control Panel > Speech > Text to speech</b>. Can be partial, case-insensitive. Example: <c>"Zira"</c>.
 		/// If <c>null</c>, uses default voice.
 		/// Voice attributes can be specified using string format <c>"voice|reqAttr"</c> or <c>"voice|reqAttr|optAttr"</c>. Here <i>reqAttr</i> and <i>optAttr</i> are arguments for <google>ISpObjectTokenCategory.EnumTokens</google>. Each part can be empty. Example: <c>"|Gender=Female"</c>.
 		/// </param>
@@ -174,7 +174,7 @@ namespace Au.More {
 		/// <summary>
 		/// Creates a text-to-speech (speech synthesis) voice instance.
 		/// </summary>
-		/// <param name="voice">A voice name from Control Panel -> Speech -> Text to speech. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If <c>null</c>, uses default voice.</param>
+		/// <param name="voice">A voice name from <b>Control Panel > Speech > Text to speech</b>. Can be partial, case-insensitive. Example: <c>"Zira"</c>. If <c>null</c>, uses default voice.</param>
 		public SpeakVoice(string voice = null) {
 			_v = new SAPI.SpVoice() as SAPI.ISpVoice;
 			GC.AddMemoryPressure(250_000);

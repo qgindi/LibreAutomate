@@ -164,7 +164,7 @@ namespace Au.Types {
 
 	/// <summary>
 	/// This exception is thrown when current thread is not on the input desktop and therefore cannot use mouse, keyboard, clipboard and window functions. 
-	/// For example when PC locked (Win+L), screen saver, UAC consent, Ctrl+Alt+Delete.
+	/// For example when PC locked (<c>Win+L</c>), screen saver, UAC consent, <c>Ctrl+Alt+Delete</c>.
 	/// </summary>
 	/// <seealso cref="miscInfo.isInputDesktop"/>
 	public class InputDesktopException : AuException {

@@ -76,7 +76,7 @@ static unsafe partial class WinRT {
 		}
 		
 		/// <summary>
-		/// Gets COM interface function at index i in vtbl.
+		/// Gets COM interface function at index <i>i</i> in vtbl.
 		/// </summary>
 		public nint this[int i] => (*(nint**)_u)[i];
 		
@@ -87,7 +87,7 @@ static unsafe partial class WinRT {
 		public override string ToString() => _u.ToString();
 		
 		/// <summary>
-		/// Calls a 0-param function that returns HSTRING.
+		/// Calls a 0-param function that returns <b>HSTRING</b>.
 		/// </summary>
 		/// <param name="i">Interface function index in vtbl.</param>
 		public string GetString(int i) {
@@ -113,7 +113,7 @@ static unsafe partial class WinRT {
 		//}
 		
 		/// <summary>
-		/// QI(IClosable).Close()
+		/// <c>QI(IClosable).Close()</c>
 		/// </summary>
 		public void Close() {
 			using var c = QI<IClosable>();

@@ -40,11 +40,11 @@ namespace Au {
 		/// </param>
 		/// <exception cref="ArgumentException">
 		/// - <i>cn</i> is <c>""</c>. To match any, use <c>null</c>.
-		/// - <i>of</i> is <c>""</c> or 0 or contains character \ or /. To match any, use <c>null</c>.
+		/// - <i>of</i> is <c>""</c> or 0 or contains character <c>'\\'</c> or <c>'/'</c>. To match any, use <c>null</c>.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window".
+		/// To create code for this function, use tool <b>Find window</b>.
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// 
@@ -174,7 +174,7 @@ namespace Au {
 			long _time;
 
 			/// <summary>
-			/// Calls/returns <see cref="findFast"/> and stores found hwnd and time. Returns the cached hwnd if called frequently and it's still valid.
+			/// Calls/returns <see cref="findFast"/> and stores found <b>wnd</b> and time. Returns the cached <b>wnd</b> if called frequently and it's still valid.
 			/// </summary>
 			public wnd FindFast(string name, string cn, bool messageOnly) {
 				long t = Environment.TickCount64;
@@ -190,7 +190,7 @@ namespace Au {
 			}
 
 			/// <summary>
-			/// Calls/returns callback <i>f</i> and stores found hwnd and time. Returns the cached hwnd if called frequently and it's still valid.
+			/// Calls/returns callback <i>f</i> and stores found <b>wnd</b> and time. Returns the cached <b>wnd</b> if called frequently and it's still valid.
 			/// </summary>
 			public wnd Get(Func<wnd> f) {
 				long t = Environment.TickCount64;
@@ -439,7 +439,7 @@ namespace Au {
 			/// Gets the first in Z order window of this thread.
 			/// </summary>
 			/// <param name="onlyVisible"></param>
-			/// <param name="nonPopup">Skip WS.POPUP without WS.CAPTION.</param>
+			/// <param name="nonPopup">Skip <b>WS.POPUP</b> without <b>WS.CAPTION</b>.</param>
 			internal static wnd TopThreadWindow_(bool onlyVisible, bool nonPopup) {
 				wnd r = default;
 				Api.EnumThreadWindows(Api.GetCurrentThreadId(), (w, _) => {
@@ -466,7 +466,7 @@ namespace Au {
 
 			/// <summary>
 			/// This version creates much less garbage.
-			/// The caller must dispose the returned ArrayBuilder_, unless list is not <c>null</c>.
+			/// The caller must dispose the returned <b>ArrayBuilder_</b>, unless list is not <c>null</c>.
 			/// If list is not <c>null</c>, adds windows there (clears at first) and returns <c>default(ArrayBuilder_)</c>.
 			/// </summary>
 			internal static ArrayBuilder_<wnd> EnumWindows2(EnumAPI api,
@@ -638,7 +638,7 @@ namespace Au.Types {
 		/// Gets program name or process id or thread id or owner window.
 		/// Other variables will be <c>null</c>/0.
 		/// </summary>
-		/// <exception cref="ArgumentException">The value is <c>""</c> or 0 or contains characters \ or / or is invalid wildcard expression.</exception>
+		/// <exception cref="ArgumentException">The value is <c>""</c> or 0 or contains characters <c>'\\'</c> or <c>'/'</c> or is invalid wildcard expression.</exception>
 		public void GetValue(out wildex program, out int pid, out int tid, out wnd owner) {
 			program = null; pid = 0; tid = 0; owner = default;
 			switch (_what) {

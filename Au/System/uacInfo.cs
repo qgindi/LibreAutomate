@@ -112,7 +112,7 @@ namespace Au {
 		/// Gets the [](xref:uac) integrity level (IL) of the process.
 		/// </summary>
 		/// <remarks>
-		/// IL from lowest to highest value: Untrusted, Low, Medium, UIAccess, High, System, Protected, Unknown.
+		/// IL from lowest to highest value: <b>Untrusted</b>, <b>Low</b>, <b>Medium</b>, <b>UIAccess</b>, <b>High</b>, <b>System</b>, <b>Protected</b>, <b>Unknown</b>.
 		/// The IL enum member values can be used like <c>if(x.IntegrityLevel > IL.Medium) ...</c> .
 		/// If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
 		/// </remarks>
@@ -326,10 +326,10 @@ namespace Au.Types {
 		/// </summary>
 		Default,
 
-		/// <summary>Runs as administrator (High or System integrity level), and UAC is not turned off. Also known as "elevated".</summary>
+		/// <summary>Runs as administrator (<b>High</b> or <b>System</b> integrity level), and UAC is not turned off. Also known as "elevated".</summary>
 		Full,
 
-		/// <summary>Runs as standard user (Medium, UIAccess or Low integrity level) in administrator user session (because of UAC).</summary>
+		/// <summary>Runs as standard user (<b>Medium</b>, <b>UIAccess</b> or <b>Low</b> integrity level) in administrator user session (because of UAC).</summary>
 		Limited
 	}
 }

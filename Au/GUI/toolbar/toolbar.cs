@@ -11,7 +11,7 @@ namespace Au;
 /// Can be attached to windows of other programs.
 /// </summary>
 /// <remarks>
-/// To create toolbar code can be used menu TT -> New toolbar.
+/// To create toolbar code can be used menu <b>TT > New toolbar</b>.
 /// 
 /// Not thread-safe. All functions must be called from the same thread that created the <b>toolbar</b> object, except where documented otherwise. Note: item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
 /// </remarks>
@@ -1018,7 +1018,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 	/// Miscellaneous options.
 	/// </summary>
 	/// <remarks>
-	/// This property is in the context menu (submenu "More") and is saved.
+	/// This property is in the context menu (submenu <b>More</b>) and is saved.
 	/// </remarks>
 	public TBFlags MiscFlags {
 		get => _sett.miscFlags;

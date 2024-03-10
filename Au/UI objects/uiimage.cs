@@ -222,7 +222,7 @@ public class uiimage {
 	/// <exception cref="Exception">Exceptions of <see cref="ImageUtil.LoadGdipBitmap"/>.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
 	/// <remarks>
-	/// To create code for this function, use tool "Find image or color in window".
+	/// To create code for this function, use tool <b>Find image or color in window</b>.
 	/// 
 	/// The speed mostly depends on:
 	/// 1. The size of the search area. Use the smallest possible area (control or UI element or rectangle in window).
@@ -241,7 +241,7 @@ public class uiimage {
 	/// Flags <see cref="IFFlags.WindowDC"/> and <see cref="IFFlags.PrintWindow"/> cannot be used if <i>area</i> is <b>Bitmap</b> or <b>RECT</b>.
 	/// </remarks>
 	/// <example>
-	/// Code created with tool "Find image or color in window".
+	/// Code created with tool <b>Find image or color in window</b>.
 	/// <code><![CDATA[
 	/// var w = wnd.find(1, "Window Name");
 	/// string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";

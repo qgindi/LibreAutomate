@@ -37,7 +37,7 @@ public struct BufferedPaint : IDisposable {
 	RECT _r;
 	
 	/// <summary>
-	/// Gets nonbuffered DC with API <msdn>BeginPaint</msdn> or <msdn>GetDC</msdn>. Then gets buffered DC with API <msdn>BeginBufferedPaint</msdn> for entire client area or rectangle <i>r</i>.
+	/// Gets non-buffered DC with API <msdn>BeginPaint</msdn> or <msdn>GetDC</msdn>. Then gets buffered DC with API <msdn>BeginBufferedPaint</msdn> for entire client area or rectangle <i>r</i>.
 	/// </summary>
 	/// <param name="w"></param>
 	/// <param name="wmPaint">Use API <b>BeginPaint</b>/<b>EndPaint</b>. If <c>false</c>, uses <b>GetDC</b>/<b>ReleaseDC</b>.</param>

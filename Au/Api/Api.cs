@@ -10,20 +10,20 @@ static unsafe partial class Api {
 	
 	/// <summary>
 	/// Gets the native size of a struct variable.
-	/// Returns Marshal.SizeOf(typeof(T)).
-	/// Speed: the same (in Release config) as Marshal.SizeOf(typeof(T)), and 2 times faster than Marshal.SizeOf(v).
+	/// Returns <c>Marshal.SizeOf(typeof(T))</c>.
+	/// Speed: the same (in Release config) as <c>Marshal.SizeOf(typeof(T))</c>, and 2 times faster than <c>Marshal.SizeOf(v)</c>.
 	/// </summary>
 	internal static int SizeOf<T>(T v) => Marshal.SizeOf<T>();
 	
 	/// <summary>
 	/// Gets the native size of a type.
-	/// Returns Marshal.SizeOf(typeof(T)).
+	/// Returns <c>Marshal.SizeOf(typeof(T))</c>.
 	/// </summary>
 	internal static int SizeOf<T>() => Marshal.SizeOf<T>();
 	
 	/// <summary>
-	/// Gets dll module handle (Api.GetModuleHandle) or loads dll (NativeLibrary.TryLoad), and returns unmanaged exported function address (Api.GetProcAddress).
-	/// See also: GetDelegate.
+	/// Gets dll module handle (<b>Api.GetModuleHandle</b>) or loads dll (<b>NativeLibrary.TryLoad</b>), and returns unmanaged exported function address (<b>Api.GetProcAddress</b>).
+	/// See also: <b>GetDelegate</b>.
 	/// </summary>
 	internal static IntPtr GetProcAddress(string dllName, string funcName) {
 		IntPtr hmod = GetModuleHandle(dllName);
@@ -52,7 +52,7 @@ static unsafe partial class Api {
 	}
 	
 	/// <summary>
-	/// If o is not <c>null</c>, calls <see cref="Marshal.ReleaseComObject"/>.
+	/// If <i>o</i> is not <c>null</c>, calls <see cref="Marshal.ReleaseComObject"/>.
 	/// </summary>
 	internal static void ReleaseComObject<T>(T o) where T : class {
 		if (o != null) Marshal.ReleaseComObject(o);
@@ -178,7 +178,7 @@ static unsafe partial class Api {
 	}
 	
 	/// <summary>
-	/// BITMAPINFOHEADER members and 3 uints for color table etc.
+	/// <b>BITMAPINFOHEADER</b> members and 3 uints for color table etc.
 	/// </summary>
 	internal struct BITMAPINFO {
 		public readonly int biSize;
@@ -236,7 +236,7 @@ static unsafe partial class Api {
 	internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, ref BITMAPINFO lpbmi, int usage);
 	
 	/// <summary>
-	/// lpbmi can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
+	/// lpbmi can be <b>BITMAPINFOHEADER</b>/<b>BITMAPV5HEADER</b> or <b>BITMAPCOREHEADER</b>.
 	/// </summary>
 	[DllImport("gdi32.dll")]
 	internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, void* lpvBits, void* lpbmi, uint ColorUse = 0); //DIB_RGB_COLORS
@@ -446,8 +446,8 @@ static unsafe partial class Api {
 		public int bInheritHandle;
 		
 		/// <summary>
-		/// Creates SECURITY_ATTRIBUTES from string security descriptor.
-		/// securityDescriptor can be <c>null</c>; then lpSecurityDescriptor will be <c>null</c>.
+		/// Creates <b>SECURITY_ATTRIBUTES</b> from string security descriptor.
+		/// <i>securityDescriptor</i> can be <c>null</c>; then <b>lpSecurityDescriptor</b> will be <c>null</c>.
 		/// </summary>
 		public SECURITY_ATTRIBUTES(string securityDescriptor) {
 			nLength = IntPtr.Size * 3;
@@ -464,13 +464,13 @@ static unsafe partial class Api {
 		~SECURITY_ATTRIBUTES() => Dispose();
 		
 		/// <summary>
-		/// Creates SECURITY_ATTRIBUTES that allows UAC low IL processes to open the kernel object.
+		/// Creates <b>SECURITY_ATTRIBUTES</b> that allows UAC low IL processes to open the kernel object.
 		/// </summary>
 		public static readonly SECURITY_ATTRIBUTES ForLowIL = new SECURITY_ATTRIBUTES("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)");
 		
 		/// <summary>
-		/// Creates SECURITY_ATTRIBUTES that allows UAC medium IL processes to open the pipe.
-		/// Like of PipeSecurity that allows ReadWrite for AuthenticatedUserSid.
+		/// Creates <b>SECURITY_ATTRIBUTES</b> that allows UAC medium IL processes to open the pipe.
+		/// Like of <b>PipeSecurity</b> that allows <b>ReadWrite</b> for <b>AuthenticatedUserSid</b>.
 		/// </summary>
 		public static readonly SECURITY_ATTRIBUTES ForPipes = new SECURITY_ATTRIBUTES("D:(A;;0x12019b;;;AU)");
 	}
@@ -597,7 +597,7 @@ static unsafe partial class Api {
 	
 	internal struct NOTIFYICONDATA {
 		/// <summary>
-		/// Sets cbSize, hWnd and uFlags.
+		/// Sets <b>cbSize</b>, <b>hWnd</b> and <b>uFlags</b>.
 		/// </summary>
 		/// <param name="wNotify"></param>
 		/// <param name="nifFlags"></param>
@@ -1147,8 +1147,8 @@ static unsafe partial class Api {
 		/// <param name="s">String.</param>
 		/// <param name="startIndex">Offset in string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
-		/// <param name="radix">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
-		/// <exception cref="ArgumentOutOfRangeException">startIndex is invalid.</exception>
+		/// <param name="radix">If 0, parses the string as hexadecimal number if starts with <c>"0x"</c>, as octal if starts with <c>"0"</c>, else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support <c>"0x"</c> etc); 16 - as hexadecimal (eg returns 26 if string is <c>"1A"</c> or <c>"0x1A"</c>); 2 - as binary (eg returns 5 if string is <c>"101"</c>).</param>
+		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is invalid.</exception>
 		internal static int strtoi(string s, int startIndex, out int numberEndIndex, int radix = 0)
 		{
 			int R = 0, len = s == null ? 0 : s.Length - startIndex;
@@ -1171,8 +1171,8 @@ static unsafe partial class Api {
 		/// <param name="s">String.</param>
 		/// <param name="startIndex">Offset in string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
-		/// <param name="radix">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
-		/// <exception cref="ArgumentOutOfRangeException">startIndex is invalid.</exception>
+		/// <param name="radix">If 0, parses the string as hexadecimal number if starts with <c>"0x"</c>, as octal if starts with <c>"0"</c>, else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support <c>"0x"</c> etc); 16 - as hexadecimal (eg returns 26 if string is <c>"1A"</c> or <c>"0x1A"</c>); 2 - as binary (eg returns 5 if string is <c>"101"</c>).</param>
+		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is invalid.</exception>
 		internal static long strtoi64(string s, int startIndex, out int numberEndIndex, int radix = 0)
 		{
 			long R = 0;

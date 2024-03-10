@@ -5,8 +5,8 @@
 	/// </summary>
 	/// <remarks>
 	/// Derived class must override <see cref="WriteLineNow"/>. Don't need to override <b>Write</b>/<b>WriteLine</b>.
-	/// If <b>Write</b> called with text that does not end with '\n', just accumulates the text in this variable.
-	/// When called <b>WriteLine</b> or <b>Flush</b> or <b>Write</b> with text that ends with '\n', calls <see cref="WriteLineNow"/> of the derived class.
+	/// If <b>Write</b> called with text that does not end with <c>'\n'</c>, just accumulates the text in this variable.
+	/// When called <b>WriteLine</b> or <b>Flush</b> or <b>Write</b> with text that ends with <c>'\n'</c>, calls <see cref="WriteLineNow"/> of the derived class.
 	/// </remarks>
 	internal abstract class LineWriter_ : TextWriter
 	{
@@ -18,7 +18,7 @@
 		public override Encoding Encoding => Encoding.Unicode;
 
 		/// <summary>
-		/// If <i>value</i> is '\n', writes accumulated text as full line and clears accumulated text, else just appends <i>value</i> to the accumulated text.
+		/// If <i>value</i> is <c>'\n'</c>, writes accumulated text as full line and clears accumulated text, else just appends <i>value</i> to the accumulated text.
 		/// </summary>
 		public override void Write(char value) {
 			//qm2.write((int)value, value);
@@ -31,7 +31,7 @@
 		}
 
 		/// <summary>
-		/// If <i>value</i> ends with '\n', writes line (accumulated text + <i>value</i>) and clears accumulated text, else just appends <i>value</i> to the accumulated text.
+		/// If <i>value</i> ends with <c>'\n'</c>, writes line (accumulated text + <i>value</i>) and clears accumulated text, else just appends <i>value</i> to the accumulated text.
 		/// </summary>
 		public override void Write(string value) {
 			//qm2.write($"'{value}'");

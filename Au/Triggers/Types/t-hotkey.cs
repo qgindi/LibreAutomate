@@ -10,7 +10,7 @@ public enum TKFlags
 {
 	/// <summary>
 	/// Allow other apps to receive the key down message too.
-	/// Without this flag, other apps usually receive only modifier keys. Also, OS always receives Ctrl+Alt+Delete and some other hotkeys.
+	/// Without this flag, other apps usually receive only modifier keys. Also, OS always receives <c>Ctrl+Alt+Delete</c> and some other hotkeys.
 	/// To receive and block key messages is used a low-level hook. Other hooks may receive blocked messages or not, depending on when they were set. 
 	/// </summary>
 	ShareEvent = 1,
@@ -32,19 +32,19 @@ public enum TKFlags
 
 	/// <summary>
 	/// Don't release modifier keys.
-	/// Without this flag, for example if trigger is <c>["Ctrl+K"]</c>, when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfere with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
+	/// Without this flag, for example if trigger is <c>["Ctrl+K"]</c>, when the user presses <c>Ctrl</c> and <c>K</c> down, the trigger sends <c>Ctrl</c> key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfere with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
 	/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
 	/// <para>NOTE: Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is <c>true</c>. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is <c>true</c> and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.</para>
 	/// </summary>
 	NoModOff = 16,
 
 	/// <summary>
-	/// The key must be an "extended key". Used mostly to distinguish numpad keys Enter, Home, End, PgUp, PgDown, arrows, Ins and Del from same non-numpad keys. Numpad Enter is extended, other numpad keys aren't. See <see cref="KKeyScan"/> example code.
+	/// The key must be an "extended key". Used mostly to distinguish numpad keys <c>Enter</c>, <c>Home</c>, <c>End</c>, <c>PgUp</c>, <c>PgDown</c>, arrows, <c>Ins</c> and <c>Del</c> from same non-numpad keys. Numpad <c>Enter</c> is extended, other numpad keys aren't. See <see cref="KKeyScan"/> example code.
 	/// </summary>
 	ExtendedYes = 32,
 
 	/// <summary>
-	/// The key must not be an "extended key". Used mostly to distinguish numpad keys Enter, Home, End, PgUp, PgDown, arrows, Ins and Del from same non-numpad keys. Numpad Enter is extended, other numpad keys aren't. See <see cref="KKeyScan"/> example code.
+	/// The key must not be an "extended key". Used mostly to distinguish numpad keys <c>Enter</c>, <c>Home</c>, <c>End</c>, <c>PgUp</c>, <c>PgDown</c>, arrows, <c>Ins</c> and <c>Del</c> from same non-numpad keys. Numpad <c>Enter</c> is extended, other numpad keys aren't. See <see cref="KKeyScan"/> example code.
 	/// </summary>
 	ExtendedNo = 64,
 }
@@ -101,7 +101,7 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 	/// </summary>
 	/// <param name="hotkey">
 	/// A hotkey, like with <see cref="keys.send"/>.
-	/// Can contain 0 to 4 modifier keys (Ctrl, Shift, Alt, Win) and 1 non-modifier key.
+	/// Can contain 0 to 4 modifier keys (<c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>) and 1 non-modifier key.
 	/// Examples: <c>"F11"</c>, <c>"Ctrl+K"</c>, <c>"Ctrl+Shift+Alt+Win+A"</c>.
 	/// To ignore modifiers: <c>"?+K"</c>. Then the trigger works with any combination of modifiers.
 	/// To ignore a modifier: <c>"Ctrl?+K"</c>. Then the trigger works with or without the modifier. More examples: <c>"Ctrl?+Shift?+K"</c>, <c>"Ctrl+Shift?+K"</c>.
@@ -281,7 +281,7 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 	}
 
 	/// <summary>
-	/// Used by foreach to enumerate added triggers.
+	/// Used by <c>foreach</c> to enumerate added triggers.
 	/// </summary>
 	public IEnumerator<HotkeyTrigger> GetEnumerator() {
 		foreach (var kv in _d) {

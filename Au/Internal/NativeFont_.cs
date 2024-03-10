@@ -60,7 +60,7 @@ internal sealed class NativeFont_ : IDisposable {
 
 	/// <summary>
 	/// Cached standard font used by most windows and controls.
-	/// On Windows 10 it is "Segoe UI" 9 by default.
+	/// On Windows 10 it is <c>"Segoe UI"</c> 9 by default.
 	/// </summary>
 	internal static NativeFont_ RegularCached(int dpi) => _d.GetOrAdd(dpi, i => _CreateCached(i));
 
@@ -68,12 +68,6 @@ internal sealed class NativeFont_ : IDisposable {
 	/// Cached standard bold font used by most windows and controls.
 	/// </summary>
 	internal static NativeFont_ BoldCached(int dpi) => _d.GetOrAdd(dpi | 0x10000, i => _CreateCached(i));
-
-	///// <summary>
-	///// Cached font "Verdana" 9.
-	///// Used eg by dialog for input Edit control.
-	///// </summary>
-	//internal static NativeFont_ Verdana9Cached(int dpi) => _d.GetOrAdd(dpi | 0x100000, i => _CreateCached(i));
 }
 
 //currently not used

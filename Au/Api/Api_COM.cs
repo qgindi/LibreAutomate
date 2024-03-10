@@ -122,7 +122,7 @@ static unsafe partial class Api {
 		public nint value2;
 
 		/// <summary>
-		/// Calls PropVariantClear.
+		/// Calls <b>PropVariantClear</b>.
 		/// </summary>
 		public void Dispose() {
 			PropVariantClear(ref this);

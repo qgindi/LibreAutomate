@@ -89,7 +89,7 @@ partial class filesystem {
 		/// Before comparing, calls <see cref="getFinalPath"/>, therefore paths can have any format.
 		/// Example: <c>@"C:\Test\"</c> and <c>@"C:\A\..\Test"</c> are equal.
 		/// Example: <c>@"C:\Test\file.txt"</c> and <c>"file.txt"</c> are equal if the file is in <c>@"C:\Test</c> and <c>@"C:\Test</c> is current directory.
-		/// Example: <c>@"C:\Temp\file.txt"</c> and <c>"%TEMP%\file.txt"</c> are equal if TEMP is an environment variable = <c>@"C:\Temp</c>.
+		/// Example: <c>@"C:\Temp\file.txt"</c> and <c>"%TEMP%\file.txt"</c> are equal if <c>TEMP</c> is an environment variable = <c>@"C:\Temp</c>.
 		/// </remarks>
 		/// <seealso cref="isSameFile(string, string, bool)"/>
 		public static CPResult comparePaths(string pathA, string pathB, bool ofSymlinkA = false, bool ofSymlinkB = false)
@@ -198,15 +198,15 @@ partial class filesystem {
 		/// <summary>
 		/// Loads unmanaged dll of correct 64/32 bitness.
 		/// </summary>
-		/// <param name="fileName">Dll file name like "name.dll".</param>
+		/// <param name="fileName">Dll file name like <c>"name.dll"</c>.</param>
 		/// <exception cref="DllNotFoundException"></exception>
 		/// <remarks>
-		/// If your program uses an unmanaged dll and can run as either 64-bit or 32-bit process, you need 2 versions of the dll - 64-bit and 32-bit. If not using deps.json, let they live in subfolders "64" and "32" of your program folder. They must have same name. This function loads correct dll version. Then [DllImport("dll")] will use the loaded dll. Don't need two different DllImport for functions ([DllImport("dll64")] and [DllImport("dll32")]).
+		/// If your program uses an unmanaged dll and can run as either 64-bit or 32-bit process, you need 2 versions of the dll - 64-bit and 32-bit. If not using <c>deps.json</c>, let they live in subfolders <c>64</c> and <c>32</c> of your program folder. They must have same name. This function loads correct dll version. Then <c>[DllImport("dll")]</c> will use the loaded dll. Don't need two different <c>[DllImport]</c> for functions (<c>[DllImport("dll64")]</c> and <c>[DllImport("dll32")]</c>).
 		/// 
 		/// Looks in:
-		/// - subfolder "64" or "32" of the Au.dll folder.
-		/// - calls NativeLibrary.TryLoad, which works like [DllImport], eg may use info from deps.json.
-		/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
+		/// - subfolder <c>64</c> or <c>32</c> of the <c>Au.dll</c> folder.
+		/// - calls <b>NativeLibrary.TryLoad</b>, which works like <c>[DllImport]</c>, eg may use info from <c>deps.json</c>.
+		/// - subfolder <c>64</c> or <c>32</c> of folder specified in environment variable <c>Au.Path</c>. For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then <b>folders.ThisApp</b> is <c>"C:\Program Files (x86)\Microsoft Visual Studio\..."</c>). Workaround: set environment variable <c>Au.Path</c> = the main Au directory and restart Windows.
 		/// </remarks>
 		internal unsafe static void LoadDll64or32Bit_(string fileName) {
 			//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
@@ -238,19 +238,19 @@ partial class filesystem {
 #if false //currently not used
 		/// <summary>
 		/// Gets HKEY_CLASSES_ROOT registry key of file type or protocol.
-		/// The key usually contains subkeys "shell", "DefaultIcon", sometimes "shellex" and more.
-		/// For example, for ".txt" can return "txtfile", for ".cs" - "VisualStudio.cs.14.0".
-		/// Looks in "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts" and in HKEY_CLASSES_ROOT.
+		/// The key usually contains subkeys <c>shell</c>, <c>DefaultIcon</c>, sometimes <c>shellex</c> and more.
+		/// For example, for <c>".txt"</c> can return <c>"txtfile"</c>, for <c>".cs"</c> - <c>"VisualStudio.cs.14.0"</c>.
+		/// Looks in <c>HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts</c> and in <c>HKEY_CLASSES_ROOT</c>.
 		/// Returns <c>null</c> if the type/protocol is not registered.
-		/// Returns <c>null</c> if <i>fileType</i> does not end with ".extension" and does not start with "protocol:"; also if starts with "shell:".
+		/// Returns <c>null</c> if <i>fileType</i> does not end with <c>".extension"</c> and does not start with <c>"protocol:"</c>; also if starts with <c>"shell:"</c>.
 		/// </summary>
 		/// <param name="fileType">
-		/// File type extension like ".txt" or protocol like "http:".
+		/// File type extension like <c>".txt"</c> or protocol like <c>"http:"</c>.
 		/// Can be full path or URL; the function gets extension or protocol from the string.
-		/// Can start with %environment variable%.
+		/// Can start with <c>%environment variable%</c>.
 		/// </param>
-		/// <param name="isFileType">Don't parse <i>fileType</i>, it does not contain full path or URL or environment variables. It is ".ext" or "protocol:".</param>
-		/// <param name="isURL">fileType is URL or protocol like "http:". Used only if <c>isFileType == true</c>, ie it is protocol.</param>
+		/// <param name="isFileType">Don't parse <i>fileType</i>, it does not contain full path or URL or environment variables. It is <c>".ext"</c> or <c>"protocol:"</c>.</param>
+		/// <param name="isURL"><i>fileType</i> is URL or protocol like <c>"http:"</c>. Used only if <c>isFileType == true</c>, ie it is protocol.</param>
 		internal static string getFileTypeOrProtocolRegistryKey(string fileType, bool isFileType, bool isURL)
 		{
 			if(!isFileType) fileType = GetExtensionOrProtocol(fileType, out isURL);
@@ -267,10 +267,10 @@ partial class filesystem {
 		}
 
 		/// <summary>
-		/// Gets file path extension like ".txt" or URL protocol like "http".
-		/// Returns <c>null</c> if path does not end with ".extension" and does not start with "protocol:"; also if starts with "shell:".
+		/// Gets file path extension like <c>".txt"</c> or URL protocol like <c>"http"</c>.
+		/// Returns <c>null</c> if path does not end with <c>".extension"</c> and does not start with <c>"protocol:"</c>; also if starts with <c>"shell:"</c>.
 		/// </summary>
-		/// <param name="path">File path or URL. Can be just extension like ".txt" or protocol like "http:".</param>
+		/// <param name="path">File path or URL. Can be just extension like <c>".txt"</c> or protocol like <c>"http:"</c>.</param>
 		/// <param name="isProtocol">Receives <c>true</c> if URL or protocol.</param>
 		internal static string GetExtensionOrProtocol(string path, out bool isProtocol)
 		{
@@ -433,10 +433,10 @@ partial class filesystem {
 		//rejected: unreliable. Uses registry, where many mimes are incorrect and nonconstant.
 		//	Use System.Web.MimeMapping.GetMimeMapping. It uses a hardcoded list, although too small.
 		///// <summary>
-		///// Gets file's MIME content type, like "text/html" or "image/png".
+		///// Gets file's MIME content type, like <c>"text/html"</c> or <c>"image/png"</c>.
 		///// Returns <c>false</c> if cannot detect it.
 		///// </summary>
-		///// <param name="file">File name or path or URL or just extension like ".txt". If <i>canAnalyseData</i> is <c>true</c>, must be full path of a file, and the file must exist and can be opened to read; else the function uses just <c>.extension</c>, and the file may exist or not.</param>
+		///// <param name="file">File name or path or URL or just extension like <c>".txt"</c>. If <i>canAnalyseData</i> is <c>true</c>, must be full path of a file, and the file must exist and can be opened to read; else the function uses just <c>.extension</c>, and the file may exist or not.</param>
 		///// <param name="contentType">Result.</param>
 		///// <param name="canAnalyseData">If cannot detect from file extension, try to detect from file data.</param>
 		///// <exception cref="ArgumentException">Not full path. Only if <i>canAnalyseData</i> is <c>true</c>.</exception>

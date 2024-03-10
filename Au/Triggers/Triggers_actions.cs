@@ -73,7 +73,7 @@ public class TriggerOptions {
 	/// <remarks>
 	/// This should not be used without a good reason. Trigger actions must be programmed carefully, to not interfere with triggers. They must be as fast as possible, else will block triggers, hooks and user input.
 	///
-	/// Before v0.16 this was named <b>ThreadMain</b> and used in the "Triggers and toolbars" script. Problem: blocks hooks etc when need long time to get file icons. Now the script uses <see cref="ThreadThis"/> instead, and calls <c>Triggers.Run</c> in another thread. Your script possibly still uses the old code. You can replace it with the new version, which can be found in menu File -> New -> Default -> Triggers and toolbars.
+	/// Before v0.16 this was named <b>ThreadMain</b> and used in the <c>"Triggers and toolbars"</c> script. Problem: blocks hooks etc when need long time to get file icons. Now the script uses <see cref="ThreadThis"/> instead, and calls <c>Triggers.Run</c> in another thread. Your script possibly still uses the old code. You can replace it with the new version, which can be found in menu <b>File > New > Default > Triggers and toolbars</b>.
 	/// </remarks>
 	public void ThreadOfTriggers() {
 		_New();
@@ -96,7 +96,7 @@ public class TriggerOptions {
 	///
 	/// Trigger actions should be fast, else other trigger actions may be delayed. If a trigger action dispatches messages, other trigger actions can run in the meantime.
 	/// 
-	/// Can be used to create and show toolbars (<see cref="toolbar"/>). Used in the default "Triggers and toolbars" script since v0.16.
+	/// Can be used to create and show toolbars (<see cref="toolbar"/>). Used in the default <c>"Triggers and toolbars"</c> script since v0.16.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -118,7 +118,7 @@ public class TriggerOptions {
 	/// <summary>
 	/// Run trigger actions in new threads.
 	/// </summary>
-	/// <param name="single">Don't run if this action is already running. If <c>false</c>, multiple action instances can run paralelly in multiple threads.</param>
+	/// <param name="single">Don't run if this action is already running. If <c>false</c>, multiple action instances can run parallelly in multiple threads.</param>
 	/// <remarks>
 	/// The action can run simultaneously with other actions. The thread is STA.
 	/// </remarks>
@@ -134,7 +134,7 @@ public class TriggerOptions {
 	/// <summary>
 	/// Run trigger actions in thread pool threads.
 	/// </summary>
-	/// <param name="single">Don't run if this action is already running. If <c>false</c>, multiple action instances can run paralelly in multiple threads.</param>
+	/// <param name="single">Don't run if this action is already running. If <c>false</c>, multiple action instances can run parallelly in multiple threads.</param>
 	/// <remarks>
 	/// The action can run simultaneously with other actions. May start later if the pool is busy.
 	/// You should know how to use thread pool correctly. The action runs in the .NET thread pool through <see cref="Task.Run"/>.
@@ -344,7 +344,7 @@ class TriggerActionThreads {
 		
 		/// <summary>
 		/// Adds the action to the queue and notifies the thread to execute it.
-		/// If the thread is busy, returns <c>false</c>; if ifRunning!=0, the action possibly will run later.
+		/// If the thread is busy, returns <c>false</c>; if <i>ifRunning</i>!=0, the action possibly will run later.
 		/// </summary>
 		public bool RunAction(Action actionWrapper, ActionTrigger trigger) {
 			if (_disposed) return false;

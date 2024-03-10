@@ -1,10 +1,9 @@
 namespace Au.Triggers;
 
-static class TrigUtil
-{
+static class TrigUtil {
 	/// <summary>
-	/// Gets left and right modifiers. Uses keys.isPressed.
-	/// Returns modL | modR.
+	/// Gets left and right modifiers. Uses <b>keys.isPressed</b>.
+	/// Returns <c>modL | modR</c>.
 	/// </summary>
 	public static KMod GetModLR(out KMod modL, out KMod modR) {
 		KMod L = 0, R = 0;

@@ -141,7 +141,7 @@ public static partial class wait {
 		int? _quit;
 		
 		/// <summary>
-		/// If <see cref="Pump"/> received WM_QUIT, calls <b>PostQuitMessage</b>, unless detects that it could cause infinite loop.
+		/// If <see cref="Pump"/> received <b>WM_QUIT</b>, calls <b>PostQuitMessage</b>, unless detects that it could cause infinite loop.
 		/// </summary>
 		public void Dispose() {
 			if (_quit != null) {
@@ -159,9 +159,9 @@ public static partial class wait {
 		[ThreadStatic] static int t_doeventsStack;
 		
 		/// <summary>
-		/// Calls PeekMessage/TranslateMessage/DispatchMessage while there are messages.
+		/// Calls <b>PeekMessage</b>/<b>TranslateMessage</b>/<b>DispatchMessage</b> while there are messages.
 		/// </summary>
-		/// <returns><c>false</c> if received WM_QUIT.</returns>
+		/// <returns><c>false</c> if received <b>WM_QUIT</b>.</returns>
 		public bool Pump() {
 			while (Api.PeekMessage(out var m)) {
 				if (m.message == Api.WM_QUIT) { _quit = (int)m.wParam; return false; }
@@ -176,8 +176,8 @@ public static partial class wait {
 		/// </summary>
 		/// <param name="msgCallback">
 		/// <c>null</c> or callback function of type:
-		/// <br/>• WPMCallback - called before dispatching a message. If returns <c>true</c>, not called for other messages. Can modify the MSG. Can set MSG.message = 0 to prevent dispatching it.
-		/// <br/>• Func&lt;bool&gt; - called after dispatching all messages.
+		/// <br/>• <b>WPMCallback</b> - called before dispatching a message. If returns <c>true</c>, not called for other messages. Can modify the <b>MSG</b>. Can set <b>MSG.message</b> = 0 to prevent dispatching it.
+		/// <br/>• <b>Func&lt;bool&gt;</b> - called after dispatching all messages.
 		/// </param>
 		/// <returns><c>true</c> if <i>msgCallback</i> returned <c>true</c>.</returns>
 		public bool PumpWithCallback(Delegate msgCallback) {
@@ -224,17 +224,17 @@ public static partial class wait {
 	}
 	
 	/// <summary>
-	/// Temporarily changes the time resolution/precision of Thread.Sleep and some other functions.
+	/// Temporarily changes the time resolution/precision of <b>Thread.Sleep</b> and some other functions.
 	/// </summary>
 	/// <remarks>
 	/// Uses API <msdn>timeBeginPeriod</msdn>, which requests a time resolution for various system timers and wait functions. Actually it is the system thread scheduling timer period.
 	/// Normal resolution on Windows 7-10 is 15.625 ms. It means that, for example, <c>Thread.Sleep(1);</c> sleeps not 1 but 1-15 ms. If you set resolution 1, it sleeps 1-2 ms.
-	/// The new resolution is revoked (<msdn>timeEndPeriod</msdn>) when disposing the SleepPrecision_ variable or when this process ends. See example. See also <see cref="TempSet1"/>.
+	/// The new resolution is revoked (<msdn>timeEndPeriod</msdn>) when disposing the <b>SleepPrecision_</b> variable or when this process ends. See example. See also <see cref="TempSet1"/>.
 	/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
 	/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 	/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
-	/// Don't need this for wait.SleepX and functions that use them (mouse.click etc). They call <see cref="TempSet1"/> when the sleep time is 1-89 ms.
-	/// This does not change the minimal period of <see cref="timer"/> and System.Windows.Forms.Timer.
+	/// Don't need this for <b>wait.ms/s</b> and functions that use them (<b>mouse.click</b> etc). They call <see cref="TempSet1"/> when the sleep time is 1-89 ms.
+	/// This does not change the minimal period of <see cref="timer"/> and <b>System.Windows.Forms.Timer</b>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -264,7 +264,7 @@ public static partial class wait {
 		/// New system timer period, milliseconds.
 		/// Should be 1. Other values may stuck and later cannot be made smaller due to bugs in OS or some applications; this bug would impact many functions of this library.
 		/// </param>
-		/// <exception cref="ArgumentOutOfRangeException">periodMS &lt;= 0.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>periodMS</i> &lt;= 0.</exception>
 		public SleepPrecision_(int periodMS) {
 			if (periodMS <= 0) throw new ArgumentOutOfRangeException();
 			if (Api.timeBeginPeriod((uint)periodMS) != 0) return;
@@ -356,7 +356,7 @@ public static partial class wait {
 		//	Not a problem, because OS clears our set value (tested). Or we could use process.thisProcessExit event.
 		
 		/// <summary>
-		/// Calls TempSet1 if sleepTimeMS is 1-89.
+		/// Calls TempSet1 if <i>sleepTimeMS</i> is 1-89.
 		/// </summary>
 		/// <param name="sleepTimeMS">milliseconds of the caller "sleep" function.</param>
 		internal static void TempSet1_(int sleepTimeMS) {

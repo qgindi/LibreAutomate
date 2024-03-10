@@ -8,19 +8,19 @@ namespace Au.More;
 /// </summary>
 internal static unsafe class CharPtr_ {
 	/// <summary>
-	/// Gets the number of characters in p until '\0'.
+	/// Gets the number of characters in <i>p</i> until <c>'\0'</c>.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string. Can be <c>null</c>.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string. Can be <c>null</c>.</param>
 	public static int Length(char* p) {
 		if (p == null) return 0;
 		for (int i = 0; ; i++) if (p[i] == '\0') return i;
 	}
 
 	/// <summary>
-	/// Gets the number of characters in p until '\0' or <i>max</i>.
+	/// Gets the number of characters in <i>p</i> until <c>'\0'</c> or <i>max</i>.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string. Can be <c>null</c>.</param>
-	/// <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string. Can be <c>null</c>.</param>
+	/// <param name="max">Max length to scan. Returns max if does not find <c>'\0'</c>.</param>
 	public static int Length(char* p, int max) {
 		if (p == null) return 0;
 		for (int i = 0; i < max; i++) if (p[i] == '\0') return i;
@@ -32,7 +32,7 @@ internal static unsafe class CharPtr_ {
 	///// Case-sensitive compares string with managed string and returns <c>true</c> if they are equal.
 	///// </summary>
 	///// <param name="p">Unmanaged string.</param>
-	///// <param name="len">p length. Returns <c>false</c> if it is != s.Length.</param>
+	///// <param name="len"><i>p</i> length. Returns <c>false</c> if it is <c>!= s.Length</c>.</param>
 	///// <param name="s">Managed string.</param>
 	//public static bool Eq(char* p, int len, string s)
 	//{
@@ -50,19 +50,19 @@ internal static unsafe class CharPtr_ {
 /// </summary>
 static unsafe class BytePtr_ {
 	/// <summary>
-	/// Gets the number of bytes in p until '\0'.
+	/// Gets the number of bytes in <i>p</i> until <c>'\0'</c>.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string. Can be <c>null</c>.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string. Can be <c>null</c>.</param>
 	public static int Length(byte* p) {
 		if (p == null) return 0;
 		for (int i = 0; ; i++) if (p[i] == 0) return i;
 	}
 
 	/// <summary>
-	/// Gets the number of bytes in p until '\0' or <i>max</i>.
+	/// Gets the number of bytes in <i>p</i> until <c>'\0'</c> or <i>max</i>.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string. Can be <c>null</c>.</param>
-	/// <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string. Can be <c>null</c>.</param>
+	/// <param name="max">Max length to scan. Returns max if does not find <c>'\0'</c>.</param>
 	public static int Length(byte* p, int max) {
 		if (p == null) return 0;
 		for (int i = 0; i < max; i++) if (p[i] == 0) return i;
@@ -70,9 +70,9 @@ static unsafe class BytePtr_ {
 	}
 
 	/// <summary>
-	/// Returns <c>true</c> if unmanaged string p starts with string s. Case-sensitive.
+	/// Returns <c>true</c> if unmanaged string <i>p</i> starts with string <i>s</i>. Case-sensitive.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string.</param>
 	/// <param name="s">Must contain only ASCII characters.</param>
 	public static bool AsciiStarts(byte* p, string s) {
 		int i, n = s.Length;
@@ -84,9 +84,9 @@ static unsafe class BytePtr_ {
 	}
 
 	/// <summary>
-	/// Returns <c>true</c> if unmanaged string p starts with string s. Case-insensitive.
+	/// Returns <c>true</c> if unmanaged string <i>p</i> starts with string <i>s</i>. Case-insensitive.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string.</param>
 	/// <param name="s">Must contain only ASCII characters.</param>
 	public static bool AsciiStartsi(byte* p, string s) {
 		var t = Tables_.LowerCase;
@@ -111,23 +111,23 @@ static unsafe class BytePtr_ {
 	//}
 
 	/// <summary>
-	/// Returns <c>true</c> if unmanaged string p and string s are equal. Case-sensitive.
+	/// Returns <c>true</c> if unmanaged string <i>p</i> and string <i>s</i> are equal. Case-sensitive.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string.</param>
 	/// <param name="s">Managed string. Must contain only ASCII characters.</param>
 	public static bool AsciiEq(byte* p, string s) => AsciiStarts(p, s) && p[s.Length] == 0;
 
 	/// <summary>
-	/// Returns <c>true</c> if unmanaged string p and string s are equal. Case-insensitive.
+	/// Returns <c>true</c> if unmanaged string <i>p</i> and string <i>s</i> are equal. Case-insensitive.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string.</param>
 	/// <param name="s">Must contain only ASCII characters.</param>
 	public static bool AsciiEqi(byte* p, string s) => AsciiStartsi(p, s) && p[s.Length] == 0;
 
 	/// <summary>
-	/// Case-sensitive compares unmanaged string p with <b>byte[]</b> s and returns <c>true</c> if they are equal.
+	/// Case-sensitive compares unmanaged string <i>p</i> with <b>byte[]</b> <i>s</i> and returns <c>true</c> if they are equal.
 	/// </summary>
-	/// <param name="p">'\0'-terminated string.</param>
+	/// <param name="p"><c>'\0'</c>-terminated string.</param>
 	/// <param name="s">Managed string. Must contain only ASCII characters.</param>
 	public static bool Eq(byte* p, byte[] s) {
 		int i;
@@ -139,7 +139,7 @@ static unsafe class BytePtr_ {
 	/// Finds character in string which can be binary.
 	/// </summary>
 	/// <param name="p"></param>
-	/// <param name="len">Length of p to search in.</param>
+	/// <param name="len">Length of <i>p</i> to search in.</param>
 	/// <param name="ch">ASCII character.</param>
 	public static int AsciiFindChar(byte* p, int len, byte ch) {
 		for (int i = 0; i < len; i++) if (p[i] == ch) return i;
@@ -150,7 +150,7 @@ static unsafe class BytePtr_ {
 	/// Finds substring in string which can be binary.
 	/// Returns -1 if not found.
 	/// </summary>
-	/// <param name="len">Length of p to search in.</param>
+	/// <param name="len">Length of <i>p</i> to search in.</param>
 	/// <param name="s">Substring to find. Must contain only ASCII characters.</param>
 	public static int AsciiFindString(byte* p, int len, string s) {
 		int len2 = s.Length;
@@ -178,10 +178,10 @@ static unsafe class BytePtr_ {
 	}
 
 	///// <summary>
-	///// Finds substring in '\0'-terminated string.
+	///// Finds substring in <c>'\0'</c>-terminated string.
 	///// Returns -1 if not found.
 	///// </summary>
-	///// <param name="s">'\0'-terminated string.</param>
+	///// <param name="s"><c>'\0'</c>-terminated string.</param>
 	///// <param name="s2">Substring to find. Must contain only ASCII characters.</param>
 	//public static int AsciiFindString(byte* s, string s2)
 	//{

@@ -74,15 +74,15 @@ using static Sci;
 public unsafe class SciTags {
 	const int STYLE_FIRST_EX = STYLE_LASTPREDEFINED + 1;
 	const int NUM_STYLES_EX = STYLE_MAX - STYLE_LASTPREDEFINED;
-
+	
 	struct _TagStyle {
 		uint u1, u2;
-
+		
 		//u1
 		public int Color { get => (int)(u1 & 0xffffff); set => u1 = (u1 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
 		public bool HasColor => 0 != (u1 & 0x1000000);
 		public int Size { get => (int)(u1 >> 25); set => u1 = (u1 & 0x1ffffff) | ((uint)Math.Clamp(value, 0, 127) << 25); }
-
+		
 		//u2
 		public int BackColor { get => (int)(u2 & 0xffffff); set => u2 = (u2 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
 		public bool HasBackColor => 0 != (u2 & 0x1000000);
@@ -92,7 +92,7 @@ public unsafe class SciTags {
 		public bool Eol { get => 0 != (u2 & 0x10000000); set { if (value) u2 |= 0x10000000; else u2 &= unchecked((uint)~0x10000000); } }
 		public bool Hotspot { get => 0 != (u2 & 0x40000000); set { if (value) u2 |= 0x40000000; else u2 &= unchecked((uint)~0x40000000); } }
 		public bool Mono { get => 0 != (u2 & 0x80000000); set { if (value) u2 |= 0x80000000; else u2 &= unchecked((uint)~0x80000000); } }
-
+		
 		public bool Equals(_TagStyle x) { return x.u1 == u1 && x.u2 == u2; }
 		public void Merge(_TagStyle x) {
 			var t1 = x.u1;
@@ -107,7 +107,7 @@ public unsafe class SciTags {
 			u2 |= t2;
 		}
 		public bool IsEmpty => u1 == 0 & u2 == 0;
-
+		
 		public _TagStyle(UserDefinedStyle k) {
 			u1 = u2 = 0;
 			if (k.textColor != null) Color = k.textColor.Value.argb;
@@ -120,7 +120,7 @@ public unsafe class SciTags {
 			Mono = k.monospace;
 		}
 	}
-
+	
 	/// <summary>
 	/// For <see cref="AddStyleTag"/>.
 	/// </summary>
@@ -129,14 +129,14 @@ public unsafe class SciTags {
 		public int size;
 		public bool bold, italic, underline, eolFilled, monospace;
 	}
-
+	
 	readonly KScintilla _c;
 	readonly List<_TagStyle> _styles = new();
-
+	
 	internal SciTags(KScintilla c) {
 		_c = c;
 	}
-
+	
 	void _SetUserStyles(int from) {
 		int i, j;
 		for (i = from; i < _styles.Count; i++) {
@@ -156,7 +156,7 @@ public unsafe class SciTags {
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Clears user-defined (through tags) styles.
 	/// Max number of user styles is NUM_STYLES_EX (216). Need to clear old styles before new styles can be defined.
@@ -169,7 +169,7 @@ public unsafe class SciTags {
 		}
 		//QM2 also cleared the image cache, but now it is shared by all controls of this thread.
 	}
-
+	
 	internal void OnTextChanged_(bool inserted, in SCNotification n) {
 		//if deleted or replaced all text, clear user styles
 		if (!inserted && n.position == 0 && _c.aaaLen8 == 0) {
@@ -177,7 +177,7 @@ public unsafe class SciTags {
 			//_linkDelegates.Clear(); //no
 		}
 	}
-
+	
 	/// <summary>
 	/// Displays <see cref="PrintServer"/> messages that are currently in its queue.
 	/// </summary>
@@ -198,7 +198,7 @@ public unsafe class SciTags {
 		//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
 		//	If multiple messages, use StringBuilder.
 		//	If some messages have tags, use string "<\x15\x0\x4" to separate messages. Never mind: don't escape etc.
-
+		
 		string s = null;
 		StringBuilder b = null;
 		bool hasTags = false, hasTagsPrev = false, scrollToTop = false;
@@ -220,12 +220,12 @@ public unsafe class SciTags {
 				} else {
 					b ??= new StringBuilder();
 					if (b.Length == 0) b.Append(s);
-
+					
 					s = m.Text;
-
+					
 					bool hasTagsThis = m.Text.Starts("<>");
 					if (hasTagsThis && !hasTags) { hasTags = true; b.Insert(0, "<\x15\x0\x4"); }
-
+					
 					if (!hasTags) {
 						b.Append("\r\n");
 					} else if (hasTagsThis) {
@@ -240,29 +240,29 @@ public unsafe class SciTags {
 				break;
 			}
 		}
-
+		
 		if (s != null) { //else 0 messages or the last message is Clear
 			if (b != null) s = b.ToString();
-
+			
 			//limit
 			int len = _c.aaaLen8;
 			if (len > 4 * 1024 * 1024) {
 				len = _c.aaaLineStartFromPos(false, len / 2);
 				if (len > 0) _c.aaaReplaceRange(false, 0, len, "...\r\n");
 			}
-
+			
 			if (hasTags) AddText(s, true, true);
 			else _c.aaaAppendText(s, true, true, true);
-
+			
 			//test slow client
 			//Thread.Sleep(500);
 			//print.qm2.write(s.Length / 1048576d);
 		}
-
+		
 		if (scrollToTop) _c.Call(SCI_SETFIRSTVISIBLELINE);
 		//never mind: more print.it() may be after print.scrollToTop().
 	}
-
+	
 	/// <summary>
 	/// Sets or appends styled text.
 	/// </summary>
@@ -276,7 +276,7 @@ public unsafe class SciTags {
 			if (append) _c.aaaAppendText("", true, true, true); else _c.aaaClearText();
 			return;
 		}
-
+		
 		int len = Encoding.UTF8.GetByteCount(text);
 		byte* buffer = MemoryUtil.Alloc(len * 2 + 8), s = buffer;
 		try {
@@ -290,15 +290,15 @@ public unsafe class SciTags {
 			MemoryUtil.Free(buffer);
 		}
 	}
-
-	record struct _StackItem(byte kind, byte style, int i = 0, string s = null); //kind: 0 style, 1 link, 2 fold
-
+	
+	record struct _StackItem(byte kind, byte style, int i = 0, string s = null, ushort attrLen = 0); //kind: 0 style, 1 link, 2 fold
+	
 	class _Garbage {
 		public readonly List<_StackItem> stack = new();
 		public readonly List<StartEnd> codes = new();
 		public readonly List<POINT> folds = new();
 		public readonly List<(int start, int end, string s)> links = new();
-
+		
 		public void Clear() {
 			stack.Clear();
 			codes.Clear();
@@ -307,19 +307,19 @@ public unsafe class SciTags {
 		}
 	}
 	[ThreadStatic] static WeakReference<_Garbage> t_garbage;
-
+	
 	void _AddText(byte* s, int len, bool append, bool? scroll) {
 		//perf.next();
 		byte* s0 = s, sEnd = s + len; //source text
 		byte* t = s0; //destination text, ie without some tags
 		byte* r0 = s0 + (len + 2), r = r0; //destination style bytes
-
+		
 		int prevStylesCount = _styles.Count;
 		bool hasTags = false;
 		byte currentStyle = STYLE_DEFAULT;
-
+		
 		if ((t_garbage ??= new(null)).TryGetTarget(out var m)) m.Clear(); else t_garbage.SetTarget(m = new());
-
+		
 		while (s < sEnd) {
 			//find '<'
 			var ch = *s++;
@@ -327,9 +327,9 @@ public unsafe class SciTags {
 				_Write(ch, currentStyle);
 				continue;
 			}
-
+			
 			var tag = s;
-
+			
 			//end tag. Support <> and </tag>, but don't care what tag it is.
 			if (s[0] == '/') {
 				s++;
@@ -352,12 +352,12 @@ public unsafe class SciTags {
 				} else { //currently can be only 2 for <fold>
 					if (!(s - tag == 6 && BytePtr_.AsciiStarts(tag + 1, "fold"))) goto ge;
 					m.folds.Add((v.i, (int)(t - s0)));
-					m.links.Add((v.i, v.i + 2, ""));
+					m.links.Add((v.i, v.i + v.attrLen, ""));
 				}
 				m.stack.RemoveAt(n);
 				continue;
 			}
-
+			
 			//multi-message separator
 			if (s[0] == 0x15 && s[1] == 0 && s[2] == 4 && (s - s0 == 1 || s[-2] == 10)) {
 				s += 3;
@@ -369,13 +369,13 @@ public unsafe class SciTags {
 				m.stack.Clear();
 				continue;
 			}
-
+			
 			//read tag name
 			ch = *s; if ((char)ch is '_' or '\a' or '+' or '.') s++;
 			while (((char)*s).IsAsciiAlpha()) s++;
 			int tagLen = (int)(s - tag);
 			if (tagLen == 0) goto ge;
-
+			
 			//read attribute
 			byte* attr = null; int attrLen = 0;
 			if (*s == 32) {
@@ -390,7 +390,7 @@ public unsafe class SciTags {
 			} else {
 				if (*s++ != '>') goto ge;
 			}
-
+			
 			//tags
 			_TagStyle style = default;
 			bool linkTag = false;
@@ -461,9 +461,11 @@ public unsafe class SciTags {
 				s += 7;
 				continue;
 			case 4 << 16 | 'f' when span.SequenceEqual("fold"u8): //<fold>text</fold>
-				m.stack.Add(new(2, 0, (int)(t - s0)));
-				//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
-				_WriteString(">>", _GetStyleIndex(new _TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle, m.stack));
+				bool foldHasAttr = attrLen > 0; if (foldHasAttr) attrLen = Math.Min(attrLen, ushort.MaxValue);
+				m.stack.Add(new(2, 0, (int)(t - s0), attrLen: (ushort)(foldHasAttr ? attrLen : 2)));
+				//add 'expand/collapse' link in this line
+				byte foldStyle = _GetStyleIndex(new _TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle, m.stack);
+				if (!foldHasAttr) _WriteString(">>", foldStyle); else for (int i = 0; i < attrLen; i++) _Write(attr[i], foldStyle);
 				//let the folded text start from next line
 				var s1 = s; if (s1[0] == '<' && (char)s1[1] is '_' or '\a' && s1[2] == '>') s1 += 3;
 				if (s1[0] is not (10 or 13)) _WriteString("\r\n", currentStyle);
@@ -490,7 +492,7 @@ public unsafe class SciTags {
 				}
 				goto ge;
 			}
-
+			
 			if (linkTag) {
 				if (_linkStyle != null) style = new _TagStyle(_linkStyle);
 				else {
@@ -499,7 +501,7 @@ public unsafe class SciTags {
 				}
 				style.Hotspot = true;
 			}
-
+			
 			byte si = _GetStyleIndex(style, currentStyle, m.stack);
 			if (linkTag) {
 				m.stack.Add(new(1, currentStyle, (int)(t - s0), Encoding.UTF8.GetString(tag, (int)(s - tag - 1))));
@@ -507,21 +509,21 @@ public unsafe class SciTags {
 				m.stack.Add(new(0, currentStyle));
 			}
 			currentStyle = si;
-
+			
 			hasTags = true;
 			continue;
 			ge: //invalid format of the tag
 			_Write((byte)'<', currentStyle);
 			s = tag;
 		}
-
+		
 		Debug.Assert(t <= s0 + len);
 		Debug.Assert(r <= r0 + len);
 		Debug.Assert(t - s0 == r - r0);
 		*t = 0; len = (int)(t - s0);
-
+		
 		if (_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
-
+		
 		//perf.next();
 		int prevLen = append ? _c.aaaLen8 : 0;
 		_c.aaaAddText8_(append, scroll ?? append, s0, len);
@@ -530,11 +532,11 @@ public unsafe class SciTags {
 			_c.Call(SCI_SETSTYLING, len, STYLE_DEFAULT);
 			return;
 		}
-
+		
 		foreach (var v in m.links) {
 			_c.AaRangeDataAdd(false, (prevLen + v.start)..(prevLen + v.end), v.s);
 		}
-
+		
 		for (int i = m.folds.Count; --i >= 0;) { //need reverse for nested folds
 			var v = m.folds[i];
 			int lineStart = _c.Call(SCI_LINEFROMPOSITION, v.x + prevLen), lineEnd = _c.Call(SCI_LINEFROMPOSITION, v.y + prevLen);
@@ -543,7 +545,7 @@ public unsafe class SciTags {
 			for (int j = lineStart + 1; j <= lineEnd; j++) _c.Call(SCI_SETFOLDLEVEL, j, level + 1);
 			_c.Call(SCI_FOLDLINE, lineStart);
 		}
-
+		
 		int endStyled = 0;
 		foreach (var v in m.codes) {
 			_StyleRangeTo(v.start);
@@ -554,28 +556,28 @@ public unsafe class SciTags {
 			fixed (byte* p = b) _c.Call(SCI_SETSTYLINGEX, b.Length, p);
 			endStyled = v.end;
 		}
-
+		
 		_StyleRangeTo(len);
 		//perf.next();
 		//print.qm2.write(perf.ToString());
-
+		
 		void _StyleRangeTo(int to) {
 			if (endStyled < to) {
 				_c.Call(SCI_STARTSTYLING, endStyled + prevLen);
 				_c.Call(SCI_SETSTYLINGEX, to - endStyled, r0 + endStyled);
 			}
 		}
-
+		
 		void _Write(byte ch, byte style) {
 			//print.qm2.write($"{ch} {style}");
 			*t++ = ch; *r++ = style;
 		}
-
+		
 		void _WriteString(string ss, byte style) {
 			for (int i_ = 0; i_ < ss.Length; i_++) _Write((byte)ss[i_], style);
 		}
 	}
-
+	
 	byte _GetStyleIndex(_TagStyle style, byte currentStyle, List<_StackItem> stack) {
 		//merge nested style with ancestors
 		if (currentStyle >= STYLE_FIRST_EX) style.Merge(_styles[currentStyle - STYLE_FIRST_EX]);
@@ -584,7 +586,7 @@ public unsafe class SciTags {
 			if (v.kind is not (0 or 1)) continue; //a non-styled tag
 			if (v.style >= STYLE_FIRST_EX) style.Merge(_styles[v.style - STYLE_FIRST_EX]);
 		}
-
+		
 		//find or add style
 		int i, n = _styles.Count;
 		for (i = 0; i < n; i++) if (_styles[i].Equals(style)) break;
@@ -597,7 +599,7 @@ public unsafe class SciTags {
 		}
 		return (byte)i;
 	}
-
+	
 	/// <summary>
 	/// Called on SCN_HOTSPOTRELEASECLICK.
 	/// </summary>
@@ -607,7 +609,7 @@ public unsafe class SciTags {
 		//process it async, because bad things happen if now we remove focus or change control text etc
 		_c.Dispatcher.InvokeAsync(() => OnLinkClick(tag, attr));
 	}
-
+	
 	public bool GetLinkFromPos(int pos, out string tag, out string attr) {
 		tag = attr = null;
 		if (pos >= 0 && _c.AaRangeDataGet(false, pos, out string s, out int from, out int to)) {
@@ -621,20 +623,20 @@ public unsafe class SciTags {
 		}
 		return false;
 	}
-
+	
 	//note: attr can be ""
 	public void OnLinkClick(string tag, string attr) {
 		//print.it($"'{tag}'  '{attr}'");
-
+		
 		if (_userLinkTags.TryGetValue(tag, out var d) || s_userLinkTags.TryGetValue(tag, out d)) {
 			d.Invoke(attr);
 			return;
 		}
-
+		
 		var a = attr.Split('|');
 		bool one = a.Length == 1;
 		string s1 = a[0], s2 = one ? null : a[1];
-
+		
 		switch (tag) {
 		case "link":
 			run.itSafe(s1, s2);
@@ -655,7 +657,7 @@ public unsafe class SciTags {
 			break;
 		}
 	}
-
+	
 	public void SetLinkStyle(UserDefinedStyle style, (bool use, ColorInt color)? activeColor = null, bool? activeUnderline = null) {
 		_linkStyle = style;
 		if (activeColor != null) {
@@ -665,10 +667,10 @@ public unsafe class SciTags {
 		if (activeUnderline != null) _c.Call(SCI_SETHOTSPOTACTIVEUNDERLINE, activeUnderline.Value);
 	}
 	UserDefinedStyle _linkStyle;
-
+	
 	readonly Dictionary<string, Action<string>> _userLinkTags = new();
 	static readonly ConcurrentDictionary<string, Action<string>> s_userLinkTags = new();
-
+	
 	/// <summary>
 	/// Adds (registers) a user-defined link tag for this control.
 	/// </summary>
@@ -690,7 +692,7 @@ public unsafe class SciTags {
 	public void AddLinkTag(string name, Action<string> a) {
 		_userLinkTags[name] = a;
 	}
-
+	
 	/// <summary>
 	/// Adds (registers) a user-defined link tag for all controls.
 	/// </summary>
@@ -709,7 +711,7 @@ public unsafe class SciTags {
 	public static void AddCommonLinkTag(string name, Action<string> a) {
 		s_userLinkTags[name] = a;
 	}
-
+	
 	/// <summary>
 	/// Adds (registers) a user-defined style tag for this control.
 	/// </summary>
@@ -730,9 +732,9 @@ public unsafe class SciTags {
 		_userStyles.Add(name, new _TagStyle(style));
 	}
 	Dictionary<string, _TagStyle> _userStyles;
-
+	
 	public Func<string, byte[]> CodeStylesProvider;
-
+	
 	//FUTURE: add control-tags, like <clear> (clear output), <scroll> (ensure line visible), <mark x> (add some marker etc).
 	//FUTURE: let our links be accessible objects.
 }

@@ -26,12 +26,12 @@ namespace Au;
 /// <th>Problems</th>
 /// </tr>
 /// <tr>
-///  <td>Chrome web browser. Also Edge, Opera and other apps that use Chrome code. Window class name is like "Chrome_WidgetWin_1".</td>
+///  <td>Chrome web browser. Also Edge, Opera and other apps that use Chrome code. Window class name is like <c>"Chrome_WidgetWin_1"</c>.</td>
 ///  <td>
 ///   <ol>
 ///    <li>Web page UI elements initially are disabled (missing). Workarounds:
 ///     <ul>
-///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix <c>"web:"</c> or <c>"chrome:"</c>. Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with "Chrome". However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabling may fail with future Chrome versions.</li>
+///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix <c>"web:"</c> or <c>"chrome:"</c>. Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with <c>"Chrome"</c>. However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabling may fail with future Chrome versions.</li>
 ///      <li>Start Chrome with command line <c>--force-renderer-accessibility</c>.</li>
 ///     </ul>
 ///    </li>
@@ -43,7 +43,7 @@ namespace Au;
 ///  <td>Firefox web browser.</td>
 ///  <td>
 ///   <ol>
-///    <li>By default, the <b>Find</b> function is about 50 times slower than it could be, and uses much CPU when waiting. And HTML attributes may be unavailable. See <see cref="EFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: set system environment variable MOZ_FORCE_DISABLE_E10S=1 and restart Firefox. Note: Firefox may remove this option in the future. If this does not work, google how to disable Firefox multiprocess. Or use Chrome instead.</li>
+///    <li>By default, the <b>Find</b> function is about 50 times slower than it could be, and uses much CPU when waiting. And HTML attributes may be unavailable. See <see cref="EFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: set system environment variable <c>MOZ_FORCE_DISABLE_E10S=1</c> and restart Firefox. Note: Firefox may remove this option in the future. If this does not work, google how to disable Firefox multiprocess. Or use Chrome instead.</li>
 ///    <li>When Firefox starts, its web page UI elements are unavailable. It creates them only when somebody asks (eg function <b>Find</b>), but does it lazily, and <b>Find</b> at first fails. Workaround: use parameter <i>wait</i>.</li>
 ///    <li>Occasionally Firefox briefly turns off its web page UI elements. Workaround: use parameter <i>wait</i>. With other web browsers also it's better to use <i>wait</i>.</li>
 ///    <li>Some new web browser versions add new features or bugs that break something.</li>
@@ -59,10 +59,10 @@ namespace Au;
 ///  </td>
 /// </tr>
 /// <tr>
-///  <td>Java applications that use AWT/Swing. Window class name starts with "SunAwt".</td>
+///  <td>Java applications that use AWT/Swing. Window class name starts with <c>"SunAwt"</c>.</td>
 ///  <td>
 ///   <ol>
-///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is missing/disabled/broken, the "Find UI element" tool shows an "enable" link when you try to capture something in a Java window. Or you can enable JAB in Options -> OS or in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java apps. Also may need to restart apps that tried to use Java UI elements.</li>
+///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is missing/disabled/broken, the <b>Find UI element</b> tool shows an "enable" link when you try to capture something in a Java window. Or you can enable JAB in <b>Options > OS</b> or in <b>Control Panel > Ease of Access Center > Use the computer without a display</b>. Or use <c>jabswitch.exe</c>. Then restart Java apps. Also may need to restart apps that tried to use Java UI elements.</li>
 ///    <li>JAB is part of Java. Install Java 64-bit.</li>
 ///    <li>If your process is 32-bit (unlikely), install Java 32-bit.</li>
 ///    <li>Not supported on 32-bit OS.</li>
@@ -83,7 +83,7 @@ namespace Au;
 ///  <td>
 ///   UI elements of many standard Windows controls have bugs when they are retrieved without loading dll into the target process (see <see cref="EFFlags.NotInProc"/>). Known bugs:
 ///   <ol>
-///    <li>Toolbar buttons don't have Name in some cases.</li>
+///    <li>Toolbar buttons don't have <b>Name</b> in some cases.</li>
 ///    <li><see cref="Focus"/> and <see cref="Select"/> often don't work properly.</li>
 ///   </ol>
 ///   Workarounds: Don't use <see cref="EFFlags.NotInProc"/>. Or use <see cref="EFFlags.UIA"/>.
@@ -101,7 +101,7 @@ namespace Au;
 ///  <td>Processes of a different 32/64 bitness than this process.</td>
 ///  <td>
 ///   <ol>
-///    <li>To load the dll is used rundll32.exe, which makes slower by about 50 ms first time.</li>
+///    <li>To load the dll is used <c>rundll32.exe</c>, which makes slower by about 50 ms first time.</li>
 ///   </ol>
 ///  </td>
 /// </tr>
@@ -109,7 +109,7 @@ namespace Au;
 ///  <td>DPI-scaled windows (see <see cref="Dpi.IsWindowVirtualized(wnd)"/>).</td>
 ///  <td>
 ///   <ol>
-///    <li>In some cases "element from point" and "get rect" functions may not work correctly with such windows. This process must be per-monitor-DPI-aware.</li>
+///    <li>In some cases "element from point" and "get rectangle" functions may not work correctly with such windows. This process must be per-monitor-DPI-aware.</li>
 ///   </ol>
 ///  </td>
 /// </tr>
@@ -153,18 +153,18 @@ public unsafe sealed partial class elm : IDisposable {
 	//We don't use RCW<IAccessible>, which would add another 32 bytes.
 	
 	/// <summary>
-	/// Creates elm from IAccessible and child id.
-	/// By default does not AddRef.
-	/// iacc must not be 0.
+	/// Creates elm from <b>IAccessible</b> and child id.
+	/// By default does not <b>AddRef</b>.
+	/// <i>iacc</i> must not be 0.
 	/// </summary>
 	internal elm(IntPtr iacc, int elem = 0, bool addRef = false) {
 		_Set(iacc, elem, default, addRef);
 	}
 	
 	/// <summary>
-	/// Creates elm from Cpp_Acc.
-	/// By default does not AddRef.
-	/// x.acc must not be 0.
+	/// Creates <b>elm</b> from <b>Cpp_Acc</b>.
+	/// By default does not <b>AddRef</b>.
+	/// <c>x.acc</c> must not be 0.
 	/// </summary>
 	internal elm(Cpp.Cpp_Acc x, bool addRef = false) {
 		_Set(x.acc, x.elem, x.misc, addRef);
@@ -172,7 +172,7 @@ public unsafe sealed partial class elm : IDisposable {
 	
 	/// <summary>
 	/// Sets fields.
-	/// _iacc must be 0, iacc not 0.
+	/// <b>_iacc</b> must be 0, <i>iacc</i> not 0.
 	/// </summary>
 	void _Set(IntPtr iacc, int elem = 0, Misc_ misc = default, bool addRef = false) {
 		Debug.Assert(_iacc == default);
@@ -243,7 +243,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// </summary>
 	/// <remarks>
 	/// Most UI elements are not simple elements. Then this property is 0.
-	/// Often (but not always) this property is the 1-based item index in parent. For example LISTITEM in LIST.
+	/// Often (but not always) this property is the 1-based item index in parent. For example <b>LISTITEM</b> in <b>LIST</b>.
 	/// The <c>set</c> function sometimes can be used as a fast alternative to <see cref="Navigate"/>. It modifies only this variable. It does not check whether the value is valid.
 	/// Simple elements cannot have child elements.
 	/// </remarks>
@@ -259,7 +259,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// </summary>
 	/// <remarks>
 	/// When <b>find</b> or similar function finds a UI element, it sets this property of the <b>elm</b> variable. If <b>fromXY</b> etc, it is 0 (unknown).
-	/// When searching in a window, at level 0 are direct children of the WINDOW. When searching in controls (specified class or id), at level 0 is the control. When searching in <b>elm</b>, at level 0 are its direct children. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page (role DOCUMENT or PANE).
+	/// When searching in a window, at level 0 are direct children of the <b>WINDOW</b>. When searching in controls (specified class or id), at level 0 is the control. When searching in <b>elm</b>, at level 0 are its direct children. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page (role <b>DOCUMENT</b> or <b>PANE</b>).
 	/// </remarks>
 	public int Level { get => _misc.level; set => _misc.SetLevel(value); }
 	
@@ -427,8 +427,8 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <returns><c>null</c> if failed.</returns>
 	/// <param name="x">Unmanaged COM object.</param>
 	/// <remarks>
-	/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
-	/// For IHTMLElement and ISimpleDOMNode returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
+	/// The COM object type can be <b>IAccessible</b>, <b>IAccessible2</b>, <b>IHTMLElement</b>, <b>ISimpleDOMNode</b> or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
+	/// For <b>IHTMLElement</b> and <b>ISimpleDOMNode</b> returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
 	/// </remarks>
 	public static elm fromComObject(IntPtr x)
 	{
@@ -445,8 +445,8 @@ public unsafe sealed partial class elm : IDisposable {
 	/// </summary>
 	/// <param name="x">Managed COM object.</param>
 	/// <remarks>
-	/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
-	/// For IHTMLElement and ISimpleDOMNode returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
+	/// The COM object type can be <b>IAccessible</b>, <b>IAccessible2</b>, <b>IHTMLElement</b>, <b>ISimpleDOMNode</b> or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
+	/// For <b>IHTMLElement</b> and <b>ISimpleDOMNode</b> returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
 	/// </remarks>
 	public static elm fromComObject(object x)
 	{
@@ -472,10 +472,10 @@ public unsafe sealed partial class elm : IDisposable {
 	enum _FuncId { name = 1, value, description, default_action, role, state, rectangle, parent_object, child_object, container_window, child_count, child_objects, help_text, keyboard_shortcut, html, selection, uiaid, uiacn }
 	
 	/// <summary>
-	/// Calls SetLastError and returns hr.
+	/// Calls <b>SetLastError</b> and returns <i>hr</i>.
 	/// In Debug config also outputs error in red.
-	/// If hr looks like not an error but just the property or action is unavailable, changes it to S_FALSE and does not show error. These are: S_FALSE, DISP_E_MEMBERNOTFOUND, E_NOTIMPL.
-	/// _FuncId also can be <b>char</b>, like (_FuncId)'n' for name.
+	/// If hr looks like not an error but just the property or action is unavailable, changes it to <b>S_FALSE</b> and does not show error. These are: <b>S_FALSE</b>, <b>DISP_E_MEMBERNOTFOUND</b>, <b>E_NOTIMPL</b>.
+	/// <b>_FuncId</b> also can be <b>char</b>, like <c>(_FuncId)'n'</c> for name.
 	/// </summary>
 	int _Hresult(_FuncId funcId, int hr) {
 		if (hr != 0) {
@@ -529,7 +529,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// Formats string from main properties of this UI element.
 	/// </summary>
 	/// <remarks>
-	/// The string starts with role. Other properties have format like <c>x="value"</c>, where x is a property character like with <see cref="GetProperties"/>; character e is <see cref="Item"/>. HTML attributes have format <c>@name="value"</c>. In string values are used C# escape sequences, for example \r\n for new line.
+	/// The string starts with role. Other properties have format like <c>x="value"</c>, where <c>x</c> is a property character like with <see cref="GetProperties"/>; character <c>e</c> is <see cref="Item"/>. HTML attributes have format <c>@name="value"</c>. In string values are used C# escape sequences, for example <c>\r\n</c> for new line.
 	/// Indentation depends on <see cref="Level"/>.
 	/// </remarks>
 	public override string ToString() {

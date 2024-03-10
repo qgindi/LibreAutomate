@@ -12,7 +12,7 @@ namespace Au.Types {
 		ExeProgram,
 		
 		/// <summary>
-		/// The task runs in Au.Task.exe process, started from editor.
+		/// The task runs in <c>Au.Task.exe</c> process, started from editor.
 		/// </summary>
 		MiniProgram,
 		
@@ -56,26 +56,26 @@ namespace Au.Types {
 	}
 	
 	/// <summary>
-	/// The default compiler adds this attribute to the main assembly if using non-default references (meta r or nuget). Allows to find them at run time. Only if role miniProgram (default) or editorExtension.
+	/// The default compiler adds this attribute to the main assembly if using non-default references (meta <b>r</b> or <b>nuget</b>). Allows to find them at run time. Only if role <b>miniProgram</b> (default) or <b>editorExtension</b>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	public sealed class RefPathsAttribute : Attribute {
-		/// <summary>Dll paths separated with |.</summary>
+		/// <summary>Dll paths separated with <c>|</c>.</summary>
 		public readonly string Paths;
 		
-		/// <param name="paths">Dll paths separated with |.</param>
+		/// <param name="paths">Dll paths separated with <c>|</c>.</param>
 		public RefPathsAttribute(string paths) { Paths = paths; }
 	}
 	
 	/// <summary>
-	/// The default compiler adds this attribute to the main assembly if using nuget packages with native dlls. Allows to find the dlls at run time. Only if role miniProgram (default) or editorExtension.
+	/// The default compiler adds this attribute to the main assembly if using NuGet packages with native dlls. Allows to find the dlls at run time. Only if role <b>miniProgram</b> (default) or <b>editorExtension</b>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	public sealed class NativePathsAttribute : Attribute {
-		/// <summary>Dll paths separated with |.</summary>
+		/// <summary>Dll paths separated with <c>|</c>.</summary>
 		public readonly string Paths;
 		
-		/// <param name="paths">Dll paths separated with |.</param>
+		/// <param name="paths">Dll paths separated with <c>|</c>.</param>
 		public NativePathsAttribute(string paths) { Paths = paths; }
 	}
 	
@@ -139,7 +139,7 @@ namespace Au.More {
 	/// </example>
 	public record class PrePostBuild(string outputFile, string outputPath, string source, string role, bool optimize, bool bit32, bool preBuild, bool publish) {
 		/// <summary>
-		/// Gets compilation info passed to current preBuild/postBuild script.
+		/// Gets compilation info passed to current <b>preBuild</b>/<b>postBuild</b> script.
 		/// </summary>
 		public static PrePostBuild Info { get; internal set; }
 	}

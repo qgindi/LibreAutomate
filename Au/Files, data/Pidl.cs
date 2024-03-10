@@ -9,7 +9,7 @@ namespace Au.Types {
 	/// 
 	/// The <b>ITEMIDLIST</b> structure is in unmanaged memory. You can dispose <b>Pidl</b> variables, or GC will do it later. Always dispose if creating many.
 	/// 
-	/// This class has only <b>ITEMIDLIST</b> functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like <b>ILClone</b>, <b>ILGetSize</b>, <b>ILFindLastID</b>.
+	/// This class has only <b>ITEMIDLIST</b> functions that are used in this library. Look for other functions on the Internet. Many of them are named with IL prefix, like <b>ILClone</b>, <b>ILGetSize</b>, <b>ILFindLastID</b>.
 	/// </remarks>
 	public unsafe class Pidl : IDisposable {
 		IntPtr _pidl;
@@ -88,7 +88,7 @@ namespace Au.Types {
 		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="pathname.expand"/>).</param>
 		/// <param name="throwIfFailed">Throw exception if failed.</param>
-		/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is <c>true</c>. Probably invalid s.</exception>
+		/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is <c>true</c>. Probably invalid <i>s</i>.</exception>
 		/// <remarks>
 		/// Calls <msdn>SHParseDisplayName</msdn>, except when string is <c>":: ITEMIDLIST"</c>.
 		/// If <c>":: ITEMIDLIST"</c>, does not check whether the shell object exists.
@@ -100,10 +100,10 @@ namespace Au.Types {
 
 		/// <summary>
 		/// The same as <see cref="FromString"/>, but returns unmanaged <b>ITEMIDLIST*</b>.
-		/// Later need to free it with Marshal.FreeCoTaskMem.
+		/// Later need to free it with <b>Marshal.FreeCoTaskMem</b>.
 		/// </summary>
 		/// <param name="s"></param>
-		/// <param name="throwIfFailed">If failed: <c>true</c> - throw AuException; <c>false</c> - return 0.</param>
+		/// <param name="throwIfFailed">If failed: <c>true</c> - throw <b>AuException</b>; <c>false</c> - return 0.</param>
 		internal static IntPtr FromString_(string s, bool throwIfFailed = false) {
 			IntPtr R;
 			s = _Normalize(s);
@@ -125,9 +125,9 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// The same as <see cref="pathname.normalize"/>(CanBeUrlOrShell|DontPrefixLongPath), but ignores non-full path (returns s).
+		/// The same as <see cref="pathname.normalize"/><c>(CanBeUrlOrShell|DontPrefixLongPath)</c>, but ignores non-full path (returns <i>s</i>).
 		/// </summary>
-		/// <param name="s">File-system path or URL or "::...".</param>
+		/// <param name="s">File-system path or URL or <c>"::..."</c>.</param>
 		static string _Normalize(string s) {
 			s = pathname.expand(s);
 			if (!pathname.isFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
@@ -262,7 +262,7 @@ namespace Au.Types {
 		//rejected: use base64 <b>ITEMIDLIST</b>. Shorter, but cannot easily split, for example in folders.UnexpandPath.
 
 		/// <summary>
-		/// If s starts with "::{", converts to <c>":: ITEMIDLIST"</c>. Else returns s.
+		/// If <i>s</i> starts with <c>"::{"</c>, converts to <c>":: ITEMIDLIST"</c>. Else returns <i>s</i>.
 		/// </summary>
 		internal static string ClsidToItemidlist_(string s) {
 			if (s != null && s.Starts("::{")) {

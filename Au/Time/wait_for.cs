@@ -65,10 +65,10 @@ namespace Au {
 		/// </summary>
 		/// <returns>
 		/// <br/>• 0 if timeout (if <i>timeout</i> &lt; 0),
-		/// <br/>• 1-handles.Length if signaled,
-		/// <br/>• -(1-handles.Length) if abandoned mutex,
-		/// <br/>• 1+handles.Length if msgCallback returned <c>true</c>,
-		/// <br/>• 2+handles.Length if stop became <c>true</c>.
+		/// <br/>• <c>1-handles.Length</c> if signaled,
+		/// <br/>• <c>-(1-handles.Length)</c> if abandoned mutex,
+		/// <br/>• <c>1+handles.Length</c> if <i>msgCallback</i> returned <c>true</c>,
+		/// <br/>• <c>2+handles.Length</c> if stop became <c>true</c>.
 		/// </returns>
 		internal static int WaitS_(Seconds timeout, WHFlags flags, IntPtr[] handles = null, Delegate msgCallback = null, WaitVariable_ stopVar = null) {
 			if (timeout.Period != null || timeout.MaxPeriod != null) print.warning("This wait function does not use Seconds.Period/MaxPeriod.");
@@ -99,17 +99,17 @@ namespace Au {
 		/// <summary>
 		/// Waits for <i>handles</i>, or/and <i>msgCallback</i> returning <c>true</c>, or/and <i>stopVar</i> becoming <c>true</c>. Or just sleeps, if <i>handles</i> etc are <c>null</c>/empty.
 		/// If flag <b>DoEvents</b>, dispatches received messages etc.
-		/// Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_ALLINPUT. Alertable.
+		/// Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with <b>QS_ALLINPUT</b>. Alertable.
 		/// </summary>
 		/// <param name="msgCallback">
 		/// Called when dispatching messages. If returns <c>true</c>, stops waiting and returns <c>handles.Length</c>.
-		/// 	If it is WPMCallback, calls it before dispatching a posted message.
-		/// 	If it is Func{bool}, calls it after dispatching one or more messages.
+		/// 	If it is <c>WPMCallback</c>, calls it before dispatching a posted message.
+		/// 	If it is <c>Func{bool}</c>, calls it after dispatching one or more messages.
 		/// </param>
 		/// <param name="stopVar">When becomes <c>true</c>, stops waiting and returns <c>handles.Length + 1</c>.</param>
 		/// <returns>
-		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + Api.WAIT_ABANDONED_0 (0x80).
-		/// If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
+		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + <b>Api.WAIT_ABANDONED_0</b> (0x80).
+		/// If <c>timeMS>0</c>, waits max <i>timeMS</i> and on timeout returns <b>Api.WAIT_TIMEOUT</b>.
 		/// If failed, returns -1. Supports <see cref="lastError"/>.
 		/// </returns>
 		internal static unsafe int Wait_(long timeMS, WHFlags flags, ReadOnlySpan<IntPtr> handles = default, Delegate msgCallback = null, WaitVariable_ stopVar = null, CancellationToken cancel = default) {

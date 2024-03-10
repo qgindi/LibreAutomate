@@ -375,11 +375,11 @@ public static unsafe class Convert2 {
 	}
 
 	/// <summary>
-	/// Converts <c>'\0'</c>-terminated UTF8 string to C# string (UTF16).
+	/// Converts <c>'\0'</c>-terminated UTF-8 string to C# string (UTF-16).
 	/// </summary>
-	/// <param name="utf8">UTF8 string. If <c>null</c>, returns <c>null</c>.</param>
+	/// <param name="utf8">UTF-8 string. If <c>null</c>, returns <c>null</c>.</param>
 	/// <remarks>
-	/// Finds <c>'\0'</c> and calls <see cref="Encoding.GetString"/>. Don't use this function when UTF8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
+	/// Finds <c>'\0'</c> and calls <see cref="Encoding.GetString"/>. Don't use this function when UTF-8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
 	/// </remarks>
 	public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, BytePtr_.Length(utf8));
 
@@ -424,7 +424,7 @@ public static unsafe class Convert2 {
 
 	///// <summary>
 	///// Gets decoded data length from Base64 encoded string length, assuming there are no newlines and other whitespace characters.
-	///// It is <c>(int)(len * 3L / 4)</c> minus the number of padding '=' characters (max 2).
+	///// It is <c>(int)(len * 3L / 4)</c> minus the number of padding <c>'='</c> characters (max 2).
 	///// </summary>
 	//public static int Base64DecodeLength(RStr encoded) {
 	//	int len = encoded.Length;
@@ -472,7 +472,7 @@ public static unsafe class Convert2 {
 	///// Converts <b>byte[]</b> or other memory to Base64 encoded string that can be used in URL.
 	///// </summary>
 	///// <param name="data">Data to encode.</param>
-	///// <remarks>Like <see cref="Convert.ToBase64String(<b>byte[]</b>)"/>, but instead of '/' and '+' uses '_' and '-'.</remarks>
+	///// <remarks>Like <see cref="Convert.ToBase64String(byte[])"/>, but instead of <c>'/'</c> and <c>'+'</c> uses <c>'_'</c> and <c>'-'</c>.</remarks>
 	//public static string Base64UrlEncode(RByte data) {
 	//	fixed (byte* p = data) return Base64UrlEncode(p, data.Length);
 
@@ -484,7 +484,7 @@ public static unsafe class Convert2 {
 	///// </summary>
 	///// <param name="data">Data to encode.</param>
 	///// <param name="length">Number of bytes to encode.</param>
-	///// <remarks>Instead of '/' and '+' uses '_' and '-'.</remarks>
+	///// <remarks>Instead of <c>'/'</c> and <c>'+'</c> uses <c>'_'</c> and <c>'-'</c>.</remarks>
 	//public static string Base64UrlEncode(void* data, int length) {
 	//	var ip = (IntPtr)data;
 	//	return string.Create(Base64EncodeLength(length), (ip, length), static (span, tu) => {
@@ -499,7 +499,7 @@ public static unsafe class Convert2 {
 	///// Converts a struct variable to Base64 encoded string that can be used in URL.
 	///// </summary>
 	///// <param name="x">Variable.</param>
-	///// <remarks>Instead of '/' and '+' uses '_' and '-'.</remarks>
+	///// <remarks>Instead of <c>'/'</c> and <c>'+'</c> uses <c>'_'</c> and <c>'-'</c>.</remarks>
 	//public static string Base64UrlEncode<T>(T x) where T : unmanaged {
 	//	return Base64UrlEncode(&x, sizeof(T));
 	//}
@@ -515,7 +515,7 @@ public static unsafe class Convert2 {
 	///// Converts string containing Base64 encoded data to <b>byte[]</b>. Supports standard encoding and URL-safe encoding.
 	///// </summary>
 	///// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing Base64 encoded data.</param>
-	///// <remarks>Like <see cref="Convert.FromBase64String(string)"/>, but the string can contain '_' and '-' instead of '/' and '+'.</remarks>
+	///// <remarks>Like <see cref="Convert.FromBase64String(string)"/>, but the string can contain <c>'_'</c> and <c>'-'</c> instead of <c>'/'</c> and <c>'+'</c>.</remarks>
 	///// <exception cref="Exception">Exceptions of <see cref="Convert.FromBase64CharArray"/>.</exception>
 	//public static byte[] Base64UrlDecode(RStr encoded) {
 	//	char[] a = ArrayPool<char>.Shared.Rent(encoded.Length);
@@ -530,13 +530,13 @@ public static unsafe class Convert2 {
 	//}
 
 	///// <summary>
-	///// Converts string containing Base64 encoded data to bytes and stores in memory of a Span variable. Supports standard encoding and URL-safe encoding.
+	///// Converts string containing Base64 encoded data to bytes and stores in memory of a <b>Span</b> variable. Supports standard encoding and URL-safe encoding.
 	///// Returns <c>false</c> if the encoded string is invalid or the buffer is too small.
 	///// </summary>
 	///// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="decoded">Memory buffer for the result.</param>
 	///// <param name="decodedLength"></param>
-	///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
+	///// <remarks>The string can contain <c>'_'</c> and <c>'-'</c> instead of <c>'/'</c> and <c>'+'</c>.</remarks>
 	//public static bool Base64UrlDecode(RStr encoded, Span<byte> decoded, out int decodedLength) {
 	//	char[] a = ArrayPool<char>.Shared.Rent(encoded.Length);
 	//	try {
@@ -554,7 +554,7 @@ public static unsafe class Convert2 {
 	///// <param name="decoded">Memory buffer for the result.</param>
 	///// <param name="bufferSize">The max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
 	///// <param name="decodedLength">Receives the number of bytes written to the <i>decoded</i> memory buffer.</param>
-	///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
+	///// <remarks>The string can contain <c>'_'</c> and <c>'-'</c> instead of <c>'/'</c> and <c>'+'</c>.</remarks>
 	//public static bool Base64UrlDecode(RStr encoded, void* decoded, int bufferSize, out int decodedLength) {
 	//	return Base64UrlDecode(encoded, new Span<byte>(decoded, bufferSize), out decodedLength);
 	//}
@@ -565,7 +565,7 @@ public static unsafe class Convert2 {
 	///// </summary>
 	///// <param name="encoded">String or <b>char[]</b> or span of string/array/memory containing Base64 encoded data.</param>
 	///// <param name="decoded">The result variable.</param>
-	///// <remarks>The string can contain '_' and '-' instead of '/' and '+'.</remarks>
+	///// <remarks>The string can contain <c>'_'</c> and <c>'-'</c> instead of <c>'/'</c> and <c>'+'</c>.</remarks>
 	//public static bool Base64UrlDecode<T>(RStr encoded, out T decoded) where T : unmanaged {
 	//	T t;
 	//	if (!Base64UrlDecode(encoded, &t, sizeof(T), out int n) || n != sizeof(T)) { decoded = default; return false; }

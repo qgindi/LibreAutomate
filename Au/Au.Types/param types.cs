@@ -45,7 +45,7 @@ public class NormalClass {
 /// To specify a reverse coordinate (the origin is the right or bottom edge), use <see cref="Reverse"/> or a "from end" index like <c>^1</c>. It is towards the left or top edge, unless negative. Or use <see cref="Max"/> or <see cref="MaxInside"/>.
 /// To specify a "fraction of the rectangle" coordinate, use <see cref="Fraction"/> or a value of type float like <c>.5f</c>. Or use <see cref="Center"/>.
 /// The meaning of <c>default(Coord)</c> depends on function where used. Many functions interpret it as center (same as <c>Coord.Center</c> or <c>.5f</c>).
-/// Also there are functions to convert <b>Coord</b> to normal coodinates.
+/// Also there are functions to convert <b>Coord</b> to normal coordinates.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[

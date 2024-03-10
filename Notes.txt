@@ -61,6 +61,7 @@ Run script "Au docs". Click the upload link.
 Rename "future.md".
 
 Github commit all and push. The message could be like v1.2.3.
+	Note: don't delay to do it. It uploads the "changes" doc.
 
 Review web pages. Github too.
 
@@ -71,15 +72,10 @@ Test the setup file at virustotal.com. And separately other files (even data fil
 	Always will be several false positives. Even with an empty Inno Setup project. Never mind.
 
 Release NuGet package:
-	In Au project edit version and maybe year.
-		Can edit directly in .csproj.
-		Make sure that <TargetFrameworks> contains all supported frameworks.
-		Build the project.
-	Run script "Create NuGet package.cs". It executes dotnet pack and adds native dlls.
-	In .csproj restore <TargetFrameworks> if need.
+	Run script "Create NuGet package.cs". It builds Au using a modified temp csproj, creates package and adds native dlls.
 	Upload to NuGet. The script prints links.
 
-Edit version in _\version.txt. Upload to public_html.
+Run script "Update version.txt.cs". It updates _\version.txt and uploads to public_html.
 
 Announce in forum.
 

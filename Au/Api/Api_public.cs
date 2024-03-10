@@ -8,7 +8,7 @@ namespace Au.Types;
 /// </summary>
 /// <remarks>
 /// Reference: <msdn>Window Styles</msdn>.
-/// Here names are without prefix WS_. For example, instead of <c>WS_BORDER</c> <c>use WS.BORDER</c>. Not included constants that are 0 (eg <c>WS_TILED</c>) or are duplicate (eg <c>WS_SIZEBOX</c> is same as <c>WS_THICKFRAME</c>) or consist of multiple other constants (eg <c>WS_TILEDWINDOW</c>).
+/// Here names are without prefix <b>WS_</b>. For example, instead of <c>WS_BORDER</c> <c>use WS.BORDER</c>. Not included constants that are 0 (eg <c>WS_TILED</c>) or are duplicate (eg <c>WS_SIZEBOX</c> is same as <c>WS_THICKFRAME</c>) or consist of multiple other constants (eg <c>WS_TILEDWINDOW</c>).
 /// </remarks>
 [Flags]
 public enum WS : uint
@@ -42,7 +42,7 @@ public enum WS : uint
 /// </summary>
 /// <remarks>
 /// Reference: <msdn>Extended Window Styles</msdn>.
-/// Here names are without prefix WS_EX_. For example, instead of <c>WS_EX_TOOLWINDOW</c> <c>use WSE.TOOLWINDOW</c>. Not included constants that are 0 (eg <c>WS_EX_LEFT</c>).
+/// Here names are without prefix <b>WS_EX_</b>. For example, instead of <c>WS_EX_TOOLWINDOW</c> <c>use WSE.TOOLWINDOW</c>. Not included constants that are 0 (eg <c>WS_EX_LEFT</c>).
 /// </remarks>
 [Flags]
 public enum WSE : uint
@@ -167,7 +167,7 @@ public enum SIGDN : uint
 }
 
 /// <summary>API <msdn>SetWindowPos</msdn> flags. Can be used with <see cref="wnd.SetWindowPos"/>.</summary>
-/// <remarks>The _X flags are undocumented.</remarks>
+/// <remarks>The <b>_X</b> flags are undocumented.</remarks>
 [Flags]
 public enum SWPFlags : uint
 {

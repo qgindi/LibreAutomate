@@ -224,7 +224,7 @@ public static partial class filesystem {
 	/// Else searches in these places:
 	/// 1. <i>dirs</i>, if used.
 	/// 2. <see cref="folders.ThisApp"/>.
-	/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, PATH environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
+	/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, <c>PATH</c> environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
 	/// 4. If <i>path</i> ends with <c>".exe"</c>, tries to get path from registry "App Paths" keys.
 	/// </remarks>
 	/// <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
@@ -1068,7 +1068,7 @@ public static partial class filesystem {
 	}
 	
 	/// <summary>
-	/// Same as createDirectoryFor, but filePath must be prepared (_PreparePath or normalize).
+	/// Same as <b>createDirectoryFor</b>, but <i>filePath</i> must be prepared (<b>_PreparePath</b> or normalize).
 	/// </summary>
 	static bool _createDirectoryForPrepared(string filePath) {
 		var path = _RemoveFilename(filePath);
@@ -1113,7 +1113,7 @@ public static partial class filesystem {
 	
 	/// <summary>
 	/// The same as <c>pathname.normalize(path)</c>.
-	/// Expands environment variables, throws ArgumentException if not full path, normalizes, etc.
+	/// Expands environment variables, throws <b>ArgumentException</b> if not full path, normalizes, etc.
 	/// </summary>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	static string _PreparePath(string path) {
@@ -1124,7 +1124,7 @@ public static partial class filesystem {
 	/// <summary>
 	/// Finds filename, eg <c>@"b.txt"</c> in <c>@"c:\a\b.txt"</c>.
 	/// </summary>
-	/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns -1.</exception>
+	/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If <i>noException</i>, instead returns -1.</exception>
 	static int _FindFilename(string path, bool noException = false) {
 		int R = path.FindLastAny(@"\/");
 		if (R < 0 || R == path.Length - 1) {
@@ -1137,7 +1137,7 @@ public static partial class filesystem {
 	/// <summary>
 	/// Removes filename, eg <c>@"c:\a\b.txt"</c> -> <c>@"c:\a"</c>.
 	/// </summary>
-	/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns <c>null</c>.</exception>
+	/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If <i>noException</i>, instead returns <c>null</c>.</exception>
 	static string _RemoveFilename(string path, bool noException = false) {
 		int i = _FindFilename(path, noException); if (i < 0) return null;
 		return path[..--i];
@@ -1146,7 +1146,7 @@ public static partial class filesystem {
 	/// <summary>
 	/// Gets filename, eg <c>@"c:\a\b.txt"</c> -> <c>@"b.txt"</c>.
 	/// </summary>
-	/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns <c>null</c>.</exception>
+	/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If <i>noException</i>, instead returns <c>null</c>.</exception>
 	static string _GetFilename(string path, bool noException = false) {
 		int i = _FindFilename(path, noException); if (i < 0) return null;
 		return path[i..];

@@ -1,14 +1,14 @@
 namespace Au {
 	public unsafe partial struct wnd {
 		/// <summary>
-		/// if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
+		/// <c>if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }</c>
 		/// </summary>
 		internal void MinimalSleepIfOtherThread_() {
 			if (!IsOfThisThread) MinimalSleepNoCheckThread_();
 		}
 
 		/// <summary>
-		/// Thread.Sleep(15); SendTimeout(1000, 0);
+		/// <c>Thread.Sleep(15); SendTimeout(1000, 0);</c>
 		/// </summary>
 		internal void MinimalSleepNoCheckThread_() {
 			Debug.Assert(!IsOfThisThread);
@@ -19,9 +19,9 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// On Win10+, if w is "ApplicationFrameWindow", returns the real app window "Windows.UI.Core.CoreWindow" hosted by w.
-		/// If w is minimized, cloaked (eg on other desktop) or the app is starting, the "Windows.UI.Core.CoreWindow" is not its child. Then searches for a top-level window named like w. It is unreliable, but MS does not provide API for this.
-		/// Info: "Windows.UI.Core.CoreWindow" windows hosted by "ApplicationFrameWindow" belong to separate processes. All "ApplicationFrameWindow" windows belong to a single process.
+		/// On Win10+, if <i>w</i> is <c>"ApplicationFrameWindow"</c>, returns the real app window <c>"Windows.UI.Core.CoreWindow"</c> hosted by <i>w</i>.
+		/// If <i>w</i> is minimized, cloaked (eg on other desktop) or the app is starting, the <c>"Windows.UI.Core.CoreWindow"</c> is not its child. Then searches for a top-level window named like <i>w</i>. It is unreliable, but no API for this.
+		/// Info: <c>"Windows.UI.Core.CoreWindow"</c> windows hosted by <c>"ApplicationFrameWindow"</c> belong to separate processes. All <c>"ApplicationFrameWindow"</c> windows belong to a single process.
 		/// </summary>
 		static wnd _WindowsStoreAppFrameChild(wnd w) {
 			bool retry = false;
@@ -46,7 +46,7 @@ namespace Au {
 
 		//not used
 		///// <summary>
-		///// The reverse of _WindowsStoreAppFrameChild.
+		///// The reverse of <b>_WindowsStoreAppFrameChild</b>.
 		///// </summary>
 		//static wnd _WindowsStoreAppHost(wnd w)
 		//{
@@ -58,7 +58,7 @@ namespace Au {
 
 		internal static partial class Internal_ {
 			/// <summary>
-			/// Calls API SetProp/GetProp to set/get misc flags for a window.
+			/// Calls API <b>SetProp</b>/<b>GetProp</b> to set/get misc flags for a window.
 			/// Currently unused.
 			/// </summary>
 			internal static class WinFlags {
@@ -124,7 +124,7 @@ namespace Au {
 			//}
 
 			/// <summary>
-			/// Returns <c>true</c> if w contains a non-zero special handle value (<see cref="SpecHWND"/>).
+			/// Returns <c>true</c> if <i>w</i> contains a non-zero special handle value (<see cref="SpecHWND"/>).
 			/// Note: <b>SpecHWND.TOP</b> is 0.
 			/// </summary>
 			public static bool IsSpecHwnd(wnd w) {
@@ -133,8 +133,8 @@ namespace Au {
 			}
 
 			/// <summary>
-			/// Converts object to wnd.
-			/// Object can contain <c>null</c>, wnd, Control, or System.Windows.DependencyObject (must be in element 0 of <b>object[]</b>).
+			/// Converts object to <b>wnd</b>.
+			/// Object can contain <c>null</c>, <b>wnd</b>, <b>Control</b>, or <b>System.Windows.DependencyObject</b> (must be in element 0 of <b>object[]</b>).
 			/// Avoids loading Forms and WPF dlls when not used.
 			/// </summary>
 			public static wnd FromObject(object o) => o switch {
@@ -151,9 +151,9 @@ namespace Au {
 			static wnd _Wpf(object o) => (o as System.Windows.DependencyObject).Hwnd();
 
 			/// <summary>
-			/// If w is handle of a WPF element (Window, Popup, HwndHost-ed control, HwndSource.RootVisual), returns that element, else <c>null</c>.
-			/// Slow if HwndHost-ed control.
-			/// w can be default.
+			/// If <i>w</i> is handle of a WPF element (<b>Window</b>, <b>Popup</b>, <b>HwndHost</b>-ed control, <b>HwndSource.RootVisual</b>), returns that element, else <c>null</c>.
+			/// Slow if <b>HwndHost</b>-ed control.
+			/// <i>w</i> can be <c>default</c>.
 			/// </summary>
 			public static System.Windows.FrameworkElement ToWpfElement(wnd w) {
 				if (!w.Is0) {
@@ -168,9 +168,9 @@ namespace Au {
 			}
 
 			/// <summary>
-			/// An enumerable list of wnd for <see cref="wndFinder._FindOrMatch"/> and <see cref="wndChildFinder._FindInList"/>.
-			/// Holds ArrayBuilder_ or IEnumerator or single wnd or none.
-			/// Must be disposed if it is ArrayBuilder_ or IEnumerator, else disposing is optional.
+			/// An enumerable list of <b>wnd</b> for <see cref="wndFinder._FindOrMatch"/> and <see cref="wndChildFinder._FindInList"/>.
+			/// Holds <b>ArrayBuilder_</b> or <b>IEnumerator</b> or single <b>wnd</b> or none.
+			/// Must be disposed if it is <b>ArrayBuilder_</b> or <b>IEnumerator</b>, else disposing is optional.
 			/// </summary>
 			internal struct WndList_ : IDisposable {
 				internal enum ListType { None, ArrayBuilder, Enumerator, SingleWnd }

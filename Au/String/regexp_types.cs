@@ -131,7 +131,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <remarks>
 		/// Marks can be inserted in regular expression pattern like <c>(*MARK:name)</c> or <c>(*:name)</c>.
-		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: <c>"^(*MARK:A)((*MARK:B)a|b)c"</c>. When it matches <c>"bc"</c>, the mark is A. The B mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match <c>"bx"</c>, the mark is B.
+		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: <c>"^(*MARK:A)((*MARK:B)a|b)c"</c>. When it matches <c>"bc"</c>, the mark is <c>A</c>. The <c>B</c> mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match <c>"bx"</c>, the mark is <c>B</c>.
 		/// </remarks>
 		public string Mark { get; private set; }
 		
@@ -325,9 +325,6 @@ namespace Au.Types {
 		/// </remarks>
 		public RStr Span => _len > 0 ? _subject.AsSpan(_index, _len) : (_index < 0 ? default : ""); //_len can be < 0
 		
-		///// 
-		///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetSpan_"/>.
-		
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
 		/// </summary>
@@ -336,9 +333,6 @@ namespace Au.Types {
 		/// Creates new string each time. See also <see cref="Span"/>.
 		/// </remarks>
 		public string Value => _len > 0 ? _subject[_index..End] : (_index < 0 ? null : ""); //_len can be < 0
-		
-		///// 
-		///// This function cannot be used with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>. Then use <see cref="GetValue_"/>.
 		
 		/// <summary>
 		/// Returns <see cref="Value"/>.
@@ -547,10 +541,10 @@ namespace Au.Types {
 	#region callout
 	
 	/// <summary>
-	/// Managed version of PCRE API struct pcre2_callout_block.
+	/// Managed version of PCRE API struct <b>pcre2_callout_block</b>.
 	/// When you set <see cref="regexp.Callout"/>, your callout function's parameter is of this type.
 	/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
-	/// Most properties are pcre2_callout_block fields as documented in PCRE help. Other properties and methods are easier/safer versions of unsafe fields like offset_vector.
+	/// Most properties are <b>pcre2_callout_block</b> fields as documented in PCRE help. Other properties and methods are easier/safer versions of unsafe fields like <b>offset_vector</b>.
 	/// </summary>
 	public unsafe struct RXCalloutData {
 #pragma warning disable 649 //field never assigned
@@ -609,13 +603,13 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Flags.
-		/// 1 PCRE2_CALLOUT_STARTMATCH, 2 PCRE2_CALLOUT_BACKTRACK.
+		/// 1 <b>PCRE2_CALLOUT_STARTMATCH</b>, 2 <b>PCRE2_CALLOUT_BACKTRACK</b>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int callout_flags => _p->callout_flags;
 		
 		/// <summary>
-		/// The offset within the subject string at which the current match attempt started. But depends on \K etc.
+		/// The offset within the subject string at which the current match attempt started. But depends on <c>\K</c> etc.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int start_match => (int)_p->start_match;
@@ -658,7 +652,7 @@ namespace Au.Types {
 		/// Gets the start index and length of the specified group in the subject string.
 		/// </summary>
 		/// <param name="group">Group number (1-based index).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be &gt; 0 and &lt; capture_top.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be &gt; 0 and &lt; <b>capture_top</b>.</exception>
 		public (int index, int length) Group(int group) {
 			if (group <= 0 || group >= _p->capture_top) throw new ArgumentOutOfRangeException(nameof(group), "Must be > 0 and < capture_top.");
 			var v = _p->vec;
@@ -670,7 +664,7 @@ namespace Au.Types {
 		/// Gets the value (substring) of the specified group.
 		/// </summary>
 		/// <param name="group">Group number (1-based index).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be &gt; 0 and &lt; capture_top.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be &gt; 0 and &lt; <b>capture_top</b>.</exception>
 		public string GroupValue(int group) {
 			var (i, len) = Group(group);
 			if (i < 0) return null;
@@ -699,8 +693,8 @@ namespace Au.Types {
 	/// <remarks>
 	/// Many options also can be specified in regular expression (RE):
 	/// - These can be anywhere in RE: <c>(?i)</c> <b>CASELESS</b>, <c>(?m)</c> <b>MULTILINE</b>, <c>(?s)</c> <b>DOTALL</b>, <c>(?n)</c> <b>NO_AUTO_CAPTURE</b>, <c>(?x)</c> <b>EXTENDED</b>, <c>(?xx)</c> <b>EXTENDED_MORE</b>, <c>(?J)</c> <b>DUPNAMES</b>, <c>(?U)</c> <b>UNGREEDY</b>. Can be multiple, like <c>(?ms)</c>. Can be unset, like <c>(?-i)</c>. RE <c>"\Qtext\E"</c> is like RE <c>"text"</c> with flag <b>LITERAL</b>.
-	/// - Instead of <b>ANCHORED</b> can be used \G at the start of RE. Or ^, except in multiline mode.
-	/// - Instead of <b>ENDANCHORED</b> can be used \z at the end of RE. Or $, except in multiline mode.
+	/// - Instead of <b>ANCHORED</b> can be used <c>\G</c> at the start of RE. Or <c>^</c>, except in multiline mode.
+	/// - Instead of <b>ENDANCHORED</b> can be used <c>\z</c> at the end of RE. Or <c>$</c>, except in multiline mode.
 	/// - Flag UTF is implicitly added if RE contains non-ASCII characters and there is no flag <b>NEVER_UTF</b>.
 	/// - These must be at the very start and are named like flags: <c>(*UTF)</c>, <c>(*UCP)</c>, <c>(*NOTEMPTY)</c>, <c>(*NOTEMPTY_ATSTART)</c>, <c>(*NO_AUTO_POSSESS)</c>, <c>(*NO_DOTSTAR_ANCHOR)</c>, <c>(*NO_START_OPT)</c>.
 	/// - More info in <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">PCRE syntax reference</see>.

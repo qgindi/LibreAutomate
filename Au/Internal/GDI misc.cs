@@ -140,7 +140,7 @@ struct GdiObject_ : IDisposable {
 	public static implicit operator IntPtr(GdiObject_ g) => g._h;
 
 	/// <summary>
-	/// Calls API CreateSolidBrush.
+	/// Calls API <b>CreateSolidBrush</b>.
 	/// </summary>
 	/// <param name="color">0xRRGGBB.</param>
 	public static GdiObject_ ColorBrush(ColorInt color) {
@@ -148,10 +148,10 @@ struct GdiObject_ : IDisposable {
 	}
 
 	/// <summary>
-	/// Calls API GetThemeSysColorBrush.
+	/// Calls API <b>GetThemeSysColorBrush</b>.
 	/// </summary>
 	/// <param name="hTheme">Theme handle. If default, gets non-themed color.</param>
-	/// <param name="colorIndex">API COLOR_x.</param>
+	/// <param name="colorIndex">API <b>COLOR_x</b>.</param>
 	public static GdiObject_ SysColorBrush(IntPtr hTheme, int colorIndex) {
 		return new(Api.GetThemeSysColorBrush(hTheme, colorIndex));
 	}

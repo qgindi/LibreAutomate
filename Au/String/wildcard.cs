@@ -40,7 +40,7 @@ namespace Au {
 		/// Cannot be <c>null</c> (throws exception).
 		/// <c>""</c> will match <c>""</c>.
 		/// </param>
-		/// <param name="matchCase">Case-sensitive even if there is no **c.</param>
+		/// <param name="matchCase">Case-sensitive even if there is no <c>**c</c>.</param>
 		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(string)"/> always return <c>false</c>.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
@@ -166,19 +166,19 @@ namespace Au {
 
 		/// <summary>
 		/// Returns the <b>regexp</b> object created from regular expression string.
-		/// <c>null</c> if <b>TextType</b> is not <b>RegexPcre</b> (no option r).
+		/// <c>null</c> if <b>TextType</b> is not <b>RegexPcre</b> (no option <c>r</c>).
 		/// </summary>
 		public regexp RegexPcre => _o as regexp;
 
 		/// <summary>
 		/// Gets the <b>Regex</b> object created from regular expression string.
-		/// <c>null</c> if <b>TextType</b> is not <b>RegexNet</b> (no option R).
+		/// <c>null</c> if <b>TextType</b> is not <b>RegexNet</b> (no option <c>R</c>).
 		/// </summary>
 		public Regex RegexNet => _o as Regex;
 
 		/// <summary>
 		/// Array of <b>wildex</b> variables, one for each part in multi-part text.
-		/// <c>null</c> if <b>TextType</b> is not <b>Multi</b> (no option m).
+		/// <c>null</c> if <b>TextType</b> is not <b>Multi</b> (no option <c>m</c>).
 		/// </summary>
 		public wildex[] MultiArray => _o as wildex[];
 
@@ -193,7 +193,7 @@ namespace Au {
 		public bool IgnoreCase => _ignoreCase;
 
 		/// <summary>
-		/// Has option n?
+		/// Has option <c>n</c>?
 		/// </summary>
 		public bool Not => _not;
 
@@ -230,10 +230,10 @@ namespace Au.Types {
 		/// 
 		/// | Character | Will match | Examples
 		/// | -
-		/// | * | Zero or more of any characters. | <c>"start*"</c>, <c>"*end"</c>, <c>"*middle*"</c>
-		/// | ? | Any single character. | <c>"date ????-??-??"</c>
+		/// | <c>*</c> | Zero or more of any characters. | <c>"start*"</c>, <c>"*end"</c>, <c>"*middle*"</c>
+		/// | <c>?</c> | Any single character. | <c>"date ????-??-??"</c>
 		/// 
-		/// There are no escape sequences for * and ? characters.
+		/// There are no escape sequences for <c>*</c> and <c>?</c> characters.
 		/// 
 		/// Uses ordinal comparison, ie does not depend on current culture.
 		/// 
@@ -378,31 +378,31 @@ namespace Au.Types {
 	/// </summary>
 	public enum WXType : byte {
 		/// <summary>
-		/// Simple text (option t, or no *? characters and no t r R options).
+		/// Simple text (option <c>t</c>, or no <c>*?</c> characters and no <c>t</c> <c>r</c> <c>R</c> options).
 		/// </summary>
 		Text,
 
 		/// <summary>
-		/// Wildcard (has *? characters and no t r R options).
+		/// Wildcard (has <c>*?</c> characters and no <c>t</c> <c>r</c> <c>R</c> options).
 		/// <b>Match</b> calls <see cref="ExtString.Like(string, string, bool)"/>.
 		/// </summary>
 		Wildcard,
 
 		/// <summary>
-		/// PCRE regular expression (option r).
+		/// PCRE regular expression (option <c>r</c>).
 		/// <b>Match</b> calls <see cref="regexp.IsMatch"/>.
 		/// </summary>
 		RegexPcre,
 
 		/// <summary>
-		/// .NET regular expression (option R).
+		/// .NET regular expression (option <c>R</c>).
 		/// <b>Match</b> calls <see cref="Regex.IsMatch(string)"/>.
 		/// </summary>
 		RegexNet,
 
 		/// <summary>
-		/// Multiple parts (option m).
-		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="wildex.MultiArray"/>) and returns <c>true</c> if all negative (option n) parts return <c>true</c> (or there are no such parts) and some positive (no option n) part returns <c>true</c> (or there are no such parts).
+		/// Multiple parts (option <c>m</c>).
+		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="wildex.MultiArray"/>) and returns <c>true</c> if all negative (option <c>n</c>) parts return <c>true</c> (or there are no such parts) and some positive (no option <c>n</c>) part returns <c>true</c> (or there are no such parts).
 		/// If you want to implement a different logic, call <b>Match</b> for each <see cref="wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
 		/// </summary>
 		Multi,

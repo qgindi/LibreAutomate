@@ -52,6 +52,12 @@ Code formatting and intellisense options.
 #### Completion list > Append ()
 When you select a function in the completion list, whether/when to append `()`. Can append always, never or only when selected with the `Spacebar` key (but not `Tab`, doubleclick, etc).
 
+### Compiler
+#### Always print "Compiled"
+Always print a \"Compiled\" message when a script etc compiled successfully.
+If unchecked, prints only if role is **exeProgram** or **classLibrary**.
+If 3-rd state, prints when executing the **Compile** command, but not when compiling implicitly (for example before launching the script).
+
 ### Templates
 Initial code of new scripts and class files. Can be empty.
 

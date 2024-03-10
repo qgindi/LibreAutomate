@@ -29,7 +29,7 @@ public partial class keys {
 		/// Calls API <msdn>GetKeyState</msdn> and returns its return value.
 		/// </summary>
 		/// <remarks>
-		/// If returns &lt; 0, the key is pressed. If the low-order bit is 1, the key is toggled; it works only with CapsLock, NumLock, ScrollLock and several other keys, as well as mouse buttons.
+		/// If returns &lt; 0, the key is pressed. If the low-order bit is 1, the key is toggled; it works only with <c>CapsLock</c>, <c>NumLock</c>, <c>ScrollLock</c> and several other keys, as well as mouse buttons.
 		/// Can be used for mouse buttons too, for example <c>keys.gui.getKeyState(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
 		/// </remarks>
 		public static short getKeyState(KKey key) => Api.GetKeyState((int)key);
@@ -46,36 +46,36 @@ public partial class keys {
 		/// Returns <c>true</c> if the specified key or mouse button is toggled.
 		/// </summary>
 		/// <remarks>
-		/// Works only with CapsLock, NumLock, ScrollLock and several other keys, as well as mouse buttons.
+		/// Works only with <c>CapsLock</c>, <c>NumLock</c>, <c>ScrollLock</c> and several other keys, as well as mouse buttons.
 		/// </remarks>
 		public static bool isToggled(KKey key) => 0 != (getKeyState(key) & 1);
 
 		/// <summary>
-		/// Returns <c>true</c> if the Alt key is pressed.
+		/// Returns <c>true</c> if the <c>Alt</c> key is pressed.
 		/// </summary>
 		public static bool isAlt => isPressed(KKey.Alt);
 
 		/// <summary>
-		/// Returns <c>true</c> if the Ctrl key is pressed.
+		/// Returns <c>true</c> if the <c>Ctrl</c> key is pressed.
 		/// </summary>
 		public static bool isCtrl => isPressed(KKey.Ctrl);
 
 		/// <summary>
-		/// Returns <c>true</c> if the Shift key is pressed.
+		/// Returns <c>true</c> if the <c>Shift</c> key is pressed.
 		/// </summary>
 		public static bool isShift => isPressed(KKey.Shift);
 
 		/// <summary>
-		/// Returns <c>true</c> if the Win key is pressed.
+		/// Returns <c>true</c> if the <c>Win</c> key is pressed.
 		/// </summary>
 		public static bool isWin => isPressed(KKey.Win) || isPressed(KKey.RWin);
 
 		/// <summary>
 		/// Returns <c>true</c> if some modifier keys are pressed.
 		/// </summary>
-		/// <param name="mod">Return <c>true</c> if some of these keys are pressed. Default: Ctrl, Shift or Alt.</param>
+		/// <param name="mod">Return <c>true</c> if some of these keys are pressed. Default: <c>Ctrl</c>, <c>Shift</c> or <c>Alt</c>.</param>
 		/// <remarks>
-		/// By default does not check the Win key, as it is not used in UI, but you can include it in <i>mod</i> if need.
+		/// By default does not check the <c>Win</c> key, as it is not used in UI, but you can include it in <i>mod</i> if need.
 		/// </remarks>
 		public static bool isMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt) {
 			if (0 != (mod & KMod.Ctrl) && isCtrl) return true;
@@ -88,9 +88,9 @@ public partial class keys {
 		/// <summary>
 		/// Gets flags indicating which modifier keys are pressed.
 		/// </summary>
-		/// <param name="mod">Check only these keys. Default: Ctrl, Shift, Alt.</param>
+		/// <param name="mod">Check only these keys. Default: <c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>.</param>
 		/// <remarks>
-		/// By default does not check the Win key, as it is not used in UI, but you can include it in <i>mod</i> if need.
+		/// By default does not check the <c>Win</c> key, as it is not used in UI, but you can include it in <i>mod</i> if need.
 		/// </remarks>
 		public static KMod getMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt) {
 			KMod R = 0;
@@ -102,7 +102,7 @@ public partial class keys {
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if the Caps Lock key is toggled.
+		/// Returns <c>true</c> if the <c>CapsLock</c> key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// The same as <see cref="keys.isCapsLock"/>.
@@ -110,7 +110,7 @@ public partial class keys {
 		public static bool isCapsLock => isToggled(KKey.CapsLock);
 
 		/// <summary>
-		/// Returns <c>true</c> if the Num Lock key is toggled.
+		/// Returns <c>true</c> if the <c>NumLock</c> key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// The same as <see cref="keys.isNumLock"/>.
@@ -118,7 +118,7 @@ public partial class keys {
 		public static bool isNumLock => isToggled(KKey.NumLock);
 
 		/// <summary>
-		/// Returns <c>true</c> if the Scroll Lock key is toggled.
+		/// Returns <c>true</c> if the <c>ScrollLock</c> key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// The same as <see cref="keys.isScrollLock"/>.
@@ -139,34 +139,34 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Returns <c>true</c> if the Alt key is pressed. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if the <c>Alt</c> key is pressed. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	public static bool isAlt => isPressed(KKey.Alt);
 
 	/// <summary>
-	/// Returns <c>true</c> if the Ctrl key is pressed. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if the <c>Ctrl</c> key is pressed. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	public static bool isCtrl => isPressed(KKey.Ctrl);
 
 	/// <summary>
-	/// Returns <c>true</c> if the Shift key is pressed. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if the <c>Shift</c> key is pressed. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	public static bool isShift => isPressed(KKey.Shift);
 
 	/// <summary>
-	/// Returns <c>true</c> if the Win key is pressed. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if the <c>Win</c> key is pressed. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	public static bool isWin => isPressed(KKey.Win) || isPressed(KKey.RWin);
 
 	/// <summary>
-	/// Returns <c>true</c> if some modifier keys are pressed: Ctrl, Shift, Alt, Win. Calls <see cref="isPressed"/>.
+	/// Returns <c>true</c> if some modifier keys are pressed: <c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
-	/// <param name="mod">Return <c>true</c> if some of these keys are pressed. Default - any (Ctrl, Shift, Alt or Win).</param>
+	/// <param name="mod">Return <c>true</c> if some of these keys are pressed. Default - any.</param>
 	/// <seealso cref="waitForNoModifierKeys"/>
 	public static bool isMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win) {
 		if (0 != (mod & KMod.Ctrl) && isCtrl) return true;
@@ -177,7 +177,7 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Gets flags indicating which modifier keys are pressed: Ctrl, Shift, Alt, Win. Calls <see cref="isPressed"/>.
+	/// Gets flags indicating which modifier keys are pressed: <c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>. Calls <see cref="isPressed"/>.
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	/// <param name="mod">Check only these keys. Default - all four.</param>
@@ -191,17 +191,17 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Returns <c>true</c> if the Caps Lock key is toggled.
+	/// Returns <c>true</c> if the <c>CapsLock</c> key is toggled.
 	/// </summary>
 	public static bool isCapsLock => gui.isCapsLock;
 
 	/// <summary>
-	/// Returns <c>true</c> if the Num Lock key is toggled.
+	/// Returns <c>true</c> if the <c>NumLock</c> key is toggled.
 	/// </summary>
 	public static bool isNumLock => gui.isNumLock;
 
 	/// <summary>
-	/// Returns <c>true</c> if the Scroll Lock key is toggled.
+	/// Returns <c>true</c> if the <c>ScrollLock</c> key is toggled.
 	/// </summary>
 	public static bool isScrollLock => gui.isScrollLock;
 
@@ -210,7 +210,7 @@ public partial class keys {
 	#region wait
 
 	/// <summary>
-	/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are pressed. See <see cref="isMod"/>.
+	/// Waits while some modifier keys (<c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>) are pressed. See <see cref="isMod"/>.
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="mod">Check only these keys. Default: all.</param>
@@ -221,7 +221,7 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are pressed.
+	/// Waits while some modifier keys (<c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>) or mouse buttons are pressed.
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout). Default 0.</param>
 	/// <param name="mod">Check only these keys. Default: all.</param>
@@ -277,8 +277,8 @@ public partial class keys {
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <remarks>
 	/// Uses <see cref="RegisteredHotkey"/> (API <msdn>RegisterHotKey</msdn>).
-	/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
-	/// <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
+	/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if <c>F12</c>.
+	/// <note>Most single-key and <c>Shift+key</c> hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -346,7 +346,7 @@ public partial class keys {
 	/// </summary>
 	/// <returns>
 	/// Returns the key code. On timeout returns 0 if <i>timeout</i> is negative; else exception.
-	/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
+	/// For modifier keys returns the left or right key code, for example <c>LCtrl</c>/<c>RCtrl</c>, not <c>Ctrl</c>.
 	/// </returns>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <example>
@@ -385,7 +385,7 @@ public partial class keys {
 	/// </summary>
 	/// <returns>
 	/// Returns the key code. On timeout returns 0 if <i>timeout</i> is negative; else exception.
-	/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
+	/// For modifier keys returns the left or right key code, for example <c>LCtrl</c>/<c>RCtrl</c>, not <c>Ctrl</c>.
 	/// </returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="f">Callback function that receives key down and up events. Let it return <c>true</c> to stop waiting.</param>
@@ -396,7 +396,7 @@ public partial class keys {
 	/// Ignores key events injected by functions of this library.
 	/// </remarks>
 	/// <example>
-	/// Wait for F3 or Esc.
+	/// Wait for <c>F3</c> or <c>Esc</c>.
 	/// <code><![CDATA[
 	/// var k = keys.waitForKeys(0, k => !k.IsUp && k.Key is KKey.F3 or KKey.Escape, block: true);
 	/// print.it(k);
@@ -422,7 +422,7 @@ public partial class keys {
 	/// <param name="keysEtc">
 	/// Arguments of these types:
 	/// <br/>• string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c>.\
-	/// Tool: in <c>""</c> string press Ctrl+Space.
+	/// Tool: in <c>""</c> string press <c>Ctrl+Space</c>.
 	/// <br/>• string with prefix <c>"!"</c> - literal text.\
 	/// Example: <c>var p = "pass"; keys.send("!user", "Tab", "!" + p, "Enter");</c>
 	/// <br/>• string with prefix <c>"%"</c> - HTML to paste. Full or fragment.
@@ -464,7 +464,7 @@ public partial class keys {
 	/// </td>
 	/// <td>Start with an uppercase character. Only the first 3 characters are significant; others can be any ASCII letters. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c> or <c>"Back5"</c>.
 	/// <br/>
-	/// <br/>Alias: <c>AltGr</c> (RAlt), <c>Menu</c> (Apps), <c>PageDown</c> or <c>PD</c> (PgDn), <c>PageUp</c> or <c>PU</c> (PgUp), <c>PrintScreen</c> or <c>PS</c> (PrtSc), <c>BS</c> (Back), <c>PB</c> (Pause/Break), <c>CL</c> (CapsLock), <c>NL</c> (NumLock), <c>SL</c> (ScrollLock), <c>HM</c> (Home).
+	/// <br/>Alias: <c>AltGr</c> (<c>RAlt</c>), <c>Menu</c> (<c>Apps</c>), <c>PageDown</c> or <c>PD</c> (<c>PgDn</c>), <c>PageUp</c> or <c>PU</c> (<c>PgUp</c>), <c>PrintScreen</c> or <c>PS</c> (<c>PrtSc</c>), <c>BS</c> (<c>Back</c>), <c>PB</c> (<c>Pause/Break</c>), <c>CL</c> (<c>CapsLock</c>), <c>NL</c> (<c>NumLock</c>), <c>SL</c> (<c>ScrollLock</c>), <c>HM</c> (<c>Home</c>).
 	/// </td>
 	/// </tr>
 	/// <tr>
@@ -489,24 +489,24 @@ public partial class keys {
 	/// <tr>
 	/// <td>Other keys</td>
 	/// <td>Virtual-key codes.</td>
-	/// <td>Start with VK or Vk.
+	/// <td>Start with <c>VK</c> or <c>Vk</c>.
 	/// Example: <c>keys.send("VK65 VK0x42");</c>
 	/// </td>
 	/// </tr>
 	/// <tr>
 	/// <td>Forbidden</td>
-	/// <td>Fn, Ctrl+Alt+Del, Win+L, some other.</td>
+	/// <td><c>Fn</c>, <c>Ctrl+Alt+Del</c>, <c>Win+L</c>, some other.</td>
 	/// <td>Programs cannot press these keys.</td>
 	/// </tr>
 	/// <tr>
 	/// <td>Special characters</td>
 	/// <td>
-	/// <b>Operator:</b> + * ( ) _ ^
-	/// <br/><b>Numpad key prefix:</b> #
-	/// <br/><b>Text/HTML argument prefix:</b> ! %
-	/// <br/><b>Reserved:</b> @ $ &amp;
+	/// <b>Operator:</b> <c>+</c> <c>*</c> <c>(</c> <c>)</c> <c>_</c> <c>^</c>
+	/// <br/><b>Numpad key prefix:</b> <c>#</c>
+	/// <br/><b>Text/HTML argument prefix:</b> <c>!</c> <c>%</c>
+	/// <br/><b>Reserved:</b> <c>@</c> <c>$</c> <c>&amp;</c>
 	/// </td>
-	/// <td>These characters cannot be used as keys. Instead use = 8 9 0 - 6 3 1 5 2 4 7.</td>
+	/// <td>These characters cannot be used as keys. Instead use <c>=</c> <c>8</c> <c>9</c> <c>0</c> <c>-</c> <c>6</c> <c>3</c> <c>1</c> <c>5</c> <c>2</c> <c>4</c> <c>7</c>.</td>
 	/// </tr>
 	/// </table>
 	/// 
@@ -543,14 +543,14 @@ public partial class keys {
 	/// <td><c>+()</c></td>
 	/// <td><c>"Alt+(E P)"</c></td>
 	/// <td>The same as <c>"Alt*down E P Alt*up"</c>.
-	/// <br/>Inside () cannot be used operators +, +() and ^.
+	/// <br/>Inside <c>()</c> cannot be used operators <c>+</c>, <c>+()</c> and <c>^</c>.
 	/// </td>
 	/// </tr>
 	/// <tr>
 	/// <td><c>_</c></td>
 	/// <td><c>"Tab _A_b Tab"</c><br/><c>"Alt+_e_a"</c><br/><c>"_**20"</c></td>
 	/// <td>Send next character like text with option <see cref="OKeyText.KeysOrChar"/>.
-	/// <br/>Can be used to Alt-select items in menus, ribbons and dialogs regardless of current keyboard layout.
+	/// <br/>Can be used to <c>Alt</c>-select items in menus, ribbons and dialogs regardless of current keyboard layout.
 	/// <br/>Next character can be any 16-bit character, including operators and whitespace.
 	/// </td>
 	/// </tr>
@@ -559,7 +559,7 @@ public partial class keys {
 	/// <td><c>"Alt+^ea"</c></td>
 	/// <td>Send all remaining characters and whitespace like text with option <see cref="OKeyText.KeysOrChar"/>.
 	/// <br/>For example <c>"Alt+^ed b"</c> is the same as <c>"Alt+_e_d Space _b"</c>.
-	/// <br/>Alt is released after the first character. Don't use other modifiers.
+	/// <br/><c>Alt</c> is released after the first character. Don't use other modifiers.
 	/// </td>
 	/// </tr>
 	/// </table>
@@ -584,15 +584,15 @@ public partial class keys {
 	/// <tr>
 	/// <td><see cref="OKey.NoCapsOff"/></td>
 	/// <td><c>false</c>.
-	/// If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</td>
+	/// If the <c>CapsLock</c> key is toggled, untoggles it temporarily (presses it before and after).</td>
 	/// <td><c>true</c>.
-	/// Does not touch the CapsLock key.
-	/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="OKey.TextHow"/> is <b>KeysX</b>.</td>
+	/// Does not touch the <c>CapsLock</c> key.
+	/// <br/>Alphabetic keys of "keys" arguments can depend on <c>CapsLock</c>. Text of "text" arguments doesn't depend on <c>CapsLock</c>, unless <see cref="OKey.TextHow"/> is <b>KeysX</b>.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.NoModOff"/></td>
 	/// <td><c>false</c>.
-	/// Releases modifier keys (Alt, Ctrl, Shift, Win).
+	/// Releases modifier keys (<c>Alt</c>, <c>Ctrl</c>, <c>Shift</c>, <c>Win</c>).
 	/// <br/>Does it only at the start; later they cannot interfere, unless <see cref="OKey.NoBlockInput"/> is <c>true</c>.</td>
 	/// <td><c>true</c>.
 	/// Does not touch modifier keys.</td>
@@ -613,7 +613,7 @@ public partial class keys {
 	/// <td><see cref="OKey.KeySpeedClipboard"/></td>
 	/// <td>5 ms.</td>
 	/// <td>0 - 1000.
-	/// Changes the speed of Ctrl+V keys when pasting text or HTML using clipboard.</td>
+	/// Changes the speed of <c>Ctrl+V</c> keys when pasting text or HTML using clipboard.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.SleepFinally"/></td>
@@ -623,8 +623,13 @@ public partial class keys {
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.TextHow"/></td>
-	/// <td><see cref="OKeyText.Characters"/></td>
+	/// <td><see cref="OKeyText.Characters"/>.</td>
 	/// <td><b>KeysOrChar</b>, <b>KeysOrPaste</b> or <b>Paste</b>.</td>
+	/// </tr>
+	/// <tr>
+	/// <td><see cref="OKey.TextShiftEnter"/></td>
+	/// <td><c>false</c>.</td>
+	/// <td><c>true</c>. When sending text, instead of <c>Enter</c> send <c>Shift+Enter</c>.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.PasteLength"/></td>
@@ -741,7 +746,7 @@ public partial class keys {
 	//CONSIDER: move most of Remarks to Articles. Also make the param doc smaller, and move the big list to Remarks.
 
 	/// <summary>
-	/// Generates virtual keystrokes. Like <see cref="send"/>, but without reliability features: delays, user input blocking, resetting modifiers/CapsLock.
+	/// Generates virtual keystrokes. Like <see cref="send"/>, but without reliability features: delays, user input blocking, resetting modifiers/<c>CapsLock</c>.
 	/// </summary>
 	/// <remarks>
 	/// Ignores <b>opt.key</b> and instead uses default options with these changes:

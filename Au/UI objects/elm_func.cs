@@ -19,9 +19,9 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Low-level version of <see cref="WndContainer"/>. Does not call ThrowIfDisposed_ and _Hresult (lastError).
+		/// Low-level version of <see cref="WndContainer"/>. Does not call <b>ThrowIfDisposed_</b> and <b>_Hresult</b> (<b>lastError</b>).
 		/// </summary>
-		/// <returns>HRESULT</returns>
+		/// <returns><b>HRESULT</b></returns>
 		int _GetWnd(out wnd w) {
 			int hr = Cpp.Cpp_AccGetInt(this, 'w', out var i);
 			GC.KeepAlive(this);
@@ -201,7 +201,7 @@ namespace Au {
 		
 		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>INVISIBLE</b> and does not have state <b>OFFSCREEN</b>.</summary>
 		/// <remarks>
-		/// If the UI element has both <b>INVISIBLE</b> and <b>OFFSCREEN</b> states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most UI elements returns <c>false</c> (is visible), but for UI elements that have these roles returns <c>true</c> (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
+		/// If the UI element has both <b>INVISIBLE</b> and <b>OFFSCREEN</b> states, it is either invisible or just offscreen, depending on application etc. Then this function works like <b>Find</b> and similar functions: for most UI elements returns <c>false</c> (is visible), but for UI elements that have these roles returns <c>true</c> (invisible): <b>WINDOW</b>, <b>DOCUMENT</b>, <b>PROPERTYPAGE</b>, <b>GROUPING</b>, <b>ALERT</b>, <b>MENUPOPUP</b>.
 		/// Does not check whether this UI element is in an invisible parent/ancestor UI element.
 		/// </remarks>
 		public bool IsInvisible => IsInvisible_(State);
@@ -239,7 +239,7 @@ namespace Au {
 		public bool IsSelected => State.Has(EState.SELECTED);
 		
 		/// <summary>
-		/// Converts BSTR to string and disposes the BSTR.
+		/// Converts <b>BSTR</b> to string and disposes the <b>BSTR</b>.
 		/// If hr is not 0, returns <c>""</c> (never <c>null</c>).
 		/// </summary>
 		static string _BstrToString(int hr, BSTR b) {
@@ -365,7 +365,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Performs the UI element's default action (see <see cref="DefaultAction"/>). Usually it is "click', 'press" or similar.
+		/// Performs the UI element's default action (see <see cref="DefaultAction"/>). Usually it is "click", "press" or similar.
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -393,9 +393,9 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Calls EnableActivate(-1) and Cpp_AccAction.
+		/// Calls <c>EnableActivate(-1)</c> and <c>Cpp_AccAction</c>.
 		/// </summary>
-		/// <returns>HRESULT</returns>
+		/// <returns><b>HRESULT</b></returns>
 		int _InvokeL(char action = 'a', string param = null) {
 			//UIA bug: if window inactive, in some cases tries to activate, and waits ~10 s if failed.
 			//	Eg ExpandCollapse pattern (always) and Invoke/Toggle patterns (buttons/checkboxes, not always).
@@ -418,12 +418,12 @@ namespace Au {
 		/// </summary>
 		/// <param name="action">
 		/// Action name. See <see cref="DefaultAction"/>.
-		/// If <c>null</c> (default), performs default action (like <see cref="Invoke"/>) or posts Space key message. More info in Remarks.</param>
+		/// If <c>null</c> (default), performs default action (like <see cref="Invoke"/>) or posts <c>Space</c> key message. More info in Remarks.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Read more about Java UI elements in <see cref="elm"/> topic.
 		/// 
-		/// Problem: if the action opens a dialog, <b>Invoke</b>/<b>JavaInvoke</b> do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is <c>null</c> and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
+		/// Problem: if the action opens a dialog, <b>Invoke</b>/<b>JavaInvoke</b> do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is <c>null</c> and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts <c>Space</c> key message, which should press the button; then this function does not wait.
 		/// </remarks>
 		public void JavaInvoke(string action = null) {
 			//problem: if the button click action opens a modal dialog, doAccessibleActions waits until closed.
@@ -884,7 +884,7 @@ namespace Au {
 		/// <param name="outer">If <c>true</c>, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
-		/// If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
+		/// If this is the root of web page (role <b>DOCUMENT</b> or <b>PANE</b>), gets web page body HTML.
 		/// </remarks>
 		public string Html(bool outer) {
 			ThrowIfDisposed_();
@@ -932,7 +932,7 @@ namespace Au {
 		/// <exception cref="AuException">Failed to scroll, or the UI element does not support scrolling.</exception>
 		/// <remarks>
 		/// This function works with these UI elements:
-		/// - Web page elements in Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). With Find use role prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c>, and don't use flag <see cref="EFFlags.NotInProc"/>.
+		/// - Web page elements in Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). To find UI element, use role prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c>, and don't use flag <see cref="EFFlags.NotInProc"/>.
 		/// - Standard treeview, listview and listbox controls.
 		/// - Some other controls if found with flag <see cref="EFFlags.UIA"/>.
 		/// 
@@ -1233,7 +1233,7 @@ namespace Au {
 		/// Expands or collapse this expandable UI element (tree item, combo box, expander, dropdown button).
 		/// </summary>
 		/// <param name="expand"><c>true</c> to expand, <c>false</c> to collapse.</param>
-		/// <param name="keys">If not <c>null</c>, makes this element focused and presses these keys. See <see cref="keys.send"/>. If <c>""</c>, uses keys commonly used for that UI element type, for example Right/Left for treeitem, Alt+Down for combobox. If <c>null</c>, uses <see cref="Invoke"/> or similar functions, which often are available only if the element was found with flag <b>UIA</b>; if unavailable or fails, works like with <i>keys</i> <c>""</c>.</param>
+		/// <param name="keys">If not <c>null</c>, makes this element focused and presses these keys. See <see cref="keys.send"/>. If <c>""</c>, uses keys commonly used for that UI element type, for example <c>Right</c>/<c>Left</c> for <b>TREEITEM</b>, <c>Alt+Down</c> for <b>COMBOBOX</b>. If <c>null</c>, uses <see cref="Invoke"/> or similar functions, which often are available only if the element was found with flag <b>UIA</b>; if unavailable or fails, works like with <i>keys</i> <c>""</c>.</param>
 		/// <param name="waitS">If not 0, waits for new expanded/collapsed state max this number of seconds; on timeout throws exception, unless negative.</param>
 		/// <param name="ignoreState">Ignore initial <b>EXPANDED</b>/<b>COLLAPSED</b> state and always perform the expand/collapse action. Can be useful when <see cref="State"/> <b>EXPANDED</b>/<b>COLLAPSED</b> is incorrect. To ignore final state, use negative <i>waitS</i> instead, for example -0.001.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
@@ -1351,7 +1351,7 @@ namespace Au {
 		/// Expands multiple treeview control items using a path string.
 		/// </summary>
 		/// <param name="path">
-		/// String or array consisting of names (<see cref="Name"/>) of treeitem elements, like <c>"One|Two|Three"</c> or <c>["One", "Two", "Three"]</c>.
+		/// String or array consisting of names (<see cref="Name"/>) of <b>TREEITEM</b> elements, like <c>"One|Two|Three"</c> or <c>["One", "Two", "Three"]</c>.
 		/// Name string format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="keys"><c>null</c> or keys to use to expand each element specified in <i>path</i>. See <see cref="Expand(bool, string, double, bool)"/>.</param>
@@ -1365,9 +1365,9 @@ namespace Au {
 		/// <exception cref="NotSupportedException">The treeview control type is not supported when this is a 32-bit process running on 64-bit OS (unlikely).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
 		/// <remarks>
-		/// This element can be a TREE or TREEITEM. If it is a collapsed TREEITEM, expands it. Then finds and expands elements specified in <i>path</i>.
+		/// This element can be a <b>TREE</b> or <b>TREEITEM</b>. If it is a collapsed <b>TREEITEM</b>, expands it. Then finds and expands elements specified in <i>path</i>.
 		/// 
-		/// Does not work if all TREEITEM elements in the TREE control are its direct children, unless it's the standard Windows treeview control.
+		/// Does not work if all <b>TREEITEM</b> elements in the <b>TREE</b> control are its direct children, unless it's the standard Windows treeview control.
 		/// </remarks>
 		public elm Expand(Strings path, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 3, bool notLast = false) {
 			return _ExpandPath(path, keys, null, waitS, notLast);
@@ -1461,11 +1461,11 @@ namespace Au {
 		/// 
 		/// <para>
 		/// In the string can be used these characters to specify how to select the item and close the drop-down list:
-		/// <br/>• i - call <see cref="Invoke"/>.
-		/// <br/>• s - call <see cref="Select"/>.
-		/// <br/>• c - close the list with <see cref="Expand"/>.
-		/// <br/>• m - call <see cref="MouseClick"/>; often can't be used because fails to get correct rectangle or to scroll.
-		/// <br/>• k - call <see cref="Focus"/> and <see cref="keys.send"/> (Home, Down, Enter).
+		/// <br/>• <c>i</c> - call <see cref="Invoke"/>.
+		/// <br/>• <c>s</c> - call <see cref="Select"/>.
+		/// <br/>• <c>c</c> - close the list with <see cref="Expand"/>.
+		/// <br/>• <c>m</c> - call <see cref="MouseClick"/>; often can't be used because fails to get correct rectangle or to scroll.
+		/// <br/>• <c>k</c> - call <see cref="Focus"/> and <see cref="keys.send"/> (<c>Home</c>, <c>Down</c>, <c>Enter</c>).
 		/// <br/>• space - nothing.
 		/// </para>
 		/// 
@@ -1475,7 +1475,7 @@ namespace Au {
 		/// 
 		/// The string also can contain sleep times. For example <c>"300m"</c> will wait 300 ms and click; the first sleep will be between expanding and finding.
 		/// 
-		/// If the string starts with ~, the function does not expand the drop-down list (it should be already expanded).
+		/// If the string starts with <c>"~"</c>, the function does not expand the drop-down list (it should be already expanded).
 		/// 
 		/// If the string isn't <c>null</c>/empty but does not contain characters <c>iscmk</c> (for example is <c>" "</c> or <c>"~ "</c> or <c>"200 "</c>), the function does not select/close. For example these codes do the same: <c>e.ComboSelect("Red", "i");</c> and <c>e.ComboSelect("Red", " ").Invoke();</c>.
 		/// </param>
@@ -1485,7 +1485,7 @@ namespace Au {
 		/// <exception cref="NotFoundException">Item not found.</exception>
 		/// <exception cref="Exception">Exceptions of used functions.</exception>
 		/// <remarks>
-		/// The function at first calls <see cref="Expand(bool, string, double, bool)"/> to show the drop-down list, unless <i>how</i> starts with ~. Then finds the item by name, selects it and closes the drop-down list.
+		/// The function at first calls <see cref="Expand(bool, string, double, bool)"/> to show the drop-down list, unless <i>how</i> starts with <c>"~"</c>. Then finds the item by name, selects it and closes the drop-down list.
 		/// </remarks>
 		public elm ComboSelect(string item, string how = null, double waitS = 3) {
 			//Works with most tested combobox types: native, web, WPF, UWP, ribbon, Office, Qt, Java, JavaFX.

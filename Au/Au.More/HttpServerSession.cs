@@ -19,7 +19,7 @@ namespace Au.More {
 		/// <remarks>
 		/// Runs all the time and listens for new TCP client connections. For each connected client starts new thread, creates new object of your <b>HttpServerSession</b>-based type, and calls <see cref="Run"/>, which calls <see cref="MessageReceived"/>. Supports keep-alive. Multiple sessions can run simultaneously.
 		///
-		///	Uses <see cref="TcpListener"/>, not <see cref="HttpListener"/>, therefore don't need administrator privileges, netsh and opening ports in firewall. Just the standard firewall dialog first time.
+		///	Uses <see cref="TcpListener"/>, not <see cref="HttpListener"/>, therefore don't need administrator privileges, <c>netsh</c> and opening ports in firewall. Just the standard firewall dialog first time.
 		///
 		/// The HTTP server is accessible from local network computers. Usually not accessible from the internet. To make accessible from the internet, you can use ngrok or similar software. This server does not support https (secure connections), but ngrok makes internet connections secure.
 		/// 
@@ -115,7 +115,7 @@ namespace Au.More {
 		/// <remarks>
 		///	Not called if failed to read the message.
 		/// 
-		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> <c>true</c>. On unhandled exception sends error 500 (InternalServerError) and closes the connection.
+		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> <c>true</c>. On unhandled exception sends error 500 (<b>InternalServerError</b>) and closes the connection.
 		/// </remarks>
 		protected abstract void MessageReceived(HSMessage m, HSResponse r);
 		
@@ -290,8 +290,8 @@ namespace Au.More {
 	/// <summary>
 	/// Reads an HTTP request or response message.
 	/// All functions may throw <see cref="HttpReadException_"/> and exceptions of <b>NetworkStream.Read</b>.
-	/// The class was designed to read request, therefore throws exceptions such as BadRequest, but can be used to read response too.
-	/// Uses 16 KB of stack. Consider [SkipLocalsInit].
+	/// The class was designed to read request, therefore throws exceptions such as <b>BadRequest</b>, but can be used to read response too.
+	/// Uses 16 KB of stack. Consider <c>[SkipLocalsInit]</c>.
 	/// </summary>
 	unsafe ref struct HttpReader_ {
 		readonly NetworkStream _ns;
@@ -472,17 +472,17 @@ namespace Au.Types {
 	/// </summary>
 	public class HSMessage {
 		/// <summary>
-		/// Method, like "GET" or "POST".
+		/// Method, like <c>"GET"</c> or <c>"POST"</c>.
 		/// </summary>
 		public string Method { get; internal set; }
 		
 		/// <summary>
-		/// Target, like "/file.html" or "/file.html?a=1&amp;b=2" or "/". May be URL-encoded.
+		/// Target, like <c>"/file.html"</c> or <c>"/file.html?a=1&amp;b=2"</c> or <c>"/"</c>. May be URL-encoded.
 		/// </summary>
 		public string RawTarget { get; internal set; }
 		
 		/// <summary>
-		/// Target without URL parameters, like "/file.html" or "/". Not URL-encoded.
+		/// Target without URL parameters, like <c>"/file.html"</c> or <c>"/"</c>. Not URL-encoded.
 		/// </summary>
 		public string TargetPath { get; internal set; }
 		
@@ -519,7 +519,7 @@ namespace Au.Types {
 		string _contentText;
 		
 		/// <summary>
-		/// JSON-deserializes <see cref="Content"/> to object of type T.
+		/// JSON-deserializes <see cref="Content"/> to object of type <b>T</b>.
 		/// </summary>
 		/// <returns><c>default(T)</c> if the request does not have body data.</returns>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.Deserialize{TValue}(Stream, JsonSerializerOptions?)"/>.</exception>
@@ -647,7 +647,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <value>If <c>Content-Disposition</c> header or name is missing, returns <c>Index.ToS()</c>.</value>
 		/// <remarks>
-		///	Decodes "=?utf-8?B?base64?=".
+		///	Decodes <c>"=?utf-8?B?base64?="</c>.
 		/// </remarks>
 		public string Name => _name ??= _DecodeMime(_ContentDisposition()?.Parameters["name"] ?? Index.ToS());
 		string _name;
@@ -657,7 +657,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <value><c>null</c> if <c>Content-Disposition</c> header or filename is missing.</value>
 		/// <remarks>
-		///	Decodes "utf-8''urlencoded" or "=?utf-8?B?base64?=".
+		///	Decodes <c>"utf-8''urlencoded"</c> or <c>"=?utf-8?B?base64?="</c>.
 		/// </remarks>
 		public string FileName {
 			get {
@@ -713,7 +713,7 @@ namespace Au.Types {
 		public string Boundary { get; }
 		
 		/// <summary>
-		/// Returns the charset parameter, or <c>null</c> if not specified.
+		/// Returns the <c>charset</c> parameter, or <c>null</c> if not specified.
 		/// </summary>
 		public string Charset { get; }
 		
@@ -722,9 +722,9 @@ namespace Au.Types {
 		/// </summary>
 		/// <value>Returns:
 		/// <br/>• <c>null</c> if multipart content (<b>Boundary</b> not <c>null</c>).
-		/// <br/>• UTF8 if charset is utf-8 or not specified.
-		/// <br/>• <b>Encoding</b> that matches charset.
-		/// <br/>• ASCII if charset is invalid.
+		/// <br/>• UTF-8 if <c>charset</c> is <c>utf-8</c> or not specified.
+		/// <br/>• <b>Encoding</b> that matches <c>charset</c>.
+		/// <br/>• ASCII if <c>charset</c> is invalid.
 		/// </value>
 		public Encoding Encoding { get; }
 		
@@ -754,7 +754,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Response headers. Initially empty.
-		/// The server later may add Date, Server, Content-Encoding, Content-Length.
+		/// The server later may add <c>Date</c>, <c>Server</c>, <c>Content-Encoding</c>, <c>Content-Length</c>.
 		/// </summary>
 		public Dictionary<string, string> Headers { get; } = new(StringComparer.OrdinalIgnoreCase);
 		
@@ -782,10 +782,10 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// JSON-serializes object of type T, and sets <see cref="Content"/>.
+		/// JSON-serializes object of type <b>T</b>, and sets <see cref="Content"/>.
 		/// </summary>
-		/// <param name="obj">Object of type T.</param>
-		/// <param name="contentType">Value of "Content-Type" header.</param>
+		/// <param name="obj">Object of type <b>T</b>.</param>
+		/// <param name="contentType">Value of <c>"Content-Type"</c> header.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.SerializeToUtf8Bytes{TValue}(TValue, JsonSerializerOptions?)"/>.</exception>
 		public void SetContentJson<T>(T obj, string contentType = "application/json; charset=utf-8") {
 			Content = JsonSerializer.SerializeToUtf8Bytes(obj, InternetUtil_.JsonSerializerOptions);

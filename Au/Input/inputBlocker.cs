@@ -10,11 +10,11 @@ namespace Au
 	/// Does not block:
 	/// - In windows of the same thread that started blocking. For example, if your script shows a message box, the user can click its buttons.
 	/// - In windows of higher [](xref:uac) integrity level (IL) processes, unless this process has uiAccess IL.
-	/// - In special desktops/screens, such as when you press Ctrl+Alt+Delete or launch an admin program that requires UAC elevation. See also <see cref="ResumeAfterCtrlAltDelete"/>.
-	/// - Some Windows hotkeys, such as Ctrl+Alt+Delete and Win+L.
+	/// - In special desktops/screens, such as when you press <c>Ctrl+Alt+Delete</c> or launch an admin program that requires UAC elevation. See also <see cref="ResumeAfterCtrlAltDelete"/>.
+	/// - Some Windows hotkeys, such as <c>Ctrl+Alt+Delete</c> and <c>Win+L</c>.
 	/// - Keyboard hooks don't work in windows of this process if this process uses direct input or raw input API.
 	/// 
-	/// To stop blocking, can be used <c>using</c>, like in the example. Or <c>try</c> with <c>finally</c> code that calls <see cref="Dispose"/> or <see cref="Stop"/>. Also automatically stops when this thread ends. Users can stop with Ctrl+Alt+Delete.
+	/// To stop blocking, can be used <c>using</c>, like in the example. Or <c>try</c> with <c>finally</c> code that calls <see cref="Dispose"/> or <see cref="Stop"/>. Also automatically stops when this thread ends. Users can stop with <c>Ctrl+Alt+Delete</c>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -232,7 +232,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, [](xref:uac) consent, etc.
+		/// Continue blocking when returned from a special screen where blocking is disabled: <c>Ctrl+Alt+Delete</c>, [](xref:uac) consent, etc.
 		/// </summary>
 		public bool ResumeAfterCtrlAltDelete { get; set; }
 
@@ -240,7 +240,7 @@ namespace Au
 		/// Record blocked keys, and play back when stopped blocking.
 		/// </summary>
 		/// <remarks>
-		/// Will not play back if: 1. The blocking time is &gt; 10 seconds; then plays back only key-up events. 2. Detected Ctrl+Alt+Delete, [](xref:uac) consent or some other special screen. 3. Called <see cref="Pause"/>.
+		/// Will not play back if: 1. The blocking time is &gt; 10 seconds; then plays back only key-up events. 2. Detected <c>Ctrl+Alt+Delete</c>, [](xref:uac) consent or some other special screen. 3. Called <see cref="Pause"/>.
 		/// </remarks>
 		public bool ResendBlockedKeys { get; set; }
 
@@ -263,7 +263,7 @@ namespace Au
 		///// Don't block these keys.
 		///// </summary>
 		///// <remarks>
-		///// For modifier keys use the left/right key code: LCtrl, RCtrl, LShift, RShift, LAlt, RAlt, Win, RWin.
+		///// For modifier keys use the left/right key code: <c>LCtrl</c>, <c>RCtrl</c>, <c>LShift</c>, <c>RShift</c>, <c>LAlt</c>, <c>RAlt</c>, <c>Win</c>, <c>RWin</c>.
 		///// </remarks>
 		//public static KKey[] DontBlockKeys { get; set; }
 

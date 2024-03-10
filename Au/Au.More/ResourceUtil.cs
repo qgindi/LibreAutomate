@@ -11,9 +11,9 @@ namespace Au.More {
 	/// <remarks>
 	/// Internally uses <see cref="ResourceManager"/>. Uses <see cref="CultureInfo.InvariantCulture"/>.
 	///
-	/// Loads resources from managed resource "AssemblyName.g.resources". To add such resource files in Visual Studio, set file build action = Resource. Don't use <c>.resx</c> files and the Resources page in Project Properties.
+	/// Loads resources from managed resource <c>"AssemblyName.g.resources"</c>. To add such resource files in Visual Studio, set file build action = <b>Resource</b>. Don't use <c>.resx</c> files and the <b>Resources</b> page in <b>Project Properties</b>.
 	///
-	/// By default loads resources from the app entry assembly. In script with role miniProgram - from the script's assembly. To specify another loaded assembly, use prefix like <c>"&lt;AssemblyName&gt;"</c> or <c>"*&lt;AssemblyName&gt;"</c>.
+	/// By default loads resources from the app entry assembly. In script with role <b>miniProgram</b> - from the script's assembly. To specify another loaded assembly, use prefix like <c>"&lt;AssemblyName&gt;"</c> or <c>"*&lt;AssemblyName&gt;"</c>.
 	///
 	/// The resource name argument can optionally start with <c>"resource:"</c>.
 	///
@@ -140,7 +140,7 @@ namespace Au.More {
 		}
 		
 		/// <summary>
-		/// Gets WPF image element from xaml or other image resource.
+		/// Gets WPF image element from XAML or other image resource.
 		/// </summary>
 		/// <param name="name">Resource name, like <c>"file.png"</c> or <c>"sub/file.xaml"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>

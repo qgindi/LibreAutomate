@@ -188,7 +188,7 @@ namespace Au {
 		/// 
 		/// No more than one notification at a time can be displayed. If an application attempts to display a notification when one is already being displayed, the new notification is queued and displayed when the older notification goes away.
 		/// 
-		/// Users may choose to not show notifications, depending on various conditions. Look in Windows Settings app, Notifications &amp; actions.
+		/// Users may choose to not show notifications, depending on various conditions. Look in Windows <b>Settings > System > Notifications</b>.
 		/// </remarks>
 		public void ShowNotification(string title, string text, TINFlags flags = 0, icon icon = default) {
 			if (!_Update(n: new(title, text, flags, icon))) print.warning("ShowNotification() failed. " + lastError.message);
@@ -292,7 +292,7 @@ namespace Au {
 		public event Action<TIEventArgs> Message;
 		
 		/// <summary>
-		/// When default action should be invoked (on click, Space/Enter, automation/accessibility API).
+		/// When default action should be invoked (on click, <c>Space</c>/<c>Enter</c>, automation/accessibility API).
 		/// </summary>
 		/// <remarks>
 		/// If clicked, the parameter contains message <b>NIN_SELECT</b> (1024) and mouse coordinates. Else <b>NIN_KEYSELECT</b> (1025) and top-left of the tray icon.
@@ -301,7 +301,7 @@ namespace Au {
 		public event Action<TIEventArgs> Click;
 		
 		/// <summary>
-		/// When a context menu should be shown (on right click or Apps key).
+		/// When a context menu should be shown (on right click or <c>Apps</c> key).
 		/// </summary>
 		public event Action<TIEventArgs> RightClick;
 		

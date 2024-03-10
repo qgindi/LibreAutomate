@@ -25,7 +25,7 @@ namespace Au;
 /// <remarks>
 /// This class uses WPF (Windows Presentation Foundation). Creates window at run time. No designer. No WPF and XAML knowledge required, unless you want something advanced.
 /// 
-/// To start, use snippet wpfSnippet or menu File -> New -> Dialogs. Also look in Cookbook.
+/// To start, use snippet <b>wpfSnippet</b> or menu <b>File > New > Dialogs</b>. Also look in Cookbook.
 /// 
 /// Most functions return <c>this</c>, to enable method chaining, aka fluent interface, like with <b>StringBuilder</b>. See example.
 /// 
@@ -35,7 +35,7 @@ namespace Au;
 /// 
 /// Note: WPF starts slowly and uses much memory. It is normal if to show the first window in process takes 500-1000 ms and the process uses 30 MB of memory, whereas WinForms takes 250 ms / 10 MB and native takes 50 ms / 2 MB. However WinForms becomes slower than WPF if there are more than 100 controls in window. This library uses WPF because it is the most powerful and works well with high DPI screens.
 /// 
-/// WPF has many control types, for example <see cref="Button"/>, <see cref="CheckBox"/>, <see cref="TextBox"/>, <see cref="ComboBox"/>, <see cref="Label"/>. Most are in namespaces <b>System.Windows.Controls</b> and <b>System.Windows.Controls.Primitives</b>. Also on the internet you can find many libraries containing WPF controls and themes. For example, search for <i>github awesome dotnet C#</i>. Many libraries are open-source, and most can be found in GitHub (source, info and sometimes compiled files). Compiled files usually can be found in <see href="https://www.nuget.org/"/> as packages. Use menu Tools -> NuGet.
+/// WPF has many control types, for example <see cref="Button"/>, <see cref="CheckBox"/>, <see cref="TextBox"/>, <see cref="ComboBox"/>, <see cref="Label"/>. Most are in namespaces <b>System.Windows.Controls</b> and <b>System.Windows.Controls.Primitives</b>. Also on the internet you can find many libraries containing WPF controls and themes. For example, search for <i>github awesome dotnet C#</i>. Many libraries are open-source, and most can be found in GitHub (source, info and sometimes compiled files). Compiled files usually can be found in <see href="https://www.nuget.org/"/> as packages. Use menu <b>Tools > NuGet</b>.
 /// 
 /// By default don't need XAML. When need, you can load XAML strings and files with <see cref="System.Windows.Markup.XamlReader"/>.
 /// </remarks>
@@ -253,7 +253,7 @@ public class wpfBuilder {
 	/// <param name="widths">
 	/// Column widths.
 	/// An argument can be:
-	/// <br/>• <b>int</b> or <b>double</b> - <see cref="ColumnDefinition.Width"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total width of star-sized columns. Examples: <c>50</c>, <c>-0.5</c>.
+	/// <br/>• <b>int</b> or <b>double</b> - <see cref="ColumnDefinition.Width"/>. Value 0 means auto-size. Negative value is star-width, ie fraction of total width of star-sized columns. Examples: <c>50</c>, <c>-0.5</c>.
 	/// <br/>• <b>Range</b> - <see cref="ColumnDefinition.MinWidth"/> and/or <see cref="ColumnDefinition.MaxWidth"/>. Sets width value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
 	/// <br/>• tuple <b>(double value, Range minMax)</b> - width and min/max widths. Example: <c>(-2, 50..)</c>.
 	/// <br/>• <see cref="ColumnDefinition"/>.
@@ -276,7 +276,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="height">
 	/// Row height. Can be:
-	/// <br/>• <b>int</b> or <b>double</b> - <see cref="RowDefinition.Height"/>. Value 0 means auto-size. Negative value is star-width (*), ie fraction of total height of star-sized rows. Examples: <c>50</c>, <c>-0.5</c>.
+	/// <br/>• <b>int</b> or <b>double</b> - <see cref="RowDefinition.Height"/>. Value 0 means auto-size. Negative value is star-width, ie fraction of total height of star-sized rows. Examples: <c>50</c>, <c>-0.5</c>.
 	/// <br/>• <b>Range</b> - <see cref="RowDefinition.MinHeight"/> and/or <see cref="RowDefinition.MaxHeight"/>. Sets height value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
 	/// <br/>• tuple <b>(double value, Range minMax)</b> - height and min/max heights. Example: <c>(-2, 50..200)</c>.
 	/// <br/>• <see cref="RowDefinition"/>.
@@ -629,10 +629,10 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
-	/// When clicked OK or Apply button.
+	/// When clicked <b>OK</b> or <b>Apply</b> button.
 	/// </summary>
 	/// <remarks>
-	/// <see cref="Button.IsDefault"/> is <c>true</c> if it is OK button.
+	/// <see cref="Button.IsDefault"/> is <c>true</c> if it is <b>OK</b> button.
 	/// The parameter's property <b>Cancel</b> can be used to prevent closing the window.
 	/// </remarks>
 	public event Action<WBButtonClickArgs> OkApply;
@@ -869,18 +869,18 @@ public class wpfBuilder {
 	
 #if !DEBUG
 	/// <summary>
-	/// Adds 2 elements. One of type <i>T1</i>, other of type <i>T2</i>.
+	/// Adds 2 elements. One of type <b>T1</b>, other of type <b>T2</b>.
 	/// </summary>
 	/// <param name="var1">Variable of first element. More info - see other overload.</param>
 	/// <param name="text1">Text, header or other content of first element. More info - see other overload.</param>
 	/// <param name="var2">Variable of second element. More info - see other overload.</param>
 	/// <param name="text2">Text, header or other content of second element. More info - see other overload.</param>
 	/// <param name="row2">If not <c>null</c>, after adding first element calls <see cref="Row"/> with this argument.</param>
-	/// <exception cref="NotSupportedException">If the function does not support non-<c>null</c> <i>text</i> for element type <i>T1</i> or <i>T2</i>.</exception>
+	/// <exception cref="NotSupportedException">If the function does not support non-<c>null</c> <i>text</i> for element type <b>T1</b> or <b>T2</b>.</exception>
 	/// <remarks>
 	/// If <b>T1</b> is <b>Label</b>, sets <see cref="Label.Target"/>. If <b>T1</b> is <b>Label</b> or <b>TextBlock</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
 	/// </remarks>
-	[EditorBrowsableAttribute(EditorBrowsableState.Never)] //obsolete. Too many overloads, confusing. Instead users can add label element separately and use <b>LabeledBy</b>.
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Too many overloads, confusing. Instead users can add label element separately and use <b>LabeledBy</b>.
 	[Obsolete]
 	public wpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
 		return _Add2(out var1, text1, out var2, text2, row2);
@@ -892,7 +892,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="variable">Receives button's variable.</param>
 	/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
-	/// <param name="click">Action to call when the button clicked. Its parameter's property <b>Cancel</b> can be used to prevent closing the window when clicked this OK button. Not called if validation fails.</param>
+	/// <param name="click">Action to call when the button clicked. Its parameter's property <b>Cancel</b> can be used to prevent closing the window when clicked this <b>OK</b> button. Not called if validation fails.</param>
 	/// <param name="flags"></param>
 	/// <remarks>
 	/// If <i>flags</i> contains <b>OK</b> or <b>Apply</b> or <b>Validate</b> and this window contains elements for which was called <see cref="Validation"/>, on click performs validation; if fails, does not call the <i>click</i> action and does not close the window.
@@ -970,22 +970,22 @@ public class wpfBuilder {
 	int _resultButton;
 	
 	/// <summary>
-	/// Adds OK and/or Cancel and/or Apply buttons.
+	/// Adds <b>OK</b> and/or <b>Cancel</b> and/or <b>Apply</b> buttons.
 	/// </summary>
-	/// <param name="ok">Text of OK button. If <c>null</c>, does not add the button.</param>
-	/// <param name="cancel">Text of Cancel button. If <c>null</c>, does not add the button.</param>
-	/// <param name="apply">Text of Apply button. If <c>null</c>, does not add the button.</param>
+	/// <param name="ok">Text of <b>OK</b> button. If <c>null</c>, does not add the button.</param>
+	/// <param name="cancel">Text of <b>Cancel</b> button. If <c>null</c>, does not add the button.</param>
+	/// <param name="apply">Text of <b>Apply</b> button. If <c>null</c>, does not add the button.</param>
 	/// <param name="stackPanel">Add a right-bottom aligned <see cref="StackPanel"/> that contains the buttons. See <see cref="StartOkCancel"/>. If <c>null</c> (default), adds if not already in a stack panel, except when there is 1 button.</param>
 	/// <remarks>
-	/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns <c>true</c> on <b>OK</b>, <c>false</c> on <b>Cancel</b>.
+	/// Sets properties of <b>OK</b>/<b>Cancel</b> buttons so that click and <c>Enter</c>/<c>Esc</c> close the window; then <see cref="ShowDialog"/> returns <c>true</c> on <b>OK</b>, <c>false</c> on <b>Cancel</b>.
 	/// See also event <see cref="OkApply"/>.
 	/// </remarks>
 	public wpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null)
 		=> AddOkCancel(out _, out _, out _, ok, cancel, apply, stackPanel);
 	
-	/// <param name="bOK">Variable of OK button.</param>
-	/// <param name="bCancel">Variable of Cancel button.</param>
-	/// <param name="bApply">Variable of Apply button.</param>
+	/// <param name="bOK">Variable of <b>OK</b> button.</param>
+	/// <param name="bCancel">Variable of <b>Cancel</b> button.</param>
+	/// <param name="bApply">Variable of <b>Apply</b> button.</param>
 	/// <inheritdoc cref="AddOkCancel(string, string, string, bool?)"/>
 	public wpfBuilder AddOkCancel(out Button bOK, out Button bCancel, out Button bApply, string ok = "OK", string cancel = "Cancel", string apply = null, bool? stackPanel = null) {
 		int n = 0; if (ok != null) n++; if (cancel != null) n++;
@@ -1017,12 +1017,12 @@ public class wpfBuilder {
 	Style _style_VertSep;
 	
 	/// <summary>
-	/// Adds enum members as <b>StackPanel</b> with checkboxes (if it's a [Flags] enum) or <b>ComboBox</b> control.
+	/// Adds enum members as <b>StackPanel</b> with checkboxes (if it's a <c>[Flags]</c> enum) or <b>ComboBox</b> control.
 	/// </summary>
 	/// <param name="e">Variable for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</param>
 	/// <param name="init">Initial value.</param>
 	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
-	/// <param name="label">If not <c>null</c>, adds a <b>GroupBox</b> or <b>Label</b> control with this label. If it's a [Flags] enum, adds <b>GroupBox</b> as parent of checkboxes, else adds <b>Label</b> before the <b>ComboBox</b> (uses 2 grid cells).</param>
+	/// <param name="label">If not <c>null</c>, adds a <b>GroupBox</b> or <b>Label</b> control with this label. If it's a <c>[Flags]</c> enum, adds <b>GroupBox</b> as parent of checkboxes, else adds <b>Label</b> before the <b>ComboBox</b> (uses 2 grid cells).</param>
 	/// <param name="vertical">Vertical stack. Default <c>true</c>.</param>
 	/// <example>
 	/// <code><![CDATA[
@@ -1230,8 +1230,8 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets horizontal and/or vertical alignment of the last added element.
 	/// </summary>
-	/// <param name="x">Horizontal alignment. String that starts with one of these letters, uppercase or lowercase: L (left), R (right), C (center), S (stretch).</param>
-	/// <param name="y">Vertical alignment. String that starts with one of these letters, uppercase or lowercase: T (top), B (bottom), C (center), S (stretch).</param>
+	/// <param name="x">Horizontal alignment. String that starts with one of these letters, uppercase or lowercase: <c>L</c> (left), <c>R</c> (right), <c>C</c> (center), <c>S</c> (stretch).</param>
+	/// <param name="y">Vertical alignment. String that starts with one of these letters, uppercase or lowercase: <c>T</c> (top), <c>B</c> (bottom), <c>C</c> (center), <c>S</c> (stretch).</param>
 	/// <exception cref="InvalidOperationException">Current panel is <b>Canvas</b>.</exception>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
 	public wpfBuilder Align(string x = null, string y = null) => Align(_AlignmentFromStringX(x), _AlignmentFromStringY(y));
@@ -1290,7 +1290,7 @@ public class wpfBuilder {
 	/// Sets margin of the last added element.
 	/// </summary>
 	/// <param name="margin">
-	/// String containing uppercase or lowercase letters for margin sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
+	/// String containing uppercase or lowercase letters for margin sides (<c>L</c>, <c>T</c>, <c>R</c>, <c>B</c>) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
 	/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 	/// </param>
 	/// <exception cref="ArgumentException">Invalid string.</exception>
@@ -1350,7 +1350,7 @@ public class wpfBuilder {
 	/// Sets padding of the last added control.
 	/// </summary>
 	/// <param name="padding">
-	/// String containing uppercase or lowercase letters for padding sides (L, T, R, B) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
+	/// String containing uppercase or lowercase letters for padding sides (<c>L</c>, <c>T</c>, <c>R</c>, <c>B</c>) optionally followed by a number (default 0) and optionally separated by spaces. Or just single number, to set all sides equal.
 	/// Examples: <c>"tb"</c> (top 0, bottom 0), <c>"L5 R15"</c> (left 5, right 15), <c>"2"</c> (all sides 2).
 	/// </param>
 	/// <exception cref="InvalidOperationException">The last added element does not have <b>Padding</b> property.</exception>
@@ -1606,7 +1606,7 @@ public class wpfBuilder {
 	/// </summary>
 	/// <param name="func">Function that returns an error string if element's value is invalid, else returns <c>null</c>.</param>
 	/// <remarks>
-	/// The callback function will be called when clicked button OK or Apply or a button added with flag <see cref="WBBFlags.Validate"/>.
+	/// The callback function will be called when clicked button <b>OK</b> or <b>Apply</b> or a button added with flag <see cref="WBBFlags.Validate"/>.
 	/// If it returns a non-<c>null</c> string, the window stays open and button's <i>click</i> callback not called. The string is displayed in a tooltip.
 	/// </remarks>
 	/// <example>
@@ -1702,11 +1702,11 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets <see cref="FrameworkElement.Name"/> of the last added element.
 	/// </summary>
-	/// <param name="name">Name. Must start with a letter or _, and contain only letters, digits and _.</param>
+	/// <param name="name">Name. Must start with a letter or <c>_</c>, and contain only letters, digits and <c>_</c>.</param>
 	/// <param name="andUia">Also set UI Automation name (<see cref="UiaName"/>).</param>
 	/// <exception cref="ArgumentException">Invalid name.</exception>
 	/// <remarks>
-	/// The <b>Name</b> property can be used to identify the element in code. It also sets the UIA AutomationId (regardless of <i>andUia</i>). It isn't displayed in UI.
+	/// The <b>Name</b> property can be used to identify the element in code. It also sets the UIA <b>AutomationId</b> (regardless of <i>andUia</i>). It isn't displayed in UI.
 	/// </remarks>
 	public wpfBuilder Name(string name, bool andUia = false) {
 		Last.Name = name;
@@ -1925,7 +1925,7 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
-	/// [Obsolete. Use FormatText.]
+	/// Obsolete. Use <b>FormatText</b>.
 	/// Adds inlines to the last added <see cref="TextBlock"/>.
 	/// </summary>
 	/// <param name="inlines">
@@ -2375,7 +2375,7 @@ public class wpfBuilder {
 	/// Sets vertical or horizontal splitter properties of the last added <see cref="GridSplitter"/>.
 	/// </summary>
 	/// <param name="vertical">If <c>true</c>, resizes columns, else rows.</param>
-	/// <param name="span">How many rows spans vertical splitter, or how many columns spans horizontall splitter. Can be more than row/column count.</param>
+	/// <param name="span">How many rows spans vertical splitter, or how many columns spans horizontal splitter. Can be more than row/column count.</param>
 	/// <param name="thickness">Width of vertical splitter or height of horizontal. If <b>double.NaN</b>, sets alignment "stretch", else "center".</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>GridSplitter</b>.</exception>
 	/// <example>
@@ -2543,7 +2543,7 @@ public class wpfBuilder {
 	public wpfBuilder StartStack<T>(out T container, object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out container, header);
 	
 	/// <summary>
-	/// Adds right-bottom-aligned horizontal stack panel (<see cref="StartStack"/>) for adding OK, Cancel and more buttons.
+	/// Adds right-bottom-aligned horizontal stack panel (<see cref="StartStack"/>) for adding <b>OK</b>, <b>Cancel</b> and more buttons.
 	/// When don't need more buttons, use just <see cref="AddOkCancel"/>.
 	/// </summary>
 	/// <example>

@@ -103,9 +103,9 @@ static unsafe partial class Api {
 	internal static extern bool ReleaseMutex(IntPtr hMutex);
 
 	/// <summary>
-	/// Note: use only for private threads. Not everything works like with Thread.Start. For example .NET does not auto-release COM objects when thread ends.
+	/// Note: use only for private threads. Not everything works like with <b>Thread.Start</b>. For example .NET does not auto-release COM objects when thread ends.
 	/// </summary>
-	/// <param name="lpStartAddress">[UnmanagedCallersOnly]</param>
+	/// <param name="lpStartAddress"><c>[UnmanagedCallersOnly]</c></param>
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern IntPtr CreateThread(nint lpThreadAttributes, nint dwStackSize, delegate* unmanaged<GCHandle, uint> lpStartAddress, GCHandle lpParameter, uint dwCreationFlags, out int lpThreadId);
 
@@ -199,9 +199,9 @@ static unsafe partial class Api {
 	static extern int _GetFullPathName(string lpFileName, int nBufferLength, char* lpBuffer, char** lpFilePart);
 
 	/// <summary>
-	/// Calls API GetFullPathName.
-	/// Returns <c>false</c> if failed or result is same; then r is s.
-	/// r can be same variable as s.
+	/// Calls API <b>GetFullPathName</b>.
+	/// Returns <c>false</c> if failed or result is same; then <i>r</i> is <i>s</i>.
+	/// <i>r</i> can be same variable as <i>s</i>.
 	/// </summary>
 	[SkipLocalsInit]
 	internal static bool GetFullPathName(string s, out string r) {
@@ -213,9 +213,9 @@ static unsafe partial class Api {
 	static extern int _GetLongPathName(string lpszShortPath, char* lpszLongPath, int cchBuffer);
 
 	/// <summary>
-	/// Calls API GetFullPathName.
-	/// Returns <c>false</c> if failed or result is same; then r is s.
-	/// r can be same variable as s.
+	/// Calls API <b>GetFullPathName</b>.
+	/// Returns <c>false</c> if failed or result is same; then <i>r</i> is <i>s</i>.
+	/// <i>r</i> can be same variable as <i>s</i>.
 	/// </summary>
 	[SkipLocalsInit]
 	internal static bool GetLongPathName(string s, out string r) {
@@ -300,11 +300,11 @@ static unsafe partial class Api {
 	static extern int _SearchPath(string lpPath, string lpFileName, string lpExtension, int nBufferLength, char* lpBuffer, char** lpFilePart);
 
 	/// <summary>
-	/// Calls API SearchPath. Returns full path, or <c>null</c> if not found.
+	/// Calls API <b>SearchPath</b>. Returns full path, or <c>null</c> if not found.
 	/// </summary>
 	/// <param name="lpPath">Parent directory or <c>null</c>.</param>
 	/// <param name="lpFileName"></param>
-	/// <param name="lpExtension"><c>null</c> or extension like ".ext" to add if lpFileName is without extension.</param>
+	/// <param name="lpExtension"><c>null</c> or extension like <c>".ext"</c> to add if <i>lpFileName</i> is without extension.</param>
 	[SkipLocalsInit]
 	internal static string SearchPath(string lpPath, string lpFileName, string lpExtension = null) {
 		using FastBuffer<char> b = new();
@@ -574,11 +574,11 @@ static unsafe partial class Api {
 	static extern int _GetEnvironmentVariable(string lpName, char* lpBuffer, int nSize);
 
 	/// <summary>
-	/// Calls API GetEnvironmentVariable.
+	/// Calls API <b>GetEnvironmentVariable</b>.
 	/// Returns <c>null</c> if variable not found.
-	/// Does not support folders.X.
+	/// Does not support <c>folders.X</c>.
 	/// </summary>
-	/// <param name="name">Case-insensitive name. Without %.</param>
+	/// <param name="name">Case-insensitive name. Without <c>%</c>.</param>
 	[SkipLocalsInit]
 	internal static string GetEnvironmentVariable(string name) {
 		using FastBuffer<char> b = new();
@@ -597,9 +597,9 @@ static unsafe partial class Api {
 	static extern int _ExpandEnvironmentStrings(string lpSrc, char* lpDst, int nSize);
 
 	/// <summary>
-	/// Calls API ExpandEnvironmentStrings.
-	/// Returns <c>false</c> if failed or result is same; then r is s.
-	/// r can be same variable as s.
+	/// Calls API <b>ExpandEnvironmentStrings</b>.
+	/// Returns <c>false</c> if failed or result is same; then <i>r</i> is <i>s</i>.
+	/// <i>r</i> can be same variable as <i>s</i>.
 	/// </summary>
 	[SkipLocalsInit]
 	internal static bool ExpandEnvironmentStrings(string s, out string r) {
@@ -970,7 +970,7 @@ static unsafe partial class Api {
 	/// Use this API instead of <b>Directory.CreateSymbolicLink</b> which has a bug: does not throw exception when fails (eg non-admin).
 	/// Note: the API fails if non-admin.
 	///		With flag 2 does not fail if enabled developer mode.
-	///		It seems can be enabled for non-admin in gpedit.msc; not tested; google for more info.
+	///		It seems can be enabled for non-admin in <c>gpedit.msc</c>; not tested; google for more info.
 	///		Somewhere found this info, but it's incorrect: "Windows 11 doesn’t require administrative privileges to create symbolic links".
 	/// </summary>
 	/// <param name="dwFlags">1 - directory.</param>

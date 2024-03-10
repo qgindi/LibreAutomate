@@ -29,14 +29,14 @@ public enum KKey : byte
 {
 	MouseLeft = 0x01,
 	MouseRight = 0x02,
-	///<summary>Ctrl+Pause.</summary>
+	///<summary><c>Ctrl+Pause</c>.</summary>
 	Break = 0x03,
 	MouseMiddle = 0x04,
 	MouseX1 = 0x05,
 	MouseX2 = 0x06,
 	Back = 0x08,
 	Tab = 0x09,
-	///<summary>Shift+NumPad5, or NumPad5 when NumLock off.</summary>
+	///<summary><c>Shift+NumPad5</c>, or <c>NumPad5</c> when <c>NumLock</c> off.</summary>
 	Clear = 0x0C,
 	Enter = 0x0D,
 	Shift = 0x10,
@@ -71,25 +71,25 @@ public enum KKey : byte
 	Insert = 0x2D,
 	Delete = 0x2E,
 	//Help = 0x2F,
-	///<summary>The 0 ) key.</summary>
+	///<summary>The 0 <c>)</c> key.</summary>
 	D0 = 0x30,
-	///<summary>The 1 ! key.</summary>
+	///<summary>The 1 <c>!</c> key.</summary>
 	D1 = 0x31,
-	///<summary>The 2 @ key.</summary>
+	///<summary>The 2 <c>@</c> key.</summary>
 	D2 = 0x32,
-	///<summary>The 3 # key.</summary>
+	///<summary>The 3 <c>#</c> key.</summary>
 	D3 = 0x33,
-	///<summary>The 4 $ key.</summary>
+	///<summary>The 4 <c>$</c> key.</summary>
 	D4 = 0x34,
-	///<summary>The 5 % key.</summary>
+	///<summary>The 5 <c>%</c> key.</summary>
 	D5 = 0x35,
-	///<summary>The 6 ^ key.</summary>
+	///<summary>The 6 <c>^</c> key.</summary>
 	D6 = 0x36,
-	///<summary>The 7 &amp; key.</summary>
+	///<summary>The 7 <c>&amp;</c> key.</summary>
 	D7 = 0x37,
-	///<summary>The 8 * key.</summary>
+	///<summary>The 8 <c>*</c> key.</summary>
 	D8 = 0x38,
-	///<summary>The 9 ( key.</summary>
+	///<summary>The 9 <c>(</c> key.</summary>
 	D9 = 0x39,
 	A = 0x41,
 	B = 0x42,
@@ -117,11 +117,11 @@ public enum KKey : byte
 	X = 0x58,
 	Y = 0x59,
 	Z = 0x5A,
-	///<summary>The left Win key.</summary>
+	///<summary>The left <c>Win</c> key.</summary>
 	Win = 0x5B,
-	///<summary>The right Win key.</summary>
+	///<summary>The right <c>Win</c> key.</summary>
 	RWin = 0x5C,
-	///<summary>The Application/Menu key.</summary>
+	///<summary>The <c>Application/Menu</c> key.</summary>
 	Apps = 0x5D,
 	Sleep = 0x5F,
 	NumPad0 = 0x60,
@@ -134,16 +134,16 @@ public enum KKey : byte
 	NumPad7 = 0x67,
 	NumPad8 = 0x68,
 	NumPad9 = 0x69,
-	///<summary>The numpad * key.</summary>
+	///<summary>The numpad <c>*</c> key.</summary>
 	Multiply = 0x6A,
-	///<summary>The numpad + key.</summary>
+	///<summary>The numpad <c>+</c> key.</summary>
 	Add = 0x6B,
 	//Separator = 0x6C,
-	///<summary>The numpad - key.</summary>
+	///<summary>The numpad <c>-</c> key.</summary>
 	Subtract = 0x6D,
-	///<summary>The numpad . key.</summary>
+	///<summary>The numpad <c>.</c> key.</summary>
 	Decimal = 0x6E,
-	///<summary>The numpad / key.</summary>
+	///<summary>The numpad <c>/</c> key.</summary>
 	Divide = 0x6F,
 	F1 = 0x70,
 	F2 = 0x71,
@@ -173,17 +173,17 @@ public enum KKey : byte
 	NumLock = 0x90,
 	ScrollLock = 0x91,
 	//VK_OEM_NEC_EQUAL ... VK_OEM_FJ_ROYA
-	///<summary>The left Shift key.</summary>
+	///<summary>The left <c>Shift</c> key.</summary>
 	LShift = 0xA0,
-	///<summary>The right Shift key.</summary>
+	///<summary>The right <c>Shift</c> key.</summary>
 	RShift = 0xA1,
-	///<summary>The left Ctrl key.</summary>
+	///<summary>The left <c>Ctrl</c> key.</summary>
 	LCtrl = 0xA2,
-	///<summary>The right Ctrl key.</summary>
+	///<summary>The right <c>Ctrl</c> key.</summary>
 	RCtrl = 0xA3,
-	///<summary>The left Alt key.</summary>
+	///<summary>The left <c>Alt</c> key.</summary>
 	LAlt = 0xA4,
-	///<summary>The right Alt key.</summary>
+	///<summary>The right <c>Alt</c> key.</summary>
 	RAlt = 0xA5,
 	BrowserBack = 0xA6,
 	BrowserForward = 0xA7,

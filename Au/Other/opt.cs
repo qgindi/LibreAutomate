@@ -524,7 +524,7 @@ namespace Au.Types {
 	
 	/// <summary>
 	/// Options for functions of class <see cref="keys"/>.
-	/// Some options also are used with <see cref="clipboard"/> functions that send keys (Ctrl+V etc).
+	/// Some options also are used with <see cref="clipboard"/> functions that send keys (<c>Ctrl+V</c> etc).
 	/// </summary>
 	/// <seealso cref="opt.key"/>
 	/// <seealso cref="opt.init.key"/>
@@ -543,7 +543,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Copies options from o, or sets default if o==<c>null</c>. Like ctor does.
+		/// Copies options from <i>o</i>, or sets default if <c>o==null</c>. Like ctor does.
 		/// </summary>
 		internal void CopyOrDefault_(OKey o) {
 			if (o != null) {
@@ -553,6 +553,7 @@ namespace Au.Types {
 				_sleepFinally = o._sleepFinally;
 				_pasteLength = o._pasteLength;
 				TextHow = o.TextHow;
+				TextShiftEnter = o.TextShiftEnter;
 				PasteWorkaround = o.PasteWorkaround;
 				RestoreClipboard = o.RestoreClipboard;
 				NoModOff = o.NoModOff;
@@ -566,12 +567,13 @@ namespace Au.Types {
 				_sleepFinally = 10;
 				_pasteLength = 200;
 				TextHow = OKeyText.Characters;
-				PasteWorkaround = default;
+				TextShiftEnter = false;
+				PasteWorkaround = false;
 				RestoreClipboard = true;
-				NoModOff = default;
-				NoCapsOff = default;
-				NoBlockInput = default;
-				Hook = default;
+				NoModOff = false;
+				NoCapsOff = false;
+				NoBlockInput = false;
+				Hook = null;
 			}
 			//#if DEBUG
 			//			if(o != null) {
@@ -593,7 +595,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Returns this variable, or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
 		/// </summary>
-		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
+		/// <param name="wFocus">The focused or active window. Use <b>GetWndFocusedOrActive</b>.</param>
 		internal OKey GetHookOptionsOrThis_(wnd wFocus) {
 			var call = this.Hook;
 			if (call == null || wFocus.Is0) return this;
@@ -643,7 +645,7 @@ namespace Au.Types {
 		int _keySpeed;
 		
 		/// <summary>
-		/// How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
+		/// How long to wait (milliseconds) between sending <c>Ctrl+V</c> and <c>Ctrl+C</c> keys of clipboard functions (paste, copy).
 		/// Default: 5.
 		/// </summary>
 		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
@@ -708,6 +710,15 @@ namespace Au.Types {
 		public OKeyText TextHow { get; set; }
 		
 		/// <summary>
+		/// When sending text, instead of <c>Enter</c> send <c>Shift+Enter</c>.
+		/// Default: false.
+		/// </summary>
+		/// <remarks>
+		/// This option is applied when sending text with <see cref="keys.sendt"/> (like <c>keys.sendt("A\nB")</c>) or with operator <c>!</c> (like <c>keys.send("!A\nB")</c>) or with <see cref="keys.AddText(string, string)"/>. Ignored when using operator <c>^</c>, <c>_</c>, <see cref="keys.AddText(string, OKeyText)"/>, <see cref="keys.AddChar(char)"/>.
+		/// </remarks>
+		public bool TextShiftEnter { get; set; }
+		
+		/// <summary>
 		/// To send text use clipboard (like with <see cref="OKeyText.Paste"/>) if text length is &gt;= this value.
 		/// Default: 200.
 		/// </summary>
@@ -739,7 +750,7 @@ namespace Au.Types {
 		
 		//rejected: rarely used. Eg can be useful for Python programmers. Let call clipboard.paste() explicitly or set the Paste option eg in hook.
 		///// <summary>
-		///// To send text use <see cref="OKeyText.Paste"/> if text contains characters '\n' followed by '\t' (tab) or spaces.
+		///// To send text use <see cref="OKeyText.Paste"/> if text contains characters <c>'\n'</c> followed by <c>'\t'</c> (tab) or spaces.
 		///// </summary>
 		///// <remarks>
 		///// Some apps auto-indent. This option is a workaround.
@@ -836,7 +847,7 @@ namespace Au.Types {
 		public bool NoModOff { get; set; }
 		
 		/// <summary>
-		/// When starting to send keys or text, don't turn off CapsLock.
+		/// When starting to send keys or text, don't turn off <c>CapsLock</c>.
 		/// Default: <c>false</c>.
 		/// </summary>
 		/// <example>
@@ -896,7 +907,7 @@ namespace Au.Types {
 		internal OKeyHookData(OKey optk, wnd w) { this.optk = optk; this.w = w; }
 		
 		/// <summary>
-		/// Options used by the "send keys or text" function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
+		/// Options used by the "send keys or text" function. The callback function can modify them, except <b>Hook</b>, <b>NoModOff</b>, <b>NoCapsOff</b>, <b>NoBlockInput</b>.
 		/// </summary>
 		public readonly OKey optk;
 		
@@ -913,8 +924,8 @@ namespace Au.Types {
 	/// <remarks>
 	/// There are three ways to send text to the active app using keys:
 	/// - Characters (default) - use special key code <b>VK_PACKET</b>. Can send most characters.
-	/// - Keys - use virtual-key codes, with Shift etc where need. Can send only characters that can be simply entered with the keyboard using current keyboard layout.
-	/// - Paste - use the clipboard and Ctrl+V. Can send any text.
+	/// - Keys - use virtual-key codes, with <c>Shift</c> etc where need. Can send only characters that can be simply entered with the keyboard using current keyboard layout.
+	/// - Paste - use the clipboard and <c>Ctrl+V</c>. Can send any text.
 	/// 
 	/// Most but not all apps support all three ways.
 	/// </remarks>
@@ -922,7 +933,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Send most text characters using special key code <b>VK_PACKET</b>.
 		/// This option is default. Few apps don't support it.
-		/// For newlines, tab and space sends keys (Enter, Tab, Space), because <b>VK_PACKET</b> often does not work well.
+		/// For newlines, tab and space sends keys (<c>Enter</c>, <c>Tab</c>, <c>Space</c>), because <b>VK_PACKET</b> often does not work well.
 		/// If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as <b>WM_PACKET</b> pairs.
 		/// </summary>
 		Characters,
@@ -932,21 +943,21 @@ namespace Au.Types {
 		//In PhraseExpress this is default. Its alternative methods are SendKeys (does not send Unicode chars) and clipboard. It uses clipboard if text is long, default 100. Allows to choose different for specified apps. Does not add any delays between chars; for some apps too fast, eg VirtualBox edit fields when text contains Unicode surrogates.
 		
 		/// <summary>
-		/// Send virtual-key codes, with Shift etc where need.
+		/// Send virtual-key codes, with <c>Shift</c> etc where need.
 		/// All apps support it.
 		/// If a character cannot be simply typed with the keyboard using current keyboard layout, sends it like with the <b>Characters</b> option.
 		/// </summary>
 		KeysOrChar,
 		
 		/// <summary>
-		/// Send virtual-key codes, with Shift etc where need.
+		/// Send virtual-key codes, with <c>Shift</c> etc where need.
 		/// All apps support it.
 		/// If text contains characters that cannot be simply typed with the keyboard using current keyboard layout, clipboard-pastes whole text.
 		/// </summary>
 		KeysOrPaste,
 		
 		/// <summary>
-		/// Paste text using the clipboard and Ctrl+V.
+		/// Paste text using the clipboard and <c>Ctrl+V</c>.
 		/// Few apps don't support it.
 		/// This option is recommended for long text, because other ways then are too slow.
 		/// Other options are unreliable when text length is more than 4000 and the target app is too slow to process sent characters. Then <see cref="OKey.TextSpeed"/> can help.

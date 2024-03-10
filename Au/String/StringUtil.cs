@@ -8,10 +8,10 @@ namespace Au.More;
 public static class StringUtil {
 	/// <summary>
 	/// Parses a function parameter that can optionally have a <c>"***name "</c> prefix, like <c>"***value xyz"</c>.
-	/// Returns: 0 - s does not start with <c>"***"</c>; i+1 - s starts with <c>"***names[i] "</c>; -1 - s is invalid.
 	/// </summary>
-	/// <param name="s">Parameter. If starts with <c>"***"</c> and is valid, receives the "value" part; else unchanged. Can be <c>null</c>.</param>
-	/// <param name="names">List of supported "name".</param>
+	/// <returns>0 - <i>s</i> does not start with <c>"***"</c>; <c>i+1</c> - <i>s</i> starts with <c>"***names[i] "</c>; -1 - <i>s</i> is invalid.</returns>
+	/// <param name="s">Parameter. If starts with <c>"***"</c> and is valid, receives the <c>"value"</c> part; else unchanged. Can be <c>null</c>.</param>
+	/// <param name="names">List of supported <c>"name"</c>.</param>
 	/// <remarks>
 	/// Used to parse parameters like <i>name</i> of <see cref="wnd.Child"/>.
 	/// </remarks>
@@ -35,7 +35,7 @@ public static class StringUtil {
 	/// <param name="underlineChar"></param>
 	/// <remarks>
 	/// Character <c>'&amp;'</c> (in WPF <c>'_'</c>) is used to underline next character in displayed text of dialog controls and menu items. Two such characters are used to display single.
-	/// The underline is displayed when using the keyboard with Alt key to select dialog controls and menu items.
+	/// The underline is displayed when using the keyboard with <c>Alt</c> key to select dialog controls and menu items.
 	/// </remarks>
 	[SkipLocalsInit]
 	public static unsafe string RemoveUnderlineChar(string s, char underlineChar = '&') {

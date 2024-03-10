@@ -20,7 +20,7 @@ namespace Au {
 	/// 
 	/// The <b>wnd</b> type can be used with native Windows API functions without casting. Use <b>wnd</b> for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(wnd hWnd, ...)</c>.
 	/// 
-	/// See also: MSDN article <msdn>Window Features</msdn>.
+	/// See also: <msdn>Window Features</msdn>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -33,21 +33,23 @@ namespace Au {
 	/// </example>
 	public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 #if false
-		/// Why wnd is struct, not class:
-		/// 	Advantages:
-		/// 	- Lightweight. Same as <b>nint</b> (8 or 4 bytes).
-		/// 	- Easier to create overloaded functions that have a window parameter. If it was a class, then a <c>null</c> argument could be ambiguous if eg could also be a string etc.
-		/// 	- When a find-window function does not find the window, calling next function (without checking the return value) does not throw <c>null</c>-reference exception. Instead the function can throw a more specific exception or just return <c>false</c> etc.
-		/// 	- The handle actually already is a reference (to a window object managed by the OS). We don't own the object; we usually don't need to destroy the window finally; it is more like a numeric window id.
-		/// 	- Code where a window argument is <c>default(wnd)</c> is more clear. If it would be <c>null</c>, then it is unclear how the function interprets it: as a 0 handle or as "don't use it". Now if we want a "don't use it" behavior, we'll use an overload.
-		/// 	- In my experience, it makes programming/scripting easier than if it would be a class. Because windows are not found so often (in automation scripts). A find-window function could throw a "not found" exception, but it is not good (it's easier to check the return value than to use try/catch or throwing/nonthrowing overloads).
-		/// 	- Probably it is not a "bad practice" to have a struct with many member functions, because eg the .NET DateTime is struct.
-		/// 	
-		/// 	Disadvantages:
-		/// 	- Cannot be a base class of other classes. Workaround: Use it as a public field or property of the other class (or struct); in some cases it can be even better, because wnd has very many methods, and the non-inherited methods of that class would be difficult to find; now they are separated, and can be used like x.NewClassMethod() and x.w.WndMethod(); anyway, in most cases we'll need the new window classes only for the functions that they add, not for wnd functions, eg we would use a class ButtonWnd mostly only for button functions, not for general window functions.
-		/// 	- In some cases C# does not allow to call a property-set function. wnd has few such functions, maybe none.
-		/// 	
-		//note: don't use :IWin32Window, because it loads System.Windows.Forms.dll always when wnd used.
+	/// <remarks>
+	/// Why <b>wnd</b> is struct, not class:
+	/// 	Advantages:
+	/// 	- Lightweight. Same as <b>nint</b> (8 or 4 bytes).
+	/// 	- Easier to create overloaded functions that have a window parameter. If it was a class, then a <c>null</c> argument could be ambiguous if eg could also be a string etc.
+	/// 	- When a find-window function does not find the window, calling next function (without checking the return value) does not throw <c>null</c>-reference exception. Instead the function can throw a more specific exception or just return <c>false</c> etc.
+	/// 	- The handle actually already is a reference (to a window object managed by the OS). We don't own the object; we usually don't need to destroy the window finally; it is more like a numeric window id.
+	/// 	- Code where a window argument is <c>default(wnd)</c> is more clear. If it would be <c>null</c>, then it is unclear how the function interprets it: as a 0 handle or as "don't use it". Now if we want a "don't use it" behavior, we'll use an overload.
+	/// 	- In my experience, it makes programming/scripting easier than if it would be a class. Because windows are not found so often (in automation scripts). A find-window function could throw a "not found" exception, but it is not good (it's easier to check the return value than to use try/catch or throwing/non-throwing overloads).
+	/// 	- Probably it is not a "bad practice" to have a struct with many member functions, because eg the .NET <b>DateTime</b> is struct.
+	/// 	
+	/// 	Disadvantages:
+	/// 	- Cannot be a base class of other classes. Workaround: Use it as a public field or property of the other class (or struct); in some cases it can be even better, because <b>wnd</b> has very many methods, and the non-inherited methods of that class would be difficult to find; now they are separated, and can be used like <c>x.NewClassMethod()</c> and <c>x.w.WndMethod()</c>; anyway, in most cases we'll need the new window classes only for the functions that they add, not for <b>wnd</b> functions, eg we would use a class <b>ButtonWnd</b> mostly only for button functions, not for general window functions.
+	/// 	- In some cases C# does not allow to call a property-set function. <b>wnd</b> has few such functions, maybe none.
+	/// 	
+	/// </remarks>
+	//note: don't use :IWin32Window, because it loads System.Windows.Forms.dll always when wnd used.
 #endif
 		
 		readonly nint _h;
@@ -237,7 +239,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// If <see cref="Is0"/> or !<see cref="IsAlive"/>, throws <see cref="AuWndException"/>.
+		/// If <see cref="Is0"/> or not <see cref="IsAlive"/>, throws <see cref="AuWndException"/>.
 		/// </summary>
 		/// <returns>This.</returns>
 		/// <exception cref="AuWndException"></exception>
@@ -247,7 +249,7 @@ namespace Au {
 		}
 		
 		///// <summary>
-		///// If <see cref="Is0"/>, throws <see cref="AuWndException"/>. Returns !<see cref="IsAlive"/>.
+		///// If <see cref="Is0"/>, throws <see cref="AuWndException"/>. Returns <c>!IsAlive</c>.
 		///// </summary>
 		///// <exception cref="AuWndException"></exception>
 		//public bool IsInvalidThrowIf0()
@@ -357,7 +359,7 @@ namespace Au {
 		///// Also returns <c>false</c> if <see cref="IsCloaked"/> returns <c>true</c>, but only for some popup windows that usually are useless and could cause problems if considered visible.
 		///// Else returns <c>true</c>.
 		///// 
-		///// Even when this function returns <c>true</c>, the window may be actually invisible. It can be cloaked (excepth the above case), on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
+		///// Even when this function returns <c>true</c>, the window may be actually invisible. It can be cloaked (except the above case), on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
 		///// </remarks>
 		///// <seealso cref="IsVisible"/>
 		///// <seealso cref="IsCloaked"/>
@@ -568,8 +570,8 @@ namespace Au {
 		/// Sets window min/max/normal/restore state.
 		/// Also unhides.
 		/// </summary>
-		/// <param name="state">Must be SW_MINIMIZE, SW_RESTORE (restores to normal/max if minimized), SW_SHOWNORMAL or SW_SHOWMAXIMIZED.</param>
-		/// <param name="how">0 ShowWindow, 1 SetWindowPlacement (no animation), 2 WM_SYSCOMMAND.</param>
+		/// <param name="state">Must be <b>SW_MINIMIZE</b>, <b>SW_RESTORE</b> (restores to normal/max if minimized), <b>SW_SHOWNORMAL</b> or <b>SW_SHOWMAXIMIZED</b>.</param>
+		/// <param name="how">0 <b>ShowWindow</b>, 1 <b>SetWindowPlacement</b> (no animation), 2 <b>WM_SYSCOMMAND</b>.</param>
 		/// <exception cref="AuWndException"/>
 		void _MinMaxRes(int state, int how) {
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
@@ -656,7 +658,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Initializes a WINDOWPLACEMENT struct and calls API <msdn>GetWindowPlacement</msdn>.
+		/// Initializes a <b>WINDOWPLACEMENT</b> struct and calls API <msdn>GetWindowPlacement</msdn>.
 		/// </summary>
 		/// <param name="wp"></param>
 		/// <param name="rectInScreen">Remove workarea thickness from <c>wp.rcNormalPosition</c>.</param>
@@ -676,10 +678,10 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Sets WINDOWPLACEMENT <b>length</b> field and calls API <msdn>SetWindowPlacement</msdn>.
+		/// Sets <b>WINDOWPLACEMENT</b> <b>length</b> field and calls API <msdn>SetWindowPlacement</msdn>.
 		/// </summary>
 		/// <param name="wp"></param>
-		/// <param name="rectInScreen">wp.rcNormalPosition is without workarea thickness.</param>
+		/// <param name="rectInScreen"><c>wp.rcNormalPosition</c> is without workarea thickness.</param>
 		/// <param name="errStr">If not <c>null</c>, throws it if failed.</param>
 		/// <exception cref="AuWndException">Failed. Throws, only if <c>errStr!=null</c>, else returns <c>false</c>.</exception>
 		internal bool SetWindowPlacement_(ref Api.WINDOWPLACEMENT wp, bool rectInScreen, string errStr = null) {
@@ -744,9 +746,9 @@ namespace Au {
 			}
 			
 			/// <summary>
-			/// Sends a key (VK_0 up). It allows to activate now.
+			/// Sends a key (<b>VK_0</b> up). It allows to activate now.
 			/// Later this process usually (but not always) can activate easily (without key etc). It works even with higher IL windows.
-			/// Don't know why is this behavior. Tested on all OS from XP to 10.
+			/// Don't know why is this behavior. Tested on all OS.
 			/// Does not work if the foreground process has higher UAC IL.
 			/// </summary>
 			static void _EnableActivate_SendKey(bool debugOut) {
@@ -786,7 +788,7 @@ namespace Au {
 			}
 			
 			/// <summary>
-			/// Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
+			/// Calls <c>Api.AllowSetForegroundWindow(Api.GetCurrentProcessId())</c>.
 			/// </summary>
 			static bool _EnableActivate_AllowSetFore() {
 				return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId());
@@ -825,7 +827,7 @@ namespace Au {
 			[Flags]
 			internal enum ActivateFlags {
 				/// <summary>
-				/// Don't call ThrowIfInvalid (ie caller ensures it is valid).
+				/// Don't call <b>ThrowIfInvalid</b> (ie caller ensures it is valid).
 				/// </summary>
 				NoThrowIfInvalid = 1,
 				
@@ -835,8 +837,8 @@ namespace Au {
 				NoGetWindow = 2,
 				
 				/// <summary>
-				/// Don't activate if has WS_EX_NOACTIVATE style or is toolwindow without caption, unless cloaked.
-				/// Then just calls ZorderTop(), which in most cases does not work (inactive window).
+				/// Don't activate if has <b>WS_EX_NOACTIVATE</b> style or is toolwindow without caption, unless cloaked.
+				/// Then just calls <b>ZorderTop</b>, which in most cases does not work (inactive window).
 				/// </summary>
 				IgnoreIfNoActivateStyleEtc = 4,
 				
@@ -850,7 +852,7 @@ namespace Au {
 		/// <summary>
 		/// Activates this window (brings to the foreground).
 		/// The same as <see cref="Activate"/>, but has some options.
-		/// Returns <c>false</c> if does not activate because of flag IgnoreIfNoActivateStyleEtc.
+		/// Returns <c>false</c> if does not activate because of flag <b>IgnoreIfNoActivateStyleEtc</b>.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
 		/// <exception cref="InputDesktopException"></exception>
@@ -1011,8 +1013,8 @@ namespace Au {
 		
 		//Too unreliable.
 		///// <summary>
-		///// Calls API LockSetForegroundWindow, which temporarily prevents other applications from activating windows easily with SetForegroundWindow().
-		///// If LockSetForegroundWindow() fails, calls EnableActivate() and retries.
+		///// Calls API <b>LockSetForegroundWindow</b>, which temporarily prevents other applications from activating windows easily with <b>SetForegroundWindow</b>.
+		///// If <b>LockSetForegroundWindow</b> fails, calls <b>EnableActivate</b> and retries.
 		///// </summary>
 		///// <param name="on">Lock or unlock.</param>
 		//public static bool lockActiveWindow(bool on)
@@ -1029,7 +1031,7 @@ namespace Au {
 		/// <remarks>
 		/// The control can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="thisThread.focus"/>.
 		/// Works not with all windows. For example, does not work with Windows Store apps. Then use <see cref="elm.Focus"/>.
-		/// Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then does not throw exception.
+		/// Can instead focus a child control. For example, if this is a <b>ComboBox</b>, it will focus its child <b>Edit</b> control. Then does not throw exception.
 		/// This can be control or top-level window. Top-level windows also can have focus.
 		/// Fails when the target process is admin or uiAccess and this process isn't. See [](xref:uac).
 		/// </remarks>
@@ -1124,7 +1126,7 @@ namespace Au {
 			/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 			/// <remarks>
 			/// Fails if the control/window belongs to another thread or is invalid or disabled.
-			/// Can instead focus a child control. For example, if ComboBox, will focus its child Edit control. Then returns <c>true</c>.
+			/// Can instead focus a child control. For example, if <b>ComboBox</b>, will focus its child <b>Edit</b> control. Then returns <c>true</c>.
 			/// </remarks>
 			public static bool focus(wnd w) {
 				if (w.Is0) { Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE); return false; }
@@ -1651,7 +1653,7 @@ namespace Au {
 		/// Moves and resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, screen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
+		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, screen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support <b>SWP</b> flags.
 		/// This function is more lightweight, it just calls API <msdn>SetWindowPos</msdn> with flags <c>NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd</c>. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="lastError"/>.
 		/// 
@@ -1826,13 +1828,13 @@ namespace Au {
 			}
 			
 			/// <summary>
-			/// Moves w to left/top in screen, and/or ensures it's in screen.
+			/// Moves <i>w</i> to left/top in screen, and/or ensures it's in screen.
 			/// </summary>
 			/// <param name="ensureMethod">Just ensure in screen. Not used parameters: left, top.</param>
 			/// <param name="w"></param>
 			/// <param name="left">If empty, uses center.</param>
 			/// <param name="top">If empty, uses center.</param>
-			/// <param name="screen">If empty, uses screen of w.</param>
+			/// <param name="screen">If empty, uses screen of <i>w</i>.</param>
 			/// <param name="workArea"></param>
 			/// <param name="ensureIn"></param>
 			public static void MoveWindowInScreen(bool ensureMethod, wnd w, Coord left, Coord top, screen screen, bool workArea, bool ensureIn) {
@@ -1975,7 +1977,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="wAfter"></param>
 		/// <param name="before">Call <c>wAfter = wAfter.Get.Previous();</c>.</param>
-		/// <param name="noownerzorder">With SWP_NOOWNERZORDER.</param>
+		/// <param name="noownerzorder">With <b>SWP_NOOWNERZORDER</b>.</param>
 		/// <returns></returns>
 		internal bool ZorderL_(wnd wAfter, bool before = false, bool noownerzorder = false) {
 			if (before) {
@@ -1995,7 +1997,7 @@ namespace Au {
 		/// <remarks>
 		/// This window and <i>w</i> can be both top-level windows or both controls of same parent.
 		/// Can make this window topmost or non-topmost, depending on where <i>w</i> is in the Z order.
-		/// Also affects owned and owner windows, but does not make them topmost/nontopmost if not necessary.
+		/// Also affects owned and owner windows, but does not make them topmost/non-topmost if not necessary.
 		/// Uses API <msdn>SetWindowPos</msdn>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
@@ -2123,7 +2125,7 @@ namespace Au {
 			=> _ZorderAB(default, false, ownerToo, top: true);
 		
 		/// <summary>
-		/// Calls SetWindowPos with HWND_TOP and SWP_NOOWNERZORDER (ignores owner and owned windows).
+		/// Calls <b>SetWindowPos</b> with <b>HWND_TOP</b> and <b>SWP_NOOWNERZORDER</b> (ignores owner and owned windows).
 		/// </summary>
 		internal bool ZorderTopRaw_() {
 			Debug_.PrintIf(!IsChild && !Get.EnabledOwned().Is0, "has owned windows: " + ToString());
@@ -2173,7 +2175,7 @@ namespace Au {
 		/// <summary>
 		/// Makes this window non-topmost.
 		/// </summary>
-		/// <param name="afterActiveWindow">Also place this window below the active nontopmost window in the Z order, unless the active window is this or owner.</param>
+		/// <param name="afterActiveWindow">Also place this window below the active non-topmost window in the Z order, unless the active window is this or owner.</param>
 		/// <remarks>
 		/// This cannot be a control.
 		/// Also affects owner and owned windows.
@@ -2475,7 +2477,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Returns <c>true</c> if this is a console window (class name "ConsoleWindowClass").
+		/// Returns <c>true</c> if this is a console window (class name <c>"ConsoleWindowClass"</c>).
 		/// </summary>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
 		public bool IsConsole => ClassNameIs("ConsoleWindowClass");
@@ -2509,12 +2511,12 @@ namespace Au {
 			}
 		}
 		
-		//These are not useful. Use IsAccessDenied or class uacInfo.
+		//These are not useful. Use UacAccessDenied or class uacInfo.
 		///// <summary>
 		///// Gets UAC integrity level of window's process.
-		///// Returns UacIL.Unknown if failed.
-		///// This function considers UIAccess equal to High.
-		///// See also: class uacInfo.
+		///// Returns <b>UacIL.Unknown</b> if failed.
+		///// This function considers <b>UIAccess</b> equal to <b>High</b>.
+		///// See also: class <see cref="uacInfo"/>.
 		///// </summary>
 		//public UacIL UacIntegrityLevel
 		//{
@@ -2524,8 +2526,8 @@ namespace Au {
 		///// <summary>
 		///// Returns <c>true</c> if window's process has higher UAC integrity level (IL) than current process.
 		///// Returns <c>true</c> if fails to open process handle, which usually means that the process has higher integrity level.
-		///// This function considers UIAccess equal to High.
-		///// See also: class uacInfo.
+		///// This function considers <b>UIAccess</b> equal to <b>High</b>.
+		///// See also: class <see cref="uacInfo"/>.
 		///// </summary>
 		//public bool UacIntegrityLevelIsHigher
 		//{
@@ -2604,7 +2606,7 @@ namespace Au {
 		/// <remarks>
 		/// Top-level window name usually its title bar text.
 		/// Control name usually is its text that does not change, for example button or static (label) control text.
-		/// Unlike <see cref="ControlText"/>, this function usually does not get variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
+		/// Unlike <see cref="ControlText"/>, this function usually does not get variable text, for example <b>Edit</b> control editable text, <b>ComboBox</b> control selected item text, status bar text.
 		/// Calls <see cref="GetText"/><c>(false, true)</c>.
 		/// </remarks>
 		/// <seealso cref="SetText"/>
@@ -2626,7 +2628,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Gets window name using API InternalGetWindowText. The same as GetText(false, false).
+		/// Gets window name using API <b>InternalGetWindowText</b>. The same as <c>GetText(false, false)</c>.
 		/// This should be a top-level window, because does not process ampersands.
 		/// </summary>
 		internal string NameTL_ => _GetTextFast(false);
@@ -2636,7 +2638,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>Returns <c>""</c> if no text. Returns <c>null</c> if failed, eg if the window is closed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Unlike <see cref="Name"/>, this function prefers variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
+		/// Unlike <see cref="Name"/>, this function prefers variable text, for example <b>Edit</b> control editable text, <b>ComboBox</b> control selected item text, status bar text.
 		/// For controls that cannot have such text (eg button, static), it usually gets the same text as <b>Name</b>. For example button and static (label) controls.
 		/// Much slower than <b>Name</b>. Fails if the window is hung.
 		/// Calls <see cref="GetText"/><c>(true, false)</c>.
@@ -2657,7 +2659,7 @@ namespace Au {
 		/// <br/>• <c>null</c> - try <b>InternalGetWindowText</b>. If it gets <c>""</c> and this is a control, then try <b>WM_GETTEXT</b>.
 		/// </param>
 		/// <param name="removeUnderlineAmpersand">
-		/// Remove the invisible <c>'&amp;'</c> characters that are used to underline keyboard shortcuts with the Alt key.
+		/// Remove the invisible <c>'&amp;'</c> characters that are used to underline keyboard shortcuts with the <c>Alt</c> key.
 		/// Removes only if this is a control (has style <b>WS.CHILD</b>).
 		/// Calls <see cref="StringUtil.RemoveUnderlineChar"/>.
 		/// </param>
@@ -2679,7 +2681,7 @@ namespace Au {
 		/// <summary>
 		/// Gets text.
 		/// Returns <c>""</c> if it is empty.
-		/// Calls API InternalGetWindowText. If it fails, and getControlTextIfEmpty==<c>true</c>, and this is a control, calls _GetTextSlow, which uses WM_GETTEXT.
+		/// Calls API <b>InternalGetWindowText</b>. If it fails, and <b>getControlTextIfEmpty</b>==<c>true</c>, and this is a control, calls <b>_GetTextSlow</b>, which uses <b>WM_GETTEXT</b>.
 		/// </summary>
 		/// <returns><c>null</c> if failed, eg if the control is destroyed or its thread is hung. Supports <see cref="lastError"/>.</returns>
 		[SkipLocalsInit]
@@ -2701,7 +2703,7 @@ namespace Au {
 		/// <summary>
 		/// Gets text.
 		/// Returns <c>""</c> if it is empty.
-		/// Uses WM_GETTEXT.
+		/// Uses <b>WM_GETTEXT</b>.
 		/// </summary>
 		/// <returns><c>null</c> if failed, eg if the control is destroyed or its thread is hung. Supports <see cref="lastError"/>.</returns>
 		[SkipLocalsInit]
@@ -2747,7 +2749,7 @@ namespace Au {
 		///// Returns <c>null</c> if there is no such control.
 		///// </summary>
 		///// <remarks>
-		///// Can be used to identify controls that have no name but have a named control (label) at the left or above. For example Edit And ComboBox controls in dialogs.
+		///// Can be used to identify controls that have no name but have a named control (label) at the left or above. For example <b>Edit</b> and <b>ComboBox</b> controls in dialogs.
 		///// In such cases this function works like <see cref="NameElm"/>, but is faster and supports any sibling control type.
 		///// </remarks>
 		//public string NameLabel
@@ -2763,14 +2765,9 @@ namespace Au {
 		//		//_todo: if the label control is not at the left/above, find topmost control at the left/above
 		//	}
 		//}
-#if false //artifacts of xml doc from various places. Maybe it will come back some day. The code is commented out there.
-		//from wnd.Child comments:
-		/// - "***label " - use <see cref="NameLabel"/>.
-		/// <br/>Useful when the control itself does not have a name but an adjacent control is used as its name. Examples - Edit controls in dialogs.
-#endif
 		
 		/// <summary>
-		/// Gets <see cref="elm.Name"/> of the UI element (role WINDOW) of this window or control.
+		/// Gets <see cref="elm.Name"/> of the UI element (role <b>WINDOW</b>) of this window or control.
 		/// </summary>
 		/// <returns>Returns <c>""</c> if the object has no name or failed to get it. Returns <c>null</c> if invalid window handle.</returns>
 		public string NameElm => elm.NameOfWindow_(this);
@@ -2780,7 +2777,7 @@ namespace Au {
 		/// </summary>
 		/// <returns><c>null</c> if it is not a Windows Forms control or if failed.</returns>
 		/// <remarks>
-		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
+		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a <b>Control</b> object.</note>
 		/// 
 		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="WinformsControlNames"/> instance and call its <see cref="WinformsControlNames.GetControlName"/> method for each control.</note>
 		/// </remarks>
@@ -2843,11 +2840,11 @@ namespace Au {
 		/// </param>
 		/// <param name="useXButton">
 		/// If <c>false</c> (default), uses API message <msdn>WM_CLOSE</msdn>.
-		/// If <c>true</c>, uses API message <msdn>WM_SYSCOMMAND SC_CLOSE</msdn>, like when the user clicks the X button in the title bar.
+		/// If <c>true</c>, uses API message <msdn>WM_SYSCOMMAND SC_CLOSE</msdn>, like when the user clicks the <b>X</b> button in the title bar.
 		/// Most windows can be closed with any of these messages, but some respond properly only to one of them. For example, some applications on <b>WM_CLOSE</b> don't exit, although the main window is closed. Some applications don't respond to <b>WM_SYSCOMMAND</b> if it is posted soon after opening the window.
 		/// </param>
 		/// <remarks>
-		/// The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
+		/// The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without <b>X</b> button, or just need more time to close it.
 		/// If the window is of this thread, just calls <see cref="Send"/> or <see cref="Post"/> (if <i>noWait</i>==<c>true</c>) and returns <c>true</c>.
 		/// </remarks>
 		/// <seealso cref="WaitForClosed"/>

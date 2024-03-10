@@ -58,7 +58,7 @@ public static class clipboard {
 	}
 
 	/// <summary>
-	/// Calls API SetClipboardData("Clipboard Viewer Ignore"). Clipboard must be open.
+	/// Calls API <c>SetClipboardData("Clipboard Viewer Ignore")</c>. Clipboard must be open.
 	/// Then clipboard manager/viewer/etc programs that are aware of this convention don't try to get our clipboard data while we are pasting.
 	/// Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't. Windows 10 Clipboard History doesn't.
 	/// </summary>
@@ -70,26 +70,47 @@ public static class clipboard {
 	/// <summary>
 	/// Gets the selected text from the focused app using the clipboard.
 	/// </summary>
-	/// <param name="cut">Use Ctrl+X.</param>
+	/// <param name="cut">Use <c>Ctrl+X</c>.</param>
 	/// <param name="options">
 	/// Options. If <c>null</c> (default), uses <see cref="opt.key"/>.
 	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.KeySpeedClipboard"/>. Does not use <see cref="OKey.Hook"/>.
 	/// </param>
-	/// <param name="hotkey">Keys to use instead of Ctrl+C or Ctrl+X. Example: <c>hotkey: "Ctrl+Shift+C"</c>. Overrides <i>cut</i>.</param>
+	/// <param name="hotkey">Keys to use instead of <c>Ctrl+C</c> or <c>Ctrl+X</c>. Example: <c>hotkey: "Ctrl+Shift+C"</c>. Overrides <i>cut</i>.</param>
 	/// <param name="timeoutMS">Max time to wait until the focused app sets clipboard data, in milliseconds. If 0 (default), the timeout is 3000 ms. The function waits up to 10 times longer if the window is hung.</param>
 	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not set clipboard data.</exception>
 	/// <exception cref="InputDesktopException"></exception>
 	/// <remarks>
 	/// Also can get file paths, as multiline text.
 	/// 
-	/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, gets it, finally restores clipboard data.
+	/// Sends keys <c>Ctrl+C</c>, waits until the focused app sets clipboard data, gets it, finally restores clipboard data.
 	/// Fails if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
-	/// Works with console windows too, even if they don't support Ctrl+C.
+	/// Works with console windows too, even if they don't support <c>Ctrl+C</c>.
 	/// </remarks>
 	public static string copy(bool cut = false, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
-		if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, cut ? KKey.X : KKey.C);
 		return _Copy(cut, hotkey, options, timeoutMS);
 		//rejected: 'format' parameter. Not useful.
+	}
+	
+	/// <summary>
+	/// Calls <see cref="copy"/> and handles exceptions.
+	/// </summary>
+	/// <returns>Returns <c>false</c> if failed.</returns>
+	/// <param name="text">Receives the copied text.</param>
+	/// <param name="timeout">Max time to wait until the focused app sets clipboard data, in milliseconds. The function waits up to 10 times longer if the window is hung.</param>
+	/// <param name="warning">Call <see cref="print.warning"/>.</param>
+	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text <c>"Failed to copy text"</c>.</param>
+	/// <inheritdoc cref="copy" path="//param|//remarks"/>
+	public static bool tryCopy(out string text, int timeout, bool warning = false, bool osd = false, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+		try {
+			text = _Copy(false, hotkey, options, Math.Max(timeout, 25));
+			return true;
+		}
+		catch (Exception e1) {
+			if (warning) print.warning(e1);
+			if (osd) osdText.showTransparentText("Failed to copy text");
+			text = null;
+			return false;
+		}
 	}
 
 	/// <summary>
@@ -98,8 +119,9 @@ public static class clipboard {
 	/// <returns>Returns <c>false</c> if failed.</returns>
 	/// <param name="text">Receives the copied text.</param>
 	/// <param name="warning">Call <see cref="print.warning"/>. Default <c>true</c>.</param>
-	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to copy text". Default <c>true</c>.</param>
+	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text <c>"Failed to copy text"</c>. Default <c>true</c>.</param>
 	/// <inheritdoc cref="copy" path="//param|//remarks"/>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Not optimal parameters.
 	public static bool tryCopy(out string text, bool cut = false, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		try {
 			text = _Copy(cut, hotkey, options, timeoutMS);
@@ -119,9 +141,9 @@ public static class clipboard {
 	/// <returns>The return value of <i>callback</i>.</returns>
 	/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example <see cref="clipboardData"/> or <see cref="System.Windows.Forms.Clipboard"/>. Don't call copy/paste functions.</param>
 	/// <remarks>
-	/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, calls callback function that gets it, finally restores clipboard data.
+	/// Sends keys <c>Ctrl+C</c>, waits until the focused app sets clipboard data, calls the callback function that gets it, finally restores clipboard data.
 	/// Fails if the focused app does not set clipboard data.
-	/// Works with console windows too, even if they don't support Ctrl+C.
+	/// Works with console windows too, even if they don't support <c>Ctrl+C</c>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -221,14 +243,14 @@ public static class clipboard {
 	/// Options. If <c>null</c> (default), uses <see cref="opt.key"/>.
 	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.PasteWorkaround"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.SleepFinally"/>, <see cref="OKey.Hook"/>, <see cref="OKey.KeySpeedClipboard"/>.
 	/// </param>
-	/// <param name="hotkey">Keys to use instead of Ctrl+V. Example: <c>hotkey: "Ctrl+Shift+V"</c>.</param>
+	/// <param name="hotkey">Keys to use instead of <c>Ctrl+V</c>. Example: <c>hotkey: "Ctrl+Shift+V"</c>.</param>
 	/// <param name="timeoutMS">Max time to wait until the focused app gets clipboard data, in milliseconds. If 0 (default), the timeout is 3000 ms. The function waits up to 10 times longer if the window is hung.</param>
 	/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data.</exception>
 	/// <exception cref="InputDesktopException"></exception>
 	/// <remarks>
-	/// Sets clipboard data, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
+	/// Sets clipboard data, sends keys <c>Ctrl+V</c>, waits until the focused app gets clipboard data, finally restores clipboard data.
 	/// Fails if nothing gets clipboard data in several seconds.
-	/// Works with console windows too, even if they don't support Ctrl+V.
+	/// Works with console windows too, even if they don't support <c>Ctrl+V</c>.
 	/// 
 	/// A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a delay.
 	/// Possible problems with some virtual PC programs. Either pasting does not work in their windows, or they use a hidden clipboard viewer that makes this function slower and less reliable.
@@ -251,9 +273,30 @@ public static class clipboard {
 	/// Calls <see cref="paste"/> and handles exceptions.
 	/// </summary>
 	/// <returns>Returns <c>false</c> if failed.</returns>
-	/// <param name="warning">Call <see cref="print.warning"/>. Default <c>true</c>.</param>
-	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text "Failed to paste text". Default <c>true</c>.</param>
+	/// <param name="timeout">Max time to wait until the focused app gets clipboard data, in milliseconds. The function waits up to 10 times longer if the window is hung.</param>
+	/// <param name="warning">Call <see cref="print.warning"/>.</param>
+	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text <c>"Failed to paste text"</c>.</param>
 	/// <inheritdoc cref="paste" path="//param|//remarks"/>
+	public static bool tryPaste(string text, int timeout, bool warning = false, bool osd = false, string html = null, OKey options = null, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default) {
+		try {
+			paste(text, html, options, hotkey, Math.Max(timeout, 25));
+			return true;
+		}
+		catch (Exception e1) {
+			if (warning) print.warning(e1);
+			if (osd) osdText.showTransparentText("Failed to paste text");
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Calls <see cref="paste"/> and handles exceptions.
+	/// </summary>
+	/// <returns>Returns <c>false</c> if failed.</returns>
+	/// <param name="warning">Call <see cref="print.warning"/>. Default <c>true</c>.</param>
+	/// <param name="osd">Call <see cref="osdText.showTransparentText"/> with text <c>"Failed to paste text"</c>. Default <c>true</c>.</param>
+	/// <inheritdoc cref="paste" path="//param|//remarks"/>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Not optimal parameters.
 	public static bool tryPaste(string text, string html = null, OKey options = null, bool warning = true, bool osd = true, [ParamString(PSFormat.Hotkey)] KHotkey hotkey = default, int timeoutMS = 0) {
 		try {
 			paste(text, html, options, hotkey, timeoutMS);
@@ -308,7 +351,7 @@ public static class clipboard {
 
 	/// <summary>
 	/// Used by <see cref="clipboard"/> and <see cref="keys"/>.
-	/// The caller should block user input (if need), release modifier keys, get optk/wFocus, sleep finally (if need).
+	/// The caller should block user input (if need), release modifier keys, get <i>optk</i>/<i>wFocus</i>, sleep finally (if need).
 	/// </summary>
 	/// <param name="data">string or <b>clipboardData</b>.</param>
 	internal static void Paste_(object data, OKey optk, wnd wFocus, KHotkey hotkey = default, int timeoutMS = 0) {
@@ -401,7 +444,7 @@ public static class clipboard {
 	}
 
 	/// <summary>
-	/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
+	/// Waits until the target app gets (when pasting) or sets (when copying) clipboard text.
 	/// For it subclasses our clipboard owner window and uses clipboard messages. Does not unsubclass.
 	/// </summary>
 	class _ClipboardListener : WaitVariable_ {
@@ -412,14 +455,14 @@ public static class clipboard {
 		wnd _wFocus;
 
 		/// <summary>
-		/// The clipboard message has been received. Probably the target window responded to the Ctrl+C or Ctrl+V.
-		/// On Paste it is unreliable because of clipboard viewers/managers/etc. The caller also must check IsBadWindow.
+		/// The clipboard message has been received. Probably the target window responded to the <c>Ctrl+C</c> or <c>Ctrl+V</c>.
+		/// When pasting, it is unreliable because of clipboard viewers/managers/etc. The caller also must check <b>IsBadWindow</b>.
 		/// </summary>
 		public bool Success => waitVar;
 
 		/// <summary>
-		/// On Paste, <c>true</c> if probably not the target process retrieved clipboard data. Probably a clipboard viewer/manager/etc.
-		/// Not used on Copy.
+		/// When pasting, <c>true</c> if probably not the target process retrieved clipboard data. Probably a clipboard viewer/manager/etc.
+		/// Not used when copying.
 		/// </summary>
 		public bool IsBadWindow;
 
@@ -429,7 +472,7 @@ public static class clipboard {
 		public Exception FailedToSetData;
 
 		/// <summary>
-		/// Subclasses clipOwner.
+		/// Subclasses <i>clipOwner</i>.
 		/// </summary>
 		/// <param name="paste"><c>true</c> if used for paste, <c>false</c> if for copy.</param>
 		/// <param name="data">If used for paste, can be string containing Unicode text or <b>int</b>/<b>string</b> dictionary containing clipboard format/data.</param>
@@ -452,10 +495,10 @@ public static class clipboard {
 		}
 
 		/// <summary>
-		/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
-		/// Throws AuException on timeout (default 3 s normally, 28 s if the target window is hung).
+		/// Waits until the target app gets (when pasting) or sets (when copying) clipboard text.
+		/// Throws <b>AuException</b> on timeout (default 3 s normally, 28 s if the target window is hung).
 		/// </summary>
-		/// <param name="ctrlKey">The variable that was used to send Ctrl+V or Ctrl+C. This function may call Release to avoid too long Ctrl down.</param>
+		/// <param name="ctrlKey">The variable that was used to send <c>Ctrl+V</c> or <c>Ctrl+C</c>. This function may call <b>Release</b> to avoid too long <c>Ctrl</c> down.</param>
 		public void Wait(ref keys.Internal_.SendCopyPaste ctrlKey, int timeoutMS = 0) {
 			//print.it(Success); //on Paste often already true, because SendInput dispatches sent messages
 			int n = 6, t = 500; //max 3 s (6*500 ms). If hung, max 28 s.
@@ -535,8 +578,8 @@ public static class clipboard {
 	}
 
 	/// <summary>
-	/// Opens and closes clipboard using API OpenClipboard and CloseClipboard.
-	/// Constructor tries to open for 10 s, then throws AuException.
+	/// Opens and closes clipboard using API <b>OpenClipboard</b> and <b>CloseClipboard</b>.
+	/// Constructor tries to open for 10 s, then throws <b>AuException</b>.
 	/// If the <i>createOwner</i> parameter is <c>true</c>, creates temporary message-only clipboard owner window.
 	/// If the <i>noOpenNow</i> parameter is <c>true</c>, does not open, only creates owner if need.
 	/// Dispose() closes clipboard and destroys the owner window.
@@ -595,7 +638,7 @@ public static class clipboard {
 
 	/// <summary>
 	/// Saves and restores clipboard data.
-	/// Clipboard must be open. Don't need to call EmptyClipboard before Restore.
+	/// Clipboard must be open. Don't need to call <b>EmptyClipboard</b> before <b>Restore</b>.
 	/// </summary>
 	struct _SaveRestore {
 		Dictionary<int, byte[]> _data;

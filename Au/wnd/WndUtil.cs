@@ -115,7 +115,7 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="wndProc">Window procedure.</param>
 		/// <param name="keepAlive">
-		/// Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <msdn>WM_NCDESTROY</msdn> recived or thread ended).
+		/// Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <msdn>WM_NCDESTROY</msdn> received or thread ended).
 		/// <para>IMPORTANT: In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy <b>HwndHost</b>-ed controls. Then let <i>keepAlive</i>=<c>false</c> and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</para>
 		/// </param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
@@ -199,10 +199,10 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and creates hidden window.
+		/// Auto-registers window class <c>"Au.DWP"</c> with <c>wndproc = DefWindowProc</c> and creates hidden window.
 		/// </summary>
 		/// <param name="messageOnly"></param>
-		/// <param name="wndProcUnsafe">If not <c>null</c>, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
+		/// <param name="wndProcUnsafe">If not <c>null</c>, replaces window procedure (<b>SetWindowLongPtr</b>). The caller must protect the delegate from GC.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		internal static wnd CreateWindowDWP_(bool messageOnly, WNDPROC wndProcUnsafe = null) {
 			var cn = WindowClassDWP_;
@@ -214,7 +214,7 @@ namespace Au.More {
 		const string c_wndClassDWP = "Au.DWP";
 
 		/// <summary>
-		/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and returns "Au.DWP".
+		/// Auto-registers window class <c>"Au.DWP"</c> with <c>wndproc = DefWindowProc</c> and returns <c>"Au.DWP"</c>.
 		/// </summary>
 		internal static unsafe string WindowClassDWP_ {
 			get {
@@ -231,7 +231,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Replaces window procedure (SetWindowLongPtr). Returns previous window procedure.
+		/// Replaces window procedure (<b>SetWindowLongPtr</b>). Returns previous window procedure.
 		/// The caller must protect the delegate from GC.
 		/// </summary>
 		internal static IntPtr SubclassUnsafe_(wnd w, WNDPROC wndProc) {
@@ -254,7 +254,7 @@ namespace Au.More {
 		/// <param name="w"></param>
 		/// <param name="font">
 		/// Native font handle.
-		/// If <c>default(IntPtr)</c>, sets font that is used by most windows and controls on this computer, usually Segoe UI, 9, DPI-scaled for <i>w</i> screen.
+		/// If <c>default(IntPtr)</c>, sets font that is used by most windows and controls on this computer, usually <b>Segoe UI</b> 9, DPI-scaled for <i>w</i> screen.
 		/// </param>
 		/// <remarks>
 		/// Sends <msdn>WM_SETFONT</msdn> message.
@@ -283,7 +283,7 @@ namespace Au.More {
 		/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
 		/// <remarks>
-		/// Most Windows Store app windows have class name "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
+		/// Most Windows Store app windows have class name <c>"Windows.UI.Core.CoreWindow"</c> or <c>"ApplicationFrameWindow"</c>.
 		/// </remarks>
 		public static unsafe string GetWindowsStoreAppId(wnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false) {
 			string appId = null;
@@ -364,7 +364,7 @@ namespace Au.More {
 
 		//probably not useful. Dangerous.
 		///// <summary>
-		///// Calls API <msdn>SetClassLongPtr</msdn> (SetClassLong in 32-bit process).
+		///// Calls API <msdn>SetClassLongPtr</msdn> (<b>SetClassLong</b> in 32-bit process).
 		///// </summary>
 		///// <exception cref="AuWndException"/>
 		//public static nint SetClassLong(wnd w, int index, nint newValue)
@@ -378,10 +378,10 @@ namespace Au.More {
 		//rejected. Does not work with many windows. Unreliable. Rarely used.
 		///// <summary>
 		///// Gets atom of a window class.
-		///// To get class atom when you have a window w, use <c>WndUtil.GetClassLong(w, GCL.ATOM)</c>.
+		///// To get class atom when you have a window <i>w</i>, use <c>WndUtil.GetClassLong(w, GCL.ATOM)</c>.
 		///// </summary>
 		///// <param name="className">Class name.</param>
-		///// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (CS_GLOBALCLASS style).</param>
+		///// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (<b>CS_GLOBALCLASS</b> style).</param>
 		//public static ushort GetClassAtom(string className, IntPtr moduleHandle = default)
 		//{
 		//	var x = new Api.WNDCLASSEX();
@@ -783,7 +783,7 @@ print.it(s2);
 		/// </summary>
 		/// <returns><c>true</c> if dropped, <c>false</c> if canceled.</returns>
 		/// <param name="window">Window or control that owns the drag operation. Must be of this thread.</param>
-		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right, Middle.</param>
+		/// <param name="mouseButton">Mouse button that is used for the drag operation: <b>Left</b>, <b>Right</b>, <b>Middle</b>.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
 		public static bool DragLoop(AnyWnd window, MButtons mouseButton = MButtons.Left, Action<WDLArgs> onMouseKeyMessage = null) {
 			wnd w = window.Hwnd;

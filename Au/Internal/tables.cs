@@ -23,7 +23,7 @@ namespace Au.More
 		public static readonly byte[] Hex;
 
 		/// <summary>
-		/// Native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
+		/// Native-memory <c>char[0x10000]</c> containing lower-case versions of the first 0x10000 characters.
 		/// </summary>
 		public static char* LowerCase {
 			get { var v = _lcTable; if (v == null) _lcTable = v = Cpp.Cpp_LowercaseTable(); return v; } //why operator ??= cannot be used with pointers?

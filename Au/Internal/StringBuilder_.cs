@@ -1,11 +1,11 @@
 ﻿namespace Au.More;
 
 /// <summary>
-/// Provides a cached reusable instance of StringBuilder per thread. It's an optimisation that reduces the number of instances constructed and collected.
+/// Provides a cached reusable instance of <b>StringBuilder</b> per thread. It's an optimization that reduces the number of instances constructed and collected.
 /// Used like <c>using(new StringBuilder_(out var b)) { b.Append("example"); var s = b.ToString(); }</c>.
 /// </summary>
 /// <remarks>
-/// This is a modified copy of the .NET internal StringBuilderCache class.
+/// This is a modified copy of the .NET internal <b>StringBuilderCache</b> class.
 /// </remarks>
 internal struct StringBuilder_ : IDisposable {
 	StringBuilder _sb;
@@ -39,7 +39,7 @@ internal struct StringBuilder_ : IDisposable {
 	}
 	
 	/// <summary>
-	/// Releases the StringBuilder to the cache.
+	/// Releases the <b>StringBuilder</b> to the cache.
 	/// </summary>
 	public void Dispose() {
 		if (_sb.Capacity == Capacity) t_cached = _sb;

@@ -151,9 +151,9 @@ public class IFArea {
 	}
 
 	/// <summary>
-	/// Calls GetRect_, and CaptureScreen.Image if need.
+	/// Calls <b>GetRect_</b>, and <b>CaptureScreen.Image</b> if need.
 	/// </summary>
-	/// <returns><c>false</c> if GetRect_ returns <c>false</c> (empty rect).</returns>
+	/// <returns><c>false</c> if <b>GetRect_</b> returns <c>false</c> (empty rectangle).</returns>
 	internal bool GetOcrData_(OcrFlags flags, out Bitmap b, out POINT resultOffset) {
 		if (Type == AreaType.Bitmap) { b = B; resultOffset = default; return true; }
 		if (!GetRect_(out RECT r, out resultOffset, (IFFlags)flags)) { b = null; return false; }
@@ -186,7 +186,7 @@ public class IFArea {
 /// - string - path of <c>.png</c> or <c>.bmp</c> file. If not full path, uses <see cref="folders.ThisAppImages"/>.
 /// - string that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - resource name; see <see cref="ResourceUtil.GetGdipBitmap"/>.
 /// - string with prefix <c>"image:"</c> - Base64 encoded <c>.png</c> image.\
-///   Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.KImageUtil.ImageToString</b> (in Au.Controls.dll).
+///   Can be created with tool <b>Find image or color in window</b> or with function <b>Au.Controls.KImageUtil.ImageToString</b> (in <c>Au.Controls.dll</c>).
 /// - <see cref="ColorInt"/>, <b>int</b> or <b>uint</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.
 /// - <see cref="Bitmap"/> - image object.
 /// - <b>IFImage[]</b> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).

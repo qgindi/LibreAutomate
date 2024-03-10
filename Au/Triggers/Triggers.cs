@@ -24,7 +24,7 @@ namespace Au.Triggers;
 /// 
 /// Finally call <see cref="Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
 /// 
-/// To quickly restart the script when editing, click the Run button.
+/// To quickly restart the script when editing, click the <b>Run</b> button.
 /// 
 /// Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="script.run"/> to run other scripts in new process; see example.
 /// 
@@ -468,14 +468,14 @@ public class ActionTriggers {
 	internal bool Running_ => !_evStop.Is0;
 
 	/// <summary>
-	/// Throws InvalidOperationException if executing <see cref="Run"/>.
+	/// Throws <b>InvalidOperationException</b> if executing <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfRunning_() {
 		if (Running_) throw new InvalidOperationException("Must be before or after Run.");
 	}
 
 	/// <summary>
-	/// Throws InvalidOperationException if not executing <see cref="Run"/>.
+	/// Throws <b>InvalidOperationException</b> if not executing <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfNotRunning_() {
 		if (!Running_) throw new InvalidOperationException("Cannot be before or after Run.");
@@ -634,7 +634,7 @@ class TriggerHookContext : WFCache {
 
 	/// <summary>
 	/// Used with <see cref="trigger"/>.
-	/// Can be 0 or one of TriggerActionThreads.c_ constants.
+	/// Can be 0 or one of <b>TriggerActionThreads.c_</b> constants.
 	/// </summary>
 	public int muteMod;
 
@@ -738,7 +738,7 @@ class TriggerHookContext : WFCache {
 
 	/// <summary>
 	/// Called before processing each keyboard hook event.
-	/// Updates Mod, ModL, ModR, IsThisKeyMod. They are used by hotkey and autotext triggers.
+	/// Updates <b>Mod</b>, <b>ModL</b>, <b>ModR</b>, <b>IsThisKeyMod</b>. They are used by hotkey and autotext triggers.
 	/// </summary>
 	public void InitMod(HookData.Keyboard k) {
 		KMod modL = 0, modR = 0;

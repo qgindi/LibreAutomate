@@ -126,7 +126,7 @@ public record struct ColorInt {
 	public override string ToString() => "#" + argb.ToString("X8");
 	
 	/// <summary>
-	/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
+	/// Converts color from ARGB (<c>0xAARRGGBB</c>) to ABGR (<c>0xAABBGGRR</c>) or vice versa (swaps the red and blue bytes).
 	/// ARGB is used in .NET, GDI+ and HTML/CSS.
 	/// ABGR is used by most Windows API; aka <b>COLORREF</b>.
 	/// </summary>
@@ -141,7 +141,7 @@ public record struct ColorInt {
 	///// Returns new color. Does not modify this variable.
 	///// </summary>
 	///// <param name="n">The luminance in units of 0.1 percent of the range (which depends on <i>totalRange</i>). Can be from -1000 to 1000.</param>
-	///// <param name="totalRange">If <c>true</c>, <i>n</i> is in whole luminance range (from minimal to maximal possible). If <c>false</c>, n is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
+	///// <param name="totalRange">If <c>true</c>, <i>n</i> is in whole luminance range (from minimal to maximal possible). If <c>false</c>, <i>n</i> is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
 	///// <remarks>
 	///// Calls API <msdn>ColorAdjustLuma</msdn>.
 	///// Does not change hue and saturation. Does not use alpha.

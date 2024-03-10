@@ -45,7 +45,7 @@ public unsafe class elmFinder {
 	
 	/// <summary>
 	/// Set this when you need only some property of the UI element (name, etc) and not the UI element itself.
-	/// The value is a character like with <see cref="elm.GetProperties"/>, for example <c>'n'</c> for Name. Use <c>'-'</c> if you don't need any property.
+	/// The value is a character like with <see cref="elm.GetProperties"/>, for example <c>'n'</c> for <b>Name</b>. Use <c>'-'</c> if you don't need any property.
 	/// </summary>
 	/// <exception cref="ArgumentException">Used parameter <i>also</i>, <i>navig</i> or <i>next</i>.</exception>
 	public char ResultGetProperty {
@@ -121,7 +121,7 @@ public unsafe class elmFinder {
 	/// <param name="navig">If not <c>null</c>, after finding the specified UI element will call <see cref="elm.Navigate"/> with this string and use its result instead of the found element.</param>
 	/// <exception cref="ArgumentException"><i>flags</i> contains <b>UIA</b> or <b>ClientArea</b> when appending (only the first finder can have these flags).</exception>
 	/// <remarks>
-	/// To create code for this function, use dialog "Find UI element".
+	/// To create code for this function, use tool <b>Find UI element</b>.
 	/// 
 	/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
 	/// 
@@ -135,10 +135,10 @@ public unsafe class elmFinder {
 	/// 
 	/// Can have a prefix:
 	/// - <c>"web:"</c> - search only in the visible web page, not in whole window. Example: <c>"web:LINK"</c>.\
-	///   Supports Firefox, Chrome, Internet Explorer (IE) and apps that use same code (Edge, Opera...). With other windows, searches in the first found visible UI element that has DOCUMENT role.\
+	///   Supports Firefox, Chrome, Internet Explorer (IE) and apps that use same code (Edge, Opera...). With other windows, searches in the first found visible UI element that has <b>DOCUMENT</b> role.\
 	///   Tip: To search only NOT in web pages, use <i>prop</i> <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
-	/// - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If <i>w</i> window class name starts with "Mozilla", can be used <c>"web:"</c> instead.
-	/// - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If <i>w</i> window class name starts with "Chrome", can be used <c>"web:"</c> instead.
+	/// - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If <i>w</i> window class name starts with <c>"Mozilla"</c>, can be used <c>"web:"</c> instead.
+	/// - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If <i>w</i> window class name starts with <c>"Chrome"</c>, can be used <c>"web:"</c> instead.
 	/// 
 	/// <note>Chrome web page UI elements normally are disabled (don't exist). Use prefix <c>"web:"</c> or <c>"chrome:"</c> to enable.</note>
 	/// 
@@ -164,7 +164,7 @@ public unsafe class elmFinder {
 	/// - <c>"rect"</c> - <see cref="elm.GetRect(out RECT, bool)"/> with <i>raw</i> <c>true</c>. Can be specified left, top, width and/or height, using <see cref="RECT.ToString"/> format.\
 	///   Example: <c>"rect={L=1155 T=1182 W=132 H=13}"</c>.
 	///   Example: <c>"rect={W=132 T=1182}"</c>.
-	///   The L T coordinates are relative to the primary screen.
+	///   The <c>L T</c> coordinates are relative to the primary screen.
 	/// - <c>"level"</c> - level (see <see cref="elm.Level"/>) at which the UI element can be found. Can be exact level, or minimal and maximal level separated by space.\
 	///   The default value is 0 1000.
 	/// - <c>"item"</c> - <see cref="elm.Item"/>.
@@ -174,7 +174,7 @@ public unsafe class elmFinder {
 	/// - <c>"uiaid"</c> - <see cref="elm.UiaId"/>.
 	/// - <c>"uiacn"</c> - <see cref="elm.UiaCN"/>.
 	/// - <c>"maxcc"</c> - when searching, skip children of UI elements that have more than this number of direct children. Default 10000, min 1, max 1000000.\
-	///   It can make faster. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
+	///   It can make faster. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc <b>TABLE</b> has one billion children.
 	/// - <c>"notin"</c> - when searching, skip children of UI elements that have these roles. It can make faster.\
 	///   Example: <c>"notin=TREE,LIST,TOOLBAR"</c>.\
 	///   Roles in the list must be separated with <c>","</c> or <c>", "</c>. Case-sensitive, not wildcard. See also: <see cref="EFFlags.MenuToo"/>.
@@ -262,17 +262,17 @@ public unsafe class elmFinder {
 	/// <exception cref="AuWndException">Invalid window handle (0 or closed). See also <see cref="In(wnd)"/>.</exception>
 	/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 	/// <remarks>
-	/// To create code for this function, use dialog "Find UI element".
+	/// To create code for this function, use tool <b>Find UI element</b>.
 	/// 
 	/// More info in <see cref="elm"/> topic.
 	/// </remarks>
 	/// <example>
-	/// Find link "Example" in web page, and click. Wait max 5 s. Throw <b>NotFoundException</b> if not found.
+	/// Find link <c>"Example"</c> in web page, and click. Wait max 5 s. Throw <b>NotFoundException</b> if not found.
 	/// <code><![CDATA[
 	/// var w = wnd.find(0, "* Chrome");
 	/// w.Elm["web:LINK", "Example"].Find(5).Invoke();
 	/// ]]></code>
-	/// Try to find link "Example" in web page. Return if not found. Click if found.
+	/// Try to find link <c>"Example"</c> in web page. Return if not found. Click if found.
 	/// <code><![CDATA[
 	/// var w = wnd.find(0, "* Chrome");
 	/// var e = w.Elm["web:LINK", "Example"].Find();

@@ -35,7 +35,7 @@ namespace Au.More {
 		/// <param name="w">Window or control.</param>
 		/// <param name="r">Rectangle in <i>w</i> client area coordinates. If <c>null</c>, uses <c>w.ClientRect</c>.</param>
 		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
-		/// <exception cref="ArgumentException">The rectangle is empty or does not intercect with the window's client area.</exception>
+		/// <exception cref="ArgumentException">The rectangle is empty or does not intersect with the window's client area.</exception>
 		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
 		/// If <i>flags</i> contains <b>WindowDC</b> (default) or <b>PrintWindow</b>:
@@ -51,7 +51,7 @@ namespace Au.More {
 		/// <summary>
 		/// Gets pixel colors from a rectangle in screen.
 		/// </summary>
-		/// <returns>2-dimensional array [row, column] containing pixel colors in 0xAARRGGBB format. Alpha 0xFF.</returns>
+		/// <returns>2-dimensional array <c>[row, column]</c> containing pixel colors in <c>0xAARRGGBB</c> format. Alpha <c>0xFF</c>.</returns>
 		/// <param name="r">Rectangle in screen.</param>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
@@ -71,7 +71,7 @@ namespace Au.More {
 		/// <summary>
 		/// Gets pixel colors from a rectangle in window client area.
 		/// </summary>
-		/// <returns>2-dimensional array [row, column] containing pixel colors in 0xAARRGGBB format. Alpha 0xFF.</returns>
+		/// <returns>2-dimensional array <c>[row, column]</c> containing pixel colors in <c>0xAARRGGBB</c> format. Alpha <c>0xFF</c>.</returns>
 		/// <inheritdoc cref="Image(wnd, RECT?, CIFlags)"/>
 		public static uint[,] Pixels(wnd w, RECT? r = null, CIFlags flags = CIFlags.WindowDC) {
 			using var c = new CaptureScreenImage();
@@ -114,7 +114,7 @@ namespace Au.More {
 		/// <param name="result">Receives results.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">A window to minimize temporarily.</param>
-		/// <param name="wCapture">A window to capture immediately instead of waiting for F3 key. Used only with a "get window pixels" flag.</param>
+		/// <param name="wCapture">A window to capture immediately instead of waiting for <c>F3</c> key. Used only with a "get window pixels" flag.</param>
 		/// <remarks>
 		/// Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
 		/// 
@@ -282,7 +282,7 @@ namespace Au.More {
 
 			public CIUResult Result;
 
-			/// <returns>0 Cancel, 1 OK, 2 Retry.</returns>
+			/// <returns>0 <b>Cancel</b>, 1 <b>OK</b>, 2 <b>Retry</b>.</returns>
 			public int Show(Bitmap img, CIUFlags flags, RECT r) {
 				_img = img;
 				_flags = flags;
@@ -508,9 +508,9 @@ namespace Au.More {
 		#region other
 
 		/// <summary>
-		/// UI for capturing a rectangle, point or/and window on screen with Shift key.
+		/// UI for capturing a rectangle, point or/and window on screen with <c>Shift</c> key.
 		/// </summary>
-		/// <returns><c>true</c> if captured, <c>false</c> if pressed Esc.</returns>
+		/// <returns><c>true</c> if captured, <c>false</c> if pressed <c>Esc</c>.</returns>
 		/// <param name="result"></param>
 		/// <param name="type"></param>
 		/// <param name="rectInClient">Get rectangle in window client area.</param>
@@ -773,7 +773,7 @@ namespace Au.More {
 		public uint* Pixels => _pixels;
 
 		/// <summary>
-		/// Copies pixels of the captured image to new 1-D array.
+		/// Copies pixels of the captured image to new 1D array.
 		/// </summary>
 		[SkipLocalsInit]
 		public uint[] ToArray1D() {
@@ -783,7 +783,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Copies pixels of the captured image to new 2-D array [row, column].
+		/// Copies pixels of the captured image to new 2D array <c>[row, column]</c>.
 		/// </summary>
 		public uint[,] ToArray2D() {
 			var a = new uint[_height, _width];

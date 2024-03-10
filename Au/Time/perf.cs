@@ -16,7 +16,7 @@ namespace Au {
 		/// <remarks>
 		/// This function is used to measure time differences with 1 microsecond precision, like <c>var t1=perf.mcs; ... var t2=perf.mcs; var diff=t2-t1;</c>.
 		/// Independent of computer clock time changes.
-		/// MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
+		/// See also: <msdn>Acquiring high-resolution time stamps</msdn>.
 		/// </remarks>
 		/// <seealso cref="perf"/>
 		public static long mcs { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMCS); } }
@@ -263,7 +263,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// If <c>true</c>, times of each new First/Next/Next... measurement are added to previous measurement times.
+		/// If <c>true</c>, times of each new <b>First</b>/<b>Next</b>/<b>Next</b>... measurement are added to previous measurement times.
 		/// Finally you can call <see cref="write"/> or <see cref="toString"/> to get the sums.
 		/// Usually used to measure code in loops. See example.
 		/// </summary>
@@ -354,7 +354,7 @@ namespace Au {
 		/// <remarks>
 		/// Code speed measurements often are misleading because of variable CPU speed. Most CPU don't run at full speed when not actively used.
 		/// 
-		/// You can make CPU speed constant in Control Panel -> Power Options -> ... Advanced -> Processor power management -> Minimum or maximum power state.
+		/// You can make CPU speed constant in <b>Control Panel > Power Options > ... Advanced > Processor power management > Minimum or maximum power state</b>.
 		/// There are programs that show current CPU speed. For example HWMonitor.
 		/// </remarks>
 		public static void cpu(int timeMilliseconds = 200) {

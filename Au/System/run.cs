@@ -49,7 +49,7 @@ namespace Au {
 		/// - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
 		/// - Shell object's <b>ITEMIDLIST</b> like <c>":: ITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="folders.shell"/>. Can be used to open virtual folders and items like Control Panel.
 		/// - Shell object's parsing name, like <c>@"shell:::{CLSID}"</c> or <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>. Can be used to open virtual folders and items like Control Panel.
-		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Example: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>. To discover the string use hotkey Ctrl+Shift+Q or function <see cref="WndUtil.GetWindowsStoreAppId"/> or Google.
+		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Example: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>. To discover the string use hotkey <c>Ctrl+Shift+Q</c> or function <see cref="WndUtil.GetWindowsStoreAppId"/> or Google.
 		/// - To open a Windows Settings page can be used <google>ms-settings</google>, like <c>"ms-settings:display"</c>. To open Settings use <c>"ms-settings:"</c>.
 		/// 
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="pathname.expand"/>.
@@ -440,7 +440,7 @@ namespace Au.Types {
 		/// <summary>
 		/// If this process runs as administrator, run new process as administrator too.
 		/// Without this flag, if this process runs as administrator:
-		/// <br/>• Starts new process as non-administrator from the shell process (explorer.exe).
+		/// <br/>• Starts new process as non-administrator from the shell process (<c>explorer.exe</c>).
 		/// <br/>• If it fails (for example if shell process isn't running), calls <see cref="print.warning"/> and starts new process as administrator.
 		/// <br/>• The new process does not inherit environment variables of this process.
 		/// </summary>

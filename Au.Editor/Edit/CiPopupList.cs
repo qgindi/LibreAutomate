@@ -9,7 +9,7 @@ class CiPopupList {
 	DockPanel _panel;
 	KTreeView _tv;
 	StackPanel _tb;
-	
+
 	SciCode _doc;
 	CiCompletion _compl;
 	List<CiComplItem> _a;
@@ -21,17 +21,17 @@ class CiPopupList {
 	List<string> _groups;
 	CiPopupText _textPopup;
 	timer _tpTimer;
-	
+
 	public KPopup PopupWindow => _popup;
-	
+
 	///// <summary>
 	///// The child list control.
 	///// </summary>
 	//public KTreeView Control => _tv;
-	
+
 	public CiPopupList(CiCompletion compl) {
 		_compl = compl;
-		
+
 		_tv = new KTreeView {
 			ItemMarginLeft = 20,
 			//HotTrack = true, //no
@@ -40,29 +40,29 @@ class CiPopupList {
 		};
 		_tv.ItemActivated += _tv_ItemActivated;
 		_tv.SelectedSingle += _tv_SelectedSingle;
-		
+
 		_tb = new StackPanel { Background = SystemColors.ControlBrush };
-		
+
 		var cstyle = Application.Current.FindResource(ToolBar.CheckBoxStyleKey) as Style;
 		var bstyle = Application.Current.FindResource(ToolBar.ButtonStyleKey) as Style;
-		
+
 		var kindNames = CiUtil.ItemKindNames;
 		_kindButtons = new CheckBox[kindNames.Length];
 		for (int i = 0; i < kindNames.Length; i++) {
 			_AddButton(_kindButtons[i] = new(), kindNames[i], CiComplItem.ImageResource((CiItemKind)i), _KindButton_Click);
 		}
-		
+
 		_tb.Children.Add(new Separator());
-		
+
 		_AddButton(_groupButton = new(), "Group by namespace or inheritance", "resources/ci/groupby.xaml", _GroupButton_Click);
 		if (App.Settings.ci_complGroup) _groupButton.IsChecked = true;
-		
+
 		_AddButton(_unimportedButton = new(), "Show more types or extension methods (Ctrl+Space)", "resources/ci/expandscope.xaml", _UnimportedButton_Click);
-		
+
 		//var options = new Button();
 		//options.Click += _Options_Click;
 		//_AddButton(options, "Options", "resources/images/settingsgroup_16x.xaml");
-		
+
 		void _AddButton(ButtonBase b, string text, string image, RoutedEventHandler click) {
 			b.Style = (b is CheckBox) ? cstyle : bstyle;
 			b.Content = ResourceUtil.GetWpfImageElement(image);
@@ -72,7 +72,7 @@ class CiPopupList {
 			if (click != null) b.Click += click;
 			_tb.Children.Add(b);
 		}
-		
+
 		_panel = new DockPanel { Background = SystemColors.WindowBrush };
 		DockPanel.SetDock(_tb, Dock.Left);
 		_panel.Children.Add(_tb);
@@ -84,11 +84,11 @@ class CiPopupList {
 			Name = "Ci.Completion",
 			WindowName = "Au completion list",
 		};
-		
+
 		_textPopup = new CiPopupText(CiPopupText.UsedBy.PopupList);
 		_tpTimer = new timer(_ShowTextPopup);
 	}
-	
+
 	private void _KindButton_Click(object sender, RoutedEventArgs e) {
 		int kindsChecked = 0, kindsVisible = 0;
 		for (int i = 0; i < _kindButtons.Length; i++) {
@@ -104,7 +104,7 @@ class CiPopupList {
 		}
 		UpdateVisibleItems();
 	}
-	
+
 	private void _GroupButton_Click(object sender, RoutedEventArgs e) {
 		_groupsEnabled = (sender as CheckBox).IsChecked == true && _groups != null;
 		_SortAndSetControlItems();
@@ -112,21 +112,21 @@ class CiPopupList {
 		_tv.Redraw(true);
 		App.Settings.ci_complGroup = _groupButton.IsChecked == true;
 	}
-	
+
 	private void _UnimportedButton_Click(object sender, RoutedEventArgs e) {
 		App.Dispatcher.InvokeAsync(() => _compl.ShowList());
 	}
-	
+
 	//private void _Options_Click(object sender, RoutedEventArgs e) {
 	//	var m = new popupMenu();
 	//	//m[""] = o => ;
 	//}
-	
+
 	private void _tv_ItemActivated(TVItemEventArgs e) {
 		_compl.Commit(_doc, _av[e.Index]);
 		Hide();
 	}
-	
+
 	private void _tv_SelectedSingle(object sender, int index) {
 		if ((uint)index < _av.Count) {
 			var ci = _av[index];
@@ -140,7 +140,7 @@ class CiPopupList {
 			_tpTimer.Stop();
 		}
 	}
-	
+
 	void _ShowTextPopup(timer t) {
 		var ci = t.Tag as CiComplItem;
 		var text = _compl.GetDescriptionDoc(ci, 0);
@@ -149,28 +149,28 @@ class CiPopupList {
 		_textPopup.OnLinkClick = (ph, e) => ph.Text = _compl.GetDescriptionDoc(ci, e.ToInt(1));
 		_textPopup.Show(Panels.Editor.ActiveDoc, _popup.Hwnd.Rect, Dock.Right);
 	}
-	
+
 	void _SortAndSetControlItems() {
 		_av.Sort((c1, c2) => {
 			int diff = c1.moveDown - c2.moveDown;
 			if (diff != 0) return diff;
-			
+
 			if (_groupsEnabled) {
 				diff = c1.group - c2.group;
 				if (diff != 0) return diff;
-				
+
 				if (_groups[c1.group].NE()) {
 					CiItemKind k1 = c1.kind, k2 = c2.kind;
-					
+
 					//group Enum and Enum.Member together
 					if (k1 == CiItemKind.EnumMember) k1 = CiItemKind.Enum;
 					if (k2 == CiItemKind.EnumMember) k2 = CiItemKind.Enum;
-					
+
 					diff = k1 - k2;
 					if (diff != 0) return diff;
 				}
 			}
-			
+
 			int r = string.Compare(c1.ci.SortText, c2.ci.SortText, StringComparison.OrdinalIgnoreCase);
 			if (r == 0) {
 				r = CiSnippets.Compare(c1, c2);
@@ -178,23 +178,23 @@ class CiPopupList {
 			}
 			return r;
 		});
-		
+
 		CiComplItem prev = null;
 		foreach (var v in _av) {
 			var group = _groupsEnabled && (prev == null || v.group != prev.group) ? _groups[v.group] : null;
 			v.SetDisplayText(group);
 			prev = v;
 		}
-		
+
 		_tv.SetItems(_av);
 	}
-	
+
 	public void UpdateVisibleItems() {
 		int n1 = 0; foreach (var v in _a) if (v.hidden == 0) n1++;
 		_av = new(n1);
 		foreach (var v in _a) if (v.hidden == 0) _av.Add(v);
 		_SortAndSetControlItems();
-		
+
 		//Occasionally app used to crash without an error UI when typing a word and should show completions.
 		//	Windows event log shows exception with call stack, which shows that _av.Select called with _av=null.
 		//	The reason (reproduced):
@@ -202,36 +202,39 @@ class CiPopupList {
 		//		WPF raises an UIA event and waits + dispatches messages. During that time is called Hide(). It sets _av=null.
 		//	Workaround: return now if _aw null. Workaround 2: replace the WPF scrollbar with native scrollbar. Both done.
 		if (_av == null) return;
-		
-		_compl.SelectBestMatch(_av.Select(o => o.ci), _groupsEnabled); //pass items sorted like in the visible list
-		
-		int kinds = 0;
-		foreach (var v in _a) if ((v.hidden & ~CiComplItemHiddenBy.Kind) == 0) kinds |= 1 << (int)v.kind;
-		for (int i = 0; i < _kindButtons.Length; i++) _kindButtons[i].Visibility = 0 != (kinds & (1 << i)) ? Visibility.Visible : Visibility.Collapsed;
+
+		try {
+			_compl.SelectBestMatch(_av.Select(o => o.ci), _groupsEnabled); //pass items sorted like in the visible list
+
+			int kinds = 0;
+			foreach (var v in _a) if ((v.hidden & ~CiComplItemHiddenBy.Kind) == 0) kinds |= 1 << (int)v.kind;
+			for (int i = 0; i < _kindButtons.Length; i++) _kindButtons[i].Visibility = 0 != (kinds & (1 << i)) ? Visibility.Visible : Visibility.Collapsed;
+		}
+		catch (Exception e1) { print.it(e1, "\r\n", _av, _a); } //TODO
 	}
-	
+
 	public void Show(SciCode doc, int position, List<CiComplItem> a, List<string> groups) {
 		if (a.NE_()) {
 			Hide();
 			return;
 		}
-		
+
 		_a = a;
 		_groups = groups;
 		_groupsEnabled = _groups != null && _groupButton.IsChecked == true;
 		_doc = doc;
-		
+
 		foreach (var v in _kindButtons) v.IsChecked = false;
 		_groupButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		_unimportedButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		UpdateVisibleItems();
-		
+
 		var r = CiUtil.GetCaretRectFromPos(_doc, position, inScreen: true);
 		r.left -= Dpi.Scale(50, _doc);
-		
+
 		_popup.ShowByRect(_doc, Dock.Bottom, r);
 	}
-	
+
 	public void Hide() {
 		//Debug_.PrintIf(_debug, "reenter, " + new StackTrace());
 		if (_a == null) return;
@@ -243,7 +246,7 @@ class CiPopupList {
 		_av = null;
 		_groups = null;
 	}
-	
+
 	public CiComplItem SelectedItem {
 		get {
 			int i = _tv.SelectedIndex;
@@ -255,7 +258,7 @@ class CiPopupList {
 			if (i >= 0) _tv.SelectSingle(i, andFocus: true, scrollTop: true); else _tv.UnselectAll();
 		}
 	}
-	
+
 	public bool OnCmdKey(KKey key) {
 		if (_popup.IsVisible) {
 			switch (key) {
@@ -274,39 +277,39 @@ class CiPopupList {
 		}
 		return false;
 	}
-	
+
 	class _CustomDraw : ITVCustomDraw {
 		CiPopupList _p;
 		TVDrawInfo _cd;
 		GdiTextRenderer _tr;
 		int _textColor;
-		
+
 		public _CustomDraw(CiPopupList list) {
 			_p = list;
 		}
-		
+
 		public void Begin(TVDrawInfo cd, GdiTextRenderer tr) {
 			_cd = cd;
 			_tr = tr;
 			_textColor = Api.GetSysColor(Api.COLOR_WINDOWTEXT);
 		}
-		
+
 		//public bool DrawBackground() {
 		//}
-		
+
 		//public bool DrawCheckbox() {
 		//}
-		
+
 		//public bool DrawImage(System.Drawing.Bitmap image) {
 		//}
-		
+
 		public bool DrawText() {
 			var ci = _cd.item as CiComplItem;
-			
+
 			var s = _cd.item.DisplayText;
 			Range black, green;
 			if (ci.commentOffset == 0) { black = ..s.Length; green = default; } else { black = ..ci.commentOffset; green = ci.commentOffset..; }
-			
+
 			int xEndOfText = 0;
 			int color = ci.moveDown.HasAny(CiComplItemMoveDownBy.Name | CiComplItemMoveDownBy.FilterText) ? 0x808080 : _textColor;
 			_tr.MoveTo(_cd.xText, _cd.yText);
@@ -322,31 +325,31 @@ class CiPopupList {
 			} else {
 				_tr.DrawText(s, color, black);
 			}
-			
+
 			if (ci.moveDown.Has(CiComplItemMoveDownBy.Obsolete)) xEndOfText = _tr.GetCurrentPosition().x;
-			
+
 			if (ci.commentOffset > 0) _tr.DrawText(s, 0x00A040, green);
-			
+
 			//draw red line over obsolete items
 			if (ci.moveDown.Has(CiComplItemMoveDownBy.Obsolete)) {
 				int vCenter = _cd.rect.top + _cd.rect.Height / 2;
 				_cd.graphics.DrawLine(System.Drawing.Pens.OrangeRed, _cd.xText, vCenter, xEndOfText, vCenter);
 			}
-			
+
 			return true;
 		}
-		
+
 		public void DrawMarginLeft() {
 			var ci = _cd.item as CiComplItem;
 			var g = _cd.graphics;
 			var r = _cd.rect;
-			
+
 			//draw images: access, static/abstract
 			var cxy = _cd.imageRect.Width;
 			var ri = new System.Drawing.Rectangle(_cd.imageRect.left - cxy, _cd.imageRect.top + cxy / 4, cxy, cxy);
 			if (ci.AccessImageSource is string s1) g.DrawImage(IconImageCache.Common.Get(s1, _cd.dpi, isImage: true), ri);
 			if (ci.ModifierImageSource is string s2) g.DrawImage(IconImageCache.Common.Get(s2, _cd.dpi, isImage: true), ri);
-			
+
 			//draw group separator
 			if (_cd.index > 0) {
 				var cip = _p._av[_cd.index - 1];
@@ -355,10 +358,10 @@ class CiPopupList {
 				}
 			}
 		}
-		
+
 		//public void DrawMarginRight() {
 		//}
-		
+
 		//public void End() {
 		//}
 	}

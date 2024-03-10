@@ -80,7 +80,7 @@ namespace Au.More {
 		public string FileNameLabel { private get; set; }
 
 		/// <summary>
-		/// Sets the OK button label.
+		/// Sets the <b>OK</b> button label.
 		/// </summary>
 		public string OkButtonLabel { private get; set; }
 
@@ -165,7 +165,7 @@ namespace Au.More {
 		/// <param name="onlyFilesystem">The dialog allows to select only file system items (files, folders), not other shell items or URLs. Default <c>true</c>. If <c>false</c>, other shell items are returned like <c>":: ITEMIDLIST"</c>; see <see cref="Pidl"/>.</param>
 		/// <param name="fileMustExist">The dialog can return only existing items. Default <c>true</c>.</param>
 		/// <param name="previewPane">Display the preview pane.</param>
-		/// <returns><c>true</c> on OK, <c>false</c> on Cancel or error.</returns>
+		/// <returns><c>true</c> on <b>OK</b>, <c>false</c> on <b>Cancel</b> or error.</returns>
 		public bool ShowOpen(out string result, AnyWnd owner = default, bool selectFolder = false, bool onlyFilesystem = true, bool fileMustExist = true, bool previewPane = false) {
 			result = _ShowOpen(owner, false, selectFolder, onlyFilesystem, fileMustExist, previewPane) as string;
 			return result != null;
@@ -188,7 +188,7 @@ namespace Au.More {
 		/// <param name="owner">Owner window. Optional.</param>
 		/// <param name="overwritePrompt">If the selected file already exists, show a message box. Default <c>true</c>.</param>
 		/// <param name="initFile">The initially selected file. Its name is displayed in the file name edit box, and the containing folder is opened. This would generally be used when the application is saving a file that already exists. For new files use <see cref="FileNameText"/>.</param>
-		/// <returns><c>true</c> on OK, <c>false</c> on Cancel or error.</returns>
+		/// <returns><c>true</c> on <b>OK</b>, <c>false</c> on <b>Cancel</b> or error.</returns>
 		public bool ShowSave(out string result, AnyWnd owner = default, bool overwritePrompt = true, string initFile = null) {
 			//default FOS_OVERWRITEPROMPT, FOS_NOCHANGEDIR, FOS_PATHMUSTEXIST, FOS_NOREADONLYRETURN
 			var f = _Api.FOS.FOS_NOCHANGEDIR;
@@ -398,7 +398,7 @@ namespace Au.Types {
 		/// <summary>Do not check for situations that would prevent an application from opening the selected file, such as sharing violations or access denied errors.</summary>
 		NoValidateAccess = 0x100,
 
-		///// <summary>The user can enter a path that does not exist, like C:\does not exist\file.txt.</summary>
+		///// <summary>The user can enter a path that does not exist, like <c>C:\does not exist\file.txt</c>.</summary>
 		//NoValidatePath = 0x800, //does not work. Always validates.
 
 		/// <summary>Shortcuts should not be treated as their target items, allowing an application to open a <c>.lnk</c> file.</summary>

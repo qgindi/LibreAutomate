@@ -78,6 +78,9 @@ record AppSettings : JSettings {
 	}
 	public font_t font_output, font_find;
 	
+	//Options -> Compile, run
+	public bool? comp_printCompiled = false;
+	
 	//Options -> Templates
 	public int templ_use;
 	//public int templ_flags;

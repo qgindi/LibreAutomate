@@ -167,7 +167,7 @@ public sealed unsafe class consoleProcess : IDisposable {
 	///
 	/// When <b>IsLine</b> is <c>false</c>, <i>s</i> text can be either a prompt (incomplete line that asks for user input) or an incomplete line/prompt text (the remainder will be retrieved later). Your script should somehow distinguish it. If it's a known prompt, let it call <see cref="Write"/>. Else call <see cref="Wait"/>. See example.
 	///
-	/// It's impossible to automatically distinguish a prompt from a partial line or partial prompt. The console program can write line text in parts, possibly with delays inbetween. Or it can write a prompt text and wait for user input. Also this function may receive line text in parts because of limited buffer size etc.
+	/// It's impossible to automatically distinguish a prompt from a partial line or partial prompt. The console program can write line text in parts, possibly with delays in between. Or it can write a prompt text and wait for user input. Also this function may receive line text in parts because of limited buffer size etc.
 	/// </remarks>
 	/// <inheritdoc cref="consoleProcess" path="/example"/>
 	public bool Read(out string s) => _Read(out s, false);
@@ -341,7 +341,7 @@ public sealed unsafe class consoleProcess : IDisposable {
 	}
 	
 	/// <summary>
-	/// Sends text to the console's input. Also sends character <c>'\n'</c> (like key Enter), unless <i>text</i> ends with <c>'\n'</c> or <i>noNL</i> is <c>true</c>.
+	/// Sends text to the console's input. Also sends character <c>'\n'</c> (like key <c>Enter</c>), unless <i>text</i> ends with <c>'\n'</c> or <i>noNL</i> is <c>true</c>.
 	/// </summary>
 	/// <param name="text"></param>
 	/// <param name="noNL">Don't append character <c>'\n'</c> when <i>text</i> does not end with <c>'\n'</c>.</param>

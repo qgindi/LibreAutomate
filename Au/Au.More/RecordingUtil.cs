@@ -15,7 +15,7 @@
 		/// </param>
 		/// <param name="withSleepTimes">
 		/// <i>recorded</i> also contains sleep times (milliseconds) alternating with distances.
-		/// It must start with a sleep time. Example: {time1, dist1, time2, dist2}. Another example: {time1, dist1, time2, dist2, time3}. This is invalid: {dist1, time1, dist2, time2}.
+		/// It must start with a sleep time. Example: <c>{time1, dist1, time2, dist2}</c>. Another example: <c>{time1, dist1, time2, dist2, time3}</c>. This is invalid: <c>{dist1, time1, dist2, time2}</c>.
 		/// </param>
 		public static string MouseToString(IEnumerable<uint> recorded, bool withSleepTimes) {
 			var a = new List<byte>();

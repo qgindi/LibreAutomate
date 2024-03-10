@@ -31,7 +31,7 @@ public sealed class IconImageCache : IDisposable {
 		}
 		
 		/// <summary>
-		/// If the index file for this DPI still not loaded, loads it into dNameHash.
+		/// If the index file for this DPI still not loaded, loads it into <b>dNameHash</b>.
 		/// </summary>
 		public void LoadIndexFile() {
 			if (dNameHash == null && filesystem.exists(indexFile, useRawPath: true)) {
@@ -124,7 +124,7 @@ public sealed class IconImageCache : IDisposable {
 	/// <param name="dpi">DPI of window that will display the image. See <see cref="Dpi"/>.</param>
 	/// <param name="isImage">
 	/// <c>false</c> - get file/folder/filetype/url/etc icon with <see cref="icon.of"/>. If <i>imageSource</i> is relative path of a <c>.cs</c> file, gets its custom icon as image; returns <c>null</c> if no custom icon or if editor isn't running.
-	/// <c>true</c> - load image from xaml/png/etc file, database, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like <c>"*Pack.Icon color"</c> (see menu Tools -> Icons).
+	/// <c>true</c> - load image from xaml/png/etc file, database, resource or string with <see cref="ImageUtil.LoadGdipBitmap"/> or <see cref="ImageUtil.LoadWpfImageElement"/>. Can be icon name like <c>"*Pack.Icon color"</c> (see menu <b>Tools > Icons</b>).
 	/// 
 	/// To detect whether a string is an image, call <see cref="ImageUtil.HasImageOrResourcePrefix"/>; if it returns <c>true</c>, it is image.
 	/// </param>

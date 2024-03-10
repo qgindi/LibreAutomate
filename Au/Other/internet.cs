@@ -55,7 +55,7 @@ namespace Au {
 		/// 
 		/// Sets these properties and default headers:
 		/// - <see cref="SocketsHttpHandler.AutomaticDecompression"/> = <b>All</b>.
-		/// - User-Agent: Au.
+		/// - <c>User-Agent: Au</c>.
 		/// 
 		/// <b>internet.http</b> makes easier to discover and use internet get/post/etc functions when using this library. You can instead create an <b>HttpClient</b> instance and use its functions in the same way. See the second example. Use the same <b>HttpClient</b> instance when making multiple get/post/etc requests.
 		/// </remarks>
@@ -209,7 +209,7 @@ namespace Au.Types {
 		/// <param name="t"></param>
 		/// <param name="name">Field name.</param>
 		/// <param name="file">File path.</param>
-		/// <param name="contentType">Content-Type header, for example <c>"image/png"</c>.</param>
+		/// <param name="contentType"><c>Content-Type</c> header, for example <c>"image/png"</c>.</param>
 		/// <param name="fileName">Filename. If <c>null</c>, gets from <i>file</i>.</param>
 		/// <returns>This.</returns>
 		/// <remarks>
@@ -263,7 +263,7 @@ namespace Au.Types {
 		/// <c>null</c> or request headers like <c>["name1: value1", "name2: value2"]</c>.
 		/// Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.
 		/// </param>
-		/// <param name="auth">String like "username:password" for basic authentication. Adds Authorization header.</param>
+		/// <param name="auth">String like <c>"username:password"</c> for basic authentication. Adds <c>Authorization</c> header.</param>
 		/// <param name="also">Can set more properties for the request.</param>
 		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
 		/// <exception cref="Exception">
@@ -293,7 +293,7 @@ namespace Au.Types {
 		
 		//rejected. This could be used with 'also' parameter, and then could remove 'auth' parameter. But this library is mostly for non-programmers, and should make user code as simple as possible.
 		///// <summary>
-		///// Adds Authorization header for basic authentication.
+		///// Adds <c>Authorization</c> header for basic authentication.
 		///// </summary>
 		//public static void Auth(this HttpRequestMessage t, string user, string password) {
 		//	t.Headers.Add("Authorization", "Basic " + Convert.ToBase64String($"{user}:{password}".ToUTF8()));

@@ -4,30 +4,29 @@ namespace Au.Triggers;
 /// Flags of mouse triggers.
 /// </summary>
 [Flags]
-public enum TMFlags : byte
-{
+public enum TMFlags : byte {
 	/// <summary>
 	/// Allow other apps to receive the mouse button or wheel message too.
 	/// Used only with the click and wheel triggers.
 	/// To receive and block mouse messages is used a low-level hook. Other hooks may receive blocked messages or not, depending on when they were set. 
 	/// </summary>
 	ShareEvent = 1,
-
+	
 	/// <summary>
 	/// Run the action when the mouse button and modifier keys are released.
 	/// </summary>
 	ButtonModUp = 2,
-
+	
 	/// <summary>
 	/// The trigger works only with left-side modifier keys.
 	/// </summary>
 	LeftMod = 4,
-
+	
 	/// <summary>
 	/// The trigger works only with right-side modifier keys.
 	/// </summary>
 	RightMod = 8,
-
+	
 	//rejected. We always mod-off and eat auto-repeated and up events with a temp hook. Because OS does not disable auto-repeating like for hotkeys.
 	///// <summary>
 	///// Don't release modifier keys.
@@ -39,15 +38,14 @@ public enum TMFlags : byte
 /// <summary>
 /// Represents a mouse trigger.
 /// </summary>
-public class MouseTrigger : ActionTrigger
-{
+public class MouseTrigger : ActionTrigger {
 	internal readonly KMod modMasked, modMask;
 	readonly TMFlags _flags;
 	readonly TMKind _kind;
 	readonly byte _data;
 	readonly screen _screen;
 	readonly string _paramsString;
-
+	
 	internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action,
 		TMKind kind, byte data, KMod mod, KMod modAny, TMFlags flags, screen screen,
 		string paramsString, (string, int) source) : base(triggers, action, true, source) {
@@ -60,37 +58,37 @@ public class MouseTrigger : ActionTrigger
 		_screen = screen;
 		_paramsString = paramsString;
 	}
-
+	
 	internal override void Run(TriggerArgs args) => RunT(args as MouseTriggerArgs);
-
+	
 	/// <summary>
 	/// Returns <c>"Mouse"</c>.
 	/// </summary>
 	public override string TypeString => "Mouse";
-
+	
 	/// <summary>
 	/// Returns a string containing trigger parameters.
 	/// </summary>
 	public override string ParamsString => _paramsString;
-
+	
 	///
 	public TMKind Kind => _kind;
-
+	
 	///
 	public TMClick Button => _kind == TMKind.Click ? (TMClick)_data : default;
-
+	
 	///
 	public TMWheel Wheel => _kind == TMKind.Wheel ? (TMWheel)_data : default;
-
+	
 	///
 	public TMEdge Edge => _kind == TMKind.Edge ? (TMEdge)_data : default;
-
+	
 	///
 	public TMMove Move => _kind == TMKind.Move ? (TMMove)_data : default;
-
+	
 	///
 	public screen Screen => _screen;
-
+	
 	///
 	public TMFlags Flags => _flags;
 }
@@ -99,15 +97,14 @@ public class MouseTrigger : ActionTrigger
 /// Mouse triggers.
 /// </summary>
 /// <example> See <see cref="ActionTriggers"/>.</example>
-public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
-{
+public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger> {
 	ActionTriggers _triggers;
 	Dictionary<int, ActionTrigger> _d = new Dictionary<int, ActionTrigger>();
-
+	
 	internal MouseTriggers(ActionTriggers triggers) {
 		_triggers = triggers;
 	}
-
+	
 	/// <summary>
 	/// Adds a mouse click trigger.
 	/// </summary>
@@ -129,7 +126,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			_Add(value, TMKind.Click, (byte)button, modKeys, flags, default, button.ToString(), (f_, l_));
 		}
 	}
-
+	
 	/// <summary>
 	/// Adds a mouse wheel trigger.
 	/// </summary>
@@ -139,7 +136,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			_Add(value, TMKind.Wheel, (byte)direction, modKeys, flags, default, direction.ToString(), (f_, l_));
 		}
 	}
-
+	
 	/// <summary>
 	/// Adds a mouse screen edge trigger.
 	/// </summary>
@@ -156,7 +153,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			_Add(value, TMKind.Edge, (byte)edge, modKeys, flags, screen, edge.ToString(), (f_, l_), a1_);
 		}
 	}
-
+	
 	/// <summary>
 	/// Adds a mouse move trigger.
 	/// </summary>
@@ -166,15 +163,15 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			_Add(value, TMKind.Move, (byte)move, modKeys, flags, screen, move.ToString(), (f_, l_), a1_);
 		}
 	}
-
+	
 	MouseTrigger _Add(Action<MouseTriggerArgs> f, TMKind kind, byte data, string modKeys, TMFlags flags, screen screen, string sData, (string, int) source, string a1_ = null) {
 		_triggers.ThrowIfRunning_();
-
+		
 		if (screen.Handle != default) print.warning("screen should be lazy or default");
 		//CONSIDER: store device id or xy, and repair when handle becomes invalid.
-
+		
 		bool noMod = modKeys.NE();
-
+		
 		string ps;
 		using (new StringBuilder_(out var b)) {
 			b.Append(kind.ToString()).Append(' ').Append(sData);
@@ -187,7 +184,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			}
 			ps = b.ToString(); //print.it(ps);
 		}
-
+		
 		KMod mod = 0, modAny = 0;
 		if (noMod) {
 			if (flags.HasAny(kind == TMKind.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
@@ -205,19 +202,19 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 		};
 		return t;
 	}
-
+	
 	static int _DictKey(TMKind kind, byte data) => (data << 8) | (byte)kind;
-
+	
 	/// <summary>
 	/// The last added trigger.
 	/// </summary>
 	public MouseTrigger Last => _lastAdded;
 	MouseTrigger _lastAdded;
-
+	
 	bool ITriggers.HasTriggers => _lastAdded != null;
-
+	
 	internal HooksThread.UsedEvents UsedHookEvents_ { get; private set; }
-
+	
 	void ITriggers.StartStop(bool start) {
 		if (start) {
 		} else {
@@ -225,14 +222,14 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			_eatUp = 0;
 		}
 	}
-
+	
 	internal bool HookProcClickWheel(HookData.Mouse k, TriggerHookContext thc) {
 		//print.it(k.Event, k.pt);
 		Debug.Assert(!k.IsInjectedByAu); //server must ignore
-
+		
 		TMKind kind;
 		byte data;
-
+		
 		if (k.IsButton) {
 			if (k.IsButtonUp) {
 				if (k.Event == _upEvent) {
@@ -252,7 +249,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 				//CONSIDER: _upTimeout.
 			}
 			if (k.Event == _eatUp) _eatUp = 0;
-
+			
 			kind = TMKind.Click;
 			var b = k.Event switch {
 				HookData.MouseEvent.LeftButton => TMClick.Left,
@@ -272,15 +269,15 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			};
 			data = (byte)b;
 		}
-
+		
 		return _HookProc2(thc, false, kind, k.Event, k.pt, data, 0);
 	}
-
+	
 	internal void HookProcEdgeMove(EdgeMoveDetector_.Result d, TriggerHookContext thc) //d not in
 	{
 		TMKind kind;
 		byte data, dataAnyPart;
-
+		
 		if (d.edgeEvent != 0) {
 			kind = TMKind.Edge;
 			data = (byte)d.edgeEvent; dataAnyPart = (byte)d.edgeEventAnyPart;
@@ -288,10 +285,10 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			kind = TMKind.Move;
 			data = (byte)d.moveEvent; dataAnyPart = (byte)d.moveEventAnyPart;
 		}
-
+		
 		_HookProc2(thc, true, kind, HookData.MouseEvent.Move, d.pt, data, dataAnyPart);
 	}
-
+	
 	bool _HookProc2(TriggerHookContext thc, bool isEdgeMove, TMKind kind, HookData.MouseEvent mEvent, POINT pt, byte data, byte dataAnyPart) {
 		var mod = TrigUtil.GetModLR(out var modL, out var modR) | _eatMod;
 		MouseTriggerArgs args = null;
@@ -301,24 +298,24 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			for (; v != null; v = v.next) {
 				var x = v as MouseTrigger;
 				if ((mod & x.modMask) != x.modMasked) continue;
-
+				
 				switch (x.Flags & (TMFlags.LeftMod | TMFlags.RightMod)) {
 				case TMFlags.LeftMod: if (modL != mod) continue; break;
 				case TMFlags.RightMod: if (modR != mod) continue; break;
 				}
-
+				
 				if (isEdgeMove && !x.Screen.IsOfMouse_) {
 					var sh = x.Screen.Now;
 					if (!sh.Rect.Contains(pt)) continue;
 				}
-
+				
 				if (v.DisabledThisOrAll) continue;
-
+				
 				if (args == null) thc.args = args = new MouseTriggerArgs(x, thc.Window, mod); //may need for scope callbacks too
 				else args.Trigger = x;
-
+				
 				if (!x.MatchScopeWindowAndFunc(thc)) continue;
-
+				
 				if (x.action == null) {
 					_ResetUp();
 				} else if (0 != (x.Flags & TMFlags.ButtonModUp) && (mod != 0 || kind == TMKind.Click)) {
@@ -330,14 +327,14 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 					thc.trigger = x;
 					_ResetUp();
 				}
-
+				
 				_eatMod = mod;
 				if (mod != 0) {
 					_SetTempKeybHook();
 					if (thc.trigger != null) thc.muteMod = TriggerActionThreads.c_modRelease;
 					else ThreadPool.QueueUserWorkItem(_ => keys.Internal_.ReleaseModAndDisableModMenu());
 				}
-
+				
 				//print.it(mEvent, pt, mod);
 				if (isEdgeMove || 0 != (x.Flags & TMFlags.ShareEvent)) return false;
 				if (kind == TMKind.Click) _eatUp = mEvent;
@@ -351,7 +348,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 		}
 		return false;
 	}
-
+	
 	//these are used to activate trigger when button and modifiers released
 	MouseTrigger _upTrigger;
 	MouseTriggerArgs _upArgs;
@@ -364,14 +361,14 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	long _keyHookTimeout;
 	//this is used to eat button-up event, regardless when the trigger is activated
 	HookData.MouseEvent _eatUp;
-
+	
 	void _ResetUp() {
 		_upTrigger = null;
 		_upArgs = null;
 		_upEvent = 0;
 		_upMod = 0;
 	}
-
+	
 	void _UnhookTempKeybHook() {
 		if (_keyHook != null) {
 			//print.it(". unhook");
@@ -379,13 +376,13 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			_keyHookTimeout = _keyHook.DontBlockModInOtherHooks_(0);
 		}
 	}
-
+	
 	void _ResetUpAndUnhookTempKeybHook() {
 		_ResetUp();
 		_eatMod = 0;
 		_UnhookTempKeybHook();
 	}
-
+	
 	void _SetTempKeybHook() {
 		//print.it(". hook");
 		if (_keyHook == null) {
@@ -414,54 +411,51 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 		if (!_keyHook.IsSet) _keyHook.Hook();
 		_keyHookTimeout = _keyHook.DontBlockModInOtherHooks_(5000);
 	}
-
+	
 	internal static void JitCompile() {
 		Jit_.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
 		wnd.fromXY(default, WXYFlags.NeedWindow);
 	}
-
+	
 	/// <summary>
-	/// Detects trigger events of types Edge and Move.
+	/// Detects trigger events of types <b>Edge</b> and <b>Move</b>.
 	/// </summary>
 	/// <remarks>
 	/// Used in the hook server, to avoid sending all mouse move events to clients, which would use 2 or more times more CPU, eg 0.9% instead of 0.45%. Tested: raw input uses slightly less CPU.
 	/// </remarks>
-	internal class EdgeMoveDetector_
-	{
+	internal class EdgeMoveDetector_ {
 		int _x, _y; //mouse position. Relative to the primary screen.
 		int _xmin, _ymin, _xmax, _ymax; //min and max possible mouse position in current screen. Relative to the primary screen.
 		_State _prev;
 		int _sens;
 		public Result result;
-
-		internal struct Result
-		{
+		
+		internal struct Result {
 			public POINT pt;
 			public TMEdge edgeEvent, edgeEventAnyPart;
 			public TMMove moveEvent, moveEventAnyPart;
 		}
-
+		
 		/// <summary>
 		/// State data set by previous events.
 		/// </summary>
-		struct _State
-		{
+		struct _State {
 			public int xx, yy; //previous coords
 			public long time; //previous time
-
+			
 			//these used for Move events
 			public int mx1, my1, mx2, my2;
 			public TMMove mDirection;
 			public long mTimeout;
-
+			
 			//these used for Edge events
 			public long eTimeout;
-
+			
 #if DEBUG
 			//public int debug;
 #endif
 		}
-
+		
 		public bool Detect(POINT pt) {
 			//get normal x y. In pt can be outside screen when cursor moved fast and was stopped by a screen edge. Tested: never for click/wheel events.
 			//print.it(pt, mouse.xy);
@@ -473,35 +467,35 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			_y = Math.Clamp(pt.y, _ymin, _ymax);
 			//print.it(pt, _x, _y, r);
 			_sens = scrn.Dpi / 4;
-
+			
 			result = default;
 			result.pt = (_x, _y);
-
+			
 			_Detect();
 			_prev.xx = _x; _prev.yy = _y;
-
+			
 #if DEBUG
 			//print.it(++_prev.debug, edgeEvent, moveEvent, (_x, _y));
 #endif
 			return result.edgeEvent != 0 || result.moveEvent != 0;
 		}
-
+		
 		void _Detect() {
 			if (mouse.isPressed(MButtons.Left | MButtons.Right | MButtons.Middle)) {
 				_prev.mDirection = 0;
 				return;
 			}
-
+			
 			int x = _x, y = _y;
 			if (x == _prev.xx && y == _prev.yy) { /*print.it("same x y");*/ return; }
-
+			
 			long time = perf.ms;
 			int dt = (int)(time - _prev.time);
 			_prev.time = time;
 			if (dt <= 0) return; //never noticed
-
+			
 			//print.it((x, y), mouse.xy, time%10000);
-
+			
 			if (y == _ymin || y == _ymax || x == _xmin || x == _xmax) {
 				_prev.mDirection = 0;
 				if (time < _prev.eTimeout) return; //prevent double trigger when OS sometimes gives strange coords if some hook blocks the event
@@ -526,7 +520,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			} else {
 				if (_prev.mDirection == 0) {
 					if (time < _prev.mTimeout) return;
-
+					
 					int dx = (x - _prev.xx) * 16 / dt, dy = (y - _prev.yy) * 21 / dt;
 					TMMove e = 0;
 					if (dx > 0) {
@@ -609,23 +603,23 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 				}
 			}
 		}
-
+		
 		int _PartX(int x) {
 			int q = (_xmax - _xmin) / 4;
 			if (x < _xmin + q) return 2;
 			if (x >= _xmax - q) return 3;
 			return 1;
 		}
-
+		
 		int _PartY(int y) {
 			int q = (_ymax - _ymin) / 4;
 			if (y < _ymin + q) return 2;
 			if (y >= _ymax - q) return 3;
 			return 1;
 		}
-
+		
 		///// <summary>
-		///// Sensitivity of <see cref="TMMove"/> tiggers.
+		///// Sensitivity of <see cref="TMMove"/> triggers.
 		///// Default: 5. Can be 0 (less sensitive) to 10 (more sensitive).
 		///// </summary>
 		//public int MoveSensitivity {
@@ -639,9 +633,9 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 		//}
 		//int _sensPublic;
 	}
-
+	
 	/// <summary>
-	/// Used by foreach to enumerate added triggers.
+	/// Used by <c>foreach</c> to enumerate added triggers.
 	/// </summary>
 	public IEnumerator<MouseTrigger> GetEnumerator() {
 		foreach (var kv in _d) {
@@ -651,27 +645,26 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 			}
 		}
 	}
-
+	
 	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 /// <summary>
 /// Arguments for actions of mouse triggers.
 /// </summary>
-public class MouseTriggerArgs : TriggerArgs
-{
+public class MouseTriggerArgs : TriggerArgs {
 	///
 	public MouseTrigger Trigger { get; internal set; }
-
+	
 	///
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public override ActionTrigger TriggerBase => Trigger;
-
+	
 	/// <summary>
-	/// The active window (Edge and Move triggers) or the mouse window (Click and Wheel triggers).
+	/// The active window (<b>Edge</b> and <b>Move</b> triggers) or the mouse window (<b>Click</b> and <b>Wheel</b> triggers).
 	/// </summary>
 	public wnd Window { get; }
-
+	
 	/// <summary>
 	/// The pressed modifier keys.
 	/// </summary>
@@ -679,13 +672,13 @@ public class MouseTriggerArgs : TriggerArgs
 	/// Can be useful when the trigger ignores modifiers. For example <i>modKeys</i> is <c>"?"</c> or <c>"Shift?"</c>.
 	/// </remarks>
 	public KMod Mod { get; }
-
+	
 	///
 	public MouseTriggerArgs(MouseTrigger trigger, wnd w, KMod mod) {
 		Trigger = trigger;
 		Window = w; Mod = mod;
 	}
-
+	
 	///
 	public override string ToString() => "Trigger: " + Trigger;
 }
@@ -714,8 +707,7 @@ public enum TMWheel : byte { Forward = 1, Backward, Left, Right }
 /// To activate a screen edge trigger, the user touches a screen edge with the mouse pointer.
 /// Each screen edge is divided into 3 parts: 1 - center 50%; 2 - left or top 25%; 3 - right or bottom 25%. Constants like <b>TopInCenter50</b> specify an edge and part; the trigger works only in that part of that edge. Constants like <b>Top</b> specify just an edge; the trigger works in all parts of that edge.
 /// </remarks>
-public enum TMEdge : byte
-{
+public enum TMEdge : byte {
 	Top = 1, TopInCenter50, TopInLeft25, TopInRight25,
 	Bottom, BottomInCenter50, BottomInLeft25, BottomInRight25,
 	Left, LeftInCenter50, LeftInTop25, LeftInBottom25,
@@ -729,8 +721,7 @@ public enum TMEdge : byte
 /// To activate a mouse move trigger, the user quickly moves the mouse pointer to the specified direction and back.
 /// The screen is divided into 3 parts: 1 - center 50%; 2 - left or top 25%; 3 - right or bottom 25%. Constants like <b>UpDownInCenter50</b> specify a direction and screen part; the trigger works only in that screen part. Constants like <b>UpDown</b> specify just a direction; the trigger works in whole screen.
 /// </remarks>
-public enum TMMove : byte
-{
+public enum TMMove : byte {
 	RightLeft = 1, RightLeftInCenter50, RightLeftInTop25, RightLeftInBottom25,
 	LeftRight, LeftRightInCenter50, LeftRightInTop25, LeftRightInBottom25,
 	UpDown, UpDownInCenter50, UpDownInLeft25, UpDownInRight25,

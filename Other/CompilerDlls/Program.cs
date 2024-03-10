@@ -78,6 +78,7 @@ int PostBuild() {
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
 
 // -- In project references add <Private>True</Private>. Also add the Scripting project (just to copy the dll).
   <ItemGroup Label="Project References">
