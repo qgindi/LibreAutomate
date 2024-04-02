@@ -433,10 +433,10 @@ public unsafe partial class KScintilla {
 	/// <exception cref="ArgumentOutOfRangeException">Negative or greater than <see cref="aaaLen16"/>.</exception>
 	public int aaaPos8(int pos16) {
 		Debug.Assert((uint)pos16 <= aaaLen16);
-		if (pos16 < 0) throw new ArgumentOutOfRangeException();
+		if (pos16 < 0) throw new ArgumentOutOfRangeException(null, $"pos16 = {pos16}");
 		if (_posState == default) _CreatePosMap();
 		if (_posState == _PosState.Ok) {
-			if (pos16 > _len16) throw new ArgumentOutOfRangeException();
+			if (pos16 > _len16) throw new ArgumentOutOfRangeException(null, $"pos16 = {pos16}, _len16 = {_len16}, aaaGetText_().Length={aaaGetText_().Length}");
 			//using binary search find max _aPos[r].i16 that is < pos16
 			int r = -1, from = 0, to = _aPos.Count;
 			while (to > from) {
@@ -474,7 +474,7 @@ public unsafe partial class KScintilla {
 			int len8 = p.len16 * p.charLen;
 			return p.i16 + Math.Min(pos8 - p.i8, len8) / p.charLen + Math.Max(pos8 - (p.i8 + len8), 0); //p.i16 + utf + ascii
 		} else {
-			int gap = Sci_Range(_sciPtr, 0, pos8, out var p1, out var p2);
+			int gap = Sci_Range(AaSciPtr, 0, pos8, out var p1, out var p2);
 			int R = Encoding.UTF8.GetCharCount(p1, p2 == null ? pos8 : gap);
 			if (p2 != null) R += Encoding.UTF8.GetCharCount(p2, pos8 - gap);
 			return R;
@@ -497,7 +497,7 @@ public unsafe partial class KScintilla {
 		_aPos.Clear();
 		
 		int textLen;
-		int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
+		int gap = Sci_Range(AaSciPtr, 0, -1, out var p, out var p2, &textLen);
 		int to8 = p2 == null ? textLen : gap;
 		int i8 = 0, i16 = 0;
 		g1:

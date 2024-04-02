@@ -8,37 +8,20 @@ class PanelMouse {
 	wnd _prevWnd;
 	string _prevWndName;
 	int _prevCounter;
-
+	
 	public PanelMouse() {
 		//P.UiaSetName("Mouse panel"); //no UIA element for Panel
-
-		_sci = new KScintilla {
-			Name = "Mouse_info",
-			AaInitReadOnlyAlways = true,
-			AaInitTagsStyle = KScintilla.AaTagsStyle.AutoAlways
-		};
-		_sci.AaHandleCreated += _sci_aaHandleCreated;
+		
+		_sci = new KScintilla_(this) { Name = "Mouse_info" };
 		P.Children.Add(_sci);
 	}
-
+	
 	public Grid P { get; } = new();
-
-	private void _sci_aaHandleCreated() {
-		_sci.aaaStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
-		_sci.aaaStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
-		_sci.aaaMarginSetWidth(1, 4);
-		_sci.aaaStyleClearAll();
-		_sci.Call(Sci.SCI_SETHSCROLLBAR);
-		_sci.Call(Sci.SCI_SETVSCROLLBAR);
-		_sci.Call(Sci.SCI_SETWRAPMODE, Sci.SC_WRAP_WORD);
-
-		App.Timer025sWhenVisible += _MouseInfo;
-	}
-
+	
 	void _MouseInfo() {
 		//using var p1 = perf.local();
 		if (!P.IsVisible) return;
-
+		
 		var p = mouse.xy;
 		if (p == _prevXY && ++_prevCounter < 4) return; _prevCounter = 0; //use less CPU. c and wName rarely change when same p.
 		var c = wnd.fromXY(p);
@@ -49,32 +32,35 @@ class PanelMouse {
 		_prevXY = p;
 		_prevWnd = c;
 		_prevWndName = wName;
-
+		
+		string lineSep = App.Settings.mouse_singleLine ? "    ..    " : "\r\n";
+		int limit = Math.Clamp(App.Settings.mouse_limitText, 20, 10000);
+		
 		//p1.Next();
 		using (new StringBuilder_(out var b)) {
 			var cn = w.ClassName;
 			if (cn != null) {
 				var pc = p; w.MapScreenToClient(ref pc);
-				b.AppendFormat("<b>xy</b> {0,5} {1,5}  .  <b>window xy</b> {2,5} {3,5}  .  <b>program</b>  {4}",
-					p.x, p.y, pc.x, pc.y, w.ProgramName?.Escape());
+				b.AppendFormat("<b>Mouse</b> {0,5} {1,5}  .  <b>in window</b> {2,5} {3,5}    ..    <b>Program</b>  {4}",
+					p.x, p.y, pc.x, pc.y, w.ProgramName?.Escape(limit));
 				if (c.UacAccessDenied) b.Append(" <c red>(admin)<>");
-				b.Append("\r\n<b>Window   ");
-				var name = wName?.Escape(200); if (!name.NE()) b.AppendFormat("name</b>  {0}  .  <b>", name);
-				b.Append("cn</b>  ").Append(cn.Escape());
+				b.AppendFormat("{0}<b>Window   ", lineSep);
+				var name = wName?.Escape(limit); if (!name.NE()) b.AppendFormat("</b>{0}  .  <b>", name);
+				b.Append("cn</b>  ").Append(cn.Escape(limit));
 				if (c != w) {
-					b.AppendFormat("\r\n<b>Control   id</b>  {0}  .  <b>cn</b>  {1}",
-						c.ControlId, c.ClassName?.Escape());
+					b.AppendFormat("{0}<b>Control   id</b>  {1}  .  <b>cn</b>  {2}",
+						lineSep, c.ControlId, c.ClassName?.Escape(limit));
 					var ct = c.Name;
-					if (!ct.NE()) b.Append("  .  <b>name</b>  ").Append(ct.Escape(200));
+					if (!ct.NE()) b.Append("  .  <b>name</b>  ").Append(ct.Escape(limit));
 				} else if (cn == "#32768") {
 					var m = MenuItemInfo.FromXY(p, w, 50);
 					if (m != null) {
-						b.AppendFormat("\r\n<b>Menu   id</b>  {0}", m.ItemId);
+						b.AppendFormat("{0}<b>Menu   id</b>  {1}", lineSep, m.ItemId);
 						if (m.IsSystem) b.Append(" (system)");
 						//print.it(m.GetText(true, true));
 					}
 				}
-
+				
 				//rejected. Makes this func 5 times slower.
 				//var color = CaptureScreen.Pixel(p);
 			}
@@ -83,7 +69,7 @@ class PanelMouse {
 			_sci.aaaSetText(s);
 		}
 	}
-
+	
 	//public void SetMouseInfoText(string text)
 	//{
 	//	if(Dispatcher.Thread == Thread.CurrentThread) _SetMouseInfoText(text);
@@ -91,4 +77,40 @@ class PanelMouse {
 	//
 	//	void _SetMouseInfoText(string text) { _sci.aaaSetText(text); }
 	//}
+	
+	internal class KScintilla_ : KScintilla {
+		PanelMouse _p;
+		
+		internal KScintilla_(PanelMouse panel) {
+			_p = panel;
+			
+			AaInitReadOnlyAlways = true;
+			AaInitTagsStyle = KScintilla.AaTagsStyle.AutoAlways;
+		}
+		
+		protected override void AaOnHandleCreated() {
+			aaaStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
+			aaaStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
+			aaaMarginSetWidth(1, 4);
+			aaaStyleClearAll();
+			Call(Sci.SCI_SETHSCROLLBAR);
+			Call(Sci.SCI_SETVSCROLLBAR);
+			Call(Sci.SCI_SETWRAPMODE, Sci.SC_WRAP_WORD);
+			
+			App.Timer025sWhenVisible += _p._MouseInfo;
+		}
+		
+		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+			//WndUtil.PrintMsg(out var s, default, msg, wParam, lParam); print.qm2.write(s);
+			switch (msg) {
+			case Api.WM_CONTEXTMENU:
+				var m = new popupMenu();
+				m.AddCheck("Single line", App.Settings.mouse_singleLine, o => { App.Settings.mouse_singleLine = o.IsChecked; });
+				m["Text length..."] = o => { if (dialog.showInputNumber(out int i, "Mouse panel", "Maximal length of name, cn and program strings.", editText: App.Settings.mouse_limitText, owner: Handle)) App.Settings.mouse_limitText = i > 0 ? i : 100; };
+				m.Show(owner: Handle);
+				return default;
+			}
+			return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
+		}
+	}
 }

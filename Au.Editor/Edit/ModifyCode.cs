@@ -10,7 +10,7 @@ using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Utilities;
 using CAW::Microsoft.CodeAnalysis.Shared.Utilities;
-//using CAW::Microsoft.CodeAnalysis.FindSymbols;
+using CAW::Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using CAW::Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
@@ -144,6 +144,8 @@ static class ModifyCode {
 		}
 	}
 	
+	//FUTURE: option to auto-format.
+	
 	public static string Format(CodeInfo.Context cd, ref int from, ref int to) {
 		//perf.first();
 		string code = cd.code;
@@ -269,6 +271,109 @@ static class ModifyCode {
 		set { _formattingOptions = value; }
 	}
 	static CSharpSyntaxFormattingOptions _formattingOptions;
+	
+	public static void CleanupWndFind() {
+		if (!CodeInfo.GetContextAndDocument(out var cd, metaToo: true)) return;
+		var doc = cd.sci;
+		
+		int from, to;
+		if (doc.aaaHasSelection) {
+			from = doc.aaaSelectionStart16; to = doc.aaaSelectionEnd16;
+		} else {
+			from = 0; to = cd.code.Length;
+		}
+		
+		Dictionary<string, List<LocalDeclarationStatementSyntax>> d = new();
+		
+		foreach (var n in cd.syntaxRoot.DescendantNodes(TextSpan.FromBounds(from, to))) {
+			if (n is not LocalDeclarationStatementSyntax lds) continue;
+			var ds = lds.Declaration;
+			if (!(ds.Type.ToString() is "var" or "wnd" or "Au.wnd")) continue;
+			if (ds.Variables.Count != 1) continue;
+			var ds2 = ds.Variables[0];
+			if (ds2.Initializer?.Value is not InvocationExpressionSyntax ies) continue;
+			if (ies.Expression.ToString() != "wnd.find") {
+				//maybe wnd.find(...).Activate()
+				if (!ies.ToString().Like("wnd.find(*).Activate()")) continue;
+				if (ies.Expression is not MemberAccessExpressionSyntax mas) continue;
+				ies = mas.Expression as InvocationExpressionSyntax;
+				if (ies?.Expression.ToString() != "wnd.find") continue;
+			}
+			var a = ies.ArgumentList.Arguments;
+			if (a.Count > 0) {
+				var k0 = a[0].Expression.Kind();
+				if (k0 is SyntaxKind.NumericLiteralExpression || (a[0].Expression is PrefixUnaryExpressionSyntax pues && pues.Operand.Kind() is SyntaxKind.NumericLiteralExpression)) a = a.RemoveAt(0);
+				else if (!(k0 is SyntaxKind.StringLiteralExpression or SyntaxKind.NullLiteralExpression)) continue; //probably Seconds
+			}
+			if (a.Count == 0) continue;
+			var s = a.ToString();
+			if (d.TryGetValue(s, out var list)) list.Add(lds); else d[s] = new() { lds };
+		}
+		
+		List<(int start, int end, string repl)> aRepl = new();
+		foreach (var (k, a) in d) {
+			if (a.Count < 2) continue;
+			static SyntaxNode _Scope(SyntaxNode n) {
+				n = n.Parent;
+				if (n is GlobalStatementSyntax) n = n.Parent;
+				return n;
+			}
+			g1:
+			var ds0 = a[0];
+			var repl = ds0.Declaration.Variables[0].Identifier.Text;
+			var scope0 = _Scope(ds0);
+			a.RemoveAt(0);
+			for (int i = 0; i < a.Count; i++) {
+				var lds = a[i];
+				var scope = _Scope(lds);
+				if (scope != scope0) {
+					bool ok = false;
+					foreach (var v in scope.Ancestors()) {
+						if (ok = v == scope0) break;
+						if (v is MemberDeclarationSyntax && v is not GlobalStatementSyntax) break;
+						if (v is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax) break;
+					}
+					if (!ok) continue;
+				}
+				
+				//remove the duplicate wnd.find statement
+				if (lds.Declaration.Variables[0].Initializer.Value is InvocationExpressionSyntax ies && ies.Expression is MemberAccessExpressionSyntax mas && mas.Name.Identifier.Text == "Activate") { //.Activate()
+					var span = lds.Span;
+					aRepl.Add((span.Start, mas.Expression.Span.End, repl));
+				} else {
+					var span = lds.GetRealFullSpan(true);
+					aRepl.Add((span.Start, span.End, ""));
+				}
+				a.RemoveAt(i--);
+				
+				//find references of the variable declared in the duplicate wnd.find statement
+				if (cd.semanticModel.GetDeclaredSymbol(lds.Declaration.Variables[0]) is ISymbol sym) {
+					if (SymbolFinder.FindReferencesAsync(sym, cd.document.Project.Solution, [cd.document]).Result.SingleOrDefault() is { } rs) {
+						foreach (var loc in rs.Locations) {
+							var span = loc.Location.SourceSpan;
+							aRepl.Add((span.Start, span.End, repl));
+						}
+					}
+				}
+			}
+			if (a.Count > 1) goto g1;
+		}
+		
+		if (aRepl.Count == 0) {
+			dialog.showInfo("Deduplicate wnd.find", $"No duplicate wnd.find statements found{(doc.aaaHasSelection ? " in the selected text" : "")}.", owner: doc.AaWnd, secondsTimeout: 5);
+			return;
+		}
+		
+		doc.EInicatorsFound_(aRepl.Select(o => o.start..o.end).ToList());
+		wait.doEvents(1000);
+		if (doc != Panels.Editor.ActiveDoc || doc.aaaText != cd.code) return;
+		using (new SciCode.aaaUndoAction(doc)) {
+			foreach (var v in aRepl.OrderByDescending(o => o.end)) {
+				if (v.start > to) continue; to = v.start; //a variable in a replaced statement
+				doc.aaaReplaceRange(true, v.start, v.end, v.repl);
+			}
+		}
+	}
 }
 
 //gets 0 for empty lines. OK for //comments.

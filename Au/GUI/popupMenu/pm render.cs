@@ -7,14 +7,14 @@ public unsafe partial class popupMenu {
 	/// <summary>
 	/// Sets some metrics, for example item padding.
 	/// </summary>
-	/// <seealso cref="DefaultMetrics"/>
+	/// <seealso cref="defaultMetrics"/>
 	public PMMetrics Metrics { get; set; }
 	
 	/// <summary>
 	/// Sets or gets default metrics.
 	/// </summary>
 	/// <seealso cref="Metrics"/>
-	public static PMMetrics DefaultMetrics {
+	public static PMMetrics defaultMetrics {
 		get => s_defaultMetrics ??= new();
 		set { s_defaultMetrics = value; }
 	}
@@ -28,10 +28,10 @@ public unsafe partial class popupMenu {
 	/// <summary>
 	/// Sets or gets default font.
 	/// </summary>
-	public static FontNSS DefaultFont { get; set; }
+	public static FontNSS defaultFont { get; set; }
 	
 	NativeFont_ _GetFont(bool bold = false) {
-		var font = Font ?? DefaultFont;
+		var font = Font ?? defaultFont;
 		if (font == null) return bold ? NativeFont_.BoldCached(_dpi) : NativeFont_.RegularCached(_dpi);
 		if (!bold) return _font ??= font.CreateFont(_dpi);
 		return _fontBold ??= (font with { Bold = true }).CreateFont(_dpi);
@@ -77,7 +77,7 @@ public unsafe partial class popupMenu {
 			if (k == null) {
 				for (var p = m._sub.parent; p != null; p = p._sub.parent) if ((k = p.Metrics) != null) break;
 			}
-			k ??= DefaultMetrics;
+			k ??= defaultMetrics;
 			
 			int dpi = m._dpi;
 			border = dpi / 96;

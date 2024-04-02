@@ -2,10 +2,6 @@
 
 //Dll injection is used for finding accessible objects (AO). Much faster when runs in the target thread.
 //For example, can find an AO in Chrome web page about 60 times faster.
-//note: with Firefox by default slow anyway, maybe just 30% faster.
-//	To make fast, need to disable the Firefox multiprocess feature (if still possible):
-//	In about:config set browser.tabs.remote.force-enable = false.
-//	Firefox sets this to true when upgrading, eg from version 57 to 58. Even if both installed, if you run 57 and then 58.
 //It seems UI Automation also searches inproc, but somehow it manages to find the same object only 2-3 times faster (instead of 60) than outproc MSAA, and in some cases slower. Also its loading is very slow.
 //	Tested: UI Automation is slightly faster when we call it inproc. Depends on window. Can be eg 2 times faster, or same speed.
 

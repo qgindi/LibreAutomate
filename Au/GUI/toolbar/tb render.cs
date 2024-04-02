@@ -141,14 +141,14 @@ public partial class toolbar {
 	/// t.Metrics = new(4, 2);
 	/// ]]></code>
 	/// </example>
-	/// <seealso cref="DefaultMetrics"/>
+	/// <seealso cref="defaultMetrics"/>
 	public TBMetrics Metrics { get; set; }
 	
 	/// <summary>
 	/// Sets default metrics of toolbars.
 	/// </summary>
 	/// <seealso cref="Metrics"/>
-	public static TBMetrics DefaultMetrics {
+	public static TBMetrics defaultMetrics {
 		get => s_defaultMetrics ??= new();
 		set { s_defaultMetrics = value; }
 	}
@@ -220,7 +220,7 @@ public partial class toolbar {
 		public int bBorder, bPaddingX, bPaddingY, tbBorder, tbPadding, textPaddingR, textPaddingY, image, dot, triangle, imagePaddingX;
 		
 		public _Metrics(toolbar tb) {
-			var k = tb.Metrics ?? DefaultMetrics;
+			var k = tb.Metrics ?? defaultMetrics;
 			int dpi = tb._dpi;
 			bBorder = dpi / 96;
 			bPaddingX = Dpi.Scale(k.ButtonPaddingX, dpi);

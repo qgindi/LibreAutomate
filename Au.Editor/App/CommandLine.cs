@@ -8,7 +8,7 @@ static class CommandLine {
 	public static bool ProgramStarted1(string[] args, out int exitCode) {
 		//print.it(args);
 		exitCode = 0; //note: Environment.ExitCode bug: the setter's set value is ignored and the process returns 0.
-		int i = args.Length > 0 && args[0] == "/n" ? 1 : 0;
+		int i = args.Length > 0 && args[0] is "/n" or "-n" ? 1 : 0;
 		if (args.Length > i) {
 			var s = args[i];
 			if (s.Starts('/')) {
@@ -257,6 +257,8 @@ static class CommandLine {
 		//case 13: //ScriptEditor.Folders (rejected)
 		//	s = string.Join('|', (string)folders.ThisAppDocuments, (string)folders.ThisAppDataLocal, (string)folders.ThisAppTemp);
 		//	return WndCopyData.Return<char>(s, wparam);
+		case 14: //ScriptEditor.GetFileInfo
+			return _GetFileInfo(s) is byte[] r1 ? WndCopyData.Return<byte>(r1, wparam) : 0;
 		case 100: //script.run/runWait
 		case 101: //run script from command line
 			return _RunScript();
@@ -320,6 +322,17 @@ static class CommandLine {
 				int offset = a[2].NE() ? -1 : a[2].ToInt();
 				App.Model.OpenAndGoTo(f1, line, offset);
 			} else print.warning($"File not found: '{s}'.", -1);
+		}
+		
+		byte[] _GetFileInfo(string s) {
+			int flags = s.ToInt(0, out int end);
+			var f = end == s.Length ? Panels.Editor.ActiveDoc?.EFile : App.Model.Find(s[++end..], FNFind.File);
+			if (f != null) {
+				var kind = f.FileType switch { FNType.Script => EFileKind.Script, FNType.Class => EFileKind.Class, _ => EFileKind.Other };
+				string text = null; if (0 != (flags & 1)) f.GetCurrentText(out text, null);
+				return Serializer_.Serialize(f.ItemPath, text, (int)kind, (int)f.Id, f.FilePath, App.Model.WorkspaceDirectory);
+			}
+			return null;
 		}
 	}
 	

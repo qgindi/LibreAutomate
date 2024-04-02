@@ -74,7 +74,7 @@ class DProperties : KDialogWindow {
 		b.R.Add("uac", out uac);
 		b.End();
 		b.R.Add("testScript", out testScript)
-			.Validation(_ => testScript.Text is string s1 && s1.Length > 0 && null == _f.FindRelative(s1, FNFind.CodeFile, orAnywhere: true) ? "testScript not found" : null);
+			.Validation(_ => testScript.IsVisible && testScript.IsEnabled && testScript.Text is string s1 && s1.Length > 0 && null == _f.FindRelative(s1, FNFind.CodeFile, orAnywhere: true) ? "testScript not found" : null);
 		b.End();
 		
 		b.R.StartGrid(out gAssembly, "Assembly");
@@ -189,7 +189,9 @@ class DProperties : KDialogWindow {
 			_ChangedRole();
 		};
 		void _ChangedRole() {
-			_ShowCollapse(testScript, _role is MCRole.classLibrary or MCRole.classFile);
+			bool? ts = _role is MCRole.classLibrary or MCRole.classFile ? (_f.FindProject(out _, out var pmain) && _f != pmain ? null : true) : false;
+			_ShowCollapse(testScript, ts != false);
+			if (ts == null) { testScript.IsEnabled = false; testScript.Text = "<the first C# file of this project>"; }
 			_ShowCollapse(_role is MCRole.miniProgram or MCRole.exeProgram, pRun, console, icon);
 			_ShowCollapse(_role is MCRole.exeProgram or MCRole.classLibrary, outputPath, bVersion);
 			_ShowCollapse(_role is MCRole.exeProgram, manifest, bit32);
@@ -218,7 +220,7 @@ class DProperties : KDialogWindow {
 	void _GetMeta() {
 		//info: _Get returns null if hidden
 		
-		_f.TestScript = _Get(testScript) is string sts ? _f.FindRelative(sts, FNFind.CodeFile, orAnywhere: true) : null; //validated
+		_f.TestScript = _Get(testScript) is string sts && testScript.IsEnabled ? _f.FindRelative(sts, FNFind.CodeFile, orAnywhere: true) : null; //validated
 		
 		_meta.ifRunning = _Get(ifRunning, defaultIndex: 0);
 		_meta.uac = _Get(uac, defaultIndex: 0);
@@ -240,6 +242,7 @@ class DProperties : KDialogWindow {
 		_meta.preBuild = _Get(preBuild);
 		_meta.postBuild = _Get(postBuild);
 		
+		var oldRole = _meta.role;
 		_meta.role = null;
 		_meta.outputPath = null;
 		if (_role != MCRole.classFile) {
@@ -253,6 +256,22 @@ class DProperties : KDialogWindow {
 		}
 		
 		_meta.miscFlags = _miscFlags == 0 ? null : _miscFlags.ToS();
+		
+		if (_isClass && oldRole is null or "classLibrary" && !(_meta.role is null or "classLibrary")) {
+			print.it($$"""
+<>Info: Now <help editor/Class files, projects>class file<> '{{_f.Name}}' can be executed directly. Just add code that calls a class function. Example:
+<code>/*/ role {{_meta.role}}; define TEST; /*/
+#if TEST //allows to use this class file elsewhere via /*/ c {{_f.Name}}; /*/
+Class1.Function1();
+#endif
+class Class1 {
+	public static void Function1() {
+		print.it(1);
+	}
+}
+</code>
+""");
+		}
 	}
 	
 	void _OkApply(WBButtonClickArgs e) {
@@ -562,8 +581,8 @@ class DProperties : KDialogWindow {
 			Close();
 		});
 		info.aaaText = $"""
-Type: <help editor/{(_isClass ? "Class files, projects>C# class file" : "Scripts>C# script")}<>  (<+changeFileType>change...<>)
-Path: <explore>{_f.FilePath}<>
+File type: <help editor/{(_isClass ? "Class files, projects>C# class file" : "Scripts>C# script")}<>  (<+changeFileType>change...<>)
+File path: <explore>{_f.FilePath}<>
 
 C# file properties here are similar to C# project properties in Visual Studio.
 Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edited there too.

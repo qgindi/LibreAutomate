@@ -546,7 +546,7 @@ namespace Au.More {
 		static int s_lowLevelHooksTimeout;
 
 		internal static void OnException_(Exception e) {
-			print.warning("Unhandled exception in hook procedure. " + e.ToString());
+			print.warning("Unhandled exception in hook procedure. " + e.ToString(), -1);
 		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 32)] //note: this struct is in shared memory. Size must be same in all library versions.

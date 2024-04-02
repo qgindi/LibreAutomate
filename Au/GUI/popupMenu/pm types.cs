@@ -83,7 +83,7 @@ public class PMItem : MTItem {
 			if (actionThread) run.thread(() => _Invoke(), background: false); else _Invoke();
 			void _Invoke() {
 				try { action(this); }
-				catch (Exception ex) when (!this.actionException) { print.warning(ex.ToString(), -1); }
+				catch (Exception ex) when (!this.actionException) { print.warning(ex); }
 			}
 		}
 	}
@@ -145,7 +145,7 @@ public enum PMKHook {
 }
 
 /// <summary>
-/// Used with <see cref="popupMenu.Metrics"/> and <see cref="popupMenu.DefaultMetrics"/>.
+/// Used with <see cref="popupMenu.Metrics"/> and <see cref="popupMenu.defaultMetrics"/>.
 /// </summary>
 /// <remarks>
 /// All values are in logical pixels (1 pixel when DPI is 100%).

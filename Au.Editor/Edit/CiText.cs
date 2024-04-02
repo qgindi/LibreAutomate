@@ -780,7 +780,7 @@ class CiText {
 	
 	public static Section FromKeyword(string name) {
 		//var url = "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/";
-		var url = "https://www.google.com/search?q=C%23+keyword";
+		var url = App.Settings.internetSearchUrl + "C%23+keyword";
 		var x = new CiText();
 		x.StartParagraph();
 		x.Append("Keyword ");

@@ -255,7 +255,7 @@ EXPORT HRESULT Cpp_AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult)
 		aFrom.acc->AddRef();
 		return 0;
 	}
-#else //does not work with Firefox wrappers: the returned object isn't wrapped and therefore invalid. And somehow slower (tested only with Chrome).
+#else //does not work with AccessibleMarshalWrapper: the returned object isn't wrapped and therefore invalid. And somehow slower (tested only with Chrome).
 	if(navig[0] == 'p' && navig[1] == 'a' && (navig[2] == 0 || 0 == wcscmp(navig, L"parent"))) {
 		aResult.Zero();
 		hr = Navig_Parent(ref aFrom, ref aResult);

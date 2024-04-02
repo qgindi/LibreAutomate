@@ -329,16 +329,11 @@ partial class CiCompletion {
 			}
 			
 			Debug.Assert(doc == Panels.Editor.ActiveDoc); //when active doc changed, cancellation must be requested
-			var codeNow = doc.aaaText;
-			int posNow = doc.aaaCurrentPos16, posAdd = 0, codeLength = code.Length;
-			if (codeNow != code) { //changed while awaiting
-				int lenDiff = codeNow.Length - code.Length; if (lenDiff <= 0) return;
-				posAdd = posNow - position; if (posAdd != lenDiff) return;
-				if (!CodeInfo.GetContextAndDocument(out cd, posNow)) return;
-				position = cd.pos;
-				code = cd.code;
-				document = cd.document;
-			} else if (posNow != position) return;
+			if (doc.aaaText != code) { //changed while awaiting
+				timer.after(55, _ => { if (doc == Panels.Editor.ActiveDoc) ShowList(); });
+				return;
+				//SHOULDDO: instead: when text changed, cancel and set timer.
+			} else if (doc.aaaCurrentPos16 != position) return;
 			//p1.Next('T');
 			
 			var provider = _GetProvider(r.ItemsList[0]); //currently used only in cases when all completion items are from same provider
@@ -346,13 +341,12 @@ partial class CiCompletion {
 			//print.it(provider, isDot, canGroup, r.Items[0].DisplayText);
 			
 			var span = r.Span;
-			if (posAdd > 0) span = new(span.Start, span.Length + posAdd);
 			
 			var d = new _Data {
 				completionService = completionService,
 				document = document,
 				model = model,
-				codeLength = codeLength,
+				codeLength = code.Length,
 				filterText = code.Substring(span.Start, span.Length),
 				items = new List<CiComplItem>(r.ItemsList.Count),
 				forced = isCommand,
@@ -376,6 +370,9 @@ partial class CiCompletion {
 			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;
 			uint kinds = 0; bool hasNamespaces = false;
 			foreach (var ci_ in r.ItemsList) {
+				//FUTURE: test with new Roslyn, maybe this fixed (in VS works well):
+				//	The list contains only types if after `is`. Example: `bool ok = m is C.`. Here C is a class that contains inner types and int constants.
+				
 				var ci = ci_;
 				if (unimported) {
 					//if (ci.Flags.Has(CompletionItemFlags.Expanded)) { //now instead used CompletionOptions.ExpandedCompletionBehavior
@@ -950,10 +947,15 @@ partial class CiCompletion {
 	/// key == default if clicked or typed a character (except Tab and Enter). Does not include hotkey modifiers.
 	/// </summary>
 	CiComplResult _Commit(SciCode doc, CiComplItem item, char ch, KKey key) {
+		//At first hide UI and set _data=null. Else modifying document text may cause bugs.
+		var data = _data;
+		int currentFrom = data.tempRange.CurrentFrom, currentTo = data.tempRange.CurrentTo;
+		_CancelUI();
+		
 		if (item.Provider == CiComplProvider.EmbeddedLanguage) { //can complete only on click or Tab
 			if (ch != default || !(key == default || key == KKey.Tab)) return CiComplResult.None;
 		} else if (ch == ':') { //don't complete if `label:`
-			if (_data.model.SyntaxTree.FindTokenOrEndToken(_data.tempRange.CurrentFrom, default).Parent is IdentifierNameSyntax node) {
+			if (data.model.SyntaxTree.FindTokenOrEndToken(currentFrom, default).Parent is IdentifierNameSyntax node) {
 				if ((node.Parent is ExpressionStatementSyntax ess && ess.Parent is BlockSyntax) || (node.Parent is VariableDeclarationSyntax vds && vds.Parent is LocalDeclarationStatementSyntax)) {
 					if (!(item.Text == "global" || (item.FirstSymbol is INamespaceSymbol ns && ns.IsGlobalNamespace))) //eg `global::`
 						return CiComplResult.None;
@@ -962,7 +964,7 @@ partial class CiCompletion {
 		}
 		
 		bool isSpace; if (isSpace = ch == ' ') ch = default;
-		int codeLenDiff = doc.aaaLen16 - _data.codeLength;
+		int codeLenDiff = doc.aaaLen16 - data.codeLength;
 		
 		if (item.Provider == CiComplProvider.Snippet) {
 #if true
@@ -984,10 +986,10 @@ partial class CiCompletion {
 		bool ourProvider = item.Provider is CiComplProvider.Winapi;
 		if (ourProvider) {
 			s = item.Text;
-			i = _data.tempRange.CurrentFrom;
-			len = _data.tempRange.CurrentTo - i;
+			i = currentFrom;
+			len = currentTo - i;
 		} else {
-			var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
+			var change = data.completionService.GetChangeAsync(data.document, ci).Result;
 			//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 			
 			var changes = change.TextChanges;
@@ -1006,7 +1008,7 @@ partial class CiCompletion {
 			var span = lastChange.Span;
 			i = span.Start;
 			len = span.Length + codeLenDiff;
-			//print.it($"{change.NewPosition.HasValue}, cp={doc.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
+			//print.it($"{change.NewPosition.HasValue}, cp={doc.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{data.filterText}'");
 			//print.it($"'{s}'");
 			if (isComplex) { //xml doc, override, regex
 				if (ch != default) return CiComplResult.None;
@@ -1019,7 +1021,7 @@ partial class CiCompletion {
 						//Replace 4 spaces with tab. Make { in same line.
 						s = s.Replace("    ", "\t").RxReplace(@"\R\t*\{", " {", 1);
 						//Correct indentation. 
-						int indent = s.FindNot("\t"), indent2 = doc.aaaLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
+						int indent = s.FindNot("\t"), indent2 = doc.aaaLineIndentationFromPos(true, currentFrom);
 						if (indent > indent2) s = s.RxReplace("(?m)^" + new string('\t', indent - indent2), "");
 					}
 					break;
@@ -1046,7 +1048,7 @@ partial class CiCompletion {
 				return CiComplResult.Complex;
 			}
 		}
-		Debug_.PrintIf(i != _data.tempRange.CurrentFrom && item.Provider != CiComplProvider.EmbeddedLanguage, $"{_data.tempRange.CurrentFrom}, {i}");
+		Debug_.PrintIf(i != currentFrom && item.Provider != CiComplProvider.EmbeddedLanguage, $"{currentFrom}, {i}");
 		//ci.DebugPrint();
 		
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
@@ -1137,7 +1139,7 @@ partial class CiCompletion {
 						}
 						bracketsFrom = i + s.Length + 2;
 						bracketsLen = s2.Length - 3;
-					} else if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !_data.noAutoSelect && !doc.aaaText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
+					} else if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !data.noAutoSelect && !doc.aaaText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
 						s2 ??= ch == '(' ? "()" : "<>";
 						positionBack = 1;
 						bracketsFrom = i + s.Length + s2.Length - 1;
@@ -1148,7 +1150,7 @@ partial class CiCompletion {
 					}
 					s += s2;
 				}
-			} else if (!(ch is '(' or '<' or '[' or '{' || _data.noAutoSelect)) { //completed with ;,.?- etc
+			} else if (!(ch is '(' or '<' or '[' or '{' || data.noAutoSelect)) { //completed with ;,.?- etc
 				if (_NeedParenthesis()) s += "()";
 			}
 			
@@ -1180,7 +1182,7 @@ partial class CiCompletion {
 		}
 		
 		try {
-			if (!isComplex && s == _data.filterText) return CiComplResult.None;
+			if (!isComplex && s == data.filterText) return CiComplResult.None;
 			
 			doc.aaaSetAndReplaceSel(true, i, i + len, s);
 			if (isComplex) {
@@ -1195,7 +1197,7 @@ partial class CiCompletion {
 		finally {
 			if (ourProvider) {
 				switch (item.Provider) {
-				case CiComplProvider.Winapi: _data.winapi.OnCommitInsertDeclaration(item); break;
+				case CiComplProvider.Winapi: data.winapi.OnCommitInsertDeclaration(item); break;
 				}
 			}
 			if (isComplex && ch is '(' or '<') {

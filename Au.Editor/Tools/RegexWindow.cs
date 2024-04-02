@@ -54,6 +54,7 @@ class RegexWindow : InfoWindow //KPopup
 			} else {
 				s = _GetContentText();
 				if (!s.RxMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
+				else s = s.Replace("{App.Settings.internetSearchUrl}", App.Settings.internetSearchUrl);
 			}
 			this.Text2 = s;
 		}

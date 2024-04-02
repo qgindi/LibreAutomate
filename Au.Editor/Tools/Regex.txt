@@ -32,9 +32,7 @@
 <link https://www.pcre.org/current/doc/html/index.html>PCRE regex library reference<>
 <link>http://www.rexegg.com/<>
 <link>https://www.regular-expressions.info/<>
-<link http://www.google.com/search?q=regular+expression+tester,+PCRE>Find regex test tools<>
-
-This program uses PCRE2 version 10.33.
+<link {App.Settings.internetSearchUrl}regular+expression+tester,+PCRE>Find regex test tools<>
 
 -- options --
 

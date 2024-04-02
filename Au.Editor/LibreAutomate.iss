@@ -1,4 +1,4 @@
-﻿#define MyAppName "LibreAutomate C#"
+#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
 #define MyAppVersion "1.1.8"
 #define MyAppPublisher "Gintaras Didžgalvis"
@@ -171,6 +171,7 @@ var
   resultCode: Integer;
 begin
   Result := false;
+  //exit;
   fileName := ExpandConstant('{tmp}\dotnet.txt');
   args := '/C dotnet --list-runtimes > "' + fileName + '" 2>&1';
   if Exec(ExpandConstant('{cmd}'), args, '', SW_HIDE, ewWaitUntilTerminated, resultCode) and (resultCode = 0) then
@@ -181,24 +182,37 @@ begin
 end;
 
 function InstallDotNet(): Boolean;
-//function InstallDotNet(sdk: Boolean): Boolean;
+//function InstallDotNet(sdk: Boolean): Boolean; //rejected. Downloads 200MB, installs ~800 MB (and slow). Probably most users uninstall the app or never use NuGet, and the SDK would stay there unused.
 var
+  ResultCode: Integer;
   DownloadPage: TDownloadWizardPage;
   url, setupFile, info1, info2: string;
-  ResultCode: Integer;
+  a1: TArrayOfString;
 begin
+  //Get the download URL of the latest .NET Desktop Runtime.
+  //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates https://www.libreautomate.com/download/net-url.txt.
+  try
+    DownloadTemporaryFile('https://www.libreautomate.com/download/net-url.txt', 'net-url.txt', '', nil);
+    if LoadStringsFromFile(ExpandConstant('{tmp}\net-url.txt'), a1) then url := a1[0];
+    //Log(url);
+  except
+    Log(GetExceptionMessage);
+  end;
+  
+  //If the above failed, use this hardcoded URL. This URL is updated for each new .NET 8.0.x version.
+  //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates this string in this .iss file.
+  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/51bc18ac-0594-412d-bd63-18ece4c91ac4/90b47b97c3bfe40a833791b166697e67/windowsdesktop-runtime-8.0.3-win-x64.exe';
+  
+  //rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
+  //url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';
+  //Unofficial URL of the latest .NET 8 version. Found in https://github.com/dotnet/installer/issues/11040
+  //The official URL (in the runtime download page) is only for that patch version (8.0.x).
+  //For preview use (not tested): https://aka.ms/dotnet/8.0/preview/windowsdesktop-runtime-win-x64.exe
+    
   Result := true;
-//   if sdk then begin //rejected. Downloads 200MB, installs ~800 MB (and slow). Probably most users uninstall the app or never use NuGet, and the SDK would stay there unused.
-//     info1 := 'Installing .NET 8 SDK x64';
-//     info2 := 'Optional. Adds some advanced features (NuGet). If stopped or failed now, you can download and install it later. Size ~220 MB.';
-//     url := 'https://aka.ms/dotnet/8.0/dotnet-sdk-win-x64.exe';
-//   end else begin
-    info1 := 'Installing .NET 8 Desktop Runtime x64';
-    info2 := 'If stopped or failed now, will need to download/install it later. Size ~55 MB.';
-    url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';
-    //Unofficial URL of the latest .NET 8 version. Found in answers only. The official URL (in the runtime download page) is only for that patch version (8.0.x).
-//  end;
   setupFile := ExtractFileName(url);
+  info1 := 'Installing .NET 8 Desktop Runtime x64';
+  info2 := 'If stopped or failed now, will need to download/install it later. Size ~55 MB.';
   
   DownloadPage := CreateDownloadPage(info1, info2, nil);
   DownloadPage.Clear;

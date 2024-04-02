@@ -201,6 +201,18 @@ namespace Au {
 			/// </summary>
 			/// <seealso cref="SetOwnerWindow"/>
 			public static bool autoOwnerWindow { get; set; }
+			
+			/// <summary>
+			/// Timeout text format string.
+			/// </summary>
+			/// <remarks>
+			/// Default: <c>"This dialog will disappear if not clicked in {0} s.\nTimeout action: {1}."</c>.
+			/// Use placeholder <c>{0}</c> for seconds (in the first line) and <c>{1}</c> for default action (in the second line). 
+			/// </remarks>
+			/// <seealso cref="SetTimeout(int, string, bool)"/>
+			public static string timeoutTextFormat { get; set; } = c_defaultTimeoutTextFormat;
+			
+			internal const string c_defaultTimeoutTextFormat = "This dialog will disappear if not clicked in {0} s.\nTimeout action: {1}.";
 		}
 
 		#endregion static options
@@ -661,6 +673,7 @@ namespace Au {
 		/// <summary>
 		/// Let the dialog close itself after <i>closeAfterS</i> seconds. Then <see cref="ShowDialog"/> returns <see cref="Timeout"/>.
 		/// </summary>
+		/// <seealso cref="options.timeoutTextFormat"/>
 		public void SetTimeout(int closeAfterS, string timeoutActionText = null, bool noInfo = false) {
 			_timeoutS = closeAfterS;
 			_timeoutActionText = timeoutActionText;
@@ -1196,9 +1209,10 @@ namespace Au {
 
 		string _TimeoutFooterText(int timeLeft) {
 			using (new StringBuilder_(out var b)) {
-				b.Append("This dialog will disappear if not clicked in ").Append(timeLeft).Append(" s.");
-				if (!_timeoutActionText.NE()) b.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
-				if (RtlLayout) b.Replace(".", "");
+				var format = options.timeoutTextFormat;
+				if (format.NE()) return format;
+				if (_timeoutActionText.NE()) format = format?.Lines()[0];
+				b.AppendFormat(format, timeLeft, _timeoutActionText);
 				if (!_timeoutFooterText.NE()) b.Append('\n').Append(_timeoutFooterText);
 				return b.ToString();
 			}

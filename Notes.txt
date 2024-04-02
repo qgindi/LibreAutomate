@@ -5,7 +5,7 @@ The program version format is major.minor.build, like 1.20.5.
 	Build: changed when fixed bugs between minor versions. Also may have some new features.
 
 To update version info of dll files (Au, Au.Editor, Au.Controls):
-	Open global2.cs and edit AssemblyVersion attribute. Single global2.cs is used by all these projects.
+	Open global2.cs and edit Au_.Version. Single global2.cs is used by all these projects.
 	It's important to update Au version info whenever something changed in Au or its dependencies (AuCpp etc).
 	Also may need to update year in AssemblyCopyright attribute (it's displayed in About info).
 To update version info of the setup file:

@@ -115,6 +115,25 @@ namespace Au.Types {
 		//PathToGdipBitmap,
 		//IconNameToGdipBitmap,
 	}
+	
+	/// <summary>
+	/// See <see cref="ScriptEditor.GetFileInfo"/>.
+	/// </summary>
+	/// <param name="name">File name, like <c>"File.cs"</c>.</param>
+	/// <param name="path">Path in workspace, like <c>@"\Folder\File.cs"</c>.</param>
+	/// <param name="text">File text; null if <i>needText</i> false or if failed to get text. If the file is open in editor, it's the editor text, else it's the saved text.</param>
+	/// <param name="kind"></param>
+	/// <param name="id">File id.</param>
+	/// <param name="filePath">Full path.</param>
+	/// <param name="workspace">Path of the workspace folder.</param>
+	public record class EFileInfo(string name, string path, string text, EFileKind kind, uint id, string filePath, string workspace);
+	
+#pragma warning disable CS1591 //Missing XML comment for publicly visible type or member
+	/// <summary>
+	/// See <see cref="EFileInfo"/>.
+	/// </summary>
+	public enum EFileKind { Script, Class, Other }
+#pragma warning restore CS1591 //Missing XML comment for publicly visible type or member
 }
 
 namespace Au.More {

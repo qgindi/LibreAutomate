@@ -127,7 +127,6 @@ internal static unsafe partial class Cpp {
 	
 #if DEBUG
 	internal static void DebugUnload() {
-		//run GC to release Firefox object wrappers. Else may not unload from Firefox.
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
 		Cpp_Unload(0);

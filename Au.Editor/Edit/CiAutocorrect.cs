@@ -100,8 +100,13 @@ class CiAutocorrect {
 		bool isBackspace = false, isOpenBrac = false;
 		
 		int pos8 = doc.aaaCurrentPos8;
-		if (pos8 == doc.aaaLen8 && ch != (char)KKey.Back && !doc.aaaHasSelection) { //if pos8 is at the end of text, add newline
-			doc.aaaInsertText(false, pos8, "\r\n");
+		if (pos8 == doc.aaaLen8 && ch != (char)KKey.Back && !CodeInfo._compl.IsVisibleUI) { //if pos8 is at the end of text, add newline
+			if (!doc.aaaHasSelection) doc.aaaInsertText(false, pos8, "\r\n");
+			else {
+				int i1 = doc.aaaSelectionStart8, i2 = doc.aaaSelectionEnd8;
+				doc.aaaInsertText(false, pos8, "\r\n");
+				doc.aaaSelect(false, i1, i2);
+			}
 		}
 		
 		switch (ch) {

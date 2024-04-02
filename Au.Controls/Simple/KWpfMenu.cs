@@ -283,7 +283,7 @@ public class KWpfMenu : ContextMenu
 			_m._EndModal(); //workaround for: OnClosed called with 160 ms delay. Same with native message loop.
 			if (action != null) {
 				try { action(new WpfMenuActionArgs(this)); }
-				catch (Exception ex) when (!actionException) { print.warning(ex.ToString(), -1); }
+				catch (Exception ex) when (!actionException) { print.warning(ex); }
 			}
 		}
 

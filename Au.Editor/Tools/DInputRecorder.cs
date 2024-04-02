@@ -797,7 +797,7 @@ class DInputRecorder : KDialogWindow {
 				void _Comment() {
 					try {
 						var e = elm.fromXY(p, EXYFlags.PreferLink /*| EXYFlags.NotInProc*/); //with NotInProc in some cases works not as good, eg no Name of 32-bit classic toolbar buttons
-						var role = e?.Role; if (role == null) return;
+						var role = e?.Role; if (role.NE()) return;
 						var name = e.Name;
 						if (!name.NE()) name = name.Escape(limit: 30, quote: true);
 						else if (role is "CLIENT" or "WINDOW") return;

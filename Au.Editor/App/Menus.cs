@@ -39,8 +39,9 @@ static class Menus {
 			[Command('c', image = EdResources.c_iconClass)]
 			public static void New_class() { _New("Class.cs"); }
 			
-			[Command('t', image = "*FeatherIcons.FileText" + black)]
+			[Command('t', image = "*FeatherIcons.FileText" + black, tooltip = "New .txt file. You can change the filename extension.")]
 			public static void New_text_file() { _New("File.txt"); }
+			//TODO: support menu tooltips. Eg now many users interpret "New text file" as "Only .txt files are supported".
 			
 			[Command('f', image = EdResources.c_iconFolder)]
 			public static void New_folder() { _New(null); }
@@ -315,10 +316,10 @@ static class Menus {
 			[Command(image = "*Codicons.SymbolClass" + brown)]
 			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
 			
-			[Command(image = "*PixelartIcons.AlignLeft" + brown, separator = true)]
-			public static void Format_document() { ModifyCode.Format(false); }
-			
 			//CONSIDER: script.setup.
+			
+			[Command(separator = true, keysText = "Ctrl+A")]
+			public static void Select_all() { Panels.Editor.ActiveDoc.Call(Sci.SCI_SELECTALL); }
 		}
 		
 		[Command]
@@ -335,32 +336,13 @@ static class Menus {
 			[Command(keysText = "R-click margin", keys = "Ctrl+Alt+/", image = "*BoxIcons.RegularComment" + brown)]
 			public static void Toggle_line_comment() { ModifyCode.Comment(null, notSlashStar: true); }
 			
-			[Command(keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown)]
-			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }
-			//SHOULDDO: now does not indent empty lines if was no indentation.
-			
-			[Command(keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease" + brown)]
-			public static void Unindent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_BACKTAB); }
-			
 			//[Command(keysText = "Ctrl+D")]
 			//public static void Duplicate() { Panels.Editor.ActiveDoc.Call(Sci.SCI_SELECTIONDUPLICATE); }
-			
-			[Command]
-			public static void Format_selection() { ModifyCode.Format(true); }
-			
-			[Command]
-			public static void Remove_screenshots() { Panels.Editor.ActiveDoc.EImageRemoveScreenshots(); }
-			
-			[Command(separator = true, keysText = "Ctrl+A")]
-			public static void Select_all() { Panels.Editor.ActiveDoc.Call(Sci.SCI_SELECTALL); }
-		}
 		
-		[Command]
-		public static class Surround {
-			[Command("for (repeat)", image = "*Typicons.ArrowLoop" + brown)]
+			[Command("Surround - for (repeat)", image = "*Typicons.ArrowLoop" + brown, separator = true)]
 			public static void Surround_for() { InsertCode.SurroundFor(); }
 			
-			[Command("try (catch exceptions)", image = "*MaterialDesign.ErrorOutline" + brown)]
+			[Command("Surround - try/catch", image = "*MaterialDesign.ErrorOutline" + brown)]
 			public static void Surround_try_catch() { InsertCode.SurroundTryCatch(); }
 			
 			[Command("...", separator = true)]
@@ -380,6 +362,28 @@ static class Menus {
 			
 			[Command]
 			public static void Create_overrides() { GenerateCode.CreateOverrides(); }
+		}
+		
+		[Command]
+		public static class Tidy_code {
+			[Command(image = "*PixelartIcons.AlignLeft" + brown)]
+			public static void Format_document() { ModifyCode.Format(false); }
+			
+			[Command(image = "*PixelartIcons.AlignLeft" + brown)]
+			public static void Format_selection() { ModifyCode.Format(true); }
+			
+			[Command("Indent selected lines", keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown, separator = true)]
+			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }
+			//SHOULDDO: now does not indent empty lines if was no indentation.
+			
+			[Command("Unindent selected lines", keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease" + brown)]
+			public static void Unindent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_BACKTAB); }
+			
+			[Command("Deduplicate wnd.find", separator = true, image = "*Material.Broom" + brown)] //TODO: tooltip: "all or selection"
+			public static void Deduplicate_wnd_find() { ModifyCode.CleanupWndFind(); }
+			
+			[Command] //TODO: tooltip: "all or selection"
+			public static void Remove_screenshots() { Panels.Editor.ActiveDoc.EImageRemoveScreenshots(); }
 		}
 		
 		[Command(separator = true)]
@@ -607,7 +611,7 @@ static class Menus {
 		public static void Forum() { run.itSafe("https://www.libreautomate.com/forum/"); }
 		
 		[Command]
-		public static void Email() { run.itSafe($"mailto:support@quickmacros.com?subject={App.AppNameShort} {App.Version}"); }
+		public static void Email() { run.itSafe($"mailto:support@quickmacros.com?subject={App.AppNameShort} {Au_.Version}"); }
 		
 		[Command]
 		public static void Donate() { run.itSafe("https://github.com/sponsors/qgindi"); }
@@ -615,7 +619,7 @@ static class Menus {
 		[Command]
 		public static void About() {
 			print.it($@"<>---- {App.AppNameLong} ----
-Version: {App.Version}
+Version: {Au_.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
 Uses C# 12, <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite 3.42.0<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 4.11<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, <link https://github.com/xoofx/markdig>Markdig<>.

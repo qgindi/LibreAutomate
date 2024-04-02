@@ -109,7 +109,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>0 (<b>ERole.None</b>) if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox; then returns <b>ERole.Custom</b>.
+		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string; then returns <b>ERole.Custom</b>.
 		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
 		/// </remarks>
 		public ERole RoleInt {
@@ -127,7 +127,7 @@ namespace Au {
 		/// </summary>
 		/// <returns><c>""</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string, for example in Firefox.
+		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string.
 		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the <b>int</b> value like <c>"0"</c> or <c>"500"</c>.
 		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
 		/// </remarks>
@@ -883,7 +883,7 @@ namespace Au {
 		/// <returns><c>""</c> if this is not a HTML element or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="outer">If <c>true</c>, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
+		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
 		/// If this is the root of web page (role <b>DOCUMENT</b> or <b>PANE</b>), gets web page body HTML.
 		/// </remarks>
 		public string Html(bool outer) {
@@ -899,7 +899,7 @@ namespace Au {
 		/// <returns><c>""</c> if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="name">Attribute name, for example <c>"href"</c>, <c>"id"</c>, <c>"class"</c>. Full, case-sensitive.</param>
 		/// <remarks>
-		/// Works with Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
+		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
 		/// </remarks>
 		/// <exception cref="ArgumentException"><i>name</i> is <c>null</c>/<c>""</c>/invalid.</exception>
 		public string HtmlAttribute(string name) {
@@ -915,7 +915,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>Empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
+		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
 		/// </remarks>
 		public Dictionary<string, string> HtmlAttributes() {
 			ThrowIfDisposed_();
@@ -932,11 +932,11 @@ namespace Au {
 		/// <exception cref="AuException">Failed to scroll, or the UI element does not support scrolling.</exception>
 		/// <remarks>
 		/// This function works with these UI elements:
-		/// - Web page elements in Chrome, Firefox, Internet Explorer and apps that use their code (Edge, Opera, Thunderbird, web browser controls...). To find UI element, use role prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c>, and don't use flag <see cref="EFFlags.NotInProc"/>.
+		/// - Web page elements in Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). To find UI element, use role prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c>, and don't use flag <see cref="EFFlags.NotInProc"/>.
 		/// - Standard treeview, listview and listbox controls.
 		/// - Some other controls if found with flag <see cref="EFFlags.UIA"/>.
 		/// 
-		/// Some apps after scrolling update <see cref="Rect"/> with a delay. Some apps (Firefox) never update it for existing <b>elm</b> variables. This function does not wait.
+		/// Some apps after scrolling update <see cref="Rect"/> with a delay. Some apps never update it for existing <b>elm</b> variables. This function does not wait.
 		/// </remarks>
 		public void ScrollTo() {
 			ThrowIfDisposed_();

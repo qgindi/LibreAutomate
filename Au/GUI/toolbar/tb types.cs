@@ -314,7 +314,7 @@ public struct TBScaling {
 }
 
 /// <summary>
-/// Used with <see cref="toolbar.Metrics"/> and <see cref="toolbar.DefaultMetrics"/>.
+/// Used with <see cref="toolbar.Metrics"/> and <see cref="toolbar.defaultMetrics"/>.
 /// </summary>
 /// <param name="ButtonPaddingX">Button padding left and right.</param>
 /// <param name="ButtonPaddingY">Button padding top and bottom.</param>

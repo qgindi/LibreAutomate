@@ -4,8 +4,9 @@ namespace Au {
 		/// Waits for a user-defined condition. Until the callback function returns a value other than <c>default(T)</c>, for example <c>true</c>.
 		/// </summary>
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. Default period is 10, and can be changed like <c>wait.until(new(10) { Timeout = 100 }</c>.</param>
+		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. Default period is 10, and can be changed like <c>wait.until(new(5) { Timeout = 100 }, ...)</c>.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>timeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"></exception>
 		/// <example>See <see cref="wait"/>.</example>
 		public static T until<T>(Seconds timeout, Func<T> condition) {
 			var loop = new WaitLoop(timeout);
@@ -38,6 +39,71 @@ namespace Au {
 				if (!loop.Sleep()) return r;
 			}
 		}
+		
+		/// <summary>
+		/// Calls callback function <i>action</i>. If it throws an exception, waits/retries until it does not throw exceptions or until timeout.
+		/// </summary>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="action">Callback function (eg lambda). It is called repeatedly, until does not throw an exception. Default period is 10, and can be changed like <c>wait.retry(new(5) { Timeout = 100 }, ...)</c>.</param>
+		/// <param name="catchWhen">Called on exception. Return <c>true</c> to handle the exception (and wait/retry). Return <c>false</c> to not handle the exception. If <c>null</c> (default), handles all exceptions.</param>
+		/// <returns>Returns <c>true</c> when <i>action</i> succeeded. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"></exception>
+		/// <example>
+		/// This example uses both <b>wait.retry</b> overloads - with parameter <c>Func func</c> and with parameter <c>Action action</c>.
+		/// <code><![CDATA[
+		/// string file = @"C:\Test\test.txt";
+		/// string s = wait.retry(5, () => File.ReadAllText(file));
+		/// s = s.Upper();
+		/// wait.retry(5, () => { File.WriteAllText(file, s); });
+		/// print.it("ok");
+		/// ]]></code>
+		/// Set the retry period.
+		/// <code><![CDATA[
+		/// wait.retry(new(5) { Period = 100, MaxPeriod = 1000 }, () => { File.WriteAllText(file, s); });
+		/// ]]></code>
+		/// Handle only exceptions of some types.
+		/// <code><![CDATA[
+		/// wait.retry(5, () => { File.WriteAllText(file, s); }, e => e is IOException);
+		/// ]]></code>
+		/// </example>
+		public static bool retry(Seconds timeout, Action action, Func<Exception, bool> catchWhen = null) {
+			var loop = new WaitLoop(timeout);
+			for (; ; ) {
+				try { action(); return true; }
+				catch (Exception e) when (catchWhen?.Invoke(e) != false) { }
+				if (!loop.Sleep()) return false;
+			}
+		}
+		
+		/// <summary>
+		/// Calls callback function <i>func</i> and returns its result. If it throws an exception, waits/retries until it does not throw exceptions or until timeout.
+		/// </summary>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="func">Callback function (eg lambda). It is called repeatedly, until does not throw an exception. Default period is 10, and can be changed like <c>wait.retry(new(5) { Timeout = 100 }, ...)</c>.</param>
+		/// <param name="catchWhen">Called on exception. Return <c>true</c> to handle the exception (and wait/retry). Return <c>false</c> to not handle the exception. If <c>null</c> (default), handles all exceptions.</param>
+		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>timeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"></exception>
+		public static T retry<T>(Seconds timeout, Func<T> func, Func<Exception, bool> catchWhen = null) {
+			var loop = new WaitLoop(timeout);
+			for (; ; ) {
+				try { return func(); }
+				catch (Exception e) when (catchWhen?.Invoke(e) != false) { }
+				if (!loop.Sleep()) return default;
+			}
+		}
+		
+		//rejected. This overload could be useful when need exact try count and period. But probably rarely useful when we have the overloads with Seconds. Maybe in the future, if really useful. Also need Func overload, CancellationToken, max period, doevents option, etc.
+		//public static bool retry(int tryCount, int periodMS, Action action, Func<Exception, bool> catchWhen = null) {
+		//	ArgumentOutOfRangeException.ThrowIfEqual(tryCount, 0);
+		//	ArgumentOutOfRangeException.ThrowIfNegative(periodMS);
+		//	bool noThrow = tryCount < 0; if (noThrow) tryCount = -tryCount;
+		//	while (tryCount-- > 0) {
+		//		try { action(); return true; }
+		//		catch (Exception e) when ((tryCount > 0 || noThrow) && catchWhen?.Invoke(e) != false) { }
+		//		if (tryCount > 0 && periodMS > 0) Thread.Sleep(periodMS);
+		//	}
+		//	return false;
+		//}
 		
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).

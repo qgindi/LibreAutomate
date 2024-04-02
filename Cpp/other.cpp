@@ -245,4 +245,9 @@ namespace other {
 		Sleep(500 / less);
 	}
 
+	//for rundll32.exe
+	EXPORT void WINAPI UnloadAuCppDll(DWORD flags = 0) {
+		Cpp_Unload(flags);
+	}
+
 } //namespace other

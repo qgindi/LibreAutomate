@@ -229,7 +229,7 @@ static class CiUtilExt {
 	}
 	
 	/// <summary>
-	/// Gets full span of a method or type declaration node, not including leading trivia that is not comments/doccomments touching the declaration.
+	/// Gets full span, not including leading trivia that is not comments/doccomments touching the declaration.
 	/// </summary>
 	/// <param name="minimalLeadingTrivia">Get leading trivia just until the first newline when searching backwards. Usually it is indentation whitespace or nothing.</param>
 	public static TextSpan GetRealFullSpan(this SyntaxNode t, bool minimalLeadingTrivia = false) {

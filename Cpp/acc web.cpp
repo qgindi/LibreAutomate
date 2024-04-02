@@ -81,21 +81,21 @@ public:
 
 };
 
-class FFNode
+class HtmlNode
 {
 	static constexpr GUID IID_ISimpleDOMNodeService = { 0x0c539790, 0x12e4, 0x11cf, 0xb6, 0x61, 0x00, 0xaa, 0x00, 0x4c, 0xd6, 0xd8 };
 
 	ISimpleDOMNode* _x;
 
-	FFNode(ISimpleDOMNode* x) {
+	HtmlNode(ISimpleDOMNode* x) {
 		_x = x;
 	}
 public:
-	FFNode() {
+	HtmlNode() {
 		_x = null;
 	}
 
-	~FFNode() {
+	~HtmlNode() {
 		if(_x) _x->Release();
 	}
 
@@ -116,26 +116,6 @@ public:
 	{
 		assert(_x == null);
 		return QueryService(iacc, &_x, &IID_ISimpleDOMNodeService);
-	}
-
-	BSTR GetAttribute(STR name)
-	{
-		Bstr bn(name); short ns; BSTR r = null;
-		if(0 != _x->get_attributesForNames(1, &bn, &ns, &r)) return null;
-
-		//problem: Firefox gets "" for missing attributes. I don't know a fast workaround. Chrome and IE then fail (null).
-		//if(r != null && *r == 0) {
-		//	IAccessible2_2* ia2=null;
-		//	if(0==_x->QueryInterface(&ia2)) {
-		//		_variant_t v;
-		//		Print((uint)ia2->get_attribute(bn, &v)); //E_NOTIMPL
-		//		ia2->Release();
-		//	}
-		//}
-
-		return r;
-
-		//problem: Chrome case-sensitive. Firefox and IE not.
 	}
 
 	struct NodeInfo
@@ -170,12 +150,32 @@ public:
 		return x.tag.Detach();
 	}
 
+	BSTR GetAttribute(STR name)
+	{
+		Bstr bn(name); short ns; BSTR r = null;
+		if(0 != _x->get_attributesForNames(1, &bn, &ns, &r)) return null;
+
+		//problem: Firefox gets "" for missing attributes. I don't know a fast workaround. Chrome and IE then fail (null).
+		//if(r != null && *r == 0) {
+		//	IAccessible2_2* ia2=null;
+		//	if(0==_x->QueryInterface(&ia2)) {
+		//		_variant_t v;
+		//		Print((uint)ia2->get_attribute(bn, &v)); //E_NOTIMPL
+		//		ia2->Release();
+		//	}
+		//}
+
+		return r;
+
+		//problem: Chrome case-sensitive. Firefox and IE not.
+	}
+
 	//Returns null if fails or has 0 attributes.
 	//Later delete[] the result.
 	BstrNameValue* GetAttributes(out int& count)
 	{
 		BSTR na[300], va[_countof(na)]; short nsa[_countof(na)]; unsigned short n = 0; //max seen: 22 in FF UI, 16 in web page (rarely > 12)
-		if(0 != _x->get_attributes(_countof(na), na, nsa, va, &n) || n == 0) { count = 0; return null; }
+		if(0 != _x->get_attributes(_countof(na), na, nsa, va, &n) || n == 0) { count = 0; return null; } //new FF returns E_NOTIMPL
 		count = n;
 		auto a = new BstrNameValue[n];
 		for(int i = 0; i < n; i++) {
@@ -185,6 +185,23 @@ public:
 		}
 		return a;
 	}
+
+	//Chrome returns max 1 style, always "display". Not useful.
+	////Returns null if fails or has 0 styles.
+	////Later delete[] the result.
+	//BstrNameValue* GetStyles(out int& count)
+	//{
+	//	BSTR na[300], va[_countof(na)]; unsigned short n = 0;
+	//	if(0 != _x->get_computedStyle(_countof(na), false, na, va, &n) || n == 0) { count = 0; return null; }
+	//	count = n;
+	//	auto a = new BstrNameValue[n];
+	//	for(int i = 0; i < n; i++) {
+	//		BstrNameValue& r = a[i];
+	//		r.name.Attach(na[i]);
+	//		r.value.Attach(va[i]);
+	//	}
+	//	return a;
+	//}
 
 	BSTR GetInnerHTML()
 	{
@@ -244,7 +261,7 @@ private:
 	void _ChromeComposeInnerHTML(str::StringBuilder& b, int childCount)
 	{
 		for(int i = 0; i < childCount; i++) {
-			FFNode child;
+			HtmlNode child;
 			if(0 != _x->get_childAt(i, &child._x)) { PRINTS(L"failed"); if(i == 0) return; continue; }
 			child._ChromeComposeHTML(b);
 		}
@@ -288,7 +305,7 @@ private:
 		//	Document often has 2 children: doctype and HTML.
 		//	HTML usually has 2 children: HEAD and BODY.
 		for(int i = childCount; i > 0; i--) {
-			FFNode child;
+			HtmlNode child;
 			if(0 != _x->get_childAt(i - 1, &child._x)) continue;
 			NodeInfo info;
 			if(child.GetNodeInfo(info, false)
@@ -303,13 +320,14 @@ private:
 		return null;
 	}
 
+	//note: This code is for old Firefox versions. Now Firefox does not support getting HTML etc.
 	BSTR _FirefoxGetBodyHtml(int childCount, bool outer)
 	{
 		int cc2, cc3;
-		FFNode childHTML(_FindChild(childCount, NODETYPE_ELEMENT, L"HTML", 4, out cc2));
+		HtmlNode childHTML(_FindChild(childCount, NODETYPE_ELEMENT, L"HTML", 4, out cc2));
 		if(childHTML) {
 			//get BODY, not whole HTML. Like IE and Chrome.
-			FFNode childBODY(childHTML._FindChild(cc2, NODETYPE_ELEMENT, L"BODY", 4, out cc3));
+			HtmlNode childBODY(childHTML._FindChild(cc2, NODETYPE_ELEMENT, L"BODY", 4, out cc3));
 			if(childBODY) {
 				if(outer) return childBODY.GetOuterHTML();
 				BSTR s = null;
@@ -325,7 +343,7 @@ class _BrowserInterface
 {
 public:
 	IEElem ie;
-	FFNode ff;
+	HtmlNode node;
 
 	_BrowserInterface() { ZEROTHIS; }
 
@@ -334,9 +352,9 @@ public:
 		bool ok;
 		static thread_local bool t_preferIE;
 		if(t_preferIE) { //if previously was IE, now try IE first, to make faster
-			ok = ie.FromAcc(iacc) || ff.FromAcc(iacc);
+			ok = ie.FromAcc(iacc) || node.FromAcc(iacc);
 		} else {
-			ok = ff.FromAcc(iacc) || ie.FromAcc(iacc);
+			ok = node.FromAcc(iacc) || ie.FromAcc(iacc);
 		}
 		t_preferIE = !!ie;
 		return ok;
@@ -346,7 +364,7 @@ public:
 
 //Gets/compares specified HTML attributes and returns true if all match.
 //Returns false if cannot get HTML attributes, for example if this is not a HTML element, or if called not inproc.
-//Supports Firefox, Chrome, Internet Explorer and apps that use their code.
+//Supports Chrome, Internet Explorer and apps that use their code.
 //Names of HTML attributes must be with "@" prefix, like "@href". Other names are ignored.
 bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count)
 {
@@ -355,7 +373,7 @@ bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count)
 		STR name = prop[i].name;
 		if(*name++ != '@') continue;
 		if(!isBI && !(isBI = bi.Init(iacc))) return false;
-		BSTR b = bi.ie ? bi.ie.GetAttribute(name) : bi.ff.GetAttribute(name);
+		BSTR b = bi.ie ? bi.ie.GetAttribute(name) : bi.node.GetAttribute(name);
 		bool yes = prop[i].value.Match(b ? b : L"", b ? SysStringLen(b) : 0);
 		if(b) SysFreeString(b);
 		if(!yes) return false;
@@ -364,8 +382,8 @@ bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count)
 }
 
 void AccChromeEnableHtml(IAccessible* aDoc) {
-	FFNode ff;
-	ff.FromAcc(aDoc);
+	HtmlNode node;
+	node.FromAcc(aDoc);
 }
 
 HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
@@ -377,20 +395,20 @@ HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
 	if(what[0] == '\'') {
 		switch(what[1]) {
 		case 't': //tag
-			if(bi.ff) sResult = bi.ff.GetTag();
+			if(bi.node) sResult = bi.node.GetTag();
 			else if(0 != bi.ie->get_tagName(&sResult)) return 1;
 			break;
 		case 'o': //outer HTML
-			if(bi.ff) sResult = bi.ff.GetOuterHTML();
+			if(bi.node) sResult = bi.node.GetOuterHTML();
 			else if(0 != bi.ie->get_outerHTML(&sResult)) return 1;
 			break;
 		case 'i': //inner HTML
-			if(bi.ff) sResult = bi.ff.GetInnerHTML();
+			if(bi.node) sResult = bi.node.GetInnerHTML();
 			else if(0 != bi.ie->get_innerHTML(&sResult)) return 1;
 			break;
 		case 'a': { //attributes
 			int n;
-			auto a = bi.ie ? bi.ie.GetAttributes(out n) : bi.ff.GetAttributes(out n);
+			auto a = bi.ie ? bi.ie.GetAttributes(out n) : bi.node.GetAttributes(out n);
 			//Perf.Next();
 			if(a) {
 				str::StringBuilder b;
@@ -405,8 +423,8 @@ HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
 			}
 		} break;
 		case 's': { //scroll
-			if(bi.ff) {
-				if(0 != bi.ff->scrollTo(true)) return 1;
+			if(bi.node) {
+				if(0 != bi.node->scrollTo(true)) return 1;
 			} else {
 				if(0 != bi.ie->scrollIntoView(_variant_t(true))) return 1;
 			}
@@ -414,7 +432,7 @@ HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)
 		default: assert(false); return (HRESULT)eError::InvalidParameter;
 		}
 	} else { //attribute
-		sResult = bi.ie ? bi.ie.GetAttribute(what) : bi.ff.GetAttribute(what);
+		sResult = bi.ie ? bi.ie.GetAttribute(what) : bi.node.GetAttribute(what);
 		//note: for missing attributes Chrome/IE return null, but Firefox "".
 	}
 	//Perf.NW();

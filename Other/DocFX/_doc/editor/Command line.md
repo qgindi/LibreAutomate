@@ -8,7 +8,7 @@ uid: command_line
 
 To restart as administrator the program uses Windows Task Scheduler task `\Au\Au.Editor`. It is created by the setup program. Does not restart if the task is missing or disabled.
 
-**/v** - show the main window when started, regarless of program settings.
+**/v** - show the main window when started, regardless of program settings.
 
 **/reload** - if the program is running, reload current workspace.
 

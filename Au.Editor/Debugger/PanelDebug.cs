@@ -61,11 +61,11 @@ partial class PanelDebug {
 			m.Add("Disconnect", o => _Disconnect(), "*Codicons.DebugDisconnect", disable: !IsDebugging).Tooltip = "Continue without debugger";
 		});
 		tb.Items.Add(new Separator());
-		_buttons.@continue = _TbButton("*Codicons.DebugContinue @14" + c_color, _ => _Continue(), "Continue  (F5)");
-		_buttons.pause = _TbButton("*Codicons.DebugPause @14" + c_color, _ => _Pause(), "Pause  (F6)");
-		_buttons.next = _TbButton("*Codicons.DebugStepOver @14" + c_color, _ => _Next(), "Step over  (F10)");
-		_buttons.step = _TbButton("*Codicons.DebugStepInto" + c_color, _ => _Step(), "Step into  (F11)");
-		_buttons.stepOut = _TbButton("*Codicons.DebugStepOut" + c_color, _ => _StepOut(), "Step out  (Shift+F11)");
+		_buttons.@continue = _TbButton("*Codicons.DebugContinue @14" + c_color, _ => _Continue(), "Continue\n\nF5");
+		_buttons.pause = _TbButton("*Codicons.DebugPause @14" + c_color, _ => _Pause(), "Pause\n\nF6");
+		_buttons.next = _TbButton("*Codicons.DebugStepOver @14" + c_color, _ => _Next(), "Step over\n\nF10");
+		_buttons.step = _TbButton("*Codicons.DebugStepInto" + c_color, _ => _Step(), "Step into\n\nF11");
+		_buttons.stepOut = _TbButton("*Codicons.DebugStepOut" + c_color, _ => _StepOut(), "Step out\n\nShift+F11");
 		tb.Items.Add(new Separator());
 		//_TbButton("*BoxIcons.RegularMenu" + c_color3, null,  "More debugger commands").xDropdownMenu(_CommandsMenu);
 		_TbButton("*EvaIcons.Options2" + Menus.green, null, "Debugger options").xDropdownMenu(_OptionsMenu);

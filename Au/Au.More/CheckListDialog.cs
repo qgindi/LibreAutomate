@@ -70,9 +70,9 @@ public class CheckListDialog {
 	/// <summary>
 	/// Sets formatted text, like <see cref="wpfBuilder.FormatText(wpfBuilder.InterpolatedString)"/>.
 	/// </summary>
-	/// <inheritdoc cref="wpfBuilder.FormattedText(wpfBuilder.InterpolatedString)" path="//param|//exception"/>
+	/// <inheritdoc cref="wpfBuilder.formatTextOf" path="//param|//exception"/>
 	public void FormatText(wpfBuilder.InterpolatedString text) {
-		wpfBuilder.FormatText(_text, text);
+		wpfBuilder.formatTextOf(_text, text);
 		_text.Visibility = Visibility.Visible;
 	}
 	

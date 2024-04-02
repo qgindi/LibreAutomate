@@ -822,9 +822,9 @@ public class wpfBuilder {
 	/// <br/>• <see cref="TextBox"/> - sets <b>Text</b> property.
 	/// <br/>• <see cref="ComboBox"/> - sets <b>Text</b> property (see also <see cref="Items"/>).
 	/// <br/>• <see cref="PasswordBox"/> - sets <b>Password</b> property.
-	/// <br/>• <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
-	/// <br/>• <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
-	/// <br/>• <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc) (see also <see cref="FormatText"/> and <see cref="FormattedText"/>).
+	/// <br/>• <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="FormatText"/> and <see cref="formattedText"/>).
+	/// <br/>• <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property (see also <see cref="FormatText"/> and <see cref="formattedText"/>).
+	/// <br/>• <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc) (see also <see cref="FormatText"/> and <see cref="formattedText"/>).
 	/// <br/>• <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
 	/// <br/>• Other element types that have <b>Text</b> property.
 	/// </param>
@@ -2047,7 +2047,7 @@ public class wpfBuilder {
 	/// <br/>• <b>ContentControl</b> (eg <b>Label</b> or <b>Button</b>) - creates new <b>TextBlock</b> with inlines and sets its <b>Content</b> property if it is <c>null</c>. If <b>HeaderedContentControl</b> (eg <b>GroupBox</b>) and its <b>Header</b> property is <c>null</c>, sets <b>Header</b> instead.
 	/// <br/>• <b>Panel</b> whose <b>Parent</b> is <b>HeaderedContentControl</b> (eg <c>b.StartGrid&lt;GroupBox>(null).FormatText($"...")</c>) - uses the <b>HeaderedContentControl</b> like the above.
 	///
-	/// For elements other than the last added use <see cref="FormatText(object, InterpolatedString)"/> or <see cref="FormattedText(InterpolatedString)"/>.
+	/// For elements other than the last added use <see cref="formatTextOf(object, InterpolatedString)"/> or <see cref="formattedText(InterpolatedString)"/>.
 	///
 	/// To load images can be used <see cref="ImageUtil.LoadWpfImageElement"/> and <see cref="ImageUtil.LoadWpfImage"/>.
 	/// </remarks>
@@ -2092,7 +2092,7 @@ public class wpfBuilder {
 	/// <exception cref="FormatException">Invalid color attribute.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="XElement.Parse"/>.</exception>
 	/// <inheritdoc cref="FormatText(InterpolatedString)" path="/param"/>
-	public static void FormatText(object obj, InterpolatedString text) {
+	public static void formatTextOf(object obj, InterpolatedString text) {
 		var s = text.GetFormattedText();
 		_FormatText(obj, s, text.a);
 	}
@@ -2107,17 +2107,17 @@ public class wpfBuilder {
 	/// <inheritdoc cref="FormatText(InterpolatedString)" path="/param"/>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.R.Add(wpfBuilder.FormattedText($"<b>Label</b>"), out TextBox _);
+	/// b.R.Add(wpfBuilder.formattedText($"<b>Label</b>"), out TextBox _);
 	/// b.R.AddButton(_TextWithIcon("Button", "*PixelartIcons.Notes #0060F0"), _ => { print.it("Button clicked"); });
 	/// 
 	/// static TextBlock _TextWithIcon(string text, string icon) {
 	/// 	var e = ImageUtil.LoadWpfImageElement(icon);
 	/// 	e.Margin = new(0, 0, 4, 0);
-	/// 	return wpfBuilder.FormattedText($"{e}{text}");
+	/// 	return wpfBuilder.formattedText($"{e}{text}");
 	/// }
 	/// ]]></code>
 	/// </example>
-	public static TextBlock FormattedText(InterpolatedString text) {
+	public static TextBlock formattedText(InterpolatedString text) {
 		var e = new TextBlock();
 		var s = text.GetFormattedText();
 		_FormatText(e, s, text.a);

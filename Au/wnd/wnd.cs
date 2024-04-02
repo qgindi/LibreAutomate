@@ -1653,7 +1653,7 @@ namespace Au {
 		/// Moves and resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, screen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support <b>SWP</b> flags.
+		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, screen, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support <b>SWP</b> flags.
 		/// This function is more lightweight, it just calls API <msdn>SetWindowPos</msdn> with flags <c>NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd</c>. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="lastError"/>.
 		/// 
@@ -1667,7 +1667,15 @@ namespace Au {
 		/// <summary>
 		/// Moves and resizes. Same as <see cref="MoveL(int, int, int, int, SWPFlags)"/>.
 		/// </summary>
-		public bool MoveL(RECT r, SWPFlags swpFlagsToAdd = 0) {
+		/// <param name="visibleRect">Use the visible rectangle without the transparent frame. Note: the window should be visible. This parameter not used with child windows.</param>
+		public bool MoveL(RECT r, SWPFlags swpFlagsToAdd = 0, bool visibleRect = false) {
+			if (visibleRect && GetRect(out var rTrue) && GetRect(out var rVisible, withoutExtendedFrame: true) && rVisible != rTrue) {
+				r.left -= rVisible.left - rTrue.left;
+				r.top -= rVisible.top - rTrue.top;
+				r.right += rTrue.right - rVisible.right;
+				r.bottom += rTrue.bottom - rVisible.bottom;
+			}
+			
 			return MoveL(r.left, r.top, r.Width, r.Height, swpFlagsToAdd);
 		}
 		
@@ -1675,7 +1683,7 @@ namespace Au {
 		/// Moves.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, bool, screen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// See also <see cref="Move(Coord, Coord, bool, screen, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is more lightweight, it just calls API <msdn>SetWindowPos</msdn> with flags <c>NOSIZE|NOZORDER|NOOWNERZORDER|NOACTIVATE</c>. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="lastError"/>.
 		/// 
@@ -1692,7 +1700,7 @@ namespace Au {
 		/// Resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Resize(Coord, Coord, bool, screen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// See also <see cref="Resize(Coord, Coord, bool, screen, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is more lightweight, it just calls API <msdn>SetWindowPos</msdn> with flags <c>NOMOVE|NOZORDER|NOOWNERZORDER|NOACTIVATE</c>. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
@@ -1704,38 +1712,22 @@ namespace Au {
 		internal bool ResizeL_(SIZE z) => ResizeL(z.width, z.height);
 		
 		/// <summary>
-		/// Moves.
-		/// </summary>
-		/// <param name="x">Left. If <b>default</b>, does not move in X axis. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
-		/// <param name="y">Top. If <b>default</b>, does not move in Y axis.</param>
-		/// <param name="workArea"><i>x y</i> are relative to the work area. Not used when this is a child window.</param>
-		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>screen.index(1)</c>.</param>
-		/// <exception cref="AuWndException"/>
-		/// <remarks>
-		/// Also restores the visible top-level window if it is minimized or maximized.
-		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
-		/// With windows of current thread usually it's better to use <see cref="MoveL(int, int)"/>.
-		/// </remarks>
-		public void Move(Coord x, Coord y, bool workArea = false, screen screen = default) {
-			Move(x, y, default, default, workArea, screen);
-		}
-		
-		/// <summary>
 		/// Moves and/or resizes.
 		/// </summary>
 		/// <param name="x">Left. If <b>default</b>, does not move in X axis. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Top. If <b>default</b>, does not move in Y axis.</param>
 		/// <param name="width">Width. If <b>default</b>, does not change width.</param>
 		/// <param name="height">Height. If <b>default</b>, does not change height.</param>
-		/// <param name="workArea"><i>x y width height</i> are relative to the work area. Not used when this is a child window.</param>
-		/// <param name="screen"><i>x y width height</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>screen.index(1)</c>.</param>
+		/// <param name="workArea"><i>x y width height</i> are relative to the work area. This parameter not used with child windows.</param>
+		/// <param name="screen"><i>x y width height</i> are relative to this screen or its work area. Default - primary. Example: <c>screen.index(1)</c>. This parameter not used with child windows.</param>
+		/// <param name="visibleRect">Use the visible rectangle without the transparent frame. Note: the window should be visible. This parameter not used with child windows.</param>
+		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client area coordinates.
-		/// With windows of current thread usually it's better to use <see cref="MoveL(int, int, int, int, SWPFlags)"/>.
+		/// With windows of current thread usually it's better to use <see cref="MoveL"/>.
 		/// </remarks>
-		/// <exception cref="AuWndException"/>
-		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, screen screen = default) {
+		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, screen screen = default, bool visibleRect = false) {
 			ThrowIfInvalid();
 			
 			wnd w = Get.DirectParent;
@@ -1766,9 +1758,27 @@ namespace Au {
 				//info: '&& IsVisible' because ShowNotMinMax unhides
 			}
 			
+			if (visibleRect && GetRect(out var rTrue) && GetRect(out var rVisible, withoutExtendedFrame: true) && rVisible != rTrue) {
+				int dx = rVisible.left - rTrue.left, dy = rVisible.top - rTrue.top;
+				if (!x.IsEmpty) xy.x -= dx;
+				if (!y.IsEmpty) xy.y -= dy;
+				if (!width.IsEmpty) wh.x += rTrue.right - rVisible.right + dx;
+				if (!height.IsEmpty) wh.y += rTrue.bottom - rVisible.bottom + dy;
+			}
+			
 			if (!MoveL(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
 			
 			MinimalSleepIfOtherThread_();
+		}
+		
+		/// <summary>
+		/// Moves.
+		/// </summary>
+		/// <param name="workArea"><i>x y</i> are relative to the work area. This parameter not used with child windows.</param>
+		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Example: <c>screen.index(1)</c>. This parameter not used with child windows.</param>
+		/// <inheritdoc cref="Move(Coord, Coord, Coord, Coord, bool, screen, bool)"/>
+		public void Move(Coord x, Coord y, bool workArea = false, screen screen = default, bool visibleRect = false) {
+			Move(x, y, default, default, workArea, screen, visibleRect);
 		}
 		
 		/// <summary>
@@ -1776,15 +1786,16 @@ namespace Au {
 		/// </summary>
 		/// <param name="width">Width. If <b>default</b>, does not change width.</param>
 		/// <param name="height">Height. If <b>default</b>, does not change height.</param>
-		/// <param name="workArea">For <see cref="Coord.Fraction"/> etc use width/height of the work area. Not used when this is a child window.</param>
-		/// <param name="screen">For <b>Coord.Fraction</b> etc use width/height of this screen. Default - primary. Not used when this is a child window. Example: <c>screen.index(1)</c>.</param>
+		/// <param name="workArea">For <see cref="Coord.Fraction"/> etc use width/height of the work area. This parameter not used with child windows.</param>
+		/// <param name="screen">For <b>Coord.Fraction</b> etc use width/height of this screen. Default - primary. Example: <c>screen.index(1)</c>. This parameter not used with child windows.</param>
+		/// <param name="visibleRect">Use the visible rectangle without the transparent frame. Note: the window should be visible. This parameter not used with child windows.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// With windows of current thread usually it's better to use <see cref="ResizeL(int, int)"/>.
 		/// </remarks>
-		public void Resize(Coord width, Coord height, bool workArea = false, screen screen = default) {
-			Move(default, default, width, height, workArea, screen);
+		public void Resize(Coord width, Coord height, bool workArea = false, screen screen = default, bool visibleRect = false) {
+			Move(default, default, width, height, workArea, screen, visibleRect);
 		}
 		
 		#endregion
@@ -1828,7 +1839,7 @@ namespace Au {
 			}
 			
 			/// <summary>
-			/// Moves <i>w</i> to left/top in screen, and/or ensures it's in screen.
+			/// Moves <i>w</i> to <i>left top</i> in screen, and/or ensures it's in screen.
 			/// </summary>
 			/// <param name="ensureMethod">Just ensure in screen. Not used parameters: left, top.</param>
 			/// <param name="w"></param>

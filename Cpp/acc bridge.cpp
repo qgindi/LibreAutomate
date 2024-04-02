@@ -74,7 +74,8 @@ public:
 
 static long s_accMarshalWrapperCount;
 
-//Workaround for Firefox bug in TEXT AOs in multi-process mode.
+//This is used as a workaround when CoMarshalInterface fails.
+//More comments in WriteAccToStream.
 class AccessibleMarshalWrapper : public IAccessible
 {
 	IAccessible* _a;
@@ -99,7 +100,7 @@ public:
 			_a->AddRef();
 			*ppvObject = this;
 			return 0;
-			//Firefox bug: TEXT AOs return E_NOINTERFACE for IID_IUnknown, that is why CoMarshalInterface fails.
+			//Old Firefox bug: TEXT AOs return E_NOINTERFACE for IID_IUnknown, that is why CoMarshalInterface fails.
 			//	Also they don't give custom IMarshal, although all other AOs do.
 		}
 		if(ignoreQI) { //don't give IMarshal and other interfaces while in CoMarshalInterface
@@ -258,21 +259,18 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 	if(!(has & eAccResult::UsePrevAcc)) {
 		//problem: with some AO the hook is not called when we try to do something inproc, eg get all props.
 		//	They use a custom IMarshal, which redirects to another (not hooked) IAccessible interface. In most cases it is even in another process.
-		//	Known apps: 1. Firefox, when multiprocess not disabled. 2. Some hidden AO in IE. 3. Windows store apps, but we don't use inproc.
+		//	Known apps: 1. Old Firefox, when multiprocess not disabled. 2. Some hidden AO in IE. 3. Windows store apps, but we don't use inproc.
 		//	Known apps where is custom IMarshal but the hook works: 1. Task Scheduler MMC: controls of other process.
 		//	Workarounds:
-		//		Tested, fails: replace CoMarshalInterface with CoGetStandardMarshal/MarshalInterface. Chrome works, Firefox crashes.
-		//		Old, rejected: remove InProc flag. But with new Firefox then all AOs are not inproc.
-		//		Now using: wrap the AO in AccessibleMarshalWrapper and marshal it instead, like we always did for Firefox TEXT AOs.
+		//		Tested, fails: replace CoMarshalInterface with CoGetStandardMarshal/MarshalInterface. Chrome works, old Firefox crashes.
+		//		Old, rejected: remove InProc flag. But with some old Firefox versions then all AOs are not inproc.
+		//		Now using: wrap the AO in AccessibleMarshalWrapper and marshal it instead.
 		HRESULT hr = 1;
 		IMarshal* m = null;
 		if(0 == a.acc->QueryInterface(&m)) m->Release();
 		else hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
 		//ao::PrintAcc(a.acc, a.elem); Print((DWORD)hr);
 		if(hr) {
-			//Firefox fails to marshal all TEXT AO when multi-processs.
-			//	Workaround: wrap a.acc into an AccessibleMarshalWrapper and marshal it instead.
-			//	With new Firefox we have to use this for all AOs.
 #if true
 			HRESULT hr1 = hr;
 			auto wrap = new AccessibleMarshalWrapper(a.acc);

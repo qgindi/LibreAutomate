@@ -283,6 +283,8 @@ partial class SciCode : KScintilla {
 	bool _modified;
 	
 	protected override nint WndProc(wnd w, int msg, nint wp, nint lp) {
+		//WndUtil.PrintMsg(w, msg, wp, lp, new(Api.WM_TIMER, Api.WM_PAINT, Api.WM_MOUSEMOVE, Api.WM_NCHITTEST, Api.WM_SETCURSOR));
+		
 		switch (msg) {
 		case Api.WM_CHAR: {
 				int c = (int)wp;
@@ -293,6 +295,11 @@ partial class SciCode : KScintilla {
 				}
 			}
 			break;
+		//rejected. Possibly can be bad in some cases. I can't learn and test everything.
+		//case Api.WM_IME_COMPOSITION: //to add missing newline, because no WM_CHAR when using IME
+		//	if (0 != (lp & 0x800)) //GCS_RESULTSTR; Scintilla uses it.
+		//		CodeInfo.SciBeforeCharAdded(this, default);
+		//	break;
 		case Api.WM_RBUTTONDOWN or Api.WM_MBUTTONDOWN: {
 				POINT p = Math2.NintToPOINT(lp);
 				int margin = aaaMarginFromPoint(p);
@@ -468,7 +475,7 @@ partial class SciCode : KScintilla {
 		} else {
 			bool isCS = _fn.IsCodeFile, isFragment = i2 != i1 && !(i1 == 0 && i2 == textLen);
 			string s = isFragment ? aaaRangeText(false, i1, i2) : aaaText;
-			if (isCS) s = _ImageRemoveScreenshots(s);
+			if (isCS) s = _ImageRemoveScreenshots(s, true);
 			switch (copyAs) {
 			case ECopyAs.Forum:
 				var b = new StringBuilder("[code]");

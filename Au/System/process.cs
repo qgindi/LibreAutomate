@@ -762,8 +762,18 @@ namespace Au {
 				e = script.s_unhandledException;
 			}
 			var k = _eventExit;
-			if (k != null) try { k(e); } catch { }
+			if (k != null) {
+				try { _eventExit = null; k(e); }
+				catch (Exception e1) {
+#if DEBUG
+					print.qm2.write("_ThisProcessExit", e1);
+#endif
+				}
+			}
+			thisProcessExitDone_?.Invoke();
 		}
+		
+		internal static event Action thisProcessExitDone_;
 		
 		/// <summary>
 		/// Calls and removes all <see cref="thisProcessExit"/> event handlers.

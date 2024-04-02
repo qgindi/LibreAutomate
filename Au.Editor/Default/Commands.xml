@@ -50,6 +50,7 @@ All attributes are optional. The Example command contains all.
 		<Surround_for />
 		<Surround_try_catch />
 		<Create_delegate />
+		<Deduplicate_wnd_find />
 		<Find separator="" />
 		<Find_references />
 		<Find_symbol />

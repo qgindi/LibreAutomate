@@ -29,15 +29,19 @@ global using IEnumerable = System.Collections.IEnumerable;
 global using IEnumerator = System.Collections.IEnumerator;
 
 [module: DefaultCharSet(CharSet.Unicode)]
+[assembly: ComVisible(false)]
 
 [assembly: AssemblyCompany("Gintaras Didžgalvis")]
 [assembly: AssemblyProduct("LibreAutomate C#")]
 [assembly: AssemblyCopyright("Copyright 2020-2024 Gintaras Didžgalvis")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("1.1.8")]
+[assembly: AssemblyVersion(Au_.Version)]
 
-// Setting ComVisible to false makes the types in this assembly not visible 
-// to COM components.  If you need to access a type in this assembly from 
-// COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
+#if AU
+namespace Au.More;
+
+class Au_ {
+	public const string Version = "1.1.8";
+}
+#endif

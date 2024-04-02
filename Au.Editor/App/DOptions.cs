@@ -29,9 +29,9 @@ class DOptions : KDialogWindow {
 		_Workspace();
 		_FontAndColors();
 		_CodeEditor();
-		_Compiler();
 		_Templates();
 		_Hotkeys();
+		_Other();
 		_OS();
 		
 		//_tc.SelectedIndex = 2;
@@ -165,8 +165,9 @@ class DOptions : KDialogWindow {
 		public bool Apply(ref AppSettings.font_t f) {
 			var s = name.Text.Trim(); var d = size.Text.ToNumber();
 			if (s == f.name && d == f.size) return false;
-			if (!s.NE()) f.name = s;
-			f.size = Math.Clamp(d, 6, 30);
+			f.name = s;
+			f.size = d;
+			f.Normalize();
 			return true;
 		}
 	}
@@ -190,6 +191,8 @@ class DOptions : KDialogWindow {
 		}
 		var font = _AddFontControls("Editor");
 		var fontOutput = _AddFontControls("Output");
+		var fontRecipeText = _AddFontControls("Recipe text");
+		var fontRecipeCode = _AddFontControls("Recipe code");
 		var fontFind = _AddFontControls("Find");
 		b.End();
 		b.R.StartGrid();
@@ -244,6 +247,8 @@ class DOptions : KDialogWindow {
 			
 			font.Init(fonts, styles.FontName, styles.FontSize);
 			fontOutput.Init(fonts, App.Settings.font_output);
+			fontRecipeText.Init(fonts, App.Settings.font_recipeText);
+			fontRecipeCode.Init(fonts, App.Settings.font_recipeCode);
 			fontFind.Init(fonts, App.Settings.font_find);
 			
 			//styles
@@ -394,6 +399,7 @@ class DOptions : KDialogWindow {
 				}
 				
 				if (fontOutput.Apply(ref App.Settings.font_output)) Panels.Output.Scintilla.AaSetStyles();
+				if (fontRecipeText.Apply(ref App.Settings.font_recipeText) | fontRecipeCode.Apply(ref App.Settings.font_recipeCode)) Panels.Recipe.Scintilla.AaSetStyles();
 				if (fontFind.Apply(ref App.Settings.font_find)) Panels.Find.SetFont_(true);
 			};
 			
@@ -507,17 +513,6 @@ Example:
 		//CONSIDER: completion list: option to single-click.
 	}
 	
-	void _Compiler() {
-		var b = _Page("Compiler");
-		b.R.Add(out CheckBox printCompiled, "Always print \"Compiled\"").Checked(App.Settings.comp_printCompiled, threeState: true)
-			.Tooltip("Always print a \"Compiled\" message when a script etc compiled successfully.\nIf unchecked, prints only if role is exeProgram or classLibrary.\nIf 3-rd state, prints only when executing the Compile command.");
-		b.End();
-		
-		_b.OkApply += e => {
-			App.Settings.comp_printCompiled = printCompiled.IsChecked;
-		};
-	}
-	
 	void _Templates() {
 		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
 		b.R.Add("Template", out ComboBox template).Items("Script|Class")
@@ -592,6 +587,19 @@ Example:
 				RegHotkeys.UnregisterPermanent();
 				RegHotkeys.RegisterPermanent();
 			}
+		};
+	}
+	
+	void _Other() {
+		var b = _Page("Other");
+		b.R.Add("Internet search URL", out TextBox internetSearchUrl, App.Settings.internetSearchUrl);
+		b.R.Add(out CheckBox printCompiled, "Always print \"Compiled\"").Checked(App.Settings.comp_printCompiled, threeState: true)
+			.Tooltip("Always print a \"Compiled\" message when a script etc compiled successfully.\nIf unchecked, prints only if role is exeProgram or classLibrary.\nIf 3-rd state, prints only when executing the Compile command.");
+		b.End();
+		
+		_b.OkApply += e => {
+			App.Settings.internetSearchUrl = internetSearchUrl.TextOrNull() ?? "https://www.google.com/search?q=";
+			App.Settings.comp_printCompiled = printCompiled.IsChecked;
 		};
 	}
 	

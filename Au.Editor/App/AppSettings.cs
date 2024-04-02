@@ -14,8 +14,10 @@ record AppSettings : JSettings {
 	AppSettings _Loaded() {
 		_NE(ref user) ??= Guid.NewGuid().ToString();
 		hotkeys ??= new();
-		(font_output ??= new()).Loaded();
-		(font_find ??= new()).Loaded();
+		(font_output ??= new()).Normalize("Consolas", 9);
+		(font_recipeText ??= new()).Normalize("Calibri", 10.5);
+		(font_recipeCode ??= new()).Normalize("Consolas", 9);
+		(font_find ??= new()).Normalize("Consolas", 9);
 		debug ??= new();
 		delm ??= new();
 		recorder ??= new();
@@ -69,21 +71,31 @@ record AppSettings : JSettings {
 	//font of various UI parts
 	public record font_t {
 		public string name;
-		public double size = 9;
+		public double size;
 		
-		public void Loaded() {
-			_NE(ref name, "Consolas");
-			size = Math.Clamp(size, 6, 30);
+		string _defName;
+		double _defSize;
+		
+		internal void Normalize(string defName, double defSize) {
+			_defName = defName;
+			_defSize = defSize;
+			Normalize();
+		}
+		
+		public void Normalize() {
+			if (name.NE()) name = _defName;
+			if (size == 0) size = _defSize; else size = Math.Clamp(size, 6, 30);
 		}
 	}
-	public font_t font_output, font_find;
-	
-	//Options -> Compile, run
-	public bool? comp_printCompiled = false;
+	public font_t font_output, font_recipeText, font_recipeCode, font_find;
 	
 	//Options -> Templates
 	public int templ_use;
 	//public int templ_flags;
+	
+	//Options -> Other
+	public bool? comp_printCompiled = false;
+	public string internetSearchUrl = "https://www.google.com/search?q=";
 	
 	//code editor
 	public bool edit_wrap, edit_noImages;
@@ -121,6 +133,10 @@ record AppSettings : JSettings {
 	
 	//panel Recipe
 	public sbyte recipe_zoom;
+	
+	//panel Mouse
+	public bool mouse_singleLine;
+	public int mouse_limitText = 100;
 	
 	//panel Debug
 	public record debug_t {

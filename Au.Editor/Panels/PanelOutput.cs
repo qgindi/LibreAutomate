@@ -117,7 +117,7 @@ class PanelOutput {
 		PanelOutput _p;
 		StringBuilder _sb;
 		
-		public KScintilla_(PanelOutput panel) {
+		internal KScintilla_(PanelOutput panel) {
 			_p = panel;
 			
 			AaInitReadOnlyAlways = true;
@@ -136,6 +136,7 @@ class PanelOutput {
 			
 			SciTags.AddCommonLinkTag("open", _OpenLink);
 			SciTags.AddCommonLinkTag("script", _RunScript);
+			SciTags.AddCommonLinkTag("google", _Google);
 			AaTags.AddLinkTag("+properties", fid => {
 				var f = App.Model.FindCodeFile(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
@@ -150,9 +151,11 @@ class PanelOutput {
 		}
 		
 		public void AaSetStyles() {
-			var styles = new CiStyling.TStyles(customized: false) { BackgroundColor = 0xF7F7F7 };
-			styles.FontName = App.Settings.font_output.name;
-			styles.FontSize = App.Settings.font_output.size;
+			var styles = new CiStyling.TStyles(customized: false) {
+				BackgroundColor = 0xF7F7F7,
+				FontName = App.Settings.font_output.name,
+				FontSize = App.Settings.font_output.size
+			};
 			styles.ToScintilla(this);
 		}
 		
@@ -270,6 +273,12 @@ class PanelOutput {
 			var a = s.Split('|');
 			var f = App.Model.FindCodeFile(a[0]); if (f == null) return;
 			CompileRun.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));
+		}
+		
+		static void _Google(string s) {
+			var a = s.Split('|');
+			string s1 = a[0], s2 = a.Length > 1 ? a[1] : null;
+			run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s1) + s2);
 		}
 	}
 }

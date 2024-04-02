@@ -34,7 +34,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Search without loading dll into the target process.
 		/// Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
-		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher [](xref:uac) integrity level, partially Firefox web page if its multiprocess feature is not disabled.
+		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher [](xref:uac) integrity level.
 		/// Some windows have child controls that belong to a different process or thread than the window. For example the Windows Task Scheduler window. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control (<see cref="wnd.Child"/> etc) and search in it.
 		/// Don't need this flag when searching in elm (then it is inherited from the elm variable).
 		/// See also: <see cref="elm.MiscFlags"/>.

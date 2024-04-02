@@ -1941,9 +1941,9 @@ If unchecked, returns null.");
 @"All UI elements in the window.");
 
 		//SHOULDDO: now no info for HwndHost
-		//			_Info(_code, "Code",
-		//@"Created code to find the UI element.
-		//Some parts can be edited directly.");
+//		_info.Info(_code, "Code",
+//@"Code to find the UI element.
+//The ""find window"" part can be edited directly.");
 	}
 
 	string _dialogInfo = $@"This tool creates code to find <help elm>UI element<> in <help wnd.find>window<>.
@@ -1959,7 +1959,6 @@ If checked 'Smaller', the tool tries to capture a smaller element. Note: in some
 
 If the hotkey doesn't work when the target window is active, probably its process is admin and this process isn't. Or the process steals the hotkey; try another hotkey (Options -> Hotkeys).";
 
-	//const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature. More info in <help>elm<> help. Or use Chrome instead.";
 	const string c_infoJava = "If there are no UI elements in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help>elm<> help.";
 
 	partial class _PropPage {

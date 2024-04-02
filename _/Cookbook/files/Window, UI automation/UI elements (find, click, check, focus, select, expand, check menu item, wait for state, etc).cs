@@ -92,3 +92,11 @@ var f1 = new elmFinder("BUTTON", "Apply"); //or var f1 = elm.path["BUTTON", "App
 var w10 = wnd.find(cn: "#32770", also: t => f1.In(t).Exists()); //or t => t.HasElm(f1)
 print.it(w10);
 print.it(f1.Result);
+
+/// Print all UI elements in a window.
+
+var w11 = wnd.find("LibreAutomate");
+//print all
+print.it(w11.Elm.FindAll());
+//print only buttons
+print.it(w11.Elm["BUTTON"].FindAll());

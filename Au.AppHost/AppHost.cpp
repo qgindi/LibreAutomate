@@ -384,16 +384,22 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		wsprintfW(w, L"To run this application, need to install:\r\n\r\n"
 			L".NET %i Desktop Runtime x%i\r\n\r\n"
 			L"Would you like to download it now?", NETVERMAJOR, bits);
-		if (IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO)) {
+		if (IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO | MB_TOPMOST)) {
 			AllowSetForegroundWindow(ASFW_ANY);
 			auto ShellExecuteW = (int(__stdcall*)(HWND, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, INT))GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
 			//wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
-			//note: the below URL did not exist when tested with .NET 8 RC (before the final .NET 8 was released).
-			//  The setup script uses this URL too.
-			//	The default SDK AppHost then opened this page: https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.0-rc.2-windows-x64-installer?cid=getdotnetcore
-			//		It starts to download. Also it contains a direct download link, but it is for that version, not for the newest version.
+#if true
+			wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i", NETVERMAJOR, NETVERMINOR);
+			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
+			Sleep(1000);
+			wsprintfW(w, L"In the dowload page please find and download this:\r\n\r\n.NET Desktop Runtime for Windows x%i", bits);
+			MessageBoxW(0, w, p.exeName.c_str(), MB_ICONINFORMATION | MB_TOPMOST);
+#else
+			//rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
+			//note: this URL is different for preview/rc (before the final version released).
 			wsprintfW(w, L"https://aka.ms/dotnet/%i.%i/windowsdesktop-runtime-win-x%i.exe", NETVERMAJOR, NETVERMINOR, bits); //latest patch
 			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
+#endif
 		}
 		return -1;
 	}

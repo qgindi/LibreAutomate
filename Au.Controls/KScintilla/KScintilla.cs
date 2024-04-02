@@ -34,7 +34,13 @@ public unsafe partial class KScintilla : HwndHost {
 		//filesystem.more.loadDll64or32Bit_("Lexilla.dll");
 	}
 	
-	public nint AaSciPtr => _sciPtr;
+	//public nint AaSciPtr => _sciPtr;
+	public nint AaSciPtr {
+		get {
+			Debug.Assert(_sciPtr != 0);
+			return _sciPtr;
+		}
+	}
 	
 	public SciImages AaImages { get; private set; }
 	

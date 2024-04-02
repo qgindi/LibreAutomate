@@ -5,7 +5,7 @@ namespace Au.Controls;
 
 /// <summary>
 /// Scintilla-based control to show formatted information text.
-/// To set text use the <see cref="KScintilla.aaaText"/> property. For formatting and links use tags: <see cref="SciTags"/>.
+/// To set text use the <see cref="aaaText"/> property. For formatting and links use tags: <see cref="SciTags"/>.
 /// </summary>
 public class KSciInfoBox : KScintilla {
 	public KSciInfoBox() {
@@ -63,6 +63,7 @@ public class KSciInfoBox : KScintilla {
 			}
 			this.aaaText = (o as FrameworkElement).ToolTip as string;
 		};
+		if (c is TextBox or ComboBox) c.GotKeyboardFocus += (o, _) => { this.aaaText = (o as FrameworkElement).ToolTip as string; };
 	}
 
 	/// <summary>
@@ -76,4 +77,14 @@ public class KSciInfoBox : KScintilla {
 
 	///
 	public bool AaElemsSuspended => _suspendElems != 0 && Environment.TickCount64 < _suspendElems;
+	
+	/// <inheritdoc cref="KScintilla.aaaText"/>
+	public new string aaaText {
+		get => base.aaaText;
+		set {
+			if (value == _text) return; //prevent scrolling to the top
+			base.aaaText = _text = value;
+		}
+	}
+	string _text;
 }

@@ -135,7 +135,7 @@ public partial class KMenuCommands {
 			if (image == null) {
 				b.Content = text;
 				b.Padding = new Thickness(4, 1, 4, 2);
-				b.ToolTip = ButtonTooltip;
+				_SetTooltip(ButtonTooltip);
 			} else if (imageAt != null) {
 				var v = new DockPanel();
 				var dock = imageAt.Value;
@@ -145,10 +145,10 @@ public partial class KMenuCommands {
 				if (dock == Dock.Left || dock == Dock.Right) t.Margin = new Thickness(2, -1, 2, 1);
 				v.Children.Add(t);
 				b.Content = v;
-				b.ToolTip = ButtonTooltip;
+				_SetTooltip(ButtonTooltip);
 			} else { //only image
 				b.Content = image;
-				b.ToolTip = ButtonTooltip ?? text;
+				_SetTooltip(ButtonTooltip ?? text);
 			}
 			b.Foreground = _mi.Foreground;
 			if (image != null && !text.NE()) System.Windows.Automation.AutomationProperties.SetName(b, text);
@@ -157,6 +157,15 @@ public partial class KMenuCommands {
 			if (_mi.IsCheckable) {
 				if (b is ToggleButton tb) tb.SetBinding(ToggleButton.IsCheckedProperty, new Binding("IsChecked") { Source = _mi });
 				else print.warning($"Menu item {Name} is checkable, but button isn't a ToggleButton (CheckBox or RadioButton).");
+			}
+			
+			void _SetTooltip(string s) {
+				string k = this.Keys, g = _mi.InputGestureText;
+				if (!k.NE() || !g.NE()) {
+					if (!g.NE()) k = k.NE() ? g : g + ", " + k;
+					s = s.NE() ? k : $"{s}\n\n{k}";
+				}
+				b.ToolTip = s;
 			}
 		}
 		

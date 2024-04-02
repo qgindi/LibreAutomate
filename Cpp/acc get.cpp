@@ -117,7 +117,6 @@ bool _FromPoint_DW1(POINT p, ref AccRaw& a, out AccRaw& ar, bool notThis) {
 	//a.PrintAcc();
 	if(a.elem == 0) {
 		//note: OpenOffice/LibreOffice Calc hangs/crashes if p is in the table. This func is not called for any OO/LO programs.
-		//note: Firefox may be slow, because not fully inproc. This func is not called.
 		AccContext context(100);
 		AccChildren c(ref context, ref a);
 		//Print(c.Count());
@@ -159,7 +158,7 @@ void _FromPoint_DescendantWorkaround(POINT p, ref IAccessible*& a, ref long& ele
 }
 
 //Get UIA element from same point. If its size is < 0.5 than of the AO, use it. Dirty, but in most cases works well.
-bool _FromPoint_UiaWorkaround(POINT p, ref Smart<IAccessible>& iacc, ref long& elem/*, BYTE role*/)
+bool _FromPoint_UiaWorkaround(POINT p, ref Smart<IAccessible>& iacc, ref long& elem, BYTE role)
 {
 	//note: don't ignore when has children. Eg can be WINDOW, and its child count is not 0.
 
@@ -172,7 +171,10 @@ bool _FromPoint_UiaWorkaround(POINT p, ref Smart<IAccessible>& iacc, ref long& e
 	__int64 sq1 = (__int64)wid1 * hei1, sq2 = (__int64)wid2 * hei2;
 	if(!(sq2 < sq1 / 2 && sq2 > 0)) return false;
 
-	//Printf(L"{%i %i %i %i} {%i %i %i %i}", x1, y1, wid1, hei1, x2, y2, wid2, hei2);
+	//auia may be DOCUMENT with rect = the visible page area, whereas iacc is eg a much bigger GROUPING.
+	if(ao::GetRoleByte(auia, 0) == ROLE_SYSTEM_DOCUMENT) return false;
+
+	//Printf(L"{%i %i %i %i} {%i %i %i %i} 0x%X 0x%X", x1, y1, wid1, hei1, x2, y2, wid2, hei2, role, ao::GetRoleByte(auia, 0));
 
 	//SHOULDDO: although smaller, in some cases it can be not a descendant. Often cannot detect it reliably. Some reasons:
 	// 1. UIA filters out some objects.
@@ -247,7 +249,7 @@ g1:
 		//UIA?
 		if(role != ROLE_CUSTOM && (trySmaller || (!!(flags & eXYFlags::OrUIA) && _IsContainer(role)))) { //and ignore elem
 			RETRY_IF_CHANGED_WINDOW;
-			if(_FromPoint_UiaWorkaround(p, ref iacc, ref elem)) {
+			if(_FromPoint_UiaWorkaround(p, ref iacc, ref elem, role)) {
 				miscFlags |= eAccMiscFlags::UIA;
 				PRINTF(L"switched to UIA.  p={%i, %i}  role=0x%X  w=%i  cl=%s", p.x, p.y, role, (int)(LPARAM)wFP, GetCommandLineW());
 			}

@@ -1097,10 +1097,15 @@ public static class script {
 			var k = key;
 			if (k == KKey.Pause && 0 != (i & Api.MOD_CONTROL)) k = KKey.Break; //Ctrl+Pause = Break
 			if (!Api.RegisterHotKey(s_auxWnd, idBase + i, (uint)i | Api.MOD_NOREPEAT, k)) {
+				//print.it(i, k, s_auxWnd, lastError.message);
 				if (k == KKey.Pause && i == 8) continue; //Win+Pause opens something in Windows Settings
 				while (--i >= 0) Api.UnregisterHotKey(s_auxWnd, idBase + i);
 				return false;
 				//any failed to register hotkey would be dangerous, because the user-pressed key combined with script-pressed modifiers would invoke the hotkey in its owner app
+				
+				//TODO: not good. Many keys fail because a hotkey is registered. Eg Esc, arrows, Home. Many are registered by OS with mod Win.
+				//	Maybe instead just print warning "Failed to register hotkey X. It can be dangerous... Consider using media keys etc instead.". Fail only if cannot register the key without modifiers.
+				//	Or use LL hook. Then can detect script-pressed keys. But no, it's too heavy; maybe every script will have script.setup with that key.
 			}
 		}
 		return true;

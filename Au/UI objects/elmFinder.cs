@@ -135,7 +135,7 @@ public unsafe class elmFinder {
 	/// 
 	/// Can have a prefix:
 	/// - <c>"web:"</c> - search only in the visible web page, not in whole window. Example: <c>"web:LINK"</c>.\
-	///   Supports Firefox, Chrome, Internet Explorer (IE) and apps that use same code (Edge, Opera...). With other windows, searches in the first found visible UI element that has <b>DOCUMENT</b> role.\
+	///   Supports Chrome, Firefox, Internet Explorer (IE) and apps that use same code (Edge, Opera...). With other windows, searches in the first found visible UI element that has <b>DOCUMENT</b> role.\
 	///   Tip: To search only NOT in web pages, use <i>prop</i> <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
 	/// - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If <i>w</i> window class name starts with <c>"Mozilla"</c>, can be used <c>"web:"</c> instead.
 	/// - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If <i>w</i> window class name starts with <c>"Chrome"</c>, can be used <c>"web:"</c> instead.

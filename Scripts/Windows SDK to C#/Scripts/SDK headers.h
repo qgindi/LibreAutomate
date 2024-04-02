@@ -117,6 +117,7 @@ typedef struct _iobuf { char *_ptr; int _cnt; char *_base; int _flag; int _file;
 #include <Pla.h> //performance logs and alerts
 #include <werapi.h> //error reporting
 #include <physicalmonitorenumerationapi.h>
+#include <propvarutil.h>
 
 //core audio API
 #include <Audioclient.h>

@@ -20,7 +20,7 @@ ChromeOptions options = new();
 //options.AddArguments($"user-data-dir={folders.LocalAppData + @"Google\Chrome\User Data"}", "profile-directory=Profile 1");
 
 //Start new Chrome instance.
-var service = ChromeDriverService.CreateDefaultService();
+var service = ChromeDriverService.CreateDefaultService(pathname.getDirectory(typeof(ChromeDriver).Assembly.Location));
 service.HideCommandPromptWindow = true;
 using var driver = new ChromeDriver(service, options);
 driver.Manage().Window.Maximize();
@@ -88,7 +88,7 @@ static class Selenium {
 		var s = process.getCommandLine(w.ProcessId, true) ?? throw new AuException("Failed to get Chrome command line");
 		var da = StringUtil.CommandLineToArray(s).FirstOrDefault(o => o.Starts("--remote-debugging-port=")) ?? throw new AuException("Chrome must be started with command line like --remote-debugging-port=9222");
 		ChromeOptions options = new() { DebuggerAddress = "127.0.0.1:" + da[24..] };
-		var service = ChromeDriverService.CreateDefaultService();
+		var service = ChromeDriverService.CreateDefaultService(pathname.getDirectory(typeof(ChromeDriver).Assembly.Location));
 		service.HideCommandPromptWindow = true;
 		return new ChromeDriver(service, options);
 	}

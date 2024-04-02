@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
+using System.Windows.Media;
 
 //SHOULDDO: when disabling main window, also disable its owned windows. At least floating panels.
 //	Because for dialogs often is used 'owner: App.Hmain'.
@@ -84,9 +85,14 @@ partial class MainWindow : Window {
 	}
 	
 	protected override void OnSourceInitialized(EventArgs e) {
-		base.OnSourceInitialized(e);
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
 		App.Hmain = (wnd)hs.Handle;
+		
+		//TODO: need testing. This code added 2024-03-24 in LA 1.2.
+		hs.CompositionTarget.RenderMode = RenderMode.SoftwareOnly;
+		RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+
+		base.OnSourceInitialized(e);
 		
 		if (App.Settings.wndpos.main == null) App.Hmain.EnsureInScreen();
 		
@@ -101,6 +107,11 @@ partial class MainWindow : Window {
 		App.Model.WorkspaceLoadedWithUI(onUiLoaded: true);
 		
 		App.Loaded = AppState.LoadedUI;
+		
+		//workaround for WPF bug: on Environment.Exit its "process exit" event handler creates chaoss, eg pumps messages, including wmtimer, and app crashes.
+		process.thisProcessExitDone_ += () => { //after calling all process.thisProcessExit event handlers
+			if (App.Loaded == AppState.LoadedUI) Api.ExitProcess(Environment.ExitCode);
+		};
 		
 		CodeInfo.UiLoaded();
 		
@@ -145,6 +156,7 @@ partial class MainWindow : Window {
 		
 		bool loaded = App.Loaded == AppState.LoadedUI;
 		App.Loaded = AppState.Unloading;
+		App.OnMainWindowClosed_();
 		base.OnClosed(e);
 		if (loaded) {
 			UacDragDrop.AdminProcess.Enable(false);

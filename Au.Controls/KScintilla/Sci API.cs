@@ -1,6 +1,3 @@
-//SHOULDDO: update Scintilla. Useful new API:
-//	Change history (displays in margin).
-
 namespace Au.Controls;
 
 public static unsafe class Sci {
@@ -58,7 +55,6 @@ public static unsafe class Sci {
 		public int copy; //bool
 	}
 #pragma warning restore 649
-	#endregion
 
 	//[DllImport("Scintilla")]
 	//public static extern bool Sci_CanUndoRedoContainer(nint sci, bool redo, int token);
@@ -68,8 +64,6 @@ public static unsafe class Sci {
 
 	[DllImport("Scintilla")]
 	public static extern int Sci_GetUndoMark(nint sci, bool redo);
-
-	#region au constants etc
 
 	public const int STYLE_HIDDEN = 31; //DEFAULT-1
 

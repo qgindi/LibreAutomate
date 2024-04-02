@@ -31,7 +31,7 @@ static partial class App {
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 		
 		//restart as admin if started as non-admin on admin user account
-		if (args.Length > 0 && args[0] == "/n") {
+		if (args.Length > 0 && args[0] is "/n" or "-n") {
 			args = args.RemoveAt(0);
 			_raaResult = WinTaskScheduler.RResult.ArgN;
 		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
@@ -126,8 +126,8 @@ static partial class App {
 			//	But then problems. Eg cannot auto-create main window synchronously, because need to exit native loop and start WPF loop.
 		}
 		catch (Exception e1) when (!Debugger.IsAttached) {
-			Wmain.Close();
 			s_timer.Stop();
+			Wmain.Close();
 			dialog.showError("Exception", e1.ToString(), flags: DFlags.Wider);
 		}
 		finally { MainFinally_(); }
@@ -182,7 +182,7 @@ static partial class App {
 		//	And crashes if a message causes to call Show again.
 		//	To reproduce, let the program start hidden, and double-click the tray icon.
 		if (_sw1) return;
-
+		
 		_sw1 = true;
 		Wmain.Show(); //auto-creates MainWindow if never was visible
 		_sw1 = false;
@@ -284,7 +284,7 @@ static partial class App {
 			Environment.Exit(1);
 		}
 	}
-
+	
 #if DEBUG
 	static void _RemindToBuild32bit() {
 		if (IsAuAtHome)
@@ -340,6 +340,10 @@ static partial class App {
 				//note: don't create the task in the setup program. It requires a C++ dll, and it triggers AV false positives.
 			}
 		}
+	}
+	
+	internal static void OnMainWindowClosed_() {
+		s_timer.Stop();
 	}
 	
 	static WinTaskScheduler.RResult _raaResult;
@@ -432,9 +436,6 @@ static partial class App {
 	
 	public static bool IsPortable { get; private set; }
 	
-	public static string Version => s_version ??= typeof(App).Assembly.GetName().Version.ToString(3);
-	static string s_version;
-	
 	public static async void CheckForUpdates(System.Windows.Controls.Button b = null) {
 		bool forceNow = b != null;
 		int day = (int)(DateTime.Now.Ticks / 864000000000);
@@ -447,12 +448,12 @@ static partial class App {
 			r.EnsureSuccessStatusCode();
 			var s = await r.Content.ReadAsStringAsync();
 			s = s.Lines()[0];
-			if (s != Version && System.Version.TryParse(Version, out var v1) && System.Version.TryParse(s, out var v2) && v2 > v1) {
+			if (s != Au_.Version && System.Version.TryParse(Au_.Version, out var v1) && System.Version.TryParse(s, out var v2) && v2 > v1) {
 				//Panels.Output.Scintilla.AaTags.AddLinkTag("+appUpdate", _Update);
-				//print.it($"<>{AppNameShort} {s} is available. The installed version is {Version}.  [<+appUpdate>update...<>]  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>website<>]");
-				print.it($"<>{AppNameShort} {s} is available. The installed version is {Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>download<>]");
+				//print.it($"<>{AppNameShort} {s} is available. The installed version is {Au_.Version}.  [<+appUpdate>update...<>]  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>website<>]");
+				print.it($"<>{AppNameShort} {s} is available. The installed version is {Au_.Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>download<>]");
 			} else if (forceNow) {
-				dialog.showInfo(null, $"{AppNameShort} is up to date. Version {Version}.", owner: Hmain);
+				dialog.showInfo(null, $"{AppNameShort} is up to date. Version {Au_.Version}.", owner: Hmain);
 			}
 		}
 		catch (Exception e1) { if (forceNow) print.warning(e1); }

@@ -86,6 +86,8 @@ static class CiUtil {
 			}
 		} else if (token.Parent is ImplicitObjectCreationExpressionSyntax && (!forHelp || cd.pos == token.Span.End)) {
 			//for 'new(' get the ctor or type
+		} else if (k == SyntaxKind.BaseKeyword) {
+			
 		} else {
 			//print.it(
 			//	//token.IsKeyword(), //IsReservedKeyword||IsContextualKeyword, but not IsPreprocessorKeyword
@@ -173,7 +175,7 @@ static class CiUtil {
 		if (url != null) run.itSafe(url);
 	}
 	
-	public static string GoogleURL(string query) => "https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(query);
+	public static string GoogleURL(string query) => App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(query);
 	
 	public static string GetSymbolHelpUrl(ISymbol sym) {
 		//print.it(sym);

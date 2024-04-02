@@ -163,6 +163,77 @@ public static class ScriptEditor {
 	/// </remarks>
 	public static bool IsPortable { get; internal set; }
 	
+	/// <summary>
+	/// Gets name, text and some info of the currently active file in editor.
+	/// </summary>
+	/// <param name="needText">Need text too.</param>
+	/// <returns><c>null</c> if there are no open files or if failed.</returns>
+	public static EFileInfo GetFileInfo(bool needText) => GetFileInfo(null, needText);
+	
+	/// <summary>
+	/// Gets name, text and some info of a file in the current workspace in editor.
+	/// </summary>
+	/// <param name="file">A file in current workspace. Can be full path, or relative path in workspace, or file name with extension (<c>".cs"</c> etc), or <c>":id"</c>.</param>
+	/// <param name="needText">Need text too.</param>
+	/// <returns><c>null</c> if the specified file not found or if failed.</returns>
+	public static EFileInfo GetFileInfo(string file, bool needText) {
+		var w = WndMsg_;
+		var flags = needText ? "1" : "0";
+		if (!w.Is0 && WndCopyData.SendReceive<char>(w, 14, file != null ? flags + " " + file : flags, out byte[] r)) {
+			var x = Serializer_.Deserialize(r);
+			string path = x[0];
+			return new EFileInfo(pathname.getName(path), path, x[1], (EFileKind)(int)x[2], (uint)(int)x[3], x[4], x[5]);
+		}
+		return null;
+	}
+	
+	/// <summary>
+	/// If a specified class file is currently active in editor, calls a callback function (which can be or call a function in that file) and returns true.
+	/// </summary>
+	/// <param name="files">
+	/// List of tuples <c>(string file, Action action)</c>:
+	/// <br/>• <b>file</b> - a class file from current project; must be filename without ".cs" and path.
+	/// <br/>• <b>action</b> - a callback function to call if that file is the active file in editor.
+	/// </param>
+	/// <remarks>
+	/// A script project folder can contain one script file at the top, and any number of class files. When you click <b>Run</b>, the code execution starts from the script, even if a class file is currently active in editor. But sometimes you may want to execute just a function in the current class file, and skip script code. The example shows how to do it easily.
+	/// </remarks>
+	/// <example>
+	/// Code at/near the start of the script file of a script project.
+	/// <code><![CDATA[
+	/// if (script.testing && ScriptEditor.TestCurrentFileInProject(("TaskA", TaskA.Func1), ("TaskB", () => TaskB.Func1(5)))) return;
+	/// ]]></code>
+	/// File TaskA.cs.
+	/// <code><![CDATA[
+	/// static class TaskA {
+	/// 	public static void Func1() {
+	/// 		dialog.show(null, "TaskA");
+	/// 	}
+	/// }
+	/// ]]></code>
+	/// File TaskB.cs.
+	/// <code><![CDATA[
+	/// static class TaskB {
+	/// 	public static void Func1(int x) {
+	/// 		dialog.show(null, $"TaskB, x={x}");
+	/// 	}
+	/// }
+	/// ]]></code>
+	/// </example>
+	public static bool TestCurrentFileInProject(params (string file, Action action)[] files) {
+		if (GetFileInfo(false) is {  } f && f.kind is EFileKind.Class) {
+			var s = f.name[..^3];
+			foreach (var (n, a) in files) {
+				if (n.Eqi(s)) {
+					a();
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	
 	//rejected. Use folders.Editor.
 	///// <summary>
 	///// Gets some special folders of editor process.

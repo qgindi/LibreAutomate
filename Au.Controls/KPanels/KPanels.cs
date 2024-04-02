@@ -93,7 +93,7 @@ public partial class KPanels {
 				_savedXML = s1;
 			}
 		}
-		catch (Exception ex) { print.qm2.write(ex); }
+		catch { }
 	}
 	static XmlWriterSettings s_xws;
 	string _savedXML;

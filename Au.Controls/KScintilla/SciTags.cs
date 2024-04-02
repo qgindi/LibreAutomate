@@ -641,9 +641,6 @@ public unsafe class SciTags {
 		case "link":
 			run.itSafe(s1, s2);
 			break;
-		case "google":
-			run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s1) + s2);
-			break;
 		case "help":
 			HelpUtil.AuHelp(attr);
 			break;
@@ -651,7 +648,7 @@ public unsafe class SciTags {
 			run.selectInExplorer(attr);
 			break;
 		default:
-			//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
+			//case "open": case "script": case "google": //the control recognizes but cannot implement these. The lib user can implement.
 			//others are unregistered tags. Only if start with '+' (others are displayed as text).
 			if (opt.warnings.Verbose) dialog.showWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
 			break;

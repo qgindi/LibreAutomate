@@ -286,7 +286,7 @@ public unsafe partial class KTreeView {
 	
 	//Returns false if not on item.
 	void _OnMouseDown(MouseButton button, nint wParam, nint lParam, bool @double = false) {
-		if (button != MouseButton.Middle && Focusable) Focus();
+		if (button != MouseButton.Middle && Focusable && !_w.Window.HasExStyle(WSE.NOACTIVATE)) Focus();
 		var xy = Math2.NintToPOINT(lParam);
 		if (!HitTest(xy, out var h) || !Api.GetCapture().Is0) return;
 		

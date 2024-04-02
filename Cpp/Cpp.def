@@ -1,6 +1,7 @@
 EXPORTS
 
 Cpp_RunDllW ;__stdcall
+UnloadAuCppDll ;__stdcall
 
 pcre2_pattern_info=pcre2_pattern_info_16
 pcre2_substring_nametable_scan=pcre2_substring_nametable_scan_16

@@ -697,7 +697,7 @@ public partial class toolbar : MTBase {
 			void _ExecItem() {
 				var action = b.clicked as Action<TBItem>;
 				try { action(b); }
-				catch (Exception ex) when (!b.actionException) { print.warning(ex.ToString(), -1); }
+				catch (Exception ex) when (!b.actionException) { print.warning(ex); }
 			}
 		}
 	}

@@ -51,11 +51,11 @@ public unsafe partial class popupMenu : MTBase {
 	int _iHot = -1;
 	PMFlags _flags;
 	PMItem _result;
-
+	
 	static popupMenu() {
 		WndUtil.RegisterWindowClass("Au.popupMenu", etc: new() { style = Api.CS_HREDRAW | Api.CS_VREDRAW | Api.CS_DROPSHADOW, mCursor = MCursor.Arrow });
 	}
-
+	
 	/// <summary>
 	/// Use this constructor for various context menus of your app.
 	/// </summary>
@@ -63,7 +63,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// Users cannot right-click a menu item and open/select it in editor.
 	/// </remarks>
 	public popupMenu() { }
-
+	
 	/// <summary>
 	/// Use this constructor in scripts.
 	/// </summary>
@@ -78,9 +78,9 @@ public unsafe partial class popupMenu : MTBase {
 	public popupMenu(string name, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) : base(name, f_, l_) {
 		ExtractIconPathFromCode = true;
 	}
-
+	
 	#region add
-
+	
 	PMItem _Add(PMItem mi, string text, MTImage image, int l_, string f_, Delegate click = null) {
 		_ThreadTrap();
 		_OpenTrap("cannot add items while the menu is open. To add to submenu, use the submenu variable.");
@@ -90,7 +90,7 @@ public unsafe partial class popupMenu : MTBase {
 		Last = mi;
 		return mi;
 	}
-
+	
 	/// <summary>
 	/// Adds menu item with explicitly specified id.
 	/// </summary>
@@ -102,7 +102,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="f_">[](xref:caller_info)</param>
 	public PMItem Add(int id, string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable) { Id = _lastId = id }, text, image, l_, f_);
-
+	
 	/// <summary>
 	/// Adds menu item with auto-generated id.
 	/// </summary>
@@ -116,7 +116,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </remarks>
 	public PMItem Add(string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable) { Id = ++_lastId }, text, image, l_, f_);
-
+	
 	/// <summary>
 	/// Adds menu item with action (callback function) that is executed on click.
 	/// </summary>
@@ -131,7 +131,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </remarks>
 	public PMItem Add(string text, Action<PMItem> click, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable), text, image, l_, f_, click);
-
+	
 	/// <summary>
 	/// Adds menu item with action (callback function) that is executed on click.
 	/// </summary>
@@ -147,7 +147,7 @@ public unsafe partial class popupMenu : MTBase {
 	public Action<PMItem> this[string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null] {
 		set { Add(text, value, image, disable, l_, f_); }
 	}
-
+	
 	/// <summary>
 	/// Adds menu item to be used as a checkbox.
 	/// </summary>
@@ -163,7 +163,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </remarks>
 	public PMItem AddCheck(string text, bool check = false, Action<PMItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable, check) { checkType = 1 }, text, image, l_, f_, click);
-
+	
 	/// <summary>
 	/// Adds menu item to be used as a radio button in a group of such items.
 	/// </summary>
@@ -179,7 +179,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </remarks>
 	public PMItem AddRadio(string text, bool check = false, Action<PMItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable, check) { checkType = 2 }, text, image, l_, f_, click);
-
+	
 	/// <summary>
 	/// Adds menu item that opens a submenu.
 	/// Used like <c>m.Submenu("Example", m => { /* add submenu items */ });</c>.
@@ -221,7 +221,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </example>
 	public PMItem Submenu(string text, Action<popupMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable) { IsSubmenu = true }, text, image, l_, f_, opening);
-
+	
 	/// <summary>
 	/// Adds menu item that opens a reusable submenu.
 	/// </summary>
@@ -243,18 +243,18 @@ public unsafe partial class popupMenu : MTBase {
 	/// </example>
 	public PMItem Submenu(string text, Func<popupMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable) { IsSubmenu = true }, text, image, l_, f_, opening);
-
+	
 	/// <summary>
 	/// Adds separator.
 	/// </summary>
 	public void Separator()
 		=> _Add(new PMItem(this, isDisabled: true) { IsSeparator = true }, null, default, 0, null);
-
+	
 	/// <summary>
 	/// Gets the last added menu item.
 	/// </summary>
 	public PMItem Last { get; private set; }
-
+	
 	/// <summary>
 	/// Gets added items, except separators and items in submenus.
 	/// </summary>
@@ -271,7 +271,7 @@ public unsafe partial class popupMenu : MTBase {
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets added items and separators, except items in submenus.
 	/// </summary>
@@ -281,13 +281,13 @@ public unsafe partial class popupMenu : MTBase {
 			return _a;
 		}
 	}
-
+	
 	/// <summary>
 	/// Don't use: <c>&amp;</c> character for keyboard shortcut; tab character for hotkey; <c>|</c> character for tooltip (but use <c>\0</c>).
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
 	public bool RawText { get; set; }
-
+	
 	/// <summary>
 	/// Adds enum members as checkbox-items (if it's a <c>[Flags]</c> enum) or radio-items.
 	/// </summary>
@@ -309,11 +309,11 @@ public unsafe partial class popupMenu : MTBase {
 	public EnumUI<TEnum> AddEnum<TEnum>(TEnum init = default, (TEnum value, string text)[] items = null) where TEnum : unmanaged, Enum {
 		return new EnumUI<TEnum>(this, init, items);
 	}
-
+	
 	#endregion
-
+	
 	#region show, close
-
+	
 	/// <summary>
 	/// Shows the menu and waits until closed.
 	/// </summary>
@@ -331,21 +331,21 @@ public unsafe partial class popupMenu : MTBase {
 		_OpenTrap("this menu is already open");
 		if (_sub.parent != null) throw new InvalidOperationException("this is a submenu");
 		if (_a.Count == 0) return 0;
-
+		
 		Api.ReleaseCapture(); //winforms still capturing on MouseClick etc, and menu would be like disabled
-
+		
 		if (!flags.Has(PMFlags.Underline)) if (0 != Api.SystemParametersInfo(Api.SPI_GETKEYBOARDCUES, 0)) flags |= PMFlags.Underline;
-
+		
 		_Show(flags, xy, excludeRect, owner.Hwnd);
-
+		
 		int R = 0;
-
+		
 		WindowsHook hKey = null, hMouse = null;
 		timer timer = null;
 		try {
 			var wFore = wnd.active;
 			bool foreground = wFore.IsOfThisThread;
-
+			
 			//to close with mouse use timer. Mouse hook may not work because of UAC.
 			int mouseState = _GetMouseState();
 			timer = new(t => { //close if mouse clicked a non-menu window or if activated another window
@@ -356,7 +356,7 @@ public unsafe partial class popupMenu : MTBase {
 				else if (wnd.active != wFore) Close();
 			});
 			timer.Every(30);
-
+			
 			static int _GetMouseState() =>
 				(keys.gui.getKeyState(KKey.MouseLeft) & 0x1)
 				| ((keys.gui.getKeyState(KKey.MouseRight) & 0x1) << 1)
@@ -364,14 +364,14 @@ public unsafe partial class popupMenu : MTBase {
 				;
 			//note: use only toggled state. Pressed state may change to "no" when mouse is already in a non-menu window although was in a menu window at the time of the mouse event.
 			//note: in some cases toggled state may not change when clicked. Eg when clicked a taskbar button that activates another window. Then helps if (wnd.active!=wFore) Close();.
-
+			
 			void _CloseIfClickedNotMenu(wnd w) {
 				//if(!w.Get.Owners(andThisWindow: true).Contains(_w)) Close(); //no, user may want nested root menus, although it is rare
 				if (!_IsMenuWindow(w)) Close();
 			}
-
+			
 			bool _IsMenuWindow(wnd w) => w == _w || w.ClassNameIs("Au.popupMenu");
-
+			
 			if (!foreground) {
 				//never mind: hooks don't work if the active window has higher UAC IL. Then use timer and mouse/Esc toggle state.
 				hKey = WindowsHook.Keyboard(h => {
@@ -406,7 +406,7 @@ public unsafe partial class popupMenu : MTBase {
 					}
 #endif
 				});
-
+				
 				//If the active app is showing a menu, it captures the mouse.
 				//	If this menu is there, a click goes to that app instead of this menu.
 				//	Workaround: mouse hook. We cannot SetCapture in this background thread.
@@ -430,10 +430,10 @@ public unsafe partial class popupMenu : MTBase {
 						}
 					});
 				}
-
+				
 				static bool _IsCapturingMouse() => miscInfo.getGUIThreadInfo(out var g) && !g.hwndCapture.Is0;
 			}
-
+			
 			//var pmo = new PrintMsgOptions(Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, Api.WM_PAINT, 0x138a /*SC_WORK_IDLE*/, Api.WM_USER, int.MinValue) { WindowProperties = true };
 			//print.it("in");
 			_MessageLoop();
@@ -475,34 +475,34 @@ public unsafe partial class popupMenu : MTBase {
 			timer?.Stop();
 			if (!_w.Is0) Api.DestroyWindow(_w);
 		}
-
+		
 		var b = _result;
 		if (b != null) {
 			b.InvokeAction_();
 			R = b.Id;
 		}
-
+		
 		return R;
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if the menu window is open.
 	/// </summary>
 	public bool IsOpen => !_w.Is0;
-
+	
 	/// <summary>
 	/// After closing the menu gets the selected item, or <c>null</c> if canceled.
 	/// </summary>
 	public PMItem Result => _result;
-
+	
 	void _OpenTrap(string error = null) {
 		if (IsOpen) throw new InvalidOperationException(error);
 	}
-
+	
 	void _ShowSubmenu(PMItem b, bool focusFirst = false, popupMenu m = null) {
 		if (b == _sub.item) return;
 		_sub.child?.Close();
-
+		
 		bool contextMenu = m != null;
 		if (!contextMenu) {
 			if (b.clicked == null) return;
@@ -517,37 +517,43 @@ public unsafe partial class popupMenu : MTBase {
 			}
 			if (m == null || m._a.Count == 0) return;
 		}
-
+		
 		_sub.child = m;
 		_sub.item = b;
 		m._sub.parent = this;
 		if (focusFirst && m._iHot < 0) m._iHot = 0;
-
+		
 		if (contextMenu) {
 			m._Show(0, null, null, _w);
 		} else {
 			var r = _ItemRect(b, inScreen: true);
 			r.Inflate(-_size.border, _size.border);
-
+			
 			m._Show(_flags & ~(PMFlags)0xffffff, new(r.right, r.top), r, _w);
 		}
 	}
-
+	
 	void _Show(PMFlags flags, POINT? xy, RECT? excludeRect, wnd owner) { //CONSIDER: _Show(PMPosition pos = null) //then could precisely specify offsets etc
 		if (_a.Count == 0) return;
-
+		
 		_result = null;
 		_flags = flags;
-
+		
 		RECT cr = default;
-		bool byCaret = flags.Has(PMFlags.ByCaret) && miscInfo.getTextCursorRect(out cr, out _);
+		bool byCaret = flags.Has(PMFlags.ByCaret);
+		if (byCaret) {
+			if (caretRectFunc is {  } crf) {
+				var r1 = crf();
+				if (r1 is null) byCaret = false; else cr = r1.Value;
+			} else byCaret = miscInfo.getTextCursorRect(out cr, out _);
+		}
 		POINT p = byCaret ? new(cr.left, cr.bottom) : xy ?? mouse.xy;
-
+		
 		var scrn = screen.of(p);
 		_dpi = scrn.Dpi;
 		var rs = scrn.WorkArea;
 		rs.Inflate(-8, -8);
-
+		
 		if (byCaret) {
 			if (excludeRect == null) {
 				cr.Inflate(50, 1);
@@ -565,42 +571,42 @@ public unsafe partial class popupMenu : MTBase {
 				excludeRect = new(p.x, p.y, 1, 1);
 			}
 		}
-
+		
 		if (_addedNewItems) {
 			_addedNewItems = false;
 			_Images();
 		}
-
+		
 		_scroll = new(true, i => _a[i].rect.top, i => _a[i].rect.bottom);
-
+		
 		WS style = WS.POPUP | WS.DLGFRAME; //3-pixel frame
 		WSE estyle = WSE.TOOLWINDOW | WSE.NOACTIVATE | WSE.TOPMOST;
 		SIZE z = _Measure(rs.Width * 19 / 20);
-
+		
 		bool needScroll = z.height > rs.Height;
 		if (needScroll) {
 			z.height = rs.Height;
 			style |= WS.VSCROLL;
 		}
-
+		
 		if (byCaret && !flags.HasAny(PMFlags.AlignRight | PMFlags.AlignCenterH))
 			p.x = Math.Max(p.x - _met.image - _met.check - _met.paddingLeft - _met.textPaddingX - 3, rs.left);
-
+		
 		RECT r = new(0, 0, z.width, z.height);
 		Dpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
 		_size.window = r.Size; _size.client = z; _size.border = -r.top;
 		Api.CalculatePopupWindowPosition(p, r.Size, (uint)flags & 0xffffff, excludeRect.GetValueOrDefault(), out r);
 		
 		if (r.bottom > rs.bottom && r.top > rs.top - 4) r.Move(r.left, r.top - 4); //let the bottom edge not touch the bottom edge of the screen
-
+		
 		_w = WndUtil.CreateWindow(_WndProc, true, "Au.popupMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
 		_SetScrollbar(needScroll);
-
+		
 		_w.ShowL(true);
-
+		
 		_mouse.p = _w.MouseClientXY;
 	}
-
+	
 	/// <summary>
 	/// Closes the menu and its submenus.
 	/// </summary>
@@ -624,7 +630,7 @@ public unsafe partial class popupMenu : MTBase {
 			Api.DestroyWindow(w);
 		}
 	}
-
+	
 	private protected override void _WmNcdestroy() {
 		//print.it("destroy", _name);
 		_sub.timer?.Stop();
@@ -645,16 +651,16 @@ public unsafe partial class popupMenu : MTBase {
 		_iHot = -1;
 		base._WmNcdestroy();
 	}
-
+	
 	#endregion
-
+	
 	nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 		//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 		//if (WndUtil.PrintMsg(out string s, w, msg, wParam, lParam, pmo)) print.it("<><c green>" + s + "<>");
 		//WndUtil.PrintMsg(w, msg, wParam, lParam);
-
+		
 		if (_scroll.WndProc(w, msg, wParam, lParam)) return default;
-
+		
 		switch (msg) {
 		case Api.WM_NCCREATE:
 			_WmNccreate(w);
@@ -696,28 +702,28 @@ public unsafe partial class popupMenu : MTBase {
 			}
 			return default;
 		}
-
+		
 		var R = Api.DefWindowProc(w, msg, wParam, lParam);
-
+		
 		switch (msg) {
 		case Api.WM_NCPAINT:
 			_WmNcpaint();
 			break;
 		}
-
+		
 		return R;
 	}
-
+	
 	void _SetScrollbar(bool needScroll) {
 		if (needScroll) {
 			_scroll.SetRange(_a.Count);
-
+			
 			_scroll.PosChanged += (sb, part) => {
 				_sub.child?.Close();
-
+				
 				int pos = _scroll.Pos;
 				Api.InvalidateRect(_w);
-
+				
 				if (part <= -2) { //if mouse wheel, update hot item, submenu, tooltip
 					var p = _w.MouseClientXY;
 					if (_w.ClientRect.Contains(p)) _WmMousemove(Math2.MakeLparam(p), fake: true);
@@ -728,7 +734,7 @@ public unsafe partial class popupMenu : MTBase {
 			_scroll.NItems = _a.Count;
 		}
 	}
-
+	
 	int _HitTest(POINT p, bool failIfDisabled = false) {
 		p.y += _scroll.Offset;
 		for (int i = 0; i < _a.Count; i++) {
@@ -736,20 +742,20 @@ public unsafe partial class popupMenu : MTBase {
 		}
 		return -1;
 	}
-
+	
 	RECT _ItemRect(PMItem k, bool inScreen = false) {
 		var r = k.rect;
 		r.Offset(0, -_scroll.Offset);
 		if (inScreen) _w.MapClientToScreen(ref r);
 		return r;
 	}
-
+	
 	void _WmMousemove(nint lParam, bool fake) {
 		var p = Math2.NintToPOINT(lParam);
-
+		
 		//prevent selecting item when mouse position does not change. It would interfere with keyboard navigation.
 		if (!fake && p == _mouse.p) return; _mouse.p = p;
-
+		
 		int i = _HitTest(p, failIfDisabled: true);
 		if (i != _iHot) {
 			_SetHotItem(i);
@@ -762,15 +768,15 @@ public unsafe partial class popupMenu : MTBase {
 				_SubmenuTimer();
 			}
 		}
-
+		
 		if (_iHot >= 0 != _mouse.track) _mouse.track = Api.TrackMouseLeave(_w, _iHot >= 0) && _iHot >= 0;
-
+		
 		_sub.parent?._SubmenuMouseMove();
 	}
-
+	
 	int _SubmenuTimer(PMItem item = null) {
 		if (item == null && _sub.child == null) return 0;
-
+		
 		_sub.timer ??= new(t => {
 			if (t.Tag is PMItem mi) {
 				if (FocusedItem == mi) _ShowSubmenu(mi);
@@ -783,14 +789,14 @@ public unsafe partial class popupMenu : MTBase {
 		_sub.timer.After(R);
 		return R;
 	}
-
+	
 	void _SubmenuMouseMove() {
 		if (FocusedItem != _sub.item) {
 			_SetHotItem(_a.IndexOf(_sub.item));
 			_sub.timer.Stop();
 		}
 	}
-
+	
 	void _WmMouseleave() {
 		_mouse.track = false;
 		if (_iHot < 0) return;
@@ -798,7 +804,7 @@ public unsafe partial class popupMenu : MTBase {
 		_SetHotItem(-1);
 		_SubmenuTimer();
 	}
-
+	
 	void _WmMousebutton(int msg, nint lParam) {
 		switch (msg) {
 		case Api.WM_LBUTTONDOWN: _mouse.left = true; return;
@@ -815,11 +821,11 @@ public unsafe partial class popupMenu : MTBase {
 		if (msg == Api.WM_LBUTTONUP) _Click(i);
 		else _ContextMenu(_a[i]);
 	}
-
+	
 	void _Click(int i, bool keyboard = false) {
 		var b = _a[i];
 		if (b.IsDisabled) return;
-
+		
 		if (b.checkType > 0) {
 			if (b.checkType == 1) {
 				b.IsChecked ^= true;
@@ -827,7 +833,7 @@ public unsafe partial class popupMenu : MTBase {
 				for (int j = i; --j >= 0 && _Uncheck(j);) { }
 				for (int j = i; ++j < _a.Count && _Uncheck(j);) { }
 				b.IsChecked = true;
-
+				
 				bool _Uncheck(int j) {
 					var v = _a[j];
 					if (v.checkType != 2) return false;
@@ -840,7 +846,7 @@ public unsafe partial class popupMenu : MTBase {
 				return;
 			}
 		}
-
+		
 		if (b.IsSubmenu) {
 			if (keyboard) _SetHotItem(i, ensureVisible: true);
 			_ShowSubmenu(b, focusFirst: keyboard);
@@ -849,13 +855,13 @@ public unsafe partial class popupMenu : MTBase {
 			Close(ancestorsToo: true);
 		}
 	}
-
+	
 	/// <summary>
 	/// Don't close menu when clicked a checkbox or radio item.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
 	public bool CheckDontClose { get; set; }
-
+	
 	void _ContextMenu(PMItem b) {
 		if (b.IsSeparator) return;
 		var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(b.sourceFile, b);
@@ -866,19 +872,19 @@ public unsafe partial class popupMenu : MTBase {
 			_ShowSubmenu(b, m: m);
 		}
 	}
-
+	
 	popupMenu _TopMenu() {
 		var m = this; while (m._sub.child != null) m = m._sub.child;
 		return m;
 	}
-
+	
 	bool _TopHot(out (popupMenu m, int i, PMItem b) r) {
 		var m = this; while (m._sub.child != null) m = m._sub.child;
 		int i = m._iHot;
 		r = (m, i, i < 0 ? null : m._a[i]);
 		return i >= 0;
 	}
-
+	
 	/// <summary>
 	/// Gets or sets the focused menu item.
 	/// </summary>
@@ -902,7 +908,7 @@ public unsafe partial class popupMenu : MTBase {
 			}
 		}
 	}
-
+	
 	void _SetHotItem(int i, bool ensureVisible = false) {
 		if (i != _iHot) {
 			if (_iHot >= 0) _Invalidate(_iHot);
@@ -919,7 +925,7 @@ public unsafe partial class popupMenu : MTBase {
 			_scroll.Pos = pos;
 		}
 	}
-
+	
 	bool _WmKeydown(in MSG msg) { //called for root menu
 		KKey k = (KKey)(int)msg.wParam;
 		if (_IsCancelKey(k)) {
@@ -943,13 +949,13 @@ public unsafe partial class popupMenu : MTBase {
 		}
 		return true;
 	}
-
+	
 	void _KeyNavigate(KKey k) { //called for top menu
 		int i = _scroll.KeyNavigate(_iHot, k); if (i == _iHot) return;
 		while ((uint)i < _a.Count && _a[i].IsSeparator) i += k is KKey.Home or KKey.Down or KKey.PageDown ? 1 : -1;
 		_SetHotItem(Math.Clamp(i, 0, _a.Count - 1), ensureVisible: true);
 	}
-
+	
 	void _WmChar(char c) { //called for top menu
 		if (c <= ' ') return;
 		char cl = char.ToLowerInvariant(c), cu = char.ToUpperInvariant(c);
@@ -974,14 +980,14 @@ public unsafe partial class popupMenu : MTBase {
 			_Click(iUnderlined, keyboard: true);
 		}
 	}
-
+	
 	static bool _IsOkKey(KKey k) => k is KKey.Enter or KKey.Tab or KKey.Space;
 	static bool _IsCancelKey(KKey k) => k is KKey.Alt or KKey.Win or KKey.RWin or KKey.F10 or KKey.Apps or KKey.Back;
 	static bool _IsPassKey(KKey k)
 		=> k is KKey.Ctrl or KKey.Shift or KKey.CapsLock or KKey.NumLock or KKey.ScrollLock
 		or KKey.PrintScreen or KKey.Pause or KKey.Insert
 		or (>= KKey.F1 and <= KKey.F24) || keys.isMod(KMod.Ctrl | KMod.Alt | KMod.Win);
-
+	
 	/// <summary>
 	/// Creates and shows a simple popup menu. Without images, actions, submenus. Returns item id or 0.
 	/// </summary>
@@ -1018,7 +1024,7 @@ public unsafe partial class popupMenu : MTBase {
 		}
 		return m.Show(flags, xy, excludeRect, owner);
 	}
-
+	
 	/// <summary>
 	/// Gets or sets callback function that decides how to respond to pressed keys (default, close, ignore, block).
 	/// </summary>
@@ -1028,4 +1034,14 @@ public unsafe partial class popupMenu : MTBase {
 	/// The function must be as fast as possible.
 	/// </remarks>
 	public Func<popupMenu, HookData.Keyboard, PMKHook> KeyboardHook { get; set; }
+	
+	/// <summary>
+	/// Sets a user-defined "get caret rectangle" function.
+	/// </summary>
+	/// <value>Default: null; calls <see cref="miscInfo.getTextCursorRect"/>.</value>
+	/// <remarks>
+	/// The callback function is called by <see cref="Show"/> when <i>flags</i> includes <see cref="PMFlags.ByCaret"/>. Also used by <see cref="Au.Triggers.AutotextTriggerArgs.Menu"/>.
+	/// Let it return a rectangle in screen, or null if failed. For example, it can call <see cref="miscInfo.getTextCursorRect"/>; if it fails, use an alternative way to get caret rectangle or preferred menu location.
+	/// </remarks>
+	public static Func<RECT?> caretRectFunc { get; set; }
 }

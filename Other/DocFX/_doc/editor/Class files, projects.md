@@ -8,9 +8,9 @@ A [script](xref:script) can contain functions and classes. Also can use those fr
 ### Class files
 A class file contains C# code of one or more classes with functions that can be used in other C# files (script, class). By default it cannot run when you click the **Run** button.
 
-There are several ways to include class files in a C# file `X`:
-- In `X` **Properties** click **Add file > Class file**. Used when the class file contais classes that can be used in any C# files.
-- Create a library and in `X` **Properties** click **Add reference > Project**. Used when the library has multiple class files with classes that can be used anywhere.
+There are several ways to use class files in a C# file `X`:
+- In `X` **Properties** click **Add file > Class file**.
+- If the class file is in a library (role **classLibrary**), in `X` **Properties** click **Add reference > Project**.
 - Create a project and add class files to the project folder. Used when the classes are used only in that project.
 
 ### Projects
@@ -24,7 +24,7 @@ The main file can be a script or a class file. Most of its properties are applie
 
 The folder can contain more scripts, but they are not part of the project. If they want to use project's class files, add them explicitly: **Properties > Add file > Class file**.
 
-Usually project files are used only in the project folder, therefore they are not included in **Properties > Add file > Class file** of scripts that are not in the folder, unless the folder name starts with `@@`.
+Usually class files that are in a project are used only in files of that project, therefore they are not included in the drop-down list of **Properties > Add file > Class file**, unless the project folder name starts with `@@`.
 
 ### Libraries
 A library is a .dll file. It contains compiled classes with functions that can be used anywhere.
@@ -56,4 +56,6 @@ class Class1 {
 }
 ```
 
-When the first option in `/*/ ... /*/` is role other than `classFile` (like in the example), `define TEST` and other incompatible options are ignored when the class file is compiled as part of another script etc (for example the `TEST` symbol isn't added to the compilation). Else such options then cannot be used (error).
+When the first option in `/*/ ... /*/` is **role** other than `classFile` (like in the example), `define TEST` and other incompatible options are ignored when the class file is compiled as part of another script etc (for example the `TEST` symbol isn't added to the compilation). Else such options then cannot be used (error).
+
+This does not work if the class file is in a project. See [ScriptEditor.TestCurrentFileInProject]().

@@ -53,13 +53,13 @@ partial class Program {
 			
 			//menu
 			
-			tt["m1"] = o => o.Menu(
+			tt["m1"] = o => o.Menu([
 				"https://www.example.com",
 				"<tag>[[|]]</tag>",
 				new("Label example", "TEXT1"),
 				new("HTML example", "TEXT2", "<b>TEXT2</b>"),
-				new(null, "TEXT3")
-				);
+				new(null, "TEXT3"),
+				]);
 		}
 	}
 	

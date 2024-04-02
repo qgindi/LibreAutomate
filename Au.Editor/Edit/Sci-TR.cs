@@ -213,18 +213,20 @@ partial class SciCode : KScintilla {
 		if (mod == 0) pos = aaaCurrentPos8;
 		int pos2 = pos;
 		if (mod.Has(MOD.SC_MOD_DELETETEXT)) { pos2 += len; len = -len; }
+		List<Action> aOL = null;
 		for (int i = _tempRanges.Count; --i >= 0;) {
 			var r = _tempRanges[i];
 			if (r.MustLeave(pos, pos2, len)) {
 				_TraceTempRange("leave", r.Owner);
 				_tempRanges.RemoveAt(i);
 				r.Leaved();
-				r.onLeave?.Invoke();
+				if (r.onLeave is { } ol) (aOL ??= new()).Add(ol);
 			} else {
 				r.to += len;
 				Debug.Assert(r.to >= r.from);
 			}
 		}
+		if (aOL != null) foreach (var ol in aOL) ol();
 	}
 	
 	[Conditional("TRACE_TEMP_RANGES")]

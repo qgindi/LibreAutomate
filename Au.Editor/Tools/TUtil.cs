@@ -625,9 +625,9 @@ static class TUtil {
 				_Add(PathCode.MetaR, "/*/ r path; /*/");
 			}
 			m.Separator();
-			m.AddCheck("Unexpand path", App.Settings.tools_pathUnexpand, o => App.Settings.tools_pathUnexpand ^= true);
+			m.AddCheck("Unexpand path (option)", App.Settings.tools_pathUnexpand, o => App.Settings.tools_pathUnexpand ^= true);
 			if (paths.Any(o => o.Ends(".lnk", true)))
-				m.AddCheck("Shortcut path", App.Settings.tools_pathLnk, o => App.Settings.tools_pathLnk ^= true);
+				m.AddCheck("Shortcut path (option)", App.Settings.tools_pathLnk, o => App.Settings.tools_pathLnk ^= true);
 			
 			var R = (PathCode)m.Show(owner: owner);
 			
@@ -667,7 +667,7 @@ static class TUtil {
 			_Add(PathCode.Run, "run.it(path);");
 			_Add(PathCode.RunMenu, "t[name] = o => run.it(path);");
 			m.Separator();
-			m.AddCheck("Unexpand path", App.Settings.tools_pathUnexpand, o => App.Settings.tools_pathUnexpand ^= true);
+			m.AddCheck("Unexpand path (option)", App.Settings.tools_pathUnexpand, o => App.Settings.tools_pathUnexpand ^= true);
 		}
 	}
 	

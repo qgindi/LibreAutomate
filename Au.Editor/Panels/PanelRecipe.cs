@@ -14,16 +14,16 @@ using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
 class PanelRecipe {
-	_KScintilla _c;
+	KScintilla_ _c;
 	string _usings;
 	string _currentRecipeName;
 	
-	//public KScintilla Scintilla => _c;
+	public KScintilla_ Scintilla => _c;
 	
 	public PanelRecipe() {
 		//P.UiaSetName("Recipe panel"); //no UIA element for Panel
 		
-		_c = new _KScintilla(this) {
+		_c = new KScintilla_(this) {
 			Name = "Recipe_text",
 			AaInitReadOnlyAlways = true,
 			AaInitTagsStyle = KScintilla.AaTagsStyle.User
@@ -186,11 +186,11 @@ class PanelRecipe {
 		return null;
 	}
 	
-	class _KScintilla : KScintilla {
+	internal class KScintilla_ : KScintilla {
 		PanelRecipe _panel;
 		bool _zoomMenu;
 		
-		public _KScintilla(PanelRecipe panel) {
+		internal KScintilla_(PanelRecipe panel) {
 			_panel = panel;
 		}
 		
@@ -201,21 +201,15 @@ class PanelRecipe {
 			Call(SCI_MARKERDEFINE, 0, SC_MARK_FULLRECT);
 			Call(SCI_MARKERSETBACK, 0, 0xA0E0B0);
 			
-			//aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
-			//aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
-			//aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
-			//aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
-			aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
-			var styles = new CiStyling.TStyles(customized: false) { FontSize = 9 };
-			styles.ToScintilla(this, multiFont: true);
+			AaSetStyles();
 			Call(SCI_SETZOOM, App.Settings.recipe_zoom);
 			
 			AaTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
 			AaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _panel._usings); if (s != null) run.itSafe(s); });
 			//aaTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
-			AaTags.AddLinkTag("+lang", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
+			AaTags.AddLinkTag("+lang", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
 			//aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
-			AaTags.AddLinkTag("+ms", s => run.itSafe("https://www.google.com/search?q=" + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
+			AaTags.AddLinkTag("+ms", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
 			AaTags.AddLinkTag("+nuget", s => DNuget.ShowSingle(s));
 			AaTags.AddStyleTag(".k", new() { textColor = 0x0000FF, bold = true }); //keyword
 			AaTags.AddStyleTag(".c", new() { backColor = 0xF0F0F0, monospace = true }); //inline code
@@ -224,6 +218,17 @@ class PanelRecipe {
 			_panel._AutoRenderCurrentRecipeScript();
 #endif
 			base.AaOnHandleCreated();
+		}
+		
+		public void AaSetStyles() {
+			//aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
+			//aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
+			//aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
+			//aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
+			//aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
+			aaaStyleFont(STYLE_DEFAULT, App.Settings.font_recipeText.name, App.Settings.font_recipeText.size);
+			var styles = new CiStyling.TStyles(customized: false) { FontName = App.Settings.font_recipeCode.name, FontSize = App.Settings.font_recipeCode.size };
+			styles.ToScintilla(this, multiFont: true);
 		}
 		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {

@@ -478,7 +478,6 @@ public:
 		_startAtIndex = startAtIndex;
 
 		//With get_accChildCount was faster in most tested cases, usually 10-20%, sometimes 50%, sometimes same speed, Chrome 30%, WPF 50%, never slower.
-		//	But in the past with some Firefox version outproc was 2 times slower.
 		//	Note: get_accChildCount can return different count than AccessibleChildren. Usually more. With this code bad is only when incorrectly returns 0 or >maxcc.
 		//	Never mind: with VS 2022 Preview get_accChildCount occasionally hangs when parent is PAGETABLIST of document. OK with only AccessibleChildren.
 
