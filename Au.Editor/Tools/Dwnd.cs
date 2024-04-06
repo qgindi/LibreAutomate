@@ -703,7 +703,7 @@ class Dwnd : KDialogWindow {
 
 		_info.aaaText = _dialogInfo;
 		_info.AaAddElem(this, _dialogInfo);
-		TUtil.RegisterLink_DialogHotkey(_info, insertToo: !true);
+		TUtil.RegisterLink_DialogHotkey(_info);
 
 		_info.InfoCT(nameW, "Window name.", true);
 		_info.InfoCT(classW, "Window class name.", true);

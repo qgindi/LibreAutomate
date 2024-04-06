@@ -299,7 +299,9 @@ partial class Compiler {
 				
 				if (_meta.Role == MCRole.classLibrary) {
 					MetaReferences.UncacheOldFiles();
-					if (MetaReferences.IsDefaultRef(_meta.Name)) print.warning($"Library name '{_meta.Name}' should not be used. Rename the C# file.", -1);
+					if (MetaReferences.IsDefaultRef(_meta.Name)
+						&& _meta.References.Refs.Any(o => _meta.Name.Eqi(o.Display.Contains('\\') ? pathname.getNameNoExt(o.Display) : o.Display))) //may be removed with meta noRef
+						print.warning($"Library name '{_meta.Name}' should not be used. Rename the C# file.", -1);
 				}
 				
 				if (notInCache) print.it($"<>Compiled {f.SciLink()} -> <explore>{outFile}<>");

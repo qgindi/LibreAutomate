@@ -690,6 +690,8 @@ public unsafe class SciTags {
 		_userLinkTags[name] = a;
 	}
 	
+	public bool HasLinkTag(string name) => _userLinkTags.ContainsKey(name);
+	
 	/// <summary>
 	/// Adds (registers) a user-defined link tag for all controls.
 	/// </summary>
@@ -708,6 +710,8 @@ public unsafe class SciTags {
 	public static void AddCommonLinkTag(string name, Action<string> a) {
 		s_userLinkTags[name] = a;
 	}
+	
+	public static bool HasCommonLinkTag(string name) => s_userLinkTags.ContainsKey(name);
 	
 	/// <summary>
 	/// Adds (registers) a user-defined style tag for this control.

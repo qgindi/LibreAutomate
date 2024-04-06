@@ -30,6 +30,8 @@ enum class eAF2
 };
 ENABLE_BITMASK_OPERATORS(eAF2);
 
+struct RECTWH { long L; long T; long W; long H; };
+
 //AccFindCallback return type.
 enum class eAccFindCallbackResult { Continue, StopFound, StopNotFound };
 

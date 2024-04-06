@@ -16,7 +16,7 @@ New cookbook recipes:
 - .
 
 Improved:
-- .
+- In tool **Find UI object**, the **Smaller** checkbox has been replaced with hotkey `Shift+F3`. Also now it works with more windows.
 
 Fixed bugs:
 - Fixed several bugs.

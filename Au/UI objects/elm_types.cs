@@ -56,16 +56,16 @@ namespace Au.Types {
 	}
 
 	/// <summary>
-	/// A workaround to add internal members to public enums.
+	/// Adds internal members to public enums.
 	/// </summary>
 	internal static partial class Enum_ {
 		/// <summary>
-		/// Used by tools like <b>Find UI element</b>, together with <b>ElmMiscFlags_Marked</b>.
+		/// Used by <b>Delm</b>, together with <b>ElmMiscFlags_Marked</b>.
 		/// </summary>
 		internal static EFFlags EFFlags_Mark = (EFFlags)0x10000;
 
 		/// <summary>
-		/// Used by tools like <b>Find UI element</b>, together with <b>AFFlags_Mark</b>.
+		/// Used by <b>Delm</b>, together with <b>AFFlags_Mark</b>.
 		/// </summary>
 		internal static EMiscFlags EMiscFlags_Marked = (EMiscFlags)128;
 
@@ -125,7 +125,7 @@ namespace Au.Types {
 		/// 3. In some apps some elements have bugs and the process can crash. Rare.
 		/// 
 		/// The <b>Find UI element</b> tool uses this flag when checked <b>Smaller</b>.
-		/// This flag is ignored when not in-process, because could be too slow. Also ignored in some windows, eg web browsers and Java apps.
+		/// This flag is ignored when not in-process, because could be too slow. Also ignored in some windows.
 		/// </summary>
 		TrySmaller = 8,
 

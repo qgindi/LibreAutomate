@@ -777,7 +777,7 @@ static class TUtil {
 	public class CapturingWithHotkey {
 		readonly KCheckBox _captureCheckbox;
 		readonly Func<POINT, (RECT? r, string s)> _dGetRect;
-		readonly (string hotkey, Action a) _dCapture, _dInsert;
+		readonly (string hotkey, Action a) _dCapture, _dInsert, _dSmaller;
 		HwndSource _hs;
 		timer _timer;
 		internal osdRect _osr;
@@ -785,15 +785,16 @@ static class TUtil {
 		bool _capturing;
 		const string c_propName = "Au.Capture";
 		readonly static int s_stopMessage = Api.RegisterWindowMessage(c_propName);
-		const int c_hotkeyCapture = 1623031890, c_hotkeyInsert = 1623031891;
+		const int c_hotkeyCapture = 1623031890, c_hotkeyInsert = 1623031891, c_hotkeySmaller = 1623031892;
 		
 		/// <param name="captureCheckbox">Checkbox that turns on/off capturing.</param>
 		/// <param name="getRect">Called to get rectangle of object from mouse. Receives mouse position. Can return default to hide the rectangle.</param>
-		public CapturingWithHotkey(KCheckBox captureCheckbox, Func<POINT, (RECT? r, string s)> getRect, (string hotkey, Action a) capture, (string hotkey, Action a) insert = default) {
+		public CapturingWithHotkey(KCheckBox captureCheckbox, Func<POINT, (RECT? r, string s)> getRect, (string hotkey, Action a) capture, (string hotkey, Action a) insert = default, (string hotkey, Action a) smaller = default) {
 			_captureCheckbox = captureCheckbox;
 			_dGetRect = getRect;
 			_dCapture = capture;
 			_dInsert = insert;
+			_dSmaller = smaller;
 		}
 		
 		/// <summary>
@@ -827,6 +828,7 @@ static class TUtil {
 					}
 					if (!_RegisterHotkey(c_hotkeyCapture, _dCapture.hotkey)) return;
 					if (_dInsert.hotkey != null) _RegisterHotkey(c_hotkeyInsert, _dInsert.hotkey);
+					if (_dSmaller.hotkey != null) _RegisterHotkey(c_hotkeySmaller, _dSmaller.hotkey);
 					_capturing = true;
 					
 					if (_hs == null) {
@@ -889,6 +891,7 @@ static class TUtil {
 					_hs.RemoveHook(_WndProc);
 					Api.UnregisterHotKey(wDialog, c_hotkeyCapture);
 					if (_dInsert.hotkey != null) Api.UnregisterHotKey(wDialog, c_hotkeyInsert);
+					if (_dSmaller.hotkey != null) Api.UnregisterHotKey(wDialog, c_hotkeySmaller);
 					wDialog.Prop.Remove(c_propName);
 					_timer.Stop();
 					_osr.Hide();
@@ -901,29 +904,35 @@ static class TUtil {
 			if (msg == s_stopMessage) {
 				handled = true;
 				_captureCheckbox.IsChecked = false;
-			} else if (msg == Api.WM_HOTKEY && (wParam == c_hotkeyCapture || wParam == c_hotkeyInsert)) {
+			} else if (msg == Api.WM_HOTKEY && (wParam is c_hotkeyCapture or c_hotkeyInsert or c_hotkeySmaller)) {
 				handled = true;
-				if (wParam == c_hotkeyInsert) _dInsert.a(); else _dCapture.a();
+				if (wParam == c_hotkeyInsert) _dInsert.a();
+				else if (wParam == c_hotkeySmaller) _dSmaller.a();
+				else _dCapture.a();
 			}
 			return default;
 		}
 	}
 	
 	/// <summary>
-	/// Adds link +hotkey that shows dialog "Hotkeys" and updates App.Settings.delm.hk_capture and optionally App.Settings.delm.hk_insert.
+	/// Adds link +hotkey that shows dialog "Hotkeys" and updates App.Settings.delm.hk_x.
 	/// </summary>
-	public static void RegisterLink_DialogHotkey(KSciInfoBox sci, bool insertToo) {
+	public static void RegisterLink_DialogHotkey(KSciInfoBox sci) {
+		if (sci.AaTags.HasLinkTag("+hotkey")) return;
 		sci.AaTags.AddLinkTag("+hotkey", _ => {
-			TextBox capture, insert = null;
 			var b = new wpfBuilder("Hotkey");
-			b.R.Add("Capture", out capture, App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus().Tooltip("Used in wnd and elm tools");
-			b.R.Add("Insert", out insert, App.Settings.delm.hk_insert).xValidateHotkey().Tooltip("Used in only in elm tool"); //add even if not used in that dialog. Else users may enter the same hotkey for both.
+			b.R.Add("Capture", out TextBox capture, App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus().Tooltip("Used in wnd and elm tools");
+			//add these even if not used in that dialog. Else users may enter the same hotkey for both.
+			b.R.Add("Insert code (elm tool)", out TextBox insert, App.Settings.delm.hk_insert).xValidateHotkey();
+			b.R.Add("Try smaller (elm tool)", out TextBox smaller, App.Settings.delm.hk_smaller).xValidateHotkey().Tooltip("Toggle \"try to capture smaller UI element\" in current window");
+			
 			b.R.Add<Label>("After changing hotkeys please restart the tool window.");
 			b.R.AddOkCancel();
 			b.End();
 			if (b.ShowDialog(Window.GetWindow(sci))) {
 				App.Settings.delm.hk_capture = capture.Text;
-				if (insertToo) App.Settings.delm.hk_insert = insert.TextOrNull();
+				App.Settings.delm.hk_insert = insert.TextOrNull();
+				App.Settings.delm.hk_smaller = smaller.TextOrNull();
 			}
 		});
 	}
