@@ -16,7 +16,8 @@ New cookbook recipes:
 - .
 
 Improved:
-- In tool **Find UI object**, the **Smaller** checkbox has been replaced with hotkey `Shift+F3`. Also now it works with more windows.
+- Tool **Find UI object**: improved feature "capture smaller element". Use hotkey `Shift+F3`.
+- Tool **Find UI object**: option "Use role in elm variable name".
 
 Fixed bugs:
 - Fixed several bugs.
@@ -42,4 +43,9 @@ Fixed bugs:
 - .
 
 ### Breaking changes
-These static functions have been renamed to fix naming mistakes: **wpfBuider.FormatText** -> **formatTextOf**, **wpfBuider.FormattedText** -> **formattedText**, **popupMenu.DefaultFont** -> **defaultFont**, **popupMenu.DefaultMetrics** -> **defaultMetrics**, **toolbar.DefaultMetrics** -> **defaultMetrics**.
+These static functions have been renamed:
+- **wpfBuider.FormatText** -> **formatTextOf**,
+- **wpfBuider.FormattedText** -> **formattedText**,
+- **popupMenu.DefaultFont** -> **defaultFont**, 
+- **popupMenu.DefaultMetrics** -> **defaultMetrics**, 
+- **toolbar.DefaultMetrics** -> **defaultMetrics**.

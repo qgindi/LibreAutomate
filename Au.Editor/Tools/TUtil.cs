@@ -923,10 +923,11 @@ static class TUtil {
 			var b = new wpfBuilder("Hotkey");
 			b.R.Add("Capture", out TextBox capture, App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus().Tooltip("Used in wnd and elm tools");
 			//add these even if not used in that dialog. Else users may enter the same hotkey for both.
-			b.R.Add("Insert code (elm tool)", out TextBox insert, App.Settings.delm.hk_insert).xValidateHotkey();
-			b.R.Add("Try smaller (elm tool)", out TextBox smaller, App.Settings.delm.hk_smaller).xValidateHotkey().Tooltip("Toggle \"try to capture smaller UI element\" in current window");
+			b.R.Add("Insert (elm tool)", out TextBox insert, App.Settings.delm.hk_insert).xValidateHotkey();
+			b.R.Add("Options (elm tool)", out TextBox smaller, App.Settings.delm.hk_smaller).xValidateHotkey();
 			
-			b.R.Add<Label>("After changing hotkeys please restart the tool window.");
+			b.R.xAddInfoBlockT("After changing hotkeys please restart the tool window.");
+			if (!uacInfo.isAdmin) b.R.xAddInfoBlockT("Hotkeys don't work when the active window is admin,\nbecause this process isn't admin.");
 			b.R.AddOkCancel();
 			b.End();
 			if (b.ShowDialog(Window.GetWindow(sci))) {

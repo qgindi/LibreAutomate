@@ -44,7 +44,6 @@ struct NameValue {
 	str::Wildex value;
 };
 
-//IE web browser control class name.
 const STR c_IES = L"Internet Explorer_Server";
 const STR c_CRW = L"Chrome_RenderWidgetHostHWND";
 

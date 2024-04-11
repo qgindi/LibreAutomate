@@ -40,7 +40,6 @@ class Delm : KDialogWindow {
 	string _screenshot;
 	//POINT _captPoint;
 	//EXYFlags _captFlags;
-	wnd _trySmaller;
 	
 	KSciInfoBox _info;
 	Button _bTest, _bInsert, _bWindow;
@@ -213,12 +212,6 @@ class Delm : KDialogWindow {
 	void _SetElm(bool captured) {
 		wnd c = _GetWndContainer(), w = c.Window;
 		if (w.Is0) return;
-		//if (captured && w.IsCloaked) {
-		//	//workaround for old pre-Chromium Edge. w is a cloaked windowsuicorecorewindow of other process. There are many such cloaked windows, and wnd.find often finds wrong window.
-		//	c = wnd.fromMouse();
-		//	w = c.Window;
-		//	if (w.Is0) return;
-		//}
 		
 		string wndName = w.NameTL_;
 		bool sameWnd = captured && w == _wnd && wndName == _wndName;
@@ -617,59 +610,50 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	TUtil.CapturingWithHotkey _capt;
 	
 	void _InitCapturingWithHotkey() {
-		_capt = new TUtil.CapturingWithHotkey(_cCapture,
-			p => {
-				var flags = _GetXYFlags();
-				//bool xy = _ActionIsMouse(_iAction);
-				return _RunElmTask(500, (p, flags), static m => {
-					//don't show rects when a mouse button is pressed.
-					//	With some apps then hangs. Eg Word -> Insert -> Symbol, click a symbol; notinproc too, but not UIA.
-					//print.it(Au.mouse.isPressed());
-					if (mouse.isPressed()) return default;
-					
-					//using var pe1 = perf.local();
-					using var e = _ElmFromPointRaw(m.p, m.flags);
-					//pe1.Next('e');
-					if (e == null) return default;
-					var r = e.Rect;
-					//pe1.Next('r');
-					var s = e.Role;
-					//if (m.xy) s = $"{s}    {m.p.x - r.left}, {m.p.y - r.top}";
-					
-					//rejected: if big etc, inform about 'Smaller'
-					//if (!m.flags.HasAny(EXYFlags.TrySmaller | EXYFlags.NotInProc) && r.Width * r.Height > 5000) {
-					//	var ri = e.RoleInt;
-					//	if (!(_RoleIsLinkOrButton(ri) || ri is ERole.Custom or ERole.TEXT or ERole.STATICTEXT or ERole.IMAGE or ERole.DIAGRAM)) {
-					//		int wid = (int)Dpi.Unscale(r.Width, r), hei = Math2.MulDiv(r.Height, wid, r.Width);
-					//		//print.it(wid, hei, wid * hei);
-					//		bool big = wid * hei > 10000;
-					//		if (!big && !m.flags.Has(EXYFlags.UIA)) {
-					//			var ee = _ElmFromPointRaw(m.p, m.flags | EXYFlags.UIA);
-					//			if (ee != null && ee.RoleInt != ri) {
-					//				var rr = ee.Rect;
-					//				if (rr.Width * rr.Height < r.Width * r.Height / 2) big = true;
-					//			}
-					//		}
-					//		if (big) s += "\nTry the 'TrySmaller' hotkey";
-					//	}
-					//}
-					
-					return (r, s);
-				});
-			},
-			(App.Settings.delm.hk_capture, _Capture),
-			(App.Settings.delm.hk_insert, () => _Insert(hotkey: true)),
-			(App.Settings.delm.hk_smaller, () => {
-				//var w = wnd.fromMouse(WXYFlags.NeedWindow);
-				//_trySmaller = w != _trySmaller ? w : default;
-				//osdText.showText(_trySmaller.Is0 ? "TrySmaller is off" : "Using TrySmaller in this window", xy: PopupXY.Mouse);
-				
-				_TrySmaller();
-			}
-		)
-			);
-		
+		_capt = new TUtil.CapturingWithHotkey(_cCapture, _GetRect, (App.Settings.delm.hk_capture, _Capture), (App.Settings.delm.hk_insert, () => _Insert(hotkey: true)), (App.Settings.delm.hk_smaller, _CaptureSmallerMenu));
 		_cCapture.IsChecked = true;
+		
+		(RECT? r, string s) _GetRect(POINT p) { //timer every ~250 ms while capturing
+			if (_CaptureSmallerGetMethodForWindow(p) == 2) return _CaptureSmallestGetRect(p);
+			
+			var flags = _GetXYFlags(p);
+			//bool xy = _ActionIsMouse(_iAction);
+			return _RunElmTask(500, (p, flags), static m => {
+				//don't show rects when a mouse button is pressed.
+				//	With some apps then hangs. Eg Word -> Insert -> Symbol, click a symbol; notinproc too, but not UIA.
+				//print.it(Au.mouse.isPressed());
+				if (mouse.isPressed()) return default;
+				
+				//using var pe1 = perf.local();
+				using var e = _ElmFromPointRaw(m.p, m.flags);
+				//pe1.Next('e');
+				if (e == null) return default;
+				var r = e.Rect;
+				//pe1.Next('r');
+				var s = e.Role;
+				//if (m.xy) s = $"{s}    {m.p.x - r.left}, {m.p.y - r.top}";
+				
+				//rejected: if big etc, inform about 'Smaller'
+				//if (!m.flags.HasAny(EXYFlags.TrySmaller | EXYFlags.NotInProc) && r.Width * r.Height > 5000) {
+				//	var ri = e.RoleInt;
+				//	if (!(_RoleIsLinkOrButton(ri) || ri is ERole.Custom or ERole.TEXT or ERole.STATICTEXT or ERole.IMAGE or ERole.DIAGRAM)) {
+				//		int wid = (int)Dpi.Unscale(r.Width, r), hei = Math2.MulDiv(r.Height, wid, r.Width);
+				//		//print.it(wid, hei, wid * hei);
+				//		bool big = wid * hei > 10000;
+				//		if (!big && !m.flags.Has(EXYFlags.UIA)) {
+				//			var ee = _ElmFromPointRaw(m.p, m.flags | EXYFlags.UIA);
+				//			if (ee != null && ee.RoleInt != ri) {
+				//				var rr = ee.Rect;
+				//				if (rr.Width * rr.Height < r.Width * r.Height / 2) big = true;
+				//			}
+				//		}
+				//		if (big) s += "\nTry the 'TrySmaller' hotkey";
+				//	}
+				//}
+				
+				return (r, s);
+			});
+		}
 	}
 	
 	void _Capture() {
@@ -687,13 +671,13 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		}
 	}
 	
-	EXYFlags _GetXYFlags() {
+	EXYFlags _GetXYFlags(POINT p) {
 		var flags = EXYFlags.PreferLink;
 		switch (_cUIA.IsChecked) { case true: flags |= EXYFlags.UIA; break; case null: flags |= EXYFlags.OrUIA; break; }
-		if (!_trySmaller.Is0 && _trySmaller == wnd.fromMouse(WXYFlags.NeedWindow)) flags |= EXYFlags.TrySmaller;
 		if (_page != null) {
 			if (_page.notInprocA.IsChecked) flags |= EXYFlags.NotInProc;
 		}
+		if (_CaptureSmallerGetMethodForWindow(p) == 1) flags |= EXYFlags.TrySmaller;
 		return flags;
 	}
 	
@@ -725,9 +709,11 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	
 	//Called only when capturing, not to display rectangles of elements from mouse.
 	bool _ElmFromPoint(POINT p, bool ctor = false) {
-		var flags = _GetXYFlags();
+		var flags = _GetXYFlags(p);
 		
-		var a = _RunElmTask(2000, (p, flags, ctor), static m => _GetElm(m.p, m.flags, m.ctor));
+		var a = _CaptureSmallerGetMethodForWindow(p) == 2
+			? _CaptureSmallestNow(p)
+			: _RunElmTask(2000, (p, flags, ctor), static m => _GetElm(m.p, m.flags, m.ctor));
 		if (a == null) return false;
 		var e = a[0];
 		
@@ -848,71 +834,85 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	
 	record class _CapturedElm(elm e, string role, string tt, RECT rect);
 	
-	void _TrySmaller() {
+	(int method, wnd w, (elm e, RECT rect)[] a, int timer) _smaller;
+	
+	void _CaptureSmallerMenu() {
 		var w = wnd.fromMouse(WXYFlags.NeedWindow);
-		_trySmaller = w != _trySmaller ? w : default;
-		osdText.showText(_trySmaller.Is0 ? "TrySmaller is off" : "Using TrySmaller in this window", xy: PopupXY.Mouse);
-		if (_trySmaller.Is0) return;
+		if (w.IsOfThisThread) {
+			dialog.showInfo(null, "Use this hotkey when the mouse is in the window where you want to capture an element.", flags: DFlags.CenterMouse, owner: this);
+			return;
+		}
 		
+		int k = _smaller.method; if (k > 0 && w != _smaller.w) k = 0;
+		
+		var m = new popupMenu();
+		m.Add("elm capturing method in this window:", disable: true);
+		m.AddRadio("&1. Default (fast)", k == 0).Id = 1;
+		m.AddRadio("&2. With flag TrySmaller", k == 1).Id = 2;
+		m.AddRadio("&3. Smallest (gets all rectangles now)", k == 2).Id = 3;
+		k = m.Show(PMFlags.Underline) - 1;
+		if (k < 0) return;
+		
+		_smaller = default;
+		if (k == 0 || w.Is0) return;
+		
+		if (k == 2) {
+			using var osd = osdText.showText("Getting element rectangles...", -1, PopupXY.Mouse);
+			if (!_CaptureSmallestUpdateRects(w)) return;
+		}
+		
+		_smaller.method = k;
+		_smaller.w = w;
+	}
+	
+	int _CaptureSmallerGetMethodForWindow(POINT? p = null) {
+		int r = _smaller.method;
+		if (r > 0 && _smaller.w != wnd.fromXY(p ?? mouse.xy, WXYFlags.NeedWindow)) r = 0;
+		return r;
+	}
+	
+	bool _CaptureSmallestUpdateRects(wnd w) {
 		EFFlags flags = EFFlags.MenuToo;
 		if (_cUIA.IsChecked == true) flags |= EFFlags.UIA;
 		if (_page != null) {
-			if (_cUIA.IsChecked == null && _page.uiaA.IsChecked) flags |= EFFlags.UIA;
 			if (_page.notInprocA.IsChecked) flags |= EFFlags.NotInProc;
 			if (_page.hiddenTooA.IsChecked) flags |= EFFlags.HiddenToo;
 		}
-		flags|= Enum_.EFFlags_Mark;
-		RECT r1=new(11111,22222,1,1);
-		var prop=$"rect={r1}";
 		
-		//bool test=keys.isNumLock;
-		perf.first();
-		List<(elm e, RECT rect)> a=new();
-		bool ok = _RunElmTask(2000, this, dlg => {
-			try {
-				w.Elm[prop: prop, flags: flags, also: o => {
-					a.Add((o, default));
-					return false;
-				}
-				].Exists();
-			}
-			catch (Exception ex) { return false; }
-			return true;
-		});
-		perf.nw();
-		print.it(a.Count);
+		_smaller.timer = int.MaxValue;
+		try {
+			int t = Environment.TickCount;
+			_smaller.a = _RunElmTask(2000, this, _ => w.Elm[flags: flags].FindAll().Select(o => (o, o.Rect)).ToArray());
+			t = Environment.TickCount - t; if (t < 1000) _smaller.timer = t / 50 + 8; //~2.5s (2-7)
+			
+			//SHOULDDO: get all rects in single inproc call. Now ~5 times slower.
+			//	Currently there is no infrastructure. Could marshal rects together with elms, but I don't like to pollute the code just for this. Maybe better use eg shared memory.
+		}
+		catch { return false; }
+		return true;
 	}
-	//void _TrySmaller() {
-	//	var w = wnd.fromMouse(WXYFlags.NeedWindow);
-	//	_trySmaller = w != _trySmaller ? w : default;
-	//	osdText.showText(_trySmaller.Is0 ? "TrySmaller is off" : "Using TrySmaller in this window", xy: PopupXY.Mouse);
-	//	if (_trySmaller.Is0) return;
+	
+	(RECT? r, string s) _CaptureSmallestGetRect(POINT p) {
+		if (--_smaller.timer == 0) _CaptureSmallestUpdateRects(_smaller.w);
 		
-	//	EFFlags flags = EFFlags.MenuToo;
-	//	if (_cUIA.IsChecked == true) flags |= EFFlags.UIA;
-	//	if (_page != null) {
-	//		if (_cUIA.IsChecked == null && _page.uiaA.IsChecked) flags |= EFFlags.UIA;
-	//		if (_page.notInprocA.IsChecked) flags |= EFFlags.NotInProc;
-	//		if (_page.hiddenTooA.IsChecked) flags |= EFFlags.HiddenToo;
-	//	}
-		
-	//	//bool test=keys.isNumLock;
-	//	perf.first();
-	//	List<(elm e, RECT rect)> a=new();
-	//	bool ok = _RunElmTask(2000, this, dlg => {
-	//		try {
-	//			w.Elm[flags: flags, also: o => {
-	//				a.Add((o, o.Rect));
-	//				return false;
-	//			}
-	//			].Exists();
-	//		}
-	//		catch (Exception ex) { return false; }
-	//		return true;
-	//	});
-	//	perf.nw();
-	//	print.it(a.Count);
-	//}
+		var a = _smaller.a;
+		int iSm = -1; long sizeSm = 0;
+		for (int i = 0; i < a.Length; i++) {
+			if (!a[i].rect.Contains(p)) continue;
+			long size = (long)a[i].rect.Width * a[i].rect.Height;
+			if (size > 0) if (sizeSm == 0 || size <= sizeSm) { sizeSm = size; iSm = i; }
+		}
+		if (iSm < 0) return default;
+		return (a[iSm].rect, a[iSm].e.Role);
+	}
+	
+	_CapturedElm[] _CaptureSmallestNow(POINT p) {
+		List<_CapturedElm> r = new();
+		foreach (var v in _smaller.a) {
+			if (v.rect.Contains(p)) r.Add(new(v.e, v.e.Role, null, v.rect));
+		}
+		return r.OrderBy(o => (long)o.rect.Width * o.rect.Height).ToArray();
+	}
 	
 	#endregion
 	
@@ -930,6 +930,11 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			if (_Opt.Has(_EOptions.Activate) && !_wndNoActivate && !_CurrentAction.IsFinder) {
 				s = s.RxReplace(@"^.+?\bwnd\.find\(.+[^(]\)\K;\r", ".Activate();\r", 1);
 			}
+			
+			if (_Opt.Has(_EOptions.VarRole) && !(_CurrentAction.IsFinder || _CurrentAction.IsFindAll)) {
+				if (s.RxMatch(@"(?m)^var (e) = w\.Elm\[""(?:[a-z]+:)?([a-zA-Z][\w ]*\w)""", out var m)) s = s.ReplaceAt(m[1], m[2].Value.Lower().Replace(' ', '_') + "1");
+			}
+			
 			InsertCode.Statements(s);
 			if (!hotkey) {
 				_close = true;
@@ -1635,6 +1640,7 @@ new elmFinder || 5
 		var m = new popupMenu();
 		var cAT = m.AddCheck("Auto test find", _Opt.Has(_EOptions.AutoTest)); cAT.Tooltip = "Test find when captured";
 		var cWA = m.AddCheck(".Activate()", _Opt.Has(_EOptions.Activate)); cWA.Tooltip = "Append .Activate() to wnd.find(...), unless the window looks like does not like to be activated";
+		var cVR = m.AddCheck("var role", _Opt.Has(_EOptions.VarRole)); cVR.Tooltip = "Use role in elm variable name";
 		//var cCC = m.AddCheck("Compact code", _Opt.Has(_EOptions.Compact)); cNS.Tooltip = "Insert code without { } and don't use elm e with action";
 		m.Separator();
 		m["Save action"] = _ => {
@@ -1655,6 +1661,7 @@ new elmFinder || 5
 		//bool format = _SetOpt(_EOptions.Compact, cCC.IsChecked);
 		//if (format) _FormatCode();
 		_SetOpt(_EOptions.Activate, cWA.IsChecked);
+		_SetOpt(_EOptions.VarRole, cVR.IsChecked);
 	}
 	
 	[Flags]
@@ -1665,6 +1672,7 @@ new elmFinder || 5
 		NoWait = 1 << 3,
 		MouseScroll = 1 << 4,
 		Activate = 1 << 5,
+		VarRole = 1 << 6,
 		//and don't save autotestaction, autoinsert
 	}
 	
@@ -2059,9 +2067,7 @@ If unchecked, returns null.");
 
 How to find UI elements that don't have a name or other property with unique constant value? Capture another UI element near it, and use <b>navig<> to get it. Or try <b>skip<>. Or path.
 
-If the wanted element is ""behind"" a bigger element, try <+hotkey>hotkey<> <b>{App.Settings.delm.hk_smaller}<>. It toggles flag <help Au.Types.EXYFlags>TrySmaller</help> for capturing in the mouse window. Note: can be slow; some apps may crash (rare).
-
-If hotkeys don't work when the target window is active, probably its process is admin and this process isn't.";
+If the wanted element is ""behind"" a bigger element, try <+hotkey>hotkey<> <b>{App.Settings.delm.hk_smaller}<>.";
 	
 	const string c_infoJava = "If there are no UI elements in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help>elm<> help.";
 	

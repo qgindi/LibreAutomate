@@ -201,7 +201,7 @@ begin
   
   //If the above failed, use this hardcoded URL. This URL is updated for each new .NET 8.0.x version.
   //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates this string in this .iss file.
-  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/51bc18ac-0594-412d-bd63-18ece4c91ac4/90b47b97c3bfe40a833791b166697e67/windowsdesktop-runtime-8.0.3-win-x64.exe';
+  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/c1d08a81-6e65-4065-b606-ed1127a954d3/14fe55b8a73ebba2b05432b162ab3aa8/windowsdesktop-runtime-8.0.4-win-x64.exe';
   
   //rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
   //url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';

@@ -864,7 +864,7 @@ System.Threading.Tasks.TaskCanceledException
 		if (disable == _tempDisableAuDebugging) return;
 		if (disable) if (!App.IsAuAtHome || Debugger.IsAttached) return;
 		string from = folders.ThisAppBS + (disable ? "Au.pdb" : "Au-.pdb"), to = disable ? "Au-.pdb" : "Au.pdb";
-		try { filesystem.rename(from, to); }
+		try { filesystem.rename(from, to, FIfExists.Delete); }
 		catch (Exception e1) { Debug_.Print(e1); return; }
 		_tempDisableAuDebugging = disable;
 	}

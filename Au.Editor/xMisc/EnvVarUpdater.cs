@@ -9,8 +9,11 @@ class EnvVarUpdater {
 		_r = _GetVars();
 		//print.it(_r);
 		
-		if (_r.TryGetValue("Path", out var s1) && s1 != Environment.GetEnvironmentVariable("Path")) {
-			Debug_.Print("PATH env var changed at startup");
+		var s2 = Environment.GetEnvironmentVariable("Path");
+		if (_r.TryGetValue("Path", out var s1) && s1 != s2) {
+			Debug_.PrintIf(
+				s2.Trim(';') != s1, //somehow s2 ends with ';' if not admin, but no ';' if admin
+				$"PATH env var changed at startup:\n{s1}\n{s2}");
 			Environment.SetEnvironmentVariable("Path", s1);
 		}
 	}
