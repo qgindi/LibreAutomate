@@ -3,7 +3,7 @@
 #include "acc.h"
 
 HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccFindParams& ap, out BSTR& errStr);
-HRESULT AccFromPoint(POINT p, HWND wFP, eXYFlags flags, int specWnd, out Cpp_Acc& aResult);
+HRESULT AccFromPoint(POINT p, HWND wFP, eXYFlags flags, eSpecWnd specWnd, out Cpp_Acc& aResult);
 HRESULT AccGetFocused(HWND w, eFocusedFlags flags, out Cpp_Acc& aResult);
 HRESULT AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult);
 HRESULT AccGetProp(Cpp_Acc a, WCHAR what, out BSTR& sResult);
@@ -528,7 +528,7 @@ namespace outproc {
 		if (useWnd) {
 			if ((ap.flags2 & (eAF2::InWebPage | eAF2::InChromePage | eAF2::InFirefoxPage | eAF2::InIES)) == eAF2::InWebPage) {
 				bool chrome = false;
-				HWND c = wn::FindChildByClassName(w, c_IES, c_CRW, OUT chrome, true);
+				HWND c = wn::FindChildByClassName(w, c_IES, c_CRW, OUT chrome, true);//TODO
 				if (c) { w = c; ap.flags2 |= chrome ? eAF2::InChromePage : eAF2::InIES; }
 				//info: in Internet Explorer the web browser control is in another process.
 			}

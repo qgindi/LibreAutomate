@@ -31,7 +31,7 @@ inline void Print(void* i) { Printf(sizeof(void*) == 8 ? L"%I64i" : L"%i", i); }
 #define PRINTS_IF(condition, x) { if(condition) PRINTS(x); }
 
 inline void PrintComRefCount(IUnknown* u) {
-	if(u) {
+	if (u) {
 		u->AddRef();
 		int i = u->Release();
 		Printf(L"%p  %i", u, i);
@@ -52,8 +52,7 @@ inline void PrintComRefCount(IUnknown* u) {
 
 #if TRACE
 
-struct Perf_Inst
-{
+struct Perf_Inst {
 private:
 	int _counter;
 	bool _incremental;
@@ -66,7 +65,7 @@ private:
 public:
 	//Perf_Inst() noexcept { ZEROTHIS; } //not used because then does not work shared data section
 	Perf_Inst() {}
-	Perf_Inst(bool isLocal) { if(isLocal) ZEROTHIS; }
+	Perf_Inst(bool isLocal) { if (isLocal) ZEROTHIS; }
 
 	void First();
 	void Next(char cMark = '\0');
@@ -74,10 +73,9 @@ public:
 
 	void NW(char cMark = '\0') { Next(cMark); Write(); }
 
-	void SetIncremental(bool yes)
-	{
-		if(_incremental = yes) {
-			for(int i = 0; i < _nElem; i++) _a[i] = 0;
+	void SetIncremental(bool yes) {
+		if (_incremental = yes) {
+			for (int i = 0; i < _nElem; i++) _a[i] = 0;
 			_nMeasurements = 0;
 		}
 	}
@@ -102,8 +100,7 @@ extern HMODULE s_moduleHandle;
 bool IsOS64Bit();
 bool IsProcess64Bit(DWORD pid, out bool& is);
 
-inline bool IsThisProcess64Bit()
-{
+inline bool IsThisProcess64Bit() {
 #ifdef _WIN64
 	return true;
 #else
@@ -145,23 +142,18 @@ STDMETHODIMP_(ULONG) Release() { return 1; }
 //Smart pointer that extends CComPtr.
 //I don't use _com_ptr_t because: 1. Can throw. 2. Intellisense bug after upgrading VS: shows many false errors.
 template <class T>
-class Smart : public CComPtr<T>
-{
+class Smart : public CComPtr<T> {
 public:
-	Smart() throw()
-	{
+	Smart() throw() {
 	}
-	Smart(_Inout_opt_ T* lp, bool addRef) throw()
-	{
+	Smart(_Inout_opt_ T* lp, bool addRef) throw() {
 		this->p = lp;
-		if(addRef) this->p->AddRef();
+		if (addRef) this->p->AddRef();
 	}
-	Smart(_Inout_ const Smart<T>& lp) throw() : CComPtr<T>(lp.p)
-	{
+	Smart(_Inout_ const Smart<T>& lp) throw() : CComPtr<T>(lp.p) {
 	}
 
-	void Swap(CComPtrBase<T>& other)
-	{
+	void Swap(CComPtrBase<T>& other) {
 		T* pTemp = this->p;
 		this->p = other.p;
 		other.p = pTemp;
@@ -190,11 +182,11 @@ struct DelayLoadedApi {
 		minWin81 = minWin10 = false;
 		auto hm = GetModuleHandle(L"user32.dll");
 		GPA2(hm, PhysicalToLogicalPoint, "PhysicalToLogicalPointForPerMonitorDPI");
-		if(minWin81 = PhysicalToLogicalPoint) { //Win8.1+
+		if (minWin81 = PhysicalToLogicalPoint) { //Win8.1+
 			GPA2(hm, LogicalToPhysicalPoint, "LogicalToPhysicalPointForPerMonitorDPI");
 
 			GPA(hm, GetWindowDpiAwarenessContext);
-			if(minWin10 = GetWindowDpiAwarenessContext) { //Win10 1607+
+			if (minWin10 = GetWindowDpiAwarenessContext) { //Win10 1607+
 				GPA(hm, GetAwarenessFromDpiAwarenessContext);
 				GPA(hm, SetThreadDpiAwarenessContext);
 
@@ -216,15 +208,13 @@ extern DelayLoadedApi dlapi;
 
 //SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
 //can instead use CSecurityAttributes/CSecurityDesc, but this added before including ATL, and don't want to change now.
-class SecurityAttributes
-{
+class SecurityAttributes {
 	DWORD nLength;
 	LPVOID lpSecurityDescriptor;
 	BOOL bInheritHandle;
 public:
 
-	SecurityAttributes()
-	{
+	SecurityAttributes() {
 		nLength = sizeof(SecurityAttributes);
 		bInheritHandle = false;
 		lpSecurityDescriptor = null;
@@ -232,8 +222,7 @@ public:
 		assert(ok);
 	}
 
-	~SecurityAttributes()
-	{
+	~SecurityAttributes() {
 		LocalFree(lpSecurityDescriptor);
 	}
 
@@ -241,15 +230,13 @@ public:
 	//	return (SECURITY_ATTRIBUTES*)this;
 	//}
 
-	static SECURITY_ATTRIBUTES* Common()
-	{
+	static SECURITY_ATTRIBUTES* Common() {
 		static SecurityAttributes s_sa;
 		return (SECURITY_ATTRIBUTES*)&s_sa;
 	}
 };
 
-class AutoReleaseMutex
-{
+class AutoReleaseMutex {
 	HANDLE _mutex;
 public:
 	AutoReleaseMutex(HANDLE mutex) noexcept {
@@ -257,11 +244,11 @@ public:
 	}
 
 	~AutoReleaseMutex() {
-		if(_mutex) ReleaseMutex(_mutex);
+		if (_mutex) ReleaseMutex(_mutex);
 	}
 
 	void ReleaseNow() {
-		if(_mutex) ReleaseMutex(_mutex);
+		if (_mutex) ReleaseMutex(_mutex);
 		_mutex = 0;
 	}
 };
@@ -326,8 +313,7 @@ public:
 //};
 
 //IStream helpers.
-class istream
-{
+class istream {
 public:
 	static LARGE_INTEGER LI(__int64 i) {
 		LARGE_INTEGER r; r.QuadPart = i;
@@ -346,7 +332,7 @@ public:
 	static bool GetPos(IStream* x, out DWORD& pos) {
 		pos = 0;
 		__int64 pos64;
-		if(x->Seek(LI(0), STREAM_SEEK_CUR, (ULARGE_INTEGER*)&pos64)) return false;
+		if (x->Seek(LI(0), STREAM_SEEK_CUR, (ULARGE_INTEGER*)&pos64)) return false;
 		pos = (DWORD)pos64;
 		return true;
 	}
@@ -364,28 +350,28 @@ public:
 	}
 };
 
-namespace wn
-{
-inline DWORD Style(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_STYLE); }
-inline DWORD ExStyle(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_EXSTYLE); }
-bool ClassName(HWND w, out Bstr& s);
-int ClassNameIs(HWND w, std::initializer_list<STR> a);
-bool ClassNameIs(HWND w, STR s);
-bool ClassNameIs(HWND w, const str::Wildex& s);
-bool Name(HWND w, out Bstr& s);
-bool IsVisibleInWindow(HWND c, HWND wTL);
+namespace wn {
+	inline DWORD Style(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_STYLE); }
+	inline DWORD ExStyle(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_EXSTYLE); }
+	bool ClassName(HWND w, out Bstr& s);
+	int ClassNameIs(HWND w, std::initializer_list<STR> a);
+	bool ClassNameIs(HWND w, STR s);
+	bool ClassNameIs(HWND w, const str::Wildex& s);
+	bool Name(HWND w, out Bstr& s);
+	bool IsVisibleInWindow(HWND c, HWND wTL);
 
-using WNDENUMPROCL = const std::function <bool(HWND c)>;
+	using WNDENUMPROCL = const std::function <bool(HWND c)>;
 
-BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback);
-HWND FindChildByClassName(HWND w, STR className, bool visible);
-HWND FindChildByClassName(HWND w, STR className1, STR className2, OUT bool& second, bool visible);
-HWND FindWndEx(HWND wParent, HWND wAfter, STR cn, STR name = null);
-HWND FindWnd(STR cn, STR name = null);
-bool WinformsNameIs(HWND w, STR name);
+	BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback);
+	HWND FindChildByClassName(HWND w, STR className, bool visible);
+	HWND FindChildByClassName(HWND w, STR className1, STR className2, OUT bool& second, bool visible);
+	HWND FindWndEx(HWND wParent, HWND wAfter, STR cn, STR name = null);
+	HWND FindWnd(STR cn, STR name = null);
+	HWND FindWndExVisible(HWND wParent, STR cn);
+	bool WinformsNameIs(HWND w, STR name);
 
 #if TRACE
-void PrintWnd(HWND w);
+	void PrintWnd(HWND w);
 #else
 #define PrintWnd __noop
 #endif
@@ -398,13 +384,11 @@ bool QueryService(IUnknown* iFrom, OUT T** iTo, const GUID* guidService = null) 
 	return QueryService_(iFrom, (void**)iTo, __uuidof(T), guidService);
 }
 
-namespace util
-{
-//Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>
-template<class T>
-void Swap(ref T& a, ref T& b)
-{
-	T t = a; a = b; b = t;
-}
+namespace util {
+	//Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>
+	template<class T>
+	void Swap(ref T& a, ref T& b) {
+		T t = a; a = b; b = t;
+	}
 
 }

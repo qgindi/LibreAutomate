@@ -5,10 +5,10 @@
 #define	ROLE_MAX 0x40 //ROLE_SYSTEM_OUTLINEBUTTON
 #define	ROLE_CUSTOM 0xFF
 
-//IAccessible helper methods. All methods are static; use this class like a namespace.
-//Other helper methods are in AccRaw. This class contains methods that don't depend on AccRaw.
+//IAccessible helpers. All functions are static; use this class like a namespace.
+//Other helpers are in AccRaw. This class contains functions that don't depend on AccRaw.
 namespace ao {
-	//VARIANT(VT_I4) for IAccessible method parameters.
+	//VARIANT(VT_I4) for IAccessible function parameters.
 	struct VE : VARIANT {
 		VE() { vt = VT_I4; lVal = 0; }
 		VE(long elem) { vt = VT_I4; lVal = elem; }

@@ -226,6 +226,10 @@
   <ItemGroup>
     <ClInclude Include="acc.h" />
     <ClInclude Include="Cpp.h" />
+    <ClInclude Include="IAccessible2.h" />
+    <ClInclude Include="ISimpleDOMDocument.h" />
+    <ClInclude Include="ISimpleDOMNode.h" />
+    <ClInclude Include="ISimpleDOMText.h" />
     <ClInclude Include="JAB.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="resource.h" />

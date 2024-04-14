@@ -123,7 +123,7 @@ public unsafe class elmFinder {
 	/// <remarks>
 	/// To create code for this function, use tool <b>Find UI element</b>.
 	/// 
-	/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
+	/// In [wildcard expression](xref:wildcard_expression) supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
 	/// 
 	/// When using path like <c>["ROLE1", "Name1"]["ROLE2", "Name2"]["ROLE3", "Name3"]</c>, multiple finders are linked like finder1 -> finder2 -> finder3, so that the chain of finders will find UI element specified by the last finder.
 	/// 
@@ -149,7 +149,7 @@ public unsafe class elmFinder {
 	/// 
 	/// <h5>About the <i>prop</i> parameter</h5>
 	/// 
-	/// Format: one or more <c>"name=value"</c> strings, like <c>new("key=xxx", "@href=yyy")</c> or <c>"key=xxx|@href=yyy"</c>. Names must match case. Values of most string properties are wildcard expressions.
+	/// Format: one or more <c>"name=value"</c> strings, like <c>new("key=xxx", "@href=yyy")</c> or <c>"key=xxx|@href=yyy"</c>. Names must match case. Values of most string properties are [wildcard expressions](xref:wildcard_expression).
 	/// 
 	/// - <c>"class"</c> - search only in child controls that have this class name (see <see cref="wnd.ClassName"/>).\
 	///   Cannot be used when searching in a UI element.
@@ -173,6 +173,7 @@ public unsafe class elmFinder {
 	/// - <c>"help"</c> - <see cref="elm.Help"/>.
 	/// - <c>"uiaid"</c> - <see cref="elm.UiaId"/>.
 	/// - <c>"uiacn"</c> - <see cref="elm.UiaCN"/>.
+	/// - <c>"url"</c> - URL of the container DOCUMENT in Chromium-based web browser. Used together with role prefix <c>"web:"</c> or <c>"chrome:"</c>. Use when the document is a side panel or developer tools or a special page like Settings. Don't need (but can be used too) when the document is a web page (URL starts with <c>"https:"</c>, <c>"http:"</c> or <c>"file:"</c>).
 	/// - <c>"maxcc"</c> - when searching, skip children of UI elements that have more than this number of direct children. Default 10000, min 1, max 1000000.\
 	///   It can make faster. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc <b>TABLE</b> has one billion children.
 	/// - <c>"notin"</c> - when searching, skip children of UI elements that have these roles. It can make faster.\

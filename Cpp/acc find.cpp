@@ -20,6 +20,7 @@ class AccFinder {
 	AccFindCallback* _callback; //receives found AO
 	STR _role; //null if used path or if the role parameter is null
 	NameValue* _prop; //other string properties and HTML attributes. Specified in the prop parameter, like L"value=XXX\0 @id=YYY".
+	str::Wildex _url; //Chrome DOCUMENT URL. Specified in the prop parameter.
 	STR _controlWF; //WinForms name. Used when the prop parameter has "id=x" where x is not a number. Then _flags2 has eAF2::InControls.
 	STR* _notin; //when searching, skip descendants of AO of these roles. Specified in the prop parameter.
 	int _propCount; //_prop array element count
@@ -33,6 +34,7 @@ class AccFinder {
 	eAF2 _flags2; //internal
 	bool _found; //true when the AO has been found
 	IAccessible** _findDOCUMENT; //used by FindDocumentSimple_, else null
+	AccFinder* _mainFinder; //used by FindDocumentSimple_, else null
 	BSTR* _errStr; //error string, when a parameter is invalid
 	HWND _wTL; //window in which currently searching
 
@@ -173,6 +175,7 @@ class AccFinder {
 							L"value", L"desc", L"help", L"action", L"key", L"uiaid", L"uiacn", //string props
 							L"state", L"level", L"maxcc", L"notin", L"rect", L"item",
 							L"class", L"id", //control
+							L"url"
 							});
 
 						if (i == 0) return _Error(L"Unknown name in prop. For HTML attributes use prefix @.");
@@ -219,6 +222,9 @@ class AccFinder {
 									if (s2 == s) { _controlId = cid; _flags2 |= eAF2::IsId; } else _controlWF = va;
 								} else _controlWF = va;
 								_flags2 |= eAF2::InControls;
+								break;
+							case 9:
+								if (!_url.Parse(va, len, true, _errStr)) return false;
 								break;
 							}
 						}
@@ -642,21 +648,30 @@ private:
 				return 0;
 				//note: this cannot be used with Chrome. ap is a DOCUMENT, but it's a random document, not the active.
 			}
+
+			//tested: 0 relations.
+			//IAccessible2* aw2 = null;
+			//if (QueryService(ap, &aw2, &IID_IAccessible)) {
+			//	long n = 0; auto r = aw2->get_nRelations(&n);
+			//	Printf(L"0x%X, %i", r, n);
+			//	aw2->Release();
+			//}
 		}
 
-		return FindDocumentSimple_(ap, out ar, _flags2);
+		return FindDocumentSimple_(ap, out ar, _flags2, this);
 	}
 
 public:
 	//Finds DOCUMENT with AccFinder::Find. Skips TREE etc.
 	//Returns 0 or NotFound.
-	static HRESULT FindDocumentSimple_(IAccessible* ap, out AccRaw& ar, eAF2 flags2) {
+	static HRESULT FindDocumentSimple_(IAccessible* ap, out AccRaw& ar, eAF2 flags2, AccFinder* mainFinder = null) {
 		AccFinder f;
+		f._mainFinder = mainFinder;
 		f._findDOCUMENT = &ar.acc;
 		f._flags2 = flags2 & (eAF2::InChromePage | eAF2::InFirefoxPage);
 		if (!!(flags2 & eAF2::InFirefoxPage)) f._flags2 |= eAF2::InFirefoxNotWebNotUIA; //skip background tabs
-		else if (!!(flags2 & eAF2::InChromePage)) f._flags |= eAF::Reverse; //~20% faster, skips devtools, but finds sidebar first
-		f._maxLevel = 10;
+		else if (!!(flags2 & eAF2::InChromePage)) f._flags |= eAF::Reverse; //~20% faster
+		f._maxLevel = 30;
 		Cpp_Acc a(ap, 0);
 		if (0 != f.Find(0, &a, null)) return (HRESULT)eError::NotFound;
 		return 0;
@@ -673,30 +688,56 @@ private:
 			long state; if (0 != a.get_accState(out state) || !!(state & STATE_SYSTEM_INVISIBLE)) return _eMatchResult::SkipChildren;
 
 			if (!!(_flags2 & eAF2::InChromePage)) {
-				//tested: the IAccessible2 does not have attributes or something that would help to find the true document
+				//tested: IAccessible2, ISimpleDOMDocument and IAccessibleApplication can't help to detect document type (web page, side panel etc)
 				//IAccessible2* aw2 = null;
 				//if(QueryService(a.acc, &aw2, &IID_IAccessible)) {
-				//	Bstr b;
-				//	auto r = aw2->get_attributes(&b);
+				//	//Bstr b;
+				//	//auto r = aw2->get_attributes(&b);
 				//	//auto r = aw2->get_extendedRole(&b);
-				//	Printf(L"0x%X, %s", r, b.m_str);
+				//	//auto r = aw2->get_localizedExtendedRole(&b);
+				//	//Printf(L"0x%X, %s", r, b.m_str);
 				//	//long n = 0; auto r = aw2->get_nExtendedStates(&n);
 				//	//long n = 0; auto r = aw2->get_nRelations(&n);
 				//	//long n = 0; auto r = aw2->get_uniqueID(&n);
 				//	//long n = 0; auto r = aw2->role(&n);
+				//	//long n = 0; auto r = aw2->get_indexInParent(&n);
 				//	//Printf(L"0x%X, %i", r, n);
 				//	aw2->Release();
-				//	return _eMatchResult::SkipChildren;
 				//}
 
-				Bstr b;
-				if (0 == a.acc->get_accValue(ao::VE(), &b) && b && b.Length() >= 16) {
-					if (!wcsncmp(b, L"devtools:", 9) //last tested with Chrome 101
-						|| !wcsncmp(b, L"chrome-devtools:", 16) //old
-						|| !wcsncmp(b, L"chrome://read-later", 19) //side panel, last tested with Chrome 101
-						) return _eMatchResult::SkipChildren;
-					//note: sync with Delm._IsVisibleWebPage.
+				//ISimpleDOMDocument* isd = null;
+				//if (QueryService(a.acc, &isd, &IID_IAccessible)) {
+				//	Bstr s1, s2, s3, s4;
+				//	if (0 == isd->get_URL(&s1)) Printf(L"URL=%s", s1.m_str);
+				//	if (0 == isd->get_title(&s2)) Printf(L"title=%s", s2.m_str);
+				//	if (0 == isd->get_docType(&s3)) Printf(L"docType=%s", s3.m_str);
+				//	if (0 == isd->get_mimeType(&s4)) Printf(L"mimeType=%s", s4.m_str);
+				//	//if (0 == isd->get_nameSpaceURIForID(&s1)) Printf(L"=%s", s1.m_str);
+
+				//	isd->Release();
+				//}
+
+				//IAccessibleApplication* iaa=null;
+				//if (QueryService(a.acc, &iaa, &IID_IAccessible)) {
+				//	Bstr s1, s2, s3, s4;
+				//	if(0==iaa->get_appName(&s1)) Printf(L"appName=%s", s1.m_str);
+				//	if(0==iaa->get_appVersion(&s2)) Printf(L"appVersion=%s", s2.m_str);
+				//	if(0==iaa->get_toolkitName(&s3)) Printf(L"toolkitName=%s", s3.m_str);
+				//	if(0==iaa->get_toolkitVersion(&s4)) Printf(L"toolkitVersion=%s", s4.m_str);
+				//	iaa->Release();
+				//}
+
+				if (_mainFinder != null) { //else called by AccEnableChrome2 (can be any DOCUMENT)
+					Bstr b;
+					if (!(0 == a.acc->get_accValue(ao::VE(), &b) && b && b.Length() > 0)) return _eMatchResult::SkipChildren;
+
+					if (_mainFinder->_url.Is()) {
+						if (!_mainFinder->_url.Match(b, b.Length())) return _eMatchResult::SkipChildren;
+					} else {
+						if (b.Length() < 6 || (wcsncmp(b, L"https:", 6) && wcsncmp(b, L"http:", 5) && wcsncmp(b, L"file:", 5))) return _eMatchResult::SkipChildren;
+					}
 				}
+				//note: sync with Delm._IsVisibleWebPage.
 			}
 
 			a.acc->AddRef();
@@ -707,8 +748,9 @@ private:
 
 		static const BYTE b[] = { ROLE_SYSTEM_MENUBAR, ROLE_SYSTEM_TITLEBAR, ROLE_SYSTEM_MENUPOPUP, ROLE_SYSTEM_TOOLBAR,
 			ROLE_SYSTEM_STATUSBAR, ROLE_SYSTEM_OUTLINE, ROLE_SYSTEM_LIST, ROLE_SYSTEM_SCROLLBAR, ROLE_SYSTEM_GRIP,
-			ROLE_SYSTEM_SEPARATOR, ROLE_SYSTEM_PUSHBUTTON, ROLE_SYSTEM_TEXT, ROLE_SYSTEM_STATICTEXT, ROLE_SYSTEM_TOOLTIP,
+			ROLE_SYSTEM_SEPARATOR, ROLE_SYSTEM_PUSHBUTTON, ROLE_SYSTEM_TEXT, ROLE_SYSTEM_TOOLTIP,
 			ROLE_SYSTEM_TABLE,
+			//ROLE_SYSTEM_STATICTEXT, //no, eg WebView2 uses a Static container control
 		};
 		for (int i = 0; i < _countof(b); i++) if (role == b[i]) return _eMatchResult::SkipChildren;
 		return _eMatchResult::Continue;
@@ -720,9 +762,6 @@ HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_A
 	if (!f.SetParams(ref ap)) return (HRESULT)eError::InvalidParameter;
 	return f.Find(w, aParent, &callback);
 }
-
-//MIDL_INTERFACE("E89F726E-C4F4-4c19-BB19-B647D7FA8478")
-//IAccessible2 : public IAccessible{ };
 
 HRESULT AccEnableChrome2(HWND w, int i, HWND c) {
 	Smart<IAccessible> aw, aDoc;
@@ -751,14 +790,17 @@ HRESULT AccEnableChrome2(HWND w, int i, HWND c) {
 
 	long cc = 0;
 	bool isEnabled = 0 == aDoc->get_accChildCount(&cc) && cc > 0;
+	//Printf(L"isEnabled=%i, i=%i", isEnabled, i);
 
 	if (i == 0) {
-		if (!isEnabled) {
-			Bstr name, action;
-			aDoc->get_accName(ao::VE(), &name);
-			aDoc->get_accDefaultAction(ao::VE(), &action);
-		}
-		AccChromeEnableHtml(aDoc); //not necessary, it seems get_accName enables it, but anyway
+		Bstr name, action;
+		if (!isEnabled) aDoc->get_accName(ao::VE(), &name); //enables everything
+
+		//enable HTML, get_accDefaultAction and maybe some other properties.
+		//	get_accName alone enables too, but later.
+		//	Any of these enables all. But call both anyway.
+		aDoc->get_accDefaultAction(ao::VE(), &action);
+		AccChromeEnableHtml(aDoc);
 	}
 
 	return isEnabled ? 0 : (HRESULT)eError::WaitChromeDisabled;
@@ -771,47 +813,51 @@ namespace outproc {
 		assert(!(wn::Style(w) & WS_CHILD));
 		HWND wTL = w;
 
-		//I know 3 ways to auto-enable Chrome web page AOs:
-		//1. Send WM_GETOBJECT(0, 1) to the legacy control (child window classnamed "Chrome_RenderWidgetHostHWND").
-		//	It is documented, but was broken in many Chrome versions.
-		//  Now works again, but may stop working again. They want to get rid of the "legacy" control.
-		//	It does not enable by itself. Then need to get Name; faster if also DefaultAction. It's undocumented.
-		//	Need to wait. The time depends on how big is the webpage (which tab?). May be even 1 s.
-		//  The documentation says that Chrome calls NotifyWinEvent(ALERT) when starts, and enables acc if then receives WM_GETOBJECT with its arguments.
-		//		Actually it enables when receives WM_GETOBJECT(0, 1) at any time, but maybe stops after some long time ets. I tested after ~2 hours, still worked.
+		//I know these ways to auto-enable Chrome web page AOs:
+		//1. Call get_accName of any AO, eg of main window or document.
+		//	Need to wait. Also need to call some other functions to enable HTML and all acc properties.
+		//	In current Chrome works alone. In Edge, WebView2 and old Chrome also need 2.
 		//2. Try to QS IAccessible2 from the client IAccessible of the main window.
 		//	It's undocumented. I found it in Chromium source code, and later on the internet.
 		//		One Chromium developer suggested to use it instead of the broken WM_GETOBJECT way.
 		//  Works inproc and outproc. If outproc, the QS fails, but enables anyway.
-		//	It may not enable by itself. Or very slowly. Then need to get Name. It's undocumented.
-		//	Need to wait. The time depends on how big is the webpage (which tab?). May be even 1 s.
-		//	It seems this way is slightly better, although undocumented.
+		//	It may not enable by itself. Or very slowly. Then need to call get_accName. It's undocumented.
+		//	Need to wait. The time depends on how big is the webpage. May be even 1 s.
 		//	When used in certain way, used to kill Chrome process on Win7 (or it depends on Chrome settings etc). Current code works well.
-		//3. Get a UIA element.
+		//3. (tested loong time ago) Get a UIA element.
 		//	Chrome: of main window.
 		//	WebView2: of the legacy control. Then call its FindFirst with "true" condition. With Chrome it does not work.
 		//		Or from point.
 		//		It enables for entire process (or thread, not tested). Eg the window may have multiple WebView2 controls; need to enable just for one.
 		//	Bad: UIA at first is slow. And undocumented (or I don't know).
 		//	Need to wait like always.
+		//4. Edge enables if SPI_SETSCREENREADER. Not Chrome.
+		//5. (obsolete, now does not work) Send WM_GETOBJECT(0, 1) to the legacy control (child window classnamed "Chrome_RenderWidgetHostHWND").
+		//  Documented: Chrome calls NotifyWinEvent(ALERT) when starts, and enables if then receives WM_GETOBJECT with its arguments.
+		//	Does not work with current Chrome. Maybe works only if called soon after NotifyWinEvent; not tested.
 
 		if (c) {
 			w = GetParent(c); //eg WebView2
 			if (!w) return;
 			PRINTS_IF(!wn::ClassNameIs(w, L"Chrome_WidgetWin_1"), L"parent not Chrome_WidgetWin_1");
-		} else c = wn::FindWndEx(w, 0, c_CRW, null);
+		} else {
+			c = wn::FindWndExVisible(w, c_CRW);
+			if (!c) { //eg WebView2. //tested: enables in all WebView2 in that window.
+				c = wn::FindChildByClassName(w, c_CRW, true);
+				if (c) w = GetParent(c);
+			}
 
-		if (c) SendMessage(c, WM_GETOBJECT, 0, 1);
-		else {
-			//Don't need to enable, because there is no true web content (and no DOCUMENT).
-			//	But try to enable anyway, because in the future Chrome may remove the legacy control. Unless it's a popup window.
+			if (!c) {
+				//Don't need to enable, because there is no web content (and no DOCUMENT).
+				//	But try to enable anyway, because in the future Chrome may remove the legacy control. Unless it's a popup window.
 
-			DWORD style = (DWORD)GetWindowLong(w, GWL_STYLE);
-			if (0 != (style & WS_POPUP) || style == 0) return; //a popup window, eg menu, tooltip, new bookmark. Or invalid window handle.
+				DWORD style = (DWORD)GetWindowLong(w, GWL_STYLE);
+				if (0 != (style & WS_POPUP) || style == 0) return; //a popup window, eg menu, tooltip, new bookmark. Or invalid window handle.
 #ifdef TRACE
-			PRINTS(L"no Chrome_RenderWidgetHostHWND in:");
-			wn::PrintWnd(w); //eg Task Manager
+				PRINTS(L"no Chrome_RenderWidgetHostHWND in:");
+				wn::PrintWnd(w); //eg Task Manager
 #endif
+			}
 		}
 
 		//notinproc FindDocumentSimple_ is very slow

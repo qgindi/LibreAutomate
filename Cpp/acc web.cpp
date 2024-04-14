@@ -383,7 +383,10 @@ bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count)
 
 void AccChromeEnableHtml(IAccessible* aDoc) {
 	HtmlNode node;
-	node.FromAcc(aDoc);
+	if (node.FromAcc(aDoc)) {
+		Bstr b(node.GetTag());
+		//Printf(L"yes, %s", b.m_str);
+	}
 }
 
 HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult)

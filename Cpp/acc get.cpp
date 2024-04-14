@@ -8,19 +8,17 @@ namespace outproc {
 
 namespace {
 
-	enum class _ESpecWnd { None, Chrome, Java, OO, Mozilla, ChromeControl, ChromeControl2 };
-
 	//Returns: 1 Chrome, 2 Java, 3 OpenOffice/LibreOffice, 4 Mozilla, 0 none.
-	_ESpecWnd _IsSpecWnd(HWND wTL, HWND w) {
+	eSpecWnd _IsSpecWnd(HWND wTL, HWND w) {
 		if (w != wTL) {
 			switch (wn::ClassNameIs(w, { c_CRW, L"Chrome_WidgetWin_1" })) {
-			case 1: return _ESpecWnd::ChromeControl; //eg WebView2
-			case 2: return _ESpecWnd::ChromeControl2;
+			case 1: return eSpecWnd::ChromeControl; //eg WebView2
+			case 2: return eSpecWnd::ChromeControl2;
 			}
 		}
 		int i = wn::ClassNameIs(wTL, { L"Chrome*", L"SunAwt*", L"SAL*FRAME", L"Mozilla*" });
 		if (i > 0 && w != wTL && i != (int)_IsSpecWnd(w, w)) i = 0; //if control, ignore if classname not similar
-		return (_ESpecWnd)i;
+		return (eSpecWnd)i;
 	}
 
 	bool _IsContainer(BYTE role) {
@@ -124,15 +122,19 @@ namespace {
 					AccDtorIfElem0 aChild;
 					if (!c.GetNext(out aChild)) break;
 					if (_FromPoint_TrySmaller2(p, ref aChild, out ar, level < 0 ? 1 : level + 1)) return true;
+					//Bad: sometimes the smallest elm is in a sibling of the found.
+					//TODO: consider: reject the "TrySmaller" flag.
+					//	Idea: capture without "TrySmaller". Then, if the elm or its parent has children, get their rects, and show menu.
 				}
 			} else if (level == 0) {
-				//The tool may not show item rects even with 'TrySmaller', because they are in a sibling elm of the direct mouse elm.
+				//Sometimes a smaller elm is in a sibling elm of the direct mouse elm.
 				//	Some known cases: Chrome tab buttons.
 				//	Workaround: Retry starting from parent.
 				IAccessible* aParent;
 				if (0 == ao::get_accParent(a.acc, out aParent)) {
 					AccDtorIfElem0 parent(aParent, 0);
-					if (_FromPoint_TrySmaller2(p, ref parent, out ar, -1)) return true;
+					if (_IsContainer(parent.GetRoleByte()))
+						if (_FromPoint_TrySmaller2(p, ref parent, out ar, -1)) return true;
 				}
 			}
 
@@ -153,8 +155,6 @@ namespace {
 			elem = ar.elem;
 			role = ar.GetRoleByte();
 		}
-		//CONSIDER: maybe do differently:
-		//	After capturing an elm, let Delm in other thread get its descendants, and if there is a descendant at that point, notify the user and display descendants. Let the user retry.
 	}
 
 	//Get UIA element from same point. If its size is < 0.5 than of the AO, use it. Dirty, but in most cases works well.
@@ -214,13 +214,13 @@ namespace {
 	}
 #define RETRY_IF_CHANGED_WINDOW if(inProc && _FromPoint_ChangedWindow(wFP, p)) return E_FP_RETRY
 
-	HRESULT _AccFromPoint(POINT p, HWND wFP, eXYFlags flags, int specWnd, out Cpp_Acc& aResult) {
+	HRESULT _AccFromPoint(POINT p, HWND wFP, eXYFlags flags, eSpecWnd specWnd, out Cpp_Acc& aResult) {
 		//Perf.First();
 		Smart<IAccessible> iacc; long elem = 0;
 		eAccMiscFlags miscFlags = (eAccMiscFlags)0;
 		BYTE role = 0;
 		bool inProc = !(flags & eXYFlags::NotInProc);
-		bool trySmaller = !!(flags & eXYFlags::TrySmaller) && inProc && specWnd <= 1; //not in spec windows except Chrome
+		bool trySmaller = !!(flags & eXYFlags::TrySmaller) && inProc && specWnd != eSpecWnd::OO;
 	g1:
 		RETRY_IF_CHANGED_WINDOW;
 		//Perf.Next('w');
@@ -245,7 +245,7 @@ namespace {
 			//Perf.Next('r');
 
 			//UIA?
-			if (role != ROLE_CUSTOM && (trySmaller || (!!(flags & eXYFlags::OrUIA) && _IsContainer(role)))) { //and ignore elem
+			if (specWnd == eSpecWnd::None && role != ROLE_CUSTOM && (trySmaller || (!!(flags & eXYFlags::OrUIA) && _IsContainer(role)))) { //and ignore elem
 				RETRY_IF_CHANGED_WINDOW;
 				if (_FromPoint_UiaWorkaround(p, ref iacc, ref elem, role)) {
 					miscFlags |= eAccMiscFlags::UIA;
@@ -259,6 +259,7 @@ namespace {
 
 		bool isUIA = !!(miscFlags & eAccMiscFlags::UIA);
 		if (isUIA) role = ao::GetRoleByte(iacc);
+		else if (!trySmaller && inProc && role == ROLE_SYSTEM_PANE) trySmaller = specWnd == eSpecWnd::Chrome || specWnd == eSpecWnd::ChromeControl; //maybe Chrome tab buttons or side panel
 		if (trySmaller) {
 			//tested: notinproc too slow; UIA slower but not too slow.
 			_FromPoint_TrySmaller(p, ref iacc.p, ref elem, ref role);
@@ -282,7 +283,7 @@ namespace {
 	}
 } //namespace
 
-HRESULT AccFromPoint(POINT p, HWND wFP, eXYFlags flags, int specWnd, out Cpp_Acc& aResult) {
+HRESULT AccFromPoint(POINT p, HWND wFP, eXYFlags flags, eSpecWnd specWnd, out Cpp_Acc& aResult) {
 	//Workaround for: WindowFromPoint (and AccessibleObjectFromPoint etc) works differently inproc.
 	//	Inproc it sends WM_NCHITTEST and skips that window if returns HTTRANSPARENT.
 	//	Then the API gets wrong window, which even can be of another thread (then inproc has no sense).
@@ -316,8 +317,8 @@ namespace outproc {
 		if (!wTL) return 1; //let the caller retry
 
 		ao::TempSetScreenReader tsr;
-		_ESpecWnd specWnd = _IsSpecWnd(wTL, wFP);
-		if (specWnd == _ESpecWnd::Java) {
+		eSpecWnd specWnd = _IsSpecWnd(wTL, wFP);
+		if (specWnd == eSpecWnd::Java) {
 			WINDOWINFO wi = { sizeof(wi) };
 			if (GetWindowInfo(wFP, &wi) && PtInRect(&wi.rcClient, p)) {
 				auto ja = AccJavaFromPoint(p, wFP, !!(flags & eXYFlags::TrySmaller));
@@ -328,17 +329,17 @@ namespace outproc {
 					return 0;
 				}
 			}
-			//specWnd = _ESpecWnd::None;
-		} else if (specWnd == _ESpecWnd::Chrome) {
+			//specWnd = eSpecWnd::None;
+		} else if (specWnd == eSpecWnd::Chrome) {
 			AccEnableChrome(wTL);
 			//note: now can get wrong AO, although the above func waits for new good DOCUMENT (max 3 s).
 			//	Chrome updates web page AOs lazily. The speed depends on web page. Can get wrong AO even after loong time.
 			//	Or eg can be good AO, but some its properties are still not set.
 			//	This func doesn't know what AO must be there, and cannot wait.
 			//	Instead, where need such reliability, the caller script can eg wait for certain AO (role LINK etc) at that point.
-		} else if (specWnd == _ESpecWnd::ChromeControl) {
+		} else if (specWnd == eSpecWnd::ChromeControl) {
 			AccEnableChrome(wTL, wFP);
-		} else if (specWnd == _ESpecWnd::OO) { //OpenOffice, LibreOffice
+		} else if (specWnd == eSpecWnd::OO) { //OpenOffice, LibreOffice
 			tsr.Set(wTL);
 			//OpenOffice bug: crashes on exit if AccessibleObjectFromPoint or AccessibleObjectFromWindow called with SPI_GETSCREENREADER.
 			//	Could not find a workaround.
@@ -393,7 +394,7 @@ namespace outproc {
 				else p0 = p; //UIA
 			}
 
-			R = AccFromPoint(p0, wFP, flags, (int)specWnd, out aResult);
+			R = AccFromPoint(p0, wFP, flags, specWnd, out aResult);
 			return R;
 		}
 
@@ -410,7 +411,7 @@ namespace outproc {
 		auto x = (MarshalParams_AccFromPoint*)ic.AllocParams(&aAgent, InProcAction::IPA_AccFromPoint, sizeof(MarshalParams_AccFromPoint));
 		x->p = p;
 		x->flags = flags;
-		x->specWnd = (int)specWnd;
+		x->specWnd = specWnd;
 		x->wFP = (int)(LPARAM)wFP;
 		if (0 != (R = ic.Call())) {
 			if (R == E_FP_RETRY) {
@@ -461,23 +462,23 @@ namespace outproc {
 		if (!wTL) return 1;
 
 		ao::TempSetScreenReader tsr;
-		_ESpecWnd specWnd = _IsSpecWnd(wTL, w);
-		if (specWnd == _ESpecWnd::Java) {
+		eSpecWnd specWnd = _IsSpecWnd(wTL, w);
+		if (specWnd == eSpecWnd::Java) {
 			auto ja = AccJavaFromWindow(w, true);
 			if (ja != null) {
 				aResult.acc = ja;
 				aResult.misc.flags = eAccMiscFlags::Java;
 				return 0;
 			}
-		} else if (specWnd == _ESpecWnd::Chrome) {
+		} else if (specWnd == eSpecWnd::Chrome) {
 			AccEnableChrome(w);
-		} else if (specWnd == _ESpecWnd::ChromeControl) {
+		} else if (specWnd == eSpecWnd::ChromeControl) {
 			AccEnableChrome(wTL, w);
-		} else if (specWnd == _ESpecWnd::ChromeControl2) {
-			//if WebView, focused is parent control (class Chrome_WidgetWin_1) of the legacy control (class c_CRW). Need the legacy control to enable AO.
-			HWND w2 = wn::FindWndEx(w, 0, c_CRW, null);
+		} else if (specWnd == eSpecWnd::ChromeControl2) {
+			//if WebView, focused is parent control (class Chrome_WidgetWin_1) of the c_CRW control. Need c_CRW to enable AO.
+			HWND w2 = wn::FindWndExVisible(w, c_CRW);
 			if (w2) AccEnableChrome(wTL, w2);
-		} else if (specWnd == _ESpecWnd::OO) { //OpenOffice, LibreOffice
+		} else if (specWnd == eSpecWnd::OO) { //OpenOffice, LibreOffice
 			tsr.Set(wTL);
 			//OpenOffice bug: crashes. More info in Cpp_AccFromPoint.
 		}
