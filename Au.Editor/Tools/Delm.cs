@@ -886,7 +886,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		try {
 			int t = Environment.TickCount;
 			_smaller.a = _RunElmTask(2000, this, _ => w.Elm[flags: flags].FindAll().Select(o => (o, o.Rect)).ToArray());
-			t = Environment.TickCount - t; if (t < 1000) _smaller.timer = t / 50 + 8; //~2.5s (2-7)
+			t = Environment.TickCount - t; if (t < 1000) _smaller.timer = t / 50 + 4; //~1.5s (1-6)
 
 			//SHOULDDO: get all rects in single inproc call. Now ~5 times slower.
 			//	Currently there is no infrastructure. Could marshal rects together with elms, but I don't like to pollute the code just for this. Maybe better use eg shared memory.

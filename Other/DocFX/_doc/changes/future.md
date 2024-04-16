@@ -35,9 +35,10 @@ New members:
 
 New parameters:
 - **wnd.Move**, **wnd.Resize**, **wnd.MoveL**: *visibleRect* (exclude the transparent frame).
+- **elm** functions: in the *prop* parameter can be specified **url**. Use to search in side panels, developer tools, settings etc. The **Find UI element** tool now adds it when need.
 
 Improved:
-- .
+- **elm** with Chrome and other Chromium-based web browsers.
 
 Fixed bugs:
 - .

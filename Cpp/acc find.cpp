@@ -15,12 +15,12 @@ class AccFinder {
 	str::Wildex _name; //name. If the name parameter is null, _name.Is()==false.
 	//Bstr _roleStrings; //a copy of the input role string when eg need to parse (modify) the string
 	Bstr _propStrings; //a copy of the input prop string when eg need to parse (modify) the string
+	str::Wildex _url; //Chrome DOCUMENT URL. Specified in the prop parameter. Used by FindDocumentSimple_.
 
 	//our ctor ZEROTHISFROM(_callback)
 	AccFindCallback* _callback; //receives found AO
 	STR _role; //null if used path or if the role parameter is null
 	NameValue* _prop; //other string properties and HTML attributes. Specified in the prop parameter, like L"value=XXX\0 @id=YYY".
-	str::Wildex _url; //Chrome DOCUMENT URL. Specified in the prop parameter.
 	STR _controlWF; //WinForms name. Used when the prop parameter has "id=x" where x is not a number. Then _flags2 has eAF2::InControls.
 	STR* _notin; //when searching, skip descendants of AO of these roles. Specified in the prop parameter.
 	int _propCount; //_prop array element count
@@ -33,8 +33,7 @@ class AccFinder {
 	eAF _flags; //user
 	eAF2 _flags2; //internal
 	bool _found; //true when the AO has been found
-	IAccessible** _findDOCUMENT; //used by FindDocumentSimple_, else null
-	AccFinder* _mainFinder; //used by FindDocumentSimple_, else null
+	void* _findDOCUMENT; //used by FindDocumentSimple_, else null
 	BSTR* _errStr; //error string, when a parameter is invalid
 	HWND _wTL; //window in which currently searching
 
@@ -661,20 +660,55 @@ private:
 		return FindDocumentSimple_(ap, out ar, _flags2, this);
 	}
 
+	struct _DocumentFindData {
+		CComPtr<IAccessible> doc;
+		CComPtr<IAccessible> docs[2];
+		int nDocs = 0;
+		AccFinder* mainFinder = null;
+	};
+
 public:
 	//Finds DOCUMENT with AccFinder::Find. Skips TREE etc.
 	//Returns 0 or NotFound.
 	static HRESULT FindDocumentSimple_(IAccessible* ap, out AccRaw& ar, eAF2 flags2, AccFinder* mainFinder = null) {
 		AccFinder f;
-		f._mainFinder = mainFinder;
-		f._findDOCUMENT = &ar.acc;
+		_DocumentFindData d; d.mainFinder = mainFinder;
+		f._findDOCUMENT = &d;
 		f._flags2 = flags2 & (eAF2::InChromePage | eAF2::InFirefoxPage);
 		if (!!(flags2 & eAF2::InFirefoxPage)) f._flags2 |= eAF2::InFirefoxNotWebNotUIA; //skip background tabs
 		else if (!!(flags2 & eAF2::InChromePage)) f._flags |= eAF::Reverse; //~20% faster
 		f._maxLevel = 30;
 		Cpp_Acc a(ap, 0);
-		if (0 != f.Find(0, &a, null)) return (HRESULT)eError::NotFound;
-		return 0;
+		if (0 == f.Find(0, &a, null)) {
+			ar.acc = d.doc.Detach();
+			return 0;
+		}
+
+		//fbc. If there are no DOCUMENT with URL starting with "https:" etc, use the most likely DOCUMENT. New scripts should use prop url instead.
+		if (d.nDocs > 0) {
+			if (d.nDocs == 1) {
+				ar.acc = d.docs[0].Detach();
+				return 0;
+			} else { //2 DOCUMENT. Use the one that matches the window name. Probably the other is the side panel.
+				HWND w1 = 0;
+				if (0 == WindowFromAccessibleObject(d.docs[0], &w1)) {
+					if (wn::ClassNameIs(w1, c_CRW)) w1 = GetParent(w1);
+					Bstr wName;
+					if (wn::Name(w1, ref wName)) {
+						size_t lenW = wName.Length(), lenA;
+						for (int i = 0; i < 2; i++) {
+							Bstr aName;
+							if (0 == d.docs[i]->get_accName(ao::VE(), &aName) && (lenA = aName.Length()) > 0 && lenA < lenW && wName[lenA] == ' ' && !wcsncmp(wName, aName, lenA)) {
+								ar.acc = d.docs[i].Detach();
+								return 0;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return (HRESULT)eError::NotFound;
 
 		//when outproc, sometimes fails to get DOCUMENT role while enabling Chrome AOs. The caller will wait/retry.
 	}
@@ -686,6 +720,8 @@ private:
 		int role = a.misc.roleByte;
 		if (role == ROLE_SYSTEM_DOCUMENT) {
 			long state; if (0 != a.get_accState(out state) || !!(state & STATE_SYSTEM_INVISIBLE)) return _eMatchResult::SkipChildren;
+
+			_DocumentFindData& d = *(_DocumentFindData*)_findDOCUMENT;
 
 			if (!!(_flags2 & eAF2::InChromePage)) {
 				//tested: IAccessible2, ISimpleDOMDocument and IAccessibleApplication can't help to detect document type (web page, side panel etc)
@@ -727,21 +763,27 @@ private:
 				//	iaa->Release();
 				//}
 
-				if (_mainFinder != null) { //else called by AccEnableChrome2 (can be any DOCUMENT)
+				if (d.mainFinder != null) { //else called by AccEnableChrome2 (can be any DOCUMENT)
 					Bstr b;
 					if (!(0 == a.acc->get_accValue(ao::VE(), &b) && b && b.Length() > 0)) return _eMatchResult::SkipChildren;
 
-					if (_mainFinder->_url.Is()) {
-						if (!_mainFinder->_url.Match(b, b.Length())) return _eMatchResult::SkipChildren;
+					if (d.mainFinder->_url.Is()) {
+						if (!d.mainFinder->_url.Match(b, b.Length())) return _eMatchResult::SkipChildren;
 					} else {
-						if (b.Length() < 6 || (wcsncmp(b, L"https:", 6) && wcsncmp(b, L"http:", 5) && wcsncmp(b, L"file:", 5))) return _eMatchResult::SkipChildren;
+						if (b.Length() < 6 || (wcsncmp(b, L"https:", 6) && wcsncmp(b, L"http:", 5) && wcsncmp(b, L"file:", 5))) {
+							//fbc. If there are no DOCUMENT with URL starting with "https:" etc, use the most likely DOCUMENT. New scripts should use prop url instead.
+							if (d.nDocs < 2 && wcsncmp(b, L"devtools:", 9)) {
+								d.docs[d.nDocs++] = a.acc; //AddRef
+							}
+
+							return _eMatchResult::SkipChildren;
+						}
 					}
 				}
 				//note: sync with Delm._IsVisibleWebPage.
 			}
 
-			a.acc->AddRef();
-			*_findDOCUMENT = a.acc;
+			d.doc = a.acc; //AddRef
 			_found = true;
 			return _eMatchResult::Stop;
 		}

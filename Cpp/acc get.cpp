@@ -259,7 +259,7 @@ namespace {
 
 		bool isUIA = !!(miscFlags & eAccMiscFlags::UIA);
 		if (isUIA) role = ao::GetRoleByte(iacc);
-		else if (!trySmaller && inProc && role == ROLE_SYSTEM_PANE) trySmaller = specWnd == eSpecWnd::Chrome || specWnd == eSpecWnd::ChromeControl; //maybe Chrome tab buttons or side panel
+		//else if (!trySmaller && inProc && role == ROLE_SYSTEM_PANE) trySmaller = specWnd == eSpecWnd::Chrome || specWnd == eSpecWnd::ChromeControl; //maybe Chrome tab buttons or side panel //TODO
 		if (trySmaller) {
 			//tested: notinproc too slow; UIA slower but not too slow.
 			_FromPoint_TrySmaller(p, ref iacc.p, ref elem, ref role);
