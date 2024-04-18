@@ -41,7 +41,10 @@ global using IEnumerator = System.Collections.IEnumerator;
 #if AU
 namespace Au.More;
 
-class Au_ {
-	public const string Version = "1.1.8";
+///
+[EditorBrowsable(EditorBrowsableState.Never)]
+public class Au_ {
+	///
+	public const string Version = "1.2.0";
 }
 #endif

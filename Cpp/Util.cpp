@@ -290,7 +290,6 @@ namespace wn {
 		}
 	}
 #endif
-
 }
 
 //Gets pointer to other interface through iserviceprovider.

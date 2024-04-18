@@ -475,7 +475,8 @@ private:
 			}
 
 			if (!hiddenToo) {
-				switch (state.IsInvisible()) {
+				int iiv = state.IsInvisible();
+				switch (iiv) {
 				case 2: //INVISISBLE and OFFSCREEN
 					if (!_IsRoleToSkipIfInvisible(role)) break;
 					[[fallthrough]];
@@ -483,6 +484,12 @@ private:
 					if (_IsRoleTopLevelClient(role, level)) break; //rare
 					skipChildren = true; goto gr;
 				}
+
+				//never mind: MSAA bug of child windows classnamed "Windows.UI.Input.InputSite.WindowClass": WINDOW has INVISIBLE, although descendants are visible.
+				//	It breaks MSAA in some Win11 apps, eg taskbar, terminal, paint. UIA OK.
+				//  Could apply a workaround here, but:
+				//	1. Also need a workaround in "elm from point" code. Difficult.
+				//	2. The tool auto-switches to UIA, and it's even faster.
 			}
 
 			if (!!(_stateYes | _stateNo) && mark >= 0) {

@@ -350,6 +350,74 @@ public:
 	}
 };
 
+//Use inproc to DPI-scale elm rect from logical to physical.
+class DpiElmScaling {
+	HWND _w;
+	RECT _rw;
+	bool _scaled;
+	bool _haveRect;
+public:
+	//Use w or acc. If acc not null, ignores w and calls WindowFromAccessibleObject.
+	DpiElmScaling(bool use, HWND w, IAccessible* acc) {
+		ZEROTHIS;
+		if (!use || !dlapi.minWin81) return; //on Win7/8 we get physical rect
+
+		if (acc != null) {
+			if (!(0 == WindowFromAccessibleObject(acc, &w) && w)) { //SHOULDDO: if w specified too in the props string, don't call twice. Same with r/D.
+				PRINTS(L"failed WindowFromAccessibleObject");
+				return;
+			}
+		}
+		_w = w;
+
+		auto da = DPI_AWARENESS::DPI_AWARENESS_SYSTEM_AWARE;
+		if (dlapi.GetWindowDpiAwarenessContext) { //Win10 1607
+			da = dlapi.GetAwarenessFromDpiAwarenessContext(dlapi.GetWindowDpiAwarenessContext(w)); //fast
+			if (da != DPI_AWARENESS::DPI_AWARENESS_SYSTEM_AWARE && da != DPI_AWARENESS::DPI_AWARENESS_UNAWARE) return;
+		} else { //Win8.1
+			PROCESS_DPI_AWARENESS pda;
+			if (0 == dlapi.GetProcessDpiAwareness(GetCurrentProcess(), &pda) && pda == PROCESS_DPI_AWARENESS::PROCESS_PER_MONITOR_DPI_AWARE) return;
+		}
+
+		if (!(_haveRect = GetWindowRect(_w, &_rw))) { _w = 0; return; }
+
+		//On Win10+ we can easily, quickly and reliably detect whether the window is DPI-scaled.
+		if (dlapi.SetThreadDpiAwarenessContext) { //Win10 1607
+			auto ac = dlapi.SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2); //fast
+			RECT r2;
+			_scaled = GetWindowRect(_w, &r2) && memcmp(&_rw, &r2, 16);
+			dlapi.SetThreadDpiAwarenessContext(ac);
+		} else _scaled = true; //on Win8.1 assume need scaling, it does not harm
+	}
+
+	//Returns: 0 don't need to scale, 1 r is not in the window, 2 scaled ok, -1 failed to scale.
+	//needReturn1 - even if don't need to scale, return 1 if r is not in the window.
+	int ScaleIfNeed(ref RECT& r, bool needReturn1 = false) {
+		if (!_scaled) {
+			if (needReturn1 && _w) {
+				if (!_haveRect && !(_haveRect = GetWindowRect(_w, &_rw))) { _w = 0; return 0; }
+				if (!IntersectRect(&r, &r, &_rw)) return 1;
+			}
+			return 0;
+		}
+
+		//The API fails if the point is not in the window rect, except when touches it at the right/bottom.
+		//Tried workaround: create a hidden window with same DPI awareness and use it with the API instead of w.
+		//	In most cases it works, but often does not scale if the point is outside the top-level window.
+		//Current workaround: use r intersection with the container window rect.
+		if (!IntersectRect(&r, &r, &_rw)) return 1;
+
+		POINT p1 = { r.left, r.top }, p2 = { r.right, r.bottom };
+		if (dlapi.LogicalToPhysicalPoint(_w, &p1) && dlapi.LogicalToPhysicalPoint(_w, &p2)) {
+			SetRect(&r, p1.x, p1.y, p2.x, p2.y);
+			return 2;
+		} else {
+			PRINTS(L"failed LogicalToPhysicalPoint");
+			return -1;
+		}
+	}
+};
+
 namespace wn {
 	inline DWORD Style(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_STYLE); }
 	inline DWORD ExStyle(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_EXSTYLE); }

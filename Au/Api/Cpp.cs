@@ -23,7 +23,7 @@ internal static unsafe partial class Cpp {
 		public static implicit operator Cpp_Acc(elm e) => new(e);
 	}
 	
-	internal delegate int Cpp_AccFindCallbackT(Cpp_Acc a);
+	internal delegate int Cpp_AccFindCallbackT(Cpp_Acc a, RECT* r);
 	
 	internal struct Cpp_AccFindParams {
 		string _role, _name, _prop;
@@ -60,7 +60,7 @@ internal static unsafe partial class Cpp {
 	static extern int Cpp_AccRolePrefix(string s, int len, wnd w);
 	
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	internal static extern EError Cpp_AccFind(wnd w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
+	internal static extern EError Cpp_AccFind(wnd w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult, bool getRects = false);
 	
 	internal enum EError {
 		NotFound = 0x1001, //UI element not found. With FindAll - no errors. This is actually not an error.

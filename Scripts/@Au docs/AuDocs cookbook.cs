@@ -3,6 +3,8 @@ using System.Xml.Linq;
 partial class AuDocs {
 	
 	public static void Cookbook(string docDir) {
+		App.Settings ??= new(); //need internetSearchUrl
+		
 		var sbToc = new StringBuilder();
 		List<(string name, string nameMd, string path)> aFiles = new();
 		regexp rxTag = new(@"<([\+\.]?\w+)(?: ([^>\r\n]+))?>((?:[^<]++|(?R)|<\w+(?:, \w+)*>)*)<(?:/\1)?>");

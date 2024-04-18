@@ -8,7 +8,6 @@ namespace outproc {
 
 namespace {
 
-	//Returns: 1 Chrome, 2 Java, 3 OpenOffice/LibreOffice, 4 Mozilla, 0 none.
 	eSpecWnd _IsSpecWnd(HWND wTL, HWND w) {
 		if (w != wTL) {
 			switch (wn::ClassNameIs(w, { c_CRW, L"Chrome_WidgetWin_1" })) {
@@ -97,66 +96,6 @@ namespace {
 		//rejected: support > 1 level. The capturing tool in C# supports it.
 	}
 
-	bool _FromPoint_TrySmaller2(POINT p, ref AccRaw& a, out AccRaw& ar, int level = 0) {
-		//if (level==0) Print(L"-------------"); else Printf(L"Level %i", level);
-		bool notThis = level <= 0;
-		RECT r; if (0 != a.accLocation(ref r)) return false;
-		if (!PtInRect(&r, p)) {
-			//often PAGETAB rect is only the button, but descendants are in the page. Similar for OUTLINEITEM etc.
-			BYTE role = a.GetRoleByte();
-			if (!(role == ROLE_SYSTEM_PAGETAB || role == ROLE_SYSTEM_PAGETABLIST || role == ROLE_SYSTEM_OUTLINEITEM)) return false;
-			notThis = true;
-		}
-		if (!notThis) { //eg in Win10 powershell the pagetab has INVISIBLE style
-			long state;
-			if (0 == a.get_accState(out state) && (state & (STATE_SYSTEM_INVISIBLE | STATE_SYSTEM_OFFSCREEN)) == STATE_SYSTEM_INVISIBLE) return false;
-		}
-		//a.PrintAcc();
-		if (a.elem == 0 && level < 50) {
-			PRINTS_IF(level > 30, L"level > 30");
-			AccContext context(100);
-			AccChildren c(ref context, ref a);
-			//Print(c.Count());
-			if (c.Count() > 0) {
-				for (;;) {
-					AccDtorIfElem0 aChild;
-					if (!c.GetNext(out aChild)) break;
-					if (_FromPoint_TrySmaller2(p, ref aChild, out ar, level < 0 ? 1 : level + 1)) return true;
-					//Bad: sometimes the smallest elm is in a sibling of the found.
-					//TODO: consider: reject the "TrySmaller" flag.
-					//	Idea: capture without "TrySmaller". Then, if the elm or its parent has children, get their rects, and show menu.
-				}
-			} else if (level == 0) {
-				//Sometimes a smaller elm is in a sibling elm of the direct mouse elm.
-				//	Some known cases: Chrome tab buttons.
-				//	Workaround: Retry starting from parent.
-				IAccessible* aParent;
-				if (0 == ao::get_accParent(a.acc, out aParent)) {
-					AccDtorIfElem0 parent(aParent, 0);
-					if (_IsContainer(parent.GetRoleByte()))
-						if (_FromPoint_TrySmaller2(p, ref parent, out ar, -1)) return true;
-				}
-			}
-
-			//note: OpenOffice/LibreOffice Calc hangs/crashes if p is in the table. This func is not called for any OO/LO programs.
-		}
-		if (notThis) {
-			return false;
-		}
-		ar.acc = a.acc; a.acc = nullptr; ar.elem = a.elem;
-		return true;
-	}
-
-	void _FromPoint_TrySmaller(POINT p, ref IAccessible*& a, ref long& elem, ref BYTE& role) {
-		if (elem != 0 || !_IsContainer(role)) return;
-		AccRaw af(a, 0, eAccMiscFlags::InProc), ar;
-		if (_FromPoint_TrySmaller2(p, af, out ar)) {
-			if (a != ar.acc) { auto aa = a; a = ar.acc; aa->Release(); }
-			elem = ar.elem;
-			role = ar.GetRoleByte();
-		}
-	}
-
 	//Get UIA element from same point. If its size is < 0.5 than of the AO, use it. Dirty, but in most cases works well.
 	bool _FromPoint_UiaWorkaround(POINT p, ref Smart<IAccessible>& iacc, ref long& elem, BYTE role) {
 		//note: don't ignore when has children. Eg can be WINDOW, and its child count is not 0.
@@ -220,7 +159,6 @@ namespace {
 		eAccMiscFlags miscFlags = (eAccMiscFlags)0;
 		BYTE role = 0;
 		bool inProc = !(flags & eXYFlags::NotInProc);
-		bool trySmaller = !!(flags & eXYFlags::TrySmaller) && inProc && specWnd != eSpecWnd::OO;
 	g1:
 		RETRY_IF_CHANGED_WINDOW;
 		//Perf.Next('w');
@@ -234,7 +172,7 @@ namespace {
 			HRESULT hr = AccessibleObjectFromPoint(p, &iacc, &v);
 			if (hr == 0 && !iacc) hr = E_FAIL;
 			if (hr != 0) { //rare. Examples: treeview in HtmlHelp 2; Windows Security. Then UIA works.
-				if (trySmaller || !!(flags & eXYFlags::OrUIA)) { flags |= eXYFlags::UIA; goto g1; }
+				if (!!(flags & eXYFlags::OrUIA)) { flags |= eXYFlags::UIA; goto g1; }
 				return hr;
 			}
 			assert(v.vt == VT_I4 || v.vt == 0);
@@ -245,7 +183,7 @@ namespace {
 			//Perf.Next('r');
 
 			//UIA?
-			if (specWnd == eSpecWnd::None && role != ROLE_CUSTOM && (trySmaller || (!!(flags & eXYFlags::OrUIA) && _IsContainer(role)))) { //and ignore elem
+			if (specWnd == eSpecWnd::None && role != ROLE_CUSTOM && !!(flags & eXYFlags::OrUIA) && _IsContainer(role)) { //and ignore elem
 				RETRY_IF_CHANGED_WINDOW;
 				if (_FromPoint_UiaWorkaround(p, ref iacc, ref elem, role)) {
 					miscFlags |= eAccMiscFlags::UIA;
@@ -259,12 +197,6 @@ namespace {
 
 		bool isUIA = !!(miscFlags & eAccMiscFlags::UIA);
 		if (isUIA) role = ao::GetRoleByte(iacc);
-		//else if (!trySmaller && inProc && role == ROLE_SYSTEM_PANE) trySmaller = specWnd == eSpecWnd::Chrome || specWnd == eSpecWnd::ChromeControl; //maybe Chrome tab buttons or side panel //TODO
-		if (trySmaller) {
-			//tested: notinproc too slow; UIA slower but not too slow.
-			_FromPoint_TrySmaller(p, ref iacc.p, ref elem, ref role);
-			//Perf.Next('Y');
-		}
 		if (!!(flags & eXYFlags::PreferLink)) _FromPoint_GetLink(ref iacc.p, ref elem, ref role, isUIA);
 		//Perf.NW('Z');
 
@@ -321,7 +253,7 @@ namespace outproc {
 		if (specWnd == eSpecWnd::Java) {
 			WINDOWINFO wi = { sizeof(wi) };
 			if (GetWindowInfo(wFP, &wi) && PtInRect(&wi.rcClient, p)) {
-				auto ja = AccJavaFromPoint(p, wFP, !!(flags & eXYFlags::TrySmaller));
+				auto ja = AccJavaFromPoint(p, wFP);
 				if (ja != null) {
 					aResult.acc = ja;
 					aResult.misc.flags = eAccMiscFlags::Java;

@@ -272,11 +272,12 @@ public static class KExtWpf {
 	}
 	
 	/// <summary>
-	/// Sets header control properties: center, bold, dark gray text.
+	/// Sets header control properties: center, bold.
 	/// It can be Label, TextBlock or CheckBox. Not tested others.
 	/// </summary>
 	public static void xSetHeaderProp(this wpfBuilder b) {
-		b.Font(bold: true).Brush(foreground: SystemColors.ControlDarkDarkBrush).Align("C");
+		//b.Font(bold: true).Brush(foreground: SystemColors.ControlDarkDarkBrush).Align("C");
+		b.Font(bold: true).Align("C");
 	}
 	//public static void xSetHeaderProp(this wpfBuilder b, bool vertical = false) {
 	//	b.Font(bold: true).Brush(foreground: SystemColors.ControlDarkDarkBrush);

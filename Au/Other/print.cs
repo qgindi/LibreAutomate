@@ -511,6 +511,14 @@ public static partial class print {
 			write(util.toList(", ", value1, value2, more));
 		}
 		
+		/// <summary>
+		/// The same as <see cref="write"/>, but with <c>[Conditional("DEBUG")]</c>.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void writeD(object value1, object value2, params object[] more) {
+			write(util.toList(", ", value1, value2, more));
+		}
+		
 		/// <param name="s">If <c>null</c>, clears output.</param>
 		static void _WriteToQM2(string s) {
 			if (!_hwndQM2.IsAlive) {

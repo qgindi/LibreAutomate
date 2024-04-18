@@ -99,14 +99,14 @@ struct Cpp_AccFindParams {
 
 //Cpp_AccFind callback function type.
 //Must Release a.iacc. Preferably later, in spare time. Can do it in another thread.
-using Cpp_AccFindCallbackT = BOOL(__stdcall*)(Cpp_Acc a);
+using Cpp_AccFindCallbackT = BOOL(__stdcall*)(Cpp_Acc a, RECT* r);
 
 enum class eXYFlags
 {
 	NotInProc = 1,
 	UIA = 2,
 	PreferLink = 4,
-	TrySmaller = 8,
+	//TrySmaller = 8, //rejected 2024-04-16
 	OrUIA = 16,
 
 	//internal flags, used in the C# side too

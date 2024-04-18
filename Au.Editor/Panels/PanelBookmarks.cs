@@ -335,8 +335,8 @@ class PanelBookmarks {
 				m["Delete these bookmarks\tCtrl+click"] = o => _DeleteItem(b);
 				m.AddCheck("Active bookmarks\tM-click", b.IsActiveOrHasActiveChildren, o => _SetActive(b, o.IsChecked));
 			} else {
-				m["Rename\tShift+click"] = o => _Rename(b);
 				m["Delete\tCtrl+click"] = o => _DeleteItem(b);
+				m["Rename\tShift+click"] = o => _Rename(b);
 				m.AddCheck("Active\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
 			}
 			m.Separator();

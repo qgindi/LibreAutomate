@@ -217,6 +217,11 @@ partial class AuDocs {
 			sxml = sym.GetDocumentationCommentXml(expandIncludes: true);
 		}
 		
+		if (sxml.Starts("<!-- Badly formed XML comment ignored")) { //eg EFileInfo.kind (record, <param> text empty)
+			//print.it(sxml);
+			return true;
+		}
+		
 		//remove indentation added by GetDocumentationCommentXml etc
 		_rxIndentation ??= new(@"(?>\n) +");
 		if (!sxml.Starts("<doc>") && _rxIndentation.Match(sxml, 0, out string si)) {

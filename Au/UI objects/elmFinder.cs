@@ -27,13 +27,13 @@ public unsafe class elmFinder {
 	char _resultProp;
 	wnd _wnd;
 	elm _elm;
-	
+
 	/// <summary>
 	/// The found UI element.
 	/// <c>null</c> if not found or if used <see cref="ResultGetProperty"/>.
 	/// </summary>
 	public elm Result { get; private set; }
-	
+
 	/// <summary>
 	/// The requested property of the found UI element, depending on <see cref="ResultGetProperty"/>.
 	/// <c>null</c> if: 1. UI element not found. 2. <b>ResultGetProperty</b> not used or is <c>'-'</c>. 3. Failed to get the property.
@@ -42,7 +42,7 @@ public unsafe class elmFinder {
 	/// The type depends on the property. Most properties are <b>String</b>. Others: <see cref="elm.Rect"/>, <see cref="elm.State"/>, <see cref="elm.WndContainer"/>, <see cref="elm.HtmlAttributes"/>.
 	/// </remarks>
 	public object ResultProperty { get; private set; }
-	
+
 	/// <summary>
 	/// Set this when you need only some property of the UI element (name, etc) and not the UI element itself.
 	/// The value is a character like with <see cref="elm.GetProperties"/>, for example <c>'n'</c> for <b>Name</b>. Use <c>'-'</c> if you don't need any property.
@@ -56,12 +56,12 @@ public unsafe class elmFinder {
 			_resultProp = value;
 		}
 	}
-	
+
 	void _ClearResult() {
 		Result = null;
 		ResultProperty = null;
 	}
-	
+
 	/// <summary>
 	/// Stores the specified UI element properties in this object.
 	/// </summary>
@@ -79,15 +79,15 @@ public unsafe class elmFinder {
 		_skip = skip >= -1 ? skip : throw new ArgumentOutOfRangeException(nameof(skip));
 		_navig = navig;
 	}
-	
+
 	internal elmFinder(wnd w, elm e) {
 		_wnd = w;
 		_elm = e;
 		_flags = _EFFlags_Empty;
 	}
-	
+
 	const EFFlags _EFFlags_Empty = (EFFlags)0x10000000;
-	
+
 	/// <summary>
 	/// Creates an <see cref="elmFinder"/> for finding a UI element. Supports path like <c>var e = w.Elm["ROLE1", "Name1"]["ROLE2", "Name2"].Find();</c>.
 	/// </summary>
@@ -198,7 +198,7 @@ public unsafe class elmFinder {
 	//rejected: default skip = -1. Rarely need.
 	//	In some cases could find an unexpected element. Better to not find than to find (and click etc) wrong element.
 	//	Instead the tool gives info to try -1 when not found or found wrong element.
-	
+
 	/// <summary>
 	/// Gets or sets next finder in path (immediately after this finder).
 	/// </summary>
@@ -219,12 +219,12 @@ public unsafe class elmFinder {
 			}
 		}
 	}
-	
+
 	elmFinder _Last() {
 		var n = this; while (n._next != null) n = n._next;
 		return n;
 	}
-	
+
 	/// <summary>
 	/// Sets or changes window or control where <see cref="Find"/> etc will search.
 	/// </summary>
@@ -235,7 +235,7 @@ public unsafe class elmFinder {
 		_wnd = w;
 		return this;
 	}
-	
+
 	/// <summary>
 	/// Sets or changes parent UI element where <see cref="Find"/> etc will search.
 	/// </summary>
@@ -246,7 +246,7 @@ public unsafe class elmFinder {
 		_elm = e;
 		return this;
 	}
-	
+
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element.
 	/// </summary>
@@ -283,7 +283,7 @@ public unsafe class elmFinder {
 	/// ]]></code>
 	/// </example>
 	public elm Find() => Exists() ? Result : null;
-	
+
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
@@ -292,14 +292,14 @@ public unsafe class elmFinder {
 	/// <exception cref="NotFoundException" />
 	/// <inheritdoc cref="Find()" path="/exception"/>
 	public elm Find(Seconds wait) => Exists(wait) ? Result : null;
-	
+
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Like <see cref="Find"/>, just different return type.
 	/// </summary>
 	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else <c>false</c>.</returns>
 	/// <inheritdoc cref="Find()" path="/exception"/>
 	public bool Exists() => Find_(_elm != null, _wnd, _elm);
-	
+
 	/// <summary>
 	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>. Like <see cref="Find(Seconds)"/>, just different return type.
 	/// </summary>
@@ -309,7 +309,7 @@ public unsafe class elmFinder {
 		if (Find_(_elm != null, _wnd, _elm, wait.Exists_() ? null : wait)) return true;
 		return wait.ReturnFalseOrThrowNotFound_();
 	}
-	
+
 	/// <summary>
 	/// Waits for a matching descendant UI element to appear in the window or UI element.
 	/// </summary>
@@ -323,9 +323,9 @@ public unsafe class elmFinder {
 	/// </remarks>
 	/// <inheritdoc cref="Find()" path="/exception"/>
 	public elm Wait(Seconds timeout) => Find_(_elm != null, _wnd, _elm, timeout) ? Result : null;
-	
+
 	//TODO: public bool WaitNot(Seconds timeout) => wait.until(timeout, () => !Exists());
-	
+
 	internal bool Find_(bool inElm, wnd w, elm eParent, Seconds? waitS = null, bool isNext = false, bool fromFindAll = false) {
 		if (_flags.Has(_EFFlags_Empty) && !fromFindAll) throw new InvalidOperationException();
 		if (_flags.Has(EFFlags.UIA | EFFlags.ClientArea)) throw new ArgumentException("Don't use flags UIA and ClientArea together.");
@@ -333,7 +333,7 @@ public unsafe class elmFinder {
 			if (_role == "") throw new ArgumentException("role cannot be \"\".");
 			if (inElm && 0 != _role.Starts(false, "web:", "chrome:", "firefox:")) throw new ArgumentException("Don't use role prefix when searching in elm.");
 		}
-		
+
 		Cpp.Cpp_Acc aParent; Cpp.Cpp_Acc* pParent = null;
 		EFFlags flags = _flags;
 		if (inElm) {
@@ -349,39 +349,39 @@ public unsafe class elmFinder {
 			w.ThrowIfInvalid();
 			aParent = default;
 		}
-		
+
 		elm.WarnInSendMessage_();
-		
+
 		bool inProc = !flags.Has(EFFlags.NotInProc);
-		
+
 		_ClearResult();
-		
+
 		var ap = new Cpp.Cpp_AccFindParams(_role, _name, _prop, flags, Math.Max(0, _skip), _resultProp);
-		
+
 		if (!inElm) ap.RolePrefix(w); //converts role prefix to flags (C++ internal) and may enable Chrome AOs
-		
+
 		//if used skip<0 and path or navig, need to search in all possible paths. For it we use the 'also' callback.
 		//FUTURE: optimize. Add part of code to the C++ dll. Now can walk same tree branches multiple times.
 		Cpp.Cpp_AccFindCallbackT also = null;
 		bool allPaths = _skip < 0 && (_next != null || _navig != null);
 		bool findAll = t_findAll?.ContainsKey(this) == true; //in FindAll. This is the last finder in path.
 		if (allPaths) {
-			also = _also2 ??= ca => {
+			also = _also2 ??= (ca, _) => {
 				var e = new elm(ca);
 				if (!_AlsoNavigNext(ref e)) return 0;
 				Result = e;
 				return 1;
 			};
 		} else if (findAll) {
-			also = ca => {
+			also = (ca, _) => {
 				var e = new elm(ca);
 				_AlsoNavigNext(ref e);
 				return 0;
 			};
 		} else {
-			if (_also != null) also = _also2 ??= ca => _also(new elm(ca)) ? 1 : 0;
+			if (_also != null) also = _also2 ??= (ca, _) => _also(new elm(ca)) ? 1 : 0;
 		}
-		
+
 		Seconds seconds = waitS ?? new(-1);
 		seconds.Period ??= inProc ? 10 : 40;
 		var loop = new WaitLoop(seconds);
@@ -392,7 +392,7 @@ public unsafe class elmFinder {
 				if (hr == Cpp.EError.NotFound) return false;
 				//else error. Cannot be 0.
 			}
-			
+
 			if (hr == 0) {
 				switch (_resultProp) {
 				case '\0':
@@ -420,15 +420,15 @@ public unsafe class elmFinder {
 				}
 				if (hr == 0) return true;
 			}
-			
+
 			if (hr == Cpp.EError.InvalidParameter) throw new ArgumentException(sResult);
 			if ((hr == Cpp.EError.WindowClosed) || (!w.Is0 && !w.IsAlive)) return false; //FUTURE: check if a is disconnected etc. Or then never wait.
-			
+
 			if (!doneUAC) {
 				doneUAC = true;
 				w.UacCheckAndThrow_(); //CONSIDER: don't throw. Maybe show warning.
 			}
-			
+
 			//print.it(hr > 0 ? $"hr={hr}" : $"hr={(int)hr:X}");
 			if (hr == Cpp.EError.NotFound) {
 				if (waitS == null) return false;
@@ -438,17 +438,17 @@ public unsafe class elmFinder {
 					throw new AuException((int)hr, "For this UI element need flag NotInProc");
 				throw new AuException((int)hr);
 			}
-			
+
 			if (!doneThread) {
 				doneThread = true;
 				if (!w.Is0 && w.IsOfThisThread) return false;
 			}
-			
+
 			if (!loop.Sleep()) return false;
 			GC.KeepAlive(eParent);
 		}
 	}
-	
+
 	bool _AlsoNavigNext(ref elm e, bool noAlso = false) {
 		if (!noAlso && _also != null && !_also(e)) return false;
 		if (_navig != null) {
@@ -467,7 +467,7 @@ public unsafe class elmFinder {
 		}
 		return true;
 	}
-	
+
 	/// <summary>
 	/// Finds all matching descendant UI elements in the window or UI element.
 	/// </summary>
@@ -497,11 +497,26 @@ public unsafe class elmFinder {
 		finally { t_findAll.Remove(last); }
 		return a.ToArray();
 	}
-	
+
 	//This dictionary is used to temporarily attach the List that collects FindAll results to the elmFinder.
 	//	Another way - add a field to elmFinder and somehow make it thread-safe. But elmFinder is immutable.
 	[ThreadStatic] static Dictionary<elmFinder, List<elm>> t_findAll;
-	
+
+	internal static List<(elm, RECT)> GetAllWithRect_(wnd w, EFFlags flags) {
+		List<(elm, RECT)> a = [];
+
+		Cpp.Cpp_AccFindCallbackT also = (ca, rect) => {
+			var e = new elm(ca);
+			a.Add((e, rect != null ? *rect : e.Rect)); //info: rect null if not inproc
+			return 0;
+		};
+
+		var ap = new Cpp.Cpp_AccFindParams { flags = flags };
+		Cpp.Cpp_AccFind(w, null, ap, also, out var ca, out string sResult, getRects: true);
+		GC.KeepAlive(also);
+		return a;
+	}
+
 	///
 	public override string ToString() {
 		using (new StringBuilder_(out var b)) {
@@ -509,7 +524,7 @@ public unsafe class elmFinder {
 			return b.ToString();
 		}
 	}
-	
+
 	void _ToString(StringBuilder b) {
 		b.Append('[');
 		int n = 0;
@@ -521,7 +536,7 @@ public unsafe class elmFinder {
 		if (_skip != 0) _Add(5, "skip", _skip.ToString(), false);
 		_Add(6, "navig", _navig);
 		b.Append(']');
-		
+
 		void _Add(int i, string name, string value, bool isString = true) {
 			if (value == null) return;
 			if (n > 0) b.Append(", ");
@@ -530,9 +545,9 @@ public unsafe class elmFinder {
 			b.Append(value);
 		}
 	}
-	
+
 	[ThreadStatic] internal static (bool need, elm before, elm after) t_navigResult;
-	
+
 	//rejected. Rarely used. Maybe in the future, but different API, maybe ...In(controls).Find(), and move the code into _Find.
 	///// <summary>
 	///// Finds UI element in the specified control of window <i>w</i>.
@@ -547,7 +562,7 @@ public unsafe class elmFinder {
 	///// Alternatively you can specify control class name or id in role. How this function is different: 1. Allows to specify more control properties. 2. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
 	///// </remarks>
 	//public elm Find(wnd w, wndChildFinder controls) => Exists(w, controls) ? Result : null;
-	
+
 	///// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else <c>false</c>.</returns>
 	///// <inheritdoc cref="Find(wnd, wndChildFinder)"/>
 	//public bool Exists(wnd w, wndChildFinder controls) {
@@ -563,7 +578,7 @@ public unsafe class elmFinder {
 	//	}
 	//	return false;
 	//}
-	
+
 	//rejected. Better slightly longer code than unclear and possibly ambiguous code where you have to learn string parsing rules.
 	//public static implicit operator elmFinder(string roleNameProp) {
 	//	if (roleNameProp.NE()) throw new ArgumentException();
@@ -582,7 +597,7 @@ partial class elm {
 	/// </summary>
 	/// <seealso cref="elmFinder.this"/>
 	public static elmFinder path { get; } = new(default, null);
-	
+
 	/// <summary>
 	/// Gets an <see cref="elmFinder"/> for finding UI elements in this UI element.
 	/// Example: <c>var e2 = e1.Elm["ROLE", "Name"].Find();</c>.
@@ -600,14 +615,14 @@ public partial struct wnd {
 	/// Example: <c>print.it(w.Elm.FindAll());</c>.
 	/// </summary>
 	public elmFinder Elm => new(this, null);
-	
+
 	//public static wndFinder f_(
 	//	[ParamString(PSFormat.wildex)] string name = null,
 	//	[ParamString(PSFormat.wildex)] string cn = null,
 	//	[ParamString(PSFormat.wildex)] WOwner of = default,
 	//	WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 	//	) => new(name, cn, of, flags, also, contains);
-	
+
 	//public wnd this[
 	//	[ParamString(PSFormat.wildex)] string name = null,
 	//	[ParamString(PSFormat.wildex)] string cn = null,

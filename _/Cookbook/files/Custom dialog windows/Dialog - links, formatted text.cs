@@ -1,4 +1,4 @@
-/// To display static text with formatting, links and images, can be used WPF elements of type <see cref="TextBlock"/>. Function <see cref="wpfBuilder.FormattedText"/> makes it easier.
+/// To display static text with formatting, links and images, can be used WPF elements of type <see cref="TextBlock"/>. Function <see cref="wpfBuilder.FormatText"/> makes it easier.
 
 using System.Windows;
 using System.Windows.Controls;

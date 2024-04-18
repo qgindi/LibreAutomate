@@ -195,19 +195,20 @@ namespace {
 	};
 
 	//The BSTR returned by our get_accHelpTopic hook contains data of one or more accessible objects (AO).
-	//	Each AO data can have IAccessible object data (created by CoMarshalInterface), child element id, level, role.
+	//	Each AO data can have IAccessible object data (created by CoMarshalInterface), child element id, level, role, rect.
 	//	These flags tell what is in the data.
 	//[Flags]
 	enum class eAccResult {
 		Elem = 1,
-		Role = 4,
-		Level = 8,
-		UsePrevAcc = 0x10,
-		UsePrevLevel = 0x20,
+		Role = 2,
+		Level = 4,
+		Rect = 8,
+		UsePrevAcc = 0x40,
+		UsePrevLevel = 0x80,
 	};
 	ENABLE_BITMASK_OPERATORS(eAccResult);
 
-	bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = null) {
+	bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = null, RECT* rect = null) {
 		if (stream == null) CreateStreamOnHGlobal(0, true, &stream);
 
 		eAccResult has = (eAccResult)0;
@@ -220,6 +221,7 @@ namespace {
 		}
 		if (a.elem != 0) has |= eAccResult::Elem;
 		if (a.misc.roleByte != 0) has |= eAccResult::Role;
+		if (rect != null) has |= eAccResult::Rect;
 
 		if (stream->Write(&has, 1, null)) return false;
 
@@ -265,6 +267,9 @@ namespace {
 
 		if (!!(has & eAccResult::Level))
 			if (stream->Write(&a.misc.level, 2, null)) return false;
+
+		if (!!(has & eAccResult::Rect))
+			if (stream->Write(rect, 16, null)) return false;
 
 		return true;
 	}
@@ -335,13 +340,14 @@ namespace inproc {
 			auto p = (MarshalParams_AccFind*)h; p->Unmarshal(out ap);
 			HWND w = (HWND)(LPARAM)p->hwnd;
 			eAF2 flags2 = p->flags2;
-			bool findAll = !!(flags2 & eAF2::FindAll);
-			auto resultProp = ap.resultProp;
+			bool findAll = !!(flags2 & eAF2::FindAll), getRects = !!(flags2 & eAF2::GetRects);
+			WCHAR resultProp = ap.resultProp;
 			HRESULT hr = (HRESULT)eError::NotFound;
 			Cpp_Acc aParent(iacc, 0, h->miscFlags), aPrev;
+			DpiElmScaling des(getRects, w, null);
 
 			HRESULT hr2 = AccFind(
-				[&hr, &stream, &aPrev, resultProp, findAll, skip = ap.skip, &sResult](Cpp_Acc a) mutable {
+				[&hr, &stream, &aPrev, resultProp, findAll, skip = ap.skip, &sResult, getRects, &des](Cpp_Acc a) mutable {
 					if (!findAll && skip-- > 0) return eAccFindCallbackResult::Continue;
 
 					if (resultProp) {
@@ -355,7 +361,15 @@ namespace inproc {
 						DWORD pos = 0;
 						if (findAll) istream::GetPos(stream, out pos);
 
-						if (!WriteAccToStream(ref stream, a, &aPrev)) {
+						RECT rect = { }; RECT* pRect = null;
+						if (getRects) { //Delm uses it together with findAll to get all AO and their rects when inproc
+							if (0 != ao::accLocation(out rect, a.acc, a.elem)) return eAccFindCallbackResult::Continue;
+							int scaleResult = des.ScaleIfNeed(ref rect, true);
+							if (scaleResult == 1) return eAccFindCallbackResult::Continue; //not in window rect
+							pRect = &rect;
+						}
+
+						if (!WriteAccToStream(ref stream, a, &aPrev, pRect)) {
 							if (!findAll) goto ge;
 							stream->Seek(istream::LI(pos), STREAM_SEEK_SET, null);
 						}
@@ -397,7 +411,7 @@ namespace outproc {
 	//When FindAll, the caller must call this in loop, until returns a non-zero. If returns NotFound, there are no more AO to read.
 	//a - receives the AO, elem, etc. When FindAll, the caller must use the same variable for all, because this function uses it as an input parameter too (previous AO).
 	//dontNeedAO - don't need AO. Only release marshal data if need.
-	HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/) {
+	HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/, RECT* rect/* =null*/) {
 		if (!_stream) {
 			_resultSize = _br.ByteLength(); if (_resultSize == 0) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 			HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, _resultSize); if (hg == 0) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
@@ -438,6 +452,10 @@ namespace outproc {
 		if (!(has & eAccResult::UsePrevLevel)) {
 			if (!(has & eAccResult::Level)) a.misc.level = 0;
 			else if (_stream->Read(&a.misc.level, 2, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
+		}
+
+		if (!!(has & eAccResult::Rect)) {
+			if (_stream->Read(rect, 16, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 		}
 
 		return 0;
@@ -515,15 +533,18 @@ namespace outproc {
 	//	When this func returns eError::InvalidParameter, it is error string.
 	//	When this func returns 0 and used ap.resultProp, it is the property (string, or binary struct); null if '-'.
 	//	Else null.
-	EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc& aResult, out BSTR& sResult) {
+	//getRects - if inproc, get all rectangles too. Use with 'also'.
+	EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc& aResult, out BSTR& sResult, bool getRects) {
 		//Perf.First();
 		aResult.Zero(); sResult = null;
 		bool inProc = !(ap.flags & eAF::NotInProc), findAll = (also != null), useWnd = (aParent == null);
 		if (findAll) ap.flags2 |= eAF2::FindAll;
+		if (getRects) ap.flags2 |= eAF2::GetRects;
 		HRESULT R;
 
 		assert(!!w == !aParent);
 		assert(!ap.resultProp || !findAll);
+		assert(!getRects || findAll);
 
 		if (useWnd) {
 			if ((ap.flags2 & (eAF2::InWebPage | eAF2::InChromePage | eAF2::InFirefoxPage | eAF2::InIES)) == eAF2::InWebPage) {
@@ -565,11 +586,12 @@ namespace outproc {
 				else if (ap.resultProp != '-') sResult = ic.DetachResultBSTR();
 			} else {
 				Cpp_Acc a;
+				RECT rect = {};
 				int skip = ap.skip;
 				for (;;) {
-					R = ic.ReadResultAcc(ref a);
+					R = ic.ReadResultAcc(ref a, false, &rect);
 					if (R) break; //NotFound when end of stream
-					if (!also(a)) continue; //must Release u.acc, preferably later
+					if (!also(a, &rect)) continue; //must Release u.acc, preferably later
 					if (skip-- == 0) {
 						a.acc->AddRef();
 						aResult = a;
@@ -577,7 +599,7 @@ namespace outproc {
 					}
 				}
 				//release the marshal data of remaining AO
-				for (auto k = R; k == 0; ) k = ic.ReadResultAcc(ref a, true);
+				for (auto k = R; k == 0; ) k = ic.ReadResultAcc(ref a, true, &rect);
 			}
 			//Perf.Next();
 		} else {
@@ -587,7 +609,7 @@ namespace outproc {
 				[&found, &aResult, &sResult, &ap, skip = ap.skip, also](Cpp_Acc a) mutable {
 					if (also) {
 						a.acc->AddRef(); //of proxy (fast)
-						if (!also(a)) return eAccFindCallbackResult::Continue;
+						if (!also(a, null)) return eAccFindCallbackResult::Continue;
 					}
 
 					if (skip-- > 0) return eAccFindCallbackResult::Continue;

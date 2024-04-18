@@ -88,7 +88,6 @@ partial class MainWindow : Window {
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
 		App.Hmain = (wnd)hs.Handle;
 		
-		//TODO: need testing. This code added 2024-03-24 in LA 1.2.
 		hs.CompositionTarget.RenderMode = RenderMode.SoftwareOnly;
 		RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
 

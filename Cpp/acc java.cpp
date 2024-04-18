@@ -660,7 +660,7 @@ bool _IsPointInRect(POINT p, AccessibleContextInfo& c) {
 	return p.y >= c.y && p.y < c.y + c.height && p.x >= c.x && p.x < c.x + c.width;
 }
 
-IAccessible* AccFromPoint(POINT p, HWND w, bool alt)
+IAccessible* AccFromPoint(POINT p, HWND w)
 {
 	//bool test = 0 != (GetKeyState(VK_SCROLL) & 1);
 	//Perf.First();
@@ -686,7 +686,7 @@ IAccessible* AccFromPoint(POINT p, HWND w, bool alt)
 	//	Same with tooltips and other cn="SunAwtWindow" windows. Not with popup menus in cn="SunAwtFrame" windows.
 	//	Cannot detect whether the object is good or bad. In both cases getTopLevelObject and getAccessibleParentFromContext skip ap.
 	//	Therefore even don't try getAccessibleContextAt at first.
-	if(alt || wn::ClassNameIs(w, L"SunAwtWindow")) {
+	if(wn::ClassNameIs(w, L"SunAwtWindow")) {
 		std::function<AccessibleContext(AccessibleContext, int)> func;
 		func = [&func, vmID, p](AccessibleContext ac, int level) -> AccessibleContext {
 			AccessibleContextInfo c;
@@ -725,7 +725,7 @@ IAccessible* AccFromPoint(POINT p, HWND w, bool alt)
 		//Perf.Next('m');
 	}
 
-	if(!jo && !alt) {
+	if(!jo) {
 		if(!s_api.getAccessibleContextAt(vmID, ap, p.x, p.y, &jo)) {
 			jo = 0;
 			PRINTS(L"failed 1");
@@ -780,9 +780,9 @@ IAccessible* AccJavaFromWindow(HWND w, bool getFocused /*= false*/)
 //p - point in screen coordinates.
 //w - window containing the point.
 //alt - enumerate descendants. Slow.
-IAccessible* AccJavaFromPoint(POINT p, HWND w, bool alt)
+IAccessible* AccJavaFromPoint(POINT p, HWND w)
 {
-	return jab::AccFromPoint(p, w, alt);
+	return jab::AccFromPoint(p, w);
 }
 
 //SHOULDDO: when Delm creates tree and tries to find the captured object, use isSameObject, not rect+role. If possible and faster.

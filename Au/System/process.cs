@@ -764,11 +764,7 @@ namespace Au {
 			var k = _eventExit;
 			if (k != null) {
 				try { _eventExit = null; k(e); }
-				catch (Exception e1) {
-#if DEBUG
-					print.qm2.write("_ThisProcessExit", e1);
-#endif
-				}
+				catch (Exception e1) { print.qm2.writeD("_ThisProcessExit", e1); }
 			}
 			thisProcessExitDone_?.Invoke();
 		}

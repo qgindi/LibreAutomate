@@ -102,7 +102,6 @@ namespace Au.Types {
 		/// <summary>
 		/// Use UI Automation API.
 		/// More info: <see cref="EFFlags.UIA"/>.
-		/// See also flag <b>TrySmaller</b>.
 		/// </summary>
 		UIA = 2,
 
@@ -112,22 +111,10 @@ namespace Au.Types {
 		/// </summary>
 		PreferLink = 4,
 
-		/// <summary>
-		/// Try to get a smaller element.
-		/// 1. Try to get a smaller UI Automation element from point.
-		/// 2. Try to find a descendant that is smaller. Because some incorrectly implemented UI elements don't give a child element from point.
-		/// 
-		/// Note: this flag is for UI element capturing tools, not for automation scripts. Its behavior may change in the future.
-		/// 
-		/// UI element capturing tools should use this flag only with user consent, because:
-		/// 1. It's impossible to get perfect UI element in all cases. Can get wrong element.
-		/// 2. In some cases can be slow.
-		/// 3. In some apps some elements have bugs and the process can crash. Rare.
-		/// 
-		/// The <b>Find UI element</b> tool uses this flag when checked <b>Smaller</b>.
-		/// This flag is ignored when not in-process, because could be too slow. Also ignored in some windows.
-		/// </summary>
+		[Obsolete]
+#pragma warning disable CS1591 //Missing XML comment for publicly visible type or member
 		TrySmaller = 8,
+#pragma warning restore CS1591 //Missing XML comment for publicly visible type or member
 
 		/// <summary>
 		/// Use UI Automation API if the default API fails and in some other cases.

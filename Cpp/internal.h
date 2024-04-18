@@ -14,6 +14,7 @@ enum class eAF2 {
 
 	NotInProc = 0x100, //from eAF::NotInProc
 	FindAll = 0x200,
+	GetRects = 0x400,
 
 	//these are from prop parameter
 	InControls = 0x40, //"class=x" or "id=x"
@@ -164,7 +165,7 @@ namespace outproc {
 			return hr;
 		}
 
-		HRESULT ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO = false);
+		HRESULT ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO = false, RECT* rect = null);
 
 		BSTR DetachResultBSTR() {
 			return _br.Detach();

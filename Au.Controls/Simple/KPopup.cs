@@ -330,7 +330,8 @@ public class KPopup {
 	}
 	
 	unsafe nint? _Hook(wnd w, int msg, nint wParam, nint lParam) {
-		//WndUtil.PrintMsg((wnd)hwnd, msg, wParam, lParam);
+		//WndUtil.PrintMsg(w, msg, wParam, lParam);
+		//if(WndUtil.PrintMsg(out string s1, w, msg, wParam, lParam)) print.qm2.write(s1);
 		//if (msg == Api.WM_ACTIVATE && wParam != 0) print.it("ACTIVATE");
 		
 		switch (msg) {
@@ -400,9 +401,12 @@ public class KPopup {
 			_ClickCloseTimer(null);
 			break;
 		case Api.WM_SHOWWINDOW:
-			if (wParam == 0 && w.IsActive) {
-				var ow = w.Get.Owner;
-				if (ow.IsVisible) ow.ActivateL();
+			if (wParam == 0) {
+				if (lParam == 1) _w.ShowL(false); //minimizing owner. Prevent showing again when restoring.
+				else if (w.IsActive) {
+					var ow = w.Get.Owner;
+					_hs.Dispatcher.InvokeAsync(() => { if(w.IsActive && ow.IsVisible && !ow.IsMinimized) ow.ActivateL(); });
+				}
 			}
 			break;
 		}
