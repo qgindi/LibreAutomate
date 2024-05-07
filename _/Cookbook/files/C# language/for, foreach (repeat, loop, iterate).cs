@@ -8,8 +8,8 @@ for (int i = 0; i < 3; i++) { //increment i: 0, 1, 2
 /// 
 /// Several ways to insert <.k>for<> code quickly:
 /// - Type text like <.c>3t<> (it means "repeat 3 times").
-/// - Type <.c>forr<> and select <b>forRepeatLoopSnippet<>.
-/// - Click or select code, and use menu <b>Edit > Surround<>.
+/// - Type <.c>forl<> and select <b>forLoopSnippet<>.
+/// - Click or select code, and use menu <b>Edit > Selection > Surround<>.
 
 for (int i = 3; --i >= 0; ) { //decrement i: 2, 1, 0
 	print.it(i);

@@ -204,12 +204,12 @@ class CiProjects {
 				f = FileOf(loc.SourceTree, x.sol);
 				if (f.IsClass && (globals ??= _GetGlobals()).Contains(f)) {
 					isInGlobal = currentFile = true;
-					f = x.cd.sci.EFile;
+					f = x.cd.sci.FN;
 				}
 			} else {
 				if (isInMetadata) continue;
 				isInMetadata = currentFile = true;
-				f = x.cd.sci.EFile;
+				f = x.cd.sci.FN;
 			}
 			
 			if (f.IsClass && !d.ContainsKey(f)) {

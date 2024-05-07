@@ -134,7 +134,7 @@ partial class PanelDebug {
 			
 			int frame = 0;
 			if (_aStack.Length > 1) {
-				var path = cd.sci.EFile.FilePath;
+				var path = cd.sci.FN.FilePath;
 				var ef = _GetEnclosingFunction(node);
 				if (ef == null) { //TLS
 					if (node.HasAncestor<GlobalStatementSyntax>()) frame = _aStack.Length - 1; //else pos is in a class but not in a func

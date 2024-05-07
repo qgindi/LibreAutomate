@@ -133,8 +133,6 @@ static class ModifyCode {
 		int from0 = from, tail = cd.code.Length - to;
 		
 		string s = Format(cd, ref from, ref to);
-		//var c = "code"; print.it($"<><{c}>{s}</{c}>");
-		
 		if (s == null) return;
 		if (selection) {
 			doc.EReplaceTextGently(s, from..to);
@@ -144,28 +142,27 @@ static class ModifyCode {
 		}
 	}
 	
+	public static string Format(ref int from, ref int to) {
+		if (!CodeInfo.GetContextAndDocument(out var cd, from, metaToo: true)) return null;
+		return Format(cd, ref from, ref to);
+	}
+	
 	//FUTURE: option to auto-format.
 	
 	public static string Format(CodeInfo.Context cd, ref int from, ref int to) {
 		//perf.first();
 		string code = cd.code;
 		
-		//exclude newline at the end. Else formats entire leading trivia of next statement.
+		//exclude newline at the end. Else formats entire leading trivia of next token.
 		if (to < code.Length) {
 			if (to - from > 0 && code[to - 1] == '\n') to--;
 			if (to - from > 0 && code[to - 1] == '\r') to--;
-			if (to - from == 0) return null;
+			if (to == from) return null;
 		}
 		
-		//include empty lines at the start, because would format anyway
-		if (from > 0) {
-			bool nlStart = false; int from0 = from;
-			while (from > 0 && code[from - 1] is '\r' or '\n' or '\t' or ' ') if (code[--from] is '\r' or '\n') nlStart = true;
-			if (nlStart) {
-				if (code[from] == '\r') from++;
-				if (from < from0 && code[from] == '\n') from++;
-			}
-		}
+		//include whitespace and \r\n before. Else may not correct indentation.
+		//	In the past the formatter used to include it anyway; now it seems not.
+		while (from > 0 && code[from - 1] is '\r' or '\n' or '\t' or ' ') from--; //never mind: then formats all trivia before. We'll skip it.
 		//CiUtil.HiliteRange(from, to);
 		
 		//workarounds for some nasty Roslyn features that can't be changed with options:
@@ -180,7 +177,6 @@ static class ModifyCode {
 		int fix1 = code.RxReplace(@"(?m)^\h*\K(?=\R|//)", c_mark1, out code, range: from..to);
 		if (fix1 > 0) {
 			to += code.Length - cd.code.Length;
-			//print.it($"'{code[from..to]}'");
 			root = root.SyntaxTree.WithChangedText(SourceText.From(code)).GetCompilationUnitRoot();
 		}
 		//perf.next();
@@ -194,24 +190,24 @@ static class ModifyCode {
 		
 		var span = TextSpan.FromBounds(from, to);
 		var services = cd.document.Project.Solution.Services;
-		IList<TextChange> a1;
-		try { a1 = Formatter.GetFormattedTextChanges(root, span, services, FormattingOptions); }
+		IList<TextChange> a;
+		try { a = Formatter.GetFormattedTextChanges(root, span, services, FormattingOptions); }
 		catch (Exception e1) { print.it("Failed to format code", e1); return null; } //https://www.libreautomate.com/forum/showthread.php?tid=7622
 		//perf.next();
 		
 		string code2 = code;
 		bool replaced = false;
-		if (a1.Count > 0) {
+		if (a.Count > 0) {
 			var b = new StringBuilder();
 			int i1 = 0;
-			foreach (var v in a1) {
+			foreach (var v in a) {
 				int ss = v.Span.Start, se = v.Span.End;
 				//Debug_.PrintIf(ss < from || se > to, $"from: {from}, ss: {ss},  to: {to}, se: {se},  v: {v}");
 				if (ss < from || se > to || code.Eq(v.Span.ToRange(), v.NewText)) continue;
 				//if (se - ss == 1 && code[ss] == ' ' && v.NewText == "" && code.Eq(ss - 2, "{  }")) continue; //don't replace "{  }" with "{ }"
 				b.Append(code, i1, ss - i1);
 				b.Append(v.NewText);
-				i1 = v.Span.End;
+				i1 = se;
 				replaced = true;
 			}
 			
@@ -232,6 +228,59 @@ static class ModifyCode {
 		
 		//perf.nw();
 		return ret;
+	}
+	
+	/// <summary>
+	/// Formats code for inserting in current document at <i>start</i>.
+	/// If end &gt; <i>start</i> - for replacing text at <c>start..end</c>.
+	/// May decrease <i>start</i>; does it before calling <i>changes</i>.
+	/// </summary>
+	/// <returns><c>true</c> if formatted.</returns>
+	public static bool FormatForInsert(ref string s, ref int start, int end, Action<IList<TextChange>> changes = null) {
+		if (s.NE()) return false;
+		if (!CodeInfo.GetContextAndDocument(out var cd, start, metaToo: true)) return false;
+		
+		int start2 = start; while (start2 > 0 && SyntaxFacts.IsWhitespace(cd.code[start2 - 1])) start2--; //let's start at the line start
+		int start3 = start2; while (start3 > 0 && SyntaxFacts.IsNewLine(cd.code[start3 - 1])) start3--; //let it correct indentation
+		
+		var code = cd.code.ReplaceAt(start..end, s);
+		var root = cd.syntaxRoot.SyntaxTree.WithChangedText(SourceText.From(code)).GetCompilationUnitRoot();
+		if (root.GetText().Length != code.Length) { Debug_.Print("bad new code"); return false; }
+		int end2 = start + s.Length;
+		
+		IList<TextChange> a;
+		try { a = Formatter.GetFormattedTextChanges(root, TextSpan.FromBounds(start3, end2), cd.document.Project.Solution.Services, FormattingOptions); }
+		catch (Exception e1) { Debug_.Print("Failed to format code. " + e1); return false; }
+		
+		for (int i = a.Count; --i >= 0;) {
+			var v = a[i];
+			int ss = v.Span.Start, se = v.Span.End;
+			if (ss < start2 && se >= start2) {
+				int n = v.NewText.AsSpan().TrimEnd("\t ").Length;
+				a[i] = new(TextSpan.FromBounds(ss = start2, se), v.NewText[n..]);
+			}
+			if (ss < start2 || se > end2 || code.Eq(ss..se, v.NewText)) a.RemoveAt(i);
+		}
+		if (a.Count == 0) return false;
+		
+		start = start2;
+		if (changes != null) {
+			//if (start2 < start) s = string.Concat(cd.code.AsSpan(start2..start), s); //currently not used
+			changes(a);
+		}
+		
+		var b = new StringBuilder();
+		int k = start;
+		foreach (var v in a) {
+			b.Append(code, k, v.Span.Start - k).Append(v.NewText);
+			k = v.Span.End;
+		}
+		b.Append(code, k, end2 - k);
+		s = b.ToString();
+		
+		return true;
+		
+		//never mind: the formatter does not add indentation tabs in blank lines.
 	}
 	
 	/// <summary>
@@ -308,6 +357,9 @@ static class ModifyCode {
 			if (a.Count == 0) continue;
 			var s = a.ToString();
 			if (d.TryGetValue(s, out var list)) list.Add(lds); else d[s] = new() { lds };
+			
+			//TODO: if found with similar name (eg "Doc1 - App" -> "Doc2 - App"), ask whether to remove these too. Eg UI with checkboxes.
+			//	Also the UI should offer to replace these with `w.WaitForName`.
 		}
 		
 		List<(int start, int end, string repl)> aRepl = new();

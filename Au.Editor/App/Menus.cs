@@ -336,16 +336,10 @@ static class Menus {
 			[Command(keysText = "R-click margin", keys = "Ctrl+Alt+/", image = "*BoxIcons.RegularComment" + brown)]
 			public static void Toggle_line_comment() { ModifyCode.Comment(null, notSlashStar: true); }
 			
-			//[Command(keysText = "Ctrl+D")]
-			//public static void Duplicate() { Panels.Editor.ActiveDoc.Call(Sci.SCI_SELECTIONDUPLICATE); }
-		
-			[Command("Surround - for (repeat)", image = "*Typicons.ArrowLoop" + brown, separator = true)]
-			public static void Surround_for() { InsertCode.SurroundFor(); }
+			[Command("...", image = "*RemixIcon.BracesLine" + brown, separator = true)]
+			public static void Surround() { CiSnippets.Surround(); }
 			
-			[Command("Surround - try/catch", image = "*MaterialDesign.ErrorOutline" + brown)]
-			public static void Surround_try_catch() { InsertCode.SurroundTryCatch(); }
-			
-			[Command("...", separator = true)]
+			[Command("...")]
 			public static void Documentation_tags() { run.itSafe("https://www.libreautomate.com/forum/showthread.php?tid=7461"); }
 		}
 		
@@ -371,6 +365,9 @@ static class Menus {
 			
 			[Command(image = "*PixelartIcons.AlignLeft" + brown)]
 			public static void Format_selection() { ModifyCode.Format(true); }
+			
+			[Command]
+			public static void Disable_format_selection() { InsertCode.Surround("#pragma warning disable format\r\n", "#pragma warning restore format\r\n", 0); }
 			
 			[Command("Indent selected lines", keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown, separator = true)]
 			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }

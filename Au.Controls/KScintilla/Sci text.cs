@@ -8,7 +8,7 @@ public unsafe partial class KScintilla {
 	#region low level
 	
 	/// <summary>
-	/// Calls a Scintilla message that sets a string which is passed using lParam.
+	/// Calls a Scintilla message that sets a string which is passed using <i>lParam</i>.
 	/// The string can be null if the Scintilla message allows it.
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// Don't call this function from another thread.
@@ -21,7 +21,7 @@ public unsafe partial class KScintilla {
 	}
 	
 	/// <summary>
-	/// Calls a Scintilla message that sets a string which is passed using wParam.
+	/// Calls a Scintilla message that sets a string which is passed using <i>wParam</i>.
 	/// The string can be null if the Scintilla message allows it.
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// Don't call this function from another thread.
@@ -33,7 +33,7 @@ public unsafe partial class KScintilla {
 	}
 	
 	/// <summary>
-	/// Calls a Scintilla message and passes two strings using wParam and lParam.
+	/// Calls a Scintilla message and passes two strings using <i>wParam</i> and <i>lParam</i>.
 	/// <i>wParamlParam</i> must be like "WPARAM\0LPARAM". Asserts if no '\0'.
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// Don't call this function from another thread.
@@ -43,6 +43,19 @@ public unsafe partial class KScintilla {
 			int i = BytePtr_.Length(s);
 			Debug.Assert(i < len);
 			return Call(sciMessage, (nint)s, s + i + 1);
+		}
+	}
+	
+	/// <summary>
+	/// Calls a Scintilla message that sets a string which is passed using <i>lParam</i>.
+	/// The <i>lParam</i> string must be '\0'-terminated, eg UTF-8 string literal like <c>"example"u8</c>.
+	/// The string can be null if the Scintilla message allows it.
+	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+	/// </summary>
+	public int aaaSetString(int sciMessage, nint wParam, ReadOnlySpan<byte> lParam) {
+		fixed (byte* p =lParam) {
+			Debug.Assert(p == null || p[lParam.Length] == 0);
+			return Call(sciMessage, wParam, p);
 		}
 	}
 	

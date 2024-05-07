@@ -11,7 +11,7 @@ partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;
 	
-	public FileNode EFile => _fn;
+	public FileNode FN => _fn;
 	
 	public override string ToString() => _fn.ToString();
 	
@@ -38,10 +38,16 @@ partial class SciCode : KScintilla {
 		c_indicDebug = 11,
 		c_indicDebug2 = 12,
 		c_indicFound = 13,
+		c_indicSnippetField = 14,
+		c_indicSnippetFieldActive = 15,
 		c_indicDiagHidden = 20,
 		c_indicInfo = 21,
 		c_indicWarning = 22,
-		c_indicError = 23;
+		c_indicError = 23,
+		c_indicTestBox = 29,
+		c_indicTestStrike = 30,
+		c_indicTestPoint = 31
+		;
 	
 	internal SciCode(FileNode file, aaaFileLoaderSaver fls) {
 		_fn = file;
@@ -51,6 +57,9 @@ partial class SciCode : KScintilla {
 		if (fls.IsImage) AaInitImages = true;
 		
 		Name = "document";
+		
+		//TODO: rename all EMember and AaMember. Don't need because now coding in LA, almost never in VS.
+		//this.E
 	}
 	
 	protected override void AaOnHandleCreated() {
@@ -213,6 +222,7 @@ partial class SciCode : KScintilla {
 				App.Model.Save.TextLater(); //just compares/sets a field. Note: don't use SCN_SAVEPOINTLEFT. No SCN_SAVEPOINTLEFT if text modified externally. Then would not save subsequent changes in editor.
 				_modified = true;
 				_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
+				SnippetMode_?.SciModified(n);
 				if (isActive) {
 					if (CodeInfo.SciModified(this, n)) _CodeModifiedAndCodeinfoOK(); //WPF preview
 					Panels.Find.UpdateQuickResults();
@@ -237,6 +247,7 @@ partial class SciCode : KScintilla {
 					Panels.Editor.UpdateUI_EditEnabled_();
 				}
 			}
+			if ((n.updated & (UPDATE.SC_UPDATE_CONTENT | UPDATE.SC_UPDATE_SELECTION)) == UPDATE.SC_UPDATE_SELECTION) SnippetMode_?.SciPosChanged();
 			if (isActive) CodeInfo.SciUpdateUI(this, n.updated);
 			break;
 		case NOTIF.SCN_CHARADDED when isActive:
@@ -377,7 +388,7 @@ partial class SciCode : KScintilla {
 			Panels.Debug.AddMarginMenuItems_(this, m, line);
 		}
 #else //breakpoints and bookmarks in single menu
-		if (EFile.IsCodeFile) {
+		if (FN.IsCodeFile) {
 			Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos8);
 			Panels.Debug.AddMarginMenuItems_(this, m, line);
 			m.Separator();
@@ -460,6 +471,8 @@ partial class SciCode : KScintilla {
 		if ((markers & 63 << c_markerBreakpoint) != 0) Panels.Breakpoints.SciDeletingLineWithMarker(this, line);
 		base.AaOnDeletingLineWithMarkers(line, markers);
 	}
+	
+	internal CiSnippetMode SnippetMode_;
 	
 	#region copy paste
 	

@@ -632,7 +632,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	#endregion
 	
-	#region find
+	#region find, enum
 	
 	/// <summary>
 	/// Finds descendant file or folder by name or @"\relative path".
@@ -751,6 +751,22 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 	
 	/// <summary>
+	/// Gets all descendant nodes, except descendants of folders named "Garbage".
+	/// </summary>
+	public IEnumerable<FileNode> DescendantsExceptGarbage() {
+		int level = 0;
+		foreach (var f in Descendants()) {
+			if (level == 0) {
+				if (f.IsFolder) if (f.Name.Eqi("Garbage")) level = f.Level;
+			} else {
+				if (f.Level > level) continue;
+				level = 0;
+			}
+			yield return f;
+		}
+	}
+	
+	/// <summary>
 	/// Finds ancestor (including self) project folder and its main file.
 	/// </summary>
 	/// <returns>true if this is in a project folder and found its main file.</returns>
@@ -808,18 +824,28 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	public FNClassFileRole GetClassFileRole() {
 		if (_type != FNType.Class) return FNClassFileRole.None;
+		var r = FNClassFileRole.Class;
 		if (GetCurrentText(out var code, silent: null)) {
 			var meta = MetaComments.FindMetaComments(code);
 			if (meta.end > 0) {
+				int i = -1;
+				bool findDefineTest = false;
 				foreach (var v in MetaComments.EnumOptions(code, meta)) {
-					if (!v.NameIs("role")) continue;
-					if (v.ValueIs("classLibrary")) return FNClassFileRole.Library;
-					if (v.ValueIs("classFile")) break;
-					return FNClassFileRole.App;
+					i++;
+					if (findDefineTest) {
+						if (v.NameIs("define")) return FNClassFileRole.Class;
+					} else {
+						if (!v.NameIs("role")) continue;
+						if (v.ValueIs("classLibrary")) return FNClassFileRole.Library;
+						if (v.ValueIs("classFile")) break;
+						r = FNClassFileRole.App;
+						if (findDefineTest = i == 0) continue; //maybe using feature "test-run without a test script", eg `/*/ role miniProgram; define TEST; /*/ ... #if TEST ...`
+						break;
+					}
 				}
 			}
 		}
-		return FNClassFileRole.Class;
+		return r;
 	}
 	
 	#endregion
@@ -953,6 +979,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		_SetName(name);
 		return true;
+		
+		//TODO: when renaming or moving, search all code files (except in "Garbage*" folders) and replace the old name or path in strings.
+		//	Also doc the garbage folders feature.
 	}
 	
 	/// <summary>

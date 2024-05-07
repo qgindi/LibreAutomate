@@ -112,7 +112,8 @@ class DProperties : KDialogWindow {
 		b.AddButton(out addFile, "Other file ▾", _ButtonClick_addFile);
 		b.End();
 		
-		b.Add<AdornerDecorator>().Add(out findInLists, flags: WBAdd.ChildOfLast).Watermark("Find in lists").Tooltip("In button drop-down lists show only items containing this text");
+		b.Add<AdornerDecorator>().Add(out findInLists, flags: WBAdd.ChildOfLast).Watermark("Find in lists")
+			.Tooltip("In button drop-down lists show only items containing this text.\n\nTip: to hide garbage files, put them in folder(s) named \"Garbage\".");
 		
 		b.End();
 		//..
@@ -388,7 +389,7 @@ class Class1 {
 		var sFind = findInLists.Text;
 		List<(FileNode f, string s)> a = new();
 		folder ??= App.Model.Root;
-		foreach (var f in folder.Descendants()) {
+		foreach (var f in folder.DescendantsExceptGarbage()) {
 			if (filter(f) is not FileNode f2) continue;
 			
 			var path = f2.ItemPath;

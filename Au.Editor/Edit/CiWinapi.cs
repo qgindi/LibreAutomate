@@ -75,7 +75,7 @@ class CiWinapi {
 			var f = App.Model.Find(sr.SyntaxTree.FilePath, FNFind.CodeFile);
 			if (!App.Model.SetCurrentFile(f, dontChangeTreeSelection: true)) return false;
 			doc = Panels.Editor.ActiveDoc;
-			fSelect = cd.sci.EFile;
+			fSelect = cd.sci.FN;
 		}
 
 		var hs = new HashSet<string>();

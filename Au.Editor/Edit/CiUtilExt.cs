@@ -336,6 +336,18 @@ static class CiUtilExt {
 		return t.GetEnclosingNamedType(declNode.OpenBraceToken.SpanStart + 1, default);
 	}
 	
+	/// <summary>
+	/// If the file code contains usings, externs, attributes or #define directives, returns position after all them. Else 0.
+	/// </summary>
+	public static int GetHeaderLength(this CompilationUnitSyntax t) {
+		var last = t.AttributeLists.LastOrDefault() as SyntaxNode
+			?? t.Usings.LastOrDefault() as SyntaxNode
+			?? t.Externs.LastOrDefault() as SyntaxNode
+			?? t.GetDirectives(o => o is DefineDirectiveTriviaSyntax).LastOrDefault();
+		if (last == null) return 0;
+		return last.FullSpan.End;
+	}
+	
 	public static (string kind, string access) ImageResource(this ISymbol t) {
 		var glyph = t.GetGlyph();
 		return glyph switch {

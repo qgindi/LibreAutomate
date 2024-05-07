@@ -26,7 +26,7 @@ class CiFindGo : KDialogWindow {
 	CancellationTokenSource _cancelTS;
 	
 	public static void ShowSingle() {
-		if (Panels.Editor.ActiveDoc?.EFile.IsCodeFile != true) return;
+		if (Panels.Editor.ActiveDoc?.FN.IsCodeFile != true) return;
 		ShowSingle(() => new CiFindGo());
 	}
 	
@@ -36,7 +36,8 @@ class CiFindGo : KDialogWindow {
 		
 		_timer1 = new(_ => _Update());
 		
-		b.R.Add(out _tQuery, s_lastQuery).Focus().Tooltip("""
+		b.R.Add(out _tQuery, s_lastQuery).Font("Consolas").Align(y: VerticalAlignment.Center).Focus()
+			.Tooltip("""
 Symbol name.
 Can be part, or part1 part2, or Type.Member, or camel.
 If fuzzy, must be full name, 1 word.

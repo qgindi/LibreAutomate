@@ -3,12 +3,14 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Documents;
 using Au.Controls;
+using Au.Tools;
 
 partial class PanelFiles {
 	FilesModel.FilesView _tv;
 	TextBox _tFind;
 	timer _timerFind;
 	FileNode _firstFoundFile;
+	KPopup _ttError;
 	
 	public PanelFiles() {
 		P.UiaSetName("Files panel");
@@ -55,14 +57,24 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 	private void _Find() {
 		_firstFoundFile = null;
 		var s = _tFind.Text;
+		
+		wildex wild = null; string err = null;
+		if (wildex.hasWildcardChars(s)) {
+			try { wild = new wildex(s); }
+			catch (Exception ex1) {
+				err = ex1.Message;
+				if (err.Starts("Invalid \"**options") && !s.Contains(' ')) err = null;
+				s = null;
+			}
+		}
+		if (err != null) TUtil.InfoTooltip(ref _ttError, _tFind, err); else _ttError?.Close();
+		
 		if (s.NE()) {
 			Panels.Found.ClearResults(PanelFound.Found.Files);
 			return;
 		}
 		
 		var workingState = Panels.Found.Prepare(PanelFound.Found.Files, s, out var b);
-		
-		var wild = wildex.hasWildcardChars(s) ? new wildex(s, noException: true) : null;
 		
 		foreach (var f in App.Model.Root.Descendants()) {
 			var name = f.Name;

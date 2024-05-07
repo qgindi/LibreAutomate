@@ -80,7 +80,7 @@ partial class SciCode {
 			var z = new Sci_DragDropData { x = xy.x, y = xy.y };
 			string s = null;
 			var b = new StringBuilder();
-			bool isCodeFile = _sci._fn.IsCodeFile;
+			bool isCodeFile = _sci.FN.IsCodeFile;
 			
 			if (_justText) {
 				s = _data.text;
@@ -90,11 +90,28 @@ partial class SciCode {
 				if (_data.scripts) {
 					int what = 0;
 					if (isCodeFile) {
-						what = popupMenu.showSimple("1 string s = name;|2 string s = path;|3 script.run(path);|4 t[name] = o => script.run(path);");
+						var sm = "1 string s = name;|2 string s = path;";
+						if (Panels.Files.TreeControl.DragDropFiles.All(o => o.IsCodeFile)) {
+							sm += "|3 script.run(path);|4 t[name] = o => script.run(path);";
+							if (Panels.Files.TreeControl.DragDropFiles.All(o => o.IsClass)) {
+								sm += Panels.Files.TreeControl.DragDropFiles.All(o => o.GetClassFileRole() == FNClassFileRole.Library) ? "|101 /* pr path; */" : "|100 /* c path; */";
+							}
+						} else {
+							sm += "|102 /* resource path; */";
+							sm += "|103 /* file path; */";
+						}
+						what = popupMenu.showSimple(sm);
 						if (what == 0) return;
 					}
 					var a = Panels.Files.TreeControl.DragDropFiles;
 					if (a != null) {
+						if (what >= 100) { //meta comment
+							MetaCommentsParser m = new(_sci.FN) { };
+							var list = what switch { 100 => m.c, 101 => m.pr, 102 => m.resource, _ => m.file };
+							foreach (var v in a) list.Add(v.ItemPath);
+							m.Apply();
+							return;
+						}
 						for (int i = 0; i < a.Length; i++)
 							_AppendScriptOrLink(what, a[i].ItemPath, a[i].Name, i + 1, a[i]);
 					}
@@ -138,7 +155,7 @@ partial class SciCode {
 					}
 				} else { //file, script or URL
 					if (isCodeFile) InsertCode.Statements(s, ICSFlags.NoFocus);
-					else if(!_sci.aaaIsReadonly) _sci.aaaReplaceSel(s + "\r\n");
+					else if (!_sci.aaaIsReadonly) _sci.aaaReplaceSel(s + "\r\n");
 					else print.it(s);
 				}
 				if (!_sci.IsFocused && _sci.AaWnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.

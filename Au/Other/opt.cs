@@ -13,6 +13,10 @@ namespace Au {
 	/// <code><![CDATA[
 	/// opt.key.KeySpeed = 50;
 	/// ]]></code>
+	/// Set options for trigger actions.
+	/// <code><![CDATA[
+	/// Triggers.Options.BeforeAction = o => { opt.key.KeySpeed = 50; };
+	/// ]]></code>
 	/// </example>
 	public static class opt {
 		/// <summary>
@@ -32,6 +36,10 @@ namespace Au {
 		/// var k = new keys(opt.key); //create new keys instance and copy options from opt.key to it
 		/// k.Options.KeySpeed = 100; //changes option of k but not of opt.key
 		/// k.Add("Right*10 Ctrl+A").SendNow(); //uses options of k
+		/// ]]></code>
+		/// Set options for trigger actions.
+		/// <code><![CDATA[
+		/// Triggers.Options.BeforeAction = o => { opt.key.KeySpeed = 50; };
 		/// ]]></code>
 		/// </example>
 		public static OKey key => t_key ??= new OKey(init.key);
@@ -532,6 +540,10 @@ namespace Au.Types {
 	/// <code><![CDATA[
 	/// opt.key.KeySpeed = 50;
 	/// ]]></code>
+	/// Set options for trigger actions.
+	/// <code><![CDATA[
+	/// Triggers.Options.BeforeAction = o => { opt.key.KeySpeed = 50; };
+	/// ]]></code>
 	/// </example>
 	public class OKey {
 		/// <summary>
@@ -650,9 +662,6 @@ namespace Au.Types {
 		/// </summary>
 		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		/// <remarks>
-		/// In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
-		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// opt.key.KeySpeedClipboard = 50;

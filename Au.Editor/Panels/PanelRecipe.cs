@@ -221,6 +221,7 @@ class PanelRecipe {
 		}
 		
 		public void AaSetStyles() {
+			if (AaWnd.Is0) return;
 			//aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
 			//aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
 			//aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
@@ -285,7 +286,7 @@ class PanelRecipe {
 			if (App.Model.WorkspaceName != "Cookbook") return;
 			if (!P.IsVisible) return;
 			var doc = Panels.Editor.ActiveDoc;
-			if (doc == null || !doc.EFile.IsCodeFile || doc.EFile.Parent.Name == "-") return;
+			if (doc == null || !doc.FN.IsCodeFile || doc.FN.Parent.Name == "-") return;
 			string text = doc.aaaText;
 			if (text == prevText) return;
 			prevText = text;
@@ -293,7 +294,7 @@ class PanelRecipe {
 			
 			int n1 = doc == prevDoc ? _c.Call(SCI_GETFIRSTVISIBLELINE) : 0;
 			if (n1 > 0) _c.AaWnd.Send(Api.WM_SETREDRAW);
-			_SetText(doc.EFile.DisplayName, text);
+			_SetText(doc.FN.DisplayName, text);
 			if (doc == prevDoc) {
 				if (n1 > 0)
 					//_c.Call(SCI_SETFIRSTVISIBLELINE, n1);
@@ -304,7 +305,7 @@ class PanelRecipe {
 					});
 			} else {
 				prevDoc = doc;
-				Panels.Cookbook.AddToHistory_(doc.EFile.DisplayName);
+				Panels.Cookbook.AddToHistory_(doc.FN.DisplayName);
 			}
 			//rejected: autoscroll. Even if works perfectly, often it is more annoying than useful.
 		};

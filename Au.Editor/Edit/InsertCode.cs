@@ -1,19 +1,19 @@
 extern alias CAW;
 
-using Au.Controls;
-using System.Windows;
-using System.Windows.Controls;
-
 using Microsoft.CodeAnalysis;
 using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.CSharp.Extensions;
 using CAW::Microsoft.CodeAnalysis.Rename;
 using acc = Microsoft.CodeAnalysis.Accessibility;
+
+using Au.Controls;
+using System.Windows;
+using System.Windows.Controls;
 
 /// <summary>Flags for <see cref="InsertCode.Statements"/>.</summary>
 [Flags]
@@ -141,7 +141,7 @@ static class InsertCode {
 		
 		//rename symbols in s if need
 		
-		try { _RenameNewSymbols(ref s, k.document, node, pos); }
+		try { InsertCodeUtil.RenameNewSymbols(ref s, k, node, pos); }
 		catch (Exception e1) { Debug_.Print(e1); }
 		
 		//indent, newlines
@@ -204,79 +204,6 @@ static class InsertCode {
 		var w = d.AaWnd.Window;
 		if (flags.Has(ICSFlags.ActivateEditor)) w.ActivateL();
 		if (!flags.Has(ICSFlags.NoFocus) && w.IsActive) d.Focus();
-	}
-	
-	static void _RenameNewSymbols(ref string s, Document doc1, SyntaxNode node, int pos) {
-		//find the function or TLS where to look for declared symbols in editor code
-		var scope = node;
-		for (; scope is not CompilationUnitSyntax; scope = scope.Parent) {
-			if (scope is BaseMethodDeclarationSyntax or LocalFunctionStatementSyntax or AnonymousFunctionExpressionSyntax) {
-				if (scope.Span.ContainsInside(pos)) break;
-			}
-			//CiUtil.PrintNode(scope);
-		}
-		//CONSIDER: make names unique in non-static local/lambda/anonymous functions and container.
-		
-		//modified Roslyn's GetAllDeclaredSymbols. Would be difficult to use it.
-		static void _GetDeclaredSymbols(SemanticModel semo, SyntaxNode node, List<ISymbol> symbols, HashSet<string> names, /*int pos = -1,*/ bool skipDesc = false) {
-			if (node is not CompilationUnitSyntax && semo.GetDeclaredSymbol(node) is ISymbol sym) {
-				symbols?.Add(sym);
-				names?.Add(sym.Name);
-			}
-			if (skipDesc) return;
-			foreach (var n in node.ChildNodes()) {
-				if (n is AnonymousFunctionExpressionSyntax or AnonymousObjectCreationExpressionSyntax or TupleExpressionSyntax) continue; //lambda etc
-				
-				//rejected: don't rename if variables in both codes are in unrelated { blocks }.
-				//	This code detects blocks in editor code. Also would need to detect in new code.
-				//if (pos > 0 && n is BlockSyntax && !n.Span.ContainsInside(pos)) continue;
-				
-				_GetDeclaredSymbols(semo, n, symbols, names, /*pos,*/ n is LocalFunctionStatementSyntax or BaseTypeDeclarationSyntax);
-			}
-		}
-		
-		//get symbols declared in s
-		List<ISymbol> a2 = new();
-		HashSet<string> h2 = new();
-		using var ws = new AdhocWorkspace();
-		var doc2 = CiUtil.CreateDocumentFromCode(ws, s, false);
-		var semo2 = doc2.GetSemanticModelAsync().Result;
-		_GetDeclaredSymbols(semo2, semo2.Root, a2, h2);
-		//print.it("---- h2 ----"); foreach (var v in h2) print.it(v);
-		if (h2.Count == 0) return;
-		
-		//get names of symbols declared in scope (editor code)
-		HashSet<string> h1 = new();
-		var semo1 = doc1.GetSemanticModelAsync().Result;
-		_GetDeclaredSymbols(semo1, scope, null, h1/*, pos*/);
-		if (scope is CompilationUnitSyntax) h1.Add("args");
-		//print.it("---- h1 ----"); foreach (var v in h1) print.it(v);
-		if (h1.Count == 0) return;
-		
-		//in s replace symbol names that exist in scope (editor code)
-		bool renamed = false;
-		var sol = doc2.Project.Solution;
-		foreach (var sym in a2) {
-			string name = sym.Name, name2;
-			if (!h1.Contains(name)) continue;
-			
-			//create unique name and add to hs1
-			int i = 2;
-			if (name.RxMatch(@"\d+$", 0, out RXGroup g)) {
-				i = Math.Max(i, name.ToInt(g.Start) + 1);
-				name = name[..g.Start];
-			}
-			while (h2.Contains(name2 = name + i) || !h1.Add(name2)) i++;
-			//print.it(sym.Name, name2);
-			
-			var opt1 = new SymbolRenameOptions();
-			sol = Renamer.RenameSymbolAsync(sol, sym, opt1, name2).Result;
-			h2.Remove(sym.Name);
-			renamed = true;
-		}
-		if (renamed) s = sol.GetDocument(doc2.Id).GetTextAsync().Result.ToString();
-		
-		//rejected: also replace names that match reserved keywords. This program will not create such names.
 	}
 	
 	/// <summary>
@@ -345,9 +272,9 @@ static class InsertCode {
 	/// </summary>
 	public static void Surround(int from, int to, string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ActiveDoc;
-		if (!doc.EFile.IsCodeFile) return;
+		if (!doc.FN.IsCodeFile) return;
 		
-		int indent = doc.aaaLineIndentationFromPos(true, from);
+		int indent = before.Starts('#') ? 0 : doc.aaaLineIndentationFromPos(true, from);
 		if (indent > 0) {
 			var si = InsertCodeUtil.IndentationString(indent);
 			before = before.RxReplace("(?m)^", si);
@@ -379,8 +306,8 @@ static class InsertCode {
 	/// <param name="concise">If text is single line, surround as single line.</param>
 	public static void Surround(string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ActiveDoc;
-		if (!doc.EFile.IsCodeFile) return;
-
+		if (!doc.FN.IsCodeFile) return;
+		
 		int from = doc.aaaSelectionStart16, to = doc.aaaSelectionEnd16;
 		if (from == to) {
 			if (!CodeInfo.GetContextAndDocument(out var cd, from)) return;
@@ -392,36 +319,6 @@ static class InsertCode {
 			if (to == from && to > 0) from = to = cd.code.LastIndexOf('\n', to - 1) + 1;
 		}
 		Surround(from, to, before, after, indentPlus, concise);
-	}
-	
-	//FUTURE: dialogs in SurroundFor and SurroundTryCatch. Eg to set variable name, count, whether to add finally.
-	public static void SurroundFor() {
-		var before = """
-for (int i = 0; i < count; i++) {
-
-""";
-		var after = """
-
-}
-
-""";
-		Surround(before, after, 1);
-	}
-	
-	public static void SurroundTryCatch() {
-		//SHOULDDO: If a statement is like 'var v = expression;', make 'Type v = null; try { v = expression; } catch {  }'.
-		
-		var before = """
-try {
-
-""";
-		var after = """
-
-}
-catch (Exception) {  }
-
-""";
-		Surround(before, after, 1, concise: true);
 	}
 	
 	/// <summary>
@@ -516,24 +413,23 @@ catch (Exception) {  }
 		return end;
 	}
 	
-	//rejected. Difficult etc.
-	///// <summary>
-	///// Inserts meta option(s).
-	///// </summary>
-	///// <param name="s">One or more meta options, like <c>"r A; r B;"</c>.</param>
-	///// <returns>false if all specified meta options already exist.</returns>
-	//public static bool MetaOption(string s) {
-	//	Debug.Assert(Environment.CurrentManagedThreadId == 1);
-	//	var doc = Panels.Editor.aaActiveDoc; if (doc == null || !doc.EFile.IsCodeFile) return false;
-	//	var meta = new MetaCommentsParser(doc.aaaText);
-	//	//meta.nuget.Add(...);
-	//	meta.Apply();
-	//	return false;
-	//}
+	/// <summary>
+	/// Inserts meta comments.
+	/// </summary>
+	/// <param name="s">One or more meta options, like <c>"c A; r B;"</c>.</param>
+	/// <returns>true if changed documnt text.</returns>
+	public static bool MetaComment(string s) {
+		Debug.Assert(Environment.CurrentManagedThreadId == 1);
+		var doc = Panels.Editor.ActiveDoc; if (doc == null || !doc.FN.IsCodeFile) return false;
+		var meta = new MetaCommentsParser(doc.aaaText);
+		var meta2 = new MetaCommentsParser($"/*/ {s} /*/");
+		meta.Merge(meta2);
+		return meta.Apply();
+	}
 	
 	public static void AddFileDescription() {
 		var doc = Panels.Editor.ActiveDoc;
-		if (!doc.EFile.IsCodeFile) return;
+		if (!doc.FN.IsCodeFile) return;
 		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
 		doc.aaaSelect(false, 4, 15, makeVisible: true);
 	}

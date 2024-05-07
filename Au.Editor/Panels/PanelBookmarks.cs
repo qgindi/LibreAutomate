@@ -173,7 +173,7 @@ class PanelBookmarks {
 				if (f.file == fn) return f;
 		return null;
 	}
-	_Item _FindItemOfFile(SciCode doc) => _FindItemOfFile(doc?.EFile);
+	_Item _FindItemOfFile(SciCode doc) => _FindItemOfFile(doc?.FN);
 	
 	public void ToggleBookmark(int pos8 = -1) {
 		var doc = Panels.Editor.ActiveDoc;
@@ -188,7 +188,7 @@ class PanelBookmarks {
 			int h = doc.aaaMarkerAdd(SciCode.c_markerBookmark, line); if (h < 0) return;
 			var folder = _FindItemOfFile(doc);
 			if (folder == null) {
-				_root.AddChild(folder = new(doc.EFile, true), true);
+				_root.AddChild(folder = new(doc.FN, true), true);
 			} else folder.SetIsExpanded(true);
 			
 			var name = GetMarkerName_(doc, line, useSelStart) ?? "Bookmark";

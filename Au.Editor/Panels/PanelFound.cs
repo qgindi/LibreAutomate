@@ -279,7 +279,7 @@ class PanelFound {
 					if (_OpenLinkClicked(k.file)) {
 						timer.after(10, _ => {
 							var doc = Panels.Editor.ActiveDoc;
-							if (doc?.EFile != k.file || k.end >= doc.aaaLen16) return;
+							if (doc?.FN != k.file || k.end >= doc.aaaLen16) return;
 							App.Model.EditGoBack.RecordNext();
 							doc.aaaGoToPos(true, k.start);
 							doc.Focus();
@@ -294,7 +294,7 @@ class PanelFound {
 				case ReplaceInFileLink k:
 					if (_OpenLinkClicked(k.file, replaceAll: true)) {
 						timer.after(10, _ => {
-							if (Panels.Editor.ActiveDoc?.EFile != k.file) return;
+							if (Panels.Editor.ActiveDoc?.FN != k.file) return;
 							Panels.Find.ReplaceAllInEditorFromFoundPanel_(ttf);
 						});
 						//info: without timer sometimes does not set cursor pos correctly

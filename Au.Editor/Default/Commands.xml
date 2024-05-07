@@ -47,8 +47,7 @@ All attributes are optional. The Example command contains all.
 		<Paste hide="always" />
 		<Format_document separator="" />
 		<Toggle_comment />
-		<Surround_for />
-		<Surround_try_catch />
+		<Surround />
 		<Create_delegate />
 		<Deduplicate_wnd_find />
 		<Find separator="" />

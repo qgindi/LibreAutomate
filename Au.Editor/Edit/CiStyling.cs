@@ -429,7 +429,7 @@ partial class CiStyling {
 		public TStyle Variable = 0x204020; //dark green gray
 		public TStyle Constant = 0x204020; //like variable
 		public TStyle Label = 0xff00ff; //magenta
-		public TStyle Preprocessor = 0xff8000; //orange
+		public TStyle Preprocessor = 0xff3300; //red
 		public TStyle Excluded = 0x808080; //gray
 		public TStyle XmlDocText = 0x408000; //green
 		public TStyle XmlDocTag = 0x808080; //gray
@@ -642,6 +642,13 @@ partial class CiStyling {
 			_Indic(SciCode.c_indicDebug, IndicDebugColor, IndicDebugAlpha, INDIC_FULLBOX);
 			_Indic(SciCode.c_indicDebug2, IndicDebugColor, 128 + IndicDebugAlpha / 2, INDIC_GRADIENTCENTRE);
 			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicSnippetField, 0xe0a000, 60, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicSnippetFieldActive, 0x80E000, 60, INDIC_FULLBOX);
+#if DEBUG
+			_Indic(SciCode.c_indicTestBox, 0xff0000, 60, INDIC_FULLBOX);
+			sci.aaaIndicatorDefine(SciCode.c_indicTestStrike, INDIC_STRIKE, 0xff0000);
+			sci.aaaIndicatorDefine(SciCode.c_indicTestPoint, INDIC_POINT, 0xff00ff);
+#endif
 			
 			void _Indic(int indic, int color, int alpha, int style) {
 				sci.aaaIndicatorDefine(indic, style, color, alpha, 255, underText: true);

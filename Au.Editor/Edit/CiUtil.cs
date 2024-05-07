@@ -518,21 +518,22 @@ global using System.Windows.Media;
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 	
-	public static void HiliteRange(int start, int end) {
+	public static void DebugHiliteRange(int start, int end, int indic = SciCode.c_indicTestBox) {
 		var doc = Panels.Editor.ActiveDoc;
-		doc.EInicatorsFound_(null);
-		doc.EInicatorsFound_(new List<Range> { start..end });
+		doc.aaaIndicatorClear(indic);
+		doc.aaaIndicatorAdd(indic, true, start..end);
 	}
 	
-	public static void HiliteRange(TextSpan span) => HiliteRange(span.Start, span.End);
+	public static void DebugHiliteRange(TextSpan span, int indic = SciCode.c_indicTestBox) => DebugHiliteRange(span.Start, span.End, indic);
 	
-	public static void HiliteRanges(List<Range> a) {
+	public static void DebugHiliteRanges(List<Range> a, int indic = SciCode.c_indicTestBox) {
 		var doc = Panels.Editor.ActiveDoc;
-		doc.EInicatorsFound_(null);
-		doc.EInicatorsFound_(a);
+		doc.aaaIndicatorClear(indic);
+		int i = 0;
+		foreach (var v in a) doc.aaaIndicatorAdd(indic, true, v, ++i);
 	}
 	
-	static IEnumerable<string> GetSymbolInterfaces(ISymbol sym) {
+	static IEnumerable<string> DebugGetSymbolInterfaces(ISymbol sym) {
 		return sym.GetType().FindInterfaces((t, _) => t.Name.Ends("Symbol") && t.Name != "ISymbol", null).Select(o => o.Name);
 	}
 	

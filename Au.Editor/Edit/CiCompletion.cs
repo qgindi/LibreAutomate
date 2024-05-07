@@ -554,7 +554,7 @@ partial class CiCompletion {
 					//add snippets
 					if (provider is not (CiComplProvider.Cref or CiComplProvider.XmlDoc)) {
 						int i = d.items.Count;
-						CiSnippets.AddSnippets(d.items, span, root, code, syncon);
+						CiSnippets.AddSnippets(d.items, span, root, code, false, syncon);
 						for (; i < d.items.Count; i++) (snippetsGroup ??= new List<int>()).Add(i);
 					}
 				}

@@ -1,4 +1,4 @@
-/// To show a context menu or drop-down list can be used class <see cref="popupMenu"/>. Or WPF class <b>ContextMenu<>, but it can't have many items (slow, no scrollbar). To create <b>popupMenu<> code can be used snippet <b>popupMenuSnippet<>.
+/// To show a context menu or drop-down list can be used class <see cref="popupMenu"/>. Or WPF class <b>ContextMenu<>, but it can't have many items (slow, no scrollbar). To create <b>popupMenu<> code can be used snippet <b>menuSnippet<>.
 
 using System.Windows;
 using System.Windows.Controls;

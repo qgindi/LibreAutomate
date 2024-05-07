@@ -1,79 +1,50 @@
-<Au.Snippets>
-
+<snippets>
 	<group context="Function">
-		<!-- snippets that are valid in functions -->
-
 		<snippet name="ifElseSnippet" info="if { code } else { code }.">
-			<![CDATA[if ($end$) {
-	
+			<![CDATA[if (${1:true}) {
+	${TM_SELECTED_TEXT}$0
 } else {
 	
 }]]>
 		</snippet>
-
-		<snippet name="forRepeatLoopSnippet" info="Repeat { code } count times." more="See also: Cookbook recipe &quot;for, foreach&quot;.">
-			<list item="Increment variable i">
-				<![CDATA[for (int i = 0; i < $end$count$end$; i++) {
-	
+		<snippet name="forLoopSnippet" info="Repeat { code } count times." more="See also: Cookbook recipe &quot;for, foreach&quot;.">
+			<![CDATA[for (int ${1:i} = 0; $1 < ${2:count}; $1++) {
+	${TM_SELECTED_TEXT}$0
 }]]>
-			</list>
-			<list item="&amp;Decrement variable i">
-				<![CDATA[for (int i = $end$count$end$; --i >= 0; ) {
-	
-}]]>
-			</list>
-			<list item="&amp;Repeat forever (or until break etc)">
-				<![CDATA[for (;;) {
-	$end$
-}]]>
-			</list>
 		</snippet>
-
+		<snippet name="forReverseSnippet" info="Repeat { code } count times." more="See also: Cookbook recipe &quot;for, foreach&quot;.">
+			<![CDATA[for (int ${1:i} = ${2:count}; --$1 >= 0; ) {
+	${TM_SELECTED_TEXT}$0
+}]]>
+		</snippet>
 		<snippet name="switchSnippet" info="Go to a case that matches a variable, or default if none.">
-			<list item="switch (int)">
-				<![CDATA[switch ($end$variable$end$) {
-case 1:
+			<list item="switch statement">
+				<![CDATA[switch (${1:variable}) {
+case ${2:C}:
+	$0
+	break;
+case ${3:C}:
 	
 	break;
-case 2:
+case ${4:C}:
 	
 	break;
-case 3:
+case ${5:C}:
 	
 	break;
-default:
+case ${6:C}:
 	
 	break;
-}]]>
-			</list>
-			<list item="switch (string)">
-				<![CDATA[switch ($end$variable$end$) {
-case "value1":
+case ${7:C}:
 	
 	break;
-case "value2":
+case ${8:C}:
 	
 	break;
-case "value3":
+case ${9:C}:
 	
 	break;
-default:
-	
-	break;
-}]]>
-			</list>
-			<list item="switch (type)">
-				<![CDATA[switch ($end$variable$end$) {
-case Type1 _:
-	
-	break;
-case Type2 _:
-	
-	break;
-case Type3 _:
-	
-	break;
-case null:
+case ${10:C}:
 	
 	break;
 default:
@@ -82,63 +53,81 @@ default:
 }]]>
 			</list>
 			<list item="switch expression, 1 line">
-				<![CDATA[int i = 2;
-string s = i switch { 1 => "one", 2 => "two", 3 => "three", _ => null };]]>
+				<![CDATA[var ${1:result} = ${2:variable} switch { ${3:C} => ${4:R}, ${5:C} => ${6:R}, ${7:C} => ${8:R}, _ => ${10:default} };]]>
 			</list>
 			<list item="switch expression, multiline">
-				<![CDATA[int i = 2;
-string s = i switch {
-	1 => "one",
-	2 => "two",
-	3 => "three",
-	_ => null
+				<![CDATA[var ${1:result} = ${2:variable} switch {
+	${3:C} => ${4:R},
+	${5:C} => ${6:R},
+	${7:C} => ${8:R},
+	${9:C} => ${10:R},
+	${11:C} => ${12:R},
+	${13:C} => ${14:R},
+	${15:C} => ${16:R},
+	${17:C} => ${18:R},
+	${19:C} => ${20:R},
+	_ => ${21:default}
 };]]>
 			</list>
 		</snippet>
-
-		<snippet name="tryCatchFinallySnippet" info="Exception handling." more="See also: Cookbook recipe &quot;Errors, exceptions&quot;.">
+		<snippet name="trySnippet" info="Exception handling." more="See also: Cookbook recipe &quot;Errors, exceptions&quot;.">
 			<list item="try catch">
 				<![CDATA[try {
-	$end$
+	${TM_SELECTED_TEXT}
 }
-catch(Exception e1) {  }]]>
+catch(${1:Exception} ex) { $0 }]]>
 			</list>
 			<list item="try &amp;finally">
 				<![CDATA[try {
-	$end$
+	${TM_SELECTED_TEXT}
 }
-finally {  }]]>
+finally { $0 }]]>
 			</list>
 			<list item="&amp;try catch finally">
 				<![CDATA[try {
-	$end$
+	${TM_SELECTED_TEXT}
 }
-catch(Exception e1) {  }
+catch(${1:Exception} ex) { $0 }
 finally {  }]]>
 			</list>
 		</snippet>
-
 		<snippet name="localFunctionSnippet" info="Local function.">
-			<![CDATA[void $end$_MyFunction$end$() {
-	
+			<![CDATA[${3:void} ${1:_MyFunction}(${2:parameters}) {
+	${TM_SELECTED_TEXT}$0
 }
 ]]>
 		</snippet>
-
-
-		<!-- call functions -->
-
+		<snippet name="threadSnippet" info="Run action in other thread.">
+			<list item="Start new thread">
+				<![CDATA[run.thread(() => { ${TM_SELECTED_TEXT}$0 }, background: true);]]>
+			</list>
+			<list item="Use thread pool">
+				<![CDATA[Task.Run(() => { ${TM_SELECTED_TEXT}$0 });]]>
+			</list>
+		</snippet>
 		<snippet name="dsDialogShowSnippet" info="Standard dialog window." more="See also: wpfSnippet.">
-			<list item="OK button">dialog.show("$end$");</list>
-			<list item="OK button and &amp;info icon">dialog.showInfo("$end$");</list>
-			<list item="OK button and &amp;warning icon">dialog.showWarning("$end$");</list>
-			<list item="OK button and &amp;error icon">dialog.showError("$end$");</list>
-			<list item="OK and &amp;Cancel buttons">if (!dialog.showOkCancel("$end$")) return;</list>
-			<list item="&amp;Yes and No buttons">if (!dialog.showYesNo("$end$")) return;</list>
+			<list item="OK button">
+				<![CDATA[dialog.show("${1:header}", $"${2:text}"$3);]]>
+			</list>
+			<list item="OK button and &amp;info icon">
+				<![CDATA[dialog.showInfo("${1:header}", $"${2:text}"$3);]]>
+			</list>
+			<list item="OK button and &amp;warning icon">
+				<![CDATA[dialog.showWarning("${1:header}", $"${2:text}"$3);]]>
+			</list>
+			<list item="OK button and &amp;error icon">
+				<![CDATA[dialog.showError("${1:header}", $"${2:text}"$3);]]>
+			</list>
+			<list item="OK and &amp;Cancel buttons">
+				<![CDATA[if (!dialog.showOkCancel("${1:header}", $"${2:text}"$3)) return;]]>
+			</list>
+			<list item="&amp;Yes and No buttons">
+				<![CDATA[if (!dialog.showYesNo("${1:header}", $"${2:text}"$3)) return;]]>
+			</list>
 			<list item="Custom &amp;buttons">
-				<![CDATA[int button = dialog.show("$end$", "", "1 OK|0 Cancel|2 Yes|3 No|4 Retry|5 Close|10 Button1|11 Button2", flags: DFlags.CommandLinks);
+				<![CDATA[int button = dialog.show("${1:header}", $"${2:text}", "${3:1 OK|0 Cancel|2 Yes|3 No|4 Retry|5 Close|10 Button1|11 Button2}", flags: DFlags.CommandLinks$4);
 switch (button) {
-case 1:  break;
+case 1: $0 break;
 case 2:  break;
 case 3:  break;
 case 4:  break;
@@ -149,72 +138,71 @@ default: return;
 }]]>
 			</list>
 			<list item="&amp;List of buttons">
-				<![CDATA[//int button = dialog.showList(["one", "two", "three"]);
-int button = dialog.showList("$end$one|two|three$end$");
+				<![CDATA[int button = dialog.showList("${1:one|two|three}", "${2:header}", $"${3:text}"$4);
 switch (button) {
-case 1:  break;
+case 1: $0 break;
 case 2:  break;
 case 3:  break;
 default: return;
 }]]>
 			</list>
-			<list item="&amp;Text input">if (!dialog.showInput(out string s, "$end$")) return;</list>
-			<list item="&amp;Number input">if (!dialog.showInputNumber(out int i, "$end$")) return;</list>
+			<list item="&amp;Text input">
+				<![CDATA[if (!dialog.showInput(out string ${1:s}, "${2:header}", $"${3:text}"$4)) return;]]>
+			</list>
+			<list item="&amp;Number input">
+				<![CDATA[if (!dialog.showInputNumber(out int ${1:i}, "${2:header}", $"${3:text}"$4)) return;]]>
+			</list>
 		</snippet>
-
 		<snippet name="winFindSnippet" info="Find window.">
-			<![CDATA[var w = wnd.find(0, "$end$*Name$end$");]]>
+			<![CDATA[var w = wnd.find(0, "${1:*Name}");]]>
 		</snippet>
-
 		<snippet name="clickSnippet" info="Mouse click or move in window.">
 			<list item="Left click">
-				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
+				<![CDATA[var w = wnd.find(0, "${1:*Name}");
 mouse.click(w, );]]>
 			</list>
 			<list item="&amp;Right click">
-				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
+				<![CDATA[var w = wnd.find(0, "${1:*Name}");
 mouse.rightClick(w, );]]>
 			</list>
 			<list item="&amp;Double click">
-				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
+				<![CDATA[var w = wnd.find(0, "${1:*Name}");
 mouse.doubleClick(w, );]]>
 			</list>
 			<list item="&amp;Move">
-				<![CDATA[var w = wnd.find(0, "$end$*Name$end$");
+				<![CDATA[var w = wnd.find(0, "${1:*Name}");
 mouse.move(w, );]]>
 			</list>
 		</snippet>
-
 		<snippet name="osdSnippet" info="Show OSD text (on-screen display) or tooltip.">
 			<list item="Transparent text">
-				<![CDATA[osdText.showTransparentText("$end$");]]>
+				<![CDATA[osdText.showTransparentText("$0");]]>
 			</list>
 			<list item="Tooltip">
-				<![CDATA[osdText.showText("$end$");]]>
+				<![CDATA[osdText.showText("$0");]]>
 			</list>
 			<list item="Transparent text, until current function ends">
-				<![CDATA[using var osd = osdText.showTransparentText("$end$", -1);]]>
+				<![CDATA[using var osd = osdText.showTransparentText("$0", -1);]]>
 			</list>
 			<list item="Tooltip, until current function ends">
-				<![CDATA[using var osd = osdText.showText("$end$", -1);]]>
+				<![CDATA[using var osd = osdText.showText("$0", -1);]]>
 			</list>
 		</snippet>
-
 		<snippet name="triggerSnippet" info="Add hotkey, autotext, mouse or window trigger." more="Add triggers in a file that contains triggers of this type. To open, use menu TT. Local triggers can be in any other script.">
 			<list item="Hotkey">
-				<![CDATA[hk["$end$"] = o => {  };]]>
+				<![CDATA[hk["$0"] = o => {  };]]>
 			</list>
 			<list item="Autotext">
-				<![CDATA[tt["$end$"] = o => {  };]]>
+				<![CDATA[tt["$0"] = o => {  };]]>
 			</list>
 			<list item="Autotext replace">
-				<![CDATA[tt["$end$"] = o => o.Replace("text");]]>
+				<![CDATA[tt["$0"] = o => o.Replace("text");]]>
 			</list>
 			<list item="Autotext simple replace">
-				<![CDATA[tr["$end$"] = "";]]>
+				<![CDATA[tr["$0"] = "";]]>
 			</list>
 			<list item="Autotext menu">
-				<![CDATA[tt["$end$"] = o => o.Menu(
+				<![CDATA[tt["$0"] = o => o.Menu(
 	"text",
 	"<tag>[[|]]</tag>",
 	new("Label1", "text"),
@@ -222,10 +210,10 @@ mouse.move(w, );]]>
 	);]]>
 			</list>
 			<list item="Mouse">
-				<![CDATA[Triggers.Mouse[TM$end$] = o => {  };]]>
+				<![CDATA[Triggers.Mouse[TM$0] = o => {  };]]>
 			</list>
 			<list item="Window">
-				<![CDATA[Triggers.Window[TWEvent.ActiveNew, "$end$"] = o => {  };]]>
+				<![CDATA[Triggers.Window[TWEvent.ActiveNew, "$0"] = o => {  };]]>
 			</list>
 			<list item="Local triggers" using="Au.Triggers">
 				<![CDATA[//Script-local triggers running all the time, as main script code.
@@ -257,49 +245,49 @@ dialog.show("Testing triggers thread"); //replace this line with real script cod
 ]]>
 			</list>
 		</snippet>
-
-		<snippet name="threadSnippet" info="Run action in other thread.">
-			<list item="Start new thread">
-				<![CDATA[run.thread(() => { $end$ }, background: true);]]>
-			</list>
-			<list item="Use thread pool">
-				<![CDATA[Task.Run(() => { $end$ });]]>
-			</list>
-		</snippet>
-
 		<snippet name="stringBuilderSnippet" info="Create string with StringBuilder.">
-			<![CDATA[var b = new StringBuilder();
-b.Append($end$);
-b.AppendLine();
-b.AppendFormat("{0}, {1}", 10, 20);
-var s = b.ToString();
+			<![CDATA[StringBuilder ${1:b} = new();
+$1.Append($0);
+$1.AppendLine();
+$1.AppendFormat("{0}, {1}", 10, 20);
+var s = $1.ToString();
 print.it(s);]]>
 		</snippet>
-
-		<snippet name="actWinSnippet" info="Activate window; check if window is active.">
-			<list item="Find window and activate">
-				<![CDATA[var w = wnd.find(0, "$end$*Name$end$").Activate();]]>
-			</list>
-			<list item="If the active window has the specified name etc">
-				<![CDATA[var w = wnd.active;
-if (w.IsMatch("$end$*Name$end$")) {
-	
+		<snippet name="ifActiveWindowSnippet" info="If the active window is...">
+			<![CDATA[var ${1:w} = wnd.active;
+if ($1.IsMatch("${2:*Name}")) {
+	$0
 }]]>
+		</snippet>
+		<snippet name="ifKeySnippet" info="If key is down (pressed).">
+			<list item="Ctrl">
+				<![CDATA[if (keys.isCtrl) { $0 }]]>
+			</list>
+			<list item="Shift">
+				<![CDATA[if (keys.isShift) { $0 }]]>
+			</list>
+			<list item="Alt">
+				<![CDATA[if (keys.isAlt) { $0 }]]>
+			</list>
+			<list item="Win">
+				<![CDATA[if (keys.isWin) { $0 }]]>
+			</list>
+			<list item="Ctrl, Shift, Alt or Win">
+				<![CDATA[if (keys.isMod()) { $0 }]]>
+			</list>
+			<list item="Specified key">
+				<![CDATA[if (keys.isPressed($0)) {  }]]>
+			</list>
+			<list item="Caps Lock toggled">
+				<![CDATA[if (keys.isCapsLock) { $0 }]]>
+			</list>
+			<list item="Num Lock toggled">
+				<![CDATA[if (keys.isNumLock) { $0 }]]>
+			</list>
+			<list item="Scroll Lock toggled">
+				<![CDATA[if (keys.isScrollLock) { $0 }]]>
 			</list>
 		</snippet>
-
-		<snippet name="ifKeySnippet" info="If key is down (pressed).">
-			<list item="Ctrl">if (keys.isCtrl) { $end$ }</list>
-			<list item="Shift">if (keys.isShift) { $end$ }</list>
-			<list item="Alt">if (keys.isAlt) { $end$ }</list>
-			<list item="Win">if (keys.isWin) { $end$ }</list>
-			<list item="Ctrl, Shift, Alt or Win">if (keys.isMod()) { $end$ }</list>
-			<list item="Specified key">if (keys.isPressed($end$)) {  }</list>
-			<list item="Caps Lock toggled">if (keys.isCapsLock) { $end$ }</list>
-			<list item="Num Lock toggled">if (keys.isNumLock) { $end$ }</list>
-			<list item="Scroll Lock toggled">if (keys.isScrollLock) { $end$ }</list>
-		</snippet>
-
 		<snippet name="speedSnippet" info="Change sleep times used by keyboard and mouse functions." more="The snippet contains all speed opt, with default values; remove lines you don't need.">
 			<![CDATA[opt.key.KeySpeed = 1;
 opt.key.TextSpeed = 0;
@@ -310,96 +298,92 @@ opt.mouse.ClickSleepFinally = 10;
 opt.mouse.MoveSpeed = 0;
 opt.mouse.MoveSleepFinally = 10;]]>
 		</snippet>
-
 		<snippet name="perfSnippet" info="Measure code speed.">
-			<list item="Static">
-				<![CDATA[perf.first();$end$
+			<list item="&amp;Static">
+				<![CDATA[perf.first();$0
 perf.next();
 perf.next();
 perf.next();
 perf.nw();]]>
 			</list>
-			<list item="Local, auto-NW">
-				<![CDATA[using var p1 = perf.local();$end$
+			<list item="&amp;Local, auto-NW">
+				<![CDATA[using var p1 = perf.local();$0
 p1.Next();
 p1.Next();
 p1.Next();]]>
 			</list>
 		</snippet>
-
-		<snippet name="popupMenuSnippet" info="Popup menu.">
+		<snippet name="perfSurround" info="Measure code speed.">
+			<![CDATA[perf.first();
+${TM_SELECTED_TEXT}$0
+perf.nw();]]>
+		</snippet>
+		<snippet name="menuSnippet" info="Popup menu.">
 			<list item="Menu for automation scripts">
-				<![CDATA[var m = new popupMenu("$guid$");
+				<![CDATA[var ${1:m} = new popupMenu("${UUID}");
 
-m["Item1"] = o => {  };
-m[""] = o => {  };
-m.Submenu("", m => {
-	m[""] = o => {  };
-	m[""] = o => {  };
+$1["${2:Text}"] = o => { $0 };
+$1[""] = o => {  };
+$1.Submenu("", $1 => {
+	$1[""] = o => {  };
+	$1[""] = o => {  };
 });
-m.Separator();
-m["Run program|Tooltip"] = o => run.it(folders.System + @"notepad.exe");
-m["Run script"] = o => script.run("Script123456789.cs");
-m["Copy-paste"] = o => {
+$1.Separator();
+$1["Run program|Tooltip"] = o => run.it(folders.System + @"notepad.exe");
+$1["Run script"] = o => script.run("Script123456789.cs");
+$1["Copy-paste"] = o => {
 	string s = clipboard.copy();
 	s = s.Upper();
 	clipboard.paste(s);
 };
 
-m.Show();]]>
+$1.Show();]]>
 			</list>
 			<list item="Context menu for your program">
-				<![CDATA[var m = new popupMenu();
+				<![CDATA[var ${1:m} = new popupMenu();
 
-m["Item1"] = o => {  };
-m[""] = o => {  };
-m.Submenu("", m => {
-	m[""] = o => {  };
-	m[""] = o => {  };
+$1["${2:Text}"] = o => { $0 };
+$1[""] = o => {  };
+$1.Submenu("", $1 => {
+	$1[""] = o => {  };
+	$1[""] = o => {  };
 });
-m.Separator();
-m[""] = o => {  };
-m[""] = o => {  };
+$1.Separator();
+$1[""] = o => {  };
+$1[""] = o => {  };
 
-m.Show();]]>
+$1.Show();]]>
 			</list>
 			<list item="Simple menu, returns item id">
-				<![CDATA[int i = popupMenu.showSimple("1 One|2 Two|3 Three||0 Cancel");
-switch (i) {
-case 1:  break;
+				<![CDATA[int ${1:id} = popupMenu.showSimple("${2:1 One|2 Two|3 Three||0 Cancel}");
+switch ($1) {
+case 1: $0 break;
 case 2:  break;
 case 3:  break;
 default: return;
 }]]>
 			</list>
 		</snippet>
-
-		<snippet name="menuItemSnippet" info="Menu item or submenu." more="Other ways: drag-drop scripts, files, links; hotkey Ctrl+Shift+Q. More info in Cookbook." var="Au.popupMenu,m">
-			<list item="Item">
-				<![CDATA[$var$["$end$"] = o => {  };]]>
-			</list>
-			<list item="&amp;Submenu">
-				<![CDATA[$var$.Submenu("", $var$ => {
-	$var$[""] = o => {  };
-	$var$[""] = o => {  };
-});]]>
-			</list>
+		<snippet name="menuItemSnippet" info="Menu item." more="Other ways: drag-drop scripts, files, links; hotkey Ctrl+Shift+Q. More info in Cookbook." var="Au.popupMenu,m">
+			<![CDATA[${VAR}["${1:Text}"] = o => { $0 };]]>
 		</snippet>
-
+		<snippet name="menuSubmenuSnippet" info="Menu submenu." var="Au.popupMenu,m">
+			<![CDATA[${VAR}.Submenu("${1:Text}", ${VAR} => {
+	${VAR}["${2:Text}"] = o => { $0 };
+	${VAR}[""] = o => {  };
+});]]>
+		</snippet>
 		<snippet name="tbToolbarButtonSnippet" info="Toolbar button." more="Other ways: drag-drop scripts, files, links; hotkey Ctrl+Shift+Q. More info in Cookbook." var="Au.toolbar,t">
-			<list item="Button">
-				<![CDATA[$var$["$end$"] = o => {  };]]>
-			</list>
-			<list item="Drop-down &amp;menu">
-				<![CDATA[$var$.Menu("$end$", $var$ => {
-	$var$[""] = o => {  };
-	$var$[""] = o => {  };
-});]]>
-			</list>
+			<![CDATA[${VAR}["${1:Text}"] = o => { $0 };]]>
 		</snippet>
-
-		<snippet name="wpfSnippet" info="Create dialog window." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Input;System.Windows.Media" more="See also: dialogSnippet, menu File > New > Dialogs.">
-			<![CDATA[var b = new wpfBuilder("Window").WinSize(400);
+		<snippet name="tbToolbarMenuSnippet" info="Toolbar drop-down menu." var="Au.toolbar,t">
+			<![CDATA[${VAR}.Menu("${1:Text}", ${VAR} => {
+	${VAR}["${2:Text}"] = o => { $0 };
+	${VAR}[""] = o => {  };
+});]]>
+		</snippet>
+		<snippet name="wpfSnippet" info="Create dialog window." more="See also: dialogSnippet, menu File &gt; New &gt; Dialogs." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Input;System.Windows.Media">
+			<![CDATA[var b = new wpfBuilder("${1:Window}").WinSize(400);
 b.R.Add("Text", out TextBox text1).Focus();
 b.R.Add("Combo", out ComboBox combo1).Items("Zero|One|Two");
 b.R.Add(out CheckBox c1, "Check");
@@ -412,9 +396,8 @@ b.Window.Preview();
 if (!b.ShowDialog()) return;
 //print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true);]]>
 		</snippet>
-
 		<snippet name="wpfWndprocSnippet" info="Set WPF window hook to receives messages." using="System.Windows;System.Windows.Interop">
-			<![CDATA[$end$window$end$.SourceInitialized += (o, _) => {
+			<![CDATA[${1:window}.SourceInitialized += (o, _) => {
 	var hs = PresentationSource.FromVisual(o as Window) as HwndSource;
 	hs.AddHook(_WndProc);
 	nint _WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
@@ -429,99 +412,82 @@ if (!b.ShowDialog()) return;
 	}
 };]]>
 		</snippet>
-
 		<snippet name="ssScriptSetupSnippet" info="Set run-time options such as tray icon and emergency exit ways.">
 			<![CDATA[//.
 script.setup(trayIcon: true, sleepExit: true);
 //..
 ]]>
 		</snippet>
-
 		<snippet name="piPrintItSnippet" info="Display text and variables in the output window.">
-			<![CDATA[print.it($end$);]]>
+			<![CDATA[print.it($0);]]>
 		</snippet>
-
 		<snippet name="outPrintItSnippet" info="Display text and variables in the output window.">
-			<![CDATA[print.it($end$);]]>
+			<![CDATA[print.it($0);]]>
 		</snippet>
-
 		<snippet name="pcPrintClearSnippet" info="Clear the output window.">
 			<![CDATA[print.clear();]]>
 		</snippet>
-
 		<snippet name="ocPrintClearSnippet" info="Clear the output window.">
 			<![CDATA[print.clear();]]>
 		</snippet>
-
 		<snippet name="kkKeysSendSnippet" info="Generate virtual keystrokes (keys, text).">
-			<![CDATA[keys.send("$end$");]]>
+			<![CDATA[keys.send("$0");]]>
 		</snippet>
-
 		<snippet name="ktKeysSendtSnippet" info="Send text to the active window using virtual keystrokes.">
-			<![CDATA[keys.sendt("$end$");]]>
+			<![CDATA[keys.sendt("$0");]]>
 		</snippet>
-
 		<snippet name="pasteSnippet" info="Paste text using the clipboard and Ctrl+V.">
-			<![CDATA[clipboard.paste($end$);]]>
+			<![CDATA[clipboard.paste($0);]]>
 		</snippet>
-
 		<snippet name="copySnippet" info="Get the selected text using the clipboard and Ctrl+C.">
-			<list item="Copy">string s = clipboard.copy();</list>
-			<list item="Try copy">if (!clipboard.tryCopy(out var s, 500)) return;</list>
-			<list item="Cut">string s = clipboard.copy(cut: true);</list>
+			<list item="&amp;Copy">
+				<![CDATA[string ${1:s} = clipboard.copy();$0]]>
+			</list>
+			<list item="&amp;Try copy">
+				<![CDATA[if (!clipboard.tryCopy(out var ${1:s}, 500)) return;$0]]>
+			</list>
+			<list item="C&amp;ut">
+				<![CDATA[string ${1:s} = clipboard.copy(cut: true);$0]]>
+			</list>
 		</snippet>
-
 		<snippet name="riRunItSnippet" info="Run a program or open a document, folder, web page." more="Tip: drag and drop.">
-			<![CDATA[run.it($end$folders.System + @"notepad.exe"$end$);]]>
+			<![CDATA[run.it(${1:folders.System + @"notepad.exe"});]]>
 		</snippet>
-
 		<snippet name="srScriptRunSnippet" info="Start to execute a script." more="Tip: drag and drop.">
-			<![CDATA[script.run(@"$end$\Folder\Script$end$.cs");]]>
+			<![CDATA[script.run(@"${1:\Folder\Script}.cs");]]>
 		</snippet>
-
 		<snippet name="failedSnippet" info="Throw 'failed' exception." more="Exception text is optional.">
-			<![CDATA[throw new AuException($end$);]]>
+			<![CDATA[throw new ${1:AuException}($0);]]>
 		</snippet>
-
-		<snippet name="pauseSnippet" info="Pause the script if the pause key was pressed." more="See also: ssScriptSetupSnippet.">
-			<![CDATA[script.pause();]]>
-		</snippet>
-
 	</group>
-	<!-- end of Function -->
-
-
 	<group context="Type">
-		<!-- snippets that are valid in types -->
-
 		<snippet name="methodSnippet" info="Function.">
-			<list item="Private method or local function">
-			<![CDATA[void $end$_MyFunction$end$() {
-	
+			<list item="Private method">
+				<![CDATA[void ${1:_MyFunction}(${2:parameters}) {
+	${TM_SELECTED_TEXT}$0
 }
 ]]>
 			</list>
 			<list item="Public method">
-			<![CDATA[public void $end$MyFunction$end$() {
-	
+				<![CDATA[public void ${1:MyFunction}(${2:parameters}) {
+	${TM_SELECTED_TEXT}$0
 }
 ]]>
 			</list>
 		</snippet>
-
 		<snippet name="propSnippet" info="Property.">
 			<list item="{ get; set; }">
-				<![CDATA[public int $end$Property$end$ { get; set; }
+				<![CDATA[public int ${1:Property} { get; set; }
 ]]>
 			</list>
 			<list item="{ get; private set; }">
-				<![CDATA[public int $end$Property$end$ { get; private set; }
+				<![CDATA[public int ${1:Property} { get; private set; }
 ]]>
 			</list>
 			<list item="{ get {  } set {  } }">
-				<![CDATA[public string $end$Property$end$ {
+				<![CDATA[public string ${1:Property} {
 	get {
-		
+		$0
 	}
 	set {
 		
@@ -529,24 +495,24 @@ script.setup(trayIcon: true, sleepExit: true);
 }
 ]]>
 			</list>
-			<list item="{ get => _field; set { ... } }">
-				<![CDATA[public string $end$Property$end$ {
+			<list item="{ get =&gt; _field; set { ... } }">
+				<![CDATA[public string ${1:Property} {
 	get => _field;
 	set {
 		if (value != _field) {
 			_field = value;
-			
+			$0
 		}
 	}
 }
 string _field;
 ]]>
 			</list>
-			<list item="{ get { ... } set => _field = value; }">
-				<![CDATA[public string $end$Property$end$ {
+			<list item="{ get { ... } set =&gt; _field = value; }">
+				<![CDATA[public string ${1:Property} {
 	get {
 		if (_field == null) {
-			
+			$0
 			_field = ;
 		}
 		return _field;
@@ -557,10 +523,10 @@ string _field;
 ]]>
 			</list>
 			<list item="{ get { ... } set { ... } }">
-				<![CDATA[public string $end$Property$end$ {
+				<![CDATA[public string ${1:Property} {
 	get {
 		if (_field == null) {
-			
+			$0
 			_field = ;
 		}
 		return _field;
@@ -576,24 +542,17 @@ string _field;
 ]]>
 			</list>
 		</snippet>
-
 	</group>
-	<!-- end of Type -->
-
-
 	<group context="Namespace|Type|Line">
-		<!-- snippets that are valid in types, namespaces and global scope, at the start of line -->
-
 		<snippet name="nativeApiSnippet" info="Adds class for Windows API declarations.">
 			<![CDATA[/// <summary>
 /// Add an empty class like this in scripts (at the end) and projects (in any file) where you want to use Windows API. Change the class name (api) if want.
 /// Then, whenever you need an API function etc, type the class name and dot (api.). The completion list contains API names and adds declarations to this class.
 /// </summary>
 #pragma warning disable 649, 169 //field never assigned/used
-unsafe class $end$api$end$ : NativeApi {}
+unsafe class ${1:api} : NativeApi {}
 #pragma warning restore 649, 169 //field never assigned/used]]>
 		</snippet>
-
 		<snippet name="settingsSnippet" info="Adds a class for settings used by this script/program/library/etc.">
 			<![CDATA[/// <summary>
 /// Settings of this script/program/library/etc.
@@ -601,7 +560,7 @@ unsafe class $end$api$end$ : NativeApi {}
 /// Settings are lazily auto-saved soon after changing.
 /// </summary>
 internal record class MySettings : JSettings {
-	public static readonly string File = folders.ThisAppDocuments + @"$end$RenameMe$end$.json";
+	public static readonly string File = folders.ThisAppDocuments + @"${1:RenameMe}.json";
 
 	public static MySettings Load() => Load<MySettings>(File);
 	
@@ -617,48 +576,38 @@ internal record class MySettings : JSettings {
 //or in script as local variable:
 //using var sett = MySettings.Load();]]>
 		</snippet>
-
 	</group>
-	<!-- end of Namespace|Type|Line -->
-
-
 	<group context="Attributes">
-		<!-- snippets that are valid in [attributes] -->
-
 		<snippet name="marshalAsSnippet" info="Adds MarshalAs attribute." more="Then press dot and select from list.">
-			<![CDATA[MarshalAs(UnmanagedType$end$)]]>
+			<![CDATA[MarshalAs(UnmanagedType$0)]]>
 		</snippet>
-
 	</group>
-	<!-- end of Attributes -->
-
-
 	<group context="Any|Line">
-		<!-- snippets that are valid anywhere at the start of line -->
-
 		<snippet name="warningDisableSnippet" info="Disables one or more warnings." more="Or you can disable warnings in the Properties dialog.">
-			<![CDATA[#pragma warning disable $end$123, 456$end$ //
+			<![CDATA[#pragma warning disable ${1:123, 456}
+${TM_SELECTED_TEXT}$0
 #pragma warning restore]]>
 		</snippet>
-
 		<snippet name="ifDirectiveSnippet" info="Enables or disables code depending on a preprocessor expression.">
-			<![CDATA[#if $end$true$end$
+			<![CDATA[#if ${1:true}
+${TM_SELECTED_TEXT}$0
 #else
+
 #endif]]>
 		</snippet>
+		<snippet name="regionSnippet" info="Fold (hide) code lines." more="//. in LibreAutomate is the same as #region. Can be followed by space and text.">
+			<list item="#region">
+				<![CDATA[#region ${1:name}
+				
+${TM_SELECTED_TEXT}$0
 
-		<snippet name="regionSnippet" info="Fold (hide) code lines.">
-			<list item="#region and #endregion">
-				<![CDATA[#region $end$name$end$
 #endregion]]>
 			</list>
-			<list item="//. and //..">
-				<![CDATA[//.$end$
+			<list item="//.">
+				<![CDATA[//.
+${TM_SELECTED_TEXT}$0
 //..]]>
 			</list>
 		</snippet>
-
 	</group>
-	<!-- end of Any|Line -->
-
-</Au.Snippets>
+</snippets>

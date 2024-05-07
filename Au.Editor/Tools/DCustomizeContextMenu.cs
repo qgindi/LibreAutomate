@@ -70,7 +70,7 @@ Right - commands to add to the context menu of the {ownerName}. Separator -.
 	static (string path, string text) _GetFilePathAndText(string menuName) {
 		string file = AppSettings.DirBS + menuName + " context menu.txt", text = null;
 		if (filesystem.exists(file)) text = filesystem.loadText(file);
-		else if (menuName == "Edit") text = "Cut\nCopy\nPaste\n-\nCustomize_edit_context_menu\n";
+		else if (menuName == "Edit") text = "Cut\nCopy\nPaste\n";
 		return (file, text);
 	}
 	

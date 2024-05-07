@@ -163,7 +163,7 @@ static class CodeInfo {
 	static bool _CanWork(SciCode doc) {
 		if (!_isWarm) return false;
 		if (doc == null) return false;
-		if (!doc.EFile.IsCodeFile) return false;
+		if (!doc.FN.IsCodeFile) return false;
 		if (doc != Panels.Editor.ActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
 		return true;
 	}
@@ -241,6 +241,7 @@ static class CodeInfo {
 		return false;
 #endif
 		if (!_CanWork(doc)) return false;
+		
 		switch ((key, mod)) {
 		case (KKey.Space, ModifierKeys.Control):
 			ShowCompletionList(doc);
@@ -258,19 +259,29 @@ static class CodeInfo {
 			if ((HideTextPopup() || _tools.HideTempWindows()) && key == KKey.Escape) return true;
 			//never mind: on Esc, if several popups, should hide the top popup.
 			//	We instead hide less-priority popups when showing a popup, so that Escape will hide the correct popup in most cases.
-			return _compl.OnCmdKey_SelectOrHide(key) || _signature.OnCmdKey(key);
+			if (_compl.OnCmdKey_SelectOrHide(key) || _signature.OnCmdKey(key)) return true;
+			if (key == KKey.Escape) if (doc.SnippetMode_?.SciKey(key, mod) == true) return true;
+			break;
 		case (KKey.Tab, 0):
 		case (KKey.Enter, 0):
-			return _compl.OnCmdKey_Commit(doc, key) != CiComplResult.None || _correct.SciBeforeKey(doc, key, mod);
+			if (_compl.OnCmdKey_Commit(doc, key) != CiComplResult.None) return true;
+			if (doc.SnippetMode_?.SciKey(key, mod) == true) return true;
+			if (_correct.SciBeforeKey(doc, key, mod)) return true;
+			break;
+		case (KKey.Tab, ModifierKeys.Shift):
+			if (doc.SnippetMode_?.SciKey(key, mod) == true) return true;
+			break;
 		case (KKey.Enter, ModifierKeys.Shift):
 		case (KKey.Enter, ModifierKeys.Control):
 		case (KKey.OemSemicolon, ModifierKeys.Control):
 			var complResult = _compl.OnCmdKey_Commit(doc, key);
 			//if(complResult == CiComplResult.Complex && mod==0) return true;
-			return _correct.SciBeforeKey(doc, key, mod) | (complResult != CiComplResult.None);
+			if (_correct.SciBeforeKey(doc, key, mod) | (complResult != CiComplResult.None)) return true;
+			break;
 		case (KKey.Back, 0):
 		case (KKey.Delete, 0):
-			return _correct.SciBeforeKey(doc, key, mod);
+			if (_correct.SciBeforeKey(doc, key, mod)) return true;
+			break;
 		}
 		return false;
 	}
@@ -425,7 +436,7 @@ static class CodeInfo {
 			sci = Panels.Editor.ActiveDoc;
 			code = sci.aaaText;
 			this.pos = pos switch { -1 => sci.aaaCurrentPos16, -2 => sci.aaaSelectionStart16, _ => pos };
-			if (isCodeFile = sci.EFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
+			if (isCodeFile = sci.FN.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}
 		
 		/// <summary>
@@ -657,7 +668,7 @@ for (int i = 0; i < count; i++) { }
 		Dictionary<FileNode, ProjectReference> dPR = null;
 		
 		_solution = CurrentWorkspace.CurrentSolution;
-		_projectId = _AddProject(sci.EFile, true, isWpfPreview: sci.EIsWpfPreview);
+		_projectId = _AddProject(sci.FN, true, isWpfPreview: sci.EIsWpfPreview);
 		
 		ProjectId _AddProject(FileNode f, bool isMain, bool isWpfPreview = false) {
 			var fCurrentDoc = f;

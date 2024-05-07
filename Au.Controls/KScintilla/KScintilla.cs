@@ -90,6 +90,7 @@ public unsafe partial class KScintilla : HwndHost {
 		Call(SCI_SETSELECTIONLAYER, SC_LAYER_UNDER_TEXT);
 		aaaSetElementColor(SC_ELEMENT_SELECTION_BACK, 0xA0A0A0A0); //use alpha to mix with indicators
 		aaaSetElementColor(SC_ELEMENT_SELECTION_INACTIVE_BACK, 0x60A0A0A0);
+		aaaSetElementColor(SC_ELEMENT_SELECTION_ADDITIONAL_BACK, 0x60A0A0A0);
 		
 		if (AaInitWrapVisuals) {
 			Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END);

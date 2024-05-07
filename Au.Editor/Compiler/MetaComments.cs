@@ -733,7 +733,7 @@ class MetaComments {
 	bool _Error(string s, int from, int to) {
 		if (Errors != null) {
 			Errors.AddError(_f.f, _f.code, from, "error in meta: " + s);
-		} else if (_flags.Has(MCFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ActiveDoc.EFile) {
+		} else if (_flags.Has(MCFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ActiveDoc.FN) {
 			CodeInfo._diag.AddMetaError(_metaRange, from, to, s);
 		}
 		return false;
@@ -1064,6 +1064,8 @@ class MetaComments {
 		public string Value => code.Substring(valueStart, valueLen);
 		public bool NameIs(string s) => s.Length == nameLen && code.Eq(nameStart, s);
 		public bool ValueIs(string s) => s.Length == valueLen && code.Eq(valueStart, s);
+		
+		public Range ValueRange => valueStart..(valueStart + valueLen);
 	}
 }
 

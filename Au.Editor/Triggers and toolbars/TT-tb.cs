@@ -279,7 +279,7 @@ partial class Program {
 	(_Toolbar tb, _Trigger tr) _ToolbarFromCurrentPos() {
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return default;
 		int pos = doc.aaaCurrentPos16;
-		var f = doc.EFile;
+		var f = doc.FN;
 		//is pos in a toolbar function?
 		var t = _toolbars.FirstOrDefault(o => o.fn == f && o.method.DeclaringSyntaxReferences[0].Span.ContainsOrTouches(pos));
 		if (t != null) return (t, null);

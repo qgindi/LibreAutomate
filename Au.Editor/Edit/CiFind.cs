@@ -434,7 +434,7 @@ static class CiFind {
 			s_sciPreview = null;
 			
 			if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-			_currentFile = cd.sci.EFile;
+			_currentFile = cd.sci.FN;
 			
 			var sym = await RenameUtilities.TryGetRenamableSymbolAsync(cd.document, cd.pos, default);
 			
@@ -548,7 +548,7 @@ static class CiFind {
 			
 			var b = new wpfBuilder("Rename symbol").WinSize(300);
 			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
-			b.R.Add(out TextBox newName, _oldName).Focus()
+			b.R.Add(out TextBox newName, _oldName).Font("Consolas").Focus()
 				.Validation(_ => SyntaxFacts.IsValidIdentifier(newName.Text.TrimStart('@')) ? null : "Invalid name");
 			newName.SelectAll();
 			b.R.Add(out KCheckBox cOverloads, "Include overloads").Hidden(!hasOverloads).Checked(0 != (App.Settings.ci_rename & 1));

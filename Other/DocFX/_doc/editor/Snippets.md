@@ -13,9 +13,10 @@ A snippet can show a menu of sub-snippets. Use it to group similar snippets toge
 Snippet properties:
 - **Name** - is displayed in the completion list. Also it is the text shortcut.
 - **Info** - short text displayed in the completion list item flyout (info window) above code. Also menu item text; use `&` for keyboard shortcuts.
-- **Info+** - optional text displayed in the flyout below code.
-- **Print** - optional text displayed in the output panel when inserting the snippet. Can contain [output tags](xref:output_tags) if starts with `<>`.
-- **using** - zero or more namespaces separated by semicolon. The program will insert using directives in the correct place if need. Example: `System.Windows;System.Windows.Controls`.
+- **Info+** - text displayed in the flyout below code.
+- **Print** - text to print in the output panel when inserting the snippet. Can contain [output tags](xref:output_tags) if starts with `<>`.
+- **using** - namespaces to add as `using` directives if need. Example: `System.Windows; System.Windows.Controls`.
+- **Meta** - file properties to add as `/*/ meta comments /*/` if need. Example: `c A.cs; nuget -\B`.
 - **var** - `$var$` variable type and default name, like `Au.popupMenu,m`. When inserting the snippet, the program looks for a local variable of the specified type, and replaces `$var$` in snippet code with the variable name, or with the default name if not found. To see how it works, in code editor insert **popupMenuSnippet** and then **menuItemSnippet** (it contains `$var$`).
 - **Code** - snippet code.
 

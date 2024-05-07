@@ -7,6 +7,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Au.Controls;
 
+//TODO: everywhere generate code "var w1 ..." instead of "var w ...". The same with elm.
+//	Or maybe only with elm, because often the script works with single window, or with one main window (let it be w) and several others.
+
 /// <summary>
 /// Scintilla-based control that shows colored C# code. Based on <see cref="KSciCodeBox"/> and adds methods to get code for wnd.find.
 /// </summary>

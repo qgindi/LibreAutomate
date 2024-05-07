@@ -400,7 +400,7 @@ Recursive regex examples:
 <+a>\(([^()]++|(?R))*\)<>  -  match a string enclosed in ( ) that may contain any number of enclosed substrings, like <c green>(...)<> or <c green>(..(..)+(..))<> or <c green>(..((..)..)..)<>.
 <+a>(\(([^()]++|(?-2))*\))<>  -  the same as above when it is part of a larger regular expression.
 
-A capturing group <.r>(...)<> can be reused in other parts of regular expression. It is like a subroutine that can be called like a function by its number or name. It also can be called recursively (from itself). Unlike a backreference (the substring captured by the referenced group), a subroutine call is like a copy of the group in the regular expression. For example, regex <.r>(\w+)-(?1)<> is the same as <.r>(\w+)-(\w+)<>; as well as <.r>(?(DEFINE)(\w+))(?1)-(?1)<> and <.r>(?(DEFINE)(?'word'\w+))(?&word)-(?&word)<>.
+A capturing group <.r>(...)<> can be reused in other parts of regular expression. It is like a subroutine that can be called like a function by its number or name. It also can be called recursively (from itself). Unlike a backreference (the substring captured by the referenced group), a subroutine call is like a copy of the group in the regular expression. For example, regex <.r>(\w+)-(?1)<> is the same as <.r>(\w+)-(?:\w+)<>; as well as <.r>(?(DEFINE)(\w+))(?1)-(?1)<> and <.r>(?(DEFINE)(?'word'\w+))(?&word)-(?&word)<>.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC25>Groups as subroutines<>
