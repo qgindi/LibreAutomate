@@ -19,12 +19,11 @@ using System.Windows.Input;
 static class CiSnippets {
 	class _CiComplItemSnippet : CiComplItem {
 		public readonly XElement x;
-		public readonly _Context context;
+		public _Context context;
 		public readonly bool custom;
 		
-		public _CiComplItemSnippet(string name, XElement x, _Context context, bool custom) : base(CiComplProvider.Snippet, default, name, CiItemKind.Snippet) {
+		public _CiComplItemSnippet(string name, XElement x, bool custom) : base(CiComplProvider.Snippet, default, name, CiItemKind.Snippet) {
 			this.x = x;
-			this.context = context;
 			this.custom = custom;
 		}
 	}
@@ -42,6 +41,18 @@ static class CiSnippets {
 		Unknown = 32,
 		Any = 0xffff,
 		Line = 0x10000, //at start of line
+/*
+
+A context specifies where in code to add the snippets to the completion list. Several contexts can be combined.
+- **Function** - inside function body. Also in the main script code (top-level statements).
+- **Type** - inside a class, struct or interface but not inside functions. Use for snippets that insert entire methods, properties, etc.
+- **Namespace** - outside of types. Use for snippets that insert entire types.
+- **Attributes** - use for snippets that insert an `[attribute]`.
+- **Line** - at the start of a line. For example check **Line** and **Any** for snippets that insert a `#directive`.
+- **Any** - anywhere.
+- **None** - nowhere.
+
+*/
 	}
 	
 	static _Context s_context;
@@ -115,39 +126,19 @@ static class CiSnippets {
 			_LoadFile(DefaultFile, false);
 			if (a.Count == 0) return;
 			a.Sort((x, y) => string.Compare(x.Text, y.Text, StringComparison.OrdinalIgnoreCase));
+			_DetectContext(a);
 			s_items = a;
 			
 			void _LoadFile(string file, bool custom) {
 				try {
 					var hidden = DSnippets.GetHiddenSnippets(custom ? pathname.getName(file) : "default");
-					if (hidden != null && hidden.Contains("")) return;
+					if (hidden?.Contains("") == true) return;
 					
-					var xroot = XmlUtil.LoadElem(file);
-					bool oldFormat = xroot.Name == "Au.Snippets"; //"snippets" if new format
-					foreach (var xg in xroot.Elements("group")) {
-						if (!xg.Attr(out string sc, "context")) continue;
-						_Context con = default;
-						if (sc == "Function") con = _Context.Function | _Context.Arrow; //many
-						else { //few, eg Type or Namespace|Type
-							foreach (var seg in sc.Segments("|")) {
-								switch (sc[seg.Range]) {
-								case "Function": con |= _Context.Function | _Context.Arrow; break;
-								case "Type": con |= _Context.Type; break;
-								case "Namespace": con |= _Context.Namespace; break;
-								case "Arrow": con |= _Context.Function | _Context.Arrow; break; //fbc
-								case "Attributes": con |= _Context.Attributes; break;
-								case "Any": con |= _Context.Any; break;
-								case "Line": con |= _Context.Line; break;
-								}
-							}
-						}
-						if (con == 0) continue;
-						foreach (var xs in xg.Elements("snippet")) {
-							var name = xs.Attr("name");
-							if (hidden != null && hidden.Contains(name)) continue;
-							if (oldFormat) ConvertOldFormat_(xs);
-							a.Add(new _CiComplItemSnippet(name, xs, con, custom));
-						}
+					var xroot = LoadSnippetsFile_(file);
+					foreach (var xs in xroot.Elements("snippet")) {
+						var name = xs.Attr("name");
+						if (hidden?.Contains(name) == true) continue;
+						a.Add(new _CiComplItemSnippet(name, xs, custom));
 					}
 				}
 				catch (Exception ex) { print.it("Failed to load snippets from " + file + "\r\n\t" + ex.ToStringWithoutStack()); }
@@ -166,22 +157,114 @@ static class CiSnippets {
 		}
 	}
 	
-	internal static void ConvertOldFormat_(XElement xs) {
-		if (!xs.HasElements) _Convert(xs);
-		else foreach (var x in xs.Elements("list")) _Convert(x);
+	internal static XElement LoadSnippetsFile_(string file) {
+		var xroot = XmlUtil.LoadElem(file);
+		if (xroot.Name == "Au.Snippets") { //now "snippets"
+			xroot = _ConvertOldFormat(xroot);
+			try { xroot.Save(file); } catch { }
+		}
+		return xroot;
 		
-		static void _Convert(XElement x) {
-			if (x.Value is string v) {
-				if (v.Find("$end$") is int i1 && i1 >= 0) { //$end$xxx$end$ -> ${1:xxx}, or $end$ -> $0
-					int i1end = i1 + 5;
-					if (v.Find("$end$", i1end) is int i2 && i2 > 0) v = v.ReplaceAt(i1..(i2 + 5), "${1:" + v[i1end..i2] + "}");
-					else v = v.ReplaceAt(i1..i1end, i1end < v.Length && v[i1end] is >= '0' and <= '9' ? "${0}" : "$0");
+		static XElement _ConvertOldFormat(XElement xRootOld) {
+			var xRootNew = new XElement("snippets");
+			foreach (var xg in xRootOld.Elements("group")) {
+				foreach (var xs in xg.Elements("snippet")) {
+					_ConvertSnippet(xs);
+					xRootNew.Add(xs);
 				}
-				v = v.Replace("$random$", "${RANDOM}");
-				v = v.Replace("$guid$", "${UUID}");
-				v = v.Replace("$var$", "${VAR}");
-				x.Value = v;
 			}
+			return xRootNew;
+			
+			static void _ConvertSnippet(XElement xs) {
+				if (!xs.HasElements) _ConvertCode(xs);
+				else foreach (var x in xs.Elements("list")) _ConvertCode(x);
+				
+				static void _ConvertCode(XElement x) {
+					if (x.Value is string v) {
+						if (v.Find("$end$") is int i1 && i1 >= 0) { //$end$xxx$end$ -> ${1:xxx}, or $end$ -> $0
+							int i1end = i1 + 5;
+							if (v.Find("$end$", i1end) is int i2 && i2 > 0) v = v.ReplaceAt(i1..(i2 + 5), "${1:" + v[i1end..i2] + "}");
+							else v = v.ReplaceAt(i1..i1end, i1end < v.Length && v[i1end] is >= '0' and <= '9' ? "${0}" : "$0");
+						}
+						v = v.Replace("$random$", "${RANDOM}");
+						v = v.Replace("$guid$", "${UUID}");
+						v = v.Replace("$var$", "${VAR}");
+						x.Value = v;
+					}
+				}
+			}
+		}
+	}
+	
+	static void _DetectContext(List<_CiComplItemSnippet> a) {
+		regexp rx1 = new(@"\$(?|(TM_FILENAME_BASE|RANDOM)\b|\{((?1))\})"),
+			rx2 = new(@"\$(?|([1-9]\d*)(?!\d)|\{((?1))\})"),
+			rx3 = new(@"\$(?:\{[A-Z_]+\}|[A-Z_]+\b|0|\{0\})"),
+			rx4 = new(@"\$\{\d+:(.*?)\}");
+		
+		Parallel.ForEach(a, v => {
+			var x = v.x.HasElements ? v.x.Elements().First() : v.x;
+			v.context = _Detect(x.Value, v.Text);
+			if (x != v.x && v.context is (_Context.Function | _Context.Type)) { //eg copySnippet
+				foreach (var k in v.x.Elements().Skip(1)) if (_Detect(k.Value, v.Text) is var c2 && c2 is _Context.Function or _Context.Type) { v.context = c2; break; }
+			}
+		});
+		
+		_Context _Detect(string code, string name) {
+			if (code.NE()) return _Context.None;
+			
+			code = rx1.Replace(code, "$1");
+			code = rx2.Replace(code, "i");
+			code = rx3.Replace(code, "");
+			code = rx4.Replace(code, "$1");
+			
+			try {
+				var cu = CiUtil.GetSyntaxTree(code);
+				if (cu.Usings.Any() || cu.Externs.Any() || cu.AttributeLists.Any()) return _Context.Namespace;
+				if (!cu.Members.Any()) {
+					if (cu.ContainsDirectives) return _Context.Any | _Context.Line;
+					if (code.Starts("/// ")) return _Context.Namespace | _Context.Type | _Context.Line;
+					return _Context.Any;
+				}
+				if (cu.Members.Any(SyntaxKind.GlobalStatement)) {
+					if (!cu.Members.All(o => o is GlobalStatementSyntax)) {
+						if (cu.Members[0] is GlobalStatementSyntax) return _Context.Namespace; //TLS + types
+						return _Context.Function;
+					}
+					foreach (GlobalStatementSyntax gs in cu.Members) {
+						var stat = gs.Statement;
+						if (stat is LocalFunctionStatementSyntax) { //can be local or member function
+							if (_TryInClass()) return _Context.Type;
+						} else if (stat is LocalDeclarationStatementSyntax lds) { //can be local or member variable
+							if (lds.Declaration.Type.IsVar) return _Context.Function;
+						} else {
+							if (_TryInClass()) return _Context.Type;
+							if (stat is ExpressionStatementSyntax ess && ess.SemicolonToken.IsMissing && ess.Expression is InvocationExpressionSyntax && cu.Members.Count == 1) return _Context.Attributes; //`Attribute(...)`
+							return _Context.Function;
+						}
+					}
+					return _Context.Type | _Context.Function;
+				} else {
+					if (cu.Members.Any(o => o is BaseNamespaceDeclarationSyntax)) return _Context.Namespace;
+					if (cu.Members.All(o => o is BaseTypeDeclarationSyntax)) return _Context.Namespace | _Context.Type;
+					return _Context.Type;
+				}
+				
+				bool _TryInClass(bool debug = false) {
+					try {
+						int n1 = cu.GetDiagnostics().Count();
+						if (n1 == 0) return false;
+						var cu2 = CiUtil.GetSyntaxTree("class C{\r\n" + code + "\r\n}");
+						var d2 = cu2.GetDiagnostics();
+						int n2 = d2.Count();
+						if (n2 >= n1) return false;
+						if (n2 > 0 && d2.Any(o => o.Id == "CS1519")) return false; //"Invalid token 'token' in class, struct, or interface member declaration". Eg elseSnippet.
+						return true;
+					}
+					catch { return false; }
+				}
+			}
+			catch { return _Context.Any; }
 		}
 	}
 	
@@ -533,11 +616,6 @@ class CiSnippetMode {
 				v.offset += pos;
 				if (v.n == 0) nDollar0++;
 			}
-			
-			//List<Range> a1 = new();
-			////foreach (var v in _dollars) a1.Add(v.offset..(v.offset + v.len));
-			//foreach (var v in _dollars) a1.Add(v.text == null ? (v.offset - 1)..v.offset : v.offset..(v.offset + v.len));
-			//CiUtil.DebugHiliteRanges(a1);
 			
 			if (_dollars.Count == 1) {
 				var d = _dollars[0];

@@ -27,14 +27,11 @@ class DSnippets : KDialogWindow {
 	
 	List<_Item> _files;
 	
-	Panel _panelSnippet, _panelContext, _panelFile;
-	StackPanel _panelContextEnum;
+	Panel _panelSnippet, _panelFile;
 	KTreeView _tv;
 	KSciCodeBox _code;
 	TextBox _tName, _tInfo, _tMore, _tPrint, _tUsing, _tMeta, _tVar;
 	TextBlock _tbFile, _tbDefaultFileInfo;
-	
-	[Flags] enum CX { Function = 1, Type = 2, Namespace = 4, Attributes = 16, Line = 32, Any = 64 }
 	
 	_Item _ti; //current item
 	_Item _clip; //cut/copy item
@@ -59,9 +56,9 @@ class DSnippets : KDialogWindow {
 		b.StartGrid().Hidden(null);
 		_panelSnippet = b.Panel;
 		b.R.Add("Name", out _tName).Tooltip("Snippet name. Single word.\nIf ends with \"Surround\", the snippet can be used only for surround.");
-		_tName.TextChanged += (_, _) => { if (!_ignoreEvents && _ti.Level == 2) _TvSetText(_tName.TextOrNull()); };
+		_tName.TextChanged += (_, _) => { if (!_ignoreEvents && _ti.Level == 1) _TvSetText(_tName.TextOrNull()); };
 		b.R.Add("Info", out _tInfo);
-		_tInfo.TextChanged += (_, _) => { if (!_ignoreEvents) { _ti.info = _tInfo.TextOrNull(); if (_ti.Level == 3) _TvSetText(_ti.info); } };
+		_tInfo.TextChanged += (_, _) => { if (!_ignoreEvents) { _ti.info = _tInfo.TextOrNull(); if (_ti.Level == 2) _TvSetText(_ti.info); } };
 		b.R.Add("Info+", out _tMore).Multiline(40);
 		_tMore.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.more = _tMore.TextOrNull(); };
 		b.R.Add("Print", out _tPrint).Multiline(40).Tooltip("Print this text when inserting the snippet.\nCan contain output tags if starts with <>.");
@@ -70,7 +67,7 @@ class DSnippets : KDialogWindow {
 		_tUsing.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.using_ = _tUsing.TextOrNull(); };
 		b.R.Add("Meta", out _tMeta).Tooltip("If the snippet code requires /*/ meta comments /*/, add them here.\nExample: c Example.cs; nuget -\\Example");
 		_tMeta.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.meta_ = _tMeta.TextOrNull(); };
-		b.R.Add("$var$", out _tVar).Tooltip("$var$ variable type and name. Example: Au.toolbar,t");
+		b.R.Add("${VAR}", out _tVar).Tooltip("${VAR} variable type and name. Example: Au.toolbar,t");
 		_tVar.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.var_ = _tVar.TextOrNull(); };
 		foreach (var v in _panelSnippet.Children) if (v is TextBox t1) t1.IsReadOnlyCaretVisible = true;
 		
@@ -87,15 +84,6 @@ class DSnippets : KDialogWindow {
 		_code.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
 			if (n.code == Sci.NOTIF.SCN_MODIFYATTEMPTRO && _readonly) dialog.showInfo(null, "Default snippets are read-only, but you can clone a default snippet (right click, copy, paste) and edit the clone. Uncheck the default snippet.", owner: c);
 		};
-		b.End();
-		
-		//context
-		
-		b.And(0).StartStack(true).Hidden(null);
-		_panelContext = b.Panel;
-		b.StartStack<KGroupBox>("Context", true);
-		_panelContextEnum = b.Panel as StackPanel;
-		b.End();
 		b.End();
 		
 		//file
@@ -139,8 +127,7 @@ class DSnippets : KDialogWindow {
 		_readonly = t.IsReadonly;
 		int level = t.Level;
 		_panelFile.Visibility = level == 0 ? Visibility.Visible : Visibility.Collapsed;
-		_panelContext.Visibility = level == 1 ? Visibility.Visible : Visibility.Collapsed;
-		_panelSnippet.Visibility = level >= 2 ? Visibility.Visible : Visibility.Collapsed;
+		_panelSnippet.Visibility = level > 0 ? Visibility.Visible : Visibility.Collapsed;
 		
 		if (level == 0) {
 			_tbFile.Inlines.Clear();
@@ -148,34 +135,16 @@ class DSnippets : KDialogWindow {
 			h.Click += (_, _) => run.selectInExplorer(t.filePath);
 			_tbFile.Inlines.Add(h);
 			_tbDefaultFileInfo.Visibility = _readonly ? Visibility.Visible : Visibility.Collapsed;
-		} else if (level == 1) {
-			CX cx = 0;
-			foreach (var v in t.text.Split('|', StringSplitOptions.TrimEntries)) {
-				cx |= v switch { "Function" => CX.Function, "Type" => CX.Type, "Namespace" => CX.Namespace, "Attributes" => CX.Attributes, "Line" => CX.Line, "Any" => CX.Any, _ => 0 };
-			}
-			_panelContextEnum.Children.Clear();
-			new EnumUI<CX>(_panelContextEnum, cx);
-			_panelContext.IsEnabled = !_readonly;
-			if (!_readonly) {
-				foreach (CheckBox c in _panelContextEnum.Children) {
-					c.Checked += _c_Checked;
-					c.Unchecked += _c_Checked;
-				}
-				void _c_Checked(object sender, RoutedEventArgs e) {
-					var s = string.Join('|', _panelContextEnum.Children.OfType<CheckBox>().Where(o => o.IsChecked == true).Select(o => o.Content as string));
-					_TvSetText(s); //note: allow empty
-				}
-			}
 		} else {
-			bool isMenu = level == 2 && t.IsFolder;
+			bool isMenu = level == 1 && t.IsFolder;
 			if (!isMenu) {
 				var s = t.code;
 				_code.AaSetText(s, _readonly ? 0 : -1);
 			}
 			
-			_tName.Text = level == 2 ? t.text : t.Parent.text;
-			_tInfo.Text = level == 2 ? t.info : t.text;
-			_tMore.Text = level == 2 ? t.more : t.Parent.more;
+			_tName.Text = level == 1 ? t.text : t.Parent.text;
+			_tInfo.Text = level == 1 ? t.info : t.text;
+			_tMore.Text = level == 1 ? t.more : t.Parent.more;
 			_tPrint.Text = t.print_;
 			_tUsing.Text = t.using_;
 			_tMeta.Text = t.meta_;
@@ -183,9 +152,9 @@ class DSnippets : KDialogWindow {
 			
 			_code.Visibility = isMenu ? Visibility.Hidden : Visibility.Visible;
 			//don't disable textboxes. Instead make read-only, to allow scroll/select/copy text.
-			_tName.IsReadOnly = level == 3 || _readonly;
+			_tName.IsReadOnly = level == 2 || _readonly;
 			_tInfo.IsReadOnly = _readonly;
-			_tMore.IsReadOnly = level == 3 || _readonly;
+			_tMore.IsReadOnly = level == 2 || _readonly;
 			_tPrint.IsReadOnly = _readonly;
 			_tUsing.IsReadOnly = _readonly;
 			_tMeta.IsReadOnly = _readonly;
@@ -213,7 +182,7 @@ class DSnippets : KDialogWindow {
 				t.isChecked ^= true;
 				_tv.Redraw(t);
 			} else if (e.Part == TVParts.Text) {
-				if (level == 2 && t.IsFolder) _tv.Expand(t, true);
+				if (level == 1 && t.IsFolder) _tv.Expand(t, true);
 			}
 		} else if (e.Button == MouseButton.Right) {
 			var m = new popupMenu();
@@ -221,31 +190,21 @@ class DSnippets : KDialogWindow {
 			if (!t.IsReadonly) {
 				int clipLevel = _clip?.Level ?? -1;
 				if (level == 0) {
-					m["Add new context"] = o => _New(true);
-					if (clipLevel == 1) _MiPaste(true);
-				} else if (level == 1) {
 					m["Add new snippet"] = o => _New(true);
-					if (clipLevel == 2) _MiPaste(true);
-					m.Separator();
-					m["Add new context"] = o => _New(false);
-					m["Cut"] = o => _Copy(t, true);
-					if (clipLevel == 1) _MiPaste(false);
-					_MiDelete();
+					if (clipLevel == 1) _MiPaste(true);
 				} else {
-					if (level == 2) {
-						m["Add new snippet"] = o => _New(false);
-						m["Add new menu item"] = o => _New(true);
-					} else {
-						m["Add new menu item"] = o => _New(false);
-					}
+					if (level == 1) m["Add new snippet"] = o => _New(false);
+					m["Add new menu item"] = o => _New(level == 1);
 					m.Separator();
 					m["Cut"] = o => _Copy(t, true);
 					m["Copy"] = o => _Copy(t);
-					if (clipLevel >= 2) {
+					if (clipLevel > 0) {
 						_MiPaste(false);
-						if (level == 2) _MiPaste(true);
+						if (level == 1) _MiPaste(true);
 					}
-					_MiDelete();
+					m.Submenu("Delete", m => {
+						m[$"Delete {(level == 1 ? "snippet" : "menu item")} '{t.text}'"] = o => _Remove(t);
+					});
 				}
 				
 				void _New(bool into) { _AddNewOrPaste(false, t, into); }
@@ -253,20 +212,14 @@ class DSnippets : KDialogWindow {
 				void _MiPaste(bool into) {
 					if (!_CanPaste(t, into)) return;
 					int le = level; if (into) le++;
-					m[le == 3 ? (into ? "Paste as menu item" : "Paste menu item") : le == 2 ? "Paste snippet" : "Paste context"] = o => _AddNewOrPaste(true, t, into);
+					m[le == 1 ? "Paste snippet" : into ? "Paste as menu item" : "Paste menu item"] = o => _AddNewOrPaste(true, t, into);
 				}
 				
-				void _MiDelete() {
-					m.Submenu("Delete", m => {
-						m[level == 1 ? $"Delete context '{t.text}' and all its snippets" : $"Delete {(level == 2 ? "snippet" : "menu item")} '{t.text}'"] = o => _Remove(t);
-					});
-				}
-				
-				if (level <= 1) {
+				if (level == 0) {
 					m.Separator();
 					m["Sort snippets"] = o => _Sort(t);
 				}
-			} else if (level > 1) {
+			} else if (level > 0) {
 				m["Copy"] = o => _Copy(t);
 			}
 			
@@ -283,7 +236,7 @@ class DSnippets : KDialogWindow {
 	
 	bool _CanPaste(_Item t, bool into) {
 		int level = t.Level + (into ? 1 : 0), clipLevel = _clip?.Level ?? -1;
-		if (clipLevel != level && !(level == 3 && clipLevel == 2 && !_clip.IsFolder)) return false;
+		if (clipLevel != level && !(level == 2 && clipLevel == 1 && !_clip.IsFolder)) return false;
 		if (_clip == t.Parent || (_cut && _clip == t)) return false;
 		return true;
 	}
@@ -296,21 +249,20 @@ class DSnippets : KDialogWindow {
 		if (paste) {
 			if (_cut) {
 				t = _clip;
-				if (level == 3 && t.Level == 2) {
+				if (level == 2 && t.Level == 1) {
 					if (!t.more.NE()) print.it($"{t.text} Info+ was:\r\n{t.more}");
 					if (!t.info.NE()) t.text = t.info;
 					t.info = t.more = null;
 				}
 				_Remove(t, cut: true);
 			} else {
-				Debug.Assert(level > 1);
 				t = new _Item(this, level, _clip.text);
 				t.code = _clip.code;
-				if (level == 2) {
+				if (level == 1) {
 					t.info = _clip.info;
 					t.more = _clip.more;
 				} else {
-					if (_clip.Level == 2 && !_clip.info.NE()) t.text = _clip.info;
+					if (_clip.Level == 1 && !_clip.info.NE()) t.text = _clip.info;
 				}
 				t.print_ = _clip.print_;
 				t.using_ = _clip.using_;
@@ -318,16 +270,16 @@ class DSnippets : KDialogWindow {
 				t.var_ = _clip.var_;
 				t.isChecked = _clip.isChecked;
 				foreach (var v in _clip.Children()) {
-					var c = new _Item(this, 3, v.text) { code = v.code, print_ = v.print_, using_ = v.using_, meta_ = v.meta_, var_ = v.var_ };
+					var c = new _Item(this, 2, v.text) { code = v.code, print_ = v.print_, using_ = v.using_, meta_ = v.meta_, var_ = v.var_ };
 					t.AddChild(c);
 				}
 			}
 		} else {
-			t = new _Item(this, level, level == 1 ? "Any" : level == 2 ? "Snippet" : "");
-			if (level == 2) t.isChecked = true;
+			t = new _Item(this, level, level == 1 ? "Snippet" : "");
+			t.isChecked = level == 1;
 		}
 		
-		if (level == 3 && into && !anchor.IsFolder) { //convert anchor to menu
+		if (level == 2 && into && !anchor.IsFolder) { //convert anchor to menu
 			var u = new _Item(this, level, anchor.info?.TrimEnd('.')) { code = anchor.code };
 			anchor.code = null;
 			anchor.AddChild(u);
@@ -342,11 +294,9 @@ class DSnippets : KDialogWindow {
 		} else {
 			if (into) _tv.Expand(anchor, true);
 			_SelectAndOpen(t);
-			var c = level == 2 ? _tName : level == 3 ? _tInfo : null;
-			if (c != null) {
-				c.Focus();
-				if (paste) c.SelectAll();
-			}
+			var c = level == 1 ? _tName : _tInfo;
+			c.Focus();
+			if (paste) c.Select(0, t.text.Length - (t.text.Ends("Snippet") ? 7 : t.text.Ends("Surround") ? 8 : 0));
 		}
 	}
 	
@@ -361,7 +311,7 @@ class DSnippets : KDialogWindow {
 		var p = t.Parent;
 		t.Remove();
 		
-		if (p.Level == 2 && p.Count == 1) { //convert p to non-menu
+		if (p.Level == 1 && p.Count == 1) { //convert p to non-menu
 			var u = p.FirstChild;
 			p.code = u.code;
 			p.info ??= u.text;
@@ -375,7 +325,7 @@ class DSnippets : KDialogWindow {
 		
 		if (!cut) _tv.SetItems(_files, true);
 		
-		if (p.Level == 2 && !cut) {
+		if (p.Level == 1 && !cut) {
 			_SelectAndOpen(p);
 		} else if (_ti == t) {
 			_SelectNone();
@@ -386,7 +336,6 @@ class DSnippets : KDialogWindow {
 		_ti = null;
 		_clip = null;
 		_panelFile.Visibility = Visibility.Collapsed;
-		_panelContext.Visibility = Visibility.Collapsed;
 		_panelSnippet.Visibility = Visibility.Collapsed;
 	}
 	
@@ -397,14 +346,10 @@ class DSnippets : KDialogWindow {
 	//}
 	
 	void _Sort(_Item t) {
-		if (t.Level == 1) _Context(t); else if (t.Level == 0) foreach (var v in t.Children()) _Context(v);
+		var a = t.Children().OrderBy(o => o.text, StringComparer.OrdinalIgnoreCase).ToArray();
+		foreach (var v in a) v.Remove();
+		foreach (var v in a) t.AddChild(v);
 		_tv.SetItems(_files, modified: true);
-		
-		void _Context(_Item t) {
-			var a = t.Children().OrderBy(o => o.text, StringComparer.OrdinalIgnoreCase).ToArray();
-			foreach (var v in a) v.Remove();
-			foreach (var v in a) t.AddChild(v);
-		}
 	}
 	
 	void _InsertVar(string s) {
@@ -473,18 +418,11 @@ class DSnippets : KDialogWindow {
 	}
 	
 	void _FillTree() {
-		string snippetsDir, defSnippets;
-#if SCRIPT
-		snippetsDir = @"C:\Users\G\Documents\LibreAutomate\.settings";
-		defSnippets = @"C:\code\au\_\Default\Snippets.xml";
-#else
-		snippetsDir = AppSettings.DirBS;
-		defSnippets = CiSnippets.DefaultFile;
+		string snippetsDir = AppSettings.DirBS, defSnippets = CiSnippets.DefaultFile;
 		if (!filesystem.exists(CiSnippets.CustomFile).File) {
-			try { filesystem.saveText(CiSnippets.CustomFile, "<snippets><group context=\"Function\"/></snippets>"); }
+			try { filesystem.saveText(CiSnippets.CustomFile, "<snippets></snippets>"); }
 			catch { }
 		}
-#endif
 		_files = new();
 		
 		foreach (var f in filesystem.enumFiles(snippetsDir, "*Snippets.xml")) _File(f.FullPath, f.Name, false);
@@ -495,38 +433,36 @@ class DSnippets : KDialogWindow {
 		void _File(string path, string name, bool isDefault) {
 			try {
 				var hidden = _GetHiddenSnippets(name);
-				var xf = XmlUtil.LoadElem(path);
-				bool oldFormat = xf.Name == "Au.Snippets"; //"snippets" if new format
+				var xf = CiSnippets.LoadSnippetsFile_(path);
 				var tf = new _Item(this, 0, name) { filePath = path };
 				if (hidden == null || !hidden.Contains("")) tf.isChecked = true;
 				_files.Add(tf);
-				foreach (var xg in xf.Elements("group")) {
-					if (!xg.Attr(out string context, "context")) continue;
-					if (context.Contains("Arrow")) context = string.Join('|', context.Split('|').Where(o => o != "Arrow")).NullIfEmpty_() ?? "Function"; //fbc
-					var tg = new _Item(this, 1, context);
-					tf.AddChild(tg);
-					var e = xg.Elements("snippet");
-					if (isDefault) e = e.OrderBy(o => o.Attr("name")); //rejected: order in all files. Instead there is a context menu command "Sort".
-					foreach (var xs in e) {
-						if (oldFormat) CiSnippets.ConvertOldFormat_(xs);
-						var ts = new _Item(this, 2, xs.Attr("name")) {
-							info = xs.Attr("info"),
-							more = xs.Attr("more"),
-							print_ = xs.Attr("print"),
-							using_ = xs.Attr("using"),
-							meta_ = xs.Attr("meta"),
-							var_ = xs.Attr("var")
-						};
-						if (hidden == null || !hidden.Contains(ts.text)) ts.isChecked = true;
-						tg.AddChild(ts);
-						if (xs.HasElements) {
-							foreach (var xi in xs.Elements("list")) {
-								var ti = new _Item(this, 3, xi.Attr("item")) { code = xi.Value, print_ = xi.Attr("print"), using_ = xi.Attr("using"), meta_ = xi.Attr("meta"), var_ = xi.Attr("var") };
-								ts.AddChild(ti);
-							}
-						} else {
-							ts.code = xs.Value;
+				var e = xf.Elements("snippet");
+				if (isDefault) e = e.OrderBy(o => o.Attr("name")); //rejected: order in all files. Instead there is a context menu command "Sort".
+				foreach (var xs in e) {
+					var ts = new _Item(this, 1, xs.Attr("name")) {
+						info = xs.Attr("info"),
+						more = xs.Attr("more"),
+						print_ = xs.Attr("print"),
+						using_ = xs.Attr("using"),
+						meta_ = xs.Attr("meta"),
+						var_ = xs.Attr("var")
+					};
+					if (hidden == null || !hidden.Contains(ts.text)) ts.isChecked = true;
+					tf.AddChild(ts);
+					if (xs.HasElements) {
+						foreach (var xi in xs.Elements("list")) {
+							var ti = new _Item(this, 2, xi.Attr("item")) {
+								code = xi.Value,
+								print_ = xi.Attr("print"),
+								using_ = xi.Attr("using"),
+								meta_ = xi.Attr("meta"),
+								var_ = xi.Attr("var")
+							};
+							ts.AddChild(ti);
 						}
+					} else {
+						ts.code = xs.Value;
 					}
 				}
 				tf.fileXml = _ToXml(tf).ToString(); //to detect when need to save
@@ -537,16 +473,15 @@ class DSnippets : KDialogWindow {
 	
 	XElement _ToXml(_Item f) {
 		var xf = new XElement("snippets");
-		foreach (var g in f.Children()) {
-			var xg = new XElement("group", new XAttribute("context", g.text)); xf.Add(xg);
-			foreach (var s in g.Children()) {
-				var xs = new XElement("snippet", new XAttribute("name", s.text ?? ""), new XAttribute("info", s.info ?? "")); xg.Add(xs);
-				if (s.more != null) xs.SetAttributeValue("more", s.more);
-				_Snippet(s, xs, false);
-				foreach (var i in s.Children()) {
-					var xi = new XElement("list", new XAttribute("item", i.text ?? "")); xs.Add(xi);
-					_Snippet(i, xi, true);
-				}
+		foreach (var s in f.Children()) {
+			var xs = new XElement("snippet", new XAttribute("name", s.text ?? ""), new XAttribute("info", s.info ?? ""));
+			xf.Add(xs);
+			if (s.more != null) xs.SetAttributeValue("more", s.more);
+			_Snippet(s, xs, false);
+			foreach (var i in s.Children()) {
+				var xi = new XElement("list", new XAttribute("item", i.text ?? ""));
+				xs.Add(xi);
+				_Snippet(i, xi, true);
 			}
 		}
 		return xf;
@@ -574,7 +509,7 @@ class DSnippets : KDialogWindow {
 					filesystem.saveText(f.filePath, xml);
 				}
 			}
-			var hs = f.Descendants().Where(o => o.Level == 2 && !o.isChecked).Select(o => o.text).ToHashSet();
+			var hs = f.Descendants().Where(o => o.Level == 1 && !o.isChecked).Select(o => o.text).ToHashSet();
 			if (!f.isChecked) hs.Add("");
 			_SaveHiddenSnippets(f.text, hs);
 		}
@@ -592,16 +527,16 @@ class DSnippets : KDialogWindow {
 	
 	class _Item : TreeBase<_Item>, ITreeViewItem {
 		DSnippets _d;
-		public string text; //displayed text. Depends on level: 0 filename or "default", 1 context, 2 snippet name, 3 snippet item info
+		public string text; //displayed text. Depends on level: 0 filename or "default", 1 snippet name, 2 snippet item info
 		public string filePath, fileXml; //level 0
-		public string code, info, more, print_, using_, meta_, var_; //level 2 or 3
+		public string code, info, more, print_, using_, meta_, var_; //level 1 or 2
 		public bool isChecked;
 		bool _isExpanded;
 		
 		public _Item(DSnippets d, int level, string text) {
 			_d = d;
 			this.text = text;
-			_isExpanded = level <= 1;
+			_isExpanded = level == 0;
 		}
 		
 		public bool IsReadonly => RootAncestor.text == "default";
@@ -620,19 +555,14 @@ class DSnippets : KDialogWindow {
 		
 		object ITreeViewItem.Image => Level switch {
 			0 => "*Modern.PageXml" + Menus.black,
-			1 => EdResources.FolderIcon(_isExpanded),
-			2 => IsFolder ? "*Codicons.SymbolSnippet #00A000|#00E000" : "*Codicons.SymbolSnippet #0060F0|#80C0FF",
-			_ => "*Material.Asterisk #0060F0|#80C0FF",
+			1 => IsFolder ? s_snippetMenuIcon : "*Codicons.SymbolSnippet" + Menus.blue,
+			_ => "*Material.Asterisk @12" + Menus.blue,
 		};
+		static string[] s_snippetMenuIcon = ["*Codicons.SymbolSnippet" + Menus.blue, "*Material.Asterisk @8" + Menus.blue];
 		
-		TVCheck ITreeViewItem.CheckState => Level is not (0 or 2) ? TVCheck.None : isChecked ? TVCheck.Checked : TVCheck.Unchecked;
+		TVCheck ITreeViewItem.CheckState => Level == 2 ? TVCheck.None : isChecked ? TVCheck.Checked : TVCheck.Unchecked;
 		
-		int ITreeViewItem.Color(TVColorInfo ci) => (Level == 1 && this != _d._tv.SelectedItem) ? 0xC0E0A0 : -1;
-		
-		int ITreeViewItem.TextColor(TVColorInfo ci)
-			=> this == _d._clip ? (_d._cut ? 0xFF0000 : 0x00A000)
-			: Level == 1 ? 0
-			: -1;
+		int ITreeViewItem.TextColor(TVColorInfo ci) => this == _d._clip ? (_d._cut ? 0xFF0000 : 0x00A000) : -1;
 		
 		#endregion
 	}
@@ -650,13 +580,13 @@ class DSnippets : KDialogWindow {
 		if (_tv.FocusedItem is _Item t) {
 			switch (k) {
 			case (0, Key.Delete):
-				if (!t.IsReadonly && t.Level >= 2 && dialog.showOkCancel("Delete?", t.text, owner: this)) _Remove(t);
+				if (!t.IsReadonly && t.Level > 0 && dialog.showOkCancel("Delete?", t.text, owner: this)) _Remove(t);
 				break;
 			case (ModifierKeys.Control, Key.X):
-				if (!t.IsReadonly && t.Level >= 1) _Copy(t, true);
+				if (!t.IsReadonly && t.Level > 0) _Copy(t, true);
 				break;
 			case (ModifierKeys.Control, Key.C):
-				if (t.Level >= 2) _Copy(t);
+				if (t.Level > 0) _Copy(t);
 				break;
 			case (ModifierKeys.Control, Key.V):
 				if (!t.IsReadonly && _clip != null) {
@@ -682,7 +612,7 @@ class DSnippets : KDialogWindow {
 	
 	void _SaveImported(XElement x) {
 		string dir = AppSettings.DirBS, file = null;
-		for (int i = 1; ; i++) {
+		for (int i = 1; ; i++) { //unique filename
 			file = AppSettings.DirBS + "Imported" + i + " snippets.xml";
 			if (!filesystem.exists(file)) {
 				x.Save(file);
@@ -734,7 +664,7 @@ class DSnippets : KDialogWindow {
 				if (xSnippet.Attr("Format") is string format && !format.Starts("1.")) { print.warning($"Snippet format {format} not supported."); continue; }
 				var xs = xSnippet.Element(ns + "Snippet");
 				var s = xs.Elem(ns + "Code", "Language", "csharp")?.Value;
-				if (s.NE()) continue;
+				if (_ImportSkip(s)) continue;
 				
 				List<(string id, string def)> ad = null;
 				if (xs.Element(ns + "Declarations") is { } xDecls) {
@@ -786,6 +716,7 @@ class DSnippets : KDialogWindow {
 			try {
 				var j = jSnippet.Value.AsObject();
 				var code = _ToString(j["body"]);
+				if (_ImportSkip(code)) continue;
 				var more = _ToString(j["description"]);
 				var n = j["prefix"];
 				if (n is JsonArray ap) {
@@ -809,71 +740,15 @@ class DSnippets : KDialogWindow {
 		return xRoot;
 	}
 	
+	static bool _ImportSkip(string code) => code.NE() || 0 != code.Starts(false, "<", "Microsoft Visual Studio Solution File", "@"); //project or solution file, XML, razor
+	
 	static XElement _ImportAddXElement(XElement xRoot, string code, string namePrefix, string info, string more = null) {
-		var context = DetectContext_(code);
-		var xContext = xRoot.Elem("group", "context", context);
-		if (xContext == null) { xRoot.Add(xContext = new XElement("group", new XAttribute("context", context))); }
-		
 		var x = new XElement("snippet", "\n", new XCData(code ?? ""), "\n    ");
 		x.SetAttributeValue("name", namePrefix.RxReplace(@"[^\p{Xan}_]+", "_") + "Snippet");
 		x.SetAttributeValue("info", info);
 		if (!more.NE() && more != info) x.SetAttributeValue("more", more);
-		xContext.Add(x);
+		xRoot.Add(x);
 		return x;
-	}
-	
-	internal static string DetectContext_(string code, bool debug = false) {
-		try {
-			if (0 != code.Starts(false, "<", "Microsoft Visual Studio Solution File", "@")) return "None"; //project or solution file, XML, razor
-			
-			code = code.RxReplace(@"\$(?|(TM_FILENAME_BASE|RANDOM)\b|\{((?1))\})", "$1");
-			code = code.RxReplace(@"\$(?|([1-9]\d*)(?!\d)|\{((?1))\})", "i");
-			code = code.RxReplace(@"\$(?:\{[A-Z_]+\}|[A-Z_]+\b|0|\{0\})", "");
-			code = code.RxReplace(@"\$\{\d+:(.*?)\}", "$1");
-			
-			if (debug) print.it(code);//TODO
-			
-			var cu = CiUtil.GetSyntaxTree(code);
-			if (cu.Usings.Any() || cu.Externs.Any() || cu.AttributeLists.Any()) return "Namespace";
-			if (!cu.Members.Any()) {
-				if (cu.ContainsDirectives) return "Any|Line";
-				if (code.Starts("/// ")) return "Namespace|Type|Line";
-				return "Any";
-			}
-			if (cu.Members.Any(SyntaxKind.GlobalStatement)) {
-				if (!cu.Members.All(o => o is GlobalStatementSyntax)) {
-					if (cu.Members[0] is GlobalStatementSyntax) return "Namespace"; //TLS + types
-					return "Function";
-				}
-				foreach (GlobalStatementSyntax gs in cu.Members) {
-					var stat = gs.Statement;
-					if (stat is LocalFunctionStatementSyntax) { //can be local or member function
-						if (_TryInClass()) return "Type"; //"The modifier 'modifier' is not valid for this item" (eg 'public void...`)
-					} else if (stat is LocalDeclarationStatementSyntax lds && !lds.Declaration.Type.IsVar) { //can be local or member variable
-					} else {
-						if (_TryInClass()) return "Type";
-						return "Function";
-					}
-				}
-				return "Type|Function";
-			} else {
-				if (cu.Members.Any(o => o is BaseNamespaceDeclarationSyntax)) return "Namespace";
-				if (cu.Members.All(o => o is BaseTypeDeclarationSyntax)) return "Namespace|Type|Line";
-				return "Type";
-			}
-			
-			bool _TryInClass() {
-				try {
-					int n1 = cu.GetDiagnostics().Count();
-					if (n1 == 0) return false;
-					var cu2 = CiUtil.GetSyntaxTree("class C{\r\n" + code + "\r\n}");
-					int n2 = cu2.GetDiagnostics().Count();
-					return n2 < n1;
-				}
-				catch { return false; }
-			}
-		}
-		catch { return "Any"; }
 	}
 	
 	#endregion
