@@ -420,12 +420,10 @@ class CiAutocorrect {
 			Debug_.PrintIf(nodeStat.ContainsSkippedText); //SHOULDDO: test, maybe it helps to detect code incorrectly interpreted by Roslyn
 			if (nodeStat.GetDiagnostics().Any(o => o.Id is "CS1513" or "CS1026")) return false; //"} expected" or ") expected". Eg in `timer.after(1, _=>{print.it(1));` after `(1)`.
 			if (lastToken.IsMissing) {
-				cd.sci.aaaGoToPos(true, lastToken.GetPreviousToken().Span.End);
-				cd.sci.aaaReplaceSel(";");
+				_InsertNodeCompletionTextWithAutoformat(cd, nodeStat, ";", lastToken.GetPreviousToken().Span.End);
 			} else {
 				cd.sci.aaaGoToPos(true, lastToken.SpanStart + 1);
 			}
-			_AutoFormat(nodeStat, cd);
 		} else return false;
 		
 		return true;
@@ -605,14 +603,7 @@ class CiAutocorrect {
 					s = (needSemicolon ? ";" : ",") + "\r\n" + sInd;
 				}
 				
-				if (App.Settings.ci_formatAuto) {
-					int from = node.GetRealFullSpan().Start, to = pos;
-					var sf = ModifyCode.Format(cd, ref from, ref to, ref pos, ref pos);
-					if (sf != null) { cd.sci.aaaReplaceRange(true, from, to, sf + s); goto g1; }
-				}
-				doc.aaaInsertText(true, pos, s);
-				g1: doc.aaaGoToPos(true, pos + s.Length - (needBraces ? 3 + sInd.Length : 0));
-				
+				_InsertNodeCompletionTextWithAutoformat(cd, node, s, pos, needBraces ? 3 + sInd.Length : 0);
 				return true;
 			} else {
 				doc.aaaCurrentPos16 = pos;
@@ -875,6 +866,8 @@ class CiAutocorrect {
 	}
 	
 	static void _AutoFormat(int from, int to, CodeInfo.Context cd) {
+		Debug.Assert(App.Settings.ci_formatAuto);
+		Debug.Assert(cd.code == cd.sci.aaaText);
 		//CiUtil.DebugHiliteRange(from, to); wait.doEvents(); 500.ms(); CiUtil.DebugHiliteRange(0, 0);
 		
 		int pos = cd.sci.aaaCurrentPos16;
@@ -959,6 +952,26 @@ class CiAutocorrect {
 	/// <param name="node">Parent node of <c>)</c> token.</param>
 	/// <returns></returns>
 	static bool _IsSwitchCast(SyntaxNode node) => node is CastExpressionSyntax ce && ce.OpenParenToken.GetPreviousToken() is { RawKind: (int)SyntaxKind.SwitchKeyword, Parent: SwitchStatementSyntax };
+	
+	/// <summary>
+	/// Inserts text after node, autoformats node if need, and sets final cursor position.
+	/// Used for statement completion on Enter or ';'.
+	/// Uses single text modification operation (insert or replace).
+	/// </summary>
+	/// <param name="cd"></param>
+	/// <param name="node">Node to format.</param>
+	/// <param name="sInsert">Text to insert. Eg ";" or " {  }". Does not format it.</param>
+	/// <param name="pos">The end of the span of the last normal token of the node. Formats until it.</param>
+	/// <param name="finalPosMinus">Move the final caret position from the end of inserted text back by this count chars.</param>
+	static void _InsertNodeCompletionTextWithAutoformat(CodeInfo.Context cd, SyntaxNode node, string sInsert, int pos, int finalPosMinus = 0) {
+		if (App.Settings.ci_formatAuto) {
+			int from = node.GetRealFullSpan().Start, to = pos;
+			var sf = ModifyCode.Format(cd, ref from, ref to, ref pos, ref pos);
+			if (sf != null) { cd.sci.aaaReplaceRange(true, from, to, sf + sInsert); goto g1; }
+		}
+		cd.sci.aaaInsertText(true, pos, sInsert);
+		g1: cd.sci.aaaGoToPos(true, pos + sInsert.Length - finalPosMinus);
+	}
 	
 	#endregion
 }

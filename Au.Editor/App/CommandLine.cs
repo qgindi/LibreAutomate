@@ -218,10 +218,23 @@ static class CommandLine {
 			TriggersAndToolbars.OnDisableTriggers();
 			break;
 		case 30: //script.debug()
-			if (!App.Wmain.IsVisible) App.ShowWindow(); else if (!App.Hmain.IsActive) { App.Hmain.TaskbarButton.Flash(3); /*timer.after(10000, _ => App.Hmain.TaskbarButton.Flash(0));*/ }
-			return Panels.Debug.Attach((int)lparam) ? 1 : 0;
+			return _ScriptDebug((int)lparam);
 		}
 		return 0;
+		
+		static nint _ScriptDebug(int processId) {
+			if (processId == process.thisProcessId) { //a process can't debug itself
+#if IDE_LA //to debug this second LA process use the primary LA process
+				var w = wnd.findFast(null, ScriptEditor.c_msgWndClassName, true);
+				if (w == MsgWnd) w = wnd.findFast(null, ScriptEditor.c_msgWndClassName, true, w);
+				return w.Send(Api.WM_USER, 30, processId);
+#else
+				return 0;
+#endif
+			}
+			if (!App.Wmain.IsVisible) App.ShowWindow(); else if (!App.Hmain.IsActive) { App.Hmain.TaskbarButton.Flash(3); /*timer.after(10000, _ => App.Hmain.TaskbarButton.Flash(0));*/ }
+			return Panels.Debug.Attach(processId) ? 1 : 0;
+		}
 	}
 	
 	static nint _WmCopyData(nint wparam, nint lparam) {
