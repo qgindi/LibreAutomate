@@ -16,6 +16,9 @@ class CiQuickInfo {
 		if (isInToken) {
 			//print.it(tok.Kind());
 			
+			//CONSIDER: if over text like `0x123456` or `#123456` or `blue`, and it is a token or in a string, display quick info popup with the color (text and background). And add link "Edit color".
+			//	But problem: `0x123456` can be RGB or BGR. Maybe then display both.
+			
 			//ignore literals
 			if (cd.code[tspan.Start] is (>= '0' and <= '9') or '\'' or '"' or '@' or '$' or '{') return null;
 			var tk = tok.Kind(); if (tk is SyntaxKind.InterpolatedStringTextToken or SyntaxKind.TrueKeyword or SyntaxKind.FalseKeyword) return null;

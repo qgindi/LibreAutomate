@@ -337,7 +337,7 @@ public class ActionTriggers {
 
 		void _StartStopAll(bool start) {
 			foreach (var t in _t) {
-				if (t?.HasTriggers ?? false) t.StartStop(start);
+				if (t?.HasTriggers == true) t.StartStop(start);
 			}
 		}
 	}
@@ -594,7 +594,7 @@ interface ITriggers {
 	bool HasTriggers { get; }
 
 	/// <summary>
-	/// Optionally start/stop trigger engine (hooks etc).
+	/// Optionally start/stop the trigger engine (hooks etc).
 	/// </summary>
 	/// <param name="start"></param>
 	void StartStop(bool start);

@@ -52,7 +52,7 @@ class PanelEdit {
 	public bool Open(FileNode f, bool newFile, bool? focusEditor, bool noTemplate) {
 		Debug.Assert(!App.Model.IsAlien(f));
 		
-		if (f == _activeDoc?.FN) return true;
+		if (f == _activeDoc?.EFile) return true;
 		
 		//print.it(focusEditor, new StackTrace(true));
 		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.AaWnd.IsFocused ?? false));
@@ -106,7 +106,7 @@ class PanelEdit {
 			App.Timer025sWhenVisible += _Timer;
 			void _Timer() {
 				//print.it("timer");
-				if (--count > 0 && f == _activeDoc?.FN && Panels.Files.TreeControl.IsFocused) {
+				if (--count > 0 && f == _activeDoc?.EFile && Panels.Files.TreeControl.IsFocused) {
 					if (wnd.fromMouse() != doc.AaWnd
 						|| !Panels.Files.TreeControl.IsKeyboardFocused //editing item label
 						) return;
@@ -130,7 +130,7 @@ class PanelEdit {
 	public void Close(FileNode f) {
 		Debug.Assert(f != null);
 		SciCode doc;
-		if (f == _activeDoc?.FN) {
+		if (f == _activeDoc?.EFile) {
 			_activeDoc.ETempRanges_HidingOrClosingActiveDoc_();
 			App.Model.Save.TextNowIfNeed(closingDoc: true);
 			doc = _activeDoc;
@@ -150,7 +150,7 @@ class PanelEdit {
 		if (doc.IsFocused) doc.IsEnabled = false; //prevent focusing the scintilla control after hiding/parking
 		P.Children.Remove(doc);
 		//CodeInfo.FileClosed(doc);
-		doc.FN.OpenDoc = null;
+		doc.EFile.OpenDoc = null;
 		doc.Dispose();
 	}
 	
@@ -186,7 +186,7 @@ class PanelEdit {
 	
 	internal void OnAppActivated_() {
 		foreach (var doc in _docs) {
-			doc.FN._CheckModifiedExternally(doc);
+			doc.EFile._CheckModifiedExternally(doc);
 		}
 	}
 	

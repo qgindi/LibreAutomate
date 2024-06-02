@@ -24,7 +24,20 @@ public enum TWFlags : byte {
 /// </summary>
 /// <remarks>
 /// Cloaked windows are considered invisible. See <see cref="wnd.IsCloaked"/>.
+///
+/// The "active" events don't occur if/while the activated window is invisible. To catch invisible windows too, use a <see cref="WinEventHook"/> instead of a trigger. See example.
 /// </remarks>
+/// <example>
+/// How to use a hook instaed of a window trigger. This code can be in the same file as your window triggers.
+/// <code><![CDATA[
+/// new WinEventHook(EEvent.SYSTEM_FOREGROUND, 0, k => {
+/// 	print.it(k.w);
+/// 	if (k.w.IsMatch("* Name", "classname")) { print.it("fast code can be here", k.w); };
+/// 	//if (k.w.IsMatch("* Name", "classname")) run.thread(() => { print.it("slower code can be here", k.w); });
+/// 	//if (k.w.IsMatch("* Name", "classname")) script.run("large code.cs", k.w.Handle.ToS());
+/// });
+/// ]]></code>
+/// </example>
 public enum TWEvent {
 	/// <summary>
 	/// When the specified window becomes active (each time).
@@ -201,12 +214,9 @@ public class WindowTrigger : ActionTrigger {
 /// </example>
 public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	ActionTriggers _triggers;
-	bool _win10, _win8;
 
 	internal WindowTriggers(ActionTriggers triggers) {
 		_triggers = triggers;
-		_win10 = osVersion.minWin10;
-		_win8 = osVersion.minWin8;
 	}
 
 	/// <summary>
@@ -307,7 +317,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 
 			var ah = new EEvent[5];
 			ah[0] = EEvent.SYSTEM_FOREGROUND;
-			if (_win8) {
+			if (osVersion.minWin8) {
 				if (0 != (_allEvents & TWLater.Uncloaked)) ah[1] = EEvent.OBJECT_UNCLOAKED;
 				if (0 != (_allEvents & TWLater.Cloaked)) ah[2] = EEvent.OBJECT_CLOAKED;
 			}
@@ -325,7 +335,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 				if (w.IsVisible) {
 					if (_usesVisibleArray) _aVisible.Add(w);
 					//skip empty winstore hosts that later probably will be used as new windows. Speed: ~100 mcs, first time ~10 ms.
-					if (_win10 && w.HasExStyle(WSE.NOREDIRECTIONBITMAP) && w.IsCloaked && w.ClassNameIs("ApplicationFrameWindow")) {
+					if (osVersion.minWin10 && w.HasExStyle(WSE.NOREDIRECTIONBITMAP) && w.IsCloaked && w.ClassNameIs("ApplicationFrameWindow")) {
 						//is it a window in an inactive virtual desktop? In both cases it does not have a child Windows.UI.Core.CoreWindow.
 						dm ??= new Api.VirtualDesktopManager() as Api.IVirtualDesktopManager;
 						if (0 == dm.GetWindowDesktopId(w.Get.RootOwnerOrThis(), out var guid) && guid == default) {

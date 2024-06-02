@@ -324,7 +324,7 @@ public unsafe class elmFinder {
 	/// <inheritdoc cref="Find()" path="/exception"/>
 	public elm Wait(Seconds timeout) => Find_(_elm != null, _wnd, _elm, timeout) ? Result : null;
 
-	//TODO: public bool WaitNot(Seconds timeout) => wait.until(timeout, () => !Exists());
+	//CONSIDER: public bool WaitNot(Seconds timeout) => wait.until(timeout, () => !Exists());
 
 	internal bool Find_(bool inElm, wnd w, elm eParent, Seconds? waitS = null, bool isNext = false, bool fromFindAll = false) {
 		if (_flags.Has(_EFFlags_Empty) && !fromFindAll) throw new InvalidOperationException();

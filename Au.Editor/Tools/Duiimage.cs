@@ -326,7 +326,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 
 		string also = null;
 		if (findAll) {
-			also = "o => { all.Add(o); return IFAlso.OkFindMore; }";
+			also = "o => { a.Add(o); return IFAlso.OkFindMore; }";
 		} else if (skipC.GetText(out var skip)) {
 			also = "o => o.Skip(" + skip + ")";
 		}
@@ -346,7 +346,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		}
 
 		if (!forTest) {
-			if (findAll) bb.AppendLine("var all = new List<uiimage>();");
+			if (findAll) bb.AppendLine("var a = new List<uiimage>();");
 			if (waitNot) {
 				if (!orThrow && notTimeout) bb.Append("bool ok = ");
 			} else if (!finder) {
@@ -361,7 +361,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 					_ => null
 				};
 				if (findAll) {
-					b.Append("\r\nforeach(var im in all) { ");
+					b.Append("\r\nforeach(var im in a) { ");
 					if (mouse != null) b.Append(mouse).Append(" 250.ms(); ");
 					b.Append('}');
 				} else {
@@ -488,7 +488,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			InsertCode.Statements(s);
+			InsertCode.Statements(s, ICSFlags.MakeVarName1);
 			_close = true;
 			_bInsert.Content = "Close";
 			_bInsert.MouseLeave += (_, _) => {

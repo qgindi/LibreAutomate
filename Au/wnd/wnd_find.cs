@@ -82,10 +82,10 @@ namespace Au {
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Find();
-
+		
 		//rejected: single overload with last parameter double? wait.
 		//	Then in scripts almost always would need eg ' , wait: 1'. Or would need ', wait: 0' just for 'exception if not found'.
-
+		
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>. Can wait and throw <b>NotFoundException</b>.
 		/// </summary>
@@ -100,7 +100,7 @@ namespace Au {
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Find(wait);
-
+		
 		//rejected: probably most users will not understand/use it. It's easy and more clear to create and use wndFinder instances.
 		///// <summary>
 		///// Gets arguments and result of this thread's last call to <see cref="Find"/> or <see cref="FindAll"/>.
@@ -117,9 +117,9 @@ namespace Au {
 		///// </example>
 		//[field: ThreadStatic]
 		//public static wndFinder lastFind { get; set; }
-
+		
 		//CONSIDER: add property: [field: ThreadStatic] public static wnd last { get; set; }
-
+		
 		/// <summary>
 		/// Finds all matching windows.
 		/// </summary>
@@ -141,7 +141,7 @@ namespace Au {
 			//LastFind = f;
 			return a;
 		}
-
+		
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>wnd</b>.
 		/// </summary>
@@ -168,11 +168,11 @@ namespace Au {
 		public static wnd findFast(string name = null, string cn = null, bool messageOnly = false, wnd wAfter = default) {
 			return Api.FindWindowEx(messageOnly ? SpecHWND.MESSAGE : default, wAfter, cn, name);
 		}
-
+		
 		internal struct Cached_ {
 			wnd _w;
 			long _time;
-
+			
 			/// <summary>
 			/// Calls/returns <see cref="findFast"/> and stores found <b>wnd</b> and time. Returns the cached <b>wnd</b> if called frequently and it's still valid.
 			/// </summary>
@@ -188,7 +188,7 @@ namespace Au {
 				_time = t;
 				return _w;
 			}
-
+			
 			/// <summary>
 			/// Calls/returns callback <i>f</i> and stores found <b>wnd</b> and time. Returns the cached <b>wnd</b> if called frequently and it's still valid.
 			/// </summary>
@@ -205,7 +205,7 @@ namespace Au {
 				return _w;
 			}
 		}
-
+		
 		/// <summary>
 		/// Finds a top-level window, like <see cref="find"/>. If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="run.it"/>.
 		/// </summary>
@@ -241,7 +241,7 @@ namespace Au {
 			}
 			return w;
 		}
-
+		
 		//What to do if activate true and the window started inactive? Activate immediately or wait, and how long?
 		//	Possible cases:
 		//		Starts inactive, but soon becomes active naturally.
@@ -259,7 +259,7 @@ namespace Au {
 			}
 			//note: exception if closed while waiting. As well as if fails to activate.
 		}
-
+		
 		/// <summary>
 		/// Opens and finds new window. Ignores old windows. Activates.
 		/// </summary>
@@ -289,9 +289,9 @@ namespace Au {
 			bool activate = true) {
 			var f = new wndFinder(name, cn);
 			var a = f.FindAll();
-
+			
 			run();
-
+			
 			var loop = new WaitLoop(timeout);
 			while (loop.Sleep()) {
 				var w = f.Find();
@@ -302,10 +302,11 @@ namespace Au {
 			}
 			return default;
 		}
-
+		
 		/// <summary>
-		/// Compares window name and other properties like <see cref="find"/> does. Returns <c>true</c> if all specified (non-<c>null</c>/default) properties match.
+		/// Compares window name and other properties like <see cref="find"/> does.
 		/// </summary>
+		/// <returns><c>true</c> if all specified (non-<c>null</c>/default) properties match.</returns>
 		/// <remarks>
 		/// Creates new <see cref="wndFinder"/> and calls <see cref="wndFinder.IsMatch"/>.
 		/// To compare single parameter, use more lightweight code. Examples: <c>if (w.Name.Like("* Notepad"))</c>, <c>if (w.ClassNameIs("CabinetWClass"))</c>.
@@ -326,8 +327,26 @@ namespace Au {
 			var f = new wndFinder(name, cn, of, flags, also, contains);
 			return f.IsMatch(this);
 		}
-
-
+		
+		/// <summary>
+		/// Compares window name and other properties like <see cref="find"/> does. Can be specified multiple windows.
+		/// </summary>
+		/// <returns>1-based index of the match, or 0 if none.</returns>
+		/// <example>
+		/// <code><![CDATA[
+		/// var w = wnd.active;
+		/// int i = w.IsMatch([new("name1", "class1"), new("name2", of: "program2")]);
+		/// print.it(i);
+		/// ]]></code>
+		/// </example>
+		public int IsMatch(ReadOnlySpan<wndFinder> windows) {
+			WFCache cache = windows.Length > 1 ? new() { CacheName = true, NoTimeout = true } : null;
+			for (int i = 0; i < windows.Length; i++) {
+				if (windows[i].IsMatch(this, cache)) return i + 1;
+			}
+			return 0;
+		}
+		
 		public partial struct getwnd {
 			/// <summary>
 			/// Gets top-level windows.
@@ -353,7 +372,7 @@ namespace Au {
 			public static wnd[] allWindows(bool onlyVisible = false, bool sortFirstVisible = false) {
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
 			}
-
+			
 			/// <summary>
 			/// Gets top-level windows ordered as in the Z order.
 			/// </summary>
@@ -369,19 +388,19 @@ namespace Au {
 				//		To fix it, wait 1 ms after the first _GetWindows if results are different than previously.
 				//Tested in stress conditions and compared with EnumWindows results. Never failed.
 				//Speed with cold CPU: ~20% faster than EnumWindows.
-
+				
 				WeakReference<List<wnd>> wr1 = t_awz.wr1, wr2 = t_awz.wr2;
 				if (wr1 == null) t_awz = (wr1 = new(null), wr2 = new(null), default);
 				if (!wr1.TryGetTarget(out var a1)) wr1.SetTarget(a1 = new(800));
 				if (!wr2.TryGetTarget(out var a2)) wr2.SetTarget(a2 = new(800));
-
+				
 				int nRetry = 0;
 				_GetWindows(a1);
-
+				
 				//the fix
 				var hash1 = _Hash(a1);
 				if (hash1 != t_awz.hash1) 1.ms();
-
+				
 				g1:
 				_GetWindows(a2);
 				if (a1.SequenceEqual(a2)) {
@@ -393,18 +412,18 @@ namespace Au {
 				1.ms();
 				nRetry++;
 				goto g1;
-
+				
 				void _GetWindows(List<wnd> a) {
 					a.Clear();
 					for (var w = wnd.getwnd.top; !w.Is0; w = w.Get.Next()) a.Add(w);
 				}
-
+				
 				Hash.MD5Result _Hash(List<wnd> a) {
 					return Hash.MD5(MemoryMarshal.AsBytes(CollectionsMarshal.AsSpan(a)));
 				}
 			}
 			[ThreadStatic] static (WeakReference<List<wnd>> wr1, WeakReference<List<wnd>> wr2, Hash.MD5Result hash1) t_awz;
-
+			
 			/// <summary>
 			/// Gets top-level windows of a thread.
 			/// </summary>
@@ -425,7 +444,7 @@ namespace Au {
 				if (threadId == 0) throw new ArgumentException("0 threadId.");
 				return Internal_.EnumWindows(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
 			}
-
+			
 			//rejected
 			///// <param name="a">Receives results. If <c>null</c>, this function creates new <b>List</b>, else clears before adding items.</param>
 			///// <remarks>This overload can be used to avoid much garbage when calling frequently.</remarks>
@@ -434,7 +453,7 @@ namespace Au {
 			//	if (threadId == 0) throw new ArgumentException("0 threadId.");
 			//	Internal_.EnumWindows2(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ??= new List<wnd>());
 			//}
-
+			
 			/// <summary>
 			/// Gets the first in Z order window of this thread.
 			/// </summary>
@@ -451,19 +470,19 @@ namespace Au {
 				return r;
 			}
 		}
-
+		
 		/// <summary>
 		/// Internal static functions.
 		/// </summary>
 		internal static partial class Internal_ {
 			internal enum EnumAPI { EnumWindows, EnumThreadWindows, EnumChildWindows, }
-
+			
 			internal static wnd[] EnumWindows(EnumAPI api,
 				bool onlyVisible, bool sortFirstVisible, wnd wParent = default, bool directChild = false, int threadId = 0) {
 				using var a = EnumWindows2(api, onlyVisible, sortFirstVisible, wParent, directChild, threadId);
 				return a.ToArray();
 			}
-
+			
 			/// <summary>
 			/// This version creates much less garbage.
 			/// The caller must dispose the returned <b>ArrayBuilder_</b>, unless list is not <c>null</c>.
@@ -474,7 +493,7 @@ namespace Au {
 				Func<wnd, object, bool> predicate = null, object predParam = default, List<wnd> list = null
 				) {
 				if (directChild && wParent == getwnd.root) { api = EnumAPI.EnumWindows; wParent = default; }
-
+				
 				ArrayBuilder_<wnd> ab = default;
 				bool disposeArray = true;
 				var d = new _EnumData { api = api, onlyVisible = onlyVisible, directChild = directChild, wParent = wParent };
@@ -490,7 +509,7 @@ namespace Au {
 						Api.EnumChildWindows(wParent, _wndEnumProc, &d);
 						break;
 					}
-
+					
 					int n = d.len;
 					if (n > 0) {
 						if (predicate != null) {
@@ -499,7 +518,7 @@ namespace Au {
 								if (predicate((wnd)d.a[i], predParam)) d.a[n++] = d.a[i];
 							}
 						}
-
+						
 						if (list != null) {
 							list.Clear();
 							if (list.Capacity < n) list.Capacity = n + n / 2;
@@ -535,7 +554,7 @@ namespace Au {
 				}
 			}
 			static Api.WNDENUMPROC _wndEnumProc = (w, p) => ((_EnumData*)p)->Proc(w);
-
+			
 			struct _EnumData {
 				public int* a;
 				public int len;
@@ -545,7 +564,7 @@ namespace Au {
 				public wnd wParent;
 				int _ownerTid;
 				bool _ownerFound;
-
+				
 				public int Proc(wnd w) {
 					if (api == EnumAPI.EnumChildWindows) {
 						if (onlyVisible && !w.IsVisibleIn_(wParent)) return 1;
@@ -563,7 +582,7 @@ namespace Au {
 					a[len++] = (int)w;
 					return 1;
 				}
-
+				
 				//note: need this in exe manifest. Else EnumWindows skips "immersive" windows if this process is not admin/uiAccess.
 				/*
 <asmv3:application>
@@ -574,7 +593,7 @@ namespace Au {
 </asmv3:application>
 				*/
 			}
-
+			
 			static bool _EnumIsVisible(wnd w, EnumAPI api, wnd wParent)
 				=> api == EnumAPI.EnumChildWindows ? w.IsVisibleIn_(wParent) : w.IsVisible;
 		}
@@ -592,7 +611,7 @@ namespace Au.Types {
 		/// Use this carefully. Always use <i>cn</i> (class name), not just <i>name</i>, to avoid finding a wrong window with the same name.
 		/// </summary>
 		HiddenToo = 1,
-
+		
 		/// <summary>
 		/// Can find cloaked windows. See <see cref="wnd.IsCloaked"/>.
 		/// Cloaked are windows hidden not in the classic way, therefore <see cref="wnd.IsVisible"/> does not detect it, but <see cref="wnd.IsCloaked"/> detects. For example, windows on inactive Windows 10 virtual desktops, ghost windows of inactive Windows Store apps, various hidden system windows.
@@ -600,7 +619,7 @@ namespace Au.Types {
 		/// </summary>
 		CloakedToo = 2,
 	}
-
+	
 	/// <summary>
 	/// Used with <see cref="wnd.find"/> and similar functions to specify an owner of the window.
 	/// Can be program name (like <c>"notepad.exe"</c>), process id (<see cref="Process"/>), thread id (<see cref="Thread"/> or <see cref="ThisThread"/>), owner window.
@@ -609,31 +628,31 @@ namespace Au.Types {
 		readonly string _s; //program
 		readonly int _i; //wnd, tid, pid
 		readonly byte _what; //0 _o, 1 owner, 2 tid, 3 pid
-
+		
 		//readonly byte _ownerLevel; //rejected. Rarely used. Can use *also* instead.
-
+		
 		WOwner(string s) => _s = s;
-
+		
 		WOwner(int i, byte what) { _i = i; _what = what; }
-
+		
 		/// <summary>Program name like <c>"notepad.exe"</c>, or <c>null</c>. See <see cref="wnd.ProgramName"/>.</summary>
 		public static implicit operator WOwner([ParamString(PSFormat.Wildex)] string program) => new(program);
-
+		
 		/// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>. Will use <see cref="wnd.IsOwnedBy(wnd, int)"/> with level 2.</summary>
 		public static implicit operator WOwner(wnd ownerWindow) => new((int)ownerWindow, 1);
-
+		
 		///// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>. Will use <see cref="wnd.IsOwnedBy(wnd, int)"/> with level 2.</summary>
 		//public static implicit operator WOwner(System.Windows.DependencyObject ownerWindow) => new((int)ownerWindow.Hwnd(), 1);
-
+		
 		/// <summary>Process id. See <see cref="wnd.ProcessId"/>.</summary>
 		public static WOwner Process(int processId) => new(processId, 3);
-
+		
 		/// <summary>Thread id. See <see cref="wnd.ThreadId"/>.</summary>
 		public static WOwner Thread(int threadId) => new(threadId, 2);
-
+		
 		/// <summary>Thread id of this thread.</summary>
 		public static WOwner ThisThread => new(Api.GetCurrentThreadId(), 2);
-
+		
 		/// <summary>
 		/// Gets program name or process id or thread id or owner window.
 		/// Other variables will be <c>null</c>/0.
@@ -662,13 +681,13 @@ namespace Au.Types {
 				break;
 			}
 		}
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if nothing was assigned to this variable.
 		/// </summary>
 		public bool IsEmpty => _what == 0 && _s == null;
 	}
-
+	
 	/// <summary>
 	/// The <i>contains</i> parameter of <see cref="wnd.find"/> and similar functions.
 	/// Specifies text, image or other object that must be in the window.
@@ -676,26 +695,26 @@ namespace Au.Types {
 	public struct WContains {
 		readonly object _o;
 		WContains(object o) => _o = o;
-
+		
 		///
 		public static implicit operator WContains(wndChildFinder f) => new(f);
-
+		
 		///
 		public static implicit operator WContains(elmFinder f) => new(f);
-
+		
 		///
 		public static implicit operator WContains(uiimageFinder f) => new(f);
-
+		
 		///
 		public static implicit operator WContains(ocrFinder f) => new(f);
-
+		
 		/// <summary>
 		/// Converts from string to <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.
 		/// See <see cref="wnd.find"/>.
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of constructor of <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.</exception>
 		public static implicit operator WContains(string s) => new(_ParseString(s));
-
+		
 		static object _ParseString(string s) {
 			if (s.NE()) return null;
 			string role = null, name = s;
@@ -714,13 +733,13 @@ namespace Au.Types {
 			}
 			return new elmFinder(role, name, flags: EFFlags.ClientArea) { ResultGetProperty = '-' };
 		}
-
+		
 		/// <summary>
 		/// Gets object stored in this variable. Can be <c>null</c>, <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.
 		/// </summary>
 		public object Value => _o;
 	}
-
+	
 	/// <summary>
 	/// Can be used with <see cref="wndFinder.IsMatch"/>.
 	/// </summary>
@@ -729,7 +748,7 @@ namespace Au.Types {
 		long _time;
 		internal string Name, Class, Program;
 		internal int Tid, Pid;
-
+		
 		/// <summary>
 		/// Cache window name.
 		/// Default: <c>false</c>.
@@ -738,12 +757,12 @@ namespace Au.Types {
 		/// Window name is not cached by default because can be changed. Window class name and program name are always cached because cannot be changed.
 		/// </remarks>
 		public bool CacheName { get; set; }
-
+		
 		/// <summary>
 		/// Don't auto-clear cached properties on timeout.
 		/// </summary>
 		public bool NoTimeout { get; set; }
-
+		
 		internal void Begin(wnd w) {
 			if (NoTimeout) {
 				if (w != _w) {
@@ -759,7 +778,7 @@ namespace Au.Types {
 				//else if(CacheName && t - _time > 100) Name = null; //no, instead let call Clear if need
 			}
 		}
-
+		
 		/// <summary>
 		/// Clears all cached properties, or only name.
 		/// </summary>
@@ -772,7 +791,7 @@ namespace Au.Types {
 			if (onlyName) Name = null;
 			else { _w = default; _time = 0; Name = Class = Program = null; Tid = Pid = 0; }
 		}
-
+		
 		/// <summary>
 		/// Match invisible and cloaked windows too, even if the flags are not set (see <see cref="WFlags"/>).
 		/// </summary>

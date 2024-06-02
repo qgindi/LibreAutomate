@@ -657,14 +657,14 @@ public static class script {
 	/// If not 0, the script task will end when this key pressed. Will call <see cref="Environment.Exit"/>.
 	/// Example: <c>exitKey: KKey.MediaStop</c>.
 	/// <para>
-	/// Recommended keys: media, volume, browser and applaunch keys. They work even when the process of the active window is admin (UAC) and this script isn't; other keys then work only with <c>Ctrl</c>, <c>Alt</c> or <c>Win</c>. In any case, the key does not work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>.
+	/// Recommended keys: media, volume, browser and applaunch keys. They work even when the process of the active window is admin (UAC) and this script isn't. In any case, the key does not work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>. Also the key does not work when at that time a modifier key is pressed by a script; it also can be dangerous because may generate a trigger or hotkey used by an app or OS.
 	/// </para>
 	/// </param>
 	/// <param name="pauseKey">
 	/// Let <see cref="pause"/> pause/resume when this key pressed. Default: <c>ScrollLock</c> (<c>Fn+S</c>, <c>Fn+K</c> or similar).
 	/// If <c>CapsLock</c>, pauses when it is toggled (even if was toggled at startup) and resumes when untoggled.
 	/// <para>
-	/// <c>ScrollLock</c>, <c>CapsLock</c> and <c>NumLock</c> are the most reliable. Other keys don't work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>. Also other keys (maybe except keys like <c>MediaPlayPause</c>) don't work when the process of the active window is admin (UAC) and this script isn't, unless pressed with <c>Ctrl</c>, <c>Alt</c> or <c>Win</c>. For other keys the function registers all hotkey combinations with <c>Ctrl</c>, <c>Shift</c>, <c>Alt</c> and <c>Win</c>, and they can be used when the key alone does not work because of UAC.
+	/// <c>ScrollLock</c>, <c>CapsLock</c> and <c>NumLock</c> are the most reliable. Other keys have the same problems as with <i>exitKey</i>.
 	/// </para>
 	/// </param>
 	/// <param name="f_">[](xref:caller_info). Don't use. Or use like <c>f_: null</c> to disable script editing via tray icon.</param>
@@ -1092,23 +1092,29 @@ public static class script {
 	}
 	
 	static bool _RegisterKey(KKey key, int idBase) {
-		//register all mod combinations. Else does not work if script pressed a mod key at that time.
-		for (int i = 0; i < 16; i++) {
-			var k = key;
-			if (k == KKey.Pause && 0 != (i & Api.MOD_CONTROL)) k = KKey.Break; //Ctrl+Pause = Break
-			if (!Api.RegisterHotKey(s_auxWnd, idBase + i, (uint)i | Api.MOD_NOREPEAT, k)) {
-				//print.it(i, k, s_auxWnd, lastError.message);
-				if (k == KKey.Pause && i == 8) continue; //Win+Pause opens something in Windows Settings
-				while (--i >= 0) Api.UnregisterHotKey(s_auxWnd, idBase + i);
-				return false;
-				//any failed to register hotkey would be dangerous, because the user-pressed key combined with script-pressed modifiers would invoke the hotkey in its owner app
-				
-				//TODO: not good. Many keys fail because a hotkey is registered. Eg Esc, arrows, Home. Many are registered by OS with mod Win.
-				//	Maybe instead just print warning "Failed to register hotkey X. It can be dangerous... Consider using media keys etc instead.". Fail only if cannot register the key without modifiers.
-				//	Or use LL hook. Then can detect script-pressed keys. But no, it's too heavy; maybe every script will have script.setup with that key.
-			}
-		}
-		return true;
+		return Api.RegisterHotKey(s_auxWnd, idBase, Api.MOD_NOREPEAT, key);
+		
+		//rejected: try to register all mod combinations. Else does not work if the script pressed a mod key at that time.
+//		for (int i = 0; i < 16; i++) {
+//			var k = key;
+//			if (k == KKey.Pause && 0 != (i & Api.MOD_CONTROL)) k = KKey.Break; //Ctrl+Pause = Break
+//			if (!Api.RegisterHotKey(s_auxWnd, idBase + i, (uint)i | Api.MOD_NOREPEAT, k)) {
+//#if !true
+//				//print.it(i, k, s_auxWnd, lastError.message);
+//				if (k == KKey.Pause && i == 8) continue; //Win+Pause opens something in Windows Settings
+//				while (--i >= 0) Api.UnregisterHotKey(s_auxWnd, idBase + i);
+//				return false;
+//				//any failed to register hotkey would be dangerous, because the user-pressed key combined with script-pressed modifiers would invoke the hotkey in its owner app
+
+//				//Not good. Many keys fail because a hotkey with some modifiers is registered. Eg Esc, arrows, Home. Many are registered by OS with mod Win.
+//				//	Maybe instead just print warning "Failed to register hotkey X. It can be dangerous... Consider using media keys etc instead.". Fail only if cannot register the key without modifiers.
+//				//	Or use LL hook. Then can detect script-pressed keys. But no, it's too heavy; maybe every script will have script.setup with that key.
+//#else
+//				if (i == 0) return false;
+//#endif
+//			}
+//		}
+//		return true;
 	}
 	
 	#endregion

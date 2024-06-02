@@ -14,8 +14,8 @@ class CiPopupList {
 	CiCompletion _compl;
 	List<CiComplItem> _a;
 	List<CiComplItem> _av;
-	CheckBox[] _kindButtons;
-	CheckBox _groupButton;
+	KCheckBox[] _kindButtons;
+	KCheckBox _groupButton;
 	Button _unimportedButton;
 	bool _groupsEnabled;
 	List<string> _groups;
@@ -47,16 +47,14 @@ class CiPopupList {
 		var bstyle = Application.Current.FindResource(ToolBar.ButtonStyleKey) as Style;
 		
 		var kindNames = CiUtil.ItemKindNames;
-		_kindButtons = new CheckBox[kindNames.Length];
+		_kindButtons = new KCheckBox[kindNames.Length];
 		for (int i = 0; i < kindNames.Length; i++) {
 			_AddButton(_kindButtons[i] = new(), kindNames[i], CiComplItem.ImageResource((CiItemKind)i), _KindButton_Click);
 		}
 		
 		_tb.Children.Add(new Separator());
 		
-		_AddButton(_groupButton = new(), "Group by namespace or inheritance", "resources/ci/groupby.xaml", _GroupButton_Click);
-		if (App.Settings.ci_complGroup) _groupButton.IsChecked = true;
-		
+		_AddButton(_groupButton = new() { IsChecked = App.Settings.ci_complGroup }, "Group by namespace or inheritance", "resources/ci/groupby.xaml", _GroupButton_Click);
 		_AddButton(_unimportedButton = new(), "Show more types or extension methods (Ctrl+Space)", "resources/ci/expandscope.xaml", _UnimportedButton_Click);
 		
 		//var options = new Button();
@@ -69,7 +67,7 @@ class CiPopupList {
 			b.ToolTip = text;
 			AutomationProperties.SetName(b, text);
 			b.Focusable = false; //would close popup
-			if (click != null) b.Click += click;
+			if (b is KCheckBox c) c.CheckChanged += click; else b.Click += click;
 			_tb.Children.Add(b);
 		}
 		
@@ -82,7 +80,7 @@ class CiPopupList {
 			Content = _panel,
 			CloseHides = true,
 			Name = "Ci.Completion",
-			WindowName = "Au completion list",
+			WindowName = "LA completion list",
 		};
 		
 		_textPopup = new CiPopupText(CiPopupText.UsedBy.PopupList);
@@ -106,7 +104,7 @@ class CiPopupList {
 	}
 	
 	private void _GroupButton_Click(object sender, RoutedEventArgs e) {
-		_groupsEnabled = (sender as CheckBox).IsChecked == true && _groups != null;
+		_groupsEnabled = (sender as KCheckBox).IsChecked && _groups != null;
 		_SortAndSetControlItems();
 		this.SelectedItem = null;
 		_tv.Redraw(true);
@@ -171,10 +169,9 @@ class CiPopupList {
 				}
 			}
 			
-			int r = string.Compare(c1.ci.SortText, c2.ci.SortText, StringComparison.OrdinalIgnoreCase);
+			int r = CiUtil.SortComparer.Compare(c1.ci.SortText, c2.ci.SortText);
 			if (r == 0) {
-				r = CiSnippets.Compare(c1, c2);
-				//if (r == 0) r = string.Compare(c1.Text, c2.Text, StringComparison.OrdinalIgnoreCase);
+				r = CiSnippets.Compare(c1, c2); //custom snippet first
 			}
 			return r;
 		});
@@ -260,6 +257,23 @@ class CiPopupList {
 		}
 	}
 	
+	public CiComplItem SuggestedItem {
+		get => _suggestedItem;
+		set {
+			_tv.UnselectAll();
+			if (value != _suggestedItem) {
+				var old = _suggestedItem;
+				_suggestedItem = value;
+				if (value != null) {
+					_tv.EnsureVisible(value, scrollTop: true);
+					_tv.Redraw(value);
+				}
+				if (old != null) _tv.Redraw(old);
+			}
+		}
+	}
+	CiComplItem _suggestedItem;
+	
 	public bool OnCmdKey(KKey key) {
 		if (_popup.IsVisible) {
 			switch (key) {
@@ -306,6 +320,10 @@ class CiPopupList {
 		
 		public bool DrawText() {
 			var ci = _cd.item as CiComplItem;
+			
+			if (ci == _p.SuggestedItem) {
+				_cd.graphics.DrawRectangleInset(System.Drawing.Pens.DodgerBlue, _cd.rect);
+			}
 			
 			var s = _cd.item.DisplayText;
 			Range black, green;
@@ -359,11 +377,5 @@ class CiPopupList {
 				}
 			}
 		}
-		
-		//public void DrawMarginRight() {
-		//}
-		
-		//public void End() {
-		//}
 	}
 }

@@ -151,7 +151,7 @@ partial class SciCode : KScintilla {
 #if DEBUG
 		if (!(aaaCurrentPos8 >= from && (flags.Has(TempRangeFlags.LeaveIfPosNotAtEndOfRange) ? aaaCurrentPos8 == to : aaaCurrentPos8 <= to))) {
 			Debug_.Print("bad");
-			//CiUtil.HiliteRange(from, to);
+			CiUtil.DebugHiliteRange(from, to);
 		}
 #endif
 		

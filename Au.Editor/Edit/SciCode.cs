@@ -1,3 +1,5 @@
+//TODO: it seems some "go to" (maybe "found" links, or "go back") after changing text move current pos after "\r". Then cursor disappears. The same could happen with surrogates.
+	
 using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows;
@@ -11,7 +13,7 @@ partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;
 	
-	public FileNode FN => _fn;
+	public FileNode EFile => _fn;
 	
 	public override string ToString() => _fn.ToString();
 	
@@ -57,9 +59,6 @@ partial class SciCode : KScintilla {
 		if (fls.IsImage) AaInitImages = true;
 		
 		Name = "document";
-		
-		//TODO: rename all EMember and AaMember. Don't need because now coding in LA, almost never in VS.
-		//this.E
 	}
 	
 	protected override void AaOnHandleCreated() {
@@ -388,7 +387,7 @@ partial class SciCode : KScintilla {
 			Panels.Debug.AddMarginMenuItems_(this, m, line);
 		}
 #else //breakpoints and bookmarks in single menu
-		if (FN.IsCodeFile) {
+		if (EFile.IsCodeFile) {
 			Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos8);
 			Panels.Debug.AddMarginMenuItems_(this, m, line);
 			m.Separator();
@@ -459,10 +458,10 @@ partial class SciCode : KScintilla {
 	
 	//never mind: not called when zoom changes.
 	internal void ESetLineNumberMarginWidth_(bool onModified = false) {
-		int c = 3;
+		int c = 4;
 		int lines = aaaLineCount;
 		while (lines > 999) { c++; lines /= 10; }
-		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, -(_prevLineNumberMarginWidth = c), 6);
+		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, -(_prevLineNumberMarginWidth = c), 4);
 	}
 	int _prevLineNumberMarginWidth;
 	

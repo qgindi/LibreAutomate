@@ -83,7 +83,7 @@ public class KWpfMenu : ContextMenu
 	/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="folders.ThisAppImages"/>.
 	/// 
 	/// If failed to find or load image file, prints warning (<see cref="print.warning"/>).
-	/// To create Base64 string, use menu Code -> uiimage.
+	/// To create Base64 string, use menu Code > Find image.
 	/// To add an image resource in Visual Studio, use build action "Resource" for the image file.
 	/// </param>
 	/// <value>Action called on click.</value>

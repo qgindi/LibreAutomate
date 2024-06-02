@@ -354,8 +354,7 @@ partial class CiCompletion {
 				isDot = isDot,
 				unimported = unimported
 			};
-			
-			//Debug_.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>" && !r.SuggestionModeItem.ToString().NE(), r.SuggestionModeItem); //in '#if X' non-nul but empty text
+			//if (r.SuggestionModeItem is {  } l) print.it(l.DisplayText, l.InlineDescription, l.Properties, l.ProviderName, l.Tags); //the item is not useful
 			
 			//ISymbol enclosing = null;
 			//bool _IsAccessible(ISymbol symbol) {
@@ -550,7 +549,7 @@ partial class CiCompletion {
 							for (; i < d.items.Count; i++) snippetsGroup.Add(i);
 						}
 					}
-				} else if (!d.noAutoSelect && (hasNamespaces || _ProbablyInNamespace())) {
+				} else if (!d.noAutoSelect && (hasNamespaces || _OnlyCSharpKeywordsOrDirectives())) {
 					//add snippets
 					if (provider is not (CiComplProvider.Cref or CiComplProvider.XmlDoc)) {
 						int i = d.items.Count;
@@ -559,8 +558,8 @@ partial class CiCompletion {
 					}
 				}
 				
-				bool _ProbablyInNamespace()
-					=> kinds == 1u << (int)CiItemKind.Keyword && provider == CiComplProvider.Keyword && r.ItemsList.Count > 15; //only keywords
+				bool _OnlyCSharpKeywordsOrDirectives()
+					=> kinds == 1u << (int)CiItemKind.Keyword && provider == CiComplProvider.Keyword;
 			}
 			//p1.Next('+');
 			
@@ -759,7 +758,7 @@ partial class CiCompletion {
 			v.moveDown &= ~CiComplItemMoveDownBy.FilterText;
 		}
 		if (!filterText.NE()) {
-			string textLower = filterText.ToLower(), textUpper = filterText.Upper();
+			string textLower = filterText.Lower(), textUpper = filterText.Upper();
 			char c0Lower = textLower[0], c0Upper = textUpper[0];
 			foreach (var v in d.items) {
 				if (v.kind == CiItemKind.None) continue; //eg regex completion
@@ -882,8 +881,6 @@ partial class CiCompletion {
 						//	}
 						//	//foreach(var v in fi) print.it(v, v.Rules.MatchPriority, v.Rules.SelectionBehavior); //all 0, Default
 						//}
-						
-						if (_data.noAutoSelect && ci.kind != CiItemKind.Enum) ci = null;
 					}
 				} else if (filterText == "" && !_data.isDot && !_data.unimported) {
 					//Workaround for bug in new Roslyn: does not select enum when the target type is enum.
@@ -903,7 +900,8 @@ partial class CiCompletion {
 			}
 			//perf.nw('b');
 		}
-		_popupList.SelectedItem = ci;
+		if (_data.noAutoSelect && ci != null) _popupList.SuggestedItem = ci;
+		else _popupList.SelectedItem = ci;
 	}
 	//FUTURE: when typed 1-2 lowercase chars, select keyword instead of type.
 	//	Now these types are selected first (but none when typed 3 chars):
@@ -1228,13 +1226,13 @@ partial class CiCompletion {
 	public void Commit(SciCode doc, CiComplItem item) => _Commit(doc, item, default, default);
 	
 	/// <summary>
-	/// Tab, Enter, Shift+Enter, Ctrl+Enter, Ctrl+;.
+	/// Tab, Enter, Ctrl/Shift+Enter, Ctrl+;.
 	/// </summary>
 	public CiComplResult OnCmdKey_Commit(SciCode doc, KKey key) {
 		var R = CiComplResult.None;
 		if (_data != null) {
 			var ci = _popupList.SelectedItem;
-			if (ci != null) {
+			if (ci != null || (key is KKey.Tab && (ci = _popupList.SuggestedItem) != null)) {
 				R = _Commit(doc, ci, default, key);
 				if (R == CiComplResult.None && key is KKey.Tab or KKey.Enter) R = CiComplResult.Simple; //always suppress Tab and Enter
 			}

@@ -63,10 +63,6 @@ class DialogListViewExample : Window {
 		
 		//};
 		
-#if WPF_PREVIEW //menu Edit -> View -> WPF preview
-b.Window.Preview();
-#endif
-		
 		//b.OkApply += e => {
 		
 		//};

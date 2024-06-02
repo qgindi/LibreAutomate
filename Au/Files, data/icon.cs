@@ -211,7 +211,7 @@ namespace Au {
 					si = null;
 					//print.it("registry: no", file);
 					//Usually shell API somehow gets si.
-					//For example also looks in .ext -> PerceivedType -> HKCR\SystemFileAssociations.
+					//For example also looks in .ext > PerceivedType > HKCR\SystemFileAssociations.
 					//We can use AssocQueryString(ASSOCSTR_DEFAULTICON), but it is slow and not always gets correct si.
 				}
 

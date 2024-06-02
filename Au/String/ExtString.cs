@@ -1607,6 +1607,11 @@ public static unsafe partial class ExtString {
 		s2 = default;
 		return false;
 	}
+	
+	/// <summary>
+	/// If <i>index</i> is in this string, returns character at <i>index</i>. Else <c>'\0'</c>.
+	/// </summary>
+	internal static char At_(this string t, int index) => (uint)index < t.Length ? t[index] : default;
 }
 
 /// <summary>

@@ -132,7 +132,8 @@ public partial class KMenuCommands {
 			added?.Add(name);
 			
 			c.ButtonText = buttonText;
-			c.ButtonTooltip = ca.tooltip;
+			if (ca.tooltip is string tt) c.ButtonTooltip = parentMenu is Menu ? tt : $"{buttonText}{(ca.checkable ? "  (option)" : null)}.\n{tt}";
+			else if (ca.checkable) c.ButtonTooltip = $"{buttonText}  (option)";
 			
 			FactoryParams f = null;
 			if (itemFactory != null) {
@@ -145,6 +146,7 @@ public partial class KMenuCommands {
 			if (!ca.keysText.NE()) c.MenuItem.InputGestureText = ca.keysText;
 			if (autoUnderline && c.MenuItem.Header is string s && _FindUnderlined(s, out char uc)) au.Add(char.ToLower(uc));
 			if (ca.checkable) c.MenuItem.IsCheckable = true;
+			if (c.ButtonTooltip != null) c.MenuItem.ToolTip = c.ButtonTooltip;
 			if (ca.noIndirectDisable) c.NoIndirectDisable = true;
 			if (parentMenu is Menu m1) c.MenuItem.MinHeight = 22;
 			

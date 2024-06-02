@@ -10,7 +10,7 @@ static class RegHotkeys {
 	public static void RegisterPermanent() {
 #if !IDE_LA
 		(string keys, string menu)[] g = [
-			(App.Settings.hotkeys.tool_quick, nameof(Menus.Code.Quick_capturing)),
+			(App.Settings.hotkeys.tool_quick, nameof(Menus.Code.Simple.Quick_capturing_info)),
 			(App.Settings.hotkeys.tool_wnd, nameof(Menus.Code.wnd)),
 			(App.Settings.hotkeys.tool_elm, nameof(Menus.Code.elm)),
 			(App.Settings.hotkeys.tool_uiimage, nameof(Menus.Code.uiimage)),
@@ -20,13 +20,13 @@ static class RegHotkeys {
 			if (!keys.NE()) {
 				try {
 					if (!_a[i].Register(i, keys, App.Hmain, noRepeat: true)) {
-						print.warning($"Failed to register hotkey {keys}. Look in Options -> Hotkeys.", -1);
+						print.warning($"Failed to register hotkey {keys}. Look in Options > Hotkeys.", -1);
 						keys = null;
 					}
 				}
 				catch (Exception ex) { print.it(ex); keys = null; }
 			}
-			App.Commands[g[i].menu].MenuItem.InputGestureText = keys;
+			if (i > 0) App.Commands[g[i].menu].MenuItem.InputGestureText = keys;
 		}
 #endif
 	}

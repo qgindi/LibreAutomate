@@ -30,25 +30,28 @@ class DEnumDir : KDialogWindow {
 		_noeventValueChanged = true;
 		var b = new wpfBuilder(this).WinSize(600).Columns(0, 90, 90, -1);
 		
-		b.R.StartGrid().Columns(76, 76, 76, 0, 0, -1);
+		b.R.StartGrid().Columns(76, 76, 0, 0, -1);
 		CancellationTokenSource cts = null;
 		b.AddButton("Test", async e => {
-			print.clear();
-			e.Button.IsEnabled = false;
-			var s = _FormatCode(true);
-			cts = new();
-			var r = await TUtil.RunTestCodeAsync(s, cts.Token);
-			cts = null;
-			if (!IsLoaded) return;
-			e.Button.IsEnabled = true;
-			if (r?.isError == true) print.it($"<><b>{r.header}<>\r\n{r.text}");
+			if (cts == null) {
+				var s = _FormatCode(true);
+				print.clear();
+				e.Button.Content = "Stop";
+				cts = new();
+				var r = await TUtil.RunTestCodeAsync(s, cts.Token);
+				cts = null;
+				if (!IsLoaded) return;
+				e.Button.Content = "Test";
+				if (r?.isError == true) print.it($"<><b>{r.header}<>\r\n{r.text}");
+			} else {
+				cts.Cancel();
+			}
 		});
-		b.AddButton("Stop", _ => { cts?.Cancel(); });
 		Closing += (_, _) => { cts?.Cancel(); };
 		b.AddButton("OK", _ => {
 			Close();
 			var s = _FormatCode();
-			InsertCode.Statements(s);
+			InsertCode.Statements(s, ICSFlags.MakeVarName1);
 		});
 		
 		b.Add(out _cArray, "Get array").Checked().Tooltip("Store results in an array variable before starting to use them.\nThen it is safe to delete/rename/move/copy the files.\nBut then cannot start using results until all retrieved from the file system.\nCheck if going to delete/rename/move/copy files.\nUncheck if going to search in a potentially large directory.")

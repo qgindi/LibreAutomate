@@ -290,17 +290,15 @@ public class KColorPicker : UserControl {
 	
 	public event Action<int> ColorChanged;
 	
-	public static bool ColorTool(out string color, Window owner, bool disableOwner, bool add0xRgbButton, bool addBgrButton) {
-		color = null;
-		
-		var w = new KDialogWindow { Title = "Color", ShowInTaskbar = owner == null };
+	public static void ColorTool(Action<string> result, Window owner, bool modal, bool add0xRgbButton, bool addBgrButton) {
+		var w = new KDialogWindow { Title = "Color", ShowInTaskbar = owner == null, Owner = owner };
 		var b = new wpfBuilder(w);
 		w.ResizeMode = ResizeMode.NoResize;
 		b.R.Add(out KColorPicker palette);
 		b.R.StartGrid().Columns(-1, -1, -1);
-		b.R.AddButton("#RRGGBB", 1).Span(1);
-		if (add0xRgbButton) b.AddButton("0xRRGGBB", 2).Span(1);
-		if (addBgrButton) b.AddButton("0xBBGGRR", 3);
+		b.R.AddButton("#RRGGBB", _ => _Result($"#{palette.Color:X6}")).Span(1);
+		if (add0xRgbButton) b.AddButton("0xRRGGBB", _ => _Result($"0x{palette.Color:X6}")).Span(1);
+		if (addBgrButton) b.AddButton("0xBBGGRR", _ => _Result($"0x{ColorInt.SwapRB(palette.Color):X6}"));
 		b.End();
 		b.R.Add("Color name", out _ComboBox cbNamed).Brush(Brushes.White);
 		b.End();
@@ -335,25 +333,15 @@ public class KColorPicker : UserControl {
 				k.Children.Add(new TextBlock { Text = name, Padding = new(3, 0, 3, 0) });
 				cbNamed.Items.Add(k);
 			}
-			cbNamed.SelectionChanged += (_, e) => { w.DialogResult = true; };
+			cbNamed.SelectionChanged += (_, e) => { if (cbNamed.SelectedIndex is int i && i >= 0) _Result(aNamed[i].name); };
 		}
 		
-		if (!w.ShowAndWait(owner, disableOwner: disableOwner)) return false;
+		if (modal) w.ShowDialog(); else w.Show();
 		
-		if (b.ResultButton > 0) {
-			var v = palette.Color;
-			color = b.ResultButton switch {
-				1 => $"#{v:X6}",
-				2 => $"0x{v:X6}",
-				_ => $"0x{ColorInt.SwapRB(v):X6}"
-			};
-		} else {
-			int si = cbNamed.SelectedIndex;
-			if (si < 0) return false;
-			color = aNamed[si].name;
+		void _Result(string color) {
+			result(color);
+			w.Close();
 		}
-		
-		return true;
 	}
 	
 	class _ComboBox : ComboBox {

@@ -163,7 +163,7 @@ static class CodeInfo {
 	static bool _CanWork(SciCode doc) {
 		if (!_isWarm) return false;
 		if (doc == null) return false;
-		if (!doc.FN.IsCodeFile) return false;
+		if (!doc.EFile.IsCodeFile) return false;
 		if (doc != Panels.Editor.ActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
 		return true;
 	}
@@ -258,7 +258,7 @@ static class CodeInfo {
 		case (KKey.End, 0):
 			if ((HideTextPopup() || _tools.HideTempWindows()) && key == KKey.Escape) return true;
 			//never mind: on Esc, if several popups, should hide the top popup.
-			//	We instead hide less-priority popups when showing a popup, so that Escape will hide the correct popup in most cases.
+			//	We instead hide less-priority popups when showing a popup. Then Esc will hide the correct popup in most cases.
 			if (_compl.OnCmdKey_SelectOrHide(key) || _signature.OnCmdKey(key)) return true;
 			if (key == KKey.Escape) if (doc.SnippetMode_?.SciKey(key, mod) == true) return true;
 			break;
@@ -271,11 +271,10 @@ static class CodeInfo {
 		case (KKey.Tab, ModifierKeys.Shift):
 			if (doc.SnippetMode_?.SciKey(key, mod) == true) return true;
 			break;
-		case (KKey.Enter, ModifierKeys.Shift):
-		case (KKey.Enter, ModifierKeys.Control):
+		case (KKey.Enter, ModifierKeys.Shift) or (KKey.Enter, ModifierKeys.Control) or (KKey.Enter, ModifierKeys.Control | ModifierKeys.Shift):
 		case (KKey.OemSemicolon, ModifierKeys.Control):
 			var complResult = _compl.OnCmdKey_Commit(doc, key);
-			//if(complResult == CiComplResult.Complex && mod==0) return true;
+			if (complResult == CiComplResult.Complex) return true;
 			if (_correct.SciBeforeKey(doc, key, mod) | (complResult != CiComplResult.None)) return true;
 			break;
 		case (KKey.Back, 0):
@@ -292,21 +291,11 @@ static class CodeInfo {
 #endif
 		if (!_CanWork(doc)) return false;
 		
-		if (_correct.SciBeforeCharAdded(doc, ch, out var b)) {
-			if (b == null) return true;
-			
-			if (_compl.IsVisibleUI) {
-				int diff = b.newPosUtf8 - b.oldPosUtf8;
-				_compl.SciCharAdding_Commit(doc, ch);
-				b.newPosUtf8 = doc.aaaCurrentPos8 + diff;
-			}
-			
-			doc.aaaCurrentPos8 = b.newPosUtf8;
-			if (!b.dontSuppress) return true;
-		} else if (_compl.IsVisibleUI) {
+		if (_compl.IsVisibleUI) {
 			if (CiComplResult.Complex == _compl.SciCharAdding_Commit(doc, ch)) return true;
 		}
-		return false;
+		
+		return _correct.SciBeforeCharAdded(doc, ch);
 	}
 	
 	public static bool SciModified(SciCode doc, in Sci.SCNotification n) {
@@ -436,7 +425,7 @@ static class CodeInfo {
 			sci = Panels.Editor.ActiveDoc;
 			code = sci.aaaText;
 			this.pos = pos switch { -1 => sci.aaaCurrentPos16, -2 => sci.aaaSelectionStart16, _ => pos };
-			if (isCodeFile = sci.FN.IsCodeFile) meta = MetaComments.FindMetaComments(code);
+			if (isCodeFile = sci.EFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}
 		
 		/// <summary>
@@ -488,6 +477,10 @@ static class CodeInfo {
 			
 			//perf.next();
 			_ModifyTLS();
+			
+			//TODO: return false if syntaxtree text != code. But `syntaxRoot.GetText();` is slow. Instead compare EndOfFileToken.SpanStart with code length.
+			//print.it(code.Length, syntaxRoot.EndOfFileToken.SpanStart);
+			Debug_.PrintIf(syntaxRoot.EndOfFileToken.SpanStart != code.Length);
 			
 			return true;
 		}
@@ -668,7 +661,7 @@ for (int i = 0; i < count; i++) { }
 		Dictionary<FileNode, ProjectReference> dPR = null;
 		
 		_solution = CurrentWorkspace.CurrentSolution;
-		_projectId = _AddProject(sci.FN, true, isWpfPreview: sci.EIsWpfPreview);
+		_projectId = _AddProject(sci.EFile, true, isWpfPreview: sci.EIsWpfPreview);
 		
 		ProjectId _AddProject(FileNode f, bool isMain, bool isWpfPreview = false) {
 			var fCurrentDoc = f;

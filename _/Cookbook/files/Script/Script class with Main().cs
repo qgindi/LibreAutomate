@@ -1,4 +1,4 @@
-/// The default script syntax is known as <google>C# top-level statements<>. You can instead use the classic C# syntax with class <b>Program<> and function <b>Main<>. To insert code can be used menu <b>Edit > Document > Add class Program<>.
+/// The default script syntax is known as <google>C# top-level statements<>. You can instead use the classic C# syntax with class <b>Program<> and function <b>Main<>. To insert code can be used menu <b>Code > Simple > Add function Main<>.
 
 class Program {
 	static void Main(string[] a) => new Program(a);

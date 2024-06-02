@@ -289,7 +289,7 @@ class Docr : KDialogWindow {
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			InsertCode.Statements(s);
+			InsertCode.Statements(s, ICSFlags.MakeVarName1);
 			//if (_Opt.Has(_EOptions.InsertClose)) {
 			//	base.Close();
 			//} else {

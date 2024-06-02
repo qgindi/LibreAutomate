@@ -733,7 +733,7 @@ class MetaComments {
 	bool _Error(string s, int from, int to) {
 		if (Errors != null) {
 			Errors.AddError(_f.f, _f.code, from, "error in meta: " + s);
-		} else if (_flags.Has(MCFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ActiveDoc.FN) {
+		} else if (_flags.Has(MCFlags.ForCodeInfoInEditor) && _f.f == Panels.Editor.ActiveDoc.EFile) {
 			CodeInfo._diag.AddMetaError(_metaRange, from, to, s);
 		}
 		return false;

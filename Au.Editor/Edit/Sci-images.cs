@@ -18,10 +18,6 @@ using Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Classification;
 using CT = CAW::Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
 
-//TODO: display color if found comment like this: `int i = 0X123456, y = 0x123456; /*t RGB|b BGR*/`.
-//	The comment is at the end of line. Here t and b is to display as text or backround.
-//	To skip some 0xXXXXXX found in tat line, use `/*/*t RGB||b BGR*/`.
-
 partial class SciCode {
 	struct _Image {
 		public Bitmap image;

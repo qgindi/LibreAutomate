@@ -438,7 +438,7 @@ public partial class KMenuCommands {
 						if (image == null || onlyImage) k.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. SHOULDDO: not good on Win7
 						CopyToMenu(k, text: btext);
 						if (onlyImage) { k.Header = k.Icon; k.Icon = null; } //make narrower
-						if (ButtonTooltip != null) k.ToolTip = ButtonTooltip; else if (onlyImage) k.ToolTip = ButtonText;
+						if (ButtonTooltip != null) k.ToolTip = ButtonTooltip; else if (onlyImage) k.ToolTip = ButtonText + "...";
 						var m = new Menu { Background = toolbar.Background, IsMainMenu = false, UseLayoutRounding = true };
 						m.Items.Add(k); //parent must be Menu, else wrong Role (must be TopLevelHeader, we can't change) and does not work
 						
@@ -584,7 +584,8 @@ public class CommandAttribute : Attribute {
 	public string image;
 	
 	/// <summary>
-	/// Let <see cref="KMenuCommands.Command.CopyToButton"/> use this text for tooltip.
+	/// Tooltip text for the menu item and toolbar button (see <see cref="KMenuCommands.Command.CopyToButton"/>).
+	/// The displayed tooltip also contains menu item text in the first line.
 	/// </summary>
 	public string tooltip;
 	

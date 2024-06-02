@@ -87,7 +87,7 @@ public partial class toolbar {
 						osdr.Rect = r;
 						osdr.Show();
 					} else {
-						osdt = osdText.showText("The toolbar is offscreen. Right-click to move.\nRectangle: " + r.ToString(), xy: PopupXY.Mouse);
+						osdt = osdText.showText($"The toolbar is offscreen. Right-click to move.\nRectangle: {r}", xy: PopupXY.Mouse);
 					}
 					v.Selected = true;
 					v.Focused = true;

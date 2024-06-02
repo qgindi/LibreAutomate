@@ -30,7 +30,7 @@ class DSnippets : KDialogWindow {
 	Panel _panelSnippet, _panelFile;
 	KTreeView _tv;
 	KSciCodeBox _code;
-	TextBox _tName, _tInfo, _tMore, _tPrint, _tUsing, _tMeta, _tVar;
+	TextBox _tName, _tContext, _tInfo, _tMore, _tPrint, _tUsing, _tMeta, _tVar;
 	TextBlock _tbFile, _tbDefaultFileInfo;
 	
 	_Item _ti; //current item
@@ -53,10 +53,12 @@ class DSnippets : KDialogWindow {
 		
 		//snippet
 		
-		b.StartGrid().Hidden(null);
+		b.StartGrid().Hidden(null).Columns(0, -1, 30, 0, -1);
 		_panelSnippet = b.Panel;
 		b.R.Add("Name", out _tName).Tooltip("Snippet name. Single word.\nIf ends with \"Surround\", the snippet can be used only for surround.");
 		_tName.TextChanged += (_, _) => { if (!_ignoreEvents && _ti.Level == 1) _TvSetText(_tName.TextOrNull()); };
+		b.Skip().Add("Context", out AdornerDecorator _).Add(out _tContext, flags: WBAdd.ChildOfLast).Watermark("Auto-detect");
+		_tContext.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.context = _tContext.TextOrNull(); };
 		b.R.Add("Info", out _tInfo);
 		_tInfo.TextChanged += (_, _) => { if (!_ignoreEvents) { _ti.info = _tInfo.TextOrNull(); if (_ti.Level == 2) _TvSetText(_ti.info); } };
 		b.R.Add("Info+", out _tMore).Multiline(40);
@@ -143,6 +145,7 @@ class DSnippets : KDialogWindow {
 			}
 			
 			_tName.Text = level == 1 ? t.text : t.Parent.text;
+			_tContext.Text = level == 1 ? t.context : t.Parent.context;
 			_tInfo.Text = level == 1 ? t.info : t.text;
 			_tMore.Text = level == 1 ? t.more : t.Parent.more;
 			_tPrint.Text = t.print_;
@@ -153,6 +156,7 @@ class DSnippets : KDialogWindow {
 			_code.Visibility = isMenu ? Visibility.Hidden : Visibility.Visible;
 			//don't disable textboxes. Instead make read-only, to allow scroll/select/copy text.
 			_tName.IsReadOnly = level == 2 || _readonly;
+			_tContext.IsReadOnly = level == 2 || _readonly;
 			_tInfo.IsReadOnly = _readonly;
 			_tMore.IsReadOnly = level == 2 || _readonly;
 			_tPrint.IsReadOnly = _readonly;
@@ -160,7 +164,7 @@ class DSnippets : KDialogWindow {
 			_tMeta.IsReadOnly = _readonly;
 			_tVar.IsReadOnly = _readonly;
 			foreach (var v in _panelSnippet.Children) {
-				switch (v) {
+				switch (v is AdornerDecorator ad ? ad.Child : v) {
 				case TextBox t1: //if readonly, display like disabled
 					if (t1.IsReadOnly) t1.Background = SystemColors.ControlBrush; else t1.ClearValue(TextBox.BackgroundProperty);
 					break;
@@ -217,7 +221,11 @@ class DSnippets : KDialogWindow {
 				
 				if (level == 0) {
 					m.Separator();
-					m["Sort snippets"] = o => _Sort(t);
+					m["Sort snippets", disable: t.Count < 2] = o => _Sort(t);
+					if (t.isImportedFile || (t.Count == 0 && !t.text.Eqi("Snippets.xml"))) {
+						m.Separator();
+						m[$"Delete this {(t.isImportedFile ? "imported" : "empty")} file..."] = o => _ImportDeleteFile(t);
+					}
 				}
 			} else if (level > 0) {
 				m["Copy"] = o => _Copy(t);
@@ -250,9 +258,10 @@ class DSnippets : KDialogWindow {
 			if (_cut) {
 				t = _clip;
 				if (level == 2 && t.Level == 1) {
-					if (!t.more.NE()) print.it($"{t.text} Info+ was:\r\n{t.more}");
 					if (!t.info.NE()) t.text = t.info;
-					t.info = t.more = null;
+					if (!t.more.NE()) print.it($"{t.text} Info+ was:\r\n{t.more}");
+					if (!t.context.NE()) print.it($"{t.text} Context was:\r\n{t.context}");
+					t.info = t.more = t.context = null;
 				}
 				_Remove(t, cut: true);
 			} else {
@@ -261,6 +270,7 @@ class DSnippets : KDialogWindow {
 				if (level == 1) {
 					t.info = _clip.info;
 					t.more = _clip.more;
+					t.context = _clip.context;
 				} else {
 					if (_clip.Level == 1 && !_clip.info.NE()) t.text = _clip.info;
 				}
@@ -316,6 +326,7 @@ class DSnippets : KDialogWindow {
 			p.code = u.code;
 			p.info ??= u.text;
 			p.more ??= u.more;
+			p.context ??= u.context;
 			p.print_ ??= u.print_;
 			p.using_ ??= u.using_;
 			p.meta_ ??= u.meta_;
@@ -346,7 +357,7 @@ class DSnippets : KDialogWindow {
 	//}
 	
 	void _Sort(_Item t) {
-		var a = t.Children().OrderBy(o => o.text, StringComparer.OrdinalIgnoreCase).ToArray();
+		var a = t.Children().OrderBy(o => o.text, CiUtil.SortComparer).ToArray();
 		foreach (var v in a) v.Remove();
 		foreach (var v in a) t.AddChild(v);
 		_tv.SetItems(_files, modified: true);
@@ -375,12 +386,11 @@ class DSnippets : KDialogWindow {
 				_code.aaaReplaceSel(s);
 				_code.Focus();
 			};
-			m["${VAR}"] = aIns;
-			m["${UUID}"] = aIns;
+			m["${SELECTED_TEXT}"] = aIns;
+			m["${GUID}"] = aIns;
 			m["${RANDOM}"] = aIns;
 			m["${RANDOM_HEX}"] = aIns;
-			m["${TM_FILENAME_BASE}"] = aIns;
-			m["${TM_SELECTED_TEXT}"] = aIns;
+			m["${VAR}"] = aIns;
 			m.Show();
 		}
 	}
@@ -401,7 +411,7 @@ class DSnippets : KDialogWindow {
 	static HashSet<string> _GetHiddenSnippets(string fileName, bool orAdd = false) {
 		var files = App.Settings.ci_hiddenSnippets ??= (orAdd ? new() : null);
 		if (files == null) return null;
-		fileName = fileName.ToLower();
+		fileName = fileName.Lower();
 		if (files.TryGetValue(fileName, out var r)) return r;
 		if (orAdd) files.Add(fileName, r = new());
 		return r;
@@ -409,11 +419,14 @@ class DSnippets : KDialogWindow {
 	
 	public static HashSet<string> GetHiddenSnippets(string fileName) => _GetHiddenSnippets(fileName);
 	
-	static void _SaveHiddenSnippets(string fileName, HashSet<string> hs) {
-		if (hs.Count > 0) {
-			(App.Settings.ci_hiddenSnippets ??= new())[fileName.ToLower()] = hs;
+	/// <summary>
+	/// Saves hidden snippets of a snippets file in <c>App.Settings.ci_hiddenSnippets</c>. Removes if <i>hs</i> is null or empty.
+	/// </summary>
+	static void _SaveHiddenSnippets(string fileName, HashSet<string> hs = null) {
+		if (hs?.Count > 0) {
+			(App.Settings.ci_hiddenSnippets ??= new())[fileName.Lower()] = hs;
 		} else {
-			App.Settings.ci_hiddenSnippets?.Remove(fileName.ToLower());
+			App.Settings.ci_hiddenSnippets?.Remove(fileName.Lower());
 		}
 	}
 	
@@ -434,15 +447,17 @@ class DSnippets : KDialogWindow {
 			try {
 				var hidden = _GetHiddenSnippets(name);
 				var xf = CiSnippets.LoadSnippetsFile_(path);
-				var tf = new _Item(this, 0, name) { filePath = path };
+				if (xf == null) return;
+				var tf = new _Item(this, 0, name) { filePath = path, isImportedFile = !isDefault && xf.HasAttr("imported") };
 				if (hidden == null || !hidden.Contains("")) tf.isChecked = true;
 				_files.Add(tf);
 				var e = xf.Elements("snippet");
-				if (isDefault) e = e.OrderBy(o => o.Attr("name")); //rejected: order in all files. Instead there is a context menu command "Sort".
+				if (isDefault) e = e.OrderBy(o => o.Attr("name"), CiUtil.SortComparer); //rejected: order in all files. Instead there is a context menu command "Sort".
 				foreach (var xs in e) {
 					var ts = new _Item(this, 1, xs.Attr("name")) {
 						info = xs.Attr("info"),
 						more = xs.Attr("more"),
+						context = xs.Attr("context"),
 						print_ = xs.Attr("print"),
 						using_ = xs.Attr("using"),
 						meta_ = xs.Attr("meta"),
@@ -476,6 +491,7 @@ class DSnippets : KDialogWindow {
 		foreach (var s in f.Children()) {
 			var xs = new XElement("snippet", new XAttribute("name", s.text ?? ""), new XAttribute("info", s.info ?? ""));
 			xf.Add(xs);
+			if (s.context != null) xs.SetAttributeValue("context", s.context);
 			if (s.more != null) xs.SetAttributeValue("more", s.more);
 			_Snippet(s, xs, false);
 			foreach (var i in s.Children()) {
@@ -529,8 +545,8 @@ class DSnippets : KDialogWindow {
 		DSnippets _d;
 		public string text; //displayed text. Depends on level: 0 filename or "default", 1 snippet name, 2 snippet item info
 		public string filePath, fileXml; //level 0
-		public string code, info, more, print_, using_, meta_, var_; //level 1 or 2
-		public bool isChecked;
+		public string code, context, info, more, print_, using_, meta_, var_; //level 1 or 2
+		public bool isChecked, isImportedFile;
 		bool _isExpanded;
 		
 		public _Item(DSnippets d, int level, string text) {
@@ -610,7 +626,8 @@ class DSnippets : KDialogWindow {
 		m.Show(owner: this);
 	}
 	
-	void _SaveImported(XElement x) {
+	void _ImportSave(XElement x) {
+		x.SetAttributeValue("imported", "");
 		string dir = AppSettings.DirBS, file = null;
 		for (int i = 1; ; i++) { //unique filename
 			file = AppSettings.DirBS + "Imported" + i + " snippets.xml";
@@ -629,21 +646,21 @@ class DSnippets : KDialogWindow {
 	}
 	
 	void _ImportVS() {
-		var d = new FileOpenSaveDialog() { FileTypes = "VS snippets|*.snippet", Title = "Import snippet files", FileNameLabel = "Selected files:" };
+		var d = new FileOpenSaveDialog("fc3a7c73-3be0-43f2-af26-7d4d6b6c381e") { FileTypes = "VS snippets|*.snippet", Title = "Import snippet files", FileNameLabel = "Selected files:" };
 		if (!d.ShowOpen(out string[] files, owner: this)) return;
 		try {
 			var x = _ImportVS(files);
-			_SaveImported(x);
+			_ImportSave(x);
 		}
 		catch (Exception ex) { dialog.showError("Failed to import snippets.", ex.ToString(), owner: this); }
 	}
 	
 	void _ImportJson() {
-		var d = new FileOpenSaveDialog() { FileTypes = "VSCode snippets|*.json", Title = "Import snippets file" };
+		var d = new FileOpenSaveDialog("89bf0c8f-f42b-49ca-8644-649acecfe92f") { FileTypes = "VSCode snippets|*.json", Title = "Import snippets file" };
 		if (!d.ShowOpen(out string file, owner: this)) return;
 		try {
 			var x = _ImportJson(file);
-			_SaveImported(x);
+			_ImportSave(x);
 		}
 		catch (Exception ex) { dialog.showError("Failed to import snippets.", ex.ToString(), owner: this); }
 	}
@@ -686,7 +703,7 @@ class DSnippets : KDialogWindow {
 				}
 				s = s.Replace("$selected$ $end$", "$selected$$end$");
 				if (s.Find("$end$") is int i1 && i1 >= 0 && i1 + 5 is int i1end) s = s.ReplaceAt(i1..i1end, s.Length > i1end && s[i1end] is >= '0' and <= '9' ? "${0}" : "$0");
-				s = s.Replace("$selected$", "${TM_SELECTED_TEXT}");
+				s = s.Replace("$selected$", "${SELECTED_TEXT}");
 				if (ad != null) {
 					int n = 1;
 					foreach (var v in ad) s = s.Replace($"${v.id}$", $"${{{n++}:{v.def}}}");
@@ -716,6 +733,7 @@ class DSnippets : KDialogWindow {
 			try {
 				var j = jSnippet.Value.AsObject();
 				var code = _ToString(j["body"]);
+				code = code.Replace("${TM_SELECTED_TEXT}", "${SELECTED_TEXT}").Replace("${UUID}", "${GUID}");
 				if (_ImportSkip(code)) continue;
 				var more = _ToString(j["description"]);
 				var n = j["prefix"];
@@ -744,11 +762,20 @@ class DSnippets : KDialogWindow {
 	
 	static XElement _ImportAddXElement(XElement xRoot, string code, string namePrefix, string info, string more = null) {
 		var x = new XElement("snippet", "\n", new XCData(code ?? ""), "\n    ");
-		x.SetAttributeValue("name", namePrefix.RxReplace(@"[^\p{Xan}_]+", "_") + "Snippet");
+		x.SetAttributeValue("name", namePrefix/*.RxReplace(@"[^\p{Xan}_#]+", "_")*/ + "Snippet");
 		x.SetAttributeValue("info", info);
 		if (!more.NE() && more != info) x.SetAttributeValue("more", more);
 		xRoot.Add(x);
 		return x;
+	}
+	
+	void _ImportDeleteFile(_Item f) {
+		if (!dialog.showOkCancel("Delete this snippets file?", $"{f.filePath}", owner: this)) return;
+		if (false == filesystem.delete(f.filePath, FDFlags.CanFail | FDFlags.RecycleBin)) return;
+		_SaveHiddenSnippets(f.text);
+		_SelectNone();
+		_FillTree();
+		CiSnippets.Reload();
 	}
 	
 	#endregion

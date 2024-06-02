@@ -33,6 +33,8 @@ enum ICSFlags {
 	GoToStart = 16,
 	
 	SelectNewCode = 32,
+	
+	MakeVarName1 = 64,
 }
 
 /// <summary>
@@ -47,15 +49,16 @@ static class InsertCode {
 	/// </summary>
 	/// <param name="s">Text. The function ignores "\r\n" at the end. Does nothing if null.</param>
 	/// <param name="separate">Prepend/append empty line to separate from surrounding code if need. If null, does it if <i>s</i> contains '\n'.</param>
-	public static void Statements(string s, ICSFlags flags = 0, bool? separate = null) {
+	/// <param name="renameVars">Variable names to rename in s.</param>
+	public static void Statements(string s, ICSFlags flags = 0, bool? separate = null, (string oldName, string newName)[] renameVars = null) {
 		if (s == null) return;
 		bool sep = separate ?? s.Contains('\n');
 		
-		if (Environment.CurrentManagedThreadId == 1) _Statements(s, flags, sep);
-		else App.Dispatcher.InvokeAsync(() => _Statements(s, flags, sep));
+		if (Environment.CurrentManagedThreadId == 1) _Statements(s, flags, sep, renameVars);
+		else App.Dispatcher.InvokeAsync(() => _Statements(s, flags, sep, renameVars));
 	}
 	
-	static void _Statements(string s, ICSFlags flags, bool separate) {
+	static void _Statements(string s, ICSFlags flags, bool separate, (string oldName, string newName)[] renameVars) {
 		if (!App.Hmain.IsVisible) App.ShowWindow();
 		if (!CodeInfo.GetContextAndDocument(out var k, metaToo: true)) {
 			print.it(s);
@@ -141,7 +144,7 @@ static class InsertCode {
 		
 		//rename symbols in s if need
 		
-		try { InsertCodeUtil.RenameNewSymbols(ref s, k, node, pos); }
+		try { InsertCodeUtil.RenameNewSymbols(ref s, k, node, pos, flags.Has(ICSFlags.MakeVarName1), renameVars); }
 		catch (Exception e1) { Debug_.Print(e1); }
 		
 		//indent, newlines
@@ -272,7 +275,7 @@ static class InsertCode {
 	/// </summary>
 	public static void Surround(int from, int to, string before, string after, int indentPlus, bool concise = false) {
 		var doc = Panels.Editor.ActiveDoc;
-		if (!doc.FN.IsCodeFile) return;
+		if (!doc.EFile.IsCodeFile) return;
 		
 		int indent = before.Starts('#') ? 0 : doc.aaaLineIndentationFromPos(true, from);
 		if (indent > 0) {
@@ -305,19 +308,8 @@ static class InsertCode {
 	/// </summary>
 	/// <param name="concise">If text is single line, surround as single line.</param>
 	public static void Surround(string before, string after, int indentPlus, bool concise = false) {
-		var doc = Panels.Editor.ActiveDoc;
-		if (!doc.FN.IsCodeFile) return;
-		
-		int from = doc.aaaSelectionStart16, to = doc.aaaSelectionEnd16;
-		if (from == to) {
-			if (!CodeInfo.GetContextAndDocument(out var cd, from)) return;
-			var stat = CiUtil.GetStatementEtcFromPos(cd, from);
-			if (stat is not (null or BlockSyntax)) {
-				var span = stat.GetRealFullSpan(minimalLeadingTrivia: !true);
-				if (span.ContainsOrTouches(from)) (from, to) = span;
-			}
-			if (to == from && to > 0) from = to = cd.code.LastIndexOf('\n', to - 1) + 1;
-		}
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		var (from, to) = InsertCodeUtil.GetSurroundRange(cd);
 		Surround(from, to, before, after, indentPlus, concise);
 	}
 	
@@ -420,7 +412,7 @@ static class InsertCode {
 	/// <returns>true if changed documnt text.</returns>
 	public static bool MetaComment(string s) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
-		var doc = Panels.Editor.ActiveDoc; if (doc == null || !doc.FN.IsCodeFile) return false;
+		var doc = Panels.Editor.ActiveDoc; if (doc == null || !doc.EFile.IsCodeFile) return false;
 		var meta = new MetaCommentsParser(doc.aaaText);
 		var meta2 = new MetaCommentsParser($"/*/ {s} /*/");
 		meta.Merge(meta2);
@@ -429,7 +421,7 @@ static class InsertCode {
 	
 	public static void AddFileDescription() {
 		var doc = Panels.Editor.ActiveDoc;
-		if (!doc.FN.IsCodeFile) return;
+		if (!doc.EFile.IsCodeFile) return;
 		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
 		doc.aaaSelect(false, 4, 15, makeVisible: true);
 	}
@@ -475,7 +467,8 @@ class Program {
 """;
 		var after = @"
 	}
-}";
+}
+";
 		Surround(start, end, before, after, indentPlus: 2);
 	}
 	

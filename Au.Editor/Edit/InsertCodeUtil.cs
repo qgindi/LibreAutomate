@@ -9,6 +9,8 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Rename;
+using CAW::Microsoft.CodeAnalysis.Indentation;
+using Microsoft.CodeAnalysis.CSharp.Indentation;
 
 /// <summary>
 /// Util used by <see cref="InsertCode"/>. Also can be used everywhere.
@@ -80,6 +82,25 @@ static class InsertCodeUtil {
 			b.Append(s);
 			if (!s.Ends('\n')) b.AppendLine();
 		}
+	}
+	
+	/// <summary>
+	/// Gets range for surround.
+	/// If there is selection, returns the selected range.
+	/// Else if caret is inside or touches a statement etc, gets its full span.
+	/// Else returns empty range at caret position.
+	/// </summary>
+	public static (int start, int end) GetSurroundRange(CodeInfo.Context k) {
+		int from = k.sci.aaaSelectionStart16, to = k.sci.aaaSelectionEnd16;
+		if (from == to) {
+			var stat = CiUtil.GetStatementEtcFromPos(k, from);
+			if (stat is not (null or BlockSyntax)) {
+				var span = stat.GetRealFullSpan(minimalLeadingTrivia: !true);
+				if (span.ContainsOrTouches(from)) (from, to) = span;
+			}
+			if (to == from && to > 0 && !(stat is BlockSyntax && stat.Span.ContainsInside(from))) from = to = k.code.LastIndexOf('\n', to - 1) + 1;
+		}
+		return (from, to);
 	}
 	
 	/// <summary>
@@ -230,18 +251,20 @@ static class InsertCodeUtil {
 	/// <summary>
 	/// If <i>s</i> contains local variable declarations, replaces the variable names if they exist in current document in scope at caret position.
 	/// </summary>
-	public static void RenameNewSymbols(ref string s, int pos) {
+	public static void RenameNewSymbols(ref string s, int pos, bool makeVarName1 = false) {
 		if (!CodeInfo.GetContextAndDocument(out var k)) return;
 		var token = k.syntaxRoot.FindToken(k.pos);
 		var node = token.Parent;
-		try { RenameNewSymbols(ref s, k, node, pos); }
+		try { RenameNewSymbols(ref s, k, node, pos, makeVarName1); }
 		catch (Exception e1) { Debug_.Print(e1); }
 	}
 	
 	/// <summary>
 	/// If <i>s</i> contains local variable declarations, replaces the variable names if they exist in <i>k.document</i> in scope at <i>node</i>/<i>pos</i>.
 	/// </summary>
-	public static void RenameNewSymbols(ref string s, CodeInfo.Context k, SyntaxNode node, int pos) {
+	/// <param name="makeVarName1">Also rename local variables declared like `var v` with `var v1` at root level.</param>
+	/// <param name="rename">Explicit renamings.</param>
+	public static void RenameNewSymbols(ref string s, CodeInfo.Context k, SyntaxNode node, int pos, bool makeVarName1, (string oldName, string newName)[] rename = null) {
 		//find the function or TLS where to look for declared symbols in editor code
 		var scope = node;
 		for (; scope is not CompilationUnitSyntax; scope = scope.Parent) {
@@ -251,17 +274,20 @@ static class InsertCodeUtil {
 		}
 		
 		//modified Roslyn's GetAllDeclaredSymbols. Would be difficult to use it.
-		static void _GetDeclaredSymbols(SemanticModel semo, SyntaxNode node, List<ISymbol> symbols, HashSet<string> names, bool skipDesc = false) {
+		static void _GetDeclaredSymbols(SemanticModel semo, SyntaxNode node, List<ISymbol> symbols, HashSet<string> names, HashSet<string> hVar1, int level = 0) {
 			if (node is not CompilationUnitSyntax && semo.GetDeclaredSymbol(node) is ISymbol sym) {
 				symbols?.Add(sym);
 				names?.Add(sym.Name);
+				if (hVar1 != null) if (level == 4 && node.Parent.Parent is LocalDeclarationStatementSyntax && sym.Name is var s && !s.Ends('1')) hVar1.Add(s);
 			}
-			if (skipDesc) return;
+			if (level > 0 && node is LocalFunctionStatementSyntax or BaseTypeDeclarationSyntax) return;
 			foreach (var n in node.ChildNodes()) {
 				if (n is AnonymousFunctionExpressionSyntax or AnonymousObjectCreationExpressionSyntax or TupleExpressionSyntax) continue; //lambda etc
-				_GetDeclaredSymbols(semo, n, symbols, names, n is LocalFunctionStatementSyntax or BaseTypeDeclarationSyntax);
+				_GetDeclaredSymbols(semo, n, symbols, names, hVar1, level + 1);
 			}
 		}
+		
+		HashSet<string> h1 = new(); //names of symbols declared in scope. If makeVarName1, also names of local variables declared in s like `var v` at root level.
 		
 		//get symbols declared in s
 		List<ISymbol> a2 = new();
@@ -269,33 +295,43 @@ static class InsertCodeUtil {
 		using var ws2 = new AdhocWorkspace();
 		var doc2 = CiUtil.CreateDocumentFromCode(ws2, s, false);
 		var semo2 = doc2.GetSemanticModelAsync().Result;
-		_GetDeclaredSymbols(semo2, semo2.Root, a2, h2);
+		_GetDeclaredSymbols(semo2, semo2.Root, a2, h2, makeVarName1 ? h1 : null);
 		//print.it("---- h2 ----"); foreach (var v in h2) print.it(v);
 		if (h2.Count == 0) return;
 		
 		//get names of symbols declared in scope (editor code)
-		HashSet<string> h1 = new();
 		var semo1 = k.document.GetSemanticModelAsync().Result;
-		_GetDeclaredSymbols(semo1, scope, null, h1);
+		_GetDeclaredSymbols(semo1, scope, null, h1, null);
 		//print.it("---- h1 ----"); foreach (var v in h1) print.it(v);
 		if (h1.Count == 0) return;
 		
-		//in s replace symbol names that exist in scope (editor code)
 		bool renamed = false;
 		var sol = doc2.Project.Solution;
+		
+		//in s rename symbols that exist in scope (editor code) or renameVars
 		foreach (var sym in a2) {
-			string name = sym.Name, name2;
-			if (!h1.Contains(name)) continue;
+			string name = sym.Name, name2 = null;
 			
+			if (rename != null) {
+				foreach (var v in rename)
+					if (v.oldName == name) {
+						name = name2 = v.newName;
+						if (!makeVarName1 && !h1.Contains(name)) goto g2;
+						goto g1;
+					}
+			}
+			
+			if (!h1.Contains(name)) continue;
+			g1:
 			//create unique name and add to hs1
-			int i = 2;
+			int i = 1;
 			if (name.RxMatch(@"\d+$", 0, out RXGroup g)) {
 				i = Math.Max(i, name.ToInt(g.Start) + 1);
 				name = name[..g.Start];
 			}
 			while (h2.Contains(name2 = name + i) || !h1.Add(name2)) i++;
 			//print.it(sym.Name, name2);
-			
+			g2:
 			var opt1 = new SymbolRenameOptions();
 			sol = Renamer.RenameSymbolAsync(sol, sym, opt1, name2).Result;
 			h2.Remove(sym.Name);

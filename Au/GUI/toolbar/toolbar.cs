@@ -802,7 +802,7 @@ public partial class toolbar : MTBase {
 		if (!no.Has(TBNoMenu.Help)) m["How to"] = _ => dialog.showInfo("How to",
 @"Move toolbar: Shift+drag.
 
-Resize toolbar: drag border. Cannot resize if in context menu is unchecked or unavailable More -> Sizable; or if checked Border -> None.
+Resize toolbar: drag border. Cannot resize if in context menu is unchecked or unavailable More > Sizable; or if checked Border > None.
 
 Move or resize precisely: start to move or resize but don't move the mouse. Instead release Shift and press arrow keys. Finally release the mouse button.
 ");

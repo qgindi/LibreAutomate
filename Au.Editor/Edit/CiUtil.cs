@@ -22,16 +22,13 @@ using Microsoft.CodeAnalysis.Completion;
 
 static class CiUtil {
 	/// <summary>
-	/// Gets statement or member declaration or using directive etc from position.
-	/// Returns null if at the end of file.
+	/// Finds node at <i>pos</i> and calls <see cref="CiUtilExt.GetStatementEtc"/>, which gets the first ancestor-or-this that is a statement or member/accessor declaration or using directive etc.
 	/// </summary>
-	public static SyntaxNode GetStatementEtcFromPos(CodeInfo.Context cd, int pos) {
+	/// <inheritdoc cref="CiUtilExt.GetStatementEtc"/>
+	public static SyntaxNode GetStatementEtcFromPos(CodeInfo.Context cd, int pos, bool notAccessor = false) {
 		var cu = cd.syntaxRoot;
 		var node = cu.FindToken(pos).Parent;
-		SyntaxNode n = node.FirstAncestorOrSelf<StatementSyntax>();
-		n ??= node.FirstAncestorOrSelf<MemberDeclarationSyntax>();
-		n ??= node.FirstAncestorOrSelf<SyntaxNode>(o => o.Parent is CompilationUnitSyntax); //using directive etc
-		return n;
+		return node.GetStatementEtc(pos, notAccessor);
 	}
 	
 	public static (ISymbol symbol, CodeInfo.Context cd) GetSymbolFromPos(bool andZeroLength = false, bool preferVar = false) {
@@ -504,24 +501,24 @@ global using System.Windows.Media;
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
 		if (x == null) { print.it("null"); return; }
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.FullSpan}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{(x is CompilationUnitSyntax ? null : x.ToString().Limit(10, middle: true, lines: true))}<>'");
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.FullSpan}, k={x.Kind()}, t={x.GetType().Name},<> '<c green><\a>{(x is CompilationUnitSyntax ? null : x.ToString().Limit(10, middle: true, lines: true))}</\a><>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 	
 	public static void PrintNode(SyntaxToken x, int pos = 0, bool printNode = true, bool printErrors = false) {
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x.ToString().Limit(10, middle: true, lines: true)}<>'");
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green><\a>{x.ToString().Limit(10, middle: true, lines: true)}</\a><>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 	
 	public static void PrintNode(SyntaxTrivia x, int pos = 0, bool printNode = true, bool printErrors = false) {
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x.ToString().Limit(10, middle: true, lines: true)}<>'");
+		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green><\a>{x.ToString().Limit(10, middle: true, lines: true)}</\a><>'");
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 	
 	public static void DebugHiliteRange(int start, int end, int indic = SciCode.c_indicTestBox) {
 		var doc = Panels.Editor.ActiveDoc;
 		doc.aaaIndicatorClear(indic);
-		doc.aaaIndicatorAdd(indic, true, start..end);
+		if (end > start) doc.aaaIndicatorAdd(indic, true, start..end);
 	}
 	
 	public static void DebugHiliteRange(TextSpan span, int indic = SciCode.c_indicTestBox) => DebugHiliteRange(span.Start, span.End, indic);
@@ -717,6 +714,20 @@ global using System.Windows.Media;
 	//	}
 	//	return CiContextType.Namespace;
 	//}
+	
+	/// <summary>
+	/// Calls <b>string.Compare</b>. Moves items starting with an ASCII non-symbol char to the bottom.
+	/// </summary>
+	public class CompletionListSortComparer : IComparer<string> {
+		public int Compare(string x, string y) {
+			int r = _IsAsciiNonSymChar(x) - _IsAsciiNonSymChar(y);
+			if (r == 0) r = string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+			return r;
+			
+			static int _IsAsciiNonSymChar(string s) => s.Length > 0 && s[0] is char c && (char.IsAsciiLetterOrDigit(c) || c == '_' || c > 127) ? 0 : 1;
+		}
+	}
+	public static readonly CompletionListSortComparer SortComparer = new();
 }
 
 //enum CiContextType

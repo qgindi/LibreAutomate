@@ -38,7 +38,7 @@ bool _Dialog1() {
 	
 	b = bMain.End();
 	
-#if WPF_PREVIEW //menu Edit -> View -> WPF preview
+#if WPF_PREVIEW //menu Edit > View > WPF preview
 	tc.SelectedIndex = 0;
 	b.Window.Preview();
 #endif

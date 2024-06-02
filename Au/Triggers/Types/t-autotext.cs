@@ -907,7 +907,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 			if (text != lab) mi.Tooltip ??= text;
 			//if (i == 0) m.FocusedItem = mi; //then no tooltip
 			if (i < 9) mi.Hotkey = (i + 1).ToS();
-#else //TODO
+#else //CONSIDER: option "numbers at left side". User suggestion.
 			bool numbersAtLeft = true;
 			string lab2 = numbersAtLeft && i < 9 ? $"{(i + 1).ToS()}. {lab}" : lab;
 			var mi = m.Add(i + 1, lab2, f_: Trigger.sourceFile, l_: v.l_ > 0 ? v.l_ : Trigger.sourceLine);

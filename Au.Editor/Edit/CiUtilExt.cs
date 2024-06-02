@@ -66,17 +66,21 @@ static class CiUtilExt {
 			} else {
 				while (start < end && code[start] == '"') start++; //skip """
 				int nq = start - span.Start;
-				bool ml = k is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.Utf8MultiLineRawStringLiteralToken;
 				if (position < start) { //inside """
 					if (!isU8 && _IsRawPrefixCenter(span.Start, nq)) goto gTrue;
 					return null;
 				}
+				bool ml = k is SyntaxKind.MultiLineRawStringLiteralToken or SyntaxKind.Utf8MultiLineRawStringLiteralToken;
 				if (ml) { //skip newline
 					while (start < end && code[start] is ' ' or '\t') start++;
 					if (code[start] == '\r') start++;
 					if (code[start++] != '\n') return null;
 				}
-				if (position < start) return null; //before newline
+				x.isRawMultiline = ml;
+				if (position < start) {
+					x.isRawMultilineBetweenStartQuotesAndText = true;
+					return null; //before newline
+				}
 				
 				if (position == end) {
 					if (!isU8 && node.NoClosingQuote()) goto gTrue;
@@ -155,9 +159,10 @@ static class CiUtilExt {
 		if (isInterpolated && x.stringNode is not InterpolatedStringExpressionSyntax) x.stringNode = x.stringNode.Parent;
 		Debug.Assert(x.stringNode is LiteralExpressionSyntax or InterpolatedStringExpressionSyntax);
 		if (x.isInterpolated = isInterpolated) {
-			var ns = x.stringNode.SpanStart;
-			if (code[ns] == '@' || code[ns + 1] == '@') isVerbatim = true;
-			else if (code[ns + 1] != '"' || code.Eq(ns + 1, "\"\"\"")) isRaw = true;
+			var k1 = x.stringNode.GetFirstToken().Kind();
+			x.isRawMultiline = k1 == SyntaxKind.InterpolatedMultiLineRawStringStartToken;
+			if (k1 is SyntaxKind.InterpolatedVerbatimStringStartToken) isVerbatim = true;
+			else if (k1 is SyntaxKind.InterpolatedSingleLineRawStringStartToken or SyntaxKind.InterpolatedMultiLineRawStringStartToken) isRaw = true;
 		}
 		x.isVerbatim = isVerbatim;
 		x.isRaw = isRaw;
@@ -232,29 +237,54 @@ static class CiUtilExt {
 	/// Gets full span, not including leading trivia that is not comments/doccomments touching the declaration.
 	/// </summary>
 	/// <param name="minimalLeadingTrivia">Get leading trivia just until the first newline when searching backwards. Usually it is indentation whitespace or nothing.</param>
-	public static TextSpan GetRealFullSpan(this SyntaxNode t, bool minimalLeadingTrivia = false) {
+	/// <param name="spanEnd">Get <c>Span.End</c> instead of <c>FullSpan.End</c>.</param>
+	public static TextSpan GetRealFullSpan(this SyntaxNode t, bool minimalLeadingTrivia = false, bool spanEnd = false) {
 		int from = t.SpanStart;
 		var a = t.GetLeadingTrivia();
 		for (int i = a.Count; --i >= 0;) {
 			var v = a[i];
 			var k = v.Kind();
-			//print.it(i, k);
 			if (k == SyntaxKind.EndOfLineTrivia) {
 				if (i == 0 || minimalLeadingTrivia) break;
 				k = a[i - 1].Kind();
 				if (k == SyntaxKind.EndOfLineTrivia) break;
 				if (k == SyntaxKind.WhitespaceTrivia) if (i == 1 || a[i - 2].IsKind(SyntaxKind.EndOfLineTrivia)) break;
+			} else if (k is SyntaxKind.SingleLineDocumentationCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia) {
+				from = v.FullSpan.Start; //SpanStart does not include /// or /**
+				continue;
 			} else {
-				if (k is not (SyntaxKind.WhitespaceTrivia
-					or SyntaxKind.SingleLineCommentTrivia
-					or SyntaxKind.SingleLineDocumentationCommentTrivia
-					or SyntaxKind.MultiLineCommentTrivia
-					or SyntaxKind.MultiLineDocumentationCommentTrivia)
-					) break;
+				if (k is not (SyntaxKind.WhitespaceTrivia or SyntaxKind.SingleLineCommentTrivia or SyntaxKind.MultiLineCommentTrivia)) break;
 			}
 			from = v.SpanStart;
 		}
-		return TextSpan.FromBounds(from, t.FullSpan.End);
+		return TextSpan.FromBounds(from, spanEnd ? t.Span.End : t.FullSpan.End);
+	}
+	
+	/// <summary>
+	/// Gets the first ancestor-or-this that is a statement or member/accessor declaration or using directive etc.
+	/// See also <see cref="CiUtil.GetStatementEtcFromPos"/> (it finds node and calls this func).
+	/// </summary>
+	/// <param name="t"></param>
+	/// <param name="pos">See remarks.</param>
+	/// <param name="notAccessor">Don't need <b>AccessorDeclarationSyntax</b> (get the property etc declaration).</param>
+	/// <returns>null if the initial node is <b>CompilationUnitSyntax</b>, eg <i>pos</i> is at the end of file.</returns>
+	/// <remarks>
+	/// If the statement is `{ }` owned by another statement (eg `if`, but not `{ }`) or member/accessor declaration, gets the owner if <i>pos</i> is not inside `{ }`.
+	/// If that owner is `{ }` in an expression (eg lambda), returns the ancestor statement.
+	/// </remarks>
+	public static SyntaxNode GetStatementEtc(this SyntaxNode t, int pos, bool notAccessor = false) {
+		g1:
+		var n = t.FirstAncestorOrSelf<SyntaxNode>(notAccessor ? static o => o is StatementSyntax or MemberDeclarationSyntax : static o => o is StatementSyntax or MemberDeclarationSyntax or AccessorDeclarationSyntax);
+		if (n == null) {
+			n = t.FirstAncestorOrSelf<SyntaxNode>(static o => o.Parent is CompilationUnitSyntax); //using directive etc
+		} else if (n is BlockSyntax) {
+			var p = n.Parent;
+			if (!(p is BlockSyntax or GlobalStatementSyntax) && !n.Span.ContainsInside(pos)) {
+				if (!(p is StatementSyntax or MemberDeclarationSyntax)) { t = p; goto g1; }
+				n = p;
+			}
+		}
+		return n;
 	}
 	
 	public static bool Eq(this string t, TextSpan span, string s, bool ignoreCase = false)
@@ -453,4 +483,14 @@ record struct CiStringInfo {
 	/// At """|""".
 	/// </summary>
 	public bool isRawPrefixCenter;
+	
+	/// <summary>
+	/// In multiline raw string. Valid when returns true, but can be <c>true</c> regardless of the return value.
+	/// </summary>
+	public bool isRawMultiline;
+	
+	/// <summary>
+	/// In multiline raw string after """ but before the start of next line. Can be <c>true</c> only if returned null.
+	/// </summary>
+	public bool isRawMultilineBetweenStartQuotesAndText;
 }

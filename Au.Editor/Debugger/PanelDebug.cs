@@ -382,10 +382,10 @@ System.Threading.Tasks.TaskCanceledException
 	#endregion
 
 	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int line) {
-		m["Run to here", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.FN, line, false);
-		m["Run to here non-stop", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.FN, line, true);
-		if (IsDebugging) m["Restart and run to here non-stop", "*Codicons.DebugRestart @14" + Menus.green2] = o => _RunToHere(doc.FN, line, true, true);
-		if (IsStopped) m["Jump to here", "*Codicons.DebugStackframe @14" + Menus.green2] = o => _JumpToHere(doc.FN, line);
+		m["Run to here", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.EFile, line, false);
+		m["Run to here non-stop", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.EFile, line, true);
+		if (IsDebugging) m["Restart and run to here non-stop", "*Codicons.DebugRestart @14" + Menus.green2] = o => _RunToHere(doc.EFile, line, true, true);
+		if (IsStopped) m["Jump to here", "*Codicons.DebugStackframe @14" + Menus.green2] = o => _JumpToHere(doc.EFile, line);
 	}
 
 	void _Step(string s) {
@@ -700,7 +700,7 @@ System.Threading.Tasks.TaskCanceledException
 			if (_VarCreateL("$exception.ToString()") is { } v) {
 				string s = v.value.Trim('"').Unescape(), color = caught ? "#CC00FF" : "red", append = null;
 				if (_VarCreateL("$exception.InnerException") is { } vi && vi.value.Starts('{')) {
-					append = " See also: Debug panel -> Variables -> $exception -> InnerException.";
+					append = " See also: Debug panel > Variables > $exception > InnerException.";
 				}
 				_Print($"<c {color}>{stage.Upper(SUpper.FirstChar)}: {s}\r\n{append}<>");
 			}

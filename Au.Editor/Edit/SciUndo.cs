@@ -69,7 +69,7 @@ CREATE TABLE files (id INTEGER, fileId INTEGER, oldHash BLOB, newHash BLOB, undo
 	public void RifAddFile(SciCode doc, string oldText, string newText, List<StartEndText> changes) {
 		if (_db == null) return;
 		int n = _nFiles;
-		RifAddFile(doc.FN, oldText, newText, changes);
+		RifAddFile(doc.EFile, oldText, newText, changes);
 		if (_nFiles > n) Sci_SetUndoMark((_lastDoc = doc).AaSciPtr, _id);
 	}
 

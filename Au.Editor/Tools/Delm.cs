@@ -623,7 +623,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			//bool xy = _ActionIsMouse(_iAction);
 			return _RunElmTask(500, (p, flags), static m => {
 				//don't show rects when a mouse button is pressed.
-				//	With some apps then hangs. Eg Word -> Insert -> Symbol, click a symbol; notinproc too, but not UIA.
+				//	With some apps then hangs. Eg Word > Insert > Symbol, click a symbol; notinproc too, but not UIA.
 				//print.it(Au.mouse.isPressed());
 				if (mouse.isPressed()) return default;
 				
@@ -954,11 +954,12 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				s = s.RxReplace(@"^.+?\bwnd\.find\(.+[^(]\)\K;\r", ".Activate();\r", 1);
 			}
 			
+			(string oldName, string newName)[] rename_e = null;
 			if (_Opt.Has(_EOptions.VarRole) && !(_CurrentAction.IsFinder || _CurrentAction.IsFindAll)) {
-				if (s.RxMatch(@"(?m)^var (e) = w\.Elm\[""(?:[a-z]+:)?([a-zA-Z][\w ]*\w)""", out var m)) s = s.ReplaceAt(m[1], m[2].Value.Lower().Replace(' ', '_') + "1");
+				if (s.RxMatch(@"(?m)^var e = w\.Elm\[""(?:[a-z]+:)?([a-zA-Z][\w ]+\w)""", out var m)) rename_e = [("e", m[1].Value.Lower().Replace(' ', '_'))];
 			}
 			
-			InsertCode.Statements(s);
+			InsertCode.Statements(s, ICSFlags.MakeVarName1, renameVars: rename_e);
 			if (!hotkey) {
 				_close = true;
 				_bInsert.Content = "Close";

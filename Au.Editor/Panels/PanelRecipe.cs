@@ -286,7 +286,7 @@ class PanelRecipe {
 			if (App.Model.WorkspaceName != "Cookbook") return;
 			if (!P.IsVisible) return;
 			var doc = Panels.Editor.ActiveDoc;
-			if (doc == null || !doc.FN.IsCodeFile || doc.FN.Parent.Name == "-") return;
+			if (doc == null || !doc.EFile.IsCodeFile || doc.EFile.Parent.Name == "-") return;
 			string text = doc.aaaText;
 			if (text == prevText) return;
 			prevText = text;
@@ -294,7 +294,7 @@ class PanelRecipe {
 			
 			int n1 = doc == prevDoc ? _c.Call(SCI_GETFIRSTVISIBLELINE) : 0;
 			if (n1 > 0) _c.AaWnd.Send(Api.WM_SETREDRAW);
-			_SetText(doc.FN.DisplayName, text);
+			_SetText(doc.EFile.DisplayName, text);
 			if (doc == prevDoc) {
 				if (n1 > 0)
 					//_c.Call(SCI_SETFIRSTVISIBLELINE, n1);
@@ -305,7 +305,7 @@ class PanelRecipe {
 					});
 			} else {
 				prevDoc = doc;
-				Panels.Cookbook.AddToHistory_(doc.FN.DisplayName);
+				Panels.Cookbook.AddToHistory_(doc.EFile.DisplayName);
 			}
 			//rejected: autoscroll. Even if works perfectly, often it is more annoying than useful.
 		};

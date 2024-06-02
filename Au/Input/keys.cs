@@ -807,7 +807,7 @@ public partial class keys {
 		//note: don't call isCapsLock again here. It is unreliable because GetKeyState is sync.
 		//	Eg in some cases ignores the new key state until this UI thread removes all messages from queue.
 		if (!ok && IsCapsLockShiftOff_()) {
-			//Shift is set to turn off CapsLock in Settings -> Time & Language -> Language -> Keyboard -> Input method -> Hot keys.
+			//Shift is set to turn off CapsLock in Settings > Time & Language > Language > Keyboard > Input method > Hot keys.
 			WindowsHook.IgnoreLShiftCaps_(2000);
 			Internal_.SendKey(KKey.Shift);
 			WindowsHook.IgnoreLShiftCaps_(0);

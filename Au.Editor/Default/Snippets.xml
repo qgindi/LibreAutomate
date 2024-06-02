@@ -4,19 +4,19 @@
 
 	<snippet name="ifElseSnippet" info="if { code } else { code }.">
 		<![CDATA[if (${1:true}) {
-	${TM_SELECTED_TEXT}$0
+	${SELECTED_TEXT}$0
 } else {
 	
 }]]>
 	</snippet>
 	<snippet name="forLoopSnippet" info="Repeat { code } count times." more="See also: Cookbook recipe &quot;for, foreach&quot;.">
 		<![CDATA[for (int ${1:i} = 0; $1 < ${2:count}; $1++) {
-	${TM_SELECTED_TEXT}$0
+	${SELECTED_TEXT}$0
 }]]>
 	</snippet>
 	<snippet name="forReverseSnippet" info="Repeat { code } count times." more="See also: Cookbook recipe &quot;for, foreach&quot;.">
 		<![CDATA[for (int ${1:i} = ${2:count}; --$1 >= 0; ) {
-	${TM_SELECTED_TEXT}$0
+	${SELECTED_TEXT}$0
 }]]>
 	</snippet>
 	<snippet name="switchSnippet" info="Go to a case that matches a variable, or default if none.">
@@ -54,10 +54,10 @@ default:
 	break;
 }]]>
 		</list>
-		<list item="switch expression, 1 line">
+		<list item="switch &amp;expression, 1 line">
 			<![CDATA[var ${1:result} = ${2:variable} switch { ${3:C} => ${4:R}, ${5:C} => ${6:R}, ${7:C} => ${8:R}, _ => ${10:default} };]]>
 		</list>
-		<list item="switch expression, multiline">
+		<list item="switch expression, &amp;multiline">
 			<![CDATA[var ${1:result} = ${2:variable} switch {
 	${3:C} => ${4:R},
 	${5:C} => ${6:R},
@@ -73,21 +73,21 @@ default:
 		</list>
 	</snippet>
 	<snippet name="trySnippet" info="Exception handling." more="See also: Cookbook recipe &quot;Errors, exceptions&quot;.">
-		<list item="try catch">
+		<list item="catch">
 			<![CDATA[try {
-	${TM_SELECTED_TEXT}
+	${SELECTED_TEXT}
 }
 catch(${1:Exception} ex) { $0 }]]>
 		</list>
-		<list item="try &amp;finally">
+		<list item="&amp;finally">
 			<![CDATA[try {
-	${TM_SELECTED_TEXT}
+	${SELECTED_TEXT}
 }
 finally { $0 }]]>
 		</list>
-		<list item="&amp;try catch finally">
+		<list item="c&amp;atch finally">
 			<![CDATA[try {
-	${TM_SELECTED_TEXT}
+	${SELECTED_TEXT}
 }
 catch(${1:Exception} ex) { $0 }
 finally {  }]]>
@@ -95,10 +95,10 @@ finally {  }]]>
 	</snippet>
 	<snippet name="threadSnippet" info="Run action in other thread.">
 		<list item="Start new thread">
-			<![CDATA[run.thread(() => { ${TM_SELECTED_TEXT}$0 });]]>
+			<![CDATA[run.thread(() => { $0 });]]>
 		</list>
 		<list item="Use thread pool">
-			<![CDATA[Task.Run(() => { ${TM_SELECTED_TEXT}$0 });]]>
+			<![CDATA[Task.Run(() => { $0 });]]>
 		</list>
 	</snippet>
 	<snippet name="dsDialogShowSnippet" info="Standard dialog window." more="See also: wpfSnippet.">
@@ -152,64 +152,55 @@ default: return;
 	<snippet name="winFindSnippet" info="Find window.">
 		<![CDATA[var w = wnd.find(0, "${1:*Name}");]]>
 	</snippet>
-	<snippet name="clickSnippet" info="Mouse click or move in window.">
-		<list item="Left click">
-			<![CDATA[var w = wnd.find(0, "${1:*Name}");
-mouse.click(w, );]]>
-		</list>
-		<list item="&amp;Right click">
-			<![CDATA[var w = wnd.find(0, "${1:*Name}");
-mouse.rightClick(w, );]]>
-		</list>
-		<list item="&amp;Double click">
-			<![CDATA[var w = wnd.find(0, "${1:*Name}");
-mouse.doubleClick(w, );]]>
-		</list>
-		<list item="&amp;Move">
-			<![CDATA[var w = wnd.find(0, "${1:*Name}");
-mouse.move(w, );]]>
-		</list>
-	</snippet>
 	<snippet name="osdSnippet" info="Show OSD text (on-screen display) or tooltip.">
 		<list item="Transparent text">
-			<![CDATA[osdText.showTransparentText("$0");]]>
+			<![CDATA[osdText.showTransparentText($0);]]>
 		</list>
 		<list item="Tooltip">
-			<![CDATA[osdText.showText("$0");]]>
+			<![CDATA[osdText.showText($0);]]>
 		</list>
 		<list item="Transparent text, until current function ends">
-			<![CDATA[using var osd = osdText.showTransparentText("$0", -1);]]>
+			<![CDATA[using var osd = osdText.showTransparentText($0, -1);]]>
 		</list>
 		<list item="Tooltip, until current function ends">
-			<![CDATA[using var osd = osdText.showText("$0", -1);]]>
+			<![CDATA[using var osd = osdText.showText($0, -1);]]>
 		</list>
 	</snippet>
 	<snippet name="triggerSnippet" info="Add hotkey, autotext, mouse or window trigger." more="Add triggers in a file that contains triggers of this type. To open, use menu TT. Local triggers can be in any other script.">
 		<list item="Hotkey">
-			<![CDATA[hk["$0"] = o => {  };]]>
+			<![CDATA[hk["${1:Ctrl+E}"] = o => { $0 };]]>
 		</list>
 		<list item="Autotext">
-			<![CDATA[tt["$0"] = o => {  };]]>
+			<![CDATA[tt["${1:text}"] = o => { $0 };]]>
 		</list>
 		<list item="Autotext replace">
-			<![CDATA[tt["$0"] = o => o.Replace("text");]]>
+			<![CDATA[tt["${1:text}"] = o => o.Replace("${2:replacement}");]]>
 		</list>
 		<list item="Autotext simple replace">
-			<![CDATA[tr["$0"] = "";]]>
+			<![CDATA[tr["${1:text}"] = "${2:replacement}";]]>
 		</list>
 		<list item="Autotext menu">
-			<![CDATA[tt["$0"] = o => o.Menu(
-	"text",
+			<![CDATA[tt["${1:text}"] = o => o.Menu([
+	"${2:replacement1}",
+	new("Label1", "replacement2"),
+	new("Label2", "replacement3", "<b>html</b>"),
 	"<tag>[[|]]</tag>",
-	new("Label1", "text"),
-	new("Label2", "text", "<b>html</b>")
-	);]]>
+	]);]]>
 		</list>
-		<list item="Mouse">
-			<![CDATA[Triggers.Mouse[TM$0] = o => {  };]]>
+		<list item="Mouse click">
+			<![CDATA[Triggers.Mouse[TMClick.$1] = o => { $0 };]]>
+		</list>
+		<list item="Mouse wheel">
+			<![CDATA[Triggers.Mouse[TMWheel.$1] = o => { $0 };]]>
+		</list>
+		<list item="Mouse edge">
+			<![CDATA[Triggers.Mouse[TMEdge.$1] = o => { $0 };]]>
+		</list>
+		<list item="Mouse move">
+			<![CDATA[Triggers.Mouse[TMMove.$1] = o => { $0 };]]>
 		</list>
 		<list item="Window">
-			<![CDATA[Triggers.Window[TWEvent.ActiveNew, "$0"] = o => {  };]]>
+			<![CDATA[Triggers.Window[TWEvent.ActiveNew, "$1"] = o => { $0 };]]>
 		</list>
 		<list item="Local triggers" using="Au.Triggers">
 			<![CDATA[//Script-local triggers running all the time, as main script code.
@@ -272,7 +263,7 @@ if ($1.IsMatch("${2:*Name}")) {
 			<![CDATA[if (keys.isMod()) { $0 }]]>
 		</list>
 		<list item="Specified key">
-			<![CDATA[if (keys.isPressed($0)) {  }]]>
+			<![CDATA[if (keys.isPressed(KKey.$1)) { $0 }]]>
 		</list>
 		<list item="Caps Lock toggled">
 			<![CDATA[if (keys.isCapsLock) { $0 }]]>
@@ -298,25 +289,16 @@ opt.mouse.MoveSleepFinally = 10;]]>
 		<list item="&amp;Static">
 			<![CDATA[perf.first();$0
 perf.next();
-perf.next();
-perf.next();
 perf.nw();]]>
 		</list>
 		<list item="&amp;Local, auto-NW">
 			<![CDATA[using var p1 = perf.local();$0
-p1.Next();
-p1.Next();
 p1.Next();]]>
 		</list>
 	</snippet>
-	<snippet name="perfSurround" info="Measure code speed.">
-		<![CDATA[perf.first();
-${TM_SELECTED_TEXT}$0
-perf.nw();]]>
-	</snippet>
 	<snippet name="menuSnippet" info="Popup menu.">
 		<list item="Menu for automation scripts">
-			<![CDATA[var ${1:m} = new popupMenu("${UUID}");
+			<![CDATA[var ${1:m} = new popupMenu("${GUID}");
 
 $1["${2:Text}"] = o => { $0 };
 $1[""] = o => {  };
@@ -386,7 +368,7 @@ b.R.Add(out CheckBox c1, "Check");
 b.R.AddButton("Button", _ => { print.it("Button clicked"); });
 b.R.AddOkCancel();
 b.End();
-#if WPF_PREVIEW //menu Edit -> View -> WPF preview
+#if WPF_PREVIEW //menu Edit > View > WPF preview
 b.Window.Preview();
 #endif
 if (!b.ShowDialog()) return;
@@ -423,19 +405,16 @@ script.setup(trayIcon: true, sleepExit: true);
 	<snippet name="pcPrintClearSnippet" info="Clear the output window.">
 		<![CDATA[print.clear();]]>
 	</snippet>
-	<snippet name="ocPrintClearSnippet" info="Clear the output window.">
-		<![CDATA[print.clear();]]>
-	</snippet>
 	<snippet name="kkKeysSendSnippet" info="Generate virtual keystrokes (keys, text).">
 		<![CDATA[keys.send("$0");]]>
 	</snippet>
 	<snippet name="ktKeysSendtSnippet" info="Send text to the active window using virtual keystrokes.">
-		<![CDATA[keys.sendt("$0");]]>
+		<![CDATA[keys.sendt($0);]]>
 	</snippet>
 	<snippet name="pasteSnippet" info="Paste text using the clipboard and Ctrl+V.">
 		<![CDATA[clipboard.paste($0);]]>
 	</snippet>
-	<snippet name="copySnippet" info="Get the selected text using the clipboard and Ctrl+C.">
+	<snippet name="copySnippet" info="Get the selected text using the clipboard and Ctrl+C." context="Function">
 		<list item="&amp;Copy">
 			<![CDATA[string ${1:s} = clipboard.copy();$0]]>
 		</list>
@@ -453,7 +432,7 @@ script.setup(trayIcon: true, sleepExit: true);
 		<![CDATA[script.run(@"${1:\Folder\Script}.cs");]]>
 	</snippet>
 	<snippet name="failedSnippet" info="Throw 'failed' exception." more="Exception text is optional.">
-		<![CDATA[throw new ${1:AuException}($0);]]>
+		<![CDATA[throw new ${2:AuException}($1);]]>
 	</snippet>
 
 	<!--context="Type"-->
@@ -512,38 +491,37 @@ internal record class MySettings : JSettings {
 //using var sett = MySettings.Load();]]>
 	</snippet>
 
+	<!--context="Namespace"-->
+
+	<!--rejected: programMainSurround.-->
+
 	<!--context="Attributes"-->
 
-	<snippet name="marshalAsSnippet" info="Adds MarshalAs attribute." more="Then press dot and select from list.">
+	<snippet name="marshalAsSnippet" info="Adds MarshalAs attribute." more="Then press dot and select from list." context="Attributes">
 		<![CDATA[MarshalAs(UnmanagedType$0)]]>
 	</snippet>
 
 	<!--context="Any|Line"-->
 
-	<snippet name="warningDisableSnippet" info="Disables one or more warnings." more="Or you can disable warnings in the Properties dialog.">
-		<![CDATA[#pragma warning disable ${1:123, 456}
-${TM_SELECTED_TEXT}$0
-#pragma warning restore]]>
-	</snippet>
-	<snippet name="ifDirectiveSnippet" info="Enables or disables code depending on a preprocessor expression.">
+	<snippet name="#ifSnippet" info="Enables or disables code depending on a preprocessor expression.">
 		<![CDATA[#if ${1:true}
-${TM_SELECTED_TEXT}$0
+${SELECTED_TEXT}$0
 #else
-
 #endif]]>
 	</snippet>
-	<snippet name="regionSnippet" info="Fold (hide) code lines." more="//. in LibreAutomate is the same as #region. Can be followed by space and text.">
-		<list item="#region">
-			<![CDATA[#region ${1:name}
+	<snippet name="#regionSnippet" info="Fold (hide) code lines.">
+		<![CDATA[#region ${1:name}
 				
-${TM_SELECTED_TEXT}$0
+${SELECTED_TEXT}$0
 
 #endregion]]>
-		</list>
-		<list item="//.">
-			<![CDATA[//.
-${TM_SELECTED_TEXT}$0
+	</snippet>
+
+	<!--context="Any"-->
+	
+	<snippet name="//.Surround" info="Fold (hide) code lines." more="In LibreAutomate it is the same as #region. Can be //. or //. text.">
+		<![CDATA[//.
+${SELECTED_TEXT}$0
 //..]]>
-		</list>
 	</snippet>
 </snippets>

@@ -799,7 +799,7 @@ partial class FilesModel {
 	
 	/// <summary>
 	/// Closes selected or all items, or collapses folders.
-	/// Used to implement menu File -> Open/Close.
+	/// Used to implement menu File > Open/Close.
 	/// </summary>
 	public void CloseEtc(ECloseCmd how, FileNode dontClose = null) {
 		switch (how) {
@@ -1471,7 +1471,7 @@ partial class FilesModel {
 	#region fill menu
 	
 	/// <summary>
-	/// Adds recent workspaces to submenu File -> Workspace.
+	/// Adds recent workspaces to submenu File > Workspace.
 	/// </summary>
 	public static void FillMenuRecentWorkspaces(MenuItem sub) {
 		var mi = sub.Items[0] as MenuItem;
@@ -1489,7 +1489,7 @@ partial class FilesModel {
 	}
 	
 	/// <summary>
-	/// Adds templates to File -> New.
+	/// Adds templates to File > New.
 	/// </summary>
 	public static void FillMenuNew(MenuItem sub) {
 		var xroot = FileNode.Templates.LoadXml();
@@ -1558,7 +1558,7 @@ partial class FilesModel {
 				string file = row[0];
 				if (file.Starts("//")) continue;
 				var f = FindCodeFile(file);
-				if (f == null) { print.it("Startup script not found: " + file + ". Please edit Options -> Workspace -> Run scripts..."); continue; }
+				if (f == null) { print.it("Startup script not found: " + file + ". Please edit Options > Workspace > Run scripts..."); continue; }
 				int delay = 0;
 				if (x.ColumnCount > 1) {
 					var sd = row[1];

@@ -1,5 +1,4 @@
-//TODO: now the help page #links changed, and our links jumps to incorrect chapter.
-//	Eg in "<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC25>Groups as subroutines<>" now changed SEC25.
+//FUTURE: maybe once/year test links like <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC25>" in Regex.txt. Some SECn change when they add a new chapter.
 
 using Au.Controls;
 

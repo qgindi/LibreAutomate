@@ -14,8 +14,6 @@ using CAW::Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using CAW::Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
-//using CAW::Microsoft.CodeAnalysis.Indentation;
-//using Microsoft.CodeAnalysis.CSharp.Indentation;
 
 static class ModifyCode {
 	//SHOULDDO: if tries to uncomment /// doc comment, remove /// . Now does nothing. VS removes // and leaves /.
@@ -112,14 +110,19 @@ static class ModifyCode {
 		}
 	}
 	
+	//public static string Format(ref int from, ref int to) {
+	//	if (!CodeInfo.GetContextAndDocument(out var cd, from, metaToo: true)) return null;
+	//	return Format(cd, ref from, ref to);
+	//}
+	
 	public static void Format(bool selection) {
-		if (!CodeInfo.GetContextAndDocument(out var cd, metaToo: true)) return;
+		if (!CodeInfo.GetContextAndDocument(out var cd, -2, metaToo: true)) return;
 		
 		var doc = cd.sci;
-		int from, to;
+		int from, to, selStart, selEnd;
 		if (selection) {
-			from = doc.aaaSelectionStart16;
-			to = doc.aaaSelectionEnd16;
+			selStart = from = cd.pos;
+			selEnd = to = doc.aaaSelectionEnd16;
 			if (from == to) {
 				var node = CiUtil.GetStatementEtcFromPos(cd, from);
 				if (node == null) return;
@@ -129,28 +132,30 @@ static class ModifyCode {
 			from = 0;
 			to = cd.code.Length;
 			if (to == 0) return;
+			selStart = selEnd = -1;
 		}
-		int from0 = from, tail = cd.code.Length - to;
+		int from0 = from;
 		
-		string s = Format(cd, ref from, ref to);
+		string s = Format(cd, ref from, ref to, ref selStart, ref selEnd);
 		if (s == null) return;
 		if (selection) {
 			doc.EReplaceTextGently(s, from..to);
-			doc.aaaSelect(true, from0, doc.aaaLen16 - tail);
+			doc.aaaSelect(true, selStart, selEnd);
 		} else {
 			doc.EReplaceTextGently(s);
 		}
 	}
 	
-	public static string Format(ref int from, ref int to) {
-		if (!CodeInfo.GetContextAndDocument(out var cd, from, metaToo: true)) return null;
-		return Format(cd, ref from, ref to);
-	}
-	
-	//FUTURE: option to auto-format.
-	
-	public static string Format(CodeInfo.Context cd, ref int from, ref int to) {
-		//perf.first();
+	/// <summary>
+	/// Formats text of the specified range.
+	/// </summary>
+	/// <param name="cd"></param>
+	/// <param name="from">Start of range. The function may adjust it to span horizontal whitespace before.</param>
+	/// <param name="to">End of range. The function may adjust it to exclude newline after.</param>
+	/// <param name="selStart">Selection start. The function adjusts it to match the formatted text. Can be -1 if don't need.</param>
+	/// <param name="selEnd">Selection end. The function adjusts it to match the formatted text. Can be -1 if don't need. Can be the same variable as <i>selStart</i>.</param>
+	/// <returns>Formatted text of the final range.</returns>
+	public static string Format(CodeInfo.Context cd, ref int from, ref int to, ref int selStart, ref int selEnd) {
 		string code = cd.code;
 		
 		//exclude newline at the end. Else formats entire leading trivia of next token.
@@ -160,75 +165,118 @@ static class ModifyCode {
 			if (to == from) return null;
 		}
 		
-		//include whitespace and \r\n before. Else may not correct indentation.
-		//	In the past the formatter used to include it anyway; now it seems not.
-		while (from > 0 && code[from - 1] is '\r' or '\n' or '\t' or ' ') from--; //never mind: then formats all trivia before. We'll skip it.
-		//CiUtil.HiliteRange(from, to);
+		//include whitespace before. Else _Format can't detect \r\n before when indented.
+		while (from > 0 && code[from - 1] is '\t' or ' ') from--;
 		
-		//workarounds for some nasty Roslyn features that can't be changed with options:
-		//	Removes tabs from empty lines.
-		//	If next line after code//comment1 is //comment2, aligns //comment2 with //comment1.
-		//The best way would be to modify Roslyn code. Too difficult.
-		//Another way - fix formatted code. Not 100% reliable.
-		//Chosen way - before formatting, in empty lines add a marked doc comment. Finally remove. The same in lines containing only //comment.
+		if (!_Format(cd, from, to, out var a)) return null;
 		
-		var root = cd.syntaxRoot;
-		const string c_mark1 = "///\a\b";
-		int fix1 = code.RxReplace(@"(?m)^\h*\K(?=\R|//)", c_mark1, out code, range: from..to);
-		if (fix1 > 0) {
-			to += code.Length - cd.code.Length;
-			root = root.SyntaxTree.WithChangedText(SourceText.From(code)).GetCompilationUnitRoot();
-		}
-		//perf.next();
-		
-		//how to modify rules? But probably not useful.
-		//var rules=Formatter.GetDefaultFormattingRules(cd.document);
-		//foreach (var v in rules) {
-		//	print.it(v);
-		//	//if (v is AnchorIndentationFormattingRule d) print.it(d);
-		//}
-		
-		var span = TextSpan.FromBounds(from, to);
-		var services = cd.document.Project.Solution.Services;
-		IList<TextChange> a;
-		try { a = Formatter.GetFormattedTextChanges(root, span, services, FormattingOptions); }
-		catch (Exception e1) { print.it("Failed to format code", e1); return null; } //https://www.libreautomate.com/forum/showthread.php?tid=7622
-		//perf.next();
-		
-		string code2 = code;
-		bool replaced = false;
-		if (a.Count > 0) {
-			var b = new StringBuilder();
-			int i1 = 0;
-			foreach (var v in a) {
-				int ss = v.Span.Start, se = v.Span.End;
-				//Debug_.PrintIf(ss < from || se > to, $"from: {from}, ss: {ss},  to: {to}, se: {se},  v: {v}");
-				if (ss < from || se > to || code.Eq(v.Span.ToRange(), v.NewText)) continue;
-				//if (se - ss == 1 && code[ss] == ' ' && v.NewText == "" && code.Eq(ss - 2, "{  }")) continue; //don't replace "{  }" with "{ }"
-				b.Append(code, i1, ss - i1);
-				b.Append(v.NewText);
-				i1 = se;
-				replaced = true;
+		StringBuilder b = null;
+		int i1 = from, caret1 = selStart, caret2 = selEnd, moveCaret1 = 0, moveCaret2 = 0;
+		foreach (var v in a) {
+			string newText = v.NewText;
+			int ss = v.Span.Start, se = v.Span.End;
+			if (ss < from) {
+				if (se < from || se > to || newText.NE()) continue;
+				//probably previous line is blank with indentation, and formatter tries to remove that indentation, eg replace "\t\r\n" with "\r\n\t"
+				int n = newText.LastIndexOf('\n') + 1; if (n == 0) continue;
+				newText = newText[n..];
+				ss = from;
+				if (code.Eq(ss..se, newText)) continue;
+			} else {
+				if (se > to || code.Eq(v.Span, newText)) continue;
 			}
 			
-			if (replaced) {
-				b.Append(code, i1, code.Length - i1);
-				code = b.ToString();
+			b ??= new();
+			b.Append(code, i1, ss - i1);
+			b.Append(newText);
+			i1 = se;
+			
+			_Caret(caret1, ref moveCaret1);
+			_Caret(caret2, ref moveCaret2);
+			
+			void _Caret(int caret, ref int moveCaret) {
+				if (caret >= se) moveCaret += ss - se + newText.Length;
+				else if (caret > ss) moveCaret += ss - caret + newText.Length;
 			}
 		}
-		if (!replaced) return null;
 		
-		var ret = code[from..(to + (code.Length - code2.Length))];
+		if (b == null) return null;
+		b.Append(code, i1, to - i1);
 		
-		if (fix1 > 0) {
-			var r1 = ret.Replace(c_mark1, "");
-			to -= ret.Length - r1.Length;
-			ret = r1;
+		caret1 += moveCaret1;
+		if (caret2 >= 0) caret2 = Math.Max(caret2 + moveCaret2, caret1);
+		selStart = caret1;
+		selEnd = caret2;
+		
+		return b.ToString();
+	}
+	
+	static bool _Format(CodeInfo.Context cd, int from, int to, out IList<TextChange> ac, string code = null) {
+		bool changedCode = code != null;
+		code ??= cd.code;
+		var root = cd.syntaxRoot;
+		
+		//workaround for some nasty Roslyn features that can't be changed with options:
+		//	Removes tabs from empty lines.
+		//	If next line after code//comment1 is //comment2, aligns //comment2 with //comment1.
+		//Before formatting, in blank lines add a marker (doc comment). The same in lines containing only //comment.
+		//Other ways: 1. Modify Roslyn code; too difficult etc. 2. Fix formatted code; not 100% reliable.
+		const string c_mark = "///\a\b"; const int c_markLen = 5;
+		int nw = code.RxReplace(@"(?m)^\h*\K(?=\R|//(?!/(?!/)))", c_mark, out code, range: from..to);
+		if (nw > 0 || changedCode) {
+			root = root.SyntaxTree.WithChangedText(SourceText.From(code)).GetCompilationUnitRoot();
+			if (root.GetText().Length != code.Length) { Debug_.Print("bad new code"); ac = null; return false; }
 		}
 		
-		//perf.nw();
-		return ret;
+		//include \r\n before. Else may not correct indentation.
+		//	never mind: then formats all trivia before. We'll skip it.
+		if (from > 0 && code[from - 1] == '\n') from--;
+		if (from > 0 && code[from - 1] == '\r') from--;
+		//never mind: does not add space before statement when *from* is after eg `{` or `}` or `;`.
+		//	VS adds space or newline when using "Format selection", but not when auto-format.
+		
+		try { ac = Formatter.GetFormattedTextChanges(root, TextSpan.FromBounds(from, to + nw * c_markLen), cd.document.Project.Solution.Services, FormattingOptions); }
+		catch (Exception e1) { Debug_.Print(e1); ac = null; return false; } //https://www.libreautomate.com/forum/showthread.php?tid=7622
+		if (ac.Count == 0) return false;
+		
+		//part 2 of the workaround. Remove marker traces from ac. Then ac will match the original code (the caller's version).
+		if (nw > 0) {
+			//_PrintFormattingTextChanges("BEFORE", code, ac);
+			
+			var aInserted = new int[nw];
+			for (int i = 0, j = 0; i < nw; j += c_markLen) aInserted[i++] = j = code.Find("///\a\b", j);
+			
+			for (int i = 0; i < ac.Count; i++) {
+				var v = ac[i];
+				
+				//some changes contain marks
+				var s = v.NewText; int lenRemoved = 0;
+				if (s.Length >= c_markLen) { s = s.Replace(c_mark, null); lenRemoved = v.NewText.Length - s.Length; }
+				
+				int startOfChange = v.Span.Start, nInsertedBefore = 0;
+				while (nInsertedBefore < nw && aInserted[nInsertedBefore] < startOfChange) nInsertedBefore++;
+				
+				if (nInsertedBefore > 0 || lenRemoved > 0) ac[i] = new(new(startOfChange - nInsertedBefore * c_markLen, v.Span.Length - lenRemoved), s);
+			}
+			
+			//_PrintFormattingTextChanges("AFTER", code, ac);
+		}
+		
+		return true;
+		
+		//BAD: Roslyn does not format multiline collection initializers.
+		//	https://github.com/dotnet/roslyn/issues/8269
 	}
+	
+#if DEBUG
+	static void _PrintFormattingTextChanges(string header, string code, IList<TextChange> a) {
+		print.it("----", header);
+		foreach (var v in a) {
+			var color = code.AsSpan(v.Span.ToRange()).Eq(v.NewText) ? "gray" : "green";
+			print.it($"<><c {color}><\a>{v}</\a><>");
+		}
+	}
+#endif
 	
 	/// <summary>
 	/// Formats code for inserting in current document at <i>start</i>.
@@ -240,28 +288,28 @@ static class ModifyCode {
 		if (s.NE()) return false;
 		if (!CodeInfo.GetContextAndDocument(out var cd, start, metaToo: true)) return false;
 		
-		int start2 = start; while (start2 > 0 && SyntaxFacts.IsWhitespace(cd.code[start2 - 1])) start2--; //let's start at the line start
-		int start3 = start2; while (start3 > 0 && SyntaxFacts.IsNewLine(cd.code[start3 - 1])) start3--; //let it correct indentation
-		
 		var code = cd.code.ReplaceAt(start..end, s);
-		var root = cd.syntaxRoot.SyntaxTree.WithChangedText(SourceText.From(code)).GetCompilationUnitRoot();
-		if (root.GetText().Length != code.Length) { Debug_.Print("bad new code"); return false; }
 		int end2 = start + s.Length;
+		int start2 = start; while (start2 > 0 && cd.code[start2 - 1] is '\t' or ' ') start2--; //include whitespace before. Else _Format can't detect \r\n before when indented.
 		
-		IList<TextChange> a;
-		try { a = Formatter.GetFormattedTextChanges(root, TextSpan.FromBounds(start3, end2), cd.document.Project.Solution.Services, FormattingOptions); }
-		catch (Exception e1) { Debug_.Print("Failed to format code. " + e1); return false; }
+		if (!_Format(cd, start2, end2, out var a, code)) return false;
 		
 		for (int i = a.Count; --i >= 0;) {
 			var v = a[i];
 			int ss = v.Span.Start, se = v.Span.End;
-			if (ss < start2 && se >= start2) {
+			if (ss < start2 && se >= start2 && se < end2
+				&& !(se == start2 && v.NewText == " " && cd.code.Eq(se - 1, '\n')) //formatter bug: in TLS replaces `A\n{B` with `A {B`
+				) {
 				int n = v.NewText.AsSpan().TrimEnd("\t ").Length;
-				a[i] = new(TextSpan.FromBounds(ss = start2, se), v.NewText[n..]);
+				a[i] = new(TextSpan.FromBounds(start2, se), v.NewText[n..]);
+			} else {
+				if (ss < start2 || se > end2 || code.Eq(ss..se, v.NewText)) a.RemoveAt(i);
+				else if (v.NewText.NE() && se - ss == 1 && code.Eq((ss - 2)..(ss + 2), "{  }")) a.RemoveAt(i); //don't replace `{  }` with `{ }` eg in snippet
 			}
-			if (ss < start2 || se > end2 || code.Eq(ss..se, v.NewText)) a.RemoveAt(i);
 		}
 		if (a.Count == 0) return false;
+		
+		//_PrintFormattingTextChanges("CHANGES", code, a);
 		
 		start = start2;
 		if (changes != null) {
@@ -279,8 +327,6 @@ static class ModifyCode {
 		s = b.ToString();
 		
 		return true;
-		
-		//never mind: the formatter does not add indentation tabs in blank lines.
 	}
 	
 	/// <summary>
@@ -358,8 +404,9 @@ static class ModifyCode {
 			var s = a.ToString();
 			if (d.TryGetValue(s, out var list)) list.Add(lds); else d[s] = new() { lds };
 			
-			//TODO: if found with similar name (eg "Doc1 - App" -> "Doc2 - App"), ask whether to remove these too. Eg UI with checkboxes.
+			//CONSIDER: if found with similar name (eg "Doc1 - App" -> "Doc2 - App"), ask whether to remove these too. Eg UI with checkboxes.
 			//	Also the UI should offer to replace these with `w.WaitForName`.
+			//	But maybe in many cases the user would do it manually faster than with all this confusing UI. Or just leave it as is.
 		}
 		
 		List<(int start, int end, string repl)> aRepl = new();
@@ -427,11 +474,6 @@ static class ModifyCode {
 		}
 	}
 }
-
-//gets 0 for empty lines. OK for //comments.
-//var ind = Microsoft.CodeAnalysis.CSharp.Indentation.CSharpIndentationService.Instance;
-//var ir=ind.GetIndentation(cd.document, 73, FormattingOptions.IndentStyle.Smart, default);
-//print.it(ir.BasePosition, ir.Offset);
 
 
 partial class SciCode {

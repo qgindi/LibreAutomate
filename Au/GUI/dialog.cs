@@ -4,7 +4,7 @@ using System.Drawing;
 
 //rejected: by default show dialog in screen of mouse, like with <c>dialog.options.defaultScreen = screen.ofMouse;</c>.
 //	Some Windows etc dialogs do it, and for me it's probably better. Eg Explorer's Properties even is at mouse position (top-left corner).
-//rejected: dialog.showCheckboxes. See Cookbook -> Dialog - enum check-list, select.
+//rejected: dialog.showCheckboxes. See Cookbook > Dialog - enum check-list, select.
 
 namespace Au {
 	/// <summary>

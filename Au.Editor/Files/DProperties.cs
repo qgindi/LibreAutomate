@@ -321,7 +321,7 @@ class Class1 {
 	void _ButtonClick_addNuget(WBButtonClickArgs e) {
 		var a = DNuget.GetInstalledPackages();
 		if (a == null) {
-			dialog.showInfo(null, "There are no NuGet packages installed in this workspace.\nTo install NuGet packages, use menu -> Tools -> NuGet.", owner: this);
+			dialog.showInfo(null, "There are no NuGet packages installed in this workspace.\nTo install NuGet packages, use menu Tools > NuGet.", owner: this);
 			return;
 		}
 		var sFind = findInLists.Text;
@@ -599,7 +599,7 @@ Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edite
 
 Default role for scripts is miniProgram; cannot be the last two. Default for class files is classFile.
 
-Read more in Cookbook -> Script (classes, .exe) and online help -> Editor (scripts, class files).
+Read more in Cookbook > Script (classes, .exe) and online help > Editor (scripts, class files).
 """);
 		info.AaAddElem(testScript, """
 <b>testScript</b> - a script to run when you click the Run button.
@@ -654,7 +654,7 @@ Can be:
  • Path relative to this file. Examples: Folder\App.ico, .\App.ico, ..\Folder\App.ico.
  • Filename. The file can be anywhere; will be used the one in the same folder if exists.
 
-If not specified, uses custom icon of the main C# file. See menu Tools -> Icons.
+If not specified, uses custom icon of the main C# file. See menu Tools > Icons.
 """);
 		info.AaAddElem(manifest, """
 <b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe file.
@@ -746,7 +746,7 @@ The script must have role editorExtension. It runs in the editor's main thread.
 To get compilation info: var c = PrePostBuild.Info;
 To specify command line arguments: <c green>preBuild Script5.cs /arguments<>
 To stop the compilation, let the script throw an exception.
-To create new preBuild/postBuild script: menu File -> New -> More.
+To create new preBuild/postBuild script: menu File > New > More.
 
 Can be:
  • Path in the workspace. Examples: \Script5.cs, \Folder\Script5.cs.
@@ -768,7 +768,7 @@ If script role is editorExtension, may need to restart editor.
 To remove a default reference (.NET or Au): noRef AssemblyNameOrAuPathWildex;.
 """);
 		info.AaAddElem(addNuget, """
-<b>NuGet<> - use a NuGet package installed by the NuGet tool (menu Tools -> NuGet).
+<b>NuGet<> - use a NuGet package installed by the NuGet tool (menu Tools > NuGet).
 Adds meta comment <c green>nuget folder\package<>.
 
 To remove this meta comment, edit the code in the code editor.

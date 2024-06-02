@@ -23,7 +23,7 @@ bool _Dialog1() {
 	b.R.AddOkCancel();
 	b.End();
 	
-#if WPF_PREVIEW //menu Edit -> View -> WPF preview
+#if WPF_PREVIEW //menu Edit > View > WPF preview
 	b.Window.Preview();
 #endif
 	if (!b.ShowDialog()) return false;

@@ -1,5 +1,3 @@
-//SHOULDDO: don't record a step when opening a document if then immediately goes to another place in the document. Maybe don't record places where was stayed <1 s.
-
 class EditGoBack {
 	record struct _Location(FileNode fn, int pos);
 	
@@ -9,25 +7,25 @@ class EditGoBack {
 	long _time;
 	
 	internal void OnPosChanged(SciCode doc) {
-		//print.it("pos", aaaCurrentPos8);
+		//print.it("pos", doc.aaaCurrentPos8);
 		
 		bool add;
 		int pos = doc.aaaCurrentPos8;
 		var prev = _a.Count > 0 ? _a[_i] : default;
-		if (prev.fn != doc.FN) {
+		if (prev.fn != doc.EFile) {
 			add = true;
 		} else {
 			if (pos == prev.pos) return; //eg on Back/Forward
 			if (_recordNext) {
 				_recordNext = false;
-				add = true;
+				add = Environment.TickCount64 - _time > 250;
 			} else {
 				add = Environment.TickCount64 - _time > 500
 					&& Math.Abs(doc.aaaLineFromPos(false, pos) - doc.aaaLineFromPos(false, prev.pos)) >= 10;
 			}
 		}
 		
-		var now = new _Location(doc.FN, pos);
+		var now = new _Location(doc.EFile, pos);
 		if (add) {
 			if (++_i < _a.Count) _a.RemoveRange(_i, _a.Count - _i); //after GoBack
 			else if (_a.Count == 256) _a.RemoveAt(0);
@@ -49,7 +47,7 @@ class EditGoBack {
 		_time = 0;
 		if (_i < 0) return; //probably impossible, but anyway
 		if (deleted) len = -len;
-		var fn = doc.FN;
+		var fn = doc.EFile;
 		for (int i = _a.Count; --i >= 0;) {
 			if (_a[i].fn == fn && _a[i].pos > pos) {
 				_a[i] = new(fn, Math.Max(pos, _a[i].pos + len));
@@ -110,7 +108,7 @@ class EditGoBack {
 	}
 	
 	/// <summary>
-	/// Record next position change event, even if it is near in space or time.
+	/// Record next position change event, even if the position is near.
 	/// </summary>
 	public void RecordNext() { _recordNext = true; }
 	bool _recordNext;

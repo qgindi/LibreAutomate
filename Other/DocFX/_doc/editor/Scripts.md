@@ -16,15 +16,15 @@ In scripts you can use classes/functions of the automation library provided by t
 
 In the [code editor](xref:code_editor) you can press `Ctrl+Space` to show a list of available functions, classes etc.
 
-A script can contain these parts, all optional:
-- ```/// description```.
+A script can contain these parts, in this order. All optional.
+- Comments or documentation comments. Example: ```/// File description.```.
 - ```/*/ properties /*/```. You can edit it in the **Properties** dialog.
 - `using` directives. Don't need those specified in file `global.cs`.
 - **script.setup** or/and other code that sets run-time properties.
 - Script code. It can contain local functions anywhere.
 - Classes and other types used in the script.
 
-This syntax is known as "C# top-level statements". It is simple and concise, but has some limitations. You can instead use a class with **Main** function. Try menu **Edit > Document > Add class Program**.
+This syntax is known as "C# top-level statements". It is simple and concise, but has some limitations. You can instead use a class with function **Main**. Try menu **Code > Simple > Add function Main**.
 
 The ```//.``` and ```//..``` are used to fold (hide) code. Click the small **[+]** box at the top-left to see and edit that code when need. 
 

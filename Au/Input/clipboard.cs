@@ -195,7 +195,7 @@ public static class clipboard {
 			try {
 				if (wFocus.IsConsole) {
 					wFocus.Post(Api.WM_SYSCOMMAND, 65520);
-					//system menu -> &Edit -> &Copy; tested on all OS; Windows 10 supports Ctrl+C, but it may be disabled.
+					//system menu &Edit > &Copy; tested on all OS; Windows 10 supports Ctrl+C, but it may be disabled.
 				} else {
 					if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, cut ? KKey.X : KKey.C);
 					ctrlC.Press(hotkey, optk, wFocus);
@@ -403,7 +403,7 @@ public static class clipboard {
 			try {
 				if (isConsole) {
 					wFocus.Post(Api.WM_SYSCOMMAND, 65521);
-					//system menu -> &Edit -> &Paste; tested on all OS; Windows 10 supports Ctrl+V, but it can be disabled.
+					//system menu &Edit > &Paste; tested on all OS; Windows 10 supports Ctrl+V, but it can be disabled.
 				} else {
 					if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, KKey.V);
 					ctrlV.Press(hotkey, optk, wFocus, andKeys: andKeys);
@@ -737,7 +737,7 @@ public static class clipboard {
 		//Pasting is unreliable with Windows 10 Clipboard History (CH).
 		//Sometimes does not paste because OpenClipboard fails in the target app, because then CH has it open.
 		//Then also _IsTargetWindow debugprints. Often just debugprints and waits briefly, but pasting works.
-		//CH is enabled by default. Can be disabled in Settings -> System -> Clipboard.
+		//CH is enabled by default. Can be disabled in Settings > System > Clipboard.
 		//If enabled, CH opens clipboard and gets text after 200 ms, and then repeats every several ms, total ~15 times and 50 ms.
 		//	When the target app fails to OpenClipboard, Paste_ waits briefly and the script continues. We receive WM_RENDERFORMAT because CH gets text.
 		//If disabled, CH still opens clipboard after 200 ms, total 1-3 times.

@@ -782,13 +782,25 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// JSON-serializes object of type <b>T</b>, and sets <see cref="Content"/>.
+		/// JSON-serializes object of type <b>T</b>, and sets <see cref="Content"/>. Also sets <c>Content-Type</c> header.
 		/// </summary>
 		/// <param name="obj">Object of type <b>T</b>.</param>
-		/// <param name="contentType">Value of <c>"Content-Type"</c> header.</param>
+		/// <param name="contentType">If not <c>null</c>, sets <c>Content-Type</c> header.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.SerializeToUtf8Bytes{TValue}(TValue, JsonSerializerOptions?)"/>.</exception>
 		public void SetContentJson<T>(T obj, string contentType = "application/json; charset=utf-8") {
 			Content = JsonSerializer.SerializeToUtf8Bytes(obj, InternetUtil_.JsonSerializerOptions);
+			if (contentType != null) Headers["Content-Type"] = contentType;
+		}
+		
+		/// <summary>
+		/// JSON-serializes object of specified type, and sets <see cref="Content"/>. Also sets <c>Content-Type</c> header.
+		/// </summary>
+		/// <param name="obj">Object.</param>
+		/// <param name="type"><i>obj</i> type.</param>
+		/// <param name="contentType">If not <c>null</c>, sets <c>Content-Type</c> header.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.SerializeToUtf8Bytes{TValue}(TValue, JsonSerializerOptions?)"/>.</exception>
+		public void SetContentJson<T>(object obj, Type type, string contentType = "application/json; charset=utf-8") {
+			Content = JsonSerializer.SerializeToUtf8Bytes(obj, type, InternetUtil_.JsonSerializerOptions);
 			if (contentType != null) Headers["Content-Type"] = contentType;
 		}
 	}

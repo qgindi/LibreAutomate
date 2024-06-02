@@ -65,7 +65,7 @@ class DCustomize : KDialogWindow {
 		b.StartGrid<KGroupBox>("Properties common to menu item and toolbar button").Columns(0, -1, 30, 30);
 		b.R.Add("Text", out _tText).Tooltip("Text.\nInsert _ before Alt-underlined character.");
 		b.R.Add("Color", out _tColor).Tooltip("Text color.\nCan be a .NET color name or #RRGGBB or #RGB.")
-			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => { if (KColorPicker.ColorTool(out var color, b.Window, disableOwner: true, add0xRgbButton: false, addBgrButton: false)) _tColor.Text = color; }, "Colors"); b.Span(1);
+			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => KColorPicker.ColorTool(s => { _tColor.Text = s; }, b.Window, modal: true, add0xRgbButton: false, addBgrButton: false), "Colors"); b.Span(1);
 		b.R.Add("Image", out _tImage).Tooltip("Icon name etc.\nSee ImageUtil.LoadWpfImageElement.")
 			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.ShowSingle(); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
 		b.R.Add("Keys", out _tKeys).Tooltip("Keyboard or/and mouse shortcut(s), like Ctrl+E, Shift+M-click.\nSee keys.more.parseHotkeyString.")
@@ -191,7 +191,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 		
 		var path = new Stack<string>();
 		for (var v = c.def; v != null; v = v.parent) path.Push(v.text);
-		_lCommandPath.Content = string.Join(" -> ", path);
+		_lCommandPath.Content = string.Join(" > ", path);
 		
 		//common
 		_tText.Text = c.ctext ?? c.def.text;

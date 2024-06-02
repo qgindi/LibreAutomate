@@ -26,7 +26,7 @@ class CiFindGo : KDialogWindow {
 	CancellationTokenSource _cancelTS;
 	
 	public static void ShowSingle() {
-		if (Panels.Editor.ActiveDoc?.FN.IsCodeFile != true) return;
+		if (Panels.Editor.ActiveDoc?.EFile.IsCodeFile != true) return;
 		ShowSingle(() => new CiFindGo());
 	}
 	

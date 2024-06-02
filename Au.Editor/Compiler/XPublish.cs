@@ -61,7 +61,7 @@ class XPublish {
 		App.Model.Save.TextNowIfNeed(onlyText: true);
 		
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return false;
-		var f = doc.FN;
+		var f = doc.EFile;
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (!f.IsCodeFile) return false;
 		

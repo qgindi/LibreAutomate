@@ -2,7 +2,6 @@
 /// - Menu <b>Code > Input recorder<>. It also can record other actions: wheel, drag, move.
 /// - Menu <b>Code > Find UI element<>. Also <b>Code > Find image<> and <b>Code > Find OCR text<>.
 /// - Hotkey <mono>Ctrl+Shift+Q<>.
-/// - Snippet <b>clickSnippet<>. You can see x y in panel <b>Mouse<>.
 
 /// Click at x=10, y=20 in the client area of <_>Notepad</_> window.
 

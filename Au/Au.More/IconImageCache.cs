@@ -371,7 +371,7 @@ public sealed class IconImageCache : IDisposable {
 	public static void ClearAll(bool allProcesses = true) {
 		ClearAll_();
 		if (allProcesses) {
-			//if called in LA process (eg menu Tools -> Update icons), clear the cache dir of the common cache of scripts.
+			//if called in LA process (eg menu Tools > Update icons), clear the cache dir of the common cache of scripts.
 			//	Without it would clear only if some script processes already used the cache.
 			if (script.role == SRole.EditorExtension && Common._dir is string s1) {
 				Debug.Assert(s1.Ends(@"\iconCache"));

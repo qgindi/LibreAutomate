@@ -14,8 +14,6 @@ using System.Xml.Linq;
 using Au.Controls;
 using System.Windows.Input;
 
-//TODO: doc.
-
 static class CiSnippets {
 	class _CiComplItemSnippet : CiComplItem {
 		public readonly XElement x;
@@ -41,18 +39,18 @@ static class CiSnippets {
 		Unknown = 32,
 		Any = 0xffff,
 		Line = 0x10000, //at start of line
-/*
-
-A context specifies where in code to add the snippets to the completion list. Several contexts can be combined.
-- **Function** - inside function body. Also in the main script code (top-level statements).
-- **Type** - inside a class, struct or interface but not inside functions. Use for snippets that insert entire methods, properties, etc.
-- **Namespace** - outside of types. Use for snippets that insert entire types.
-- **Attributes** - use for snippets that insert an `[attribute]`.
-- **Line** - at the start of a line. For example check **Line** and **Any** for snippets that insert a `#directive`.
-- **Any** - anywhere.
-- **None** - nowhere.
-
-*/
+		/*
+		
+		A context specifies where in code to add the snippets to the completion list. Several contexts can be combined.
+		- **Function** - inside function body. Also in the main script code (top-level statements).
+		- **Type** - inside a class, struct or interface but not inside functions. Use for snippets that insert entire methods, properties, etc.
+		- **Namespace** - outside of types. Use for snippets that insert entire types.
+		- **Attributes** - use for snippets that insert an `[attribute]`.
+		- **Line** - at the start of a line. For example check **Line** and **Any** for snippets that insert a `#directive`.
+		- **Any** - anywhere.
+		- **None** - nowhere.
+		
+		*/
 	}
 	
 	static _Context s_context;
@@ -66,9 +64,10 @@ A context specifies where in code to add the snippets to the completion list. Se
 		
 		_Context context = _Context.Unknown;
 		int pos = span.Start;
+		bool inDirective = pos > 0 && code[pos - 1] == '#' && !surround; //when invoked the list after #, span does not include #
 		
-		if (surround && pos < root.GetHeaderLength()) { //info: if not surround, this func is not called if in header
-			
+		if (inDirective) {
+		} else if (pos < root.GetHeaderLength()) {
 		} else {
 			//get node from start
 			var token = root.FindToken(pos);
@@ -125,8 +124,12 @@ A context specifies where in code to add the snippets to the completion list. Se
 			foreach (var f in filesystem.enumFiles(AppSettings.DirBS, "*Snippets.xml")) _LoadFile(f.FullPath, true);
 			_LoadFile(DefaultFile, false);
 			if (a.Count == 0) return;
-			a.Sort((x, y) => string.Compare(x.Text, y.Text, StringComparison.OrdinalIgnoreCase));
-			_DetectContext(a);
+			a.Sort((x, y) => { //for the surround list
+				int r = CiUtil.SortComparer.Compare(x.Text, y.Text);
+				if (r == 0) return (x.custom ? 0 : 1) - (y.custom ? 0 : 1); //custom first
+				return r;
+			});
+			_DetectContextsOfSnippets(a);
 			s_items = a;
 			
 			void _LoadFile(string file, bool custom) {
@@ -135,6 +138,7 @@ A context specifies where in code to add the snippets to the completion list. Se
 					if (hidden?.Contains("") == true) return;
 					
 					var xroot = LoadSnippetsFile_(file);
+					if (xroot == null) return;
 					foreach (var xs in xroot.Elements("snippet")) {
 						var name = xs.Attr("name");
 						if (hidden?.Contains(name) == true) continue;
@@ -145,12 +149,17 @@ A context specifies where in code to add the snippets to the completion list. Se
 			}
 		}
 		
-		bool isLineStart = InsertCodeUtil.IsLineStart(code, pos);
+		bool isLineStart = InsertCodeUtil.IsLineStart(code, pos - (inDirective ? 1 : 0));
 		
-		foreach (var v in s_items) {
+		for (int i = 0; i < s_items.Count; i++) {
+			var v = s_items[i];
 			if (!v.context.HasAny(context)) continue;
 			if (v.context.Has(_Context.Line) && !isLineStart) continue;
 			if (!surround && v.Text.Ends("Surround")) continue;
+			if (inDirective) {
+				if (v.Text[0] != '#') continue;
+				v = new _CiComplItemSnippet(v.Text[1..], v.x, v.custom); //like in VS. Else typing-filtering does not work.
+			}
 			v.group = 0; v.hidden = 0; v.hilite = 0; v.moveDown = 0;
 			v.ci.Span = span;
 			items.Add(v);
@@ -159,9 +168,11 @@ A context specifies where in code to add the snippets to the completion list. Se
 	
 	internal static XElement LoadSnippetsFile_(string file) {
 		var xroot = XmlUtil.LoadElem(file);
-		if (xroot.Name == "Au.Snippets") { //now "snippets"
-			xroot = _ConvertOldFormat(xroot);
-			try { xroot.Save(file); } catch { }
+		if (xroot.Name != "snippets") {
+			if (xroot.Name == "Au.Snippets") {
+				xroot = _ConvertOldFormat(xroot);
+				try { xroot.Save(file); } catch { }
+			} else return null;
 		}
 		return xroot;
 		
@@ -187,7 +198,7 @@ A context specifies where in code to add the snippets to the completion list. Se
 							else v = v.ReplaceAt(i1..i1end, i1end < v.Length && v[i1end] is >= '0' and <= '9' ? "${0}" : "$0");
 						}
 						v = v.Replace("$random$", "${RANDOM}");
-						v = v.Replace("$guid$", "${UUID}");
+						v = v.Replace("$guid$", "${GUID}");
 						v = v.Replace("$var$", "${VAR}");
 						x.Value = v;
 					}
@@ -196,17 +207,18 @@ A context specifies where in code to add the snippets to the completion list. Se
 		}
 	}
 	
-	static void _DetectContext(List<_CiComplItemSnippet> a) {
-		regexp rx1 = new(@"\$(?|(TM_FILENAME_BASE|RANDOM)\b|\{((?1))\})"),
+	static void _DetectContextsOfSnippets(List<_CiComplItemSnippet> a) {
+		regexp rx1 = new(@"\$(?|(VAR|RANDOM|RANDOM_HEX|TM_FILENAME_BASE)\b|\{((?1))\})"),
 			rx2 = new(@"\$(?|([1-9]\d*)(?!\d)|\{((?1))\})"),
 			rx3 = new(@"\$(?:\{[A-Z_]+\}|[A-Z_]+\b|0|\{0\})"),
 			rx4 = new(@"\$\{\d+:(.*?)\}");
 		
 		Parallel.ForEach(a, v => {
-			var x = v.x.HasElements ? v.x.Elements().First() : v.x;
-			v.context = _Detect(x.Value, v.Text);
-			if (x != v.x && v.context is (_Context.Function | _Context.Type)) { //eg copySnippet
-				foreach (var k in v.x.Elements().Skip(1)) if (_Detect(k.Value, v.Text) is var c2 && c2 is _Context.Function or _Context.Type) { v.context = c2; break; }
+			if (v.x.Attr("context") is string s) {
+				v.context = _GetFromAttr(s);
+			} else {
+				var x = v.x.HasElements ? v.x.Elements().First() : v.x;
+				v.context = _Detect(x.Value, v.Text);
 			}
 		});
 		
@@ -217,6 +229,11 @@ A context specifies where in code to add the snippets to the completion list. Se
 			code = rx2.Replace(code, "i");
 			code = rx3.Replace(code, "");
 			code = rx4.Replace(code, "$1");
+			
+			//bool debug = name.Starts("ctor");
+			//if (debug) {
+			//	print.it($"<><lc #B3DF00>{name}<>\r\n<\a>{code}</\a>");
+			//}
 			
 			try {
 				var cu = CiUtil.GetSyntaxTree(code);
@@ -229,6 +246,8 @@ A context specifies where in code to add the snippets to the completion list. Se
 				if (cu.Members.Any(SyntaxKind.GlobalStatement)) {
 					if (!cu.Members.All(o => o is GlobalStatementSyntax)) {
 						if (cu.Members[0] is GlobalStatementSyntax) return _Context.Namespace; //TLS + types
+						//Debug_.Print($"{name}: GlobalStatement after non-global");
+						if (_TryInClass()) return _Context.Type;
 						return _Context.Function;
 					}
 					foreach (GlobalStatementSyntax gs in cu.Members) {
@@ -239,7 +258,7 @@ A context specifies where in code to add the snippets to the completion list. Se
 							if (lds.Declaration.Type.IsVar) return _Context.Function;
 						} else {
 							if (_TryInClass()) return _Context.Type;
-							if (stat is ExpressionStatementSyntax ess && ess.SemicolonToken.IsMissing && ess.Expression is InvocationExpressionSyntax && cu.Members.Count == 1) return _Context.Attributes; //`Attribute(...)`
+							//if (stat is ExpressionStatementSyntax ess && ess.SemicolonToken.IsMissing && ess.Expression is InvocationExpressionSyntax && cu.Members.Count == 1) return _Context.Attributes; //`Attribute(...)` //rejected
 							return _Context.Function;
 						}
 					}
@@ -266,13 +285,29 @@ A context specifies where in code to add the snippets to the completion list. Se
 			}
 			catch { return _Context.Any; }
 		}
+		
+		static _Context _GetFromAttr(string s) {
+			_Context r = 0;
+			foreach (var seg in s.Segments("|")) {
+				r |= s.AsSpan(seg.Range) switch {
+					"Function" => _Context.Function | _Context.Arrow,
+					"Type" => _Context.Type,
+					"Namespace" => _Context.Namespace,
+					"Attributes" => _Context.Attributes,
+					"Any" => _Context.Any,
+					"Line" => _Context.Line,
+					_ => 0
+				};
+			}
+			return r;
+		}
 	}
 	
 	public static void Reload() => s_items = null;
 	
 	public static int Compare(CiComplItem i1, CiComplItem i2) {
-		if (i1 is _CiComplItemSnippet s1 && i2 is _CiComplItemSnippet s2) {
-			if (!s1.custom) return 1; else if (!s2.custom) return -1; //sort custom first
+		if (i1 is _CiComplItemSnippet x && i2 is _CiComplItemSnippet y) {
+			return (x.custom ? 0 : 1) - (y.custom ? 0 : 1); //sort custom first
 		}
 		return 0;
 	}
@@ -315,18 +350,8 @@ A context specifies where in code to add the snippets to the completion list. Se
 	}
 	
 	public static void Surround() {
-		if (!CodeInfo.GetContextAndDocument(out var k, -2)) return;
-		
-		int from = k.pos, to = k.sci.aaaSelectionEnd16;
-		
-		if (from == to) {
-			var stat = CiUtil.GetStatementEtcFromPos(k, from);
-			if (stat is not (null or BlockSyntax)) {
-				var span = stat.GetRealFullSpan(minimalLeadingTrivia: !true);
-				if (span.ContainsOrTouches(from)) (from, to) = span;
-			}
-			if (to == from && to > 0) from = to = k.code.LastIndexOf('\n', to - 1) + 1;
-		}
+		if (!CodeInfo.GetContextAndDocument(out var k)) return;
+		var (from, to) = InsertCodeUtil.GetSurroundRange(k);
 		
 		List<CiComplItem> a = new();
 		AddSnippets(a, new(from, 0), k.syntaxRoot, k.code, true);
@@ -340,7 +365,7 @@ A context specifies where in code to add the snippets to the completion list. Se
 				list.Clear();
 				foreach (var v in snippet.x.Elements("list")) if (_CanAdd(v)) list.Add(v);
 				if (list.Count > 3) {
-					var sub = new popupMenu { RawText = true }; ;
+					var sub = new popupMenu { RawText = true };
 					foreach (var v in list) _Add(sub, v, true);
 					m.Submenu(name, () => sub);
 				} else if (list.Count > 0) {
@@ -350,7 +375,7 @@ A context specifies where in code to add the snippets to the completion list. Se
 				if (_CanAdd(snippet.x)) _Add(m, snippet.x, false);
 			}
 			
-			bool _CanAdd(XElement x) => x.Value.Contains("${TM_SELECTED_TEXT}");
+			bool _CanAdd(XElement x) => x.Value.Contains("${SELECTED_TEXT}");
 			
 			void _Add(popupMenu m, XElement x, bool listItem) {
 				string s = name;
@@ -365,6 +390,7 @@ A context specifies where in code to add the snippets to the completion list. Se
 				v.Tag = x;
 				v.Tooltip = snippet.x.Attr("info") + "\n\n" + x.Value;
 			}
+			//CONSIDER: hotkeys for surround snippets.
 		}
 		if (0 == m.Show()) return;
 		
@@ -403,7 +429,7 @@ A context specifies where in code to add the snippets to the completion list. Se
 		string s = x.Value;
 		
 		//##directive -> #directive
-		if (s.Starts('#') && doc.aaaText.Eq(pos - 1, '#')) s = s[1..]; //TODO: now no snippets in the completion list
+		if (s.Starts('#') && doc.aaaText.Eq(pos - 1, '#')) s = s[1..];
 		
 		//get variable name from code
 		string varName = null;
@@ -501,7 +527,7 @@ class CiSnippetMode {
 			foreach (var m in s.RxFindAll(@"(?s)\$(?:(?|\{(\d+)(?::(.+?))?\}|(\d+))|\{([A-Z].+?)\})")) {
 				b.Append(s, i, m.Start - i);
 				i = m.End;
-				if (m[3].Exists) { //variable, eg ${TM_SELECTED_TEXT}
+				if (m[3].Exists) { //variable, eg ${SELECTED_TEXT}
 					var v = m[3].Value;
 					b.Append(_Variable(v));
 				} else { //field, eg ${1:i} or $1
@@ -541,12 +567,12 @@ class CiSnippetMode {
 			int i = v.IndexOf(':');
 			if (i > 0) { def = v[++i..]; v = v[..--i]; }
 			v = v switch {
-				"TM_SELECTED_TEXT" => selectedText,
-				"TM_FILENAME_BASE" => doc.FN.DisplayName,
+				"SELECTED_TEXT" => selectedText,
+				"VAR" => varName ?? "VAR",
+				"GUID" => Guid.NewGuid().ToString(),
 				"RANDOM" => new Random().Next(0, 1000000).ToString("d6"),
 				"RANDOM_HEX" => new Random().Next(0, 0x1000000).ToString("x6"),
-				"UUID" => Guid.NewGuid().ToString(),
-				"VAR" => varName ?? "VAR",
+				"TM_FILENAME_BASE" => v, //info: TM_FILENAME_BASE is used in VSCode snippets
 				_ => null
 			};
 			return v.NE() ? def : v;

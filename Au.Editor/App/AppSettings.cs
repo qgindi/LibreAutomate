@@ -21,6 +21,8 @@ record AppSettings : JSettings {
 		debug ??= new();
 		delm ??= new();
 		recorder ??= new();
+		if (ci_complParen is < 0 or > 2) ci_complParen = 0;
+		if (ci_enterWith is < 0 or > 2) ci_enterWith = 0;
 		return this;
 	}
 	
@@ -57,7 +59,7 @@ record AppSettings : JSettings {
 	//If like `public hotkeys_t hotkeys = new()`, creates new object 2 times: 1. explicit new(); 2. when deserializing. Also in JSON can be `= null`. Move the `new()` to _Loaded.
 	//Tuple does not work well. New members are null/0. Also item names in file are like "Item1".
 	
-	//Options -> Hotkeys
+	//Options > Hotkeys
 	public record hotkeys_t {
 		public string
 			tool_quick = "Ctrl+Shift+Q",
@@ -89,20 +91,21 @@ record AppSettings : JSettings {
 	}
 	public font_t font_output, font_recipeText, font_recipeCode, font_find;
 	
-	//Options -> Templates
+	//Options > Templates
 	public int templ_use;
 	//public int templ_flags;
 	
-	//Options -> Other
+	//Options > Other
 	public bool? comp_printCompiled = false;
 	public string internetSearchUrl = "https://www.google.com/search?q=";
 	
 	//code editor
 	public bool edit_wrap, edit_noImages;
 	
-	//code info
-	public bool ci_complGroup = true, ci_formatCompact = true, ci_formatTabIndent = true;
+	//code info, autocorrection, formatting
+	public bool ci_complGroup = true, ci_classicEnter, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
+	public int ci_enterWith;
 	public int ci_rename;
 	
 	//CONSIDER: option to specify completion keys/chars. See https://www.quickmacros.com/forum/showthread.php?tid=7263

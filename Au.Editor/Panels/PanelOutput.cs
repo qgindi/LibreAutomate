@@ -25,7 +25,7 @@ class PanelOutput {
 	
 	public void Copy() { _c.Call(SCI_COPY); }
 	
-	public void Find() { Panels.Find.CtrlF(_c); }
+	//public void Find() { Panels.Find.CtrlF(_c); }
 	
 	public void History() {
 		var p = new KPopupListBox { PlacementTarget = P, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
@@ -38,7 +38,7 @@ class PanelOutput {
 		_inInitSettings = true;
 		if (WrapLines) WrapLines = true;
 		if (WhiteSpace) WhiteSpace = true;
-		if (Topmost) App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = true; //see also OnParentChanged, below
+		if (Topmost) App.Commands[nameof(Menus.Tools.Output.Output_topmost_when_floating)].Checked = true; //see also OnParentChanged, below
 		_c.AaNoMouseSetFocus = MButtons.Middle;
 		_inInitSettings = false;
 		_leaf.FloatingChanged += (_, floating) => _SetTopmost(floating ? 1 : 0);
@@ -53,7 +53,7 @@ class PanelOutput {
 			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in KScintilla.aaOnHandleCreated
 			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in KScintilla.aaOnHandleCreated
 			_c.Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : 0);
-			App.Commands[nameof(Menus.Tools.Output.Wrap_lines_in_output)].Checked = value;
+			App.Commands[nameof(Menus.Tools.Output.Output_wrap_lines)].Checked = value;
 		}
 	}
 	
@@ -64,7 +64,7 @@ class PanelOutput {
 			if (!_inInitSettings) App.Settings.output_white = value;
 			_c.Call(SCI_SETWHITESPACEFORE, 1, 0xFF0080);
 			_c.Call(SCI_SETVIEWWS, value);
-			App.Commands[nameof(Menus.Tools.Output.White_space_in_output)].Checked = value;
+			App.Commands[nameof(Menus.Tools.Output.Output_white_space)].Checked = value;
 		}
 	}
 	
@@ -72,7 +72,7 @@ class PanelOutput {
 		get => App.Settings.output_topmost;
 		set {
 			App.Settings.output_topmost = value;
-			App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = value;
+			App.Commands[nameof(Menus.Tools.Output.Output_topmost_when_floating)].Checked = value;
 			if (_leaf.Floating) _SetTopmost(2);
 		}
 	}

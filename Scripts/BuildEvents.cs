@@ -34,10 +34,12 @@ int EditorPreBuild() {
 }
 
 void _ExitEditor() {
-	var w = wnd.findFast(cn: "Au.Editor.TrayNotify");
-	if (!w.Is0) {
-		w.Close(noWait: true);
-		w.WaitForClosed(-2, waitUntilProcessEnds: true);
+	for (int i = 2; --i >= 0;) {
+		var w = wnd.findFast(cn: "Au.Editor.TrayNotify");
+		if (!w.Is0) {
+			w.Close(noWait: true);
+			w.WaitForClosed(-2, waitUntilProcessEnds: true);
+		}
 	}
 }
 

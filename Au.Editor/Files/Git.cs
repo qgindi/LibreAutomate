@@ -46,7 +46,7 @@ static partial class Git {
 			App.Model.Save.AllNowIfNeed();
 			_CheckIgnored();
 		} else if (t_autoBackup) {
-			print.it("Auto-backup error. To fix it use menu File -> Git -> Git setup.");
+			print.it("Auto-backup error. To fix it use menu File > Git > Git setup.");
 		} else {
 			Setup();
 		}
@@ -129,7 +129,7 @@ static partial class Git {
 			var gs = _GetStatus();
 			if (!gs.CanCommit) _Print("Nothing to commit.");
 			else if (_Commit(autoBackup ? "auto-backup" : null)) _Print("==== DONE ====");
-			else if (autoBackup) print.it("Auto-backup failed. Try menu File -> Git -> Commit."); //else git() prints errors
+			else if (autoBackup) print.it("Auto-backup failed. Try menu File > Git > Commit."); //else git() prints errors
 		}
 		catch (Exception e1) { print.it((autoBackup ? "Auto-backup: " : null) + "Git commit failed", e1); }
 		finally { t_autoBackup = false; }

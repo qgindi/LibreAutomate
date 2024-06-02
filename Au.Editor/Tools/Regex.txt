@@ -383,7 +383,7 @@ Conditions:
 <+a "VERSION>=%.">VERSION>=n.m<>  -  test PCRE2 version.
 
 <b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC22>Conditional groups<>
+<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC23>Conditional groups<>
 
 -- subroutines --
 
@@ -403,8 +403,8 @@ Recursive regex examples:
 A capturing group <.r>(...)<> can be reused in other parts of regular expression. It is like a subroutine that can be called like a function by its number or name. It also can be called recursively (from itself). Unlike a backreference (the substring captured by the referenced group), a subroutine call is like a copy of the group in the regular expression. For example, regex <.r>(\w+)-(?1)<> is the same as <.r>(\w+)-(?:\w+)<>; as well as <.r>(?(DEFINE)(\w+))(?1)-(?1)<> and <.r>(?(DEFINE)(?'word'\w+))(?&word)-(?&word)<>.
 
 <b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC25>Groups as subroutines<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC24>Recursive patterns<>
+<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC26>Groups as subroutines<>
+<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC25>Recursive patterns<>
 
 -- callouts --
 
@@ -415,7 +415,7 @@ A capturing group <.r>(...)<> can be reused in other parts of regular expression
 <+a (?C'%')>(?C'text')<>  -  callout with string data.
 
 <b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC27>Callouts<>
+<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC28>Callouts<>
 <help>regexp.Callout<>
 
 -- backtracking --
@@ -439,7 +439,7 @@ The following act only when a subsequent match failure causes a backtrack to rea
 The effect of one of these verbs in a group called as a subroutine is confined to the subroutine call.
 
 <b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC28>Backtracking control<>
+<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC29>Backtracking control<>
 
 -- charProp --
 
@@ -521,7 +521,7 @@ A script run is a sequence of characters that are all from the same script.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#uniextseq>Unicode character properties and scripts<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC21>Script runs<>
+<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC22>Script runs<>
 
 -- replace --
 

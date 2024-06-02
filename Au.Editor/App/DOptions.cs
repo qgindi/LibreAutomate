@@ -101,7 +101,7 @@ class DOptions : KDialogWindow {
 		//right column
 		b.Skip().StartStack(vertical: true);
 		b.Add(out KCheckBox cBackup, "Auto-backup (Git commit)").Checked(App.Model.UserSettings.gitBackup).Margin("T6")
-			.Tooltip("Silently run Git commit when LibreAutomate is visible the first time after loading this workspace or activated later after several hours from the last backup.\nIt creates a local backup of workspace files (scripts etc). To upload etc, you can use menu File -> Git.");
+			.Tooltip("Silently run Git commit when LibreAutomate is visible the first time after loading this workspace or activated later after several hours from the last backup.\nIt creates a local backup of workspace files (scripts etc). To upload etc, you can use menu File > Git.");
 		cBackup.Checked += (_, _) => { if (!Git.IsReady) App.Dispatcher.InvokeAsync(Git.Setup); };
 		b.End();
 		
@@ -173,7 +173,7 @@ class DOptions : KDialogWindow {
 	}
 	
 	void _FontAndColors() {
-		//TODO: make easier to set dark theme for code.
+		//CONSIDER: make easier to set dark theme for code.
 		
 		var b = _Page("Font, colors", WBPanelType.Dock);
 		b.Options(bindLabelVisibility: true);
@@ -429,8 +429,14 @@ To apply changes after deleting etc, restart this application.
 		b.R.StartStack(vertical: true); //left
 		
 		b.StartGrid<KGroupBox>("Completion list");
-		b.R.Add(out CheckBox complParen, "Append ( )").Checked(App.Settings.ci_complParen switch { 1 => true, 2 => false, _ => null }, threeState: true)
-			.Tooltip("Append () when selected a method or a keyword like 'if'.\nChecked - always; unchecked - never; else only when selected with the spacebar key.");
+		b.R.Add("Append ( )", out ComboBox complParen).Items("With Spacebar|Always|Never").Select(App.Settings.ci_complParen)
+			.Tooltip("Append ( ) when selected a method or a keyword like 'if'");
+		b.End();
+		
+		b.StartGrid<KGroupBox>("Statement completion");
+		b.R.Add("Hotkey", out ComboBox enterWith).Items("Ctrl+Enter|Shift+Enter|Ctrl+Shift+Enter").Select(App.Settings.ci_enterWith);
+		b.R.Add(out KCheckBox notClassicEnter, "Enter before )").Checked(!App.Settings.ci_classicEnter)
+			.Tooltip("Key Enter before ) in an argument list completes statement like with Ctrl etc, except after comma or space");
 		b.End();
 		
 		b.StartGrid<KGroupBox>("Formatting");
@@ -461,6 +467,8 @@ void Unchecked()
 """);
 		b.R.Add(out KCheckBox formatTabIndent, "Tab-indent").Checked(App.Settings.ci_formatTabIndent)
 			.Tooltip("For indentation use tab character, not spaces");
+		b.R.Add(out KCheckBox formatAuto, "Auto-format").Checked(App.Settings.ci_formatAuto)
+			.Tooltip("Automatically format statement on ;{} etc");
 		b.End();
 		
 		//b.StartGrid<KGroupBox>("Insert code");
@@ -489,7 +497,9 @@ Example:
 		//};
 		
 		_b.OkApply += e => {
-			App.Settings.ci_complParen = complParen.IsChecked switch { true => 1, false => 2, _ => 0 };
+			App.Settings.ci_complParen = complParen.SelectedIndex;
+			App.Settings.ci_enterWith = enterWith.SelectedIndex;
+			App.Settings.ci_classicEnter = !notClassicEnter.IsChecked;
 			
 			if (formatCompact.IsChecked != App.Settings.ci_formatCompact || formatTabIndent.IsChecked != App.Settings.ci_formatTabIndent) {
 				App.Settings.ci_formatCompact = formatCompact.IsChecked;
@@ -501,6 +511,7 @@ Example:
 				//	All autocorrect/autoindent/format code inserts spaces if need. Users rarely have to type indentation tabs.
 				//	And don't add options to set tab/indentation size. Too many options isn't good.
 			}
+			App.Settings.ci_formatAuto = formatAuto.IsChecked;
 			
 			//App.Settings.ci_unexpandPath = unexpandPath.IsChecked;
 			//App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.IsChecked ? 0 : 1);

@@ -326,7 +326,7 @@ static class CommandLine {
 		
 		byte[] _GetFileInfo(string s) {
 			int flags = s.ToInt(0, out int end);
-			var f = end == s.Length ? Panels.Editor.ActiveDoc?.FN : App.Model.Find(s[++end..], FNFind.File);
+			var f = end == s.Length ? Panels.Editor.ActiveDoc?.EFile : App.Model.Find(s[++end..], FNFind.File);
 			if (f != null) {
 				var kind = f.FileType switch { FNType.Script => EFileKind.Script, FNType.Class => EFileKind.Class, _ => EFileKind.Other };
 				string text = null; if (0 != (flags & 1)) f.GetCurrentText(out text, null);

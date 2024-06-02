@@ -2,7 +2,7 @@
 Command XML attributes:
 	color - text color. Value: .NET color name or #RRGGBB or #RGB.
 	text - menu item text and toolbar button text. Insert _ before Alt-underlined character.
-	image - icon name (see menu Tools -> Icons) or image file (xaml, png). See ImageUtil.LoadWpfImageElement.
+	image - icon name (see menu Tools > Icons) or image file (xaml, png). See ImageUtil.LoadWpfImageElement.
 	keys - keyboard or/and mouse shortcut(s), like "Ctrl+E, Shift+M-click". See keys.more.parseHotkeyString.
 
 These attributes are used only for toolbar buttons:

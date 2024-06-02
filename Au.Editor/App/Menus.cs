@@ -33,15 +33,14 @@ static class Menus {
 		public static class New {
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 			
-			[Command('s', keys = "Ctrl+N", image = EdResources.c_iconScript)]
+			[Command('s', keys = "Ctrl+N", image = EdResources.c_iconScript, tooltip = "A script is a C# code file that can be executed like a program.")]
 			public static void New_script() { _New("Script.cs"); }
 			
-			[Command('c', image = EdResources.c_iconClass)]
+			[Command('c', image = EdResources.c_iconClass, tooltip = "Class files contain C# classes/functions that can be used in other C# files.")]
 			public static void New_class() { _New("Class.cs"); }
 			
-			[Command('t', image = "*FeatherIcons.FileText" + black, tooltip = "New .txt file. You can change the filename extension.")]
+			[Command('t', image = "*FeatherIcons.FileText" + black, tooltip = "Text files contain any text except C# code.\nTo change the file type, edit the \"txt\" in the filename.")]
 			public static void New_text_file() { _New("File.txt"); }
-			//TODO: support menu tooltips. Eg now many users interpret "New text file" as "Only .txt files are supported".
 			
 			[Command('f', image = EdResources.c_iconFolder)]
 			public static void New_folder() { _New(null); }
@@ -58,7 +57,7 @@ static class Menus {
 		
 		[Command("Copy, paste")]
 		public static class CopyPaste {
-			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo" + green, tooltip = "Multi-select (with Ctrl or Shift).\nDouble click to open.")]
+			[Command("Multi-select", checkable = true, image = "*Modern.ListTwo" + green, tooltip = "If checked:\n    - You can select multiple items with Ctrl or Shift.\n    - Double-click to open.")]
 			public static void MultiSelect_files() { Panels.Files.TreeControl.SetMultiSelect(toggle: true); }
 			
 			[Command("Cu_t", separator = true, keysText = "Ctrl+X")]
@@ -73,10 +72,10 @@ static class Menus {
 			[Command("Cancel Cut/Copy", keysText = "Esc")]
 			public static void CancelCutCopy_file() { App.Model.Uncut(); }
 			
-			[Command('r', separator = true)]
+			[Command('r', separator = true, tooltip = @"Path in this workspace (in the Files list), like ""\Folder\File.cs"".")]
 			public static void Copy_relative_path() { App.Model.SelectedCopyPath(false); }
 			
-			[Command('f')]
+			[Command('f', tooltip = "Full path of the file.")]
 			public static void Copy_full_path() { App.Model.SelectedCopyPath(true); }
 		}
 		
@@ -153,14 +152,14 @@ static class Menus {
 			
 			[Command("...")]
 			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
-		
+			
 			[Command("...", separator = true)]
 			public static void Repair_workspace() { RepairWorkspace.Repair(false); }
 			
 			[Command("...")]
 			public static void Repair_this_folder() { RepairWorkspace.Repair(true); }
 			
-			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black)]
+			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black, tooltip = "Save all changes now (don't wait for auto-save). Editor text, files, settings etc.")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 		
@@ -247,10 +246,10 @@ static class Menus {
 			[Command(keys = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
 			public static void Redo() { SciUndo.OfWorkspace.UndoRedo(true); }
 			
-			[Command(separator = true)]
+			[Command(separator = true, tooltip = "Undo a multi-file operation, such as renaming a symbol in multiple files.")]
 			public static void Undo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(false); }
 			
-			[Command]
+			[Command(tooltip = "Redo a multi-file operation.")]
 			public static void Redo_in_files() { SciUndo.OfWorkspace.UndoRedoMultiFileReplace(true); }
 		}
 		
@@ -309,20 +308,6 @@ static class Menus {
 		}
 		
 		[Command(separator = true)]
-		public static class Document {
-			[Command(image = "*Material.CommentEditOutline" + brown)]
-			public static void Add_file_description() { InsertCode.AddFileDescription(); }
-			
-			[Command(image = "*Codicons.SymbolClass" + brown)]
-			public static void Add_class_Program() { InsertCode.AddClassProgram(); }
-			
-			//CONSIDER: script.setup.
-			
-			[Command(separator = true, keysText = "Ctrl+A")]
-			public static void Select_all() { Panels.Editor.ActiveDoc.Call(Sci.SCI_SELECTALL); }
-		}
-		
-		[Command]
 		public static class Selection {
 			[Command(keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
 			public static void Comment_selection() { ModifyCode.Comment(true); }
@@ -341,21 +326,9 @@ static class Menus {
 			
 			[Command("...")]
 			public static void Documentation_tags() { run.itSafe("https://www.libreautomate.com/forum/showthread.php?tid=7461"); }
-		}
-		
-		[Command]
-		public static class Generate {
-			[Command(keys = "Ctrl+Shift+D", image = "*Material.Lambda" + brown)]
-			public static void Create_delegate() { GenerateCode.CreateDelegate(); }
 			
-			[Command("Implement interface/abstract", tooltip = "Implement members of interface or abstract base class")]
-			public static void Implement_interface() { GenerateCode.ImplementInterfaceOrAbstractClass(); }
-			
-			[Command]
-			public static void Create_event_handlers() { GenerateCode.CreateEventHandlers(); }
-			
-			[Command]
-			public static void Create_overrides() { GenerateCode.CreateOverrides(); }
+			[Command(separator = true, keysText = "Ctrl+A")]
+			public static void Select_all() { Panels.Editor.ActiveDoc.Call(Sci.SCI_SELECTALL); }
 		}
 		
 		[Command]
@@ -376,11 +349,26 @@ static class Menus {
 			[Command("Unindent selected lines", keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease" + brown)]
 			public static void Unindent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_BACKTAB); }
 			
-			[Command("Deduplicate wnd.find", separator = true, image = "*Material.Broom" + brown)] //TODO: tooltip: "all or selection"
+			[Command("Deduplicate wnd.find", separator = true, image = "*Material.Broom" + brown, tooltip = "Remove duplicate `wnd.find` statements in all or selected text.")]
 			public static void Deduplicate_wnd_find() { ModifyCode.CleanupWndFind(); }
 			
-			[Command] //TODO: tooltip: "all or selection"
+			[Command(tooltip = "Remove screenshots in all or selected text.\nScreenshot images are saved in text as hidden comments.")]
 			public static void Remove_screenshots() { Panels.Editor.ActiveDoc.EImageRemoveScreenshots(); }
+		}
+		
+		[Command]
+		public static class Generate {
+			[Command(keys = "Ctrl+Shift+D", image = "*Material.Lambda" + brown)]
+			public static void Create_delegate() { GenerateCode.CreateDelegate(); }
+			
+			[Command("Implement interface/abstract", tooltip = "Implement members of interface or abstract base class.")]
+			public static void Implement_interface() { GenerateCode.ImplementInterfaceOrAbstractClass(); }
+			
+			[Command]
+			public static void Create_event_handlers() { GenerateCode.CreateEventHandlers(); }
+			
+			[Command]
+			public static void Create_overrides() { GenerateCode.CreateOverrides(); }
 		}
 		
 		[Command(separator = true)]
@@ -388,7 +376,7 @@ static class Menus {
 			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap" + green)]
 			public static void Wrap_lines() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 			
-			[Command(checkable = true, image = "*Material.TooltipImageOutline" + green)]
+			[Command(checkable = true, image = "*Material.TooltipImageOutline" + green, tooltip = "If checked, displays images (file icons, screenshots, \"image:\", \"*icon\").\nAlso captures screenshots when recording etc.")]
 			public static void Images_in_code() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Images); }
 			
 			[Command(checkable = true, image = "*Codicons.Preview" + green)]
@@ -399,10 +387,9 @@ static class Menus {
 		}
 	}
 	
-	[Command(target = "Edit")]
+	[Command(target = "Edit", tooltip = "Tools for creating code")]
 	public static class Code {
 		[Command(underlined: 'r', image = "*Material.RecordRec" + blue)]
-		//[Command(underlined: 'r', image = "*BoxIcons.RegularVideoRecording" + blue)]
 		public static void Input_recorder() { DInputRecorder.ShowRecorder(); }
 		
 		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt" + blue)]
@@ -414,30 +401,38 @@ static class Menus {
 		[Command("Find _image", image = "*Material.ImageSearchOutline" + blue)]
 		public static void uiimage() { Duiimage.Dialog(); }
 		
-		//[Command("Find _OCR text", image = "*Material.TextSearch" + blue)]
 		[Command("Find _OCR text", image = "*Material.Ocr" + blue)]
 		public static void ocr() { Docr.Dialog(); }
 		
-		[Command]
+		[Command(image = "*Material.FolderOutline" + blue)]
 		public static void Get_files_in_folder() { DEnumDir.Dialog(); }
-		
-		[Command]
-		public static void Quick_capturing() { QuickCapture.Info(); }
 		
 		[Command(keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline" + blue)]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 		
-		[Command(underlined: 'x', keysText = "Ctrl+Space in string")]
+		[Command(underlined: 'x', image = "*FileIcons.Regex" + blue, keysText = "Ctrl+Space in string")]
 		public static void Regex() { CiTools.CmdShowRegexWindow(); }
 		
-		[Command]
-		public static void Color() { if (KColorPicker.ColorTool(out var color, App.Wmain, disableOwner: false, add0xRgbButton: true, addBgrButton: true)) InsertCode.TextSimply(color); }
+		[Command(image = "*MaterialDesign.ColorLens" + blue)]
+		public static void Color() { KColorPicker.ColorTool(s => { clipboard.text = s; print.it($"Clipboard: {s}"); }, App.Wmain, modal: false, add0xRgbButton: true, addBgrButton: true); }
 		
-		[Command(underlined: 'A')]
+		[Command(underlined: 'A', image = "*Material.Api" + blue)]
 		public static void Windows_API() { new DWinapi().Show(); }
+		
+		[Command(separator = true)]
+		public static class Simple {
+			[Command]
+			public static void Add_function_Main() { InsertCode.AddClassProgram(); }
+			
+			[Command("Create GUID")]
+			public static void Create_GUID() { var s = Guid.NewGuid().ToString(); clipboard.text = s; print.it($"Clipboard: {s}"); }
+			
+			[Command]
+			public static void Quick_capturing_info() { QuickCapture.Info(); }
+		}
 	}
 	
-	[Command("T\x2009T", target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items
+	[Command("T\x2009T", target = "", tooltip = "Triggers and toolbars")]
 	public static class TT {
 		[Command('k'/*, separator = true*/)]
 		public static void Hotkey_triggers() { TriggersAndToolbars.Edit(@"Triggers\Hotkey triggers.cs"); }
@@ -518,18 +513,6 @@ static class Menus {
 		[Command(image = "*Material.Bug" + green2/*, separator = true*/)]
 		public static void Debug_run() { Panels.Debug.Start(); }
 		
-		//[Command] //todo: if used, also enable `nameof(Menus.Run.Debugger),` in PanelEdit._UpdateUI_IsOpen
-		//public static class Debugger {
-		//	[Command("Insert script.debug (wait for debugger to attach)")]
-		//	public static void Debug_attach() { InsertCode.Statements("script.debug();\r\nDebugger.Break();"); }
-			
-		//	[Command("Insert Debugger.Break (debugger step mode)")]
-		//	public static void Debug_break() { InsertCode.Statements("Debugger.Break();"); }
-			
-		//	[Command("Insert Debugger.Launch (launch VS debugger)")]
-		//	public static void Debug_launch() { InsertCode.Statements("Debugger.Launch();"); }
-		//}
-		
 		[Command("...", image = "*Entypo.Publish" + blue, separator = true)]
 		public static void Publish() { new XPublish().Publish(); }
 	}
@@ -542,7 +525,7 @@ static class Menus {
 		[Command(image = iconIcons)]
 		public static void Icons() { DIcons.ShowSingle(); }
 		
-		[Command]
+		[Command(tooltip = "Clear icon caches")]
 		public static void Update_icons() { IconImageCache.ClearAll(); }
 		
 		[Command(image = "*SimpleIcons.NuGet" + green)]
@@ -559,26 +542,23 @@ static class Menus {
 		
 		[Command(separator = true, target = "Output")]
 		public static class Output {
-			[Command(keysText = "M-click")]
-			public static void Clear() { Panels.Output.Clear(); }
+			[Command("Clear", keysText = "M-click")]
+			public static void Output_clear() { Panels.Output.Clear(); }
 			
 			[Command("Copy", keysText = "Ctrl+C")]
-			public static void Copy_output() { Panels.Output.Copy(); }
+			public static void Output_copy() { Panels.Output.Copy(); }
 			
-			[Command(keys = "Ctrl+F")]
-			public static void Find_selected_text() { Panels.Output.Find(); }
-			
-			[Command]
-			public static void History() { Panels.Output.History(); }
+			[Command("History")]
+			public static void Output_history() { Panels.Output.History(); }
 			
 			[Command("Wrap lines", separator = true, checkable = true)]
-			public static void Wrap_lines_in_output() { Panels.Output.WrapLines ^= true; }
+			public static void Output_wrap_lines() { Panels.Output.WrapLines ^= true; }
 			
 			[Command("White space", checkable = true)]
-			public static void White_space_in_output() { Panels.Output.WhiteSpace ^= true; }
+			public static void Output_white_space() { Panels.Output.WhiteSpace ^= true; }
 			
-			[Command(checkable = true)]
-			public static void Topmost_when_floating() { Panels.Output.Topmost ^= true; }
+			[Command("Topmost when floating", checkable = true)]
+			public static void Output_topmost_when_floating() { Panels.Output.Topmost ^= true; }
 		}
 	}
 	

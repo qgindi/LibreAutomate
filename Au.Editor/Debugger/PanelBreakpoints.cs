@@ -160,11 +160,11 @@ class PanelBreakpoints {
 				if (f.file == fn) return f;
 		return null;
 	}
-	_Item _FindItemOfFile(SciCode doc) => _FindItemOfFile(doc?.FN);
+	_Item _FindItemOfFile(SciCode doc) => _FindItemOfFile(doc?.EFile);
 	
 	public void ToggleBreakpoint(int pos8 = -1, bool logpoint = false) {
 		var doc = Panels.Editor.ActiveDoc;
-		if (doc == null || !doc.FN.IsCodeFile) return;
+		if (doc == null || !doc.EFile.IsCodeFile) return;
 		bool useSelStart = pos8 < 0;
 		int line = useSelStart ? doc.aaaLineFromPos() : doc.aaaLineFromPos(false, pos8);
 		if (_IsBreakpoint(doc, line)) {
@@ -175,7 +175,7 @@ class PanelBreakpoints {
 			int h = doc.aaaMarkerAdd(logpoint ? SciCode.c_markerBreakpointL : SciCode.c_markerBreakpoint, line); if (h < 0) return;
 			var folder = _FindItemOfFile(doc);
 			if (folder == null) {
-				_root.AddChild(folder = new(this, doc.FN, true), true);
+				_root.AddChild(folder = new(this, doc.EFile, true), true);
 			} else folder.SetIsExpanded(true);
 			
 			var name = PanelBookmarks.GetMarkerName_(doc, line, useSelStart) ?? "Breakpoint";
@@ -271,7 +271,7 @@ Not all kinds of expressions are supported.
 	
 	internal void SciMouseDwell_(bool started, SciCode doc, in Sci.SCNotification n) {
 		if (_marginTooltip != null) _marginTooltip.IsOpen = false;
-		if (n.position >= 0 || !doc.FN.IsCodeFile) return;
+		if (n.position >= 0 || !doc.EFile.IsCodeFile) return;
 		if (started) {
 			int margin = doc.aaaMarginFromPoint((n.x, n.y));
 			if (margin != SciCode.c_marginMarkers) return;
@@ -327,6 +327,9 @@ Not all kinds of expressions are supported.
 		bool haveEnabled = _root.IsEnabledOrHasEnabledChildren;
 		m[haveEnabled ? "Disable all breakpoints" : "Enable all breakpoints"] = o => { foreach (var v in _root.Children()) _SetEnabled(v, !haveEnabled); };
 		m.Submenu("More", m => {
+			m["Delete all disabled breakpoints"] = o => {
+				foreach (var v in _root.Descendants().ToArray()) if (!v.IsFolder && !v.IsEnabled) _DeleteItem(v);
+			};
 			m["Delete all breakpoints"] = o => {
 				foreach (var v in _root.Children().ToArray()) _DeleteItem(v);
 			};

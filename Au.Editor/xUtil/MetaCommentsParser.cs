@@ -137,7 +137,7 @@ class MetaCommentsParser {
 	/// <returns>true if changed documnt text.</returns>
 	public bool Apply() {
 		var doc = Panels.Editor.ActiveDoc;
-		var f = doc.FN;
+		var f = doc.EFile;
 		var code = doc.aaaText;
 		var meta = MetaComments.FindMetaComments(code);
 		string prepend = null, append = null;

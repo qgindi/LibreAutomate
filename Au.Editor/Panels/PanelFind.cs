@@ -528,7 +528,7 @@ This setting also is used by 'Find references' etc.
 		if (doc.aaaIsReadonly) return;
 		var text = doc.aaaText;
 		var a = _FindReplacements(ttf, text);
-		if (doc.FN.ReplaceAllInText(text, a, out var text2))
+		if (doc.EFile.ReplaceAllInText(text, a, out var text2))
 			undoInFiles?.RifAddFile(doc, text, text2, a);
 	}
 
@@ -622,7 +622,7 @@ This setting also is used by 'Find references' etc.
 			}
 
 			FileNode folder = App.Model.Root;
-			if (_filter > 0 && Panels.Editor.ActiveDoc?.FN is FileNode fn) {
+			if (_filter > 0 && Panels.Editor.ActiveDoc?.EFile is FileNode fn) {
 				if (_filter == 2 && fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
 				else folder = fn.AncestorsFromRoot(noRoot: true).FirstOrDefault() ?? folder;
 			}

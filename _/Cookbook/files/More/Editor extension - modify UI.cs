@@ -22,7 +22,7 @@ EditorExtension.WindowLoaded += () => _Load();
 static void _Load() {
 	
 	// Show or hide a toolbar or panel.
-	// Toolbar names: menu Tools -> Customize. Panel names: displayed in UI.
+	// Toolbar names: menu Tools > Customize. Panel names: displayed in UI.
 	
 	Panels.PanelManager["Custom2"].Visible = true;
 	

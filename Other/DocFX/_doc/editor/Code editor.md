@@ -80,12 +80,14 @@ While the list is visible, you can press the **[+]** button or `Ctrl+Space` to s
 When you type `(`, `[`, `{`, `<`, `"` or `'`, editor adds the closing `)`, `]`, `}`, `>`, `"` or `'`. Then, while the text cursor is before the added `)` etc, typing another `)` or `Tab` just leaves the enclosed area. Also then `Backspace` erases both characters.
 
 ### Statement completion
-When you press `Enter` inside a function argument list before the last `)`, editor adds missing `;` or `{  }`, adds new line and moves the text cursor there. To avoid it, press `Esc+Enter`. To complete statement without new line, use `;` instead of `Enter`.
+When you press `Enter` inside an argument list immediately before the last `)` or `]`, editor adds missing `;` or `{  }`, adds new line and moves the text cursor there. Except if before is `,` or space character. To complete statement without new line, use `;` instead of `Enter`.
 
-`Ctrl+Enter`, `Shift+Enter` and `Ctrl+;` complete current statement when the text cursor is anywhere in it. If in an empty line at the end of a `{ }` block, leaves the block and removes empty lines. In a `switch` `case` section adds missing `break;`.
+Use hotkey `Ctrl+Enter` (can be changed in **Options**) to complete current statement when the text cursor is anywhere in it. Also it can add `{  }` to `class C` etc. Use `Ctrl+;` to complete without new line.
+
+You can use `Backspace` to exit current multiline `{ block }` when the text cursor is in the last line of the block and that line is blank.
 
 ### Auto indentation
-When you press `Enter`, editor adds new line with correct number of tabs (indentation). The same with `Ctrl+Enter`.
+On `Enter` editor adds new line with correct indentation.
 
 ### Parameter info
 When you type a function name and `(`, editor shows a tooltip-like window with info about the function and current parameter. To show the window from anywhere in an argument list, press `Ctrl+Shift+Space`. You can select oveloads with arrow keys or the mouse.
@@ -179,10 +181,12 @@ You can hide and show code regions like in a tree view control: click the **[-]*
 Editor draws horizontal lines at the end of each function and type definition.
 
 ### Snippets
-The autocompletion list also contains snippets. For example the **outSnippet** inserts code `print.it();` when you type `out` and space or `Tab` or `Enter` or click it.
+The autocompletion list also contains [snippets](xref:snippets). For example the **outSnippet** inserts code `print.it();` when you type `out` and space or `Tab` or `Enter` or click it. Some snippets are in the **Surround** menu.
 
 ### Images in code
-Whenever code contains a string or comment that looks like an image file path or image embedded in code (`image:...`, usually hidden text), editor draws the image at the left. This feature can be enabled/disabled with the toolbar button.
+If a code line contains a string or comment with a file path, embedded image (screenshot, `"image:"`) or `"*icon"`, editor draws the image at the left. Also captures screenshots when recording etc. Embedded image data usually is hidden.
+
+This feature can be enabled/disabled with the toolbar button.
 
 ### Format code
 The **Format document/selection** commands insert/remove spaces, indentation and newlines to make code uniformly formatted. See also **Options > Code editor > Formatting**.
@@ -200,6 +204,8 @@ The program comes with a database of Windows API declarations, and helps to find
 
 ### Drag and drop files to insert path
 You can drag and drop files from File Explorer etc to the code editor. It inserts code with file path. Links too.
+
+You can also drag and drop scripts etc from the Files panel.
 
 ### Focus
 To focus the code editor control without changing selection: middle-click.

@@ -80,7 +80,7 @@ partial class SciCode {
 			var z = new Sci_DragDropData { x = xy.x, y = xy.y };
 			string s = null;
 			var b = new StringBuilder();
-			bool isCodeFile = _sci.FN.IsCodeFile;
+			bool isCodeFile = _sci.EFile.IsCodeFile;
 			
 			if (_justText) {
 				s = _data.text;
@@ -106,7 +106,7 @@ partial class SciCode {
 					var a = Panels.Files.TreeControl.DragDropFiles;
 					if (a != null) {
 						if (what >= 100) { //meta comment
-							MetaCommentsParser m = new(_sci.FN) { };
+							MetaCommentsParser m = new(_sci.EFile) { };
 							var list = what switch { 100 => m.c, 101 => m.pr, 102 => m.resource, _ => m.file };
 							foreach (var v in a) list.Add(v.ItemPath);
 							m.Apply();

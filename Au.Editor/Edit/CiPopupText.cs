@@ -46,7 +46,7 @@ class CiPopupText {
 			bool ubInfo = _usedBy == UsedBy.Info;
 			_w = new KPopup(ubInfo ? WS.POPUP | WS.BORDER : WS.POPUP | WS.THICKFRAME, shadow: ubInfo, sizeToContent: ubInfo ? SizeToContent.Height : default) {
 				Name = "Ci.Info",
-				WindowName = _usedBy switch { UsedBy.PopupList => "Au completion item info", UsedBy.Signature => "Au parameters info", _ => "Au quick info" },
+				WindowName = _usedBy switch { UsedBy.PopupList => "LA completion item info", UsedBy.Signature => "LA parameters info", _ => "LA quick info" },
 				CloseHides = true
 			};
 			_w.Size = (_usedBy == UsedBy.Signature ? 800 : 600, _usedBy == UsedBy.PopupList ? 360 : 300);

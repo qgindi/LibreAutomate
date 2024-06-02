@@ -131,7 +131,7 @@ partial class TriggersAndToolbars {
 		}
 		
 		//Add buttons here, like in examples. Hints: toolbarButtonSnippet, drag-drop, Ctrl+Shift+Q.
-		//More info: 1. Cookbook -> Floating toolbars. 2. toolbar class help (click word toolbar above and press F1).
+		//More info: 1. Cookbook > Floating toolbars. 2. toolbar class help (click word toolbar above and press F1).
 		
 		t["Example"] = o => { print.it("button clicked"); };
 		t["|Tooltip1", image: "*Modern.TreeLeaf #73BF00"] = o => {  }; //to set icon use the Icons dialog
@@ -279,7 +279,7 @@ partial class Program {
 	(_Toolbar tb, _Trigger tr) _ToolbarFromCurrentPos() {
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return default;
 		int pos = doc.aaaCurrentPos16;
-		var f = doc.FN;
+		var f = doc.EFile;
 		//is pos in a toolbar function?
 		var t = _toolbars.FirstOrDefault(o => o.fn == f && o.method.DeclaringSyntaxReferences[0].Span.ContainsOrTouches(pos));
 		if (t != null) return (t, null);

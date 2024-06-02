@@ -74,7 +74,7 @@ partial class TriggersAndToolbars {
 			}
 			if (!startupFound) {
 				App.Model.UserSettings.startupScripts = ss;
-				print.it("Info: script \"Triggers and toolbars\" will run at program startup. If you want to disable it, add prefix // in Options -> Workspace -> Run scripts...");
+				print.it("Info: script \"Triggers and toolbars\" will run at program startup. If you want to disable it, add prefix // in Options > Workspace > Run scripts...");
 			}
 		}
 		return fProject;

@@ -107,7 +107,7 @@ Tools that help to create code.
 Triggers and toolbars.
 
 ### Run
-Execute current script.
+Execute current script. Or just compile.
 
 ### Tools
 Tool windows.
@@ -118,4 +118,4 @@ Program help and library reference.
 ## Tray icon
 Click - show and activate editor window. Right-click - show context menu.
 
-No color when triggers are disabled.
+Gray when triggers are disabled.

@@ -434,7 +434,7 @@ static class CiFind {
 			s_sciPreview = null;
 			
 			if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-			_currentFile = cd.sci.FN;
+			_currentFile = cd.sci.EFile;
 			
 			var sym = await RenameUtilities.TryGetRenamableSymbolAsync(cd.document, cd.pos, default);
 			

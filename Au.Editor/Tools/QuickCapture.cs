@@ -6,7 +6,7 @@ static class QuickCapture {
 	static popupMenu _m;
 
 	public static void Info() {
-		print.it($@"Hotkeys for quick capturing:
+		print.it($@"Hotkeys for quick capturing (Options > Hotkeys):
 	{App.Settings.hotkeys.tool_quick} - capture window from mouse and show menu to insert code to find it etc.
 	{App.Settings.hotkeys.tool_wnd} - capture window from mouse and show tool 'Find window'.
 	{App.Settings.hotkeys.tool_elm} - capture UI element from mouse and show tool 'Find UI element'.
@@ -113,7 +113,7 @@ static class QuickCapture {
 
 	static void _Insert(string s) {
 		//print.it(s);
-		InsertCode.Statements(s);
+		InsertCode.Statements(s, ICSFlags.MakeVarName1);
 	}
 
 	public static void AoolDwnd() {

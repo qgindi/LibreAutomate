@@ -7,7 +7,7 @@ partial class Program {
 		var tr = Triggers.Autotext.SimpleReplace;
 		
 		//Add autotext triggers here.
-		//To add triggers can be used triggerSnippet or menu TT -> New trigger.
+		//To add triggers can be used triggerSnippet or menu TT > New trigger.
 		//To add trigger scopes (window, program) can be used Ctrl+Shift+Q.
 		//Click the Run button to apply changes after editing.
 		//More info in Cookbook.

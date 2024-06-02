@@ -266,7 +266,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	/// <remarks>
 	/// The setter will save workspace.
-	/// User can set custom icon: menu -> Tools -> Icons.
+	/// User can set custom icon: menu Tools > Icons.
 	/// Currently editor does not support item icons as .ico files etc. Not difficult to add, but probably don't need when we have 25000 XAML icons. For .exe files can use any icons.
 	/// </remarks>
 	public string CustomIconName {
@@ -980,7 +980,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_SetName(name);
 		return true;
 		
-		//TODO: when renaming or moving, search all code files (except in "Garbage*" folders) and replace the old name or path in strings.
+		//CONSIDER: when renaming or moving, search all code files (except in "Garbage*" folders) and replace the old name or path in strings.
 		//	Also doc the garbage folders feature.
 	}
 	
