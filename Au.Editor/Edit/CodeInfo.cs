@@ -478,7 +478,7 @@ static class CodeInfo {
 			//perf.next();
 			_ModifyTLS();
 			
-			//TODO: return false if syntaxtree text != code. But `syntaxRoot.GetText();` is slow. Instead compare EndOfFileToken.SpanStart with code length.
+			//TODO (future): return false if syntaxtree text != code. But `syntaxRoot.GetText();` is slow. Instead compare EndOfFileToken.SpanStart with code length.
 			//print.it(code.Length, syntaxRoot.EndOfFileToken.SpanStart);
 			Debug_.PrintIf(syntaxRoot.EndOfFileToken.SpanStart != code.Length);
 			

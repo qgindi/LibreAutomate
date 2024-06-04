@@ -186,7 +186,7 @@ class CiProjects {
 	}
 	
 	/// <summary>
-	/// Gets all files that use <i>sym</i>.
+	/// Gets all files that use <i>sym</i>.-
 	/// For files in projects gets the project-main file.
 	/// If <i>sym</i> is defined in class file(s), calls other <b>_GetUsers</b> overload and passes them.
 	/// If <i>sym</i> is defined in metadata or global.cs, and current file is a class file, calls that <b>_GetUsers</b> overload and passes current file.

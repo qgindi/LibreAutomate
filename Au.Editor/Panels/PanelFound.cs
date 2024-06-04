@@ -79,7 +79,7 @@ class PanelFound {
 			_lb.SelectedItem = li;
 		}
 		
-		_sci.Clear();
+		_Clear();
 		_li.SetText(text.Limit(15).RxReplace(@"\R", " "), text);
 		
 		builder = new SciTextBuilder() {
@@ -97,8 +97,13 @@ class PanelFound {
 	
 	public void ClearResults(Found kind) {
 		if (_sci == null || _sci.kind != kind || _sci.isLocked) return;
-		_sci.Clear();
+		_Clear();
 		_li.SetText(null, null);
+	}
+	
+	void _Clear() {
+		_sci.Clear();
+		_docLinks = default;
 	}
 	
 	bool _IsSciOk(in WorkingState ws) {
@@ -121,7 +126,7 @@ class PanelFound {
 	/// Appends limited text of line of text range <i>start..end</i>, as a link that opens file <i>f</i> and select text <i>start..end</i>, with highlighted range <i>start..end</i>.
 	/// </summary>
 	/// <param name="text">Text of file <i>f</i>.</param>
-	public static void AppendFoundLine(SciTextBuilder b, FileNode f, string text, int start, int end, bool displayFile, int indicHilite = Indicators.HiliteY) {
+	public static void AppendFoundLine(SciTextBuilder b, FileNode f, string text, int start, int end, WorkingState workingState, bool displayFile, int indicHilite = Indicators.HiliteY) {
 		if (b.user.i == 0) {
 			var k = b.user.o as KScintilla;
 			b.user.i = Math.Max((int)k.ActualWidth - k.aaaMarginGetX(4, dpiUnscale: true).right - 20, 1); //logical pixels
@@ -136,7 +141,7 @@ class PanelFound {
 		while (lineEnd < leMax && !text.IsCsNewlineChar(lineEnd)) lineEnd++;
 		bool limitEnd = lineEnd < text.Length && !text.IsCsNewlineChar(lineEnd);
 		
-		b.Link2(new CodeLink(f, start, end));
+		b.Link2(new CodeLink(f, start));
 		if (displayFile) b.Gray(fileName).Text("        ");
 		if (limitStart) b.Text("…");
 		b.Text(text.AsSpan(lineStart..start)).Indic(indicHilite, text.AsSpan(start..end)).Text(text.AsSpan(end..lineEnd));
@@ -147,6 +152,30 @@ class PanelFound {
 		//	Now users don't see '//' if replaced with '...'.
 		//	But for me it never was a problem.
 	}
+	
+	internal void SciModified(SciCode doc, in Sci.SCNotification n) {
+		var f = doc.EFile;
+		
+		if (_docLinks.doc != doc) { //cache links to this document, to avoid enumerating all links to all documents on each modification (slow)
+			_docLinks.doc = doc;
+			_docLinks.links = null;
+			foreach (_LbItem li in _lb.Items) {
+				if (li.sci.kind is Found.Files or Found.Repair) continue;
+				foreach (var v in li.sci.AaRangeDataEnum<CodeLink>()) {
+					if (v.file == f) (_docLinks.links ??= new()).Add(v);
+				}
+			}
+		}
+		if (_docLinks.links == null) return;
+		
+		int pos = n.position, len = n.length;
+		if (n.modificationType.Has(MOD.SC_MOD_DELETETEXT)) len = -len;
+		foreach (var v in _docLinks.links) {
+			v.TextChanged_(pos, len);
+		}
+	}
+	
+	(SciCode doc, List<CodeLink> links) _docLinks;
 	
 	public void Close(KScintilla sci) {
 		var li = _lb.Items.OfType<_LbItem>().FirstOrDefault(o => o.sci == sci);
@@ -279,7 +308,7 @@ class PanelFound {
 					if (_OpenLinkClicked(k.file)) {
 						timer.after(10, _ => {
 							var doc = Panels.Editor.ActiveDoc;
-							if (doc?.EFile != k.file || k.end >= doc.aaaLen16) return;
+							if (doc?.EFile != k.file || k.start >= doc.aaaLen16) return;
 							App.Model.EditGoBack.RecordNext();
 							doc.aaaGoToPos(true, k.start);
 							doc.Focus();
@@ -372,7 +401,32 @@ class PanelFound {
 		}
 	}
 	
-	public record class CodeLink(FileNode file, int start, int end);
+	public class CodeLink {
+		FileNode _file;
+		int _start;
+		int _deletedAt;
+		
+		public FileNode file => _file;
+		public int start => _start;
+		
+		public CodeLink(FileNode file, int start) {
+			_file = file;
+			_start = start;
+			_deletedAt = -1;
+		}
+		
+		//len < 0 when deleting
+		internal void TextChanged_(int pos, int len) {
+			if (pos == _start) {
+				if (len < 0) { _deletedAt = pos; return; } //detect when replacing the link target text. Eg replacing found substrings, or renaming found symbol references.
+				if (pos != _deletedAt) _start += len;
+			} else {
+				if (pos < _start) _start += len;
+				//never mind: will not work well in all cases. Eg when the deleted range includes _start.
+			}
+			_deletedAt = -1;
+		}
+	}
 	
 	public record class ReplaceInFileLink(FileNode file);
 	

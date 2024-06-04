@@ -404,7 +404,7 @@ Not all kinds of expressions are supported.
 		_DeleteBreakpoint(doc, line, false);
 	}
 	
-	internal void SciModified(SciCode doc, ref Sci.SCNotification n) {
+	internal void SciModified(SciCode doc, in Sci.SCNotification n) {
 		if (n.linesAdded != 0) {
 			//update the line field, and display
 			var folder = _FindItemOfFile(doc);

@@ -626,6 +626,16 @@ public unsafe partial class KScintilla : HwndHost {
 	}
 	
 	/// <summary>
+	/// Gets all datas of type <i>T</i> added with <see cref="AaRangeDataAdd"/>.
+	/// </summary>
+	/// <returns></returns>
+	public IEnumerable<T> AaRangeDataEnum<T>() {
+		if (!_rd.NE_()) {
+			foreach (var v in _rd) if (v.data is T r) yield return r;
+		}
+	}
+	
+	/// <summary>
 	/// When a text range registered with <see cref="AaRangeDataAdd"/> removed (when control text changed).
 	/// </summary>
 	/// <remarks>

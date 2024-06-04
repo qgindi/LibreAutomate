@@ -157,7 +157,7 @@ class MetaCommentsParser {
 			if (s == doc.aaaRangeText(true, meta.start, meta.end)) return false; //did not change
 		}
 		
-		doc.aaaReplaceRange(true, meta.start, meta.end, s);
+		doc.EReplaceTextGently(meta.start, meta.end, s);
 		return true;
 	}
 	

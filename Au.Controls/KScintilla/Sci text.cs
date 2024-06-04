@@ -53,7 +53,7 @@ public unsafe partial class KScintilla {
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// </summary>
 	public int aaaSetString(int sciMessage, nint wParam, ReadOnlySpan<byte> lParam) {
-		fixed (byte* p =lParam) {
+		fixed (byte* p = lParam) {
 			Debug.Assert(p == null || p[lParam.Length] == 0);
 			return Call(sciMessage, wParam, p);
 		}
@@ -850,7 +850,7 @@ public unsafe partial class KScintilla {
 	public int aaaLineIndentationFromPos(bool utf16, int pos, out int extraSpaces) {
 		int line = aaaLineFromPos(utf16, pos);
 		int i = Call(SCI_GETLINEINDENTATION, line), r = i / 4;
-		extraSpaces = i - r;
+		extraSpaces = i - r * 4;
 		return r;
 	}
 	
@@ -1423,22 +1423,29 @@ public unsafe partial class KScintilla {
 		Call(SCI_ENDUNDOACTION);
 	}
 	
-	///// <summary>
-	///// SCI_BEGINUNDOACTION.
-	///// </summary>
-	//public void aaaBeginUndoAction() {
-	//	Call(SCI_BEGINUNDOACTION);
-	//}
-	
-	///// <summary>
-	///// SCI_ENDUNDOACTION.
-	///// </summary>
-	//public void aaaEndUndoAction() {
-	//	Call(SCI_ENDUNDOACTION);
-	//}
+	/// <summary>
+	/// SCI_BEGINUNDOACTION.
+	/// </summary>
+	/// <returns>Final counter of nested undo actions. Called SCI_BEGINUNDOACTION if it's 1.</returns>
+	public int aaaBeginUndoAction() {
+		if (_inUndoAction == 0) Call(SCI_BEGINUNDOACTION);
+		return ++_inUndoAction;
+	}
+	int _inUndoAction;
 	
 	/// <summary>
-	/// Ctor calls SCI_BEGINUNDOACTION. Dispose() calls SCI_ENDUNDOACTION.
+	/// SCI_ENDUNDOACTION.
+	/// </summary>
+	/// <returns>Final counter of nested undo actions. Called SCI_ENDUNDOACTION if it's 0.</returns>
+	public int aaaEndUndoAction() {
+		Debug.Assert(_inUndoAction > 0);
+		if (--_inUndoAction == 0) Call(SCI_ENDUNDOACTION);
+		return _inUndoAction;
+	}
+	
+	/// <summary>
+	/// Ctor calls <see cref="aaaBeginUndoAction"/>. Dispose() calls <see cref="aaaEndUndoAction"/>.
+	/// Does nothing if it's a nested undo action.
 	/// </summary>
 	public struct aaaUndoAction : IDisposable {
 		KScintilla _sci;
@@ -1449,7 +1456,7 @@ public unsafe partial class KScintilla {
 		/// <param name="sci">Can be null, then does nothing.</param>
 		public aaaUndoAction(KScintilla sci) {
 			_sci = sci;
-			_sci?.Call(SCI_BEGINUNDOACTION);
+			_sci?.aaaBeginUndoAction();
 		}
 		
 		/// <summary>
@@ -1457,8 +1464,8 @@ public unsafe partial class KScintilla {
 		/// </summary>
 		public void Dispose() {
 			if (_sci != null) {
-				_sci.Call(SCI_ENDUNDOACTION);
-				Sci_SetUndoMark(_sci.AaSciPtr, -1);
+				if (0 == _sci.aaaEndUndoAction())
+					Sci_SetUndoMark(_sci.AaSciPtr, -1);
 				_sci = null;
 			}
 		}

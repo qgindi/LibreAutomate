@@ -29,7 +29,7 @@ static class GenerateCode {
 		string code = cd.code;
 		SciCode doc = cd.sci;
 		
-		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !InsertCodeUtil.IsLineStart(code, pos - 3)) return;
+		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !CodeUtil.IsLineStart(code, pos - 3)) return;
 		
 		var root = cd.syntaxRoot;
 		var node = root.FindToken(pos).Parent;
@@ -73,7 +73,7 @@ static class GenerateCode {
 			//rejected: <typeparam name="TT"></typeparam>. Rarely used.
 		}
 		
-		s = InsertCodeUtil.IndentStringForInsertSimple(s, doc, pos);
+		s = CodeUtil.IndentStringForInsertSimple(s, doc, pos);
 		
 		doc.aaaInsertText(true, pos, s, true, true);
 		doc.aaaGoToPos(true, pos + s.Find("/ ") + 2);
@@ -106,7 +106,7 @@ static class GenerateCode {
 					return _GetTypeAndFormat(aes.Left, aes);
 			} else if (node is BaseArgumentListSyntax als) {
 				if (!node.Span.ContainsInside(pos)) continue;
-				if (InsertCodeUtil.GetArgumentParameterFromPos(als, pos, semo, out _, out var ps)) {
+				if (CodeUtil.GetArgumentParameterFromPos(als, pos, semo, out _, out var ps)) {
 					bool ok = false;
 					foreach (var v in ps) ok |= _Format(v.Type);
 					return ok;
@@ -436,7 +436,7 @@ static class GenerateCode {
 	set {  }
 }"); //write-only properties
 		
-		text = InsertCodeUtil.IndentStringForInsertSimple(text, cd.sci, position, true, 1);
+		text = CodeUtil.IndentStringForInsertSimple(text, cd.sci, position, true, 1);
 		
 		cd.sci.aaaInsertText(true, position, text, addUndoPointAfter: true);
 		cd.sci.aaaGoToPos(true, position);

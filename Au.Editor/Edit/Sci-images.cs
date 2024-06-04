@@ -423,7 +423,7 @@ partial class SciCode {
 		string s = isSel ? aaaSelectedText() : aaaText;
 		var s2 = _ImageRemoveScreenshots(s, false);
 		if (s2 == s) return;
-		if (isSel) EReplaceTextGently(s2, aaaSelectionStart8..aaaSelectionEnd8);
+		if (isSel) EReplaceTextGently(aaaSelectionStart8, aaaSelectionEnd8, s2);
 		else EReplaceTextGently(s2);
 	}
 }

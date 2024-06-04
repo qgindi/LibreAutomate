@@ -167,7 +167,7 @@ class CiFolding {
 					if (c == '/' && _IsDotComment(s, ++i, out bool closing)) { //.
 						if (!_IsStartOfTrivia(false)) continue;
 						_AddFoldPoint(FoldKind.DotFold, rangeStart + i0, !closing);
-					} else if (c == '*' || InsertCodeUtil.IsLineStart(s, i0)) {
+					} else if (c == '*' || CodeUtil.IsLineStart(s, i0)) {
 						i = i0 + 2;
 						bool isLineComment = c == '/', isDocComment = false;
 						if (!isLineComment) {

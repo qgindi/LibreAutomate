@@ -42,7 +42,7 @@ class EditGoBack {
 		//});
 	}
 	
-	internal void OnTextModified(SciCode doc, bool deleted, int pos, int len) {
+	internal void SciModified(SciCode doc, bool deleted, int pos, int len) {
 		//print.it("mod", deleted, pos, len);
 		_time = 0;
 		if (_i < 0) return; //probably impossible, but anyway

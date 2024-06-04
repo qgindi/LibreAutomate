@@ -149,7 +149,7 @@ static class CiSnippets {
 			}
 		}
 		
-		bool isLineStart = InsertCodeUtil.IsLineStart(code, pos - (inDirective ? 1 : 0));
+		bool isLineStart = CodeUtil.IsLineStart(code, pos - (inDirective ? 1 : 0));
 		
 		for (int i = 0; i < s_items.Count; i++) {
 			var v = s_items[i];
@@ -349,56 +349,73 @@ static class CiSnippets {
 		}
 	}
 	
-	public static void Surround() {
+	/// <summary>
+	/// Surrounds a text range with a snippet.
+	/// </summary>
+	/// <param name="snippetXml">If null, shows menu with all "surround" snippets that are valid at current place in code. Else can be either full snippet XML or just code; must contain <c>${SELECTED_TEXT}</c>.</param>
+	/// <param name="range">If null, uses the selected range, or current statement etc if there is no selection.</param>
+	/// <remarks>
+	/// Can also insert using directives etc where need.
+	/// Formats the text and snippet.
+	/// Can start snippet mode (Tab-navigation etc).
+	/// </remarks>
+	public static void Surround(string snippetXml = null, Range? range = null) {
 		if (!CodeInfo.GetContextAndDocument(out var k)) return;
-		var (from, to) = InsertCodeUtil.GetSurroundRange(k);
+		var (from, to) = range?.GetStartEnd(k.code.Length) ?? CodeUtil.GetSurroundRange(k);
 		
-		List<CiComplItem> a = new();
-		AddSnippets(a, new(from, 0), k.syntaxRoot, k.code, true);
-		if (a.Count == 0) return;
-		
-		var m = new popupMenu { RawText = true };
-		List<XElement> list = new();
-		foreach (_CiComplItemSnippet snippet in a) {
-			string name = null;
-			if (snippet.x.HasElements) {
-				list.Clear();
-				foreach (var v in snippet.x.Elements("list")) if (_CanAdd(v)) list.Add(v);
-				if (list.Count > 3) {
-					var sub = new popupMenu { RawText = true };
-					foreach (var v in list) _Add(sub, v, true);
-					m.Submenu(name, () => sub);
-				} else if (list.Count > 0) {
-					foreach (var v in list) _Add(m, v, true);
-				}
-			} else {
-				if (_CanAdd(snippet.x)) _Add(m, snippet.x, false);
-			}
+		XElement x;
+		if (snippetXml != null) {
+			if (!snippetXml.Starts('<')) snippetXml = "<snippet><![CDATA[" + snippetXml + "]]></snippet>";
+			x = XElement.Parse(snippetXml);
+		} else {
+			List<CiComplItem> a = new();
+			AddSnippets(a, new(from, 0), k.syntaxRoot, k.code, true);
+			if (a.Count == 0) return;
 			
-			bool _CanAdd(XElement x) => x.Value.Contains("${SELECTED_TEXT}");
-			
-			void _Add(popupMenu m, XElement x, bool listItem) {
-				string s = name;
-				if (s == null) {
-					s = snippet.Text;
-					if (s.Like("*?Snippet")) s = s[..^7];
-					else if (s.Like("*?Surround")) s = s[..^8];
-					name = s;
+			var m = new popupMenu { RawText = true };
+			List<XElement> list = new();
+			foreach (_CiComplItemSnippet snippet in a) {
+				string name = null;
+				if (snippet.x.HasElements) {
+					list.Clear();
+					foreach (var v in snippet.x.Elements("list")) if (_CanAdd(v)) list.Add(v);
+					if (list.Count > 3) {
+						var sub = new popupMenu { RawText = true };
+						foreach (var v in list) _Add(sub, v, true);
+						m.Submenu(name, () => sub);
+					} else if (list.Count > 0) {
+						foreach (var v in list) _Add(m, v, true);
+					}
+				} else {
+					if (_CanAdd(snippet.x)) _Add(m, snippet.x, false);
 				}
-				if (listItem) s = s + "  |  " + StringUtil.RemoveUnderlineChar(x.Attr("item"));
-				var v = m.Add(s);
-				v.Tag = x;
-				v.Tooltip = snippet.x.Attr("info") + "\n\n" + x.Value;
+				
+				bool _CanAdd(XElement x) => x.Value.Contains("${SELECTED_TEXT}");
+				
+				void _Add(popupMenu m, XElement x, bool listItem) {
+					string s = name;
+					if (s == null) {
+						s = snippet.Text;
+						if (s.Like("*?Snippet")) s = s[..^7];
+						else if (s.Like("*?Surround")) s = s[..^8];
+						name = s;
+					}
+					if (listItem) s = s + "  |  " + StringUtil.RemoveUnderlineChar(x.Attr("item"));
+					var v = m.Add(s);
+					v.Tag = x;
+					v.Tooltip = snippet.x.Attr("info") + "\n\n" + x.Value;
+				}
+				//CONSIDER: hotkeys for surround snippets.
 			}
-			//CONSIDER: hotkeys for surround snippets.
+			if (0 == m.Show()) return;
+			x = m.Result.Tag as XElement;
 		}
-		if (0 == m.Show()) return;
 		
 		if (to - from > 1 && k.code[to - 1] == '\n') {
 			if (k.code[--to - 1] == '\r') to--;
 		}
 		
-		_Commit(k.sci, from, to, m.Result.Tag as XElement, k.code[from..to]);
+		_Commit(k.sci, from, to, x, k.code[from..to]);
 	}
 	
 	public static void Commit(SciCode doc, CiComplItem item, int codeLenDiff) {
@@ -424,7 +441,7 @@ static class CiSnippets {
 	static void _Commit(SciCode doc, int pos, int endPos, XElement x, string surroundText = null) {
 		doc.SnippetMode_?.End();
 		
-		var xSnippet = x.Name == "snippet" ? x : x.Parent;
+		var xSnippet = x.Name == "list" ? x.Parent : x;
 		
 		string s = x.Value;
 		
@@ -436,7 +453,7 @@ static class CiSnippets {
 		if (_GetAttr("var", out string attrVar)) {
 			if (attrVar.RxMatch(@"^(.+?), *(.+)$", out var m)) {
 				try {
-					var t = InsertCodeUtil.GetNearestLocalVariableOfType(m[1].Value);
+					var t = CodeUtil.GetNearestLocalVariableOfType(m[1].Value);
 					varName = t?.Name ?? m[2].Value;
 				}
 				catch (ArgumentException ex1) { print.it($"Error in {xSnippet.Attr("name")}: {ex1.Message}"); }
@@ -508,11 +525,13 @@ class CiSnippetMode {
 	StartEnd _range;
 	int _finalCaretPos;
 	bool _ignoreModified, _ignorePosChanged;
+	bool _isSurround;
 	
 	const string c_markComment = "/*\f\v*/", c_markAlt = "__\f\v__";
 	
 	public CiSnippetMode(ref string s, SciCode doc, string varName, string selectedText) {
 		_doc = doc;
+		_isSurround = !selectedText.NE();
 		
 		//replace escape sequences in an easy but not perfect way
 		bool escaped = 0 != s.RxReplace(@"\\[$}\\]", m => m.Subject[m.End - 1] switch { '$' => "\uf100", '}' => "\uf101", _ => "\uf102" }, out s); //Unicode private use area
@@ -620,7 +639,7 @@ class CiSnippetMode {
 			}
 		}
 		
-		CodeInfo.Pasting(_doc, silent: true); //to auto-add missing using directives
+		//CodeInfo.Pasting(_doc, silent: true); //to auto-add missing using directives //rejected. Does not work well with EReplaceTextGently (because it makes multiple modifications). Namespaces can be specified in snippet.
 		if (_dollars == null) {
 			_doc.aaaReplaceRange(true, pos, endPos, s, true);
 		} else {
@@ -635,7 +654,8 @@ class CiSnippetMode {
 			}
 			//never mind: the formatter splits line `/*mark*/code` -> `/*mark*/\r\ncode`
 			
-			_doc.aaaReplaceRange(true, pos, endPos, s);
+			if (_isSurround) _doc.EReplaceTextGently(pos, endPos, s);
+			else _doc.aaaReplaceRange(true, pos, endPos, s);
 			
 			int nDollar0 = 0; //max 1
 			foreach (ref var v in _dollars.AsSpan()) {

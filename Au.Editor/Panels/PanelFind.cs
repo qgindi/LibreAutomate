@@ -704,7 +704,7 @@ This setting also is used by 'Find references' etc.
 				//file
 				var path = f.ItemPath;
 				b.Marker(c_markerFile)
-					.Link2(new PanelFound.CodeLink(f, ar[0].Start.Value, ar[0].End.Value))
+					.Link2(new PanelFound.CodeLink(f, ar[0].Start.Value))
 					.Gray(path.AsSpan(0..^f.Name.Length))
 					.B(f.Name);
 				int ns = 120 - path.Length * 7 / 4; if (ns > 0) b.Text(new string(' ', ns));
@@ -716,7 +716,7 @@ This setting also is used by 'Find references' etc.
 				if (limited) continue;
 				for (int i = 0; i < ar.Length; i++) {
 					var range = ar[i];
-					PanelFound.AppendFoundLine(b, f, text, range.Start.Value, range.End.Value, displayFile: false);
+					PanelFound.AppendFoundLine(b, f, text, range.Start.Value, range.End.Value, workingState, displayFile: false);
 				}
 			}
 

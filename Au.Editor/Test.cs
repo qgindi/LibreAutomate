@@ -42,16 +42,29 @@ using Au.Controls;
 static unsafe class Test {
 
 	public static void FromMenubar() {
-		print.clear();
+		print.clear( );
 
+//		var s = """
+//<snippet>
+//	<![CDATA[if (${1:true}) {
+//${SELECTED_TEXT}$0
+//}]]>
+//</snippet>
+//""";
+//		s="""
+//if (${1:true}) {
+//${SELECTED_TEXT}$0
+//}
+//""";
 		
+//		CiSnippets.Surround(s);
 		
 		//CiSnippets.Reload();
 
 		//var d = Panels.Editor.ActiveDoc; //
 		//int pos = d.aaaCurrentPos16;
-		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-		print.it(cd.syntaxRoot.ContainsSkippedText);
+		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		//print.it(cd.syntaxRoot.ContainsSkippedText);
 		//SyntaxNode n = cd.syntaxRoot.FindToken(pos).Parent;
 		//CiUtil.PrintNode(n);
 		//CiUtil.PrintNode(n.GetStatementEtc());
@@ -65,8 +78,8 @@ static unsafe class Test {
 		//perf.nw();
 
 
-		if (!CodeInfo.GetContextAndDocument(out var k)) return;
-		//var s = InsertCodeUtil.GetAutoIndentationString(k, k.pos, false);
+		//if (!CodeInfo.GetContextAndDocument(out var k)) return;
+		//var s = CodeUtil.GetAutoIndentationString(k, k.pos, false);
 		//print.it(s.Length);
 		
 		//var n = k.syntaxRoot.FindToken(k.pos).Parent;

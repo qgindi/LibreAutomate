@@ -1,5 +1,3 @@
-//TODO: it seems some "go to" (maybe "found" links, or "go back") after changing text move current pos after "\r". Then cursor disappears. The same could happen with surrogates.
-	
 using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows;
@@ -226,9 +224,10 @@ partial class SciCode : KScintilla {
 					if (CodeInfo.SciModified(this, n)) _CodeModifiedAndCodeinfoOK(); //WPF preview
 					Panels.Find.UpdateQuickResults();
 				}
-				Panels.Bookmarks.SciModified(this, ref n);
-				Panels.Breakpoints.SciModified(this, ref n);
-				App.Model.EditGoBack.OnTextModified(this, n.modificationType.Has(MOD.SC_MOD_DELETETEXT), n.position, n.length);
+				Panels.Bookmarks.SciModified(this, n);
+				Panels.Breakpoints.SciModified(this, n);
+				Panels.Found.SciModified(this, n);
+				App.Model.EditGoBack.SciModified(this, n.modificationType.Has(MOD.SC_MOD_DELETETEXT), n.position, n.length);
 				if (n.linesAdded != 0) ESetLineNumberMarginWidth_(onModified: true);
 			}
 			break;

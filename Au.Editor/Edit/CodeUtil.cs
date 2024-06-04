@@ -15,7 +15,45 @@ using Microsoft.CodeAnalysis.CSharp.Indentation;
 /// <summary>
 /// Util used by <see cref="InsertCode"/>. Also can be used everywhere.
 /// </summary>
-static class InsertCodeUtil {
+static class CodeUtil {
+	/// <summary>
+	/// Returns <c>=> c is ' ' or '\t';</c>
+	/// </summary>
+	public static bool IsSpace(char c) => c is ' ' or '\t';
+	
+	/// <summary>
+	/// Returns true if <i>pos</i> is in <i>code</i> and <c>code[pos] is ' ' or '\t'</c>.
+	/// </summary>
+	public static bool IsSpace(string code, int pos) => (uint)pos < code.Length && code[pos] is ' ' or '\t';
+	
+	/// <summary>
+	/// Returns the start and end of the range consisting of <c>' '</c> and <c>'\t'</c> characters around <i>pos</i>.
+	/// </summary>
+	public static (int start, int end) SkipSpaceAround(string code, int pos) {
+		int start = pos, end = pos;
+		while (IsSpace(code, start - 1)) start--;
+		while (IsSpace(code, end)) end++;
+		return (start, end);
+	}
+	
+	/// <summary>
+	/// If <i>pos</i> is at the end of a line and not at the end of the string, returns the start of next line. Else returns <i>pos</i>.
+	/// </summary>
+	public static int SkipNewline(string code, int pos) {
+		if (pos < code.Length && code[pos] == '\r') pos++;
+		if (pos < code.Length && code[pos] == '\n') pos++;
+		return pos;
+	}
+	
+	/// <summary>
+	/// If <i>pos</i> is at the start of a line, returns the end of previous line. Else returns <i>pos</i>.
+	/// </summary>
+	public static int SkipNewlineBack(string code, int pos) {
+		if (pos > 0 && code[pos - 1] == '\n') pos--;
+		if (pos > 0 && code[pos - 1] == '\r') pos--;
+		return pos;
+	}
+	
 	/// <summary>
 	/// Returns true if i is at a line start + any number of spaces and tabs.
 	/// </summary>

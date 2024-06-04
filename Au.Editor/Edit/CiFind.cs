@@ -170,7 +170,7 @@ static class CiFind {
 									aUsage.Add((b.Length, 2, (ushort)sui.ValueUsageInfoOpt.Value));
 							}
 							
-							PanelFound.AppendFoundLine(b, f, text, span.Start, span.End, displayFile: !allInThisDoc, indicHilite: PanelFound.Indicators.HiliteG);
+							PanelFound.AppendFoundLine(b, f, text, span.Start, span.End, workingState, displayFile: !allInThisDoc, indicHilite: PanelFound.Indicators.HiliteG);
 						}
 						if (multiProj) _Fold(false);
 						
@@ -194,7 +194,7 @@ static class CiFind {
 					.OrderBy(o => StringUtil.LevenshteinDistance(o.f.DisplayName, symName));
 				foreach (var (f, ts) in e) {
 					if (isInSource) b.Text("   ");
-					b.Link2(new PanelFound.CodeLink(f, ts.Start, ts.End));
+					b.Link2(new PanelFound.CodeLink(f, ts.Start));
 					if (!isInSource) {
 						if (refDef) b.B(sDef); else b.Text(sDef);
 						if (defInit != null) b.Text(" ").Text(defInit.Limit(50).ReplaceLineEndings(" "));
@@ -361,7 +361,7 @@ static class CiFind {
 		if (chL is '(' or '[' or '{' or '<') {
 			chR = chL switch { '(' => ')', '[' => ']', '{' => '}', _ => '>' };
 			_Brace(false);
-		} else if (chL == '#' && InsertCodeUtil.IsLineStart(code, pos)) {
+		} else if (chL == '#' && CodeUtil.IsLineStart(code, pos)) {
 			_Directive();
 		}
 		
@@ -369,7 +369,7 @@ static class CiFind {
 		if (chR is ')' or ']' or '}' or '>') {
 			chL = chR switch { ')' => '(', ']' => '[', '}' => '{', _ => '<' };
 			_Brace(true);
-		} else if (chR == '#' && InsertCodeUtil.IsLineStart(code, pos)) {
+		} else if (chR == '#' && CodeUtil.IsLineStart(code, pos)) {
 			_Directive();
 		}
 		
@@ -590,7 +590,7 @@ static class CiFind {
 					if (v.marker == 0) continue;
 					b.Marker(v.marker);
 					if (f != prevFile) { if (prevFile != null) b.Marker(c_markerSeparator, prevLine: true); prevFile = f; }
-					PanelFound.AppendFoundLine(b, f, text, v.start, v.end, displayFile: true, indicHilite: PanelFound.Indicators.HiliteB);
+					PanelFound.AppendFoundLine(b, f, text, v.start, v.end, workingState, displayFile: true, indicHilite: PanelFound.Indicators.HiliteB);
 					//rejected: in results display newName (hilited) as if already replaced. Or old red and new green, like in VSCode.
 				}
 			}

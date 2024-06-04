@@ -77,7 +77,7 @@ static class ModifyCode {
 			} else {
 				if (com) {
 					s.RxFindAll(@"(?m)^[\t ]*(.*)\R?", out RXMatch[] a);
-					//find smallest common indent
+					//find smallest common indentation
 					int indent = 0; //tabs*4 or spaces*1
 					foreach (var m in a) {
 						if (m[1].Length == 0) continue;
@@ -103,7 +103,7 @@ static class ModifyCode {
 		}
 		
 		bool caretAtEnd = isSelection && doc.aaaCurrentPos16 == selEnd;
-		doc.aaaReplaceRange(true, replStart, replEnd, s);
+		doc.EReplaceTextGently(replStart, replEnd, s);
 		if (isSelection) {
 			int i = replStart, j = replStart + s.Length;
 			doc.aaaSelect(true, caretAtEnd ? i : j, caretAtEnd ? j : i);
@@ -119,30 +119,40 @@ static class ModifyCode {
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2, metaToo: true)) return;
 		
 		var doc = cd.sci;
-		int from, to, selStart, selEnd;
+		int from, to, selStart = cd.pos, selEnd = doc.aaaSelectionEnd16;
 		if (selection) {
-			selStart = from = cd.pos;
-			selEnd = to = doc.aaaSelectionEnd16;
+			(from, to) = (selStart, selEnd);
 			if (from == to) {
 				var node = CiUtil.GetStatementEtcFromPos(cd, from);
 				if (node == null) return;
 				(from, to) = node.FullSpan;
 			}
 		} else {
-			from = 0;
-			to = cd.code.Length;
-			if (to == 0) return;
-			selStart = selEnd = -1;
+			(from, to) = (0, cd.code.Length);
 		}
-		int from0 = from;
 		
-		string s = Format(cd, ref from, ref to, ref selStart, ref selEnd);
-		if (s == null) return;
-		if (selection) {
-			doc.EReplaceTextGently(s, from..to);
+		if (to > from && Format(cd, ref from, ref to, ref selStart, ref selEnd) is { } a) {
+			_FormatReplace(cd, a);
 			doc.aaaSelect(true, selStart, selEnd);
-		} else {
-			doc.EReplaceTextGently(s);
+		}
+	}
+	
+	/// <summary>
+	/// Formats text of the specified range.
+	/// </summary>
+	public static void Format(CodeInfo.Context cd, int from, int to) {
+		int pos = cd.sci.aaaCurrentPos16;
+		if (Format(cd, ref from, ref to, ref pos, ref pos) is { } a) {
+			_FormatReplace(cd, a);
+			if (pos >= from || pos <= to) cd.sci.aaaCurrentPos16 = pos;
+		}
+	}
+	
+	static void _FormatReplace(CodeInfo.Context cd, List<TextChange> a) {
+		using SciCode.aaaUndoAction undo = a.Count < 2 ? default : new(cd.sci);
+		for (int i = a.Count; --i >= 0;) {
+			var c = a[i];
+			cd.sci.aaaReplaceRange(true, c.Span.Start, c.Span.End, c.NewText);
 		}
 	}
 	
@@ -154,61 +164,81 @@ static class ModifyCode {
 	/// <param name="to">End of range. The function may adjust it to exclude newline after.</param>
 	/// <param name="selStart">Selection start. The function adjusts it to match the formatted text. Can be -1 if don't need.</param>
 	/// <param name="selEnd">Selection end. The function adjusts it to match the formatted text. Can be -1 if don't need. Can be the same variable as <i>selStart</i>.</param>
-	/// <returns>Formatted text of the final range.</returns>
-	public static string Format(CodeInfo.Context cd, ref int from, ref int to, ref int selStart, ref int selEnd) {
+	/// <returns>Text changes in the final range. Or null if no changes.</returns>
+	public static List<TextChange> Format(CodeInfo.Context cd, ref int from, ref int to, ref int selStart, ref int selEnd) {
 		string code = cd.code;
+		Debug.Assert(code == cd.sci.aaaText);
 		
 		//exclude newline at the end. Else formats entire leading trivia of next token.
 		if (to < code.Length) {
 			if (to - from > 0 && code[to - 1] == '\n') to--;
 			if (to - from > 0 && code[to - 1] == '\r') to--;
-			if (to == from) return null;
 		}
+		if (to == from) return null;
 		
 		//include whitespace before. Else _Format can't detect \r\n before when indented.
 		while (from > 0 && code[from - 1] is '\t' or ' ') from--;
 		
 		if (!_Format(cd, from, to, out var a)) return null;
 		
-		StringBuilder b = null;
+		List<TextChange> ar = null;
 		int i1 = from, caret1 = selStart, caret2 = selEnd, moveCaret1 = 0, moveCaret2 = 0;
 		foreach (var v in a) {
 			string newText = v.NewText;
-			int ss = v.Span.Start, se = v.Span.End;
-			if (ss < from) {
-				if (se < from || se > to || newText.NE()) continue;
+			int cStart = v.Span.Start, cEnd = v.Span.End;
+			
+			//print.it(v, $"[{code.AsSpan(cStart..cEnd).ToString()}]");
+			
+			//some changes contain unchanged text at the start or end. Eg comments and/or newlines. If contain newlines, it would delete markers etc. Remove this unchanged text from the change.
+			if (cEnd > cStart && newText.Length > 0) {
+				RStr sp1 = code.AsSpan(cStart..cEnd), sp2 = newText;
+				if (sp1.Eq(sp2)) continue;
+				int commonStart = StringUtil.CommonPrefix(sp1, sp2);
+				if (commonStart > 0) { sp1 = sp1[commonStart..]; sp2 = sp2[commonStart..]; }
+				int commonEnd = StringUtil.CommonSuffix(sp1, sp2);
+				if (commonEnd > 0) { sp1 = sp1[..^commonEnd]; sp2 = sp2[..^commonEnd]; }
+				if (commonStart + commonEnd > 0) {
+					cStart += commonStart;
+					cEnd -= commonEnd;
+					newText = sp2.ToString();
+					//print.it("-->", cStart, cEnd, $"\"{newText}\", [{code.AsSpan(cStart..cEnd).ToString()}]");
+				}
+			}
+			
+			if (cStart < from) {
+				if (cEnd < from || cEnd > to || newText.NE()) continue;
 				//probably previous line is blank with indentation, and formatter tries to remove that indentation, eg replace "\t\r\n" with "\r\n\t"
 				int n = newText.LastIndexOf('\n') + 1; if (n == 0) continue;
 				newText = newText[n..];
-				ss = from;
-				if (code.Eq(ss..se, newText)) continue;
+				cStart = from;
 			} else {
-				if (se > to || code.Eq(v.Span, newText)) continue;
+				if (cEnd > to) continue;
 			}
+			if (code.Eq(cStart..cEnd, newText)) continue;
 			
-			b ??= new();
-			b.Append(code, i1, ss - i1);
-			b.Append(newText);
-			i1 = se;
+			Debug_.PrintIf(cEnd > cStart && code.AsSpan(cStart..cEnd).Contains('\n')); //replaces multiple lines. Would delete markers etc. FUTURE: if noticed this, add code to split the change.
+			
+			ar ??= new(a.Count);
+			ar.Add(new(TextSpan.FromBounds(cStart, cEnd), newText));
 			
 			_Caret(caret1, ref moveCaret1);
 			_Caret(caret2, ref moveCaret2);
 			
 			void _Caret(int caret, ref int moveCaret) {
-				if (caret >= se) moveCaret += ss - se + newText.Length;
-				else if (caret > ss) moveCaret += ss - caret + newText.Length;
+				if (caret >= cEnd) {
+					if (caret == cEnd && cStart == cEnd && caret == caret1 && caret2 > caret) return; //inserting text at caret1. Eg adding indentation when caret1 is at SOL. Let selStart remain at SOL.
+					moveCaret += cStart - cEnd + newText.Length;
+				} else if (caret > cStart) moveCaret += cStart - caret + newText.Length;
 			}
 		}
 		
-		if (b == null) return null;
-		b.Append(code, i1, to - i1);
-		
-		caret1 += moveCaret1;
-		if (caret2 >= 0) caret2 = Math.Max(caret2 + moveCaret2, caret1);
-		selStart = caret1;
-		selEnd = caret2;
-		
-		return b.ToString();
+		if (ar != null) {
+			caret1 += moveCaret1;
+			if (caret2 >= 0) caret2 = Math.Max(caret2 + moveCaret2, caret1);
+			selStart = caret1;
+			selEnd = caret2;
+		}
+		return ar;
 	}
 	
 	static bool _Format(CodeInfo.Context cd, int from, int to, out IList<TextChange> ac, string code = null) {
@@ -222,7 +252,7 @@ static class ModifyCode {
 		//Before formatting, in blank lines add a marker (doc comment). The same in lines containing only //comment.
 		//Other ways: 1. Modify Roslyn code; too difficult etc. 2. Fix formatted code; not 100% reliable.
 		const string c_mark = "///\a\b"; const int c_markLen = 5;
-		int nw = code.RxReplace(@"(?m)^\h*\K(?=\R|//(?!/(?!/)))", c_mark, out code, range: from..to);
+		int nw = (s_rx1 ??= new(@"(?m)^\h*\K(?=\R|//(?!/(?!/)))")).Replace(code, c_mark, out code, range: from..to);
 		if (nw > 0 || changedCode) {
 			root = root.SyntaxTree.WithChangedText(SourceText.From(code)).GetCompilationUnitRoot();
 			if (root.GetText().Length != code.Length) { Debug_.Print("bad new code"); ac = null; return false; }
@@ -267,6 +297,7 @@ static class ModifyCode {
 		//BAD: Roslyn does not format multiline collection initializers.
 		//	https://github.com/dotnet/roslyn/issues/8269
 	}
+	static regexp s_rx1;
 	
 #if DEBUG
 	static void _PrintFormattingTextChanges(string header, string code, IList<TextChange> a) {
@@ -480,14 +511,19 @@ partial class SciCode {
 	/// <summary>
 	/// Replaces text without losing markers, expanding folded code, etc.
 	/// </summary>
-	public void EReplaceTextGently(string s, Range? range = null) {
-		var (rFrom, rTo) = range.GetStartEnd(aaaLen16);
+	public void EReplaceTextGently(string s) => _ReplaceTextGently(0, aaaLen16, s, false);
+	
+	/// <summary>
+	/// Replaces range text without losing markers, expanding folded code, etc.
+	/// </summary>
+	public void EReplaceTextGently(int from, int to, string s) => _ReplaceTextGently(from, to, s, true);
+	
+	void _ReplaceTextGently(int rFrom, int rTo, string s, bool isRange) {
 		int len = s.Lenn(); if (len == 0) goto gRaw;
-		string old = range.HasValue ? aaaRangeText(true, rFrom, rTo) : aaaText;
-		if (len > 1_000_000 || old.Length > 1_000_000 || old.Length == 0) goto gRaw;
+		string old = isRange ? aaaRangeText(true, rFrom, rTo) : aaaText;
+		if (len > 5_000_000 || old.Length > 5_000_000 || old.Length == 0) goto gRaw;
 		var dmp = new DiffMatchPatch.diff_match_patch();
 		var a = dmp.diff_main(old, s, true); //the slowest part. Timeout 1 s; then a valid but smaller.
-		if (a.Count > 1000) goto gRaw;
 		dmp.diff_cleanupEfficiency(a);
 		using (new SciCode.aaaUndoAction(this)) {
 			for (int i = a.Count - 1, j = old.Length; i >= 0; i--) {
@@ -503,7 +539,7 @@ partial class SciCode {
 		}
 		return;
 		gRaw:
-		if (range.HasValue) aaaReplaceRange(true, rFrom, rTo, s);
+		if (isRange) aaaReplaceRange(true, rFrom, rTo, s);
 		else aaaText = s;
 		
 		//never mind: then Undo sets position at the first replaced part (in the document it's the last, because replaces in reverse order).

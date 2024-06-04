@@ -184,7 +184,7 @@ public static class StringUtil {
 	/// Can be used to measure similarity and match approximate strings with fuzzy logic.
 	/// Uses code and info from <see href="https://www.dotnetperls.com/levenshtein"/>.
 	/// </remarks>
-	public static int LevenshteinDistance(string s1, string s2) {
+	public static int LevenshteinDistance(RStr s1, RStr s2) {
 		int n = s1.Length;
 		int m = s2.Length;
 		
@@ -217,7 +217,7 @@ public static class StringUtil {
 	/// <summary>
 	/// Returns the number of characters common to the start of each string.
 	/// </summary>
-	public static int CommonPrefix(string s1, string s2) {
+	public static int CommonPrefix(RStr s1, RStr s2) {
 		int n = Math.Min(s1.Length, s2.Length);
 		for (int i = 0; i < n; i++) {
 			if (s1[i] != s2[i]) return i;
@@ -228,7 +228,7 @@ public static class StringUtil {
 	/// <summary>
 	/// Returns the number of characters common to the end of each string.
 	/// </summary>
-	public static int CommonSuffix(string s1, string s2) {
+	public static int CommonSuffix(RStr s1, RStr s2) {
 		int len1 = s1.Length;
 		int len2 = s2.Length;
 		int n = Math.Min(len1, len2);

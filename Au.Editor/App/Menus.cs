@@ -340,7 +340,7 @@ static class Menus {
 			public static void Format_selection() { ModifyCode.Format(true); }
 			
 			[Command]
-			public static void Disable_format_selection() { InsertCode.Surround("#pragma warning disable format\r\n", "#pragma warning restore format\r\n", 0); }
+			public static void Disable_format_selection() { InsertCode.SurroundPragmaWarningFormat(); }
 			
 			[Command("Indent selected lines", keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown, separator = true)]
 			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }

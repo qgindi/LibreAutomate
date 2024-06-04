@@ -144,7 +144,7 @@ static class InsertCode {
 		
 		//rename symbols in s if need
 		
-		try { InsertCodeUtil.RenameNewSymbols(ref s, k, node, pos, flags.Has(ICSFlags.MakeVarName1), renameVars); }
+		try { CodeUtil.RenameNewSymbols(ref s, k, node, pos, flags.Has(ICSFlags.MakeVarName1), renameVars); }
 		catch (Exception e1) { Debug_.Print(e1); }
 		
 		//indent, newlines
@@ -169,7 +169,7 @@ static class InsertCode {
 			if (nn < 2) b.AppendIndent(indent).AppendLine();
 		}
 		
-		InsertCodeUtil.AppendCodeWithIndent(b, s, indent, andNewline: true);
+		CodeUtil.AppendCodeWithIndent(b, s, indent, andNewline: true);
 		
 		if (separate && !s.Ends("\n}") && replTo < code.Length && code[replTo] is not ('\r' or '}')) {
 			b.AppendIndent(indent).AppendLine();
@@ -267,50 +267,6 @@ static class InsertCode {
 				k.SendNow();
 			});
 		}
-	}
-	
-	/// <summary>
-	/// In current document gently replaces text in range from..to with before + text + after. Indents if need.
-	/// Ignores newline at the end of the range text.
-	/// </summary>
-	public static void Surround(int from, int to, string before, string after, int indentPlus, bool concise = false) {
-		var doc = Panels.Editor.ActiveDoc;
-		if (!doc.EFile.IsCodeFile) return;
-		
-		int indent = before.Starts('#') ? 0 : doc.aaaLineIndentationFromPos(true, from);
-		if (indent > 0) {
-			var si = InsertCodeUtil.IndentationString(indent);
-			before = before.RxReplace("(?m)^", si);
-			int i1 = after.IndexOf('\n') + 1;
-			if (i1 > 0) after = after.RxReplace("(?m)^", si, range: i1..);
-		}
-		
-		var s = doc.aaaRangeText(true, from, to);
-		var b = new StringBuilder();
-		
-		if (concise && s.LineCount() <= 1) {
-			b.Append(before.TrimEnd()).Append(' ');
-			b.Append(s.Trim()).Append(' ');
-			b.Append(after.TrimStart());
-		} else {
-			b.Append(before);
-			if (s.Length == 0) b.Append(InsertCodeUtil.IndentationString(indent + indentPlus));
-			else InsertCodeUtil.AppendCodeWithIndent(b, s, indentPlus, andNewline: false);
-			b.Append(after);
-		}
-		
-		doc.EReplaceTextGently(b.ToString(), from..to);
-	}
-	
-	/// <summary>
-	/// In current document gently replaces the selected text or statement with before + text + after. Indents if need.
-	/// Ignores newline at the end of the selected text.
-	/// </summary>
-	/// <param name="concise">If text is single line, surround as single line.</param>
-	public static void Surround(string before, string after, int indentPlus, bool concise = false) {
-		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-		var (from, to) = InsertCodeUtil.GetSurroundRange(cd);
-		Surround(from, to, before, after, indentPlus, concise);
 	}
 	
 	/// <summary>
@@ -419,11 +375,20 @@ static class InsertCode {
 		return meta.Apply();
 	}
 	
-	public static void AddFileDescription() {
-		var doc = Panels.Editor.ActiveDoc;
-		if (!doc.EFile.IsCodeFile) return;
-		doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
-		doc.aaaSelect(false, 4, 15, makeVisible: true);
+	//rejected
+	//public static void AddFileDescription() {
+	//	var doc = Panels.Editor.ActiveDoc;
+	//	if (!doc.EFile.IsCodeFile) return;
+	//	doc.aaaInsertText(false, 0, "/// Description\r\n\r\n");
+	//	doc.aaaSelect(false, 4, 15, makeVisible: true);
+	//}
+	
+	public static void SurroundPragmaWarningFormat() {
+		CiSnippets.Surround("""
+#pragma warning disable format
+${SELECTED_TEXT}$0
+#pragma warning restore format
+""");
 	}
 	
 	public static void AddClassProgram() {
@@ -459,17 +424,14 @@ static class InsertCode {
 		} else start = end;
 		//CiUtil.HiliteRange(start, end); return;
 		
-		var before = """
+		CiSnippets.Surround("""
 class Program {
 	static void Main(string[] a) => new Program(a);
 	Program(string[] args) {
-
-""";
-		var after = @"
+${SELECTED_TEXT}$0
 	}
 }
-";
-		Surround(start, end, before, after, indentPlus: 2);
+""", start..end);
 	}
 	
 	/// <summary>
