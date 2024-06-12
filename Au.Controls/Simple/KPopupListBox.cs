@@ -1,9 +1,11 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 namespace Au.Controls;
+
+//TODO3: Esc, Arrows, etc don't work in HwndHost-ed windows, eg Output History.
 
 /// <summary>
 /// Simple <see cref="Popup"/> with child <see cref="ListBox"/>.
@@ -53,11 +55,6 @@ public class KPopupListBox : Popup {
 	void _Close(bool ok, RoutedEventArgs e) {
 		e.Handled = true;
 		IsOpen = false;
-		
-		//SHOULDDO: bad in InfoWindow, with or without this, even if Focusable false and no Focus().
-		//	Also Esc does not work there.
-		//	ContextMenu works, except keys (Esc, Arrows, etc).
-		//	Classic menu perfect.
 		PlacementTarget?.Focus();
 		
 		if (ok) {

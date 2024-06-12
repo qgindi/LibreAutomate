@@ -303,7 +303,7 @@ class TriggerActionThreads {
 					catch (OutOfMemoryException) { //too many threads, probably 32-bit process
 						if (single) _d.TryRemove(trigger, out _);
 						_OutOfMemory();
-						//SHOULDDO: before starting thread, warn if there are too many action threads.
+						//TODO3: before starting thread, warn if there are too many action threads.
 						//	In 32-bit process normally fails at ~3000 threads.
 						//	Unlikely to fail in 64-bit process, but at ~15000 threads starts to hang temporarily, which causes hook timeout, slow mouse, other anomalies.
 					}

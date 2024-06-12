@@ -19,7 +19,7 @@ b.WinSaved(sett.placement, o => {
 if (!b.ShowDialog()) return;
 
 
-internal record class MySettings : JSettings {
+record class MySettings : JSettings {
 	public static readonly string File = folders.ThisAppDocuments + @"Dialog save 1.json";
 
 	public static MySettings Load() => Load<MySettings>(File);

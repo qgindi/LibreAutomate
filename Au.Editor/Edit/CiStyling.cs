@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.Text;
 //using Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Classification;
 
-//SHOULDDO: now preprocessor symbol bold if followed by a bold style. Example code:
+//TODO3: now preprocessor symbol bold if followed by a bold style. Example code:
 /*
 #if DEBUG
 #endif

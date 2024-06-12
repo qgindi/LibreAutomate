@@ -286,7 +286,7 @@ namespace Au.More {
 			public int Show(Bitmap img, CIUFlags flags, RECT r) {
 				_img = img;
 				_flags = flags;
-				//SHOULDDO: cursor almost invisible on my 200% DPI tablet (somehow transparent). Test on true 200% DPI screen.
+				//TODO3: cursor almost invisible on my 200% DPI tablet (somehow transparent). Test on true 200% DPI screen.
 				_cursor = MouseCursor.Load(ResourceUtil.GetBytes("<Au>resources/red_cross_cursor.cur"), 32);
 				_dpi = screen.primary.Dpi;
 				_w = WndUtil.CreateWindow(_WndProc, true, WndUtil.WindowClassDWP_, "Au.CaptureScreen", WS.POPUP | WS.VISIBLE, WSE.TOOLWINDOW | WSE.TOPMOST, r.left, r.top, r.Width, r.Height);

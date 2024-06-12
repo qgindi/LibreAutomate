@@ -81,7 +81,7 @@ public unsafe partial class KScintilla : HwndHost {
 		}
 		_InitDocument();
 		Call(SCI_SETSCROLLWIDTHTRACKING, 1);
-		Call(SCI_SETSCROLLWIDTH, 1); //SHOULDDO: later make narrower when need, eg when folded long lines (alas there is no direct notification). Maybe use timer.
+		Call(SCI_SETSCROLLWIDTH, 1); //TODO3: later make narrower when need, eg when folded long lines (alas there is no direct notification). Maybe use timer.
 		if (!AaInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
 		Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
 		
@@ -352,16 +352,21 @@ public unsafe partial class KScintilla : HwndHost {
 	/// Raises the <see cref="AaNotify"/> event.
 	/// </summary>
 	protected virtual void AaOnSciNotify(ref SCNotification n) {
-		AaNotify?.Invoke(this, ref n);
+		AaNotify?.Invoke(new(this, ref n));
 		switch (n.code) {
 		case NOTIF.SCN_MODIFIED:
-			var e = AaTextChanged;
-			if (e != null && n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) e(this, EventArgs.Empty);
+			if (AaTextChanged is { } e && n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) e(new(this, ref n));
 			break;
 		}
 	}
 	
-	public delegate void AaEventHandler(KScintilla c, ref SCNotification n);
+	public ref struct AaEventHandlerArgs {
+		public readonly KScintilla c;
+		public readonly ref SCNotification n;
+		public AaEventHandlerArgs(KScintilla sci, ref SCNotification notif) { c = sci; n = ref notif; }
+	}
+	
+	public delegate void AaEventHandler(AaEventHandlerArgs e);
 	
 	/// <summary>
 	/// Occurs when any Scintilla notification is received.
@@ -369,9 +374,9 @@ public unsafe partial class KScintilla : HwndHost {
 	public event AaEventHandler AaNotify;
 	
 	/// <summary>
-	/// Occurs when text changed.
+	/// Occurs when text changed (<b>SCN_MODIFIED</b> notification with <b>SC_MOD_INSERTTEXT</b> or <b>SC_MOD_DELETETEXT</b>).
 	/// </summary>
-	public event EventHandler AaTextChanged;
+	public event AaEventHandler AaTextChanged;
 	
 	//workaround for: Scintilla does not delete markers of deleted lines. Instead moves to the next or previous line.
 	void _DeleteMarkers(ref SCNotification n) {

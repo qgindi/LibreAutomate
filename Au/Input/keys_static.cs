@@ -361,7 +361,7 @@ public partial class keys {
 	}
 
 	static KKey _WaitForKey(Seconds timeout, KKey key, bool up, bool block) {
-		//SHOULDDO: if up and block: don't block if was down when starting to wait. Also in the Mouse func.
+		//TODO3: if up and block: don't block if was down when starting to wait. Also in the Mouse func.
 
 		KKey R = 0;
 		using (WindowsHook.Keyboard(x => {

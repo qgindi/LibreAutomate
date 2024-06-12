@@ -9,7 +9,7 @@ using Au.Controls;
 
 //CONSIDER: option to show Recipe panel when Cookbook panel is really visible and hide when isn't.
 
-//SHOULDDO: add some synonyms:
+//TODO3: add some synonyms:
 //	string/text, folder/directory, program/app/application, run/open, email/mail, regular expression/regex
 //	See _DebugGetWords.
 
@@ -254,14 +254,14 @@ class PanelCookbook {
 	}
 	
 	string[] _Stem(string s) {
-		if (_stem.stemmer == null) _stem = (new(), new());
+		if (_stem.stemmer == null) _stem = (new(), new(), new regexp(@"(*UCP)[^\W_]+"));
 		_stem.a.Clear();
-		foreach (var t in s.Lower().Segments(SegSep.Word, SegFlags.NoEmpty)) {
-			_stem.a.Add(_stem.stemmer.Stem(s[t.Range]));
+		foreach (var v in _stem.rx.FindAll(s.Lower(), 0)) {
+			_stem.a.Add(_stem.stemmer.Stem(v));
 		}
 		return _stem.a.ToArray();
 	}
-	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a) _stem;
+	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a, regexp rx) _stem;
 	
 	/// <summary>
 	/// Finds and opens a recipe.

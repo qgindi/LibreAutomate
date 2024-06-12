@@ -22,7 +22,7 @@ class XPublish {
 			b.End();
 			if (!b.ShowDialog(App.Wmain)) return;
 			App.Settings.publish = (cSingle.IsChecked ? 0 : 1) | (cNet.IsChecked ? 2 : 0) | (cR2R.IsChecked ? 4 : 0);
-			//FUTURE: maybe support publish profiles like in VS: <PublishProfileFullPath>
+			//TODO3: maybe support publish profiles like in VS: <PublishProfileFullPath>
 			
 			if (!CreateCsproj(singleFile: cSingle.IsChecked, selfContained: cNet.IsChecked, readyToRun: cR2R.IsChecked)) return;
 			
@@ -137,7 +137,7 @@ class XPublish {
 		if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll");
 		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, outDir, (from, to) => _AddContentFile(from, to));
 		
-		if (_meta.References.DefaultRefCount != MetaReferences.DefaultReferences.Count) return _Err("noRef not supported"); //FUTURE: try <DisableImplicitFrameworkReferences>
+		if (_meta.References.DefaultRefCount != MetaReferences.DefaultReferences.Count) return _Err("noRef not supported"); //TODO3: try <DisableImplicitFrameworkReferences>
 		_AddAttr(xig, "Reference", "Include", _meta.References.Refs[_meta.References.DefaultRefCount - 1].FilePath); //Au
 		_References();
 		

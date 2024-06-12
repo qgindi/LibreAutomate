@@ -243,6 +243,7 @@ class CiPopupList {
 		_a = null;
 		_av = null;
 		_groups = null;
+		_suggestedItem = null;
 	}
 	
 	public CiComplItem SelectedItem {

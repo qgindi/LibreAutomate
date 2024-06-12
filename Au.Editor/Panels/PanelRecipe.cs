@@ -176,7 +176,7 @@ class PanelRecipe {
 		string code = usings + $"///<see cref='{s}'/>";
 		using var ws = new AdhocWorkspace();
 		var document = CiUtil.CreateDocumentFromCode(ws, code, needSemantic: true);
-		var syn = document.GetSyntaxRootAsync().Result;
+		var syn = document.GetSyntaxRootSynchronously(default);
 		var node = syn.FindToken(code.Length - 3 - s.Length, true).Parent.FirstAncestorOrSelf<CrefSyntax>();
 		if (node != null) {
 			var semo = document.GetSemanticModelAsync().Result;

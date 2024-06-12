@@ -71,7 +71,7 @@ namespace Au
 			_threadHandle = Api.OpenThread(Api.SYNCHRONIZE, false, _threadId = Api.GetCurrentThreadId());
 
 			ThreadPool.QueueUserWorkItem(_this => (_this as inputBlocker)._ThreadProc(), this);
-			//SHOULDDO: what if thread pool is very busy? Eg if scripts use it incorrectly. Maybe better have own internal pool.
+			//TODO3: what if thread pool is very busy? Eg if scripts use it incorrectly. Maybe better have own internal pool.
 
 			Api.WaitForSingleObject(_syncEvent, Timeout.Infinite);
 			GC.KeepAlive(this);

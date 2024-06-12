@@ -473,7 +473,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <param name="filePath">Full path, to pass directly to .NET <b>File</b> function.</param>
 	/// <returns>null if failed or file size more than 100_000_000.</returns>
 	public static string GetFileTextLL(string filePath) {
-		//SHOULDDO: option to load only text files. If unknown extension, try to load part and find \0.
+		//TODO3: option to load only text files. If unknown extension, try to load part and find \0.
 		try {
 			using var sr = filesystem.waitIfLocked(() => new StreamReader(filePath));
 			if (sr.BaseStream.Length > 100_000_000) return null;

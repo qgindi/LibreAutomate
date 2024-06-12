@@ -1565,7 +1565,7 @@ namespace Au {
 					if (e == null) {
 						if (iw == 11) { //JavaFX drop-down list isn't connected to the CB
 							var wp = w.Get.EnabledOwned();
-							//SHOULDDO: now unreliable. Can detect a wrong window, eg a random tooltip.
+							//TODO3: now unreliable. Can detect a wrong window, eg a random tooltip.
 							//	Try to detect more reliably. Eg must have certain styles and rect, contain LIST or MENUPOPUP, etc.
 							//	Then could use with any window, not only JavaFX.
 							//	Also then could detect expanded state even when there is no EXPANDED state.

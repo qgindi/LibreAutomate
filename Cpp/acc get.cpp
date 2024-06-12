@@ -67,7 +67,7 @@ namespace {
 						long cc = 0;
 						//Perf.First();
 						//get_accChildCount can be very slow if UIA, eg in Firefox big pages.
-						//	SHOULDDO: if UIA, try something faster, eg get next/previous sibling of a. See UIAccessible::accNavigate.
+						//	TODO3: if UIA, try something faster, eg get next/previous sibling of a. See UIAccessible::accNavigate.
 						useParent = 0 == parent->get_accChildCount(&cc) && cc == 1;
 						//Perf.NW();
 						if (useParent) {
@@ -114,7 +114,7 @@ namespace {
 
 		//Printf(L"{%i %i %i %i} {%i %i %i %i} 0x%X 0x%X", x1, y1, wid1, hei1, x2, y2, wid2, hei2, role, ao::GetRoleByte(auia, 0));
 
-		//SHOULDDO: although smaller, in some cases it can be not a descendant. Often cannot detect it reliably. Some reasons:
+		//TODO3: although smaller, in some cases it can be not a descendant. Often cannot detect it reliably. Some reasons:
 		// 1. UIA filters out some objects.
 		// 2. UIA sometimes gets different rect for same object. Eg clips treeitem if part of its text is offscreen.
 		//Print("--------");

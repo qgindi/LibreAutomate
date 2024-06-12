@@ -219,7 +219,7 @@ public partial struct wnd {
 	public bool WaitForClosed(Seconds timeout, bool waitUntilProcessEnds = false) {
 		if (!waitUntilProcessEnds) return WaitFor(timeout, t => !t.IsAlive, true);
 		
-		//SHOULDDO: if window of this thread or process...
+		//TODO3: if window of this thread or process...
 		
 		if (!IsAlive) return true;
 		using var ph = Handle_.OpenProcess(this, Api.SYNCHRONIZE);

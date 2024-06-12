@@ -34,7 +34,7 @@ public class timer {
 	public timer(Action<timer> timerAction) {
 		_action = timerAction;
 	}
-	//SHOULDDO: add overload with hwnd. Or optional parameter.
+	//rejected: add overload with hwnd. Or optional parameter. Or another class. Never needed in several years.
 	
 	/// <summary>
 	/// Something to attach to this variable.

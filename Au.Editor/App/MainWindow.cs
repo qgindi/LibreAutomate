@@ -5,7 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
 
-//SHOULDDO: when disabling main window, also disable its owned windows. At least floating panels.
+//TODO3: when disabling main window, also disable its owned windows. At least floating panels.
 //	Because for dialogs often is used 'owner: App.Hmain'.
 
 partial class MainWindow : Window {
@@ -48,9 +48,12 @@ partial class MainWindow : Window {
 		
 		if (App.Commands[nameof(Menus.File.New)].FindMenuButtonInToolbar(Panels.TFile) is { } bNew)
 			bNew.MouseDoubleClick += (_, e) => { e.Handled = true; Menus.File.New.New_script(); };
-		if (App.Commands[nameof(Menus.Run.Run_script)].FindButtonInToolbar(Panels.TRun) is { } bRun) { //make Run button bigger //SHOULDDO: bad if vertical toolbar
-			bRun.Width = 40;
-			bRun.Margin = new(8, 0, 8, 0);
+		if (App.Commands[nameof(Menus.Run.Run_script)].FindButtonInToolbar(Panels.TRun) is { } bRun) { //make Run button bigger
+			bool vert = bRun.Parent is ToolBar { Orientation: Orientation.Vertical };
+			if (vert) bRun.MinHeight = 40; else bRun.MinWidth = 40;
+			Thickness margin = vert ? new(0, 8, 0, 8) : new(8, 0, 8, 0);
+			bRun.Margin = margin;
+			if (App.Commands[nameof(Menus.Run.Debug_run)].FindButtonInToolbar(Panels.TRun) is { } bDebugRun) bDebugRun.Margin = margin;
 		}
 		
 		if (Au.Triggers.ActionTriggers.DisabledEverywhere) App.Commands[nameof(Menus.TT.Disable_triggers)].Checked = true;
@@ -90,7 +93,7 @@ partial class MainWindow : Window {
 		
 		hs.CompositionTarget.RenderMode = RenderMode.SoftwareOnly;
 		RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
-
+		
 		base.OnSourceInitialized(e);
 		
 		if (App.Settings.wndpos.main == null) App.Hmain.EnsureInScreen();

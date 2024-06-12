@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Au.Controls;
@@ -61,7 +61,7 @@ public class KCheckTextBox {
 		t.Small = true;
 		_button = button;
 		if (_button != null) {
-			//_button.ClickMode = ClickMode.Press; //open on button down. But then Popup.StaysOpen=false does not work. Tried async, but same. //SHOULDDO: replace Popup in KPopupListBox with KPopup.
+			//_button.ClickMode = ClickMode.Press; //open on button down. But then Popup.StaysOpen=false does not work. Tried async, but same. //TODO3: replace Popup in KPopupListBox with KPopup.
 			_button.Click += (_, _) => {
 				if (_popup?.IsOpen ?? false) {
 					_popup.IsOpen = false;

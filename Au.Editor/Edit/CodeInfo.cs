@@ -425,6 +425,7 @@ static class CodeInfo {
 			sci = Panels.Editor.ActiveDoc;
 			code = sci.aaaText;
 			this.pos = pos switch { -1 => sci.aaaCurrentPos16, -2 => sci.aaaSelectionStart16, _ => pos };
+			Debug.Assert((uint)this.pos <= code.Length);
 			if (isCodeFile = sci.EFile.IsCodeFile) meta = MetaComments.FindMetaComments(code);
 		}
 		
@@ -473,127 +474,22 @@ static class CodeInfo {
 			//syntaxRoot protects the syntax tree from GC. Creating it is expensive.
 			//	Roslyn keeps just a week reference, and could have to recompute it for every task.
 			//	Note: now I can't reproduce. It seems TryGetSyntaxRoot etc always succeeds.
-			syntaxRoot = _syntaxRoot = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
+			syntaxRoot = _syntaxRoot = document.GetSyntaxRootSynchronously(default) as CompilationUnitSyntax;
 			
-			//perf.next();
-			_ModifyTLS();
-			
-			//TODO (future): return false if syntaxtree text != code. But `syntaxRoot.GetText();` is slow. Instead compare EndOfFileToken.SpanStart with code length.
-			//print.it(code.Length, syntaxRoot.EndOfFileToken.SpanStart);
-			Debug_.PrintIf(syntaxRoot.EndOfFileToken.SpanStart != code.Length);
+			//When certain invalid code exists, the Roslyn's copy of file code (syntaxRoot.GetText()) may be different (usually much shorter).
+			//	Then calling various Roslyn functions would throw exception. Better return false now.
+			//	It seems it was caused by _ModifyTLS, now removed. //FUTURE: remove this code?
+			if (syntaxRoot.EndOfFileToken.SpanStart != code.Length) {
+#if DEBUG
+				print.clear();
+				Debug_.Print("---- bad code ----");
+				foreach (var v in syntaxRoot.ChildNodes()) CiUtil.PrintNode(v);
+#endif
+				return false;
+			}
 			
 			return true;
 		}
-		
-		//Workarounds for Roslyn bugs that break intellisense.
-		//FUTURE: test, maybe now some Roslyn bugs fixed.
-		void _ModifyTLS() {
-			var cu = syntaxRoot;
-			var members = cu.Members;
-			
-			//TLS code like this, not in a { block }:
-			/*
-kkk
-print.it(1);
-			*/
-			//	Roslyn thinks that 'kkk print.it(1);' is a MethodDeclarationSyntax (directly in CompilationUnitSyntax).
-			var met = members.FirstOrDefault(o => o is MethodDeclarationSyntax);
-			if (met != null) {
-				if (_Fix(met)) return;
-			}
-			
-			//TLS code like this, not in a { block }:
-			/*
-int i=5
-print.it(1);
-			*/
-			//	Roslyn thinks that 'int i=5 print.it(1' is one statement, and next is ';'.
-			//	Same with codes:
-			/*
-var s="aaa bbb"
-char c = 'a';
-
-			var s = "one\ntwo\n";
-			var a = s.Lines()
-for (int i = 0; i < count; i++) { }
-			*/
-			if (members.FirstOrDefault() is GlobalStatementSyntax g0) {
-				foreach (var d in cu.GetDiagnostics()) {
-					//print.it(d);
-					if (((ErrorCode)d.Code) == ErrorCode.ERR_SyntaxError && d.GetMessage(CultureInfo.InvariantCulture) == "Syntax error, ',' expected") {
-						var tok = d.Location.FindToken(default);
-						var gss = tok.Parent.FirstAncestorOrSelf<GlobalStatementSyntax>();
-						if (gss?.Statement is not LocalDeclarationStatementSyntax) continue;
-						if (!tok.TrailingTrivia.Any(SyntaxKind.SkippedTokensTrivia)) continue;
-						if (_Fix(gss)) return;
-					}
-				}
-			}
-			
-			bool _Fix(SyntaxNode node) {
-				SyntaxNode node2 = null;
-				int iNode = 0;
-				if (node is GlobalStatementSyntax gss) {
-					//the span ends in the middle of the statement. Include fullspan of next node.
-					iNode = cu.Members.IndexOf(gss);
-					if (iNode + 1 < cu.Members.Count) node2 = cu.Members[iNode + 1];
-				}
-				var span = TextSpan.FromBounds(node.SpanStart, (node2 ?? node).FullSpan.End);
-				
-				//to get correct nodes, parse that code inside { } block
-				var s = "{\n" + code[span.Start..span.End] + "}";
-				//print.it($"'{s}'");
-				var tree = CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview));
-				var cu2 = tree.GetCompilationUnitRoot();
-				if (cu2.ContainsDirectives) return false;
-				var block = (cu2.Members[0] as GlobalStatementSyntax).Statement as BlockSyntax;
-				var a = block.Statements;
-				//foreach (var v in a) CiUtil.PrintNode(v);
-				if (a.Count < 2) return false;
-				
-				var tok2 = a[0].GetLastToken(true);
-				if (!(tok2.IsKind(SyntaxKind.SemicolonToken) && tok2.IsMissing)) return false;
-				
-				//put each node into a GlobalStatementSyntax
-				var a2 = new GlobalStatementSyntax[a.Count];
-				for (int i = 0; i < a.Count; i++) {
-					var n = a[i];
-					if (i == 0) n = n.WithLeadingTrivia(node.GetLeadingTrivia());
-					a2[i] = SyntaxFactory.GlobalStatement(n);
-				}
-				
-				var cu3 = cu.ReplaceNode(node, a2);
-				if (node2 != null) cu3 = cu3.RemoveNode(cu3.Members[iNode + a2.Length], 0);
-				//or this. Same speed.
-				//members = members.RemoveAt(iNode);
-				//if (node2 != null) members = members.RemoveAt(iNode);
-				//members = members.InsertRange(iNode, a2);
-				//var cu3 = cu.WithMembers(members);
-				
-				//print.it("----"); foreach (var v in cu3.Members) CiUtil.PrintNode(v);
-				
-				_solution = _solution.WithDocumentSyntaxRoot(_documentId, cu3);
-				document = _document = _solution.GetDocument(_documentId);
-				syntaxRoot = _syntaxRoot = _document.GetSyntaxRootAsync().Result as CompilationUnitSyntax; //not = cu3
-				return true;
-			}
-		}
-		
-		//this would be slower, because creates tree 2 times.
-		//	And would need to somehow make { token span length = 0. Not tested.
-		//	This code is just to test speed.
-		//void _ModifyTLS2() {
-		//	var cu = document.GetSyntaxRootAsync().Result as CompilationUnitSyntax;
-		//	var members = cu.Members;
-		//	perf.next();
-		//	var s = "{\n" + code + "\n}";
-		
-		//	//var d = document.WithText(SourceText.From(s, Encoding.UTF8));
-		//	//var cu2=cu.With
-		
-		//	_solution = _solution.WithDocumentText(_documentId, SourceText.From(s, Encoding.UTF8));
-		//	document = _document = _solution.GetDocument(_documentId);
-		//}
 	}
 	
 	/// <summary>
@@ -650,7 +546,7 @@ for (int i = 0; i < count; i++) { }
 	//public static MetaComments Meta => _meta;
 	
 	static void _CreateWorkspace(SciCode sci) {
-		//SHOULDDO: use same workspace if project/solution not changed.
+		//TODO3: use same workspace if project/solution not changed.
 		//	Here "solution" means when a project or file uses project references.
 		//	Now eg slow GetSemanticModelAsync when [re]opening a file in a large project/solution.
 		
@@ -685,7 +581,7 @@ for (int i = 0; i < count; i++) { }
 					_documentId = docId;
 				}
 			}
-			//SHOULDDO: reuse document+syntaxtree of global.cs and its meta c files if their text not changed.
+			//TODO3: reuse document+syntaxtree of global.cs and its meta c files if their text not changed.
 			
 			List<ProjectReference> aPR = null;
 			if (m.ProjectReferences is { } a1) {

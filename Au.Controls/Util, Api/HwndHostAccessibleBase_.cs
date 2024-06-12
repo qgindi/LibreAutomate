@@ -123,7 +123,7 @@ namespace Au.Controls {
 		public virtual int FocusedChild => -1;
 		object IAccessible.get_accFocus() => wnd.thisThread.isFocused(_w) ? FocusedChild + 1 : null;
 		//object IAccessible.get_accFocus() {
-		//	print.it("get_accFocus", wnd.thisThread.isFocused(_w));//SHOULDDO. Now this not called for KTreeView. The native control normally is never focused. IAccessible.get_accFocus called by QM2 returns unknown error 0x80131509.
+		//	print.it("get_accFocus", wnd.thisThread.isFocused(_w));//TODO3. Now this not called for KTreeView. The native control normally is never focused. IAccessible.get_accFocus called by QM2 returns unknown error 0x80131509.
 		//	return wnd.thisThread.isFocused(_w) ? FocusedChild + 1 : null;
 		//}
 
@@ -183,7 +183,7 @@ namespace Au.Controls {
 		public virtual void SelectChild(ESelect flagsSelect, int child) { }
 		void IAccessible.accSelect(ESelect flagsSelect, VarInt varChild) {
 			int child = varChild;
-			if (flagsSelect.Has(ESelect.TAKEFOCUS)) Api.SetFocus(_w); // _e.Focus();//SHOULDDO: now Api.SetFocus makes KTreeView item nonfocused (works like focused but displayed like not)
+			if (flagsSelect.Has(ESelect.TAKEFOCUS)) Api.SetFocus(_w); // _e.Focus();//TODO3: now Api.SetFocus makes KTreeView item nonfocused (works like focused but displayed like not)
 			if (child == -1) {
 				if (flagsSelect is not (ESelect.TAKEFOCUS or 0)) throw new ArgumentException();
 			} else {

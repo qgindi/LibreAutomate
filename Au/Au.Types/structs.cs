@@ -405,6 +405,40 @@ namespace Au.Types {
 		}
 #pragma warning restore 1591 //XML doc
 	}
+
+	/// <summary>
+	/// Struct with fields <c>int start</c> and <c>int end</c>.
+	/// </summary>
+	public record struct StartEnd {
+		///
+		public int start;
+		///
+		public int end;
+
+		///
+		public StartEnd(int start, int end) { this.start = start; this.end = end; }
+
+		/// <summary>
+		/// Returns <c>end - start</c>.
+		/// </summary>
+		public int Length => end - start;
+
+		/// <summary>
+		/// Converts this to <see cref="Range"/>.
+		/// Can be used to get substring, like <c>s[x.Range]</c> instead of <c>s[x.start..x.end]</c>.
+		/// </summary>
+		public Range Range => start..end;
+
+		//public static implicit operator Range(StartEnd s) => s.start..s.end; //could be used to get substring like s[se], but error
+
+		/// <summary>
+		/// Gets string span.
+		/// </summary>
+		public RStr Span(string s) => s.AsSpan(start, end - start);
+
+		///
+		public override string ToString() => $"({start}, {end})";
+	}
 	
 	internal unsafe struct VARIANT : IDisposable {
 		public Api.VARENUM vt; //ushort

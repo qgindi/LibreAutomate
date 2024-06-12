@@ -348,7 +348,7 @@ public static class script {
 		}
 		Debug_.PrintNativeError();
 		return false;
-		//SHOULDDO: optimize. Eg the app may override TextWriter.Write(char) and call this on each char in a string etc.
+		//TODO3: optimize. Eg the app may override TextWriter.Write(char) and call this on each char in a string etc.
 		//	Now 40 mcs. Console.Write(char) 20 mcs.
 	}
 	internal static string s_wrPipeName;

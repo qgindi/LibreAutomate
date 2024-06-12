@@ -1,4 +1,4 @@
-﻿
+
 using IAccessible = Au.Types.Api.IAccessible;
 using VarInt = Au.Types.Api.VarInt;
 using NAVDIR = Au.Types.Api.NAVDIR;
@@ -59,7 +59,7 @@ namespace Au {
 				if (FocusedItem == b) r |= EState.FOCUSED | EState.HOTTRACKED;
 				if (b.IsChecked) r |= EState.CHECKED;
 				if (b.IsSubmenu) r |= EState.HASPOPUP;
-				//SHOULDDO: if offscreen, r |= EState.INVISIBLE | EState.OFFSCREEN;
+				//TODO3: if offscreen, r |= EState.INVISIBLE | EState.OFFSCREEN;
 			}
 			return (int)r - 1;
 		}

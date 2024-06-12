@@ -155,7 +155,7 @@ public unsafe class uiimageFinder {
 	/// <inheritdoc cref="Find(IFArea, Seconds)" path="/param"/>
 	public uiimage Wait(Seconds timeout, IFArea area)
 		=> Wait_(Action_.Wait, timeout, area) ? Result : null;
-	//SHOULDDO: suspend waiting while a mouse button is pressed.
+	//TODO3: suspend waiting while a mouse button is pressed.
 	//	Now, eg if finds while scrolling, although MouseMove waits until buttons released, but moves to the old (wrong) place.
 
 	/// <summary>
@@ -512,14 +512,6 @@ public unsafe class uiimageFinder {
 			//find first nontransparent pixel
 			for (i = 0; i < imagePixelCount; i++) if (!_IsTransparent(imagePixels[i])) break;
 			if (i == imagePixelCount) { N = -1; return false; } //not found because all pixels in image are transparent
-
-			//SHOULDDO:
-			//1. Use colorDiff.
-			//CONSIDER:
-			//1. Start from center.
-			//2. Prefer high saturation pixels.
-			//3. If large area, find its dominant color(s) and don't use them. For speed, compare eg every 11-th.
-			//4. Create a better algorithm. Maybe just shorter. This code is converted from QM2.
 
 			//find first nonbackground pixel (consider top-left pixel is background)
 			bool singleColor = false;

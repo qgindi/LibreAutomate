@@ -249,10 +249,10 @@ public enum TBLayout {
 	HorizontalWrap,
 
 	/// <summary>Buttons are in single column, like in a popup menu. Separators are horizontal.</summary>
-	Vertical, //SHOULDDO: if some buttons don't fit, add overflow drop-down menu. Or scrollbar; or add VerticalScroll.
+	Vertical, //TODO3: if some buttons don't fit, add overflow drop-down menu. Or scrollbar; or add VerticalScroll.
 
 	//	/// <summary>Buttons are in single row. When it exceeds maximal row width, buttons are moved to a drop-down menu. More rows can be added with <see cref="toolbar.Group"/>.</summary>
-	//	Horizontal,//SHOULDDO
+	//	Horizontal,//TODO3
 }
 
 /// <summary>

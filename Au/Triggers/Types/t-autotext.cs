@@ -339,7 +339,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 		}
 		_singlePK = false;
 		
-		//SHOULDDO: use KeyToTextConverter.
+		//TODO3: use KeyToTextConverter.
 		if (k.IsAlt && 0 == (thc.Mod & (KMod.Ctrl | KMod.Shift))) goto gReset; //Alt+key without other modifiers. Info: AltGr can add Ctrl, therefore we process it. Info: still not menu mode. Tested: never types a character, except Alt+numpad numbers.
 		
 		var vk = k.vkCode;

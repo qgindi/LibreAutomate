@@ -233,7 +233,7 @@ class CiFolding {
 						//p2.First();
 						int start = rangeStart + i0;
 						var t = root.FindToken(start);
-						//SHOULDDO: possible optimization. Instead of root.FindToken use node.FindToken, where node is of function etc whose full span contains start.
+						//TODO3: possible optimization. Instead of root.FindToken use node.FindToken, where node is of function etc whose full span contains start.
 						var span = t.Span;
 						//p2.Next();
 						if (span.Contains(start)) { i = span.End - rangeStart; return false; }

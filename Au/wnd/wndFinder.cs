@@ -1,6 +1,6 @@
 using static Au.wnd.Internal_;
 
-//SHOULDDO: if no name, prefer non-tooltip window. Now often finds tooltip instead of the wanted window. Eg Java menus.
+//TODO3: if no name, prefer non-tooltip window. Now often finds tooltip instead of the wanted window. Eg Java menus.
 
 namespace Au;
 

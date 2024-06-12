@@ -1,6 +1,6 @@
 using Au.Compiler;
 
-//SHOULDDO: preserve order.
+//TODO3: preserve order.
 
 /// <seealso cref="MetaComments.FindMetaComments"/>
 /// <seealso cref="MetaComments.EnumOptions"/>
@@ -209,7 +209,7 @@ class MetaCommentsParser {
 			if (b.NE()) return;
 			if (a.NE()) a = b;
 			else {
-				var hs = a.Split_(',', ignoreCase);
+				var hs = a.SplitHS_(',', ignoreCase);
 				foreach (var s in b.Split_(',')) hs.Add(s);
 				a = string.Join(',', hs);
 			}

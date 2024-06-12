@@ -241,7 +241,6 @@ static unsafe partial class Api {
 		//Ignore dwProcessId, because AllowSetForegroundWindow doc says:
 		//"The process specified by the dwProcessId parameter loses the ability to set the foreground window the next time that either the user generates input, unless the input is directed at that process, or the next time a process calls AllowSetForegroundWindow, unless the same process is specified as in the previous call to AllowSetForegroundWindow."
 		//If it's true (not tested), if we call AllowSetForegroundWindow with a process id, we disable setforegroundwindow in all other processes.
-		//This is experimental. Changed 2023-08-23. Need some time to see maybe it breaks something. //SHOULDDO: restore if need.
 	}
 #else
 	[DllImport("user32.dll", SetLastError = true)]

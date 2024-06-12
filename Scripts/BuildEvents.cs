@@ -82,7 +82,7 @@ int EditorPostBuild() {
 	if (verChanged || !filesystem.exists(verResFile1)) if (!_VersionInfo(verResFile1, exe1, "LibreAutomate C#")) return 1;
 	if (verChanged || !filesystem.exists(verResFile2)) if (!_VersionInfo(verResFile2, exe2, "LibreAutomate miniProgram")) return 2;
 	
-	//SHOULDDO: test https://github.com/resourcelib/resourcelib
+	//TODO3: test https://github.com/resourcelib/resourcelib
 	
 	var s = $"""
 [FILENAMES]

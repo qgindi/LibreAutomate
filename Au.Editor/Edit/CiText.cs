@@ -18,8 +18,6 @@ using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.DocumentationComments;
 using Microsoft.CodeAnalysis.SignatureHelp;
 
-//SHOULDDO: test whether are displayed ref and readonly modifiers of types, functions and fields. Now functions can be readonly, which means they don't modify state.
-
 class CiText {
 	readonly Stack<TextElement> _stack = new();
 	TextElement _container = new Section();

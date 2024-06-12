@@ -234,33 +234,6 @@ static partial class App {
 		if (filesystem.exists(folders.ThisAppBS + "data").Directory) {
 			IsPortable = true;
 			ScriptEditor.IsPortable = true;
-		} else {
-			//The app name was changed several times during the preview period.
-			//	If was installed with an old name, rename the app doc directory instead of creating new.
-			//	It contains app settings and probably the workspace folder.
-			//	FUTURE: delete this code.
-			var doc = folders.Documents + AppNameShort;
-			if (!filesystem.exists(doc)) {
-				try {
-					foreach (var v in new[] { "Uiscripter", "Automaticode", "Autepad", "Derobotizer" }) {
-						var s = folders.Documents + v;
-						if (filesystem.exists(s)) {
-							filesystem.move(s, doc);
-							
-							//rejected.
-							//filesystem.more.createSymbolicLink(s, thisAppDoc, CSLink.Junction);
-							
-							var f = doc + @"\.settings\Settings.json";
-							var text = File.ReadAllText(f);
-							text = text.Replace($@"\\{v}\\", $@"\\{AppNameShort}\\");
-							File.WriteAllText(f, text);
-							
-							break;
-						}
-					}
-				}
-				catch { }
-			}
 		}
 		
 		script.role = SRole.EditorExtension;
@@ -280,7 +253,6 @@ static partial class App {
 		}
 		catch (Exception e1) {
 			dialog.showError("Failed to set app folders", e1.ToString());
-			//throw;
 			Environment.Exit(1);
 		}
 	}

@@ -190,11 +190,11 @@ partial class AuDocs {
 			
 			//<google>...</google> -> <a href="google search">
 			nr = s.RxReplace(@"<google>(.+?)</google>", @"<a href=""https://www.google.com/search?q=$1"">$1</a>", out s);
-			if (nr > 0) print.warning("SHOULDDO: if using <_><google> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.</_>");
+			if (nr > 0) print.warning("TODO3: if using <_><google> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.</_>");
 			
 			//<msdn>...</msdn> -> <a href="google search in microsoft.com">
 			nr = s.RxReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:microsoft.com+$1"">$1</a>", out s);
-			if (nr > 0) print.warning("SHOULDDO: if using <_><msdn> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.</_>");
+			if (nr > 0) print.warning("TODO3: if using <_><msdn> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.</_>");
 		}
 		
 		//javascript renderTables() replacement, to avoid it at run time. Also remove class table-striped.
@@ -223,7 +223,7 @@ partial class AuDocs {
 		}
 		
 #if DISQUS
-		//SHOULDDO: Now shows Disqus content when page loaded (if small) or scrolled to the bottom. Should show only when clicked <h2>User comments</h2>.
+		//TODO3: Now shows Disqus content when page loaded (if small) or scrolled to the bottom. Should show only when clicked <h2>User comments</h2>.
 		
 		//add this at the bottom of help pages
 		var disqus = """

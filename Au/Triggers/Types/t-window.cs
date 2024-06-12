@@ -504,7 +504,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 		} else { //reordered or/and added/removed
 				 //print.it($"n1={n1} n2={n2}  n1*n2={n1 * n2}");
 				 //perf.next();
-				 //SHOULDDO: optimize. Now slow when large array reordered. Eg divide the changed range into two.
+				 //TODO3: optimize. Now slow when large array reordered. Eg divide the changed range into two.
 				 //n1 = n2 = 0;
 			if (0 != (_allEvents & TWLater.Invisible)) {
 				if (_hs2 == null) _hs2 = new HashSet<wnd>(500); else _hs2.Clear();

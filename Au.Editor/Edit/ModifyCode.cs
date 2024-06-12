@@ -16,7 +16,7 @@ using CAW::Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
 
 static class ModifyCode {
-	//SHOULDDO: if tries to uncomment /// doc comment, remove /// . Now does nothing. VS removes // and leaves /.
+	//TODO3: if tries to uncomment /// doc comment, remove /// . Now does nothing. VS removes // and leaves /.
 	//	Only if <code>.
 	
 	/// <summary>
@@ -170,6 +170,7 @@ static class ModifyCode {
 		Debug.Assert(code == cd.sci.aaaText);
 		
 		//exclude newline at the end. Else formats entire leading trivia of next token.
+		//	Never mind: anyway formats if the last selected line is //comment.
 		if (to < code.Length) {
 			if (to - from > 0 && code[to - 1] == '\n') to--;
 			if (to - from > 0 && code[to - 1] == '\r') to--;
@@ -181,45 +182,11 @@ static class ModifyCode {
 		
 		if (!_Format(cd, from, to, out var a)) return null;
 		
-		List<TextChange> ar = null;
 		int i1 = from, caret1 = selStart, caret2 = selEnd, moveCaret1 = 0, moveCaret2 = 0;
-		foreach (var v in a) {
-			string newText = v.NewText;
-			int cStart = v.Span.Start, cEnd = v.Span.End;
-			
-			//print.it(v, $"[{code.AsSpan(cStart..cEnd).ToString()}]");
-			
-			//some changes contain unchanged text at the start or end. Eg comments and/or newlines. If contain newlines, it would delete markers etc. Remove this unchanged text from the change.
-			if (cEnd > cStart && newText.Length > 0) {
-				RStr sp1 = code.AsSpan(cStart..cEnd), sp2 = newText;
-				if (sp1.Eq(sp2)) continue;
-				int commonStart = StringUtil.CommonPrefix(sp1, sp2);
-				if (commonStart > 0) { sp1 = sp1[commonStart..]; sp2 = sp2[commonStart..]; }
-				int commonEnd = StringUtil.CommonSuffix(sp1, sp2);
-				if (commonEnd > 0) { sp1 = sp1[..^commonEnd]; sp2 = sp2[..^commonEnd]; }
-				if (commonStart + commonEnd > 0) {
-					cStart += commonStart;
-					cEnd -= commonEnd;
-					newText = sp2.ToString();
-					//print.it("-->", cStart, cEnd, $"\"{newText}\", [{code.AsSpan(cStart..cEnd).ToString()}]");
-				}
-			}
-			
-			if (cStart < from) {
-				if (cEnd < from || cEnd > to || newText.NE()) continue;
-				//probably previous line is blank with indentation, and formatter tries to remove that indentation, eg replace "\t\r\n" with "\r\n\t"
-				int n = newText.LastIndexOf('\n') + 1; if (n == 0) continue;
-				newText = newText[n..];
-				cStart = from;
-			} else {
-				if (cEnd > to) continue;
-			}
-			if (code.Eq(cStart..cEnd, newText)) continue;
-			
-			Debug_.PrintIf(cEnd > cStart && code.AsSpan(cStart..cEnd).Contains('\n')); //replaces multiple lines. Would delete markers etc. FUTURE: if noticed this, add code to split the change.
-			
-			ar ??= new(a.Count);
-			ar.Add(new(TextSpan.FromBounds(cStart, cEnd), newText));
+		for (int i = 0; i < a.Count; i++) {
+			var v = a[i];
+			var newText = v.NewText;
+			var (cStart, cEnd) = v.Span;
 			
 			_Caret(caret1, ref moveCaret1);
 			_Caret(caret2, ref moveCaret2);
@@ -232,18 +199,18 @@ static class ModifyCode {
 			}
 		}
 		
-		if (ar != null) {
-			caret1 += moveCaret1;
-			if (caret2 >= 0) caret2 = Math.Max(caret2 + moveCaret2, caret1);
-			selStart = caret1;
-			selEnd = caret2;
-		}
-		return ar;
+		caret1 += moveCaret1;
+		if (caret2 >= 0) caret2 = Math.Max(caret2 + moveCaret2, caret1);
+		selStart = caret1;
+		selEnd = caret2;
+		
+		return a;
 	}
 	
-	static bool _Format(CodeInfo.Context cd, int from, int to, out IList<TextChange> ac, string code = null) {
+	static bool _Format(CodeInfo.Context cd, int from, int to, out List<TextChange> ac, string code = null) {
 		bool changedCode = code != null;
 		code ??= cd.code;
+		string code0 = code;
 		var root = cd.syntaxRoot;
 		
 		//workaround for some nasty Roslyn features that can't be changed with options:
@@ -265,7 +232,7 @@ static class ModifyCode {
 		//never mind: does not add space before statement when *from* is after eg `{` or `}` or `;`.
 		//	VS adds space or newline when using "Format selection", but not when auto-format.
 		
-		try { ac = Formatter.GetFormattedTextChanges(root, TextSpan.FromBounds(from, to + nw * c_markLen), cd.document.Project.Solution.Services, FormattingOptions); }
+		try { ac = Formatter.GetFormattedTextChanges(root, TextSpan.FromBounds(from, to + nw * c_markLen), cd.document.Project.Solution.Services, FormattingOptions) as List<TextChange>; }
 		catch (Exception e1) { Debug_.Print(e1); ac = null; return false; } //https://www.libreautomate.com/forum/showthread.php?tid=7622
 		if (ac.Count == 0) return false;
 		
@@ -289,10 +256,66 @@ static class ModifyCode {
 				if (nInsertedBefore > 0 || lenRemoved > 0) ac[i] = new(new(startOfChange - nInsertedBefore * c_markLen, v.Span.Length - lenRemoved), s);
 			}
 			
+			code = code0;
 			//_PrintFormattingTextChanges("AFTER", code, ac);
 		}
 		
-		return true;
+		//remove fake changes. Can be many.
+		for (int i = 0; i < ac.Count; i++) {
+			var v = ac[i];
+			if (code.AsSpan(v.Span.ToRange()).Eq(v.NewText)) ac[i] = default;
+		}
+		ac.RemoveAll(static o => o.NewText == null);
+		if (ac.Count == 0) return false;
+		
+		//_PrintFormattingTextChanges("CHANGES", code, ac);
+		
+		for (int i = 0; i < ac.Count; i++) {
+			var v = ac[i];
+			if (v.Span.IsEmpty || v.NewText.Length == 0) continue;
+			
+			//Some changes contain unchanged text at the start or end. Eg comments and/or newlines.
+			//	If a change contain newlines, it would delete markers etc. Also may span the start or end of the formatting range.
+			//	Remove such unchanged text from the change.
+			RStr sp1 = code.AsSpan(v.Span.ToRange()), sp2 = v.NewText;
+			int commonStart = StringUtil.CommonPrefix(sp1, sp2);
+			if (commonStart > 0) { sp1 = sp1[commonStart..]; sp2 = sp2[commonStart..]; }
+			int commonEnd = StringUtil.CommonSuffix(sp1, sp2);
+			if (commonEnd > 0) { sp1 = sp1[..^commonEnd]; sp2 = sp2[..^commonEnd]; }
+			if (commonStart + commonEnd > 0) ac[i] = v = new(TextSpan.FromBounds(v.Span.Start + commonStart, v.Span.End - commonEnd), sp2.ToString());
+			
+			//Some changes can be multiline. Eg when code contains `//comment\r\n\r\n//comment\r\n\r\n`. Would delete markers etc. Split.
+			if (v.NewText.Contains('\n')) {
+				var a1 = code.Lines(v.Span.ToRange(), preferMore: true);
+				var a2 = v.NewText.Lines(.., preferMore: true);
+				if (a1.Length != a2.Length) Debug_.Print(v);
+				else {
+					bool insert = false;
+					for (int j = 0; j < a1.Length; j++) {
+						if (a1[j].Length == a2[j].Length && code.Eq(a1[j].Range, v.NewText.AsSpan(a2[j].Range))) continue;
+						TextChange k = new(new(a1[j].start, a1[j].Length), v.NewText[a2[j].Range]);
+						if (!insert) { insert = true; ac[i] = k; } else ac.Insert(++i, k);
+					}
+				}
+			}
+		}
+		
+		//remove changes that are not in the range. Most likely after.
+		for (int i = ac.Count; --i >= 0;) {
+			var v = ac[i];
+			var (cStart, cEnd) = v.Span;
+			
+			if (cStart < from || cEnd > to || (cEnd == to && v.NewText.Length == 0)) {
+				//Debug_.Print($"a TextChange not in the formatting range {from..to}: {v}");
+				Debug_.PrintIf(cStart < from && cEnd > from);
+				Debug_.PrintIf(cEnd > to && cStart < to);
+				ac.RemoveAt(i--);
+			}
+		}
+		
+		//TODO: if before are several blank lines, removes indentation from one of them.
+		
+		return ac.Count > 0;
 		
 		//BAD: Roslyn does not format multiline collection initializers.
 		//	https://github.com/dotnet/roslyn/issues/8269
@@ -303,8 +326,8 @@ static class ModifyCode {
 	static void _PrintFormattingTextChanges(string header, string code, IList<TextChange> a) {
 		print.it("----", header);
 		foreach (var v in a) {
-			var color = code.AsSpan(v.Span.ToRange()).Eq(v.NewText) ? "gray" : "green";
-			print.it($"<><c {color}><\a>{v}</\a><>");
+			if (code.AsSpan(v.Span.ToRange()).Eq(v.NewText)) print.it($"<><c gray><\a>{v}</\a><>");
+			else print.it($"<><c green><\a>{v}</\a><>, <c blue>\"<\a>{code[v.Span.ToRange()]}</\a>\"<>");
 		}
 	}
 #endif
@@ -401,14 +424,7 @@ static class ModifyCode {
 	public static void CleanupWndFind() {
 		if (!CodeInfo.GetContextAndDocument(out var cd, metaToo: true)) return;
 		var doc = cd.sci;
-		
-		int from, to;
-		if (doc.aaaHasSelection) {
-			from = doc.aaaSelectionStart16; to = doc.aaaSelectionEnd16;
-		} else {
-			from = 0; to = cd.code.Length;
-		}
-		
+		var (from, to) = doc.aaaHasSelection ? doc.aaaSelection(true) : (0, cd.code.Length);
 		Dictionary<string, List<LocalDeclarationStatementSyntax>> d = new();
 		
 		foreach (var n in cd.syntaxRoot.DescendantNodes(TextSpan.FromBounds(from, to))) {

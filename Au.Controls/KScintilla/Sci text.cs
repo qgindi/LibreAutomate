@@ -720,15 +720,21 @@ public unsafe partial class KScintilla {
 	
 	/// <summary>
 	/// SCI_GETSELECTIONEND UTF-8.
-	/// Always greater or equal than SelectionStart.
+	/// Always greater or equal than SelectionStart8.
 	/// </summary>
 	public int aaaSelectionEnd8 => Call(SCI_GETSELECTIONEND);
 	
 	/// <summary>
 	/// SCI_GETSELECTIONEND UTF-16.
-	/// Always greater or equal than SelectionStartChars.
+	/// Always greater or equal than SelectionStart16.
 	/// </summary>
 	public int aaaSelectionEnd16 => aaaPos16(aaaSelectionEnd8);
+
+	/// <summary>
+	/// <c>utf16 ? (aaaSelectionStart16, aaaSelectionEnd16) : (aaaSelectionStart8, aaaSelectionEnd8)</c>
+	/// </summary>
+	public (int start, int end) aaaSelection(bool utf16)
+		=> utf16 ? (aaaSelectionStart16, aaaSelectionEnd16) : (aaaSelectionStart8, aaaSelectionEnd8);
 	
 	/// <summary>
 	/// true if !SCI_GETSELECTIONEMPTY.
@@ -1247,7 +1253,7 @@ public unsafe partial class KScintilla {
 			//Utf7BOM,
 		}
 		
-		static unsafe byte[] _AnsiToUtf8(byte[] b) { //SHOULDDO: review, maybe now can be optimized
+		static unsafe byte[] _AnsiToUtf8(byte[] b) { //TODO3: review, maybe now can be optimized
 			var c = new char[b.Length];
 			fixed (byte* pb = b) fixed (char* pc = c) {
 				int n = Api.MultiByteToWideChar(0, 0, pb, b.Length, pc, c.Length);

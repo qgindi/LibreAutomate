@@ -16,127 +16,17 @@ using CAW::Microsoft.CodeAnalysis.FindSymbols;
 using Au.Triggers;
 using Au.Controls;
 
-////using System.Xml.Linq;
-
-////using System.Windows;
-////using System.Windows.Controls;
-////using System.Windows.Media;
-////using System.Windows.Interop;
-//using System.Windows.Input;
-
-////using Au.Controls;
-//using static Au.Controls.Sci;
-//using Au.Compiler;
-////using Au.Triggers;
-
-//using System.Text.RegularExpressions;
-////using System.Windows.Forms;
-//using Au.Controls;
-//using System.Windows;
-//using System.Windows.Controls;
-//using System.Windows.Controls.Primitives;
-//using System.Windows.Media;
-//using System.Windows.Threading;
-////using System.Net.Http;
-
 static unsafe class Test {
 
 	public static void FromMenubar() {
 		print.clear( );
 
-//		var s = """
-//<snippet>
-//	<![CDATA[if (${1:true}) {
-//${SELECTED_TEXT}$0
-//}]]>
-//</snippet>
-//""";
-//		s="""
-//if (${1:true}) {
-//${SELECTED_TEXT}$0
-//}
-//""";
-		
-//		CiSnippets.Surround(s);
-		
-		//CiSnippets.Reload();
-
-		//var d = Panels.Editor.ActiveDoc; //
+		//var d = Panels.Editor.ActiveDoc;
 		//int pos = d.aaaCurrentPos16;
-		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-		//print.it(cd.syntaxRoot.ContainsSkippedText);
-		//SyntaxNode n = cd.syntaxRoot.FindToken(pos).Parent;
-		//CiUtil.PrintNode(n);
-		//CiUtil.PrintNode(n.GetStatementEtc());
-		//CiUtil.PrintNode(n.GetStatementEtc2());
-		//CiUtil.PrintNode(n.GetStatementEtc2(true));
-
-		//ModifyCode.Format(!true, true);
-		//bool alt = keys.isNumLock;
-		//perf.first();
-		//if (alt) ModifyCode.Format2(false); else ModifyCode.Format(false);
-		//perf.nw();
-
-
-		//if (!CodeInfo.GetContextAndDocument(out var k)) return;
-		//var s = CodeUtil.GetAutoIndentationString(k, k.pos, false);
-		//print.it(s.Length);
-		
-		//var n = k.syntaxRoot.FindToken(k.pos).Parent;
-		//CiUtil.PrintNode(n);
-		//var n2 = n.GetStatementEtc(k.pos);
-		//CiUtil.PrintNode(n2);
-		//var n4 = n.GetStatementEtc(k.pos, notAccessor: true);
-		//CiUtil.PrintNode(n4);
-
-
-
-		//DSnippets._ImportJson(keys.isNumLock ? @"C:\Users\G\.vscode\extensions\jorgeserrano.vscode-csharp-snippets-1.1.0\snippets\csharp.json" : @"C:\Users\G\.vscode\extensions\ms-dotnettools.csharp-2.23.15-win32-x64\snippets\csharp.json");
-		//DSnippets._ImportVS(Directory.GetFiles(@"C:\Program Files\Microsoft Visual Studio\2022\Community\VC#\Snippets\1033\Visual C#"));
-
-		//var f = App.Model.FindCodeFile("Oko.cs");
-		//print.it(f.GetClassFileRole());
-
-		//GenerateCode.CreateEventHandlers();
-		//GenerateCode.CreateOverrides();
-
-		//d.Call( Sci. SCI_EOLANNOTATIONSETSTYLEOFFSET, 512);
-		//d.aaaStyleBackColor(512, 0xffffc0);
-		//d.aaaStyleForeColor(512, 0xA06040);
-		////d.Call(Sci.SCI_EOLANNOTATIONSETSTYLE, 0, 0);
-		//print.it(d.Call(Sci.SCI_EOLANNOTATIONGETSTYLE, 0));
-		//d.aaaSetString(Sci.SCI_EOLANNOTATIONSETTEXT, 0, "Test"u8);
-		//d.Call(Sci.SCI_EOLANNOTATIONSETVISIBLE, Sci.EOLANNOTATION_STADIUM);
-
-		//var s="""
-		//for(int i=0;i<16;i++)
-		//	{
-		//	print.it( 1 );
-		//	}
-
-		//""";
-		//		//s=";";
-
-		//		int pos = d.aaaSelectionStart16, pos2 = d.aaaSelectionEnd16;
-		//		if (!ModifyCode.FormatForInsert(ref s, ref pos, ref pos2)) return;
-		//		print.it("---");
-		//		print.it(s);
-
-		//for (int i = 16; i < 32; i++) {
-		//	d.aaaSetStringString(SCI_SETREPRESENTATION, $"{(char)i}\0_");
-		//	//d.aaaSetString(SCI_SETREPRESENTATIONAPPEARANCE, $"{(char)i}", SC_REPRESENTATION_PLAIN);
-		//	d.aaaSetString(SCI_SETREPRESENTATIONAPPEARANCE, $"{(char)i}", SC_REPRESENTATION_COLOUR);
-		//	d.aaaSetString(SCI_SETREPRESENTATIONCOLOUR, $"{(char)i}", 0xC0C0C0);
-		//}
-
-		//Cpp.Cpp_Test();
-
-		//print.it("");
-		//int i=9;
-		//print.it($"{i}");
-		//print.it((object)"");
-		//print.it("", "");
-		//print.it([1,2]);
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		var token = cd.syntaxRoot.FindToken(cd.pos);
+		var node = token.Parent.GetStatementEtc(cd.pos);
+		CiUtil.PrintNode(node, printErrors: true);
 	}
 
 	public static void MonitorGC() {

@@ -309,8 +309,8 @@ class DOptions : KDialogWindow {
 			
 			//when changed current line
 			int currentItem = 0;
-			sciStyles.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
-				switch (n.code) {
+			sciStyles.AaNotify += e => {
+				switch (e.n.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
 					int i = sciStyles.aaaIndicGetValue(indicHidden, sciStyles.aaaLineStartFromPos(false, sciStyles.aaaCurrentPos8)) - 1;
 					if (i != currentItem && i >= 0) {
@@ -436,7 +436,7 @@ To apply changes after deleting etc, restart this application.
 		b.StartGrid<KGroupBox>("Statement completion");
 		b.R.Add("Hotkey", out ComboBox enterWith).Items("Ctrl+Enter|Shift+Enter|Ctrl+Shift+Enter").Select(App.Settings.ci_enterWith);
 		b.R.Add(out KCheckBox notClassicEnter, "Enter before )").Checked(!App.Settings.ci_classicEnter)
-			.Tooltip("Key Enter before ) in an argument list completes statement like with Ctrl etc, except after comma or space");
+			.Tooltip("Key Enter before ) or ] completes statement like with Ctrl etc.\nExcept after comma or space or with Shift etc.");
 		b.End();
 		
 		b.StartGrid<KGroupBox>("Formatting");
@@ -537,7 +537,7 @@ Example:
 		
 		template.SelectionChanged += _Combo_Changed;
 		use.SelectionChanged += _Combo_Changed;
-		sci.AaTextChanged += (_, _) => customText[template.SelectedIndex] = sci.aaaText;
+		sci.AaTextChanged += _ => customText[template.SelectedIndex] = sci.aaaText;
 		b.Loaded += () => {
 			_Combo_Changed(template, null);
 		};

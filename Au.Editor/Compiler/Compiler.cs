@@ -47,7 +47,7 @@ partial class Compiler {
 				var m = new MetaComments(MCFlags.PrintErrors | MCFlags.OnlyRef);
 				if (!m.Parse(f, projFolder)) return false;
 				r.meta = m;
-				//FUTURE: save used dll etc paths in xcompiled, to avoid parsing meta of all pr.
+				//CONSIDER: save used dll etc paths in xcompiled, to avoid parsing meta of all pr.
 			}
 			return true;
 		} else {
@@ -228,7 +228,7 @@ partial class Compiler {
 		if (needOutputFiles) {
 			if (_meta.Role == MCRole.miniProgram) {
 				//is Main with [MTAThread]? Default STA, even if Main without [STAThread].
-				//FUTURE: C# 12 [assembly: MTAThread]
+				//FUTURE: C# ?? [assembly: MTAThread]
 				if (_compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MiniProgram_.MPFlags.MTA;
 				
 				if (_meta.Console) r.flags |= MiniProgram_.MPFlags.Console;
@@ -325,7 +325,7 @@ partial class Compiler {
 		//print.it($"<><c red>compiled<> {f}");
 		return true;
 		
-		//SHOULDDO: rebuild if missing apphost. Now rebuilds only if missing dll.
+		//TODO3: rebuild if missing apphost. Now rebuilds only if missing dll.
 	}
 	
 	/// <summary>
@@ -849,7 +849,7 @@ partial class Compiler {
 	static List<string> s_renamedFiles;
 	static timer s_rfTimer;
 	
-	//SHOULDDO: remove this? Probably fails anyway. Will delete when this app starts next time.
+	//TODO3: remove this? Probably fails anyway. Will delete when this app starts next time.
 	static void _DeleteRenamedLockedFiles(timer timer) {
 		var a = s_renamedFiles;
 		for (int i = a.Count; --i >= 0;) {

@@ -421,7 +421,7 @@ public partial class keys {
 				wait.ms(i < 20 ? 1 : 10);
 			}
 			InputDesktopException.ThrowIfBadDesktop();
-			if (requireFocus) throw new AuException("There is no focused window"); //SHOULDDO: test various windows and data types, maybe somewhere could work without focus
+			if (requireFocus) throw new AuException("There is no focused window"); //TODO3: test various windows and data types, maybe somewhere could work without focus
 			return default;
 
 			//note: the purpose of this wait is not synchronization. It just makes getting the focused/active window more reliable.

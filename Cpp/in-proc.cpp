@@ -203,7 +203,7 @@ namespace outproc {
 		Smart<IStream> stream;
 		CreateStreamOnHGlobal(hg, true, &stream);
 		if (CoUnmarshalInterface(stream, IID_IAccessible, (void**)&iacc)) return false;
-		//SHOULDDO: once run.it in TT process started to always print warning "Failed to run as non-admin.".
+		//TODO3: once run.it in TT process started to always print warning "Failed to run as non-admin.".
 		//	Attached debugger shows that CoUnmarshalInterface fails.
 		//	OK in other processes. OK after restarting TT. Can't reproduce.
 

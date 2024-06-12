@@ -36,7 +36,7 @@ class CiPopupText {
 			if (value != _section) {
 				_section = value;
 				if (IsVisible) _SetText(); else _updateText = true;
-				//SHOULDDO: if visible, probably does not auto-size. But maybe now not used, because never noticed incorrect size.
+				//TODO3: if visible, probably does not auto-size. But maybe now not used, because never noticed incorrect size.
 			}
 		}
 	}

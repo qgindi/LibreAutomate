@@ -338,6 +338,17 @@ namespace Au {
 		/// int i = w.IsMatch([new("name1", "class1"), new("name2", of: "program2")]);
 		/// print.it(i);
 		/// ]]></code>
+		/// Cache finders to improve performance when IsMatch is called multiple times. Creating all finders each time is expensive.
+		/// <code><![CDATA[
+		/// class C {
+		/// 	static wndFinder[] s_wf1;
+		/// 	
+		/// 	void F(wnd w) {
+		/// 		int i = w.IsMatch(s_wf1 ??= [new("name1", "class1"), new("name2", of: "program2")]);
+		/// 		print.it(i);
+		/// 	}
+		/// }
+		/// ]]></code>
 		/// </example>
 		public int IsMatch(ReadOnlySpan<wndFinder> windows) {
 			WFCache cache = windows.Length > 1 ? new() { CacheName = true, NoTimeout = true } : null;

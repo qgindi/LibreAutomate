@@ -546,7 +546,7 @@ static class CiFind {
 			_oldName = sym.JustName();
 			bool hasOverloads = CAW::Microsoft.CodeAnalysis.Rename.RenameUtilities.GetOverloadedSymbols(sym).Any();
 			
-			var b = new wpfBuilder("Rename symbol").WinSize(300);
+			var b = new wpfBuilder("Rename symbol").Width(300..);
 			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 			b.R.Add(out TextBox newName, _oldName).Font("Consolas").Focus()
 				.Validation(_ => SyntaxFacts.IsValidIdentifier(newName.Text.TrimStart('@')) ? null : "Invalid name");

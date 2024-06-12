@@ -516,6 +516,7 @@ class CiGoTo {
 	
 	public static void GoToBase() {
 		var (sym, cd) = CiUtil.GetSymbolFromPos(andZeroLength: true);
+		if (sym is null) return;
 		List<ISymbol> a = new();
 		if (sym is INamedTypeSymbol nt && nt.TypeKind is TypeKind.Class or TypeKind.Interface) {
 			if (nt.TypeKind == TypeKind.Interface) {

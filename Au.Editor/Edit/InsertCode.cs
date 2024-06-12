@@ -231,7 +231,7 @@ static class InsertCode {
 	/// Alternatively use '\b', then does not touch '%'.
 	/// If contains '%' or \b, must be single line.
 	/// </param>
-	public static void TextSimplyInControl(FrameworkElement c, string s) { //SHOULDDO: flags for processing % etc
+	public static void TextSimplyInControl(FrameworkElement c, string s) { //TODO3: flags for processing % etc
 		if (c == null) {
 			c = App.FocusedElement;
 			if (c == null) return;
@@ -368,7 +368,7 @@ static class InsertCode {
 	/// <returns>true if changed documnt text.</returns>
 	public static bool MetaComment(string s) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
-		var doc = Panels.Editor.ActiveDoc; if (doc == null || !doc.EFile.IsCodeFile) return false;
+		if (Panels.Editor.ActiveDoc is not { EFile.IsCodeFile: true } doc) return false;
 		var meta = new MetaCommentsParser(doc.aaaText);
 		var meta2 = new MetaCommentsParser($"/*/ {s} /*/");
 		meta.Merge(meta2);

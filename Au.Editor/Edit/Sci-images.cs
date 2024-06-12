@@ -119,7 +119,7 @@ partial class SciCode {
 		var (left, right) = aaaMarginGetX(c_marginImages);
 		_ImagesMarginAutoWidth(right - left, maxWidth);
 		if (maxWidth > 0) Api.InvalidateRect(AaWnd, new RECT(left, 0, maxWidth, short.MaxValue));
-		//SHOULDDO: draw only when need, ie when new indicators are different than old.
+		//TODO3: draw only when need, ie when new indicators are different than old.
 		//	Now draws on each text change, eg added character, unless changes are frequent. But not too slow.
 		//	And probably then also draws all other margins.
 		

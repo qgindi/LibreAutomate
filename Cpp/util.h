@@ -363,7 +363,7 @@ public:
 		if (!use || !dlapi.minWin81) return; //on Win7/8 we get physical rect
 
 		if (acc != null) {
-			if (!(0 == WindowFromAccessibleObject(acc, &w) && w)) { //SHOULDDO: if w specified too in the props string, don't call twice. Same with r/D.
+			if (!(0 == WindowFromAccessibleObject(acc, &w) && w)) { //TODO3: if w specified too in the props string, don't call twice. Same with r/D.
 				PRINTS(L"failed WindowFromAccessibleObject");
 				return;
 			}

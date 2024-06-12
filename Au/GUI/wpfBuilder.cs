@@ -7,14 +7,6 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Xml.Linq;
 
-//SHOULDDO: a workaround for WPF bug: sometimes window or part of window is white, until invalidating.
-//	Noticed with all kinds of WPF windows and popups, not only created with wpfBuilder. Noticed in other WPF apps too, usually black parts.
-//	Maybe set timer that invalidates window. Tested InvalidateRect, works.
-//	Can reproduce in ~50% times: hide main window and press Ctrl+Shift+W. The wnd tool first time often white.
-//	It seems OK when using Nvidia graphic card for all apps. Select in Nvidia control panel > Manage 3D settings.
-//	Tested on old computer. Never noticed on new.
-//	Maybe never mind, it's just a low-quality graphic card. Had other problems with it too, eg video rendering in web browser.
-
 //never mind: on Win7 text of all WPF checkboxes too low by 1 pixel. Not only of wpfBuilder.
 
 namespace Au;
@@ -406,7 +398,7 @@ public class wpfBuilder {
 		//if (script.isWpfPreview) _window.Preview(); //no
 		
 		_window.Owner = owner == null ? null : owner as Window ?? Window.GetWindow(owner);
-		//SHOULDDO: try to support AnyWnd. Why WPF here supports only Window and not Popup or HwndSource?
+		//TODO3: try to support AnyWnd. Why WPF here supports only Window and not Popup or HwndSource?
 		
 		return true == _window.ShowDialog();
 	}
@@ -1654,7 +1646,7 @@ public class wpfBuilder {
 				if (tb == null) tb = new TextBlock(); else tb.Inlines.Add(new LineBreak());
 				var h = new Hyperlink(new Run(s));
 				h.Click += (o, y) => {
-					if (_FindAncestorTabItem(e, out var ti)) ti.IsSelected = true; //SHOULDDO: support other cases too, eg other tabcontrol-like control class or tabcontrol in tabcontrol.
+					if (_FindAncestorTabItem(e, out var ti)) ti.IsSelected = true; //TODO3: support other cases too, eg other tabcontrol-like control class or tabcontrol in tabcontrol.
 					timer.after(1, _ => { //else does not focus etc if was in hidden tab page
 						try {
 							e.BringIntoView();

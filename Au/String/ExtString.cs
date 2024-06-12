@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace Au.Types;
 
 /// <summary>
@@ -29,7 +31,7 @@ public static unsafe partial class ExtString {
 	public static bool Eq(this string t, string s, bool ignoreCase = false) {
 		return ignoreCase ? string.Equals(t, s, StringComparison.OrdinalIgnoreCase) : string.Equals(t, s);
 	}
-	
+
 	/// <summary>
 	/// Compares this strings with multiple strings.
 	/// Returns 1-based index of the matching string, or 0 if none.
@@ -44,7 +46,7 @@ public static unsafe partial class ExtString {
 		for (int i = 0; i < strings.Length; i++) if (Eq(t, strings[i], ignoreCase)) return i + 1;
 		return 0;
 	}
-	
+
 	/// <summary>
 	/// Compares part of this string with other string. Returns <c>true</c> if equal.
 	/// </summary>
@@ -68,7 +70,7 @@ public static unsafe partial class ExtString {
 		//Faster than string.Compare[Ordinal].
 		//With Tables_.LowerCase similar speed. Depends on whether match. 
 	}
-	
+
 	/// <summary>
 	/// Compares part of this string with multiple strings.
 	/// Returns 1-based index of the matching string, or 0 if none.
@@ -85,7 +87,7 @@ public static unsafe partial class ExtString {
 		for (int i = 0; i < strings.Length; i++) if (t.Eq(startIndex, strings[i], ignoreCase)) return i + 1;
 		return 0;
 	}
-	
+
 	/// <summary>
 	/// Compares part of this string with other string. Returns <c>true</c> if equal.
 	/// </summary>
@@ -106,7 +108,7 @@ public static unsafe partial class ExtString {
 		int i = range.Start.GetOffset(nt), len = range.End.GetOffset(nt) - i;
 		return ns == len && t.Eq(i, s, ignoreCase);
 	}
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if the specified character is at the specified position in this string.
 	/// </summary>
@@ -117,7 +119,7 @@ public static unsafe partial class ExtString {
 		if ((uint)index >= t.Length) return false;
 		return t[index] == c;
 	}
-	
+
 	/// <summary>
 	/// Compares this and other string ignoring case (case-insensitive). Returns <c>true</c> if equal.
 	/// </summary>
@@ -127,10 +129,10 @@ public static unsafe partial class ExtString {
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Eqi(this string t, string s) => string.Equals(t, s, StringComparison.OrdinalIgnoreCase);
-	
+
 	//rejected. Not so often used.
 	//public static bool Eqi(this string t, int startIndex, string s) => Eq(t, startIndex, s, true);
-	
+
 	/// <summary>
 	/// Compares end of this string with other string. Returns <c>true</c> if equal.
 	/// </summary>
@@ -149,7 +151,7 @@ public static unsafe partial class ExtString {
 		return span.Equals(s, StringComparison.OrdinalIgnoreCase);
 		//faster than EndsWith
 	}
-	
+
 	/// <summary>
 	/// Compares end of this string with multiple strings.
 	/// Returns 1-based index of the matching string, or 0 if none.
@@ -165,7 +167,7 @@ public static unsafe partial class ExtString {
 		for (int i = 0; i < strings.Length; i++) if (Ends(t, strings[i], ignoreCase)) return i + 1;
 		return 0;
 	}
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if this string ends with the specified character.
 	/// </summary>
@@ -175,7 +177,7 @@ public static unsafe partial class ExtString {
 		int i = t.Length - 1;
 		return i >= 0 && t[i] == c;
 	}
-	
+
 	/// <summary>
 	/// Compares beginning of this string with other string. Returns <c>true</c> if equal.
 	/// </summary>
@@ -194,7 +196,7 @@ public static unsafe partial class ExtString {
 		return span.Equals(s, StringComparison.OrdinalIgnoreCase);
 		//faster than StartsWith
 	}
-	
+
 	/// <summary>
 	/// Compares beginning of this string with multiple strings.
 	/// Returns 1-based index of the matching string, or 0 if none.
@@ -210,7 +212,7 @@ public static unsafe partial class ExtString {
 		for (int i = 0; i < strings.Length; i++) if (Starts(t, strings[i], ignoreCase)) return i + 1;
 		return 0;
 	}
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if this string starts with the specified character.
 	/// </summary>
@@ -219,7 +221,7 @@ public static unsafe partial class ExtString {
 	public static bool Starts(this string t, char c) {
 		return t.Length > 0 && t[0] == c;
 	}
-	
+
 	//Speed test results with text of length 5_260_070 and 'find' text "inheritdoc":
 	//IndexOf(Ordinal)							6 ms (depends on 'find' text; can be much faster if starts with a rare character)
 	//IndexOf(OrdinalIgnoreCase)				32 ms
@@ -232,14 +234,14 @@ public static unsafe partial class ExtString {
 	//Regex.Match(CultureInvariant)				4 ms (when no regex-special characters or if escaped)
 	//Regex.Match(CultureInvariant|IgnoreCase)	9 ms
 	//Find2(true)								10 ms
-	
+
 	//Could optimize the case-insensitive Find.
 	//	Either use table (like Like), or for very long strings use Regex.
 	//	But maybe then result would be different in some cases, not sure.
 	//	How if contains Unicode surrogates?
 	//	Bad: slower startup, because need to create table or JIT Regex.
 	//	Never mind.
-	
+
 	//public static int Find2(this string t, string s, bool ignoreCase = false) {
 	//	if (!ignoreCase) return t.IndexOf(s, StringComparison.Ordinal);
 	//	int n = t.Length - s.Length;
@@ -256,7 +258,7 @@ public static unsafe partial class ExtString {
 	//	}
 	//	return -1;
 	//}
-	
+
 	/// <summary>
 	/// Finds substring in this string. Returns its 0-based index, or -1 if not found.
 	/// </summary>
@@ -270,7 +272,7 @@ public static unsafe partial class ExtString {
 	public static int Find(this string t, string s, bool ignoreCase = false) {
 		return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 	}
-	
+
 	/// <summary>
 	/// Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
 	/// </summary>
@@ -286,7 +288,7 @@ public static unsafe partial class ExtString {
 	public static int Find(this string t, string s, int startIndex, bool ignoreCase = false) {
 		return t.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 	}
-	
+
 	/// <summary>
 	/// Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
 	/// </summary>
@@ -303,7 +305,7 @@ public static unsafe partial class ExtString {
 		var (start, count) = range.GetOffsetAndLength(t.Length);
 		return t.IndexOf(s, start, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 	}
-	
+
 	//CONSIDER: make public.
 	/// <summary>
 	/// Like <see cref="Find(string, string, bool)"/>, but with a predicate.
@@ -317,7 +319,7 @@ public static unsafe partial class ExtString {
 		}
 		return -1;
 	}
-	
+
 	/// <summary>
 	/// Finds the first character specified in <i>chars</i>. Returns its index, or -1 if not found.
 	/// </summary>
@@ -332,7 +334,7 @@ public static unsafe partial class ExtString {
 		int r = t.AsSpan(start, len).IndexOfAny(chars);
 		return r < 0 ? r : r + start;
 	}
-	
+
 	/// <summary>
 	/// Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
 	/// </summary>
@@ -347,13 +349,14 @@ public static unsafe partial class ExtString {
 		int r = t.AsSpan(start, len).IndexOfNot(chars);
 		return r < 0 ? r : r + start;
 	}
-	
+
 	/// <summary>
 	/// Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
 	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static int IndexOfNot(this RStr t, string chars) {
 		Not_.Null(chars);
 		for (int i = 0; i < t.Length; i++) {
@@ -364,13 +367,14 @@ public static unsafe partial class ExtString {
 		}
 		return -1;
 	}
-	
+
 	/// <summary>
 	/// Finds the last character not specified in <i>chars</i>. Returns its index, or -1 if not found.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="chars">Characters.</param>
 	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static int LastIndexOfNot(this RStr t, string chars) {
 		Not_.Null(chars);
 		for (int i = t.Length; --i >= 0;) {
@@ -381,7 +385,7 @@ public static unsafe partial class ExtString {
 		}
 		return -1;
 	}
-	
+
 	/// <summary>
 	/// Finds the last character specified in <i>chars</i> (searches right to left). Returns its index, or -1 if not found.
 	/// </summary>
@@ -396,7 +400,7 @@ public static unsafe partial class ExtString {
 		int r = t.AsSpan(start, len).LastIndexOfAny(chars);
 		return r < 0 ? r : r + start;
 	}
-	
+
 	/// <summary>
 	/// Finds the last character not specified in <i>chars</i> (searches right to left). Returns its index, or -1 if not found.
 	/// </summary>
@@ -411,7 +415,7 @@ public static unsafe partial class ExtString {
 		int r = t.AsSpan(start, len).LastIndexOfNot(chars);
 		return r < 0 ? r : r + start;
 	}
-	
+
 	/// <summary>
 	/// Removes specified characters from the start and end of this string.
 	/// </summary>
@@ -424,7 +428,7 @@ public static unsafe partial class ExtString {
 		var span = t.AsSpan().Trim(chars);
 		return span.Length == t.Length ? t : new string(span);
 	}
-	
+
 	/// <summary>
 	/// Removes specified characters from the start of this string.
 	/// </summary>
@@ -437,7 +441,7 @@ public static unsafe partial class ExtString {
 		var span = t.AsSpan().TrimStart(chars);
 		return span.Length == t.Length ? t : new string(span);
 	}
-	
+
 	/// <summary>
 	/// Removes specified characters from the end of this string.
 	/// </summary>
@@ -450,7 +454,7 @@ public static unsafe partial class ExtString {
 		var span = t.AsSpan().TrimEnd(chars);
 		return span.Length == t.Length ? t : new string(span);
 	}
-	
+
 	/// <summary>
 	/// Finds whole word. Returns its 0-based index, or -1 if not found.
 	/// </summary>
@@ -474,10 +478,10 @@ public static unsafe partial class ExtString {
 		var (start, end) = range.GetStartEnd(t.Length);
 		int lens = s.Length;
 		if (lens == 0) return 0; //like IndexOf and Find
-		
+
 		bool wordStart = _IsWordChar(s, 0, false),
 			wordEnd = _IsWordChar(s, lens - 1, true);
-		
+
 		for (int i = start, iMax = end - lens; i <= iMax; i++) {
 			i = t.IndexOf(s, i, end - i, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 			if (i < 0) break;
@@ -486,7 +490,7 @@ public static unsafe partial class ExtString {
 			return i;
 		}
 		return -1;
-		
+
 		bool _IsWordChar(string s, int i, bool expandLeft) {
 			//CONSIDER: use Rune
 			char c = s[i];
@@ -503,21 +507,21 @@ public static unsafe partial class ExtString {
 			return false;
 		}
 	}
-	
+
 	/// <summary>
 	/// Returns <see cref="string.Length"/>. Returns 0 if this string is <c>null</c>.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	[DebuggerStepThrough]
 	public static int Lenn(this string t) => t?.Length ?? 0;
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if this string is <c>null</c> or empty (<c>""</c>).
 	/// </summary>
 	/// <param name="t">This string.</param>
 	[DebuggerStepThrough]
 	public static bool NE(this string t) => t == null || t.Length == 0;
-	
+
 	/// <summary>
 	/// Returns this string, or <c>null</c> if it is <c>""</c> or <c>null</c>.
 	/// </summary>
@@ -525,7 +529,7 @@ public static unsafe partial class ExtString {
 	[DebuggerStepThrough]
 	internal static string NullIfEmpty_(this string t) => t.NE() ? null : t;
 	//not public because probably too rarely used.
-	
+
 	/// <summary>
 	/// This function can be used with <c>foreach</c> to split this string into substrings as start/end offsets.
 	/// </summary>
@@ -540,88 +544,149 @@ public static unsafe partial class ExtString {
 	/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) print.it(s[t.start..t.end]);
 	/// ]]></code>
 	/// </example>
-	/// <seealso cref="Lines(string, Range, bool)"/>
+	/// <seealso cref="Lines(string, Range, bool, bool, bool)"/>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Use Split or Lines. They are faster, have "trim" option; the returned array is easier to use and not too expensive. For words use regex.
 	public static SegParser Segments(this string t, string separators, SegFlags flags = 0, Range? range = null) {
 		return new SegParser(t, separators, flags, range);
 	}
-	
-	//rejected. Usually Split is good. In .NET Core+ it also has option to trim spaces and in most cases is faster.
-	///// <summary>
-	///// Splits this string into substrings using the specified separators.
-	///// </summary>
-	///// <param name="t">This string.</param>
-	///// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="SegSep"/> constants.</param>
-	///// <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="String.Split"/>.</param>
-	///// <param name="flags"></param>
-	///// <param name="range">Part of this string to split.</param>
-	///// <seealso cref="Segments"/>
-	///// <seealso cref="Lines"/>
-	///// <seealso cref="SegParser"/>
-	///// <seealso cref="string.Split"/>
-	///// <seealso cref="string.Join"/>
-	//public static string[] SegSplit(this string t, string separators, SegFlags flags = 0, int maxCount = -1, Range? range = null) {
-	//	var x = new SegParser(t, separators, flags, range);
-	//	return x.ToStringArray(maxCount);
-	//}
-	
-	//rejected. 30% slower than the fast Lines() overload. The slow overload rarely used. Range rarely used; can use SegSplit instead.
-	///// <summary>
-	///// Splits this string into lines using separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>.
-	///// </summary>
-	///// <param name="t">This string.</param>
-	///// <param name="noEmptyLines">Don't need empty lines.</param>
-	///// <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more lines, the last element will contain single line, unlike with <see cref="String.Split"/></param>
-	///// <param name="range">Part of this string to split.</param>
-	///// <seealso cref="Segments"/>
-	///// <seealso cref="SegSep.Line"/>
-	//public static string[] SegLines(this string t, bool noEmptyLines = false, int maxCount = -1, Range? range = null) {
-	//	return SegSplit(t, SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0, maxCount, range);
-	//}
+
+#if NET8_0_OR_GREATER //else no ReadOnlySpan.Split
 	
 	/// <summary>
-	/// Splits this string using newline separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>.
+	/// Splits this string into substrings as start/end offsets.
 	/// </summary>
-	/// <returns>Array containing lines as strings. Does not include the last empty line.</returns>
-	/// <param name="t">This string.</param>
-	/// <param name="noEmpty">Don't need empty lines.</param>
-	/// <seealso cref="StringReader.ReadLine"/>
-	[SkipLocalsInit]
-	public static string[] Lines(this string t, bool noEmpty = false) {
-		//this code is similar to StringReader.ReadLine, but much faster. Faster than string.Split(char).
-		using var f = new FastBuffer<StartEnd>();
-		int n = 0;
-		for (int pos = 0; pos < t.Length;) {
-			if (n == f.n) f.More(preserve: true);
-			var span = t.AsSpan(pos);
-			int len = span.IndexOfAny('\r', '\n');
-			if (len < 0) {
-				f[n++] = new(pos, t.Length);
-				break;
-			} else {
-				if (!(noEmpty && len == 0)) f[n++] = new(pos, pos + len);
-				pos += len + 1;
-				if (span[len] == '\r' && pos < t.Length && t[pos] == '\n') pos++;
-			}
-		}
-		var a = new string[n];
-		for (int i = 0; i < n; i++) {
-			var v = f[i];
-			a[i] = t[v.start..v.end];
-		}
-		return a;
+	/// <seealso cref="Split"/>
+	/// <seealso cref="SplitS"/>
+	public static StartEnd[] Split(this string t, Range range, char separator, StringSplitOptions flags = 0) {
+		var (start, len) = range.GetOffsetAndLength(t.Length);
+		var a = t.AsSpan(start, len).Split(separator, flags);
+		return _SplitOffset(a, start);
 	}
 	
 	/// <summary>
-	/// Splits this string or its range using newline separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>. Gets start/end offsets of lines.
+	/// Splits this string into substrings as start/end offsets.
 	/// </summary>
-	/// <returns>Array containing start/end offsets of lines in the string (not in the range). Does not include the last empty line.</returns>
-	/// <param name="t">This string.</param>
-	/// <param name="range">Range of this string. Example: <c>var a = s.Lines(..); //split entire string</c>.</param>
-	/// <param name="noEmpty">Don't need empty lines.</param>
-	/// <seealso cref="Lines(ReadOnlySpan{char}, bool)"/>
-	public static StartEnd[] Lines(this string t, Range range, bool noEmpty = false) {
+	/// <seealso cref="Split"/>
+	/// <seealso cref="SplitS"/>
+	public static StartEnd[] Split(this string t, Range range, string separator, StringSplitOptions flags = 0) {
 		var (start, len) = range.GetOffsetAndLength(t.Length);
-		var a = t.AsSpan(start, len).Lines(noEmpty);
+		var a = t.AsSpan(start, len).Split(separator, flags);
+		return _SplitOffset(a, start);
+	}
+	
+	/// <summary>
+	/// Splits this string into substrings as start/end offsets. Can be used multiple separators.
+	/// </summary>
+	/// <seealso cref="SplitAny"/>
+	/// <seealso cref="SplitAnyS"/>
+	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, ReadOnlySpan<char> separators) {
+		var (start, len) = range.GetOffsetAndLength(t.Length);
+		var a = t.AsSpan(start, len).SplitAny(separators, flags);
+		return _SplitOffset(a, start);
+	}
+	
+	/// <summary>
+	/// Splits this string into substrings as start/end offsets. Can be used multiple separators.
+	/// </summary>
+	/// <seealso cref="SplitAny"/>
+	/// <seealso cref="SplitAnyS"/>
+	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, ReadOnlySpan<string> separators) {
+		var (start, len) = range.GetOffsetAndLength(t.Length);
+		var a = t.AsSpan(start, len).SplitAny(separators, flags);
+		return _SplitOffset(a, start);
+	}
+	
+	/// <summary>
+	/// Splits this string span into substrings as start/end offsets.
+	/// </summary>
+	public static StartEnd[] Split(this ReadOnlySpan<char> t, char separator, StringSplitOptions flags = 0)
+		=> _Split(t, flags, false, 1, separator).a1;
+	
+	/// <summary>
+	/// Splits this string span into substrings as start/end offsets.
+	/// </summary>
+	public static StartEnd[] Split(this ReadOnlySpan<char> t, string separator, StringSplitOptions flags = 0)
+		=> _Split(t, flags, false, 2, sep23: separator).a1;
+	
+	/// <summary>
+	/// Splits this string span into substrings as start/end offsets. Can be used multiple separators.
+	/// </summary>
+	public static StartEnd[] SplitAny(this ReadOnlySpan<char> t, ReadOnlySpan<char> separators, StringSplitOptions flags = 0)
+		=> _Split(t, flags, false, 3, sep23: separators).a1;
+	
+	/// <summary>
+	/// Splits this string span into substrings as start/end offsets. Can be used multiple separators.
+	/// </summary>
+	public static StartEnd[] SplitAny(this ReadOnlySpan<char> t, ReadOnlySpan<string> separators, StringSplitOptions flags = 0)
+		=> _Split(t, flags, false, 4, sep4: separators).a1;
+	
+	/// <summary>
+	/// Splits this string span into substrings.
+	/// </summary>
+	public static string[] SplitS(this ReadOnlySpan<char> t, char separator, StringSplitOptions flags = 0)
+		=> _Split(t, flags, true, 1, separator).a2;
+	
+	/// <summary>
+	/// Splits this string span into substrings.
+	/// </summary>
+	public static string[] SplitS(this ReadOnlySpan<char> t, string separator, StringSplitOptions flags = 0)
+		=> _Split(t, flags, true, 2, sep23: separator).a2;
+	
+	/// <summary>
+	/// Splits this string span into substrings. Can be used multiple separators.
+	/// </summary>
+	public static string[] SplitAnyS(this ReadOnlySpan<char> t, ReadOnlySpan<char> separators, StringSplitOptions flags = 0)
+		=> _Split(t, flags, true, 3, sep23: separators).a2;
+	
+	/// <summary>
+	/// Splits this string span into substrings. Can be used multiple separators.
+	/// </summary>
+	public static string[] SplitAnyS(this ReadOnlySpan<char> t, ReadOnlySpan<string> separators, StringSplitOptions flags = 0)
+		=> _Split(t, flags, true, 4, sep4: separators).a2;
+	
+	[SkipLocalsInit]
+	static (StartEnd[] a1, string[] a2) _Split(ReadOnlySpan<char> t, StringSplitOptions flags, bool retStr, int sep, char sep1 = default, ReadOnlySpan<char> sep23 = default, ReadOnlySpan<string> sep4 = default) {
+		const int na = 100;
+		Span<StartEnd> a = stackalloc StartEnd[na];
+		Span<Range> a2 = MemoryMarshal.Cast<StartEnd, Range>(a);
+		List<StartEnd> list = null;
+		for (int add = 0; ;) {
+			int n = sep switch { 1 => t.Split(a2, sep1, flags), 2 => t.Split(a2, sep23, flags), 3 => t.SplitAny(a2, sep23, flags), _ => t.SplitAny(a2, sep4, flags) };
+			//print.it(n, na);
+			if (add > 0) _Offset(a, n, add);
+			if (n < na) {
+				if (retStr) {
+					string[] r;
+					if (list != null) {
+						r = new string[list.Count + n];
+						for (int i = 0; i < list.Count; i++) r[i] = t[list[i].Range].ToString();
+						for (int i = 0, j = list.Count; i < n; i++) r[j++] = t[a[i].Range].ToString();
+					} else {
+						r = new string[n];
+						for (int i = 0; i < n; i++) r[i] = t[a[i].Range].ToString();
+					}
+					return (null, r);
+				} else {
+					return (list == null ? a[..n].ToArray() : [.. list, .. a[..n]], null);
+				}
+			}
+			int last = a[^1].start;
+			t = t[last..];
+			add += last;
+			(list ??= new(na * 2)).AddRange(a[..^1]);
+		}
+		
+		static void _Offset(Span<StartEnd> ar, int n, int add) {
+			foreach (ref var v in ar) {
+				v.start += add;
+				v.end += add;
+			}
+		}
+	}
+	
+#endif
+	
+	static StartEnd[] _SplitOffset(StartEnd[] a, int start) {
 		if (start != 0) {
 			for (int i = 0; i < a.Length; i++) {
 				a[i].start += start;
@@ -630,23 +695,57 @@ public static unsafe partial class ExtString {
 		}
 		return a;
 	}
-	
+
 	/// <summary>
-	/// Splits this string using newline separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>. Gets start/end offsets of lines.
+	/// Splits this string into lines.
 	/// </summary>
-	/// <returns>Array containing start/end offsets of lines. Does not include the last empty line.</returns>
+	/// <returns>Array containing lines as strings. Does not include the last empty line, unless <i>preferMore</i> true.</returns>
 	/// <param name="t">This string.</param>
 	/// <param name="noEmpty">Don't need empty lines.</param>
-	[SkipLocalsInit]
-	public static StartEnd[] Lines(this RStr t, bool noEmpty = false) {
+	/// <param name="preferMore">Add 1 array element if the string ends with a line separator or its length is 0.</param>
+	/// <param name="rareNewlines">If <c>false</c> (default), recognizes these newlines: <c>"\r\n"</c>, <c>"\n"</c> and <c>"\r"</c>. If <c>true</c>, also recognizes <c>"\f"</c>, <c>"\x0085"</c>, <c>"\x2028"</c> and <c>"\x2029"</c>.</param>
+	/// <seealso cref="StringReader.ReadLine"/>
+	public static string[] Lines(this string t, bool noEmpty = false, bool preferMore = false, bool rareNewlines = false)
+		=> _Lines(t, noEmpty, preferMore, rareNewlines, true).a2;
+
+	/// <summary>
+	/// Splits this string or a range in it into lines as start/end offsets.
+	/// </summary>
+	/// <returns>Array containing start/end offsets of lines in the string (not in the range). Does not include the last empty line, unless <i>preferMore</i> true.</returns>
+	/// <param name="t">This string.</param>
+	/// <param name="range">Range of this string. Example: <c>var a = s.Lines(..); //split entire string</c>.</param>
+	/// <param name="noEmpty">Don't need empty lines.</param>
+	/// <param name="preferMore">Add 1 array element if the string range ends with a line separator or its length is 0.</param>
+	/// <param name="rareNewlines">If <c>false</c> (default), recognizes these newlines: <c>"\r\n"</c>, <c>"\n"</c> and <c>"\r"</c>. If <c>true</c>, also recognizes <c>"\f"</c>, <c>"\x0085"</c>, <c>"\x2028"</c> and <c>"\x2029"</c>.</param>
+	/// <seealso cref="Lines(ReadOnlySpan{char}, bool, bool, bool)"/>
+	public static StartEnd[] Lines(this string t, Range range, bool noEmpty = false, bool preferMore = false, bool rareNewlines = false) {
+		var (start, len) = range.GetOffsetAndLength(t.Length);
+		var a = t.AsSpan(start, len).Lines(noEmpty, preferMore, rareNewlines);
+		return _SplitOffset(a, start);
+	}
+
+	/// <summary>
+	/// Splits this string into lines as start/end offsets.
+	/// </summary>
+	/// <returns>Array containing start/end offsets of lines. Does not include the last empty line, unless <i>preferMore</i> true.</returns>
+	/// <param name="t">This string.</param>
+	/// <param name="noEmpty">Don't need empty lines.</param>
+	/// <param name="preferMore">Add 1 array element if the string span ends with a line separator or its length is 0.</param>
+	/// <param name="rareNewlines">If <c>false</c> (default), recognizes these newlines: <c>"\r\n"</c>, <c>"\n"</c> and <c>"\r"</c>. If <c>true</c>, also recognizes <c>"\f"</c>, <c>"\x0085"</c>, <c>"\x2028"</c> and <c>"\x2029"</c>.</param>
+	public static StartEnd[] Lines(this RStr t, bool noEmpty = false, bool preferMore = false, bool rareNewlines = false)
+		=> _Lines(t, noEmpty, preferMore, rareNewlines, false).a1;
+
+	[SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	static (StartEnd[] a1, string[] a2) _Lines(ReadOnlySpan<char> t, bool noEmpty, bool preferMore, bool rareNewlines, bool retStr) {
 		using var f = new FastBuffer<StartEnd>();
-		
-		//this code is like in Lines. Tried to move it to a function, but then somehow very slow.
+
+		var newline = rareNewlines ? s_newlineAll : s_newlineRN;
 		int n = 0;
-		for (int pos = 0; pos < t.Length;) {
+		for (int pos = 0; ;) {
+			if (pos == t.Length && !preferMore) break;
 			if (n == f.n) f.More(preserve: true);
 			var span = t[pos..];
-			int len = span.IndexOfAny('\r', '\n');
+			int len = span.IndexOfAny(newline);
 			if (len < 0) {
 				f[n++] = new(pos, t.Length);
 				break;
@@ -656,39 +755,54 @@ public static unsafe partial class ExtString {
 				if (span[len] == '\r' && pos < t.Length && t[pos] == '\n') pos++;
 			}
 		}
-		
-		var a = new StartEnd[n];
-		new Span<StartEnd>(f.p, n).CopyTo(a);
-		return a;
+
+		if (!retStr) return (new Span<StartEnd>(f.p, n).ToArray(), null);
+
+		var a = new string[n];
+		for (int i = 0; i < n; i++) a[i] = t[f[i].Range].ToString();
+		return (null, a);
 	}
-	//FUTURE: add option to recognize all newline chars as documented in string.ReplaceLineEndings.
-	//	For it can use ReadOnlySpan<char>.EnumerateLines.
-	
+
 	/// <summary>
 	/// Returns the number of lines.
-	/// Counts line separators <c>"\r\n"</c>, <c>"\n"</c>, <c>"\r"</c>.
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
 	/// <param name="range">Part of this string or <c>null</c> (default).</param>
+	/// <param name="rareNewlines">If <c>false</c> (default), recognizes these newlines: <c>"\r\n"</c>, <c>"\n"</c> and <c>"\r"</c>. If <c>true</c>, also recognizes <c>"\f"</c>, <c>"\x0085"</c>, <c>"\x2028"</c> and <c>"\x2029"</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <seealso cref="StringUtil.LineAndColumn"/>
-	public static int LineCount(this string t, bool preferMore = false, Range? range = null) {
-		var (i, to) = range.GetStartEnd(t.Length);
-		if (to - i == 0) return preferMore ? 1 : 0;
-		int n = 1;
-		for (; i < to; i++) {
-			char c = t[i];
-			if (c > '\r') continue;
-			if (c == '\r') {
-				if (++i == to || t[i] != '\n') i--; //single \r ?
-				n++;
-			} else if (c == '\n') n++;
+	public static int LineCount(this string t, bool preferMore = false, Range? range = null, bool rareNewlines = false)
+		=> LineCount(range is null ? t : t.AsSpan(range.Value), preferMore, rareNewlines);
+
+	/// <inheritdoc cref="LineCount(string, bool, Range?, bool)"/>
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	public static int LineCount(this ReadOnlySpan<char> t, bool preferMore = false, bool rareNewlines = false) {
+		var newline = rareNewlines ? s_newlineAll : s_newlineRN;
+		int n = 0;
+		for (int pos = 0; ;) {
+			if (pos == t.Length) {
+				if (preferMore) n++;
+				break;
+			}
+			n++;
+			var span = t[pos..];
+			int len = span.IndexOfAny(newline);
+			if (len < 0) break;
+			pos += len + 1;
+			if (span[len] == '\r' && pos < t.Length && t[pos] == '\n') pos++;
 		}
-		if (!preferMore) switch (t[i - 1]) { case '\n': case '\r': n--; break; }
 		return n;
 	}
-	
+
+#if NET8_0_OR_GREATER
+	static readonly SearchValues<char> s_newlineRN = SearchValues.Create(['\r', '\n']),
+		s_newlineAll = SearchValues.Create(['\r', '\n', '\f', '\x85', '\x2028', '\x2029']);
+#else
+	static readonly char[] s_newlineRN = ['\r', '\n'],
+		s_newlineAll = ['\r', '\n', '\f', '\x85', '\x2028', '\x2029'];
+#endif
+
 	/// <summary>
 	/// Converts this string to lower case.
 	/// </summary>
@@ -698,7 +812,7 @@ public static unsafe partial class ExtString {
 	/// Calls <see cref="string.ToLowerInvariant"/>.
 	/// </remarks>
 	public static string Lower(this string t) => t.ToLowerInvariant();
-	
+
 	/// <summary>
 	/// Converts this string to upper case.
 	/// </summary>
@@ -708,7 +822,7 @@ public static unsafe partial class ExtString {
 	/// Calls <see cref="string.ToUpperInvariant"/>.
 	/// </remarks>
 	public static string Upper(this string t) => t.ToUpperInvariant();
-	
+
 	/// <summary>
 	/// Converts this string or only the first character to upper case or all words to title case.
 	/// </summary>
@@ -731,17 +845,18 @@ public static unsafe partial class ExtString {
 		if (how == SUpper.TitleCase) return ti.ToTitleCase(t);
 		return ti.ToUpper(t);
 	}
-	
+
 	#region ToNumber
-	
+
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	static long _ToInt(RStr t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags) {
 		numberEndIndex = 0;
-		
+
 		int len = t.Length;
 		if ((uint)startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
 		int i = startIndex;
 		char c;
-		
+
 		//skip spaces
 		for (; ; i++) {
 			if (i == len) return 0;
@@ -751,13 +866,13 @@ public static unsafe partial class ExtString {
 			if (c < '\t' || c > '\r') break; //\t \n \v \f \r
 		}
 		if (i > startIndex && 0 != (flags & STIFlags.DontSkipSpaces)) return 0;
-		
+
 		//skip arabic letter mark etc
 		if (c >= '\x61C' && c is '\x61C' or '\x200E' or '\x200F') {
 			if (++i == len) return 0;
 			c = t[i];
 		}
-		
+
 		//skip -+
 		bool minus = false;
 		if (c is '-' or '−' or '+') {
@@ -765,7 +880,7 @@ public static unsafe partial class ExtString {
 			if (c != '+') minus = true;
 			c = t[i];
 		}
-		
+
 		//is hex?
 		bool isHex = false;
 		switch (flags & (STIFlags.NoHex | STIFlags.IsHexWithout0x)) {
@@ -777,13 +892,13 @@ public static unsafe partial class ExtString {
 			isHex = true;
 			break;
 		}
-		
+
 		//skip '0'
 		int i0 = i;
 		while (i < len && t[i] == '0') i++;
-		
+
 		long R = 0; //result
-		
+
 		int nDigits = 0;
 		if (isHex) {
 			int nMaxDigits = toLong ? 16 : 8;
@@ -808,12 +923,12 @@ public static unsafe partial class ExtString {
 				}
 			}
 		}
-		
+
 		if (i == i0) return 0; //not a number
 		numberEndIndex = i;
 		return minus ? -R : R;
 	}
-	
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static int _CharHexToDec(char c) {
 		if (c >= '0' && c <= '9') return c - '0';
@@ -821,7 +936,7 @@ public static unsafe partial class ExtString {
 		if (c >= 'a' && c <= 'f') return c - ('a' - 10);
 		return -1;
 	}
-	
+
 	/// <summary>
 	/// Converts part of this string to <b>int</b> number and gets the number end index.
 	/// </summary>
@@ -852,7 +967,7 @@ public static unsafe partial class ExtString {
 	public static int ToInt(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 		return (int)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 	}
-	
+
 	/// <summary>
 	/// Converts part of this string to <b>int</b> number.
 	/// </summary>
@@ -861,7 +976,7 @@ public static unsafe partial class ExtString {
 	public static int ToInt(this string t, int startIndex = 0, STIFlags flags = 0) {
 		return (int)_ToInt(t, startIndex, out _, false, flags);
 	}
-	
+
 	/// <returns><c>false</c> if failed.</returns>
 	/// <param name="result">Receives the result, or 0 if failed.</param>
 	/// <remarks></remarks>
@@ -870,14 +985,14 @@ public static unsafe partial class ExtString {
 		result = (int)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 		return numberEndIndex != 0;
 	}
-	
+
 	/// <returns><c>false</c> if failed.</returns>
 	/// <param name="result">Receives the result, or 0 if failed.</param>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, int, STIFlags)"/>
 	public static bool ToInt(this string t, out int result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
-	
+
 	/// <summary>
 	/// Converts part of this string to <b>uint</b> number and gets the number end index.
 	/// </summary>
@@ -887,7 +1002,7 @@ public static unsafe partial class ExtString {
 		result = (uint)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 		return numberEndIndex != 0;
 	}
-	
+
 	/// <summary>
 	/// Converts part of this string to <b>uint</b> number.
 	/// </summary>
@@ -895,7 +1010,7 @@ public static unsafe partial class ExtString {
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
 	public static bool ToInt(this string t, out uint result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
-	
+
 	/// <summary>
 	/// Converts part of this string to <b>long</b> number and gets the number end index.
 	/// </summary>
@@ -905,7 +1020,7 @@ public static unsafe partial class ExtString {
 		result = _ToInt(t, startIndex, out numberEndIndex, true, flags);
 		return numberEndIndex != 0;
 	}
-	
+
 	/// <summary>
 	/// Converts part of this string to <b>long</b> number.
 	/// </summary>
@@ -913,7 +1028,7 @@ public static unsafe partial class ExtString {
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
 	public static bool ToInt(this string t, out long result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
-	
+
 	/// <summary>
 	/// Converts part of this string to <b>ulong</b> number and gets the number end index.
 	/// </summary>
@@ -923,7 +1038,7 @@ public static unsafe partial class ExtString {
 		result = (ulong)_ToInt(t, startIndex, out numberEndIndex, true, flags);
 		return numberEndIndex != 0;
 	}
-	
+
 	/// <summary>
 	/// Converts part of this string to <b>ulong</b> number.
 	/// </summary>
@@ -931,16 +1046,16 @@ public static unsafe partial class ExtString {
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
 	public static bool ToInt(this string t, out ulong result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
-	
+
 	//FUTURE: make these public and add more overloads.
 	internal static int ToInt_(this RStr t, STIFlags flags = 0)
 		=> (int)_ToInt(t, 0, out _, false, flags);
-	
+
 	internal static bool ToInt_(this RStr t, out int result, out int numberEndIndex, STIFlags flags = 0) {
 		result = (int)_ToInt(t, 0, out numberEndIndex, false, flags);
 		return numberEndIndex != 0;
 	}
-	
+
 	/// <summary>
 	/// Converts this string or its part to double number.
 	/// </summary>
@@ -959,14 +1074,14 @@ public static unsafe partial class ExtString {
 		ToNumber(t, out double r, range, style);
 		return r;
 	}
-	
+
 	/// <returns><c>false</c> if failed.</returns>
 	/// <param name="result">Receives the result, or 0 if failed.</param>
 	/// <inheritdoc cref="ToNumber(string, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out double result, Range? range = null, NumberStyles style = NumberStyles.Float) {
 		return double.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
-	
+
 	/// <summary>
 	/// Converts this string or its part to float number.
 	/// </summary>
@@ -977,7 +1092,7 @@ public static unsafe partial class ExtString {
 	public static bool ToNumber(this string t, out float result, Range? range = null, NumberStyles style = NumberStyles.Float) {
 		return float.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
-	
+
 	/// <summary>
 	/// Converts this string or its part to <b>int</b> number.
 	/// </summary>
@@ -987,12 +1102,12 @@ public static unsafe partial class ExtString {
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out int result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
 		return int.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
-		
+
 		//note: exception if NumberStyles.Integer | NumberStyles.AllowHexSpecifier.
 		//	Can parse either decimal or hex, not any.
 		//	Does not support "0x". With AllowHexSpecifier eg "11" is 17, but "0x11" is invalid.
 	}
-	
+
 	/// <summary>
 	/// Converts this string or its part to <b>uint</b> number.
 	/// </summary>
@@ -1003,7 +1118,7 @@ public static unsafe partial class ExtString {
 	public static bool ToNumber(this string t, out uint result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
 		return uint.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
-	
+
 	/// <summary>
 	/// Converts this string or its part to <b>long</b> number.
 	/// </summary>
@@ -1014,7 +1129,7 @@ public static unsafe partial class ExtString {
 	public static bool ToNumber(this string t, out long result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
 		return long.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
-	
+
 	/// <summary>
 	/// Converts this string or its part to <b>ulong</b> number.
 	/// </summary>
@@ -1025,24 +1140,24 @@ public static unsafe partial class ExtString {
 	public static bool ToNumber(this string t, out ulong result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
 		return ulong.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 	}
-	
+
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	static RStr _NumSpan(string t, Range? range, out CultureInfo ci) {
 		ci = CultureInfo.InvariantCulture;
 		if (t == null) return default;
 		var (start, len) = range.GetOffsetAndLength(t.Length);
-		
+
 		//Workaround for .NET 5 preview 7 bug: if current user culture is eg Norvegian or Lithuanian,
 		//	'number to/from string' functions use '−' (Unicode minus), not '-' (ASCII hyphen), even if in Control Panel is ASCII hyphen.
 		//	Tested: no bug in .NET Core 3.1.
 		//Also, in some cultures eg Arabic there are more chars.
 		if (!t.AsSpan(start, len).IsAscii()) ci = CultureInfo.CurrentCulture;
-		
+
 		return t.AsSpan(start, len);
 	}
-	
+
 	#endregion
-	
+
 	/// <summary>
 	/// Inserts other string.
 	/// </summary>
@@ -1054,7 +1169,7 @@ public static unsafe partial class ExtString {
 	public static string Insert(this string t, Index startIndex, string s) {
 		return t.Insert(startIndex.GetOffset(t.Length), s);
 	}
-	
+
 	/// <summary>
 	/// Replaces part of this string with other string.
 	/// </summary>
@@ -1069,7 +1184,7 @@ public static unsafe partial class ExtString {
 		if (count == 0) return t.Insert(i, s);
 		return string.Concat(t.AsSpan(0, i), s, t.AsSpan(i + count));
 	}
-	
+
 	/// <summary>
 	/// Replaces part of this string with other string.
 	/// </summary>
@@ -1082,7 +1197,7 @@ public static unsafe partial class ExtString {
 		var (i, count) = range.GetOffsetAndLength(t.Length);
 		return ReplaceAt(t, i, count, s);
 	}
-	
+
 	/// <summary>
 	/// Removes part of this string.
 	/// </summary>
@@ -1094,7 +1209,7 @@ public static unsafe partial class ExtString {
 		var (i, count) = range.GetOffsetAndLength(t.Length);
 		return t.Remove(i, count);
 	}
-	
+
 	//rejected. Use [..^count].
 	///// <summary>
 	///// Removes <i>count</i> characters from the end of this string.
@@ -1104,7 +1219,7 @@ public static unsafe partial class ExtString {
 	///// <param name="count">Count of characters to remove.</param>
 	///// <exception cref="ArgumentOutOfRangeException"></exception>
 	//public static string RemoveSuffix(this string t, int count) => t[^count];
-	
+
 	/// <summary>
 	/// Removes <i>suffix</i> string from the end.
 	/// </summary>
@@ -1117,7 +1232,7 @@ public static unsafe partial class ExtString {
 		if (!t.Ends(suffix, ignoreCase)) return t;
 		return t[..^suffix.Length];
 	}
-	
+
 	/// <summary>
 	/// Removes <i>suffix</i> character from the end.
 	/// </summary>
@@ -1129,7 +1244,7 @@ public static unsafe partial class ExtString {
 		if (!t.Ends(suffix)) return t;
 		return t[..^1];
 	}
-	
+
 	/// <summary>
 	/// If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended <c>'…'</c> character.
 	/// Else returns this string.
@@ -1166,7 +1281,7 @@ public static unsafe partial class ExtString {
 				limit = _Correct(t, limit);
 				return t[..limit] + "…";
 			}
-			
+
 			//ensure not in the middle of a surrogate pair or \r\n
 			static int _Correct(string s, int i, int d = -1) {
 				if (i > 0 && i < s.Length) {
@@ -1178,7 +1293,7 @@ public static unsafe partial class ExtString {
 		}
 		return t;
 	}
-	
+
 	/// <summary>
 	/// Replaces unsafe characters with C# escape sequences.
 	/// If the string contains these characters, replaces and returns new string. Else returns this string.
@@ -1189,14 +1304,15 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Replaces these characters: <c>'\\'</c>, <c>'"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
 	/// </remarks>
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static string Escape(this string t, int limit = 0, bool quote = false) {
 		int i, len = t.Length;
 		if (len == 0) return quote ? "\"\"" : t;
-		
+
 		if (limit > 0) {
 			if (len > limit) len = limit - 1; else limit = 0;
 		}
-		
+
 		for (i = 0; i < len; i++) {
 			var c = t[i];
 			if (c < ' ' || c == '\\' || c == '"') goto g1;
@@ -1221,16 +1337,16 @@ public static unsafe partial class ExtString {
 				} else if (c == '\\') b.Append("\\\\");
 				else if (c == '"') b.Append("\\\"");
 				else b.Append(c);
-				
+
 				if (limit > 0 && b.Length - (quote ? 1 : 0) >= len) break;
 			}
-			
+
 			if (limit > 0) b.Append('…');
 			if (quote) b.Append('"');
 			return b.ToString();
 		}
 	}
-	
+
 	/// <summary>
 	/// Replaces C# escape sequences to characters in this string.
 	/// </summary>
@@ -1241,14 +1357,15 @@ public static unsafe partial class ExtString {
 	/// Supports all escape sequences of <see cref="Escape"/>: <c>\\</c> <c>\"</c> <c>\t</c> <c>\n</c> <c>\r</c> <c>\0</c> <c>\uXXXX</c>.
 	/// Does not support <c>\a</c> <c>\b</c> <c>\f</c> <c>\v</c> <c>\'</c> <c>\xXXXX</c> <c>\UXXXXXXXX</c>.
 	/// </remarks>
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static bool Unescape(this string t, out string result) {
 		result = t;
 		int i = t.IndexOf('\\');
 		if (i < 0) return true;
-		
+
 		using (new StringBuilder_(out var b, t.Length)) {
 			b.Append(t, 0, i);
-			
+
 			for (; i < t.Length; i++) {
 				char c = t[i];
 				if (c == '\\') {
@@ -1263,7 +1380,7 @@ public static unsafe partial class ExtString {
 					//case 'b': c = '\b'; break;
 					//case 'f': c = '\f'; break;
 					//case 'v': c = '\v'; break;
-					//case '\'': break;
+					//case 'e': c = '\e'; break;
 					//also we don't support U and x
 					case 'u':
 						if (!_Uni(t, ++i, 4, out int u)) return false;
@@ -1275,11 +1392,11 @@ public static unsafe partial class ExtString {
 				}
 				b.Append(c);
 			}
-			
+
 			result = b.ToString();
 			return true;
 		}
-		
+
 		static bool _Uni(string t, int i, int maxLen, out int R) {
 			R = 0;
 			int to = i + maxLen; if (to > t.Length) return false;
@@ -1290,43 +1407,14 @@ public static unsafe partial class ExtString {
 			return true;
 		}
 	}
-	
+
 	/// <returns>New string if replaced, else this string. Does not replace if the string does not contain escape sequences or if some escape sequences are invalid or unsupported.</returns>
 	/// <inheritdoc cref="Unescape(string, out string)"/>
 	public static string Unescape(this string t) {
 		Unescape(t, out t);
 		return t;
 	}
-	
-	//rejected
-	///// <summary>
-	///// Replaces all <c>"'"</c> with <c>"''"</c>.
-	///// </summary>
-	//public static string SqlEscape(this string t) => t.Replace("'", "''");
-	
-	//rejected. Rarely used.
-	///// <summary>
-	///// Converts this string to <c>'\0'</c>-terminated <b>char[]</b>.
-	///// </summary>
-	//public static char[] ToArrayAnd0(this string t)
-	//{
-	//	var c = new char[t.Length + 1];
-	//	for(int i = 0; i < t.Length; i++) c[i] = t[i];
-	//	return c;
-	//}
-	
-	//rejected. Better call Convert2.Utf8FromString directly.
-	///// <summary>
-	///// Converts this string to <c>'\0'</c>-terminated UTF-8 string as <b>byte[]</b>.
-	///// </summary>
-	///// <remarks>
-	///// Calls <see cref="Convert2.Utf8FromString"/>.
-	///// </remarks>
-	///// <seealso cref="Convert2.Utf8ToString"/>
-	///// <seealso cref="Encoding.UTF8"/>
-	//public static byte[] ToUtf8And0(this string t) => Convert2.Utf8FromString(t);
-	
-	
+
 	/// <summary>
 	/// Reverses this string, like <c>"Abc"</c> -> <c>"cbA"</c>.
 	/// </summary>
@@ -1349,16 +1437,16 @@ public static unsafe partial class ExtString {
 			}
 		}
 		return r;
-		
+
 		//tested: string.Create slower.
 	}
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
 	/// <seealso cref="IsAscii(RStr)"/>
 	public static bool IsAscii(this string t) => t.AsSpan().IsAscii();
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
@@ -1366,22 +1454,14 @@ public static unsafe partial class ExtString {
 		foreach (char c in t) if (c > 0x7f) return false;
 		return true;
 	}
-	
-	///// <summary>
-	///// Returns <c>true</c> if does not contain non-ASCII characters.
-	///// </summary>
-	//public static bool IsAscii(this RByte t) {
-	//	foreach (char c in t) if (c > 0x7f) return false;
-	//	return true;
-	//}
-	
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static int LengthThrowIfNull_(this RStr t) {
 		int n = t.Length;
 		if (n == 0 && t == default) throw new ArgumentNullException();
 		return n;
 	}
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if equals to string <i>s</i>, case-sensitive.
 	/// </summary>
@@ -1391,7 +1471,7 @@ public static unsafe partial class ExtString {
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Eq(this RStr t, RStr s) => t.Equals(s, StringComparison.Ordinal);
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if equals to string <i>s</i>, case-insensitive.
 	/// </summary>
@@ -1401,7 +1481,7 @@ public static unsafe partial class ExtString {
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Eqi(this RStr t, RStr s) => t.Equals(s, StringComparison.OrdinalIgnoreCase);
-	
+
 	/// <summary>
 	/// Compares part of this span with string <i>s</i>. Returns <c>true</c> if equal.
 	/// </summary>
@@ -1421,7 +1501,7 @@ public static unsafe partial class ExtString {
 		if (!ignoreCase) return t.SequenceEqual(s);
 		return t.Equals(s, StringComparison.OrdinalIgnoreCase);
 	}
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if the specified character is at the specified position in this span.
 	/// </summary>
@@ -1432,7 +1512,7 @@ public static unsafe partial class ExtString {
 		if ((uint)index >= t.Length) return false;
 		return t[index] == c;
 	}
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if starts with string <i>s</i>.
 	/// </summary>
@@ -1443,7 +1523,7 @@ public static unsafe partial class ExtString {
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Starts(this RStr t, RStr s, bool ignoreCase = false) => t.StartsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-	
+
 	/// <summary>
 	/// Returns <c>true</c> if starts with string <i>s</i>.
 	/// </summary>
@@ -1454,7 +1534,7 @@ public static unsafe partial class ExtString {
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Ends(this RStr t, RStr s, bool ignoreCase = false) => t.EndsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-	
+
 	/// <summary>
 	/// Finds character <i>c</i> in this span, starting from <i>index</i>.
 	/// </summary>
@@ -1464,7 +1544,7 @@ public static unsafe partial class ExtString {
 		int i = t[index..].IndexOf(c);
 		return i < 0 ? i : i + index;
 	}
-	
+
 	/// <summary>
 	/// Finds character <i>c</i> in <i>range</i> of this span.
 	/// </summary>
@@ -1475,7 +1555,7 @@ public static unsafe partial class ExtString {
 		if (i < 0) return i;
 		return i + range.Start.GetOffset(t.Length);
 	}
-	
+
 	/// <summary>
 	/// Finds string <i>s</i> in this span, starting from <i>index</i>.
 	/// </summary>
@@ -1487,7 +1567,7 @@ public static unsafe partial class ExtString {
 		int i = t[index..].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		return i < 0 ? i : i + index;
 	}
-	
+
 	/// <summary>
 	/// Finds string <i>s</i> in <i>range</i> of this span.
 	/// </summary>
@@ -1511,65 +1591,64 @@ public static unsafe partial class ExtString {
 		return t.AsSpan(i, len);
 	}
 #endif
-	
+
 	internal static void CopyTo_(this string t, char* p)
 		=> t.AsSpan().CopyTo(new Span<char>(p, t.Length));
-	
+
 	/// <summary>
 	/// Converts to UTF-8 (<c>Encoding.UTF8.GetBytes</c>).
 	/// </summary>
 	public static byte[] ToUTF8(this string t)
 		=> Encoding.UTF8.GetBytes(t);
-	
+
 	/// <summary>
 	/// Converts to UTF-8.
 	/// </summary>
 	/// <param name="append0">Return 0-terminated UTF-8 string.</param>
 	public static byte[] ToUTF8(this RStr t, bool append0 = false)
 		=> Convert2.Utf8Encode(t, append0 ? "\0" : null);
-	
+
 	/// <summary>
 	/// Converts to UTF-8.
 	/// </summary>
 	/// <param name="append0">Return 0-terminated UTF-8 string.</param>
 	public static byte[] ToUTF8(this Span<char> t, bool append0 = false)
 		=> Convert2.Utf8Encode(t, append0 ? "\0" : null);
-	
+
 	/// <summary>
 	/// Converts UTF-8 string to string.
 	/// </summary>
 	public static string ToStringUTF8(this byte[] t)
 		=> Encoding.UTF8.GetString(t);
-	
+
 	/// <summary>
 	/// Converts UTF-8 string to string.
 	/// </summary>
 	public static string ToStringUTF8(this RByte t)
 		=> Encoding.UTF8.GetString(t);
-	
+
 	/// <summary>
 	/// Converts UTF-8 string to string.
 	/// </summary>
 	public static string ToStringUTF8(this Span<byte> t)
 		=> Encoding.UTF8.GetString(t);
-	
+
 	/// <summary>
-	/// Splits string <i>s</i>. Trims, and removes empty.
+	/// Splits this string. Trims, and removes empty.
 	/// </summary>
 	/// <returns>Array containing 0 or more strings.</returns>
 	internal static string[] Split_(this string t, char c) {
 		return t.Split(c, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 	}
-	
+
 	/// <summary>
-	/// Splits string <i>s</i> and creates <b>HashSet</b>. Trims, and removes empty.
+	/// Splits this string and creates <b>HashSet</b>. Trims, and removes empty.
 	/// </summary>
 	/// <returns><b>HashSet</b> containing 0 or more strings.</returns>
-	internal static HashSet<string> Split_(this string t, char c, bool ignoreCase) {
-		return t.Split(c, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-			.ToHashSet(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+	internal static HashSet<string> SplitHS_(this string t, char c, bool ignoreCase) {
+		return t.Split_(c).ToHashSet(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 	}
-	
+
 	/// <summary>
 	/// Splits string <i>s</i> into 2 strings.
 	/// Tip: there are 2 overloads: for string and for <b>RStr</b>.
@@ -1584,8 +1663,8 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	///	Can be used to split strings like <c>"name=value"</c> or <c>"name: value"</c> or <c>"s1 s2"</c> etc. Trims spaces.
 	/// </remarks>
-	internal static bool Split_(this string t, char c, out string s1, out string s2, int minLen1, int minLen2) {
-		if (!Split_(t, c, out RStr k1, out RStr k2, minLen1, minLen2)) {
+	internal static bool Split2_(this string t, char c, out string s1, out string s2, int minLen1, int minLen2) {
+		if (!Split2_(t, c, out RStr k1, out RStr k2, minLen1, minLen2)) {
 			s1 = s2 = null;
 			return false;
 		}
@@ -1593,9 +1672,9 @@ public static unsafe partial class ExtString {
 		s2 = k2.ToString();
 		return true;
 	}
-	
-	/// <inheritdoc cref="Split_(string, char, out string, out string, int, int)"/>
-	internal static bool Split_(this RStr t, char c, out RStr s1, out RStr s2, int minLen1, int minLen2) {
+
+	/// <inheritdoc cref="Split2_(string, char, out string, out string, int, int)"/>
+	internal static bool Split2_(this RStr t, char c, out RStr s1, out RStr s2, int minLen1, int minLen2) {
 		t = t.Trim();
 		int i = t.IndexOf(c);
 		if (i >= 0) {
@@ -1607,7 +1686,7 @@ public static unsafe partial class ExtString {
 		s2 = default;
 		return false;
 	}
-	
+
 	/// <summary>
 	/// If <i>index</i> is in this string, returns character at <i>index</i>. Else <c>'\0'</c>.
 	/// </summary>
@@ -1623,12 +1702,12 @@ public enum STIFlags {
 	/// Don't support hexadecimal numbers (numbers with prefix <c>"0x"</c>).
 	/// </summary>
 	NoHex = 1,
-	
+
 	/// <summary>
 	/// The number in string is hexadecimal without a prefix, like <c>"1A"</c>.
 	/// </summary>
 	IsHexWithout0x = 2,
-	
+
 	/// <summary>
 	/// Fail if string starts with a whitespace character.
 	/// </summary>
@@ -1643,12 +1722,12 @@ public enum SUpper {
 	/// Convert all characters to upper case.
 	/// </summary>
 	AllChars,
-	
+
 	/// <summary>
 	/// Convert only the first character to upper case.
 	/// </summary>
 	FirstChar,
-	
+
 	/// <summary>
 	/// Convert the first character of each word to upper case and other characters to lower case.
 	/// Calls <see cref="TextInfo.ToTitleCase"/>.

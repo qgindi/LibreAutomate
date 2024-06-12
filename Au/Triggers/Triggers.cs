@@ -391,7 +391,7 @@ public class ActionTriggers {
 		if (eventType == HooksThread.UsedEvents.Keyboard) {
 			//print.it("key");
 			if (!_ht.GetKeyData(messageId, out var data)) return;
-			var k = new HookData.Keyboard(null, (nint)(&data)); //SHOULDDO: now probably can be simplified, because not using a server
+			var k = new HookData.Keyboard(null, (nint)(&data)); //TODO3: now probably can be simplified, because not using a server
 			_thc.InitMod(k);
 			if (this[TriggerType.Hotkey] is HotkeyTriggers tk) { //if not null
 				eat = tk.HookProc(k, _thc);

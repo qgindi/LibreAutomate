@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using Au.Controls;
 using System.Windows.Input;
 
-//SHOULDDO: if checked 'state', activate window before test. Else different FOCUSED etc.
+//TODO3: if checked 'state', activate window before test. Else different FOCUSED etc.
 
 //CONSIDER: here and in Dwnd: UI for "contains image".
 //	Also then need to optimize "elm containing image". Now with image finder in 'also' gets pixels multiple times.
@@ -15,12 +15,12 @@ using System.Windows.Input;
 
 //TEST: CoCancelCall/CoTestCancel.
 
-//SHOULDDO: auto detect when should use Invoke and when WebInvoke, and suggest to switch.
+//TODO3: auto detect when should use Invoke and when WebInvoke, and suggest to switch.
 //	If now Invoke, and role web:, and after executing action soon changed window title, suggest WebInvoke.
 //	If now WebInvoke, and role not web:, and after executing action does not change window title for eg 5 s, suggest to stop waiting and use Invoke.
 //	Or just add pseudo action Auto. If "web:", use WebInvoke, else if has action, use Invoke, else MouseClick.
 
-//SHOULDDO: on Win11 capturing and finding in some places doesn't work because an element in the path is an invisible control.
+//TODO3: on Win11 capturing and finding in some places doesn't work because an element in the path is an invisible control.
 //	Examples: taskbar, Paint.
 //	Now by default auto-switches to UIA; it works, but then broken Invoke (in taskbar only).
 
@@ -770,7 +770,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			//	This code is similar to the C++ code in _FromPoint_GetLink, but covers more cases.
 			//	Cannot show menu in this thread. Pass e2 and strings to the UI thread, let it show menu if e2 not null.
 			elm e2 = null; string tt1 = null, tt2 = null;
-			if (!e.MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java)) { //SHOULDDO: UIA too
+			if (!e.MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java)) { //TODO3: UIA too
 				if (!_IsInteractive(e, true, out bool stop1) && !stop1) {
 					bool found = false;
 					tt1 = "This element probably does not support Invoke or Focus";
@@ -1139,7 +1139,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		if (!_elm.MiscFlags.Has(EMiscFlags.InProc)) flags |= EFFlags.NotInProc; //if captured notinproc in DPI-scaled, would fail to select in tree if tree elems retrieved inproc, because would compare with non-scaled rects
 		
 		var (xRoot, xSelect, exc) = _RunElmTask(10000, this, dlg => {
-			//SHOULDDO: cancellation
+			//TODO3: cancellation
 			var us = (uint)p.State;
 			var prop = $"rect={p.Rect}\0state=0x{us:X},!0x{~us:X}";
 			if (skipWINDOW) prop += $"\0notin=WINDOW";
@@ -1237,7 +1237,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		//if(keys.isScrollLock) return false;
 		
 		ti = _RunElmTask(5000, (_elm, a), static m => {
-			//SHOULDDO: cancellation
+			//TODO3: cancellation
 			var e = m.Item1;
 			if (!e.GetProperties("rn", out var p)) return null;
 			int item = e.Item;
@@ -2085,7 +2085,7 @@ If unchecked, returns null.");
 		_info.Info(_tree, "Tree view",
 @"All UI elements in the window.");
 		
-		//SHOULDDO: now no info for HwndHost
+		//TODO3: now no info for HwndHost
 		//		_info.Info(_code, "Code",
 		//@"Code to find the UI element.
 		//The ""find window"" part can be edited directly.");

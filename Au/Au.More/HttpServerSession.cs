@@ -130,9 +130,9 @@ namespace Au.More {
 		protected void Auth(Func<string, string, bool> auth) {
 			if (_auth != true) {
 				_auth = _message.Headers.TryGetValue("Authorization", out var s)
-					&& s.Split_(' ', out var s1, out var s2, 5, 1)
+					&& s.Split2_(' ', out var s1, out var s2, 5, 1)
 					&& s1.Eqi("Basic")
-					&& Convert.FromBase64String(s2).ToStringUTF8().Split_(':', out s1, out s2, 0, 0)
+					&& Convert.FromBase64String(s2).ToStringUTF8().Split2_(':', out s1, out s2, 0, 0)
 					&& auth(s1, s2);
 				if (_auth == false) throw new UnauthorizedAccessException();
 			}
@@ -590,7 +590,7 @@ namespace Au.Types {
 				if (i != 0) {
 					var sh = Encoding.Latin1.GetString(part.Slice(0, i - 2)).RxReplace(@"\n\h", " ");
 					foreach (var v in sh.Lines(true)) {
-						if (v.Split_(':', out var s1, out var s2, 1, 0)) dh[s1] = s2;
+						if (v.Split2_(':', out var s1, out var s2, 1, 0)) dh[s1] = s2;
 					}
 				}
 				HSContentPart p = new(index++, dh, part.Slice(i + 2).ToArray());

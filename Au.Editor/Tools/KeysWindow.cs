@@ -132,15 +132,16 @@ class KeysWindow : InfoWindow { //KPopup
 	}
 	PSFormat _format;
 	
-	void _c_AaNotify(KScintilla c, ref Sci.SCNotification n) {
+	void _c_AaNotify(KScintilla.AaEventHandlerArgs e) {
 		//show tooltips for some links
-		if (n.code == Sci.NOTIF.SCN_DWELLSTART) {
+		var c = e.c;
+		if (e.n.code == Sci.NOTIF.SCN_DWELLSTART) {
 			if (_linkStyle == 0) {
 				_linkStyle = c.aaaStyleGetAt(c.aaaFindText(false, "Alt"));
 				c.Call(Sci.SCI_CALLTIPSETPOSITION, true); //above
 				this.Hidden += (_, _) => { Control1.Call(Sci.SCI_CALLTIPCANCEL); };
 			}
-			if (n.position > 0 && _GetRange(n.position, out var r)) {
+			if (e.n.position > 0 && _GetRange(e.n.position, out var r)) {
 				if (r == _linkRange && 0 != c.Call(Sci.SCI_CALLTIPACTIVE)) return;
 				var s = c.aaaRangeText(false, r.start, r.end);
 				s = s switch {

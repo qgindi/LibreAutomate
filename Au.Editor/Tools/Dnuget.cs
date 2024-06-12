@@ -222,7 +222,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 			
 			var sBuild = $@"build ""{proj}"" --nologo --output ""{folderPath}""";
 			if (!await _RunDotnet(sBuild)) return false;
-			//SHOULDDO: if fails, uninstall the package immediately.
+			//TODO3: if fails, uninstall the package immediately.
 			//	Else in the future will fail to install any package.
 			//	Also may delete dll files and leave garbage.
 			//	But problem: may fail because of ANOTHER package. How to know which package is bad?

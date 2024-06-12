@@ -1,4 +1,4 @@
-﻿namespace SdkConverter;
+namespace SdkConverter;
 
 unsafe partial class Converter {
 	void _Tokenize(char* s) {
@@ -31,7 +31,7 @@ unsafe partial class Converter {
 				_tok.Add(new _Token(s, 1));
 				break;
 			default:
-				//SHOULDDO: replace '$' with '_'. Although SDK does not have such identifiers when removed CRT headers.
+				//TODO3: replace '$' with '_'. Although SDK does not have such identifiers when removed CRT headers.
 				if (_IsCharIdentStart(c)) {
 					len = _LenIdent(s);
 					

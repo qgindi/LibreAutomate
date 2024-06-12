@@ -397,7 +397,7 @@ partial class PanelDebug {
 						//note: if without `--all-values`, values will be null, but calls properties anyway (same speed).
 						//	In any case, does not call properties if the parent variable was created with evalFlags EVAL_NOFUNCEVAL. Then fast.
 						
-						//SHOULDDO: slow if many children. Eg WPF Window has almost 400, and the time is ~550 ms.
+						//TODO3: slow if many children. Eg WPF Window has almost 400, and the time is ~550 ms.
 						//	If > 100 children, should get child properties when/if displaying them first time.
 						//	Now we need just names for sorting. To make it fast, call -var-create with flag EVAL_NOFUNCEVAL (-var-list-children inherits its flags).
 						//		This inheritance can be a problem. Unless I'll modify netcoredbg to pass flags to -var-list-children.

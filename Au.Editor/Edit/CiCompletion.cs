@@ -332,7 +332,7 @@ partial class CiCompletion {
 			if (doc.aaaText != code) { //changed while awaiting
 				timer.after(55, _ => { if (doc == Panels.Editor.ActiveDoc) ShowList(); });
 				return;
-				//SHOULDDO: instead: when text changed, cancel and set timer.
+				//TODO3: instead: when text changed, cancel and set timer.
 			} else if (doc.aaaCurrentPos16 != position) return;
 			//p1.Next('T');
 			
@@ -541,7 +541,7 @@ partial class CiCompletion {
 					if (typeL != null) { //eg variable.x
 					} else if (symL is INamedTypeSymbol nts && CiWinapi.IsWinapiClassSymbol(nts)) { //type.x
 						int i = d.items.Count;
-						bool newExpr = syncon.TargetToken.Parent.Parent is ObjectCreationExpressionSyntax; //info: syncon.IsObjectCreationTypeContext false
+						bool newExpr = syncon.TargetToken.Parent.Parent is ObjectCreationExpressionSyntax or StackAllocArrayCreationExpressionSyntax; //info: syncon.IsObjectCreationTypeContext false
 						d.winapi = CiWinapi.AddWinapi(nts, d.items, span, typenameStart, newExpr);
 						int n = d.items.Count - i;
 						if (n > 0) {
@@ -735,8 +735,7 @@ partial class CiCompletion {
 						if (text[^1] == ']') {
 							int i = text.LastIndexOf('[') + 1;
 							if (i > 0 && text[i] is '+' or '-') {
-								var s = text[i..^1]; //FUTURE: maybe RStr will have Split(), then don't need to alloc this string. Or could use code.Segments, but not so easy.
-								var a = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+								var a = text.AsSpan(i..^1).SplitS(' ', StringSplitOptions.RemoveEmptyEntries);
 								filters ??= new();
 								filters[u.Name.ToString()] = a;
 								continue;
@@ -891,7 +890,7 @@ partial class CiCompletion {
 					foreach (var v in _data.items) {
 						//if (v.ci is var j && j.DisplayText.Starts("DEdit")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
 						//if (j.ci is var j && j.Properties.ContainsKey("Symbols")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
-						if (v.kind is CiItemKind.Enum or CiItemKind.Class or CiItemKind.Structure or CiItemKind.Delegate && v.ci.Properties.ContainsKey("Symbols")) { //SHOULDDO: unreliable
+						if (v.kind is CiItemKind.Enum or CiItemKind.Class or CiItemKind.Structure or CiItemKind.Delegate && v.ci.Properties.ContainsKey("Symbols")) { //TODO3: unreliable
 							ci = v;
 							break;
 						}
@@ -903,7 +902,7 @@ partial class CiCompletion {
 		if (_data.noAutoSelect && ci != null) _popupList.SuggestedItem = ci;
 		else _popupList.SelectedItem = ci;
 	}
-	//FUTURE: when typed 1-2 lowercase chars, select keyword instead of type.
+	//CONSIDER: when typed 1-2 lowercase chars, select keyword instead of type.
 	//	Now these types are selected first (but none when typed 3 chars):
 	/*
 	elm else
@@ -1164,6 +1163,7 @@ partial class CiCompletion {
 						node = node.Parent;
 						if (node is QualifiedNameSyntax) node = node.Parent;
 						if (node is ObjectCreationExpressionSyntax) goto g1;
+						if (node is AttributeSyntax && item.kind is CiItemKind.Class) return true;
 					}
 					break;
 				}
@@ -1172,7 +1172,7 @@ partial class CiCompletion {
 				bracketsOperation = CiAutocorrect.EBrackets.NewExpression;
 				return true;
 				//If 'new Type', adds '()'.
-				//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
+				//If then coder types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
 			}
 			
 			//bool _IsGeneric()
@@ -1232,7 +1232,8 @@ partial class CiCompletion {
 		var R = CiComplResult.None;
 		if (_data != null) {
 			var ci = _popupList.SelectedItem;
-			if (ci != null || (key is KKey.Tab && (ci = _popupList.SuggestedItem) != null)) {
+			if (key is KKey.Tab) ci ??= _popupList.SuggestedItem;
+			if (ci != null) {
 				R = _Commit(doc, ci, default, key);
 				if (R == CiComplResult.None && key is KKey.Tab or KKey.Enter) R = CiComplResult.Simple; //always suppress Tab and Enter
 			}
@@ -1265,9 +1266,3 @@ partial class CiCompletion {
 		return CiComplProvider.Other;
 	}
 }
-
-//Debug_.NoGcRegion can be used to prevent GC while getting completions. Reduces the time eg from 70 to 60 ms. Tested with some old Roslyn version.
-//It seems Roslyn uses weak references for expensive objects, eg syntax trees and semantic model.
-//Usually GC starts in the middle, and Roslyn has to rebuild them anyway.
-//But Roslyn is slow in other places too, eg syntax highlighting. Need to test everything. Maybe disable GC on every added char for eg 500 ms.
-//SHOULDDO: try to keep syntax and semantic trees in CodeInfo.Context.

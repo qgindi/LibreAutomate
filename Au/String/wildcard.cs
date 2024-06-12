@@ -50,7 +50,7 @@ namespace Au {
 			try {
 				_type = WXType.Wildcard;
 				_ignoreCase = !matchCase;
-				string[] split = null;
+				string split = null;
 
 				if (w.Length >= 3 && w[0] == '*' && w[1] == '*') {
 					for (int i = 2, j; i < w.Length; i++) {
@@ -66,7 +66,7 @@ namespace Au {
 							if (w[i - 1] != 'm') goto ge;
 							for (j = ++i; j < w.Length; j++) if (w[j] == ')') break;
 							if (j >= w.Length || j == i) goto ge;
-							split = new string[] { w[i..j] };
+							split = w[i..j];
 							i = j;
 							break;
 						default: goto ge;
@@ -84,7 +84,7 @@ namespace Au {
 						_o = new regexp(w, _ignoreCase ? RXFlags.CASELESS : 0);
 						return;
 					case WXType.Multi:
-						var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
+						var a = w.Split(split ?? "||", StringSplitOptions.None);
 						var multi = new wildex[a.Length];
 						for (int i = 0; i < a.Length; i++) multi[i] = new wildex(a[i]);
 						_o = multi;
@@ -97,7 +97,6 @@ namespace Au {
 			}
 			catch when (noException) { _type = WXType.Error; }
 		}
-		static readonly string[] _splitMulti = { "||" };
 
 		/// <summary>
 		/// Creates new <b>wildex</b> from wildcard expression string.

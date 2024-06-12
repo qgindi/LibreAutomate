@@ -259,7 +259,7 @@ class PanelOutput {
 				if (h.Count > 50) h.Dequeue();
 			}
 			
-			_p._leaf.Visible = true; //SHOULDDO: if(App.Hwnd.IsVisible) ?
+			_p._leaf.Visible = true; //TODO3: if(App.Hwnd.IsVisible) ?
 		}
 		static regexp s_rx1, s_rx2;
 		

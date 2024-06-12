@@ -637,10 +637,11 @@ static class TUtil {
 			}
 			
 			if (R is PathCode.MetaR) {
-				var p = new MetaCommentsParser(App.Model.CurrentFile);
-				if (!App.Settings.tools_pathUnexpand) p.r.AddRange(paths);
-				else foreach (var v in paths) p.r.Add(folders.unexpandPath(v));
-				p.Apply();
+				if (UnexpandPathsMetaR(paths, owner)) {
+					var p = new MetaCommentsParser(App.Model.CurrentFile);
+					p.r.AddRange(paths);
+					p.Apply();
+				}
 				return 0;
 			}
 			
@@ -672,6 +673,25 @@ static class TUtil {
 	}
 	
 	public enum PathCode { None, Var, Run, RunMenu, EnumDir, MetaR }
+	
+	public static bool UnexpandPathsMetaR(string[] a, AnyWnd errDlgOwner) {
+		foreach (var v in a) {
+			if (Au.Compiler.CompilerUtil.IsNetAssembly(v)) continue;
+			dialog.showError("Not a .NET assembly.", v, owner: errDlgOwner);
+			return false;
+		}
+		
+		string appDir = folders.ThisAppBS, dllDir = App.Model.DllDirectoryBS;
+		if (a[0].Starts(appDir, true)) {
+			for (int i = 0; i < a.Length; i++) a[i] = a[i][appDir.Length..];
+		} else if (a[0].Starts(dllDir, true)) {
+			for (int i = 0; i < a.Length; i++) a[i] = @"%dll%\" + a[i][dllDir.Length..];
+		} else if (!App.Settings.tools_pathUnexpand) { //unexpand path
+			for (int i = 0; i < a.Length; i++) a[i] = folders.unexpandPath(a[i]);
+		}
+		
+		return true;
+	}
 	
 	/// <summary>
 	/// Takes screenshot of standard size to display in editor's margin.
@@ -781,7 +801,7 @@ static class TUtil {
 		HwndSource _hs;
 		timer _timer;
 		internal osdRect _osr;
-		internal osdText _ost; //SHOULDDO: draw rect and text in same OsdWindow
+		internal osdText _ost; //TODO3: draw rect and text in same OsdWindow
 		bool _capturing;
 		const string c_propName = "Au.Capture";
 		readonly static int s_stopMessage = Api.RegisterWindowMessage(c_propName);

@@ -172,11 +172,30 @@ static class CiUtilExt {
 		return true;
 	}
 	
+	//It seems these have no sense. Never noticed syntax warnings.
+	///// <summary>
+	///// Gets <b>IEnumerable</b> of <b>Diagnostic</b> where <b>Severity</b> is <b>Error</b>.
+	///// </summary>
+	///// <returns>Not null.</returns>
+	//public static IEnumerable<Diagnostic> GetErrors(this SyntaxNode t) {
+	//	if (!t.ContainsDiagnostics) return Array.Empty<Diagnostic>(); //faster
+	//	return t.GetDiagnostics().Where(static o => o.Severity is DiagnosticSeverity.Error);
+	//}
+	
+	///// <summary>
+	///// Gets <b>IEnumerable</b> of <b>Diagnostic</b> where <b>Severity</b> is <b>Error</b>.
+	///// </summary>
+	///// <returns>Not null.</returns>
+	//public static IEnumerable<Diagnostic> GetErrors(this SyntaxToken t) {
+	//	if (!t.ContainsDiagnostics) return Array.Empty<Diagnostic>();
+	//	return t.GetDiagnostics().Where(static o => o.Severity is DiagnosticSeverity.Error);
+	//}
+	
 	/// <summary>
 	/// Returns true if this token is a string, and the closing quote(s) is missing (contains diagnostics error).
 	/// </summary>
 	public static bool NoClosingQuote(this SyntaxNode t) //fast
-		=> t.ContainsDiagnostics && t.GetDiagnostics().Any(o => o.Id is "CS1010" or "CS1039" or "CS8997");
+		=> t.ContainsDiagnostics && t.GetDiagnostics().Any(o => o.Code is 1010 or 1039 or 8997);
 	//Newline in constant, Unterminated string literal, Unterminated raw string literal.
 	//note: SyntaxToken may contain the same diagnostics too, but not always, eg no if $$"""""". Same speed.
 	

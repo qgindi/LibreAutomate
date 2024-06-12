@@ -1,4 +1,4 @@
-#define MyAppName "LibreAutomate C#"
+﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
 #define MyAppVersion "1.2.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
@@ -201,7 +201,7 @@ begin
   
   //If the above failed, use this hardcoded URL. This URL is updated for each new .NET 8.0.x version.
   //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates this string in this .iss file.
-  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/0ff148e7-bbf6-48ed-bdb6-367f4c8ea14f/bd35d787171a1f0de7da6b57cc900ef5/windowsdesktop-runtime-8.0.5-win-x64.exe';
+  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/76e5dbb2-6ae3-4629-9a84-527f8feb709c/09002599b32d5d01dc3aa5dcdffcc984/windowsdesktop-runtime-8.0.6-win-x64.exe';
   
   //rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
   //url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';
@@ -248,28 +248,11 @@ begin
   Result:=true;
 end;
 
-procedure _UninstallOld(dir: String);
-var
-  ResultCode: Integer;
-begin
-	dir:=ExpandConstant('{pf}\') + dir;
-	if SameText(dir, ExpandConstant('{app}')) then exit;
-	if not FileExists(dir + '\Au.Editor.exe') then exit;
-	if not FileExists(dir + '\unins000.exe') then exit;
-	Exec(dir + '\unins000.exe', '/SILENT /SUPPRESSMSGBOXES /NORESTART', '', 0, ewWaitUntilTerminated, ResultCode);
-end;
-
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   case CurStep of
     ssInstall:
     begin
-			//The preview program name changed several times. Uninstall previous preview version if its directory is one of the old names.
-			_UninstallOld('Uiscripter');
-			_UninstallOld('Automaticode');
-			_UninstallOld('Autepad');
-			_UninstallOld('Derobotizer');
-			
       //Cpp_Install(1, ExpandConstant('{app}\'));
     end;
      ssPostInstall:

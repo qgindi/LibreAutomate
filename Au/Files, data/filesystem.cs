@@ -661,7 +661,7 @@ public static partial class filesystem {
 			//print.it(s2);
 			
 			//create intermediate dirs if need, eg if dirFilter returned 2 (don't include the dir but include its children)
-			//SHOULDDO: CreateDirectoryEx
+			//TODO3: CreateDirectoryEx
 			if (f.Level > 0 && (fileFilter != null || dirFilter != null)) {
 				int ifn = _FindFilename(s2) - 1;
 				if (prevParentDir == null || !s2.AsSpan(0, ifn).Eq(prevParentDir)) { //optimize to avoid this code for each file
@@ -1108,7 +1108,7 @@ public static partial class filesystem {
 	internal static void ShellNotify_(uint @event, string path, string path2 = null) {
 		//ThreadPool.QueueUserWorkItem(_ => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2)); //no, this process may end soon
 		Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2);
-		//SHOULDDO: test speed. If slow, use threadpool and the process exit event.
+		//TODO3: test speed. If slow, use threadpool and the process exit event.
 	}
 	
 	/// <summary>

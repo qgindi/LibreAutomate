@@ -709,5 +709,5 @@ public partial class toolbar {
 	}
 }
 
-//SHOULDDO: now toolbars are lost too often.
+//TODO3: now toolbars are lost too often.
 //	Eg after removing autohide.

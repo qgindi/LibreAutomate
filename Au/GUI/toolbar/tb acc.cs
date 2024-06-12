@@ -39,7 +39,7 @@ partial class toolbar : IAccessible {
 		} else {
 			if (b.IsSeparatorOrGroup_) r |= EState.DISABLED;
 			if (b.IsMenu_) r |= EState.HASPOPUP;
-			//SHOULDDO: if offscreen, r |= EState.INVISIBLE | EState.OFFSCREEN;
+			//TODO3: if offscreen, r |= EState.INVISIBLE | EState.OFFSCREEN;
 			//no: EState.HOTTRACKED;
 		}
 		return (int)r - 1;

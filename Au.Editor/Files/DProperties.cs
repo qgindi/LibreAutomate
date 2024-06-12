@@ -5,6 +5,7 @@ using Au.Compiler;
 using Microsoft.Win32;
 using System.Drawing;
 using System.Windows.Documents;
+using Au.Tools;
 
 class DProperties : KDialogWindow {
 	public static void ShowFor(FileNode f) {
@@ -299,20 +300,7 @@ class Class1 {
 		};
 		if (!d.ShowOpen(out string[] a, this)) return;
 		
-		foreach (var v in a) {
-			if (CompilerUtil.IsNetAssembly(v)) continue;
-			dialog.showError("Not a .NET assembly.", v, owner: this);
-			return;
-		}
-		
-		string appDir = folders.ThisAppBS, dllDir = App.Model.DllDirectoryBS;
-		if (a[0].Starts(appDir, true)) {
-			for (int i = 0; i < a.Length; i++) a[i] = a[i][appDir.Length..];
-		} else if (a[0].Starts(dllDir, true)) {
-			for (int i = 0; i < a.Length; i++) a[i] = @"%dll%\" + a[i][dllDir.Length..];
-		} else { //unexpand path
-			for (int i = 0; i < a.Length; i++) a[i] = folders.unexpandPath(a[i]);
-		}
+		if (!TUtil.UnexpandPathsMetaR(a, this)) return;
 		
 		_meta.r.AddRange(a);
 		_ShowInfo_Added(e.Button, _meta.r);
@@ -573,7 +561,7 @@ class Class1 {
 	
 	#region info
 	
-	//SHOULDDO: make a web copy of these and maybe some other infos and tooltips. Maybe not for humans, but for search engines and AI.
+	//TODO3: make a web copy of these and maybe some other infos and tooltips. Maybe not for humans, but for search engines and AI.
 	
 	void _InitInfo() {
 		info.AaTags.AddLinkTag("+changeFileType", _ => {

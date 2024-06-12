@@ -82,9 +82,9 @@ class DSnippets : KDialogWindow {
 		b.AddButton("...", _ => _InsertVar(null));
 		b.End();
 		b.Row(-1).xAddInBorder(out _code);
-		_code.AaTextChanged += (_, _) => { if (!_ignoreEvents) _ti.code = _code.aaaText; };
-		_code.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
-			if (n.code == Sci.NOTIF.SCN_MODIFYATTEMPTRO && _readonly) dialog.showInfo(null, "Default snippets are read-only, but you can clone a default snippet (right click, copy, paste) and edit the clone. Uncheck the default snippet.", owner: c);
+		_code.AaTextChanged += _ => { if (!_ignoreEvents) _ti.code = _code.aaaText; };
+		_code.AaNotify += e => {
+			if (e.n.code == Sci.NOTIF.SCN_MODIFYATTEMPTRO && _readonly) dialog.showInfo(null, "Default snippets are read-only, but you can clone a default snippet (right click, copy, paste) and edit the clone. Uncheck the default snippet.", owner: e.c);
 		};
 		b.End();
 		
@@ -365,7 +365,7 @@ class DSnippets : KDialogWindow {
 	
 	void _InsertVar(string s) {
 		var text = _code.aaaText;
-		int selStart = _code.aaaSelectionStart16, selEnd = _code.aaaSelectionEnd16;
+		var (selStart, selEnd) = _code.aaaSelection(true);
 		bool inPlaceholder = selStart >= 4 && selEnd < text.Length && text[selEnd] == '}' && text[selStart - 1] == ':' && text.LastIndexOf('$', selStart - 2) is int i1 && i1 >= 0 && text.RxIsMatch(@"\G\$\{\d+:\z", range: i1..selStart);
 		
 		if (s != null) {

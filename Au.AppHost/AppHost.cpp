@@ -218,7 +218,7 @@ bool GetPaths(PATHS& p) {
 	p.appDir.assign(w, lenAppDir);
 	p.exeName = w + lenAppDir + 1;
 	p.isEditorOrTaskExe = _StrEqualI(p.exeName, L"Au.Editor.exe") ? 1 : _StrEqualI(p.exeName, L"Au.Task.exe") ? 2 : 0;
-	//SHOULDDO: to detect isEditorOrTaskExe don't use filename. Use eg a resource.
+	//TODO3: to detect isEditorOrTaskExe don't use filename. Use eg a resource.
 
 	//get asmDll
 	if (s_asmName[0] != 0) { //exe created from script. See code in Compiler.cs, function _AppHost.

@@ -134,7 +134,7 @@ partial class FilesModel {
 		FilesModel m = null;
 		g1:
 		try {
-			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin processes.
+			//TODO3: if editor runs as admin, the workspace directory should be write-protected from non-admin processes.
 			
 			if (s_isNewWorkspace = !filesystem.exists(xmlFile).File) {
 				filesystem.copy(folders.ThisAppBS + @"Default\Workspace", wsDir);
@@ -733,7 +733,7 @@ partial class FilesModel {
 			print.it($"<>Info: {s1} <explore>{filePath}<>");
 		} else {
 			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
-			//SHOULDDO: add all paths to List, and delete finally in single call.
+			//TODO3: add all paths to List, and delete finally in single call.
 			
 			//FUTURE: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		}
@@ -755,7 +755,7 @@ partial class FilesModel {
 		return true;
 	}
 	
-	//SHOULDDO: once (2 times) crashed when deleting folder "@Triggers and toolbars".
+	//TODO3: once (2 times) crashed when deleting folder "@Triggers and toolbars".
 	//	Both times in editor was opened a class file from the folder.
 	//	First time: messagebox "exception processing message, unexpected parameters".
 	//		After restarting were deleted files and tree items. Just several warnings about not found file id.

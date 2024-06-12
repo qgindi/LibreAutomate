@@ -302,8 +302,6 @@ public class KPopup {
 				} else {
 					if (wm == _w) return;
 					if (wm.IsOfThisThread && wm.ZorderIsAbove(_w)) return;
-					//SHOULDDO: not always closes when need.
-					// Example: in a KTreeView edit label, then activate a floating panel (eg Cookbook).
 				}
 			}
 			Close();

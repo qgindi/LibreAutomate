@@ -27,6 +27,22 @@ static class CodeUtil {
 	public static bool IsSpace(string code, int pos) => (uint)pos < code.Length && code[pos] is ' ' or '\t';
 	
 	/// <summary>
+	/// Skips <c>' '</c> and <c>'\t'</c> characters after <i>pos</i>.
+	/// </summary>
+	public static int SkipSpace(string code, int pos) {
+		while (IsSpace(code, pos)) pos++;
+		return pos;
+	}
+	
+	/// <summary>
+	/// Skips <c>' '</c> and <c>'\t'</c> characters before <i>pos</i>.
+	/// </summary>
+	public static int SkipSpaceBack(string code, int pos) {
+		while (IsSpace(code, pos - 1)) pos--;
+		return pos;
+	}
+	
+	/// <summary>
 	/// Returns the start and end of the range consisting of <c>' '</c> and <c>'\t'</c> characters around <i>pos</i>.
 	/// </summary>
 	public static (int start, int end) SkipSpaceAround(string code, int pos) {
@@ -129,7 +145,7 @@ static class CodeUtil {
 	/// Else returns empty range at caret position.
 	/// </summary>
 	public static (int start, int end) GetSurroundRange(CodeInfo.Context k) {
-		int from = k.sci.aaaSelectionStart16, to = k.sci.aaaSelectionEnd16;
+		var (from, to) = k.sci.aaaSelection(true);
 		if (from == to) {
 			var stat = CiUtil.GetStatementEtcFromPos(k, from);
 			if (stat is not (null or BlockSyntax)) {

@@ -18,7 +18,8 @@ All significant changes of that version must be documented in Other/DocFX/_doc/c
 
 HOW TO RELEASE A NEW VERSION
 
-Review all TODO. Occasionally review SHOULDDO and FUTURE.
+Review all TODO. Occasionally review TODO2, FUTURE, CONSIDER.
+	TODO2 means "low priority TODO". If after a long time it still seems low priority, delete the comment or replace with TODO3.
 
 May need to test something. Eg some changes could break some main features.
 	Also test new and some main features on other OS.

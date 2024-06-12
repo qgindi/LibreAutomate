@@ -66,7 +66,7 @@ public partial class toolbar : MTBase {
 		settingsFile = flags.Has(TBCtor.DontSaveSettings) ? null : (settingsFile ?? getSettingsFilePath(_name));
 		_sett = _Settings.Load(settingsFile, flags.Has(TBCtor.ResetSettings));
 		
-		_offsets = _sett.offsets; //SHOULDDO: don't use saved offsets if this toolbar was free and now is owned or vice versa. Because the position is irrelevent and may be far/offscreen. It usually happens when testing.
+		_offsets = _sett.offsets; //TODO3: don't use saved offsets if this toolbar was free and now is owned or vice versa. Because the position is irrelevent and may be far/offscreen. It usually happens when testing.
 		
 		ActionThread = true;
 		ExtractIconPathFromCode = true;
@@ -495,9 +495,8 @@ public partial class toolbar : MTBase {
 		case Api.WM_NCDESTROY:
 			_WmNcdestroy();
 			//PROBLEM: not called if thread ends without closing the toolbar window.
-			//	Then saves settings only on process exit. Not if process terminated, eg by the 'end task' command.
+			//	Then saves settings only on process exit. Not if process terminated.
 			//	In most cases it isn't a problem because saves settings every 2 s (IIRC).
-			//	SHOULDDO: the 'end task' command should be more intelligent. At least save settings.
 			break;
 		case Api.WM_ERASEBKGND:
 			return 0;

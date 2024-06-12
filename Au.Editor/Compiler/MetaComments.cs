@@ -239,7 +239,7 @@ class MetaComments {
 	//	if (ProjectReferences == null || !ProjectReferences.Any(o => o.m.ProjectReferences != null)) return ProjectReferences;
 	//	var a = new List<(FileNode f, MetaComments m)>(ProjectReferences);
 	//	foreach (var v in ProjectReferences) {
-	//		//todo
+	//		//undone
 	//	}
 	//	return a;
 	//}
@@ -561,7 +561,7 @@ class MetaComments {
 				try {
 					//var p1 = perf.local();
 					if (!References.Resolve(s1, alias, name[0] == 'c', false)) {
-						_ErrorV("reference assembly not found: " + s1); //FUTURE: need more info, or link to Help
+						_ErrorV("reference assembly not found: " + s1); //TODO3: need more info, or link to Help
 					}
 					//p1.NW('r');
 				}

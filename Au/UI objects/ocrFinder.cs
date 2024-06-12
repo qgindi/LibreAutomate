@@ -77,7 +77,7 @@ public class ocrFinder {
 	/// <inheritdoc cref="ocr.wait"/>
 	public ocr Wait(Seconds timeout, IFArea area)
 		=> Wait_(Action_.Wait, timeout, area) ? Result : null;
-	//SHOULDDO: suspend waiting while a mouse button is pressed.
+	//TODO3: suspend waiting while a mouse button is pressed.
 	//	Now, eg if finds while scrolling, although MouseMove waits until buttons released, but moves to the old (wrong) place.
 
 	/// <inheritdoc cref="ocr.waitNot"/>

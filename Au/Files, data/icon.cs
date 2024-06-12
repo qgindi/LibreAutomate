@@ -334,7 +334,7 @@ namespace Au {
 							//print.it(size, realSize, index, file);
 							hi = Api.CopyImage(hi, Api.IMAGE_ICON, size, size, Api.LR_COPYDELETEORG | Api.LR_COPYRETURNORG);
 							//never mind if fails, it's too rare.
-							//SHOULDDO: test LR_COPYFROMRESOURCE.
+							//TODO3: test LR_COPYFROMRESOURCE.
 						}
 						return _New(hi);
 					}
@@ -517,7 +517,7 @@ namespace Au {
 				if (v != null) return v;
 			}
 			
-			bool big = size >= 24; //SHOULDDO: make high-DPI-aware. How?
+			bool big = size >= 24; //TODO3: make high-DPI-aware. How?
 			bool ok = w.SendTimeout(2000, out nint R, Api.WM_GETICON, big ? 1 : 0);
 			if (R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, big ? 0 : 1);
 			if (R == 0) R = WndUtil.GetClassLong(w, big ? GCL.HICON : GCL.HICONSM);
@@ -705,7 +705,7 @@ namespace Au {
 					_time = 0;
 					_file = null;
 				}
-				//SHOULDDO: implement global icon cache here. File-based.
+				//TODO3: implement global icon cache here. File-based.
 			}
 			
 			public void Dispose() {

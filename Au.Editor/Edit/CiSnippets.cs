@@ -100,7 +100,7 @@ static class CiSnippets {
 				break;
 			case CompilationUnitSyntax:
 			case null:
-				context = _Context.Namespace | _Context.Function; //Function for top-level statements. SHOULDDO: only if in correct place.
+				context = _Context.Namespace | _Context.Function; //Function for top-level statements. TODO3: only if in correct place.
 				break;
 			case LambdaExpressionSyntax:
 			case ArrowExpressionClauseSyntax: //like void F() =>here
@@ -277,7 +277,7 @@ static class CiSnippets {
 						var d2 = cu2.GetDiagnostics();
 						int n2 = d2.Count();
 						if (n2 >= n1) return false;
-						if (n2 > 0 && d2.Any(o => o.Id == "CS1519")) return false; //"Invalid token 'token' in class, struct, or interface member declaration". Eg elseSnippet.
+						if (n2 > 0 && d2.Any(o => o.Code == 1519)) return false; //"Invalid token 'token' in class, struct, or interface member declaration". Eg elseSnippet.
 						return true;
 					}
 					catch { return false; }
@@ -288,8 +288,8 @@ static class CiSnippets {
 		
 		static _Context _GetFromAttr(string s) {
 			_Context r = 0;
-			foreach (var seg in s.Segments("|")) {
-				r |= s.AsSpan(seg.Range) switch {
+			foreach (var se in s.Split(.., '|')) {
+				r |= s.AsSpan(se.Range) switch {
 					"Function" => _Context.Function | _Context.Arrow,
 					"Type" => _Context.Type,
 					"Namespace" => _Context.Namespace,

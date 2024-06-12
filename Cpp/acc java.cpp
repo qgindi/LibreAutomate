@@ -785,4 +785,4 @@ IAccessible* AccJavaFromPoint(POINT p, HWND w)
 	return jab::AccFromPoint(p, w);
 }
 
-//SHOULDDO: when Delm creates tree and tries to find the captured object, use isSameObject, not rect+role. If possible and faster.
+//TODO3: when Delm creates tree and tries to find the captured object, use isSameObject, not rect+role. If possible and faster.

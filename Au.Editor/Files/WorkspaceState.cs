@@ -136,7 +136,7 @@ class WorkspaceState : IDisposable {
 		var hs = _model.OpenFiles.Select(o => o.Id).ToHashSet();
 		var b = new StringBuilder(_s.editor.Length);
 		int n1 = 0, n2 = 0;
-		foreach (var t in _s.editor.Segments("|", SegFlags.NoEmpty)) {
+		foreach (var t in _s.editor.Split(.., '|', StringSplitOptions.RemoveEmptyEntries)) {
 			n1++;
 			if (!_s.editor.ToInt(out uint id, t.start, out int i, STIFlags.IsHexWithout0x)) continue; //remove if _js.editor corrupt
 			if (!hs.Contains(id)) { //the file isn't in OpenFiles
@@ -164,7 +164,7 @@ class WorkspaceState : IDisposable {
 	/// <param name="what">0 open, 1 expanded.</param>
 	public IEnumerable<uint> FilesGet(int what) {
 		var s = what switch { 0 => _s.open, 1 => _s.expanded, _ => throw null };
-		foreach (var v in s.Segments("|")) {
+		foreach (var v in s.Split(.., '|')) {
 			yield return (uint)s.ToInt(v.start, STIFlags.IsHexWithout0x);
 		}
 	}
@@ -198,7 +198,7 @@ class WorkspaceState : IDisposable {
 			_file = model.WorkspaceDirectory + @"\.state\state";
 			try {
 				var s = filesystem.loadText(_file);
-				foreach (var line in s.Segments(SegSep.Line)) {
+				foreach (var line in s.Lines(..)) {
 					int what = s.Eq(line.start, false, "editor|", "open|", "expanded|");
 					if (what == 0) continue;
 					switch (what) {

@@ -32,15 +32,6 @@ class CiErrors {
 		
 		var a = semo.GetDiagnostics(TextSpan.FromBounds(start16, end16));
 		
-		//ImmutableArray<Diagnostic> a = default;
-		//try { a = semo.GetDiagnostics(TextSpan.FromBounds(start16, end16)); }
-		//catch(ArgumentException e1) { print.it(e1); print.it(start16, end16, code.Length, semo.SyntaxTree.ToString()); }
-		//If script code is like 'usinf var c = class C1 {}'), throws ArgumentException("invalid span"), although the span is 0..code.Length.
-		//	Then semo.SyntaxTree.ToString() prints 'usinf var c = '.
-		//	Also then invalid coloring. And completion etc throws exceptions.
-		//Other case: 'int i = (i)'. Next line: 'var v = ...'. It seems only if in top-level statements.
-		//Never mind. Rare.
-		
 		if (!a.IsDefaultOrEmpty) {
 			_codeDiag = new(a.Length);
 			foreach (var d_ in a) {

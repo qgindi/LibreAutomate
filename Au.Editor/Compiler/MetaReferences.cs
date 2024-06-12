@@ -263,7 +263,7 @@ class MetaReferences {
 			if (!DefaultReferences.TryGetValue(name, out var def)) return false;
 			
 			if (_hsNoRef?.Contains(name) ?? false) return false;
-			//SHOULDDO: what if eg two nuget packages (from different folders) have two different versions of that assembly?
+			//TODO3: what if eg two nuget packages (from different folders) have two different versions of that assembly?
 			//	Eg from _refs already removed v6 and added v8, and now trying to add v7 or v9.
 			//	Rare.
 			//	Now should try to find in _refs. If not found in default area and found in nondefault area, replace the nondefault.
@@ -280,7 +280,7 @@ class MetaReferences {
 				return null;
 			}
 			
-			//SHOULDDO: also for k dependencies that aren't in meta
+			//TODO3: also for k dependencies that aren't in meta
 		}
 	}
 	

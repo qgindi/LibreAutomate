@@ -4,7 +4,7 @@ using Au.Controls;
 
 //FUTURE: add UI to format code 'w = w.Get.Right();' etc.
 //FUTURE: init from code string.
-//SHOULDDO: try to find and select control in current tree when captured from same window. Like in Delm.
+//TODO3: try to find and select control in current tree when captured from same window. Like in Delm.
 
 namespace Au.Tools;
 
@@ -731,7 +731,7 @@ For example, if 1, gets the second matching control.");
 
 		_info.Info(_tree, "Tree view", "All child/descendant controls in the window.");
 
-		//SHOULDDO: now no info for HwndHost
+		//TODO3: now no info for HwndHost
 		//			_Info(_code, "Code",
 		//@"Created code to find the window or control.
 		//Some parts can be edited directly.

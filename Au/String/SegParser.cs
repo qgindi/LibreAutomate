@@ -8,6 +8,7 @@ namespace Au.More {
 	/// <remarks>
 	/// Can be used with <c>foreach</c>. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="ExtString.Segments"/> with <c>foreach</c>.
 	/// </remarks>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. See comments in ExtString.Segments.
 	public struct SegParser : IEnumerable<StartEnd>, IEnumerator<StartEnd> {
 		readonly string _separators;
 		readonly string _s;
@@ -32,8 +33,6 @@ namespace Au.More {
 			_start = 0;
 			_end = _sStart - 1;
 		}
-		//FUTURE: support multiple separator chars and strings.
-		//	Eg if separators starts with 2 same chars, that char is used to delimit separators, like "||,|;|substring".
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		[NoDoc]
@@ -157,6 +156,7 @@ namespace Au.Types {
 	/// <summary>
 	/// Contains several string constants that can be used with some "split string" functions of this library to specify separators.
 	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
 	public static class SegSep {
 		/// <summary>
 		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns <c>true</c>.
@@ -180,57 +180,12 @@ namespace Au.Types {
 	/// Flags for <see cref="ExtString.Segments"/> and some other functions.
 	/// </summary>
 	[Flags]
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
 	public enum SegFlags : byte {
 		/// <summary>
 		/// Don't return empty substrings.
 		/// For example, is string is <c>"one  two "</c> and separators is <c>" "</c>, return <c>{"one", "two"}</c> instead of <c>{"one", "", "two", ""}</c>.
 		/// </summary>
 		NoEmpty = 1,
-
-		///// <summary>
-		///// Remove spaces around separators. Only ASCII space characters.
-		///// </summary>
-		//TrimSpace = 2,
-		//SHOULDDO: implement
-
-		//rejected. Rarely used, makes slower, let use String.Split.
-		///// <summary>
-		///// The separators argument is string separator, not separator characters.
-		///// </summary>
-		//StringSeparator = ,
-	}
-
-	/// <summary>
-	/// Struct with fields <c>int start</c> and <c>int end</c>.
-	/// </summary>
-	public record struct StartEnd {
-		///
-		public int start;
-		///
-		public int end;
-
-		///
-		public StartEnd(int start, int end) { this.start = start; this.end = end; }
-
-		/// <summary>
-		/// Returns <c>end - start</c>.
-		/// </summary>
-		public int Length => end - start;
-
-		/// <summary>
-		/// Converts this to <see cref="Range"/>.
-		/// Can be used to get substring, like <c>s[x.Range]</c> instead of <c>s[x.start..x.end]</c>.
-		/// </summary>
-		public Range Range => start..end;
-
-		//public static implicit operator Range(StartEnd s) => s.start..s.end; //could be used to get substring like s[se], but error
-
-		/// <summary>
-		/// Gets string span.
-		/// </summary>
-		public RStr Span(string s) => s.AsSpan(start, end - start);
-
-		///
-		public override string ToString() => $"({start}, {end})";
 	}
 }

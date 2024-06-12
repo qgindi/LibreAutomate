@@ -344,7 +344,7 @@ static class Menus {
 			
 			[Command("Indent selected lines", keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown, separator = true)]
 			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }
-			//SHOULDDO: now does not indent empty lines if was no indentation.
+			//TODO3: now does not indent empty lines if was no indentation.
 			
 			[Command("Unindent selected lines", keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease" + brown)]
 			public static void Unindent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_BACKTAB); }

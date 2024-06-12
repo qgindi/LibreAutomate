@@ -86,16 +86,12 @@ class CiAutocorrect {
 	/// Also called by SciBeforeKey on Backspace and Tab. Then ch is '\b' or '\t'.
 	/// </summary>
 	public bool SciBeforeCharAdded(SciCode doc, char ch) {
+		if (doc.aaaHasSelection) return _Selection();
+		
 		int pos8 = doc.aaaCurrentPos8;
 		if (pos8 == doc.aaaLen8 && ch != '\b' && !CodeInfo._compl.IsVisibleUI) { //if pos8 is at the end of text, add newline
-			if (doc.aaaHasSelection) {
-				int i1 = doc.aaaSelectionStart8, i2 = doc.aaaSelectionEnd8;
-				doc.aaaInsertText(false, pos8, "\r\n");
-				doc.aaaSelect(false, i1, i2);
-			} else doc.aaaInsertText(false, pos8, "\r\n");
+			doc.aaaInsertText(false, pos8, "\r\n");
 		}
-		
-		if (doc.aaaHasSelection) return false;
 		
 		if (ch == ';') return _OnSemicolon(anywhere: false);
 		
@@ -177,6 +173,40 @@ class CiAutocorrect {
 						return true;
 					}
 				}
+			}
+			return false;
+		}
+		
+		bool _Selection() {
+			if (ch is '(' or '{' or '[') {
+				var (start, end) = doc.aaaSelection(true);
+				
+				//don't surround if probably it is unwanted
+				var s = doc.aaaSelectedText();
+				if (end - start == 1) {
+					if (char.IsPunctuation(s, 0) || char.IsSymbol(s, 0)) return false; //unlikely the coder wants to enclose a punctuation or operator char. Probably wants to replace. Eg `;' -> ` {  }`.
+				} else {
+					if (ch is '{' && s.RxIsMatch(@"^\s*\(\s*\)\s*$")) return false; //eg coder wants to replace `new C()` -> `new C {  }`
+					if (ch is '(' && s.RxIsMatch(@"^\s*\{\s*\}\s*$")) return false; //maybe `new C {  }` -> `new C()`
+				}
+				
+				using var undo = new SciCode.aaaUndoAction(doc);
+				string s1, s2;
+				if (ch is '(') (s1, s2) = ("(", ")");
+				else if (ch is '[') (s1, s2) = ("[", "]");
+				else {
+					(s1, s2) = ("{ ", " }");
+					var code = doc.aaaText;
+					if (code[end - 1] is '\n') {
+						s2 = "}\r\n";
+						if (start == 0 || code[start - 1] is '\n') s1 = "{\r\n";
+						else s1 = App.Settings.ci_formatCompact ? "{\r\n" : "\r\n{\r\n";
+					}
+				}
+				doc.aaaInsertText(true, end, s2);
+				doc.aaaInsertText(true, start, s1);
+				doc.aaaSelect(true, start + s1.Length, end + s1.Length);
+				return true;
 			}
 			return false;
 		}
@@ -405,31 +435,66 @@ class CiAutocorrect {
 		
 		if (!anywhere) {
 			var tk1 = token.Kind();
-			if (!(tk1 is SyntaxKind.CloseParenToken or SyntaxKind.CloseBracketToken
-				&& node0 is BaseArgumentListSyntax or BaseParameterListSyntax or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax or DoStatementSyntax
-				&& cd.pos == token.SpanStart)) return false;
+			if (!(tk1 is SyntaxKind.CloseParenToken or SyntaxKind.CloseBracketToken)) return false;
+			if (!(node0 is BaseArgumentListSyntax or BaseParameterListSyntax or ArrayRankSpecifierSyntax
+				or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax
+				or DoStatementSyntax)
+				) return false;
+			if (cd.pos != token.SpanStart) return false;
 		}
 		
 		var nodeStat = node0.GetStatementEtc(cd.pos);
 		if (nodeStat == null) return false;
 		
 		var lastToken = nodeStat.GetLastToken(includeZeroWidth: true);
-		var tk2 = lastToken.Kind();
-		if (tk2 is SyntaxKind.SemicolonToken || (tk2 is SyntaxKind.CloseBraceToken && nodeStat is TypeDeclarationSyntax tds && tds.ParameterList != null)) {
-			//CiUtil.PrintNode(nodeStat, printErrors: true);
-			Debug_.PrintIf(nodeStat.ContainsSkippedText); //SHOULDDO: test, maybe it helps to detect code incorrectly interpreted by Roslyn
-			if (nodeStat.GetDiagnostics().Any(o => o.Id is "CS1513" or "CS1026")) return false; //"} expected" or ") expected". Eg in `timer.after(1, _=>{print.it(1));` after `(1)`.
-			if (lastToken.IsMissing) {
-				_InsertNodeCompletionTextWithAutoformat(cd, nodeStat, ";", lastToken.GetPreviousToken().Span.End);
-			} else {
-				cd.sci.aaaGoToPos(true, lastToken.SpanStart + 1);
-			}
-		} else return false;
+		if (!_GetLastTokenForSemicolonStatementCompletion(ref lastToken, out bool isComplete)) return false;
+		if (isComplete) {
+			cd.sci.aaaGoToPos(true, lastToken.SpanStart + 1);
+		} else {
+			_InsertNodeCompletionTextWithAutoformat(cd, nodeStat, ";", lastToken.Span.End);
+		}
 		
 		return true;
 		
 		//rejected: make similar feature for '{'. On '{': `if (...|)` -> `if (...) { | }`. `Func(...|)` -> `Func(...) { | }`.
 		//	Rarely used. Much work to detect all possible cases where `(...{ })` is valid. Eg lambda/anonymous func, `is`, `switch`, `with`, `new`, `new X`, `new X()`, `new X[]`.
+	}
+	
+	/// <param name="lastToken">
+	/// In: last token of the statement etc node, found like `nodeStat.GetLastToken(includeZeroWidth: true)`.
+	/// Out: if <i>isComplete</i> false - the existing token before missing `;`. Else the existing `;` token (unchanged).</param>
+	/// <param name="isComplete">`;` exists.</param>
+	/// <returns>false if can't determine where `;` should be.</returns>
+	static bool _GetLastTokenForSemicolonStatementCompletion(ref SyntaxToken lastToken, out bool isComplete) {
+		isComplete = false;
+		var node = lastToken.Parent;
+		var tk2 = lastToken.Kind();
+		bool isSemicolon = tk2 is SyntaxKind.SemicolonToken;
+		if (isSemicolon || (tk2 is SyntaxKind.CloseBraceToken && node is TypeDeclarationSyntax tds && tds.ParameterList != null)) {
+			//CiUtil.PrintNode(node, printErrors: true);
+			var diag = isSemicolon && node.ContainsDiagnostics ? node.GetDiagnostics() : null;
+			if (isSemicolon && diag?.Any(o => o.Code is 1513 or 1026) == true) return false; //"} expected" or ") expected". Eg in `timer.after(1, _=>{print.it(1));` after `(1)`.
+			if (node.ContainsSkippedText) {
+				//code examples (TLS):
+				//	var k = (6, 9) void L() {}
+				//	var k = (6, 9) void L() {int i;}
+				//	int i=5 print.it(1);
+				//	var s="aaa bbb" char c = 'a';
+				//	var a = s.Lines() for (int i = 0; i < count; i++) { }
+				if (isSemicolon && node is LocalDeclarationStatementSyntax && diag?.FirstOrDefault(static o => o.Code is 1003) is { } d) { //", expected"
+					lastToken = node.FindTokenOnLeftOfPosition(d.Location.SourceSpan.Start);
+				} else {
+					Debug_.Print("ContainsSkippedText");
+					return false;
+				}
+			} else if (lastToken.IsMissing) {
+				lastToken = lastToken.GetPreviousToken();
+			} else {
+				isComplete = true;
+			}
+			return true;
+		}
+		return false;
 	}
 	
 	static void _OnEnter(int mod) {
@@ -439,7 +504,7 @@ class CiAutocorrect {
 		if (!_OnEnter2(mod)) doc.Call(Sci.SCI_NEWLINE);
 	}
 	
-	//mod: Ctrl 0, Shift 1, Ctrl+Shift 2, none -1.
+	//mod: Ctrl 0, Shift 1, Ctrl+Shift 2, none -1, don't correct -2.
 	static bool _OnEnter2(int mod) {
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 		var doc = cd.sci;
@@ -459,10 +524,13 @@ class CiAutocorrect {
 		var tk1 = tok1.Kind();
 		SyntaxNode nodeFromPos = tok1.Parent;
 		
-		if (!anywhere) {
+		if (!anywhere && mod != -2) {
 			if (tk1 is SyntaxKind.CloseParenToken or SyntaxKind.CloseBracketToken && tok1.SpanStart == pos) {
 				if (!(code[pos - 1] is ',' or ' ' || App.Settings.ci_classicEnter || mod >= 0)) {
-					canCorrect = nodeFromPos is BaseArgumentListSyntax or BaseParameterListSyntax or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax or CatchDeclarationSyntax or CatchFilterClauseSyntax or (StatementSyntax and not BlockSyntax) || _IsSwitchCast(nodeFromPos);
+					canCorrect = nodeFromPos is BaseArgumentListSyntax or BaseParameterListSyntax or ArrayRankSpecifierSyntax
+						or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax
+						or CatchDeclarationSyntax or CatchFilterClauseSyntax
+						or (StatementSyntax and not BlockSyntax) || _IsSwitchCast(nodeFromPos);
 				}
 			} else if (!isEOF) {
 				int r = _InNonblankTriviaOrStringOrChar(cd, tok1);
@@ -574,8 +642,8 @@ class CiAutocorrect {
 			//for statements that should end with semicolon
 			void _WithSemicolon(in SyntaxToken semicolonToken) {
 				if (!semicolonToken.IsKind(SyntaxKind.SemicolonToken)) { Debug_.Print(semicolonToken.Kind()); return; }
-				if (needSemicolon = semicolonToken.IsMissing) afterToken = semicolonToken.GetPreviousToken();
-				else afterToken = semicolonToken;
+				afterToken = semicolonToken;
+				if (_GetLastTokenForSemicolonStatementCompletion(ref afterToken, out bool isComplete)) needSemicolon = !isComplete;
 			}
 			
 			//for enum members and object/collection initializer expression elements
@@ -604,6 +672,22 @@ class CiAutocorrect {
 				}
 				
 				_InsertNodeCompletionTextWithAutoformat(cd, node, s, pos, needBraces ? 3 + sInd.Length : 0);
+				
+				if (!anywhere) {
+					pos = cd.pos;
+					doc.AaTextChanged += _doc_AaTextChanged;
+					void _doc_AaTextChanged(KScintilla.AaEventHandlerArgs e) {
+						e.c.AaTextChanged -= _doc_AaTextChanged;
+						if (e.n.modificationType.Has(Sci.MOD.SC_PERFORMED_UNDO)) {
+							App.Dispatcher.InvokeAsync(() => {
+								if (Panels.Editor.ActiveDoc != doc) return;
+								doc.aaaCurrentPos16 = pos;
+								_OnEnter(-2);
+							});
+						}
+					}
+				}
+				
 				return true;
 			} else {
 				doc.aaaCurrentPos16 = pos;
@@ -631,16 +715,21 @@ class CiAutocorrect {
 				if (noInd && !same) return false;
 				
 				string sInd2 = (same ? ind : ind - 1).ToString();
-				sAfter = "\r\n" + sInd2;
 				
-				if (!App.Settings.ci_formatCompact // `owner {` -> `owner\r\n{`
-					&& code[from - 1] == '{'
-					&& !(node is BlockSyntax && node.Parent is BlockSyntax or GlobalStatementSyntax)
-					&& node is not InterpolationSyntax
-					&& !CodeUtil.IsLineStart(code, from - 1, out int i1)
-					) {
-					from = i1;
-					sBefore = "\r\n" + (ind - 1).ToString() + "{";
+				if (!cbt.GetPreviousToken().IsKind(SyntaxKind.OpenBraceToken)) { //if `{ tokens | }`, don't add empty line, usually it is unwanted
+					sInd = sInd2;
+				} else {
+					sAfter = "\r\n" + sInd2;
+					
+					if (!App.Settings.ci_formatCompact // `owner {` -> `owner\r\n{`
+						&& code[from - 1] == '{'
+						&& !(node is BlockSyntax && node.Parent is BlockSyntax or GlobalStatementSyntax)
+						&& node is not InterpolationSyntax
+						&& !CodeUtil.IsLineStart(code, from - 1, out int i1)
+						) {
+						from = i1;
+						sBefore = "\r\n" + (ind - 1).ToString() + "{";
+					}
 				}
 			} else {
 				if (noInd) return false;
@@ -799,7 +888,7 @@ class CiAutocorrect {
 							if (code[to - 1] == '\n') s = sInd + "\r\n"; else { s = "\r\n" + sInd + "\r\n" + sInd; moveCaret -= sInd.Length; }
 						}
 						
-						using SciCode.aaaUndoAction undo = new (cd.sci);
+						using SciCode.aaaUndoAction undo = new(cd.sci);
 						cd.sci.aaaInsertText(true, to, s);
 						cd.sci.aaaCurrentPos16 = to + s.Length + moveCaret;
 						if (needSemicolon) cd.sci.aaaInsertText(true, braceAt + 1, ";");
@@ -872,12 +961,12 @@ class CiAutocorrect {
 	/// Uses single text modification operation (insert or replace).
 	/// </summary>
 	/// <param name="cd"></param>
-	/// <param name="node">Node to format.</param>
+	/// <param name="node">Node to format. Does not format if null.</param>
 	/// <param name="sInsert">Text to insert. Eg ";" or " {  }". Does not format it.</param>
 	/// <param name="pos">The end of the span of the last normal token of the node. Formats until it.</param>
 	/// <param name="finalPosMinus">Move the final caret position from the end of inserted text back by this count chars.</param>
 	static void _InsertNodeCompletionTextWithAutoformat(CodeInfo.Context cd, SyntaxNode node, string sInsert, int pos, int finalPosMinus = 0) {
-		if (App.Settings.ci_formatAuto) {
+		if (App.Settings.ci_formatAuto && node != null) {
 			int from = node.GetRealFullSpan(spanEnd: true).Start, to = pos, pos0 = pos;
 			if (ModifyCode.Format(cd, ref from, ref to, ref pos, ref pos) is { } a) {
 				Debug.Assert(pos >= a[^1].Span.End);

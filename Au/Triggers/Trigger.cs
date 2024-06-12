@@ -135,7 +135,7 @@ public abstract class ActionTrigger {
 		}
 #endif
 		return true;
-		//SHOULDDO: measure time more intelligently, like in MatchScope, but maybe give more time.
+		//TODO3: measure time more intelligently, like in MatchScope, but maybe give more time.
 	}
 	
 	internal bool HasFunc => _funcBefore != null || _funcAfter != null;

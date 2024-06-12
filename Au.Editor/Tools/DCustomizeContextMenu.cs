@@ -30,13 +30,13 @@ Right - commands to add to the context menu of the {ownerName}. Separator -.
 		t2.AaInitUseDefaultContextMenu = true;
 		t2.aaaText = text;
 		//b.Validation(o => never mind);
-		t2.AaNotify += (KScintilla c, ref Sci.SCNotification n) => {
+		t2.AaNotify += e => {
 			unsafe {
-				if (n.code == Sci.NOTIF.SCN_MODIFIED) {
+				if (e.n.code == Sci.NOTIF.SCN_MODIFIED) {
 					//trim tabs
-					if (n.modificationType.Has(Sci.MOD.SC_MOD_INSERTCHECK) && n.length > 1 && n.textUTF8[0] == 9) {
-						var s = n.Text.RxReplace(@"(?m)^\t+", "");
-						c.aaaSetString(Sci.SCI_CHANGEINSERTION, 0, s, true);
+					if (e.n.modificationType.Has(Sci.MOD.SC_MOD_INSERTCHECK) && e.n.length > 1 && e.n.textUTF8[0] == 9) {
+						var s = e.n.Text.RxReplace(@"(?m)^\t+", "");
+						e.c.aaaSetString(Sci.SCI_CHANGEINSERTION, 0, s, true);
 					}
 				}
 			}

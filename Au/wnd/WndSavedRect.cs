@@ -1,5 +1,5 @@
-//SHOULDDO: it seems makes WPF window visible too early.
-//SHOULDDO: if window not resizable, restore only position, not size.
+//TODO3: it seems makes WPF window visible too early.
+//TODO3: if window not resizable, restore only position, not size.
 
 namespace Au.More;
 
@@ -118,7 +118,7 @@ public struct WndSavedRect {
 			var v = scr.Info;
 			r.Offset(v.workArea.left - v.rect.left, v.workArea.top - v.rect.top);
 		}
-		r.EnsureInScreen(scr, workArea: !IsToolWindow); //SHOULDDO: use simple rect adjust. Or add EnsureInRect.
+		r.EnsureInScreen(scr, workArea: !IsToolWindow); //TODO3: use simple rect adjust. Or add EnsureInRect.
 		return r;
 	}
 

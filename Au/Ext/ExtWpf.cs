@@ -88,7 +88,7 @@ public static class ExtWpf {
 			var v = VisualTreeHelper.GetChild(t, i);
 			yield return v;
 			foreach (var k in VisualDescendants(v)) yield return k;
-			//SHOULDDO: now creates much garbage if tree is big.
+			//TODO3: now creates much garbage if tree is big.
 			//	See https://stackoverflow.com/a/30441479/2547338.
 			//	See ExtMisc.Descendants. But it cannot be used here because VisualTreeHelper does not give an IEnumerable.
 		}
@@ -187,7 +187,7 @@ public static class ExtWpf {
 	public static bool True(this CheckBox t) => t.IsChecked == true;
 	
 #if true
-	//SHOULDDO: does not work if this is called in ctor and caller sets Title afterwards.
+	//TODO3: does not work if this is called in ctor and caller sets Title afterwards.
 	static unsafe void _Move(Window t, int x, int y, in RECT r, bool andSize) {
 		var wstate = t.WindowState;
 		if (t.IsLoaded) {

@@ -27,40 +27,10 @@ While typing, editor completes words, inserts code snippets, adds `()`, `;`, `{}
 
 <!--
 To generate TOC with #links, use the VS context menu command "Generate TOC". Then remove the indentation.
-SHOULDDO: now the Back button does not scroll to TOC. And the same in all DocFX-generated pages.
+BAD: now the Back button does not scroll to TOC. And the same in all DocFX-generated pages.
 -->
 <!--TOC-->
-- [List of symbols, autocompletion](#list-of-symbols-autocompletion)
-- [Bracket completion](#bracket-completion)
-- [Statement completion](#statement-completion)
-- [Auto indentation](#auto-indentation)
-- [Parameter info](#parameter-info)
-- [Quick info](#quick-info)
-- [Error info](#error-info)
-- [XML documentation comments](#xml-documentation-comments)
-- [Go to symbol documentation](#go-to-symbol-documentation)
-- [Go to symbol definition (source code), base](#go-to-symbol-definition-source-code-base)
-- [Go to script, file, URL](#go-to-script-file-url)
-- [Find and replace text](#find-and-replace-text)
-- [Find symbol references](#find-symbol-references)
-- [Highlight symbol references and matching braces](#highlight-symbol-references-and-matching-braces)
-- [Find symbol](#find-symbol)
-- [Rename symbol](#rename-symbol)
-- [Outline of current file](#outline-of-current-file)
-- [Navigate back/forward](#navigate-backforward)
-- [Bookmarks](#bookmarks)
-- [Code coloring](#code-coloring)
-- [Text folding](#text-folding)
-- [Separators between functions/types](#separators-between-functionstypes)
-- [Snippets](#snippets)
-- [Images in code](#images-in-code)
-- [Format code](#format-code)
-- [Comment/uncomment/indent/unindent lines](#commentuncommentindentunindent-lines)
-- [Capture UI elements, insert regex etc, implement interface](#capture-ui-elements-insert-regex-etc-implement-interface)
-- [Find Windows API and insert declarations](#find-windows-api-and-insert-declarations)
-- [Drag and drop files to insert path](#drag-and-drop-files-to-insert-path)
-- [Focus](#focus)
-- [WPF window preview](#wpf-window-preview)
+    - [ertical toolbar to f](#ertical-toolbar-to-f)
 <!--/TOC-->
 
 ### List of symbols, autocompletion
@@ -79,10 +49,16 @@ While the list is visible, you can press the **[+]** button or `Ctrl+Space` to s
 ### Bracket completion
 When you type `(`, `[`, `{`, `<`, `"` or `'`, editor adds the closing `)`, `]`, `}`, `>`, `"` or `'`. Then, while the text cursor is before the added `)` etc, typing another `)` or `Tab` just leaves the enclosed area. Also then `Backspace` erases both characters.
 
-### Statement completion
-When you press `Enter` inside an argument list immediately before the last `)` or `]`, editor adds missing `;` or `{  }`, adds new line and moves the text cursor there. Except if before is `,` or space character. To complete statement without new line, use `;` instead of `Enter`.
+It works differently if there is selected text. Then `(`, `[` or `{` surrounds that text, like `(selected)` or `{ selected }`. Surrounds with `{ }` differently if the selection ends with a newline.
 
-Use hotkey `Ctrl+Enter` (can be changed in **Options**) to complete current statement when the text cursor is anywhere in it. Also it can add `{  }` to `class C` etc. Use `Ctrl+;` to complete without new line.
+### Statement completion
+When you press `Enter` immediately before `)` or `]`, editor adds missing `;` or `{  }`, adds new line, moves the text cursor, and formats the statement. Except if before is `,` or space character. Next **Undo** command undoes the change and adds new line without statement completion. This feature can be disabled in **Options**.
+
+Use hotkey `Ctrl+Enter` (can be changed in **Options**) to complete current statement when the text cursor is anywhere in it. Also it can add `{  }` to `class C` etc.
+
+Also completes statement on `Enter` in a single-line `"string"` or `"""string"""`, unless the text cursor is at `"""|text"""`.
+
+To complete statement without new line, use `;` instead of `Enter`. It adds `;` if missing, moves the text cursor, and formats the statement. With `Ctrl` it works anywhere in the statement; without - only before `)` or `]`.
 
 You can use `Backspace` to exit current multiline `{ block }` when the text cursor is in the last line of the block and that line is blank.
 

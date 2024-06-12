@@ -74,7 +74,7 @@ public unsafe partial class KTreeView {
 				if (v.IsExpanded) r += _CountVisible(v.Items);
 			}
 			return r;
-		} //SHOULDDO: now calls v.Items 2 times (_CountVisible and _AddVisible). It can be expensive.
+		} //TODO3: now calls v.Items 2 times (_CountVisible and _AddVisible). It can be expensive.
 		
 		if (n == 0) {
 			_avi = Array.Empty<_VisibleItem>();
