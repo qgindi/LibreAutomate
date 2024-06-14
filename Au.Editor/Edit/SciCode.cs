@@ -7,6 +7,8 @@ using System.Windows.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+//TODO: bug: when commented out a line or /*..*/, on Undo does not set cursor pos there (and does not scroll).
+
 partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;

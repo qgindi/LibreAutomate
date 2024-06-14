@@ -103,7 +103,7 @@ record AppSettings : JSettings {
 	public bool edit_wrap, edit_noImages;
 	
 	//code info, autocorrection, formatting
-	public bool ci_complGroup = true, ci_classicEnter, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true;
+	public bool ci_complGroup = true, ci_classicEnter, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true, ci_semicolon = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 	public int ci_enterWith;
 	public int ci_rename;

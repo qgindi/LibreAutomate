@@ -978,13 +978,13 @@ partial class CiCompletion {
 		}
 		
 		var ci = item.ci;
-		string s; int i, len;
+		string s; int startPos, len;
 		bool isComplex = false;
 		bool ourProvider = item.Provider is CiComplProvider.Winapi;
 		if (ourProvider) {
 			s = item.Text;
-			i = currentFrom;
-			len = currentTo - i;
+			startPos = currentFrom;
+			len = currentTo - startPos;
 		} else {
 			var change = data.completionService.GetChangeAsync(data.document, ci).Result;
 			//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
@@ -1003,9 +1003,9 @@ partial class CiCompletion {
 			s = lastChange.NewText;
 			if (s.NE()) return CiComplResult.None; //Roslyn bug: fails if there are parameters of type nint. Same in VS. Tried a workaround (modify ci.Properties["Symbols"]), but unsuccessfully. Tried to find/modify the Roslyn code, but it's too deep.
 			var span = lastChange.Span;
-			i = span.Start;
+			startPos = span.Start;
 			len = span.Length + codeLenDiff;
-			//print.it($"{change.NewPosition.HasValue}, cp={doc.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{data.filterText}'");
+			//print.it($"{change.NewPosition.HasValue}, cp={doc.CurrentPosChars}, startPos={startPos}, len={len}, span={span}, repl='{s}'    filter='{data.filterText}'");
 			//print.it($"'{s}'");
 			if (isComplex) { //xml doc, override, regex
 				if (ch != default) return CiComplResult.None;
@@ -1045,17 +1045,17 @@ partial class CiCompletion {
 				return CiComplResult.Complex;
 			}
 		}
-		Debug_.PrintIf(i != currentFrom && item.Provider != CiComplProvider.EmbeddedLanguage, $"{currentFrom}, {i}");
+		Debug_.PrintIf(startPos != currentFrom && item.Provider != CiComplProvider.EmbeddedLanguage, $"{currentFrom}, {startPos}");
 		//ci.DebugPrint();
 		
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
 		CiAutocorrect.EBrackets bracketsOperation = default;
 		int positionBack = 0, bracketsFrom = 0, bracketsLen = 0;
-		bool isEnter = key == KKey.Enter;
-		//ci.DebugPrint();
+		//bool isEnter = key == KKey.Enter;
+		string sAppend = null;
+		
 		if (s.FindAny("({[<") < 0) {
 			if (ch == default) { //completed with Enter, Tab, Space or click
-				string s2 = null;
 				switch (item.kind) {
 				case CiItemKind.Method or CiItemKind.ExtensionMethod:
 					ch = '(';
@@ -1063,103 +1063,78 @@ partial class CiCompletion {
 				case CiItemKind.Keyword:
 					string name = item.Text;
 					switch (name) {
-					case "nameof":
-					case "sizeof":
-					case "typeof":
-						ch = '(';
-						break;
-					case "for":
-					case "foreach":
-					case "while":
-					case "lock":
-					case "catch":
+					case "for" or "foreach" or "while" or "lock" or "catch":
 					case "if" when !_IsDirective():
-					case "fixed" when _IsInFunction(): //else probably a fixed array field
-					case "using" when isEnter && _IsInFunction(): //else directive or without ()
-					case "when" when _IsInAncestorNode(i, n => (n is CatchClauseSyntax, n is SwitchSectionSyntax)): //catch(...) when
-						ch = '(';
-						s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
+					case "fixed" when _IsStartOfStatement(): //else in struct
+					//case "using" when _IsStartOfStatement(): //else directive. But can be with or without `()`.
+					case "when" when _IsInAncestorNode(startPos, n => (n is CatchClauseSyntax, n is SwitchSectionSyntax)): //`catch(...) when`
+						(ch, sAppend) = ('(', " ()");
 						break;
-					case "try":
-					case "finally":
-					case "get" when isEnter:
-					case "set" when isEnter:
-					case "add" when isEnter:
-					case "remove" when isEnter:
-					case "do" when isEnter:
-					case "unsafe" when isEnter:
-					case "else" when isEnter && !_IsDirective():
-						ch = '{';
-						break;
-					case "checked":
-					case "unchecked":
-						ch = isEnter ? '{' : '(';
-						break;
+					//rejected: append ` {  }`. Too many confusing features isn't good. Probably rarely somebody uses or likes it. Also, would need to delete `;`.
+					//case "try" or "finally":
+					//case "get" or "set" or "add" or "remove" or "do" or "unsafe" or "checked" or "unchecked" when isEnter:
+					//case "else" when isEnter && !_IsDirective():
+					//	ch = '{';
+					//	break;
 					case "switch":
-						//is it switch statement or switch expression? Difficult to detect. Detect some common cases.
-						if (i > 0 && CodeInfo.GetContextWithoutDocument(out var cd, i)) {
-							if (cd.code[i - 1] == ' ' && cd.GetDocument()) {
-								var node = cd.syntaxRoot.FindToken(i - 1).Parent;
-								//print.it(node.Kind(), i, node.Span, node);
-								if (node.SpanStart < i) switch (node) { case ExpressionSyntax: case BaseArgumentListSyntax: ch = '{'; break; } //expression
-							}
-							if (ch == default) goto case "for";
-						}
+						if (_IsStartOfStatement()) (ch, sAppend) = ('(', " ()"); //else ch = '{';
+						break;
+					case "nameof" or "sizeof" or "typeof":
+					case "checked" or "unchecked" when !_IsStartOfStatement():
+						ch = '(';
 						break;
 					default:
 						if (_NeedParenthesis()) ch = '(';
 						break;
 					}
 					break;
-				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Enum:
+				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Interface or CiItemKind.Enum or CiItemKind.Delegate:
 					if (ci.DisplayTextSuffix == "<>") ch = '<';
 					else if (_NeedParenthesis()) ch = '(';
 					break;
 				}
 				
-				bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
-				
-				bool _IsDirective() => doc.aaaText.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
+				bool _IsDirective() => doc.aaaText.Eq(startPos - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
 				
 				if (isComplex = ch != default) {
-					if (ch == '{') {
-						if (isEnter) {
-							int indent = doc.aaaLineIndentationFromPos(true, i);
-							var b = new StringBuilder(" {\r\n");
-							b.AppendIndent(indent + 1);
-							b.AppendLine().AppendIndent(indent).Append('}');
-							s2 = b.ToString();
-							positionBack = indent + 3;
-						} else {
-							s2 = " {  }";
-							positionBack = 2;
-						}
-						bracketsFrom = i + s.Length + 2;
-						bracketsLen = s2.Length - 3;
-					} else if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !data.noAutoSelect && !doc.aaaText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
-						s2 ??= ch == '(' ? "()" : "<>";
+					//if (ch == '{') {
+					//	if (isEnter) {
+					//		int indent = doc.aaaLineIndentationFromPos(true, startPos);
+					//		var b = new StringBuilder(" {\r\n");
+					//		b.AppendIndent(indent + 1);
+					//		b.AppendLine().AppendIndent(indent).Append('}');
+					//		sAppend = b.ToString();
+					//		positionBack = indent + 3;
+					//	} else {
+					//		sAppend = " {  }";
+					//		positionBack = 2;
+					//	}
+					//	bracketsFrom = startPos + s.Length + 2;
+					//	bracketsLen = sAppend.Length - 3;
+					//} else
+					if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !data.noAutoSelect && !doc.aaaText.Eq(startPos + len, ch)) { //info: noAutoSelect when lambda argument
+						sAppend ??= ch == '(' ? "()" : "<>";
 						positionBack = 1;
-						bracketsFrom = i + s.Length + s2.Length - 1;
+						bracketsFrom = startPos + s.Length + sAppend.Length - 1;
 					} else {
 						ch = default;
-						s2 = null;
+						sAppend = null;
 						isComplex = false;
 					}
-					s += s2;
 				}
 			} else if (!(ch is '(' or '<' or '[' or '{' || data.noAutoSelect)) { //completed with ;,.?- etc
-				if (_NeedParenthesis()) s += "()";
+				if (_NeedParenthesis()) sAppend = "()";
 			}
 			
-			bool _NeedParenthesis() {
+			bool _NeedParenthesis() {//.
 				if (item.kind is CiItemKind.Method or CiItemKind.ExtensionMethod) return true;
 				if (ch == '.') return false; //if 'new Word.', often can be eg 'new Word.Word()' but rarely 'new Word().'
 				switch (item.kind) {
-				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Enum:
+				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Enum or CiItemKind.Delegate:
 				//if (ci.Properties.TryGetValue("ShouldProvideParenthesisCompletion", out var v1) && v1.Eqi("True")) goto g1; //missing when eg 'new Namespace.Type'
 				//break;
 				case CiItemKind.Keyword when item.Text is "string" or "object" or "int" or "uint" or "nint" or "nuint" or "long" or "ulong" or "byte" or "sbyte" or "short" or "ushort" or "char" or "bool" or "double" or "float" or "decimal":
-					if (CodeInfo.GetDocumentAndFindNode(out _, out var node, i)) {
+					if (CodeInfo.GetDocumentAndFindNode(out _, out var node, startPos)) {
 						node = node.Parent;
 						if (node is QualifiedNameSyntax) node = node.Parent;
 						if (node is ObjectCreationExpressionSyntax) goto g1;
@@ -1174,6 +1149,7 @@ partial class CiCompletion {
 				//If 'new Type', adds '()'.
 				//If then coder types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
 			}
+			//..
 			
 			//bool _IsGeneric()
 			//	=> ci.Properties.TryGetValue("IsGeneric", out var v1) && v1.Eqi("True");
@@ -1182,12 +1158,11 @@ partial class CiCompletion {
 		try {
 			if (!isComplex && s == data.filterText) return CiComplResult.None;
 			
-			doc.aaaSetAndReplaceSel(true, i, i + len, s);
-			if (isComplex) {
-				if (positionBack > 0) doc.aaaCurrentPos16 = i + s.Length - positionBack;
-				if (bracketsFrom > 0) {
-					CodeInfo._correct.BracketsAdded(doc, bracketsFrom, bracketsFrom + bracketsLen, bracketsOperation);
-				}
+			if (!doc.aaaText.Eq(startPos..(startPos + len), s)) doc.aaaSetAndReplaceSel(true, startPos, startPos + len, s); else doc.aaaCurrentPos16 = startPos + len;
+			if (sAppend != null) doc.aaaReplaceSel(sAppend);
+			if (positionBack > 0) doc.aaaCurrentPos16 -= positionBack;
+			if (bracketsFrom > 0) {
+				CodeInfo._correct.BracketsAdded(doc, bracketsFrom, bracketsFrom + bracketsLen, bracketsOperation);
 			}
 			
 			return isComplex ? CiComplResult.Complex : CiComplResult.Simple;
@@ -1204,20 +1179,31 @@ partial class CiCompletion {
 				CodeInfo._signature.SciCharAdded(doc, ch, methodCompletion);
 			}
 		}
-	}
-	
-	static bool _IsInAncestorNodeOfType<T>(int pos) where T : SyntaxNode
-		=> CodeInfo.GetDocumentAndFindNode(out _, out var node, pos) && null != node.GetAncestor<T>();
-	
-	static bool _IsInAncestorNode(int pos, Func<SyntaxNode, (bool yes, bool no)> f) {
-		if (!CodeInfo.GetDocumentAndFindNode(out _, out var node, pos)) return false;
-		while ((node = node.Parent) != null) {
-			//CiUtil.PrintNode(node);
-			var (yes, no) = f(node);
-			if (yes) return true;
-			if (no) return false;
+		
+		//static bool _IsInAncestorNodeOfType<T>(int pos) where T : SyntaxNode
+		//	=> CodeInfo.GetDocumentAndFindNode(out _, out var node, pos) && null != node.GetAncestor<T>();
+		
+		static bool _IsInAncestorNode(int pos, Func<SyntaxNode, (bool yes, bool no)> f) {
+			if (!CodeInfo.GetDocumentAndFindNode(out _, out var node, pos)) return false;
+			while ((node = node.Parent) != null) {
+				//CiUtil.PrintNode(node);
+				var (yes, no) = f(node);
+				if (yes) return true;
+				if (no) return false;
+			}
+			return false;
 		}
-		return false;
+		
+		bool _IsStartOfStatement() {
+			if (!CodeInfo.GetDocumentAndFindToken(out _, out var tok, startPos)) return false;
+			var node = tok.Parent.Parent;
+			if (node is StatementSyntax && node.SpanStart == startPos) {
+				//still can be an expression. Eg if `int j = i sw`, Roslyn assumes `int j = i` is a statement with missing `;`, and `sw` is another statement.
+				tok = tok.GetPreviousToken();
+				return tok.Kind() is 0 or SyntaxKind.SemicolonToken or SyntaxKind.OpenBraceToken or SyntaxKind.CloseBraceToken or SyntaxKind.ColonToken;
+			}
+			return false;
+		}
 	}
 	
 	/// <summary>

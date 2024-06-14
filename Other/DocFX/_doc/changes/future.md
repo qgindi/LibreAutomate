@@ -9,7 +9,9 @@ More features in code snippets:
 - Snippet context detected automatically.
 - A snippet can add `/*/ meta comments /*/`.
 
-Formats code when completing current statement (adding `;`, `{  }` etc). See **Options > Code editor > Formatting > Auto-format**.
+Formats code when completing current statement (adding `;`, `{  }` etc). This feature can be disabled in **Options**.
+
+Adds `;` when starting a statement. Later deletes if don't need. This feature can be disabled in **Options**.
 
 You can use `Backspace` to exit current multiline `{ block }` when the text cursor is in the last line of the block and that line is blank. Previously `Ctrl+Enter` worked in a similar way.
 
@@ -24,7 +26,7 @@ If there is selected text and you type `(`, `[` or `{`, surrounds that text like
 
 Drag and drop a non-script file from the **Files** panel to the code editor: can add `/*/ meta comments /*/`.
 
-Several small improvements.
+Several small improvements. Removed some low-value features.
 
 Fixed bugs:
 - Debugger settings: does not work **not**.

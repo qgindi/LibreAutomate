@@ -619,6 +619,8 @@ class CiSnippetMode {
 	}
 	
 	public void Start(int pos, int endPos, string s) {
+		bool endsWithSemicolon = s.Ends(';') || s.Ends(";\r\n");
+		
 		int pos0 = pos;
 		ModifyCode.FormatForInsert(ref s, ref pos, endPos, _dollars == null ? null : _ChangesCallback);
 		
@@ -637,6 +639,11 @@ class CiSnippetMode {
 					else dollars[i].len += dif;
 				}
 			}
+		}
+		
+		if (endsWithSemicolon && _doc.aaaText.RxMatch(@"\h*;", 0, out RXGroup g)) {
+			endPos += g.Length;
+			if (s.Ends(' ')) s = s[..^1]; //added when formatting
 		}
 		
 		//CodeInfo.Pasting(_doc, silent: true); //to auto-add missing using directives //rejected. Does not work well with EReplaceTextGently (because it makes multiple modifications). Namespaces can be specified in snippet.

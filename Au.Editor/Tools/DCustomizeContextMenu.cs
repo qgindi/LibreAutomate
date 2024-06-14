@@ -36,7 +36,7 @@ Right - commands to add to the context menu of the {ownerName}. Separator -.
 					//trim tabs
 					if (e.n.modificationType.Has(Sci.MOD.SC_MOD_INSERTCHECK) && e.n.length > 1 && e.n.textUTF8[0] == 9) {
 						var s = e.n.Text.RxReplace(@"(?m)^\t+", "");
-						e.c.aaaSetString(Sci.SCI_CHANGEINSERTION, 0, s, true);
+						e.c.aaaSetString(Sci.SCI_CHANGEINSERTION, s);
 					}
 				}
 			}

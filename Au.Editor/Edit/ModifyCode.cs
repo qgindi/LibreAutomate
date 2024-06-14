@@ -167,7 +167,7 @@ static class ModifyCode {
 	/// <returns>Text changes in the final range. Or null if no changes.</returns>
 	public static List<TextChange> Format(CodeInfo.Context cd, ref int from, ref int to, ref int selStart, ref int selEnd) {
 		string code = cd.code;
-		Debug.Assert(code == cd.sci.aaaText);
+		Debug.Assert(code.AsSpan(..to).Eq(cd.sci.aaaText.AsSpan(..to)));
 		
 		//exclude newline at the end. Else formats entire leading trivia of next token.
 		//	Never mind: anyway formats if the last selected line is //comment.

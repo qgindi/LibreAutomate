@@ -437,6 +437,7 @@ To apply changes after deleting etc, restart this application.
 		b.R.Add("Hotkey", out ComboBox enterWith).Items("Ctrl+Enter|Shift+Enter|Ctrl+Shift+Enter").Select(App.Settings.ci_enterWith);
 		b.R.Add(out KCheckBox notClassicEnter, "Enter before )").Checked(!App.Settings.ci_classicEnter)
 			.Tooltip("Key Enter before ) or ] completes statement like with Ctrl etc.\nExcept after comma or space or with Shift etc.");
+		b.R.Add(out KCheckBox autoSemicolon, "Add ; when starting a statement").Checked(App.Settings.ci_semicolon);
 		b.End();
 		
 		b.StartGrid<KGroupBox>("Formatting");
@@ -500,6 +501,7 @@ Example:
 			App.Settings.ci_complParen = complParen.SelectedIndex;
 			App.Settings.ci_enterWith = enterWith.SelectedIndex;
 			App.Settings.ci_classicEnter = !notClassicEnter.IsChecked;
+			App.Settings.ci_semicolon = autoSemicolon.IsChecked;
 			
 			if (formatCompact.IsChecked != App.Settings.ci_formatCompact || formatTabIndent.IsChecked != App.Settings.ci_formatTabIndent) {
 				App.Settings.ci_formatCompact = formatCompact.IsChecked;

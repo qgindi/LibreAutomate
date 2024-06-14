@@ -19,14 +19,16 @@ using Au.Controls;
 static unsafe class Test {
 
 	public static void FromMenubar() {
-		print.clear( );
+		//print.clear( );
 
-		//var d = Panels.Editor.ActiveDoc;
+		var d = Panels.Editor.ActiveDoc;
 		//int pos = d.aaaCurrentPos16;
-		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-		var token = cd.syntaxRoot.FindToken(cd.pos);
-		var node = token.Parent.GetStatementEtc(cd.pos);
-		CiUtil.PrintNode(node, printErrors: true);
+		d.aaaInsertText(true, 0, "a");
+		
+		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		//var token = cd.syntaxRoot.FindToken(cd.pos);
+		//var node = token.Parent.GetStatementEtc(cd.pos);
+		//CiUtil.PrintNode(node, printErrors: true);
 	}
 
 	public static void MonitorGC() {

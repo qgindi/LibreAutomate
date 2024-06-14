@@ -12,6 +12,8 @@ using CAW::Microsoft.CodeAnalysis.Rename;
 using CAW::Microsoft.CodeAnalysis.Indentation;
 using Microsoft.CodeAnalysis.CSharp.Indentation;
 
+//TODO: why we have 2 files - CiUtil and CodeUtil?
+
 /// <summary>
 /// Util used by <see cref="InsertCode"/>. Also can be used everywhere.
 /// </summary>

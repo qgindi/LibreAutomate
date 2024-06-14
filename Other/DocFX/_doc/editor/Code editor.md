@@ -30,7 +30,37 @@ To generate TOC with #links, use the VS context menu command "Generate TOC". The
 BAD: now the Back button does not scroll to TOC. And the same in all DocFX-generated pages.
 -->
 <!--TOC-->
-    - [ertical toolbar to f](#ertical-toolbar-to-f)
+    - [List of symbols, autocompletion](#list-of-symbols-autocompletion)
+    - [Bracket completion](#bracket-completion)
+    - [Statement completion](#statement-completion)
+    - [Auto indentation](#auto-indentation)
+    - [Parameter info](#parameter-info)
+    - [Quick info](#quick-info)
+    - [Error info](#error-info)
+    - [XML documentation comments](#xml-documentation-comments)
+    - [Go to symbol documentation](#go-to-symbol-documentation)
+    - [Go to symbol definition (source code), base](#go-to-symbol-definition-source-code-base)
+    - [Go to script, file, URL](#go-to-script-file-url)
+    - [Find and replace text](#find-and-replace-text)
+    - [Find symbol references](#find-symbol-references)
+    - [Highlight symbol references and matching braces](#highlight-symbol-references-and-matching-braces)
+    - [Find symbol](#find-symbol)
+    - [Rename symbol](#rename-symbol)
+    - [Outline of current file](#outline-of-current-file)
+    - [Navigate back/forward](#navigate-backforward)
+    - [Bookmarks](#bookmarks)
+    - [Code coloring](#code-coloring)
+    - [Text folding](#text-folding)
+    - [Separators between functions/types](#separators-between-functionstypes)
+    - [Snippets](#snippets)
+    - [Images in code](#images-in-code)
+    - [Format code](#format-code)
+    - [Comment/uncomment/indent/unindent lines](#commentuncommentindentunindent-lines)
+    - [Capture UI elements, insert regex etc, implement interface](#capture-ui-elements-insert-regex-etc-implement-interface)
+    - [Find Windows API and insert declarations](#find-windows-api-and-insert-declarations)
+    - [Drag and drop files to insert path](#drag-and-drop-files-to-insert-path)
+    - [Focus](#focus)
+    - [WPF window preview](#wpf-window-preview)
 <!--/TOC-->
 
 ### List of symbols, autocompletion
@@ -38,7 +68,7 @@ When you start typing a word, editor shows a list of symbols (classes, functions
 
 The list shows only items that contain the partially typed text. The text in list items is highlighted. Auto-selects an item that is considered the first best match. On `Ctrl+Space` shows all. You can use the vertical toolbar to filter and group list items, for example to show only methods.
 
-While the list is visible, when you enter a non-word character (space, comma, etc) or press `Enter` or `Tab` or double-click an item, the partially or fully typed word is replaced with the text of the selected list item. Also may add `()` or `{}`, for example if it is a method or a keyword like `if` or `finally`. The added text may be different when you press `Enter`; for example may add `{}` instead of `()`. By default adds `()` only if completed with space; see **Options > Code**.
+While the list is visible, when you double-click an item or press `Enter`, `Tab`, `Spacebar` or type a non-word character, the partially or fully typed word is replaced with the text of the selected list item. Also may add `()`, for example if the word is a function name or a keyword like `if`. By default adds `()` only if completed with `Spacebar`; see **Options > Code**.
 
 To select list items you also can click or press arrow or page keys. It does not hide the list. The tooltip-like window next to the list shows more info about the selected item, including links to online documentation and source code if available. Shows all overloads (functions with same name but different parameters), and you can click them to view their info.
 
@@ -59,6 +89,8 @@ Use hotkey `Ctrl+Enter` (can be changed in **Options**) to complete current stat
 Also completes statement on `Enter` in a single-line `"string"` or `"""string"""`, unless the text cursor is at `"""|text"""`.
 
 To complete statement without new line, use `;` instead of `Enter`. It adds `;` if missing, moves the text cursor, and formats the statement. With `Ctrl` it works anywhere in the statement; without - only before `)` or `]`.
+
+As you begin typing a statement (eg a word in a blank line), editor adds `;`. Later deletes if don't need (eg when completing with `{  }`) or overtypes `;` with `;`. This feature can be disabled in **Options**.
 
 You can use `Backspace` to exit current multiline `{ block }` when the text cursor is in the last line of the block and that line is blank.
 
