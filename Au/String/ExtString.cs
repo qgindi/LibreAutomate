@@ -1450,10 +1450,7 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
-	public static bool IsAscii(this RStr t) {
-		foreach (char c in t) if (c > 0x7f) return false;
-		return true;
-	}
+	public static bool IsAscii(this RStr t) => !t.ContainsAnyExceptInRange((char)0, (char)127);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static int LengthThrowIfNull_(this RStr t) {
@@ -1691,6 +1688,11 @@ public static unsafe partial class ExtString {
 	/// If <i>index</i> is in this string, returns character at <i>index</i>. Else <c>'\0'</c>.
 	/// </summary>
 	internal static char At_(this string t, int index) => (uint)index < t.Length ? t[index] : default;
+
+	/// <summary>
+	/// If <i>index</i> is in this string span, returns character at <i>index</i>. Else <c>'\0'</c>.
+	/// </summary>
+	internal static char At_(this RStr t, int index) => (uint)index < t.Length ? t[index] : default;
 }
 
 /// <summary>

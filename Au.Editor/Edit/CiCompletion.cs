@@ -25,6 +25,19 @@ using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //	Also need a tool for wildcard expression.
 //	Now users can in "string" press F1 or Ctrl+Space to open the help page.
 
+//Roslyn bug: in code like below, after `is C.` the list contains only types. VS OK.
+/*
+int i = 0;
+if (i is C.) ; //bad
+if (i == C.) ; //OK
+if (i is 4 or C.) ; //OK
+
+static class C {
+public const int CONST = 10;
+public struct STRUCT {  }
+}
+*/
+
 partial class CiCompletion {
 	CiPopupList _popupList;
 	_Data _data; //not null while the popup list window is visible
@@ -990,14 +1003,8 @@ partial class CiCompletion {
 			//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 			
 			var changes = change.TextChanges;
-			isComplex = change.NewPosition.HasValue;
-			
-			if (changes.Length != 1 && !isComplex) { //eg "(nint)"
-				var tc = change.TextChange;
-				doc.aaaReplaceRange(true, tc.Span.Start, tc.Span.End + codeLenDiff, tc.NewText, true);
-				return CiComplResult.Complex;
-			}
-			Debug_.PrintIf(changes.Length != 1 && item.Provider != CiComplProvider.Override, changes); //eg the override provider also may add 'using'
+			var provider = _GetProvider(ci);
+			isComplex = changes.Length > 1 || change.NewPosition.HasValue || provider is CiComplProvider.Override or CiComplProvider.XmlDoc;
 			
 			var lastChange = changes.Last();
 			s = lastChange.NewText;
@@ -1005,48 +1012,43 @@ partial class CiCompletion {
 			var span = lastChange.Span;
 			startPos = span.Start;
 			len = span.Length + codeLenDiff;
-			//print.it($"{change.NewPosition.HasValue}, cp={doc.CurrentPosChars}, startPos={startPos}, len={len}, span={span}, repl='{s}'    filter='{data.filterText}'");
-			//print.it($"'{s}'");
 			if (isComplex) { //xml doc, override, regex
-				if (ch != default) return CiComplResult.None;
-				//ci.DebugPrint();
-				int newPos = change.NewPosition.Value;
-				switch (item.Provider) {
+				int newPos = change.NewPosition ?? -1;
+				if (ch != default && newPos >= 0) return CiComplResult.None;
+				switch (provider) {
 				case CiComplProvider.Override:
 					newPos = -1;
 					if (App.Settings.ci_formatTabIndent) {
 						//Replace 4 spaces with tab. Make { in same line.
 						s = s.Replace("    ", "\t").RxReplace(@"\R\t*\{", " {", 1);
-						//Correct indentation. 
-						int indent = s.FindNot("\t"), indent2 = doc.aaaLineIndentationFromPos(true, currentFrom);
+						//Correct indent. 
+						int indent = s.FindNot("\t"), indent2 = doc.aaaLineIndentFromPos(true, currentFrom);
 						if (indent > indent2) s = s.RxReplace("(?m)^" + new string('\t', indent - indent2), "");
 					}
 					break;
 				case CiComplProvider.XmlDoc:
 					if (!s.Ends('>') && s.RxMatch(@"^<?(\w+)($| )", 1, out string tag)) {
-						//if (CodeInfo.GetDocumentAndFindNode(out _, out var n2, span.Start, findInsideTrivia: true)) foreach(var v in n2.AncestorsAndSelf()) CiUtil.PrintNode(v);
 						if (CodeInfo.GetDocumentAndFindNode(out _, out var n1, span.Start, findInsideTrivia: true) && null == n1.GetAncestorOrThis<XmlNameAttributeSyntax>()) { //not in <tag attr="|">
 							string lt = s.Starts('<') || doc.aaaText.Eq(span.Start - 1, '<') ? "" : "<";
-							if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos += 1 + lt.Length;
+							if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE()) && newPos > 0) newPos += 1 + lt.Length;
 							s = $"{lt}{s}></{tag}>";
 						}
 					}
 					break;
 				}
-				using var undo = new KScintilla.aaaUndoAction(doc);
+				using var undo = doc.aaaNewUndoAction();
 				bool last = true;
 				for (int j = changes.Length; --j >= 0; last = false) {
 					var v = changes[j];
-					doc.aaaReplaceRange(true, v.Span.Start, v.Span.End + (last ? codeLenDiff : 0), last ? s : v.NewText);
-					//if(last && newPos<0) newPos = span.Start - doc.aaaLen16; //from end //currently don't need because Scintilla automatically does it (read aaaReplaceRange doc)
+					if (last) doc.aaaReplaceRange(true, v.Span.Start, v.Span.End + codeLenDiff, s, moveCurrentPos: newPos < 0);
+					else doc.aaaReplaceRange(true, v.Span.Start, v.Span.End, v.NewText);
 				}
-				//if (newPos < 0) newPos += doc.aaaLen16;
 				if (newPos >= 0) doc.aaaSelect(true, newPos, newPos, makeVisible: true);
+				
 				return CiComplResult.Complex;
 			}
 		}
 		Debug_.PrintIf(startPos != currentFrom && item.Provider != CiComplProvider.EmbeddedLanguage, $"{currentFrom}, {startPos}");
-		//ci.DebugPrint();
 		
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
 		CiAutocorrect.EBrackets bracketsOperation = default;
@@ -1099,7 +1101,7 @@ partial class CiCompletion {
 				if (isComplex = ch != default) {
 					//if (ch == '{') {
 					//	if (isEnter) {
-					//		int indent = doc.aaaLineIndentationFromPos(true, startPos);
+					//		int indent = doc.aaaLineIndentFromPos(true, startPos);
 					//		var b = new StringBuilder(" {\r\n");
 					//		b.AppendIndent(indent + 1);
 					//		b.AppendLine().AppendIndent(indent).Append('}');
@@ -1195,12 +1197,13 @@ partial class CiCompletion {
 		}
 		
 		bool _IsStartOfStatement() {
-			if (!CodeInfo.GetDocumentAndFindToken(out _, out var tok, startPos)) return false;
-			var node = tok.Parent.Parent;
-			if (node is StatementSyntax && node.SpanStart == startPos) {
-				//still can be an expression. Eg if `int j = i sw`, Roslyn assumes `int j = i` is a statement with missing `;`, and `sw` is another statement.
-				tok = tok.GetPreviousToken();
-				return tok.Kind() is 0 or SyntaxKind.SemicolonToken or SyntaxKind.OpenBraceToken or SyntaxKind.CloseBraceToken or SyntaxKind.ColonToken;
+			if (!CodeInfo.GetDocumentAndFindToken(out _, out var tok, startPos, metaToo: true)) return false;
+			for (var node = tok.Parent; node?.SpanStart == startPos; node = node.Parent) {
+				if (node is StatementSyntax or IncompleteMemberSyntax { Parent: CompilationUnitSyntax }) {
+					//still can be an expression. Eg if `int j = i sw`, Roslyn assumes `int j = i` is a statement with missing `;`, and `sw` is another statement.
+					tok = tok.GetPreviousToken();
+					return tok.Kind() is 0 or SyntaxKind.SemicolonToken or SyntaxKind.OpenBraceToken or SyntaxKind.CloseBraceToken or SyntaxKind.ColonToken;
+				}
 			}
 			return false;
 		}

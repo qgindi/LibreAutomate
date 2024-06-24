@@ -151,12 +151,7 @@ class PanelOutput {
 		}
 		
 		public void AaSetStyles() {
-			var styles = new CiStyling.TStyles(customized: false) {
-				BackgroundColor = 0xF7F7F7,
-				FontName = App.Settings.font_output.name,
-				FontSize = App.Settings.font_output.size
-			};
-			styles.ToScintilla(this);
+			CiStyling.TStyles.Default.ToScintilla(this, fontName: App.Settings.font_output.name, fontSize: App.Settings.font_output.size, backgroundColor: 0xF7F7F7);
 		}
 		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {

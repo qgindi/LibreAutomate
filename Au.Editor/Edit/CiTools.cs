@@ -69,7 +69,7 @@ class CiTools {
 	
 	static void _ShowWindow(InfoWindow w, SciCode doc, int position, wnd dontCover) {
 		if (w.IsVisible) w.Hwnd.ZorderTop();
-		var r = CiUtil.GetCaretRectFromPos(doc, position, inScreen: true);
+		var r = doc.EGetCaretRectFromPos(position, inScreen: true);
 		r.left -= Dpi.Scale(80, doc);
 		bool above = !dontCover.Is0;
 		if (above) r = RECT.Union(r, dontCover.Rect);

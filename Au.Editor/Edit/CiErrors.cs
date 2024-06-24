@@ -135,19 +135,14 @@ class CiErrors {
 	}
 	
 	void _Strings(SemanticModel semo, CodeInfo.Context cd, int start16, int end16) {
-		//using var p1 = perf.local();
 		_stringErrors.Clear();
 		var code = cd.code;
 		ArgumentListSyntax keysArgs = null;
 		foreach (var node in semo.Root.DescendantNodes(TextSpan.FromBounds(start16, end16))) {
 			var format = CiUtil.GetParameterStringFormat(node, semo, false, ignoreInterpolatedString: true);
 			if (format is PSFormat.None or PSFormat.RegexpReplacement) continue;
-			var s = node.GetFirstToken().ValueText; //replaced escape sequences
-			
-			//print.it(format);
-			//CiUtil.PrintNode(node);
-			//print.it(s);
-			
+			var tok1 = node.GetFirstToken();
+			var s = tok1.ValueText; //replaced escape sequences
 			if (s.Length == 0) continue;
 			string es = null;
 			try {

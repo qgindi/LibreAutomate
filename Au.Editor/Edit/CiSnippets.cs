@@ -59,7 +59,7 @@ static class CiSnippets {
 		if (syncon != null) {
 			//CSharpSyntaxContext was discovered later and therefore almost not used here.
 			if (syncon.IsObjectCreationTypeContext) return;
-			//CiUtil.GetContextType(syncon);
+			//CiUtil.DebugGetContextType(syncon);
 		}
 		
 		_Context context = _Context.Unknown;
@@ -149,7 +149,7 @@ static class CiSnippets {
 			}
 		}
 		
-		bool isLineStart = CodeUtil.IsLineStart(code, pos - (inDirective ? 1 : 0));
+		bool isLineStart = CiUtil.IsLineStart(code, pos - (inDirective ? 1 : 0));
 		
 		for (int i = 0; i < s_items.Count; i++) {
 			var v = s_items[i];
@@ -236,7 +236,7 @@ static class CiSnippets {
 			//}
 			
 			try {
-				var cu = CiUtil.GetSyntaxTree(code);
+				var cu = CiUtil.CreateSyntaxTree(code);
 				if (cu.Usings.Any() || cu.Externs.Any() || cu.AttributeLists.Any()) return _Context.Namespace;
 				if (!cu.Members.Any()) {
 					if (cu.ContainsDirectives) return _Context.Any | _Context.Line;
@@ -273,7 +273,7 @@ static class CiSnippets {
 					try {
 						int n1 = cu.GetDiagnostics().Count();
 						if (n1 == 0) return false;
-						var cu2 = CiUtil.GetSyntaxTree("class C{\r\n" + code + "\r\n}");
+						var cu2 = CiUtil.CreateSyntaxTree("class C{\r\n" + code + "\r\n}");
 						var d2 = cu2.GetDiagnostics();
 						int n2 = d2.Count();
 						if (n2 >= n1) return false;
@@ -361,7 +361,7 @@ static class CiSnippets {
 	/// </remarks>
 	public static void Surround(string snippetXml = null, Range? range = null) {
 		if (!CodeInfo.GetContextAndDocument(out var k)) return;
-		var (from, to) = range?.GetStartEnd(k.code.Length) ?? CodeUtil.GetSurroundRange(k);
+		var (from, to) = range?.GetStartEnd(k.code.Length) ?? GetSurroundRange(k);
 		
 		XElement x;
 		if (snippetXml != null) {
@@ -418,6 +418,25 @@ static class CiSnippets {
 		_Commit(k.sci, from, to, x, k.code[from..to]);
 	}
 	
+	/// <summary>
+	/// Gets range for surround.
+	/// If there is selection, returns the selected range.
+	/// Else if caret is inside or touches a statement etc, gets its full span.
+	/// Else returns empty range at caret position.
+	/// </summary>
+	public static (int start, int end) GetSurroundRange(CodeInfo.Context k) {
+		var (from, to) = k.sci.aaaSelection(true);
+		if (from == to) {
+			var stat = k.syntaxRoot.FindToken(from).Parent.GetStatementEtc(from);
+			if (stat is not (null or BlockSyntax)) {
+				var span = stat.GetRealFullSpan(minimalLeadingTrivia: !true);
+				if (span.ContainsOrTouches(from)) (from, to) = span;
+			}
+			if (to == from && to > 0 && !(stat is BlockSyntax && stat.Span.ContainsInside(from))) from = to = k.code.LastIndexOf('\n', to - 1) + 1;
+		}
+		return (from, to);
+	}
+	
 	public static void Commit(SciCode doc, CiComplItem item, int codeLenDiff) {
 		doc.SnippetMode_?.End();
 		
@@ -453,7 +472,7 @@ static class CiSnippets {
 		if (_GetAttr("var", out string attrVar)) {
 			if (attrVar.RxMatch(@"^(.+?), *(.+)$", out var m)) {
 				try {
-					var t = CodeUtil.GetNearestLocalVariableOfType(m[1].Value);
+					var t = CiUtil.GetNearestLocalVariableOfType(m[1].Value);
 					varName = t?.Name ?? m[2].Value;
 				}
 				catch (ArgumentException ex1) { print.it($"Error in {xSnippet.Attr("name")}: {ex1.Message}"); }
@@ -537,7 +556,7 @@ class CiSnippetMode {
 		bool escaped = 0 != s.RxReplace(@"\\[$}\\]", m => m.Subject[m.End - 1] switch { '$' => "\uf100", '}' => "\uf101", _ => "\uf102" }, out s); //Unicode private use area
 		
 		//in a `/* */` use c_markAlt instead of c_markComment
-		var blockComments = s.RxIsMatch(@"/\*.+?\*/") && CiUtil.GetSyntaxTree(s) is { } cu ? cu.DescendantTrivia().Where(o => o.Kind() is SyntaxKind.MultiLineCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia).Select(o => o.Span).ToArray() : null;
+		var blockComments = s.RxIsMatch(@"/\*.+?\*/") && CiUtil.CreateSyntaxTree(s) is { } cu ? cu.DescendantTrivia().Where(o => o.Kind() is SyntaxKind.MultiLineCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia).Select(o => o.Span).ToArray() : null;
 		
 		if (s.Contains('$')) {
 			StringBuilder b = new();
@@ -619,7 +638,7 @@ class CiSnippetMode {
 	}
 	
 	public void Start(int pos, int endPos, string s) {
-		bool endsWithSemicolon = s.Ends(';') || s.Ends(";\r\n");
+		bool deleteSemicolon = s.At_(CiUtil.SkipNewlineBack(s, s.Length) - 1) is ';' or '}';
 		
 		int pos0 = pos;
 		ModifyCode.FormatForInsert(ref s, ref pos, endPos, _dollars == null ? null : _ChangesCallback);
@@ -641,7 +660,7 @@ class CiSnippetMode {
 			}
 		}
 		
-		if (endsWithSemicolon && _doc.aaaText.RxMatch(@"\h*;", 0, out RXGroup g)) {
+		if (deleteSemicolon && _doc.aaaText.RxMatch(@"\G\h*;", 0, out RXGroup g, range: endPos..)) {
 			endPos += g.Length;
 			if (s.Ends(' ')) s = s[..^1]; //added when formatting
 		}
@@ -865,7 +884,7 @@ class CiSnippetMode {
 			try {
 				MemoryUtil.Copy(_doc.aaaRangePointer(field.start, field.end), text, textLen);
 				_ignoreModified = true;
-				using var undo = new KScintilla.aaaUndoAction(_doc);
+				using var undo = _doc.aaaNewUndoAction();
 				foreach (var f in _fields) {
 					if (f.n == field.n && f != field) {
 						_doc.Call(Sci.SCI_SETTARGETRANGE, f.start, f.end);

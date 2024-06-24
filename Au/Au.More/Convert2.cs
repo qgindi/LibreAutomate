@@ -391,8 +391,8 @@ public static unsafe class Convert2 {
 	/// <br/>• <b>text</b> - <c>Encoding.UTF8.GetBytes(s)</c>.
 	/// <br/>• <b>offsets</b> - <c>null</c> if <i>s</i> is ASCII. Else UTF-8 character offsets for each <i>s</i> character plus at <c>s.Length</c>.
 	/// </returns>
-	internal static (byte[] text, int[] offsets) Utf8EncodeAndGetOffsets_(string s, bool append0 = false) {
-		var s2 = append0 ? Utf8Encode(s) : Encoding.UTF8.GetBytes(s); //always creates valid UTF-8. Replaces invalid UTF-16 chars.
+	internal static (byte[] text, int[] offsets) Utf8EncodeAndGetOffsets_(RStr s, bool append0 = false) {
+		var s2 = Utf8Encode(s, append0 ? "\0" : ""); //always creates valid UTF-8. Replaces invalid UTF-16 chars.
 		int len2 = s2.Length; if (append0) len2--;
 		if (len2 == s.Length) return (s2, null); //ASCII
 

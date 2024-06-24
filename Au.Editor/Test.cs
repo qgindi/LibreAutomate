@@ -15,17 +15,37 @@ using CAW::Microsoft.CodeAnalysis.FindSymbols;
 
 using Au.Triggers;
 using Au.Controls;
+using System.Windows.Forms;
+using System.Text.RegularExpressions;
+using System.Diagnostics.CodeAnalysis;
 
 static unsafe class Test {
 
-	public static void FromMenubar() {
-		//print.clear( );
+	//public static void RxTest([StringSyntax("Regex")] this string t) { }
 
-		var d = Panels.Editor.ActiveDoc;
-		//int pos = d.aaaCurrentPos16;
-		d.aaaInsertText(true, 0, "a");
-		
-		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+	public static void FromMenubar() {
+		print.clear();
+
+		//new Regex(@"\A\[^a-b]\a text\d\b (?<name>moo)");
+
+		//RxTest(@"\d");
+		//@"\d".RxTest();
+
+		//var d = Panels.Editor.ActiveDoc;
+		////int pos = d.aaaCurrentPos16;
+		////d.aaaInsertText(true, 0, "//");
+		//using (new SciCode.aaaUndoAction(d)) {
+		//	d.aaaInsertText(true, 0, "//");
+		//	d.aaaGoToPos(true, 2);
+		//	//d.aaaReplaceRange(true, 0, 1, "//");
+		//}
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		//print.it(CiUtil.IsPosInNonblankTrivia(cd.syntaxRoot, cd.pos, cd.code));
+		//var trivia = cd.syntaxRoot.FindTrivia(cd.pos, keys.isNumLock);
+		//print.it(cd.pos);
+		//CiUtil.PrintNode(trivia);
+		//print.it(trivia.Span, trivia.FullSpan);
+
 		//var token = cd.syntaxRoot.FindToken(cd.pos);
 		//var node = token.Parent.GetStatementEtc(cd.pos);
 		//CiUtil.PrintNode(node, printErrors: true);

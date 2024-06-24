@@ -53,13 +53,13 @@ public unsafe partial class KScintilla : HwndHost {
 	/// <summary>
 	/// Invoked by <b>AaOnHandleCreated</b>, which is called by <see cref="BuildWindowCore"/> after initializing everything but before setting text and subclassing.
 	/// </summary>
-	public event Action AaHandleCreated;
+	public event Action<KScintilla> AaHandleCreated;
 	
 	/// <summary>
 	/// Called by <see cref="BuildWindowCore"/> after initializing everything but before setting text and subclassing.
 	/// Invokes event <see cref="AaHandleCreated"/>.
 	/// </summary>
-	protected virtual void AaOnHandleCreated() => AaHandleCreated?.Invoke();
+	protected virtual void AaOnHandleCreated() => AaHandleCreated?.Invoke(this);
 	
 	protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 		var wParent = (wnd)hwndParent.Handle;
@@ -95,7 +95,7 @@ public unsafe partial class KScintilla : HwndHost {
 		if (AaInitWrapVisuals) {
 			Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END);
 			Call(SCI_SETWRAPVISUALFLAGSLOCATION, SC_WRAPVISUALFLAGLOC_END_BY_TEXT);
-			Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT);
+			Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_SAME);
 		}
 		if (AaWrapLines) {
 			Call(SCI_SETWRAPMODE, SC_WRAP_WORD);

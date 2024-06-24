@@ -26,6 +26,8 @@ If there is selected text and you type `(`, `[` or `{`, surrounds that text like
 
 Drag and drop a non-script file from the **Files** panel to the code editor: can add `/*/ meta comments /*/`.
 
+Colored regular expression text.
+
 Several small improvements. Removed some low-value features.
 
 Fixed bugs:
@@ -40,6 +42,7 @@ New members:
 - **wnd.IsMatch** overload for multiple windows.
 - **string.Split**, **ReadOnlySpan\<char\>.Split** and **ReadOnlySpan\<char\>.SplitAny** overloads that return **StartEnd[]**.
 - **ReadOnlySpan\<char\>.Split** and **ReadOnlySpan\<char\>.SplitAny** overloads that return **string[]**.
+- **regexp.Match** and **IsMatch**: overloads with **ReadOnlySpan\<char\>**.
 
 New parameters:
 - **string.Lines**: *preferMore* (include the last empty line), *rareNewlines*.
@@ -50,5 +53,6 @@ Improved:
 
 Fixed bugs:
 - When used in a single-file app or portable LA, **folders.NetRuntimeDesktopBS** returns `null`, and **folders.NetRuntimeDesktop** throws exception.
+- **regexp** functions always return `false` if the subject string is empty, even if the regular expression can match empty string.
 
 ### Breaking changes

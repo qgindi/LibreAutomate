@@ -136,37 +136,29 @@ public partial class KScintilla {
 	}
 	
 	/// <summary>
-	/// SCI_SETMARGINWIDTHN(Dpiscale(dpiWidth) + rawWidth).
+	/// SCI_SETMARGINWIDTHN or SCI_SETMARGINLEFT or SCI_SETMARGINRIGHT.
+	/// Dpi-scales, and will scale when DPI changed.
 	/// </summary>
-	/// <param name="margin"></param>
-	/// <param name="dpiWidth">Positive pixels or negative chars or 0. Will be DPI-scaled.</param>
-	/// <param name="rawWidth">Positive pixels or 0.</param>
-	public void aaaMarginSetWidth(int margin, int dpiWidth, int rawWidth = 0) {
-		if (dpiWidth != 0) {
-			_marginDpi ??= new (int, int)[Call(SCI_GETMARGINS)];
-			_marginDpi[margin] = (dpiWidth, rawWidth);
-			if (dpiWidth != 0) dpiWidth = dpiWidth > 0 ? Dpi.Scale(dpiWidth, _dpi) : -dpiWidth * aaaStyleMeasureStringWidth(STYLE_LINENUMBER, "8");
-		} else {
-			if (_marginDpi != null) _marginDpi[margin] = default;
-		}
-		Call(SCI_SETMARGINWIDTHN, margin, dpiWidth + rawWidth);
+	/// <param name="margin">Margin index for SCI_SETMARGINWIDTHN, or -1 to use SCI_SETMARGINLEFT, or -2 to use SCI_SETMARGINRIGHT.</param>
+	/// <param name="pixels">Logical pixels or 0.</param>
+	/// <param name="chars">Number of character '8' widths or 0. If both <i>pixels</i> and <i>chars</i> are not 0, uses their sum.</param>
+	public void aaaMarginSetWidth(int margin, int pixels, int chars = 0) {
+		_marginDpi ??= new (short, short)[Call(SCI_GETMARGINS) + 2];
+		_marginDpi[margin + 2] = ((short)pixels, (short)chars);
+		_MarginSetWidth(margin, pixels, chars);
 	}
-	internal (int dpi, int raw)[] _marginDpi;
+	(short pixels, short chars)[] _marginDpi; //logical pixels
 	
 	void _MarginWidthsDpiChanged() {
-		var a = _marginDpi; if (a == null) return;
-		for (int i = a.Length; --i >= 0;) {
-			int v = a[i].dpi;
-			if (v == 0) continue;
-			v = v > 0 ? Dpi.Scale(v, _dpi) : -v * aaaStyleMeasureStringWidth(STYLE_LINENUMBER, "8");
-			Call(SCI_SETMARGINWIDTHN, i, v + a[i].raw);
-		}
+		if (_marginDpi is { } a)
+			for (int i = a.Length; --i >= 0;) if (a[i] != default) _MarginSetWidth(i - 2, a[i].pixels, a[i].chars);
 	}
 	
-	//public void aaaMarginSetWidth(int margin, string textToMeasureWidth) {
-	//	int n = aaaStyleMeasureStringWidth(STYLE_LINENUMBER, textToMeasureWidth);
-	//	Call(SCI_SETMARGINWIDTHN, margin, n + 4);
-	//}
+	void _MarginSetWidth(int i, int pixels, int chars) {
+		if (pixels != 0) pixels = Dpi.Scale(pixels, _dpi);
+		if (chars != 0) pixels += chars * aaaStyleMeasureStringWidth(STYLE_LINENUMBER, "8");
+		if (i == -2) Call(SCI_SETMARGINRIGHT, 0, pixels); else if (i == -1) Call(SCI_SETMARGINLEFT, 0, pixels); else Call(SCI_SETMARGINWIDTHN, i, pixels);
+	}
 	
 	/// <returns>Margin index, or -1 if not in a margin.</returns>
 	public int aaaMarginFromPoint(POINT p, bool screenCoord = false) {

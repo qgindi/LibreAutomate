@@ -227,7 +227,7 @@ class CiPopupList {
 		_unimportedButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		UpdateVisibleItems();
 		
-		var r = CiUtil.GetCaretRectFromPos(_doc, position, inScreen: true);
+		var r = _doc.EGetCaretRectFromPos(position, inScreen: true);
 		r.left -= Dpi.Scale(50, _doc);
 		
 		_popup.ShowByRect(_doc, Dock.Bottom, r);

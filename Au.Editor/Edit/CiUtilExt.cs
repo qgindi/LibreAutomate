@@ -96,7 +96,7 @@ static class CiUtilExt {
 					if (code[--end] != '\n') return null;
 					if (code[end - 1] == '\r') end--;
 					if (position > end) return null;
-					//never mind indentation
+					//never mind indent
 				}
 				goto gTrue;
 			}
@@ -255,7 +255,7 @@ static class CiUtilExt {
 	/// <summary>
 	/// Gets full span, not including leading trivia that is not comments/doccomments touching the declaration.
 	/// </summary>
-	/// <param name="minimalLeadingTrivia">Get leading trivia just until the first newline when searching backwards. Usually it is indentation whitespace or nothing.</param>
+	/// <param name="minimalLeadingTrivia">Get leading trivia just until the first newline when searching backwards. Usually it is indent whitespace or nothing.</param>
 	/// <param name="spanEnd">Get <c>Span.End</c> instead of <c>FullSpan.End</c>.</param>
 	public static TextSpan GetRealFullSpan(this SyntaxNode t, bool minimalLeadingTrivia = false, bool spanEnd = false) {
 		int from = t.SpanStart;
@@ -281,7 +281,6 @@ static class CiUtilExt {
 	
 	/// <summary>
 	/// Gets the first ancestor-or-this that is a statement or member/accessor declaration or using directive etc.
-	/// See also <see cref="CiUtil.GetStatementEtcFromPos"/> (it finds node and calls this func).
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="pos">See remarks.</param>
@@ -471,12 +470,38 @@ static class CiUtilExt {
 	}
 	
 	/// <summary>
-	/// Appends n tabs or n*4 spaces, depending on <b>App.Settings.ci_formatIndentationSpaces</b>.
+	/// Appends n tabs or n*4 spaces, depending on <b>App.Settings.ci_formatTabIndent</b>.
 	/// </summary>
 	public static StringBuilder AppendIndent(this StringBuilder t, int n) {
 		if (App.Settings.ci_formatTabIndent) t.Append('\t', n);
 		else t.Append(' ', n * 4);
 		return t;
+	}
+	
+	/// <summary>
+	/// Appends C# code <i>s</i> to <i>b</i>.
+	/// For each line adds <i>indent</i> tabs, except in multiline @"string" or """string""" (same for u8).
+	/// Ignores the last empty line of <i>s</i>. Appends newline at the end if <b>andNewline</b>.
+	/// </summary>
+	public static void AppendCodeWithIndent(this StringBuilder t, string s, int indent, bool andNewline) {
+		if (indent > 0) {
+			var cu = CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview)).GetCompilationUnitRoot();
+			var a = s.Lines(..); int i = 0;
+			foreach (var v in a) {
+				bool canIndent = true;
+				if (s[v.start] == '#' && cu.FindTrivia(v.start).IsDirective) canIndent = false;
+				else {
+					var tok = cu.FindToken(v.start);
+					canIndent = tok.IsInString(v.start, s, out _, orU8: true) == false;
+				}
+				if (canIndent) t.AppendIndent(indent);
+				t.Append(s, v.start, v.Length);
+				if (++i < a.Length || andNewline) t.AppendLine();
+			}
+		} else {
+			t.Append(s);
+			if (!s.Ends('\n')) t.AppendLine();
+		}
 	}
 }
 

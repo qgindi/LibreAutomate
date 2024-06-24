@@ -103,18 +103,10 @@ record AppSettings : JSettings {
 	public bool edit_wrap, edit_noImages;
 	
 	//code info, autocorrection, formatting
-	public bool ci_complGroup = true, ci_classicEnter, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true, ci_semicolon = true;
+	public bool ci_complGroup = true, ci_enterBeforeParen = true, ci_enterBeforeSemicolon = true, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true, ci_semicolon = true;
 	public int ci_complParen; //0 spacebar, 1 always, 2 never
 	public int ci_enterWith;
 	public int ci_rename;
-	
-	//CONSIDER: option to specify completion keys/chars. See https://www.quickmacros.com/forum/showthread.php?tid=7263
-	//public byte ci_complOK = 15; //1 Enter, 2 Tab, 4 Space, 8 other
-	//public byte ci_complArgs = 4; //1 Enter, 2 Tab, 4 Space (instead of ci_complParen)
-	//maybe option to use Tab for Space, and disable Space. Tab would add space or/and () like now Space does.
-	
-	//public byte ci_formatBraceNewline; //0 never, 1 always, 2 type/function
-	//public byte ci_formatIndentation; //0 tab, 1 4 spaces, 2 2 spaces
 	
 	//panel Files
 	public bool files_multiSelect;

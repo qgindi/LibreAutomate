@@ -740,7 +740,7 @@ public unsafe partial class KScintilla {
 	/// Always greater or equal than SelectionStart16.
 	/// </summary>
 	public int aaaSelectionEnd16 => aaaPos16(aaaSelectionEnd8);
-
+	
 	/// <summary>
 	/// <c>utf16 ? (aaaSelectionStart16, aaaSelectionEnd16) : (aaaSelectionStart8, aaaSelectionEnd8)</c>
 	/// </summary>
@@ -864,7 +864,7 @@ public unsafe partial class KScintilla {
 	/// <param name="utf16"></param>
 	/// <param name="pos">A position in document text.</param>
 	/// <param name="extraSpaces">Receives the number of extra spaces, 0 to 3.</param>
-	public int aaaLineIndentationFromPos(bool utf16, int pos, out int extraSpaces) {
+	public int aaaLineIndentFromPos(bool utf16, int pos, out int extraSpaces) {
 		int line = aaaLineFromPos(utf16, pos);
 		int i = Call(SCI_GETLINEINDENTATION, line), r = i / 4;
 		extraSpaces = i - r * 4;
@@ -876,7 +876,7 @@ public unsafe partial class KScintilla {
 	/// </summary>
 	/// <param name="utf16"></param>
 	/// <param name="pos">A position in document text.</param>
-	public int aaaLineIndentationFromPos(bool utf16, int pos) => aaaLineIndentationFromPos(utf16, pos, out _);
+	public int aaaLineIndentFromPos(bool utf16, int pos) => aaaLineIndentFromPos(utf16, pos, out _);
 	
 	/// <summary>
 	/// Gets position from point.
@@ -906,8 +906,9 @@ public unsafe partial class KScintilla {
 	/// If s is null or "", removes annotation.
 	/// Preserves existing image info.
 	/// </summary>
-	public void aaaAnnotationText(int line, string s) {
-		if (AaImages != null) AaImages.AnnotationText_(line, s);
+	public void aaaAnnotationText(int line, string s, bool eol = false) {
+		if (eol) aaaAnnotationText_(line, s, eol);
+		else if (AaImages != null) AaImages.AnnotationText_(line, s);
 		else aaaAnnotationText_(line, s);
 	}
 	
@@ -915,9 +916,9 @@ public unsafe partial class KScintilla {
 	/// Sets raw annotation text which can contain image info.
 	/// If s is null or "", removes annotation.
 	/// </summary>
-	internal void aaaAnnotationText_(int line, string s) {
+	internal void aaaAnnotationText_(int line, string s, bool eol = false) {
 		if (s.NE()) s = null;
-		aaaSetString(SCI_ANNOTATIONSETTEXT, line, s);
+		aaaSetString(eol ? SCI_EOLANNOTATIONSETTEXT : SCI_ANNOTATIONSETTEXT, line, s);
 	}
 	
 	/// <summary>
@@ -1461,17 +1462,25 @@ public unsafe partial class KScintilla {
 	}
 	
 	/// <summary>
+	/// <c>=> new aaaUndoAction(this);</c>
+	/// </summary>
+	public aaaUndoAction aaaNewUndoAction(bool onUndoDontChangeCaretPos = false) => new aaaUndoAction(this, onUndoDontChangeCaretPos);
+	
+	/// <summary>
 	/// Ctor calls <see cref="aaaBeginUndoAction"/>. Dispose() calls <see cref="aaaEndUndoAction"/>.
 	/// Does nothing if it's a nested undo action.
 	/// </summary>
 	public struct aaaUndoAction : IDisposable {
 		KScintilla _sci;
+		bool _onUndoDontChangeCaretPos;
 		
 		/// <summary>
 		/// Calls SCI_BEGINUNDOACTION.
 		/// </summary>
 		/// <param name="sci">Can be null, then does nothing.</param>
-		public aaaUndoAction(KScintilla sci) {
+		/// <param name="onUndoDontChangeCaretPos"></param>
+		public aaaUndoAction(KScintilla sci, bool onUndoDontChangeCaretPos = false) {
+			_onUndoDontChangeCaretPos = onUndoDontChangeCaretPos;
 			_sci = sci;
 			_sci?.aaaBeginUndoAction();
 		}
@@ -1481,8 +1490,9 @@ public unsafe partial class KScintilla {
 		/// </summary>
 		public void Dispose() {
 			if (_sci != null) {
-				if (0 == _sci.aaaEndUndoAction())
-					Sci_SetUndoMark(_sci.AaSciPtr, -1);
+				if (0 == _sci.aaaEndUndoAction()) {
+					if (_onUndoDontChangeCaretPos) Sci_SetUndoMark(_sci.AaSciPtr, -1);
+				}
 				_sci = null;
 			}
 		}

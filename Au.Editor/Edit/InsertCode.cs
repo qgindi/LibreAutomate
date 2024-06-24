@@ -38,12 +38,12 @@ enum ICSFlags {
 }
 
 /// <summary>
-/// Inserts various code in code editor. With correct indentation etc.
+/// Inserts various code in code editor. With correct indent etc.
 /// Some functions can insert in other controls too.
 /// </summary>
 static class InsertCode {
 	/// <summary>
-	/// Inserts one or more statements at current line. With correct position, indentation, etc.
+	/// Inserts one or more statements at current line. With correct position, indent, etc.
 	/// If editor is null or readonly, prints in output.
 	/// Async if called from non-main thread.
 	/// </summary>
@@ -144,7 +144,7 @@ static class InsertCode {
 		
 		//rename symbols in s if need
 		
-		try { CodeUtil.RenameNewSymbols(ref s, k, node, pos, flags.Has(ICSFlags.MakeVarName1), renameVars); }
+		try { Util.RenameNewSymbols(ref s, k, node, pos, flags.Has(ICSFlags.MakeVarName1), renameVars); }
 		catch (Exception e1) { Debug_.Print(e1); }
 		
 		//indent, newlines
@@ -159,7 +159,7 @@ static class InsertCode {
 		bool afterOpenBrace = t2.IsKind(SyntaxKind.OpenBraceToken);
 		bool beforeCloseBrace = replTo < code.Length && code[replTo] == '}';
 		
-		int indent = d.aaaLineIndentationFromPos(true, pos);
+		int indent = d.aaaLineIndentFromPos(true, pos);
 		if (afterOpenBrace && breakLine != null && !(t2.Parent is BlockSyntax bs1 && bs1.Parent is GlobalStatementSyntax)) indent++;
 		else if (beforeCloseBrace) indent++;
 		
@@ -169,7 +169,7 @@ static class InsertCode {
 			if (nn < 2) b.AppendIndent(indent).AppendLine();
 		}
 		
-		CodeUtil.AppendCodeWithIndent(b, s, indent, andNewline: true);
+		b.AppendCodeWithIndent(s, indent, andNewline: true);
 		
 		if (separate && !s.Ends("\n}") && replTo < code.Length && code[replTo] is not ('\r' or '}')) {
 			b.AppendIndent(indent).AppendLine();
@@ -493,5 +493,105 @@ ${SELECTED_TEXT}$0
 		//print.it(cd.pos, replFrom, replTo, icon);
 		
 		cd.sci.aaaReplaceRange(true, replFrom, replTo, icon);
+	}
+	
+	public static class Util {
+		/// <summary>
+		/// If <i>s</i> contains local variable declarations, replaces the variable names if they exist in current document in scope at caret position.
+		/// </summary>
+		public static void RenameNewSymbols(ref string s, int pos, bool makeVarName1 = false) {
+			if (!CodeInfo.GetContextAndDocument(out var k)) return;
+			var token = k.syntaxRoot.FindToken(k.pos);
+			var node = token.Parent;
+			try { RenameNewSymbols(ref s, k, node, pos, makeVarName1); }
+			catch (Exception e1) { Debug_.Print(e1); }
+		}
+		
+		/// <summary>
+		/// If <i>s</i> contains local variable declarations, replaces the variable names if they exist in <i>k.document</i> in scope at <i>node</i>/<i>pos</i>.
+		/// </summary>
+		/// <param name="makeVarName1">Also rename local variables declared like `var v` with `var v1` at root level.</param>
+		/// <param name="rename">Explicit renamings.</param>
+		public static void RenameNewSymbols(ref string s, CodeInfo.Context k, SyntaxNode node, int pos, bool makeVarName1, (string oldName, string newName)[] rename = null) {
+			//find the function or TLS where to look for declared symbols in editor code
+			var scope = node;
+			for (; scope is not CompilationUnitSyntax; scope = scope.Parent) {
+				if (scope is BaseMethodDeclarationSyntax or LocalFunctionStatementSyntax or AnonymousFunctionExpressionSyntax) {
+					if (scope.Span.ContainsInside(pos)) break;
+				}
+			}
+			
+			//modified Roslyn's GetAllDeclaredSymbols. Would be difficult to use it.
+			static void _GetDeclaredSymbols(SemanticModel semo, SyntaxNode node, List<ISymbol> symbols, HashSet<string> names, HashSet<string> hVar1, int level = 0) {
+				if (node is not CompilationUnitSyntax && semo.GetDeclaredSymbol(node) is ISymbol sym) {
+					symbols?.Add(sym);
+					names?.Add(sym.Name);
+					if (hVar1 != null) if (level == 4 && node.Parent.Parent is LocalDeclarationStatementSyntax && sym.Name is var s && !s.Ends('1')) hVar1.Add(s);
+				}
+				if (level > 0 && node is LocalFunctionStatementSyntax or BaseTypeDeclarationSyntax) return;
+				foreach (var n in node.ChildNodes()) {
+					if (n is AnonymousFunctionExpressionSyntax or AnonymousObjectCreationExpressionSyntax or TupleExpressionSyntax) continue; //lambda etc
+					_GetDeclaredSymbols(semo, n, symbols, names, hVar1, level + 1);
+				}
+			}
+			
+			HashSet<string> h1 = new(); //names of symbols declared in scope. If makeVarName1, also names of local variables declared in s like `var v` at root level.
+			
+			//get symbols declared in s
+			List<ISymbol> a2 = new();
+			HashSet<string> h2 = new();
+			using var ws2 = new AdhocWorkspace();
+			var doc2 = CiUtil.CreateDocumentFromCode(ws2, s, false);
+			var semo2 = doc2.GetSemanticModelAsync().Result;
+			_GetDeclaredSymbols(semo2, semo2.Root, a2, h2, makeVarName1 ? h1 : null);
+			//print.it("---- h2 ----"); foreach (var v in h2) print.it(v);
+			if (h2.Count == 0) return;
+			
+			//get names of symbols declared in scope (editor code)
+			var semo1 = k.document.GetSemanticModelAsync().Result;
+			_GetDeclaredSymbols(semo1, scope, null, h1, null);
+			//print.it("---- h1 ----"); foreach (var v in h1) print.it(v);
+			if (h1.Count == 0) return;
+			
+			bool renamed = false;
+			var sol = doc2.Project.Solution;
+			
+			//in s rename symbols that exist in scope (editor code) or renameVars
+			foreach (var sym in a2) {
+				string name = sym.Name, name2 = null;
+				
+				if (rename != null) {
+					foreach (var v in rename)
+						if (v.oldName == name) {
+							name = name2 = v.newName;
+							if (!makeVarName1 && !h1.Contains(name)) goto g2;
+							goto g1;
+						}
+				}
+				
+				if (!h1.Contains(name)) continue;
+				g1:
+				//create unique name and add to hs1
+				int i = 1;
+				if (name.RxMatch(@"\d+$", 0, out RXGroup g)) {
+					i = Math.Max(i, name.ToInt(g.Start) + 1);
+					name = name[..g.Start];
+				}
+				while (h2.Contains(name2 = name + i) || !h1.Add(name2)) i++;
+				//print.it(sym.Name, name2);
+				g2:
+				var opt1 = new SymbolRenameOptions();
+				sol = Renamer.RenameSymbolAsync(sol, sym, opt1, name2).Result;
+				h2.Remove(sym.Name);
+				renamed = true;
+			}
+			if (renamed) s = sol.GetDocument(doc2.Id).GetTextAsync().Result.ToString();
+			
+			//rejected: don't rename if variables in both codes are in unrelated { blocks }.
+			//	Tested: in most cases better like now.
+			
+			//rejected: also replace names that match reserved keywords.
+			//	This program will not create such names.
+		}
 	}
 }

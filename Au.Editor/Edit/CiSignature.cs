@@ -189,7 +189,7 @@ class CiSignature {
 			_CancelUI();
 		}, SciCode.TempRangeFlags.NoDuplicate);
 		
-		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, fullSpan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos));
+		var rect = RECT.Union(doc.EGetCaretRectFromPos(fullSpan.Start), doc.EGetCaretRectFromPos(cd.pos));
 		var rclient = doc.AaWnd.ClientRect;
 		rect.left = Math.Clamp(rect.left, 0, rect.right = Math.Clamp(rect.right, 0, rclient.right));
 		doc.AaWnd.MapClientToScreen(ref rect);

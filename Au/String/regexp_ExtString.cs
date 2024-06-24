@@ -1,7 +1,6 @@
 namespace Au.Types;
 
-public static partial class ExtString
-{
+public static partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if this string matches PCRE regular expression <i>rx</i>.
 	/// </summary>
@@ -19,7 +18,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.IsMatch(t, range);
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if this string matches PCRE regular expression <i>rx</i>.
 	/// Gets match info as <see cref="RXMatch"/>.
@@ -38,7 +37,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.Match(t, out result, range);
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if this string matches PCRE regular expression <i>rx</i>.
 	/// Gets whole match or some group, as string.
@@ -57,7 +56,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.Match(t, group, out result, range);
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if this string matches PCRE regular expression <i>rx</i>.
 	/// Gets whole match or some group, as index and length.
@@ -76,7 +75,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.Match(t, group, out result, range);
 	}
-
+	
 	/// <summary>
 	/// Finds all match instances of PCRE regular expression <i>rx</i>.
 	/// </summary>
@@ -95,7 +94,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.FindAll(t, range);
 	}
-
+	
 	/// <summary>
 	/// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="RXMatch"/>.
 	/// </summary>
@@ -114,7 +113,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.FindAll(t, out result, range);
 	}
-
+	
 	/// <summary>
 	/// Finds all match instances of PCRE regular expression <i>rx</i>.
 	/// </summary>
@@ -133,7 +132,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.FindAll(t, group, range);
 	}
-
+	
 	/// <summary>
 	/// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
 	/// </summary>
@@ -152,7 +151,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.FindAll(t, group, out result, range);
 	}
-
+	
 	//rejected. Rarely used.
 	///// <summary>
 	///// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="RXGroup"/>.
@@ -172,7 +171,7 @@ public static partial class ExtString
 	//	var x = _cache.AddOrGet(rx, flags);
 	//	return x.FindAllG(t, group, out result, range);
 	//}
-
+	
 	/// <summary>
 	/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
 	/// </summary>
@@ -197,7 +196,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.Replace(t, repl, maxCount, range);
 	}
-
+	
 	/// <summary>
 	/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
 	/// </summary>
@@ -222,7 +221,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.Replace(t, repl, out result, maxCount, range);
 	}
-
+	
 	/// <summary>
 	/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
 	/// </summary>
@@ -246,7 +245,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.Replace(t, replFunc, maxCount, range);
 	}
-
+	
 	/// <summary>
 	/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
 	/// </summary>
@@ -270,7 +269,7 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.Replace(t, replFunc, out result, maxCount, range);
 	}
-
+	
 	/// <summary>
 	/// Returns an array of substrings that in this string are delimited by regular expression matches.
 	/// </summary>
@@ -289,24 +288,22 @@ public static partial class ExtString
 		var x = _cache.AddOrGet(rx, flags);
 		return x.Split(t, maxCount, range);
 	}
-
+	
 	static _RegexCache _cache = new();
-
+	
 	//Cache of compiled regular expressions.
 	//Can make ~10 times faster when the subject string is short.
 	//The algorithm is from .NET Regex source code.
-	class _RegexCache
-	{
-		struct _RXCode
-		{
+	class _RegexCache {
+		struct _RXCode {
 			public string regex;
 			public regexp code; //note: could instead cache only PCRE code (nint), but it makes quite difficult
 			public RXFlags flags;
 		}
-
+		
 		LinkedList<_RXCode> _list = new();
 		const int c_maxCount = 15;
-
+		
 		/// <summary>
 		/// If <i>rx</i>/<i>flags</i> is in the cache, returns the cached code.
 		/// Else compiles <i>rx</i>/<i>flags</i>, adds to the cache and returns the code.
@@ -329,12 +326,12 @@ public static partial class ExtString
 				}
 				{
 					var code = new regexp(rx, flags);
-
+					
 					var x = new _RXCode() { code = code, regex = rx, flags = flags };
 					_list.AddFirst(x);
 					if (_list.Count > c_maxCount) _list.RemoveLast();
 					//note: now cannot free the PCRE code, because another thread may be using it. GC will do it safely.
-
+					
 					return code;
 				}
 			}

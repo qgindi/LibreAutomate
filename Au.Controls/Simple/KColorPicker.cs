@@ -166,28 +166,7 @@ public class KColorPicker : UserControl {
 			int y = 0;
 			for (int i = 0, lum = 240; (lum -= 240 / (c_nLum + 1)) > 0; i++) {
 				for (int j = 0, hue = 0; hue < 240; j++, hue += 240 / c_nHue) {
-					//var col=_ColorHLSToRGB(hue, lum, 240);
-					
-					int lum2 = lum;
-					if (lum >= 120) {
-						int d = Math.Abs(80 - hue); //diff from green
-						if (d <= 64) {
-							d /= 4;
-							//if(lum==120) print.it(Math.Max(d, 10), (240-lum)/Math.Max(d, 10));
-							lum2 -= (240 - lum) / Math.Max(d, 8);
-						}
-					}
-					var col = ColorInt.FromHLS(hue, lum2, 240, bgr: true);
-					
-					_ac[j, i] = col;
-					
-					//if(lum==120 /*&& hue<=180*/) {
-					//	ColorInt k=ColorInt.FromBGR(col, true);
-					//	var b=k.GetPerceivedBrightness();
-					//	print.it(col.ToString("X6"), hue, lum, b);
-					//}
-					
-					_Draw(col, j * z);
+					_Draw(s_ac[j, i], j * z);
 				}
 				y += z;
 			}
@@ -195,11 +174,7 @@ public class KColorPicker : UserControl {
 			//black...white
 			y += _cellSize / 4;
 			for (int j = 0, gray = 0; j < c_nHue; j++, gray += gray < 120 ? 10 : 8) {
-				//print.it(gray);
-				if (gray > 255) gray = 255;
-				var col = (gray << 16) | (gray << 8) | gray;
-				_ac[j, c_nLum] = col;
-				_Draw(col, j * z);
+				_Draw(s_ac[j, c_nLum], j * z);
 			}
 			
 			//selection
@@ -214,7 +189,45 @@ public class KColorPicker : UserControl {
 			}
 		}
 		
-		int[,] _ac = new int[c_nHue, c_nLum + 1];
+		static int[,] _GenerateColors() {
+			int[,] a = new int[c_nHue, c_nLum + 1];
+			for (int i = 0, lum = 240; (lum -= 240 / (c_nLum + 1)) > 0; i++) {
+				for (int j = 0, hue = 0; hue < 240; j++, hue += 240 / c_nHue) {
+					//var col=_ColorHLSToRGB(hue, lum, 240);
+					
+					int lum2 = lum;
+					if (lum >= 120) {
+						int d = Math.Abs(80 - hue); //diff from green
+						if (d <= 64) {
+							d /= 4;
+							//if(lum==120) print.it(Math.Max(d, 10), (240-lum)/Math.Max(d, 10));
+							lum2 -= (240 - lum) / Math.Max(d, 8);
+						}
+					}
+					var col = ColorInt.FromHLS(hue, lum2, 240, bgr: true);
+					
+					a[j, i] = col;
+					
+					//if(lum==120 /*&& hue<=180*/) {
+					//	ColorInt k=ColorInt.FromBGR(col, true);
+					//	var b=k.GetPerceivedBrightness();
+					//	print.it(col.ToString("X6"), hue, lum, b);
+					//}
+				}
+			}
+			
+			//black...white
+			for (int j = 0, gray = 0; j < c_nHue; j++, gray += gray < 120 ? 10 : 8) {
+				//print.it(gray);
+				if (gray > 255) gray = 255;
+				var col = (gray << 16) | (gray << 8) | gray;
+				a[j, c_nLum] = col;
+			}
+			
+			return a;
+		}
+		
+		static readonly int[,] s_ac = _GenerateColors();
 		
 		(int hue, int lum) _select = (0, c_nLum);
 		
@@ -228,7 +241,7 @@ public class KColorPicker : UserControl {
 			if (S == 0) { //gray
 				int lum = L * 255 / 240;
 				for (int j = 0; j < c_nHue; j++) {
-					int gray = _ac[j, c_nLum] & 255;
+					int gray = s_ac[j, c_nLum] & 255;
 					if (gray >= lum) { _select = (j, c_nLum); break; }
 				}
 			} else {
@@ -253,7 +266,7 @@ public class KColorPicker : UserControl {
 			y = Math.Clamp(y, 0, c_nLum);
 			_select = (x, y);
 			_cp._palSelecting = true;
-			int col = _ac[x, y];
+			int col = s_ac[x, y];
 			_cp._SetColor(col, bgr: true);
 			_cp._palSelecting = false;
 			Invalidate();

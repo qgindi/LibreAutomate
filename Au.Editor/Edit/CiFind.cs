@@ -51,7 +51,7 @@ static class CiFind {
 				k.aaaStyleBackColor(c_marginStyleRead, 0xE0E0E0);
 				k.aaaStyleForeColor(c_marginStyleRead, 0x008000);
 			}
-			k.aaaMarginSetWidth(c_marginUsage, implementations ? 0 : -7);
+			k.aaaMarginSetWidth(c_marginUsage, 0, implementations ? 0 : 7);
 			
 			//perf.first();
 			Au.Compiler.TestInternal.RefsStart();
@@ -361,7 +361,7 @@ static class CiFind {
 		if (chL is '(' or '[' or '{' or '<') {
 			chR = chL switch { '(' => ')', '[' => ']', '{' => '}', _ => '>' };
 			_Brace(false);
-		} else if (chL == '#' && CodeUtil.IsLineStart(code, pos)) {
+		} else if (chL == '#' && CiUtil.IsLineStart(code, pos)) {
 			_Directive();
 		}
 		
@@ -369,7 +369,7 @@ static class CiFind {
 		if (chR is ')' or ']' or '}' or '>') {
 			chL = chR switch { ')' => '(', ']' => '[', '}' => '{', _ => '<' };
 			_Brace(true);
-		} else if (chR == '#' && CodeUtil.IsLineStart(code, pos)) {
+		} else if (chR == '#' && CiUtil.IsLineStart(code, pos)) {
 			_Directive();
 		}
 		
@@ -519,7 +519,7 @@ static class CiFind {
 								df.Add(f, x = new(f, st.ToString(), new()));
 							}
 							
-							//Roslyn may add indentation, and it is always spaces. Trim it.
+							//Roslyn may add indent, and it is always spaces. Trim it.
 							var s = tc.NewText.TrimStart();
 							int start = tc.Span.Start, end = tc.Span.End;
 							while (start < end && x.text[start] is '\t' or ' ') start++;

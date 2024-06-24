@@ -8,7 +8,7 @@ using static Sci;
 /// <remarks>
 /// Draws images in annotation areas.
 /// Supports text annotations too, below images and in no-image lines. But it is limited:
-/// 1. To set/get it use <see cref="KScintilla.aaaAnnotationText(int, string)"/>, not direct Scintilla API.
+/// 1. To set/get it use <see cref="KScintilla.aaaAnnotationText(int, string, bool)"/>, not direct Scintilla API.
 /// 2. You cannot hide all annotations (SCI_ANNOTATIONSETVISIBLE). This class sets it to show always.
 /// 3. You cannot clear all annotations (SCI_ANNOTATIONCLEARALL).
 /// 4. Setting annotation styles is currently not supported.

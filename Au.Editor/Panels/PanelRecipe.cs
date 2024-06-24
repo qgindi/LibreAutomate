@@ -228,8 +228,7 @@ class PanelRecipe {
 			//aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
 			//aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
 			aaaStyleFont(STYLE_DEFAULT, App.Settings.font_recipeText.name, App.Settings.font_recipeText.size);
-			var styles = new CiStyling.TStyles(customized: false) { FontName = App.Settings.font_recipeCode.name, FontSize = App.Settings.font_recipeCode.size };
-			styles.ToScintilla(this, multiFont: true);
+			CiStyling.TStyles.Default.ToScintilla(this, multiFont: true, fontName: App.Settings.font_recipeCode.name, fontSize: App.Settings.font_recipeCode.size);
 		}
 		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {

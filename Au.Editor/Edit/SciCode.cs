@@ -7,8 +7,6 @@ using System.Windows.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-//TODO: bug: when commented out a line or /*..*/, on Undo does not set cursor pos there (and does not scroll).
-
 partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;
@@ -80,8 +78,8 @@ partial class SciCode : KScintilla {
 		aaaMarginSetType(c_marginLineNumbers, SC_MARGIN_NUMBER);
 		
 		aaaMarginSetWidth(c_marginChanges, 4);
+		aaaMarginSetWidth(-1, 2);
 		
-		Call(SCI_SETMARGINLEFT, 0, 2);
 		Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
 		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
 		Call(SCI_ASSIGNCMDKEY, Math2.MakeLparam(SCK_RETURN, SCMOD_CTRL | SCMOD_SHIFT), SCI_NEWLINE);
@@ -94,7 +92,7 @@ partial class SciCode : KScintilla {
 		
 		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
 		
-		CiStyling.TStyles.Settings.ToScintilla(this);
+		CiStyling.TStyles.Customized.ToScintilla(this);
 		_OnHandleCreatedOrDpiChanged();
 		if (_fn.IsCodeFile) CiFolding.InitFolding(this);
 		_InitDragDrop();
@@ -462,7 +460,7 @@ partial class SciCode : KScintilla {
 		int c = 4;
 		int lines = aaaLineCount;
 		while (lines > 999) { c++; lines /= 10; }
-		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, -(_prevLineNumberMarginWidth = c), 4);
+		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, 3, _prevLineNumberMarginWidth = c);
 	}
 	int _prevLineNumberMarginWidth;
 	
@@ -766,6 +764,18 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 		public (int size, nint data) bookmark, bookmark2, breakpoint, breakpointD, breakpointC, breakpointCD, breakpointL, breakpointLD, debugLine, debugLine2;
 	}
 	static _MarkerBitmaps s_markerBitmaps;
+	
+	/// <summary>
+	/// Gets rectangle of caret if it was at the specified UTF-16 position.
+	/// If <i>pos16</i> less than 0, uses current caret position.
+	/// </summary>
+	public RECT EGetCaretRectFromPos(int pos16 = -1, bool inScreen = false) {
+		int pos8 = pos16 < 0 ? aaaCurrentPos8 : aaaPos8(pos16);
+		int x = Call(Sci.SCI_POINTXFROMPOSITION, 0, pos8), y = Call(Sci.SCI_POINTYFROMPOSITION, 0, pos8);
+		var r = new RECT(x, y, 1, Call(Sci.SCI_TEXTHEIGHT, aaaLineFromPos(false, pos8)) + 2);
+		if (inScreen) AaWnd.MapClientToScreen(ref r);
+		return r;
+	}
 	
 	#endregion
 }

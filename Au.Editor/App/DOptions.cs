@@ -203,6 +203,7 @@ class DOptions : KDialogWindow {
 		b.Add(out KCheckBox cBold, "Bold");
 		b.Add(out KCheckBox cItalic, "Italic");
 		b.Add(out KCheckBox cUnderline, "Underline");
+		b.Add(out KCheckBox cBackground, "Background");
 		b.End();
 		b.R.Add("Opacity 0-255", out TextBox tAlpha).Width(50, "L");
 		b.End();
@@ -221,7 +222,7 @@ class DOptions : KDialogWindow {
 			sciStyles.aaaSetElementColor(Sci.SC_ELEMENT_CARET_LINE_BACK, 0xE0E0E0);
 			sciStyles.Call(Sci.SCI_SETCARETLINEVISIBLEALWAYS, 1);
 			
-			var styles = CiStyling.TStyles.Settings;
+			var styles = CiStyling.TStyles.Customized with { };
 			
 			//font
 			
@@ -259,50 +260,58 @@ class DOptions : KDialogWindow {
 			styles.ToScintilla(sciStyles);
 			
 			bool ignoreColorEvents = false;
-			int backColor = styles.BackgroundColor;
 			
-			var table = new _TableItem[] {
-				new("Font", _StyleKind.Font, 0),
+			const int c_isStyle = 0, c_isIndicator = 1, c_isElement = 2, c_isFont = 3, c_isBackground = 4;
+			
+			(string name, int kind, int index)[] table = [
+				("Font", c_isFont, 0),
 
-				new("Background", _StyleKind.Background, 0),
+				("Background", c_isBackground, 0),
 
-				new("Text", _StyleKind.Style, (int)EStyle.None),
-				new("//Comment", _StyleKind.Style, (int)EStyle.Comment),
-				new(@"""String"" 'c'", _StyleKind.Style, (int)EStyle.String),
-				new(@"\r\n\t\0\\", _StyleKind.Style, (int)EStyle.StringEscape),
-				new("1234567890", _StyleKind.Style, (int)EStyle.Number),
-				new("()[]{},;:", _StyleKind.Style, (int)EStyle.Punctuation),
-				new("Operator", _StyleKind.Style, (int)EStyle.Operator),
-				new("Keyword", _StyleKind.Style, (int)EStyle.Keyword),
-				new("Namespace", _StyleKind.Style, (int)EStyle.Namespace),
-				new("Type", _StyleKind.Style, (int)EStyle.Type),
-				new("Function", _StyleKind.Style, (int)EStyle.Function),
-				new("Variable", _StyleKind.Style, (int)EStyle.Variable),
-				new("Constant", _StyleKind.Style, (int)EStyle.Constant),
-				new("GotoLabel", _StyleKind.Style, (int)EStyle.Label),
-				new("#preprocessor", _StyleKind.Style, (int)EStyle.Preprocessor),
-				new("#if-disabled", _StyleKind.Style, (int)EStyle.Excluded),
-				new("/// doc text", _StyleKind.Style, (int)EStyle.XmlDocText),
-				new("/// <doc tag>", _StyleKind.Style, (int)EStyle.XmlDocTag),
-				new("Line number", _StyleKind.Style, (int)EStyle.LineNumber),
+				("Text", c_isStyle, (int)EStyle.None),
+				("//Comment", c_isStyle, (int)EStyle.Comment),
+				(@"""String"" 'c'", c_isStyle, (int)EStyle.String),
+				(@"\r\n\t\0\\", c_isStyle, (int)EStyle.StringEscape),
+				("1234567890", c_isStyle, (int)EStyle.Number),
+				("()[]{},;:", c_isStyle, (int)EStyle.Punctuation),
+				("Operator", c_isStyle, (int)EStyle.Operator),
+				("Keyword", c_isStyle, (int)EStyle.Keyword),
+				("Namespace", c_isStyle, (int)EStyle.Namespace),
+				("Type", c_isStyle, (int)EStyle.Type),
+				("Function", c_isStyle, (int)EStyle.Function),
+				("Variable", c_isStyle, (int)EStyle.Variable),
+				("Constant", c_isStyle, (int)EStyle.Constant),
+				("GotoLabel", c_isStyle, (int)EStyle.Label),
+				("#preprocessor", c_isStyle, (int)EStyle.Preprocessor),
+				("#if-disabled", c_isStyle, (int)EStyle.Excluded),
+				("/// doc text", c_isStyle, (int)EStyle.XmlDocText),
+				("/// <doc tag>", c_isStyle, (int)EStyle.XmlDocTag),
+				("Regexp text", c_isStyle, (int)EStyle.RxText),
+				("Regexp meta", c_isStyle, (int)EStyle.RxMeta),
+				("Regexp chars", c_isStyle, (int)EStyle.RxChars),
+				("Regexp option", c_isStyle, (int)EStyle.RxOption),
+				("Regexp escape", c_isStyle, (int)EStyle.RxEscape),
+				("Regexp callout", c_isStyle, (int)EStyle.RxCallout),
+				("Regexp comment", c_isStyle, (int)EStyle.RxComment),
+				("Line number", c_isStyle, (int)EStyle.LineNumber),
 
-				new("Text highlight", _StyleKind.Indicator, SciCode.c_indicFound),
-				new("Symbol highlight", _StyleKind.Indicator, SciCode.c_indicRefs),
-				new("Brace highlight", _StyleKind.Indicator, SciCode.c_indicBraces),
-				new("Debug highlight", _StyleKind.Indicator, SciCode.c_indicDebug),
+				("Text highlight", c_isIndicator, SciCode.c_indicFound),
+				("Symbol highlight", c_isIndicator, SciCode.c_indicRefs),
+				("Brace highlight", c_isIndicator, SciCode.c_indicBraces),
+				("Debug highlight", c_isIndicator, SciCode.c_indicDebug),
 
-				new("Selection", _StyleKind.Element, Sci.SC_ELEMENT_SELECTION_BACK),
-				new("Sel. no focus", _StyleKind.Element, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
-			};
+				("Selection", c_isElement, Sci.SC_ELEMENT_SELECTION_BACK),
+				("Sel. no focus", c_isElement, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
+			];
 			
 			sciStyles.aaaText = string.Join("\r\n", table.Select(o => o.name));
 			for (int i = 0; i < table.Length; i++) {
 				int lineStart = sciStyles.aaaLineStart(false, i), lineEnd = sciStyles.aaaLineEnd(false, i);
 				sciStyles.aaaIndicatorAdd(indicHidden, false, lineStart..lineEnd, i + 1);
-				if (table[i].kind == _StyleKind.Style) {
+				if (table[i].kind is c_isStyle) {
 					sciStyles.Call(Sci.SCI_STARTSTYLING, lineStart);
 					sciStyles.Call(Sci.SCI_SETSTYLING, lineEnd - lineStart, table[i].index);
-				} else if (table[i].kind == _StyleKind.Indicator) {
+				} else if (table[i].kind is c_isIndicator) {
 					sciStyles.aaaIndicatorAdd(table[i].index, false, lineStart..lineEnd);
 				}
 			}
@@ -316,7 +325,7 @@ class DOptions : KDialogWindow {
 					if (i != currentItem && i >= 0) {
 						currentItem = i;
 						var k = table[i];
-						if (k.kind == _StyleKind.Font) {
+						if (k.kind is c_isFont) {
 							pColor.Visibility = Visibility.Collapsed;
 							gFont.Visibility = Visibility.Visible;
 						} else {
@@ -324,22 +333,27 @@ class DOptions : KDialogWindow {
 							pColor.Visibility = Visibility.Visible;
 							ignoreColorEvents = true;
 							int col;
-							pFontStyle.Visibility = k.kind == _StyleKind.Style ? Visibility.Visible : Visibility.Collapsed;
-							tAlpha.Visibility = k.kind is _StyleKind.Element or _StyleKind.Indicator ? Visibility.Visible : Visibility.Collapsed;
-							if (k.kind == _StyleKind.Style) {
-								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_STYLEGETFORE, k.index));
-								cBold.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETBOLD, k.index);
-								cItalic.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETITALIC, k.index);
-								cUnderline.IsChecked = 0 != sciStyles.Call(Sci.SCI_STYLEGETUNDERLINE, k.index);
-							} else if (k.kind == _StyleKind.Indicator) {
-								col = ColorInt.SwapRB(sciStyles.Call(Sci.SCI_INDICGETFORE, k.index));
-								tAlpha.Text = sciStyles.Call(Sci.SCI_INDICGETALPHA, k.index).ToS();
-							} else if (k.kind == _StyleKind.Element) {
-								col = sciStyles.aaaGetElementColor(k.index).argb;
+							pFontStyle.Visibility = k.kind is c_isStyle ? Visibility.Visible : Visibility.Collapsed;
+							tAlpha.Visibility = k.kind is c_isElement or c_isIndicator ? Visibility.Visible : Visibility.Collapsed;
+							if (k.kind is c_isStyle) {
+								ref var rs = ref styles[(EStyle)k.index];
+								col = rs.color;
+								cBold.IsChecked = rs.bold;
+								cItalic.IsChecked = rs.italic;
+								cUnderline.IsChecked = rs.underline;
+								bool back = (EStyle)k.index is >= EStyle.RxText and <= EStyle.RxComment;
+								if (back) cBackground.IsChecked = rs.back;
+								cBackground.Visibility = back ? Visibility.Visible : Visibility.Collapsed;
+							} else if (k.kind is c_isIndicator) {
+								ref var ri = ref styles.Indicator(k.index);
+								col = ri.color;
+								tAlpha.Text = ri.alpha.ToS();
+							} else if (k.kind is c_isElement) {
+								col = styles.ElementColor(k.index);
 								tAlpha.Text = (col >>> 24).ToS();
 								col &= 0xFFFFFF;
 							} else { //Background
-								col = backColor;
+								col = styles.BackgroundColor;
 							}
 							colorPicker.Color = col;
 							ignoreColorEvents = false;
@@ -351,8 +365,8 @@ class DOptions : KDialogWindow {
 			
 			//when changed values of controls
 			TextChangedEventHandler textChanged = (_, _) => {
-				var (fname, fsize) = font.Get();
-				for (int i = 0; i <= Sci.STYLE_LINENUMBER; i++) sciStyles.aaaStyleFont(i, fname, fsize);
+				(styles.FontName, styles.FontSize) = font.Get();
+				styles.ToScintilla(sciStyles);
 			};
 			font.name.AddHandler(TextBoxBase.TextChangedEvent, textChanged);
 			font.size.AddHandler(TextBoxBase.TextChangedEvent, textChanged);
@@ -361,46 +375,40 @@ class DOptions : KDialogWindow {
 			cBold.CheckChanged += (sender, _) => _UpdateSci(sender);
 			cItalic.CheckChanged += (sender, _) => _UpdateSci(sender);
 			cUnderline.CheckChanged += (sender, _) => _UpdateSci(sender);
+			cBackground.CheckChanged += (sender, _) => _UpdateSci(sender);
 			tAlpha.TextChanged += (sender, _) => _UpdateSci(sender);
 			
 			void _UpdateSci(object control = null) {
 				if (ignoreColorEvents || currentItem < 0) return;
 				var k = table[currentItem];
 				int col = colorPicker.Color;
-				if (k.kind == _StyleKind.Style) {
-					if (control == cBold) sciStyles.aaaStyleBold(k.index, cBold.IsChecked);
-					else if (control == cItalic) sciStyles.aaaStyleItalic(k.index, cItalic.IsChecked);
-					else if (control == cUnderline) sciStyles.aaaStyleUnderline(k.index, cUnderline.IsChecked);
-					else sciStyles.aaaStyleForeColor(k.index, col);
-				} else if (k.kind == _StyleKind.Indicator) {
-					if (control == tAlpha) sciStyles.Call(Sci.SCI_INDICSETALPHA, k.index, Math.Clamp(tAlpha.Text.ToInt(), 0, 255));
-					else sciStyles.Call(Sci.SCI_INDICSETFORE, k.index, ColorInt.SwapRB(col));
-				} else if (k.kind == _StyleKind.Element) {
-					int m = sciStyles.aaaGetElementColor(k.index).argb;
+				if (k.kind is c_isStyle) {
+					ref var rs = ref styles[(EStyle)k.index];
+					if (control == cBold) rs.bold = cBold.IsChecked;
+					else if (control == cItalic) rs.italic = cItalic.IsChecked;
+					else if (control == cUnderline) rs.underline = cUnderline.IsChecked;
+					else if (control == cBackground) rs.back = cBackground.IsChecked;
+					else rs.color = col;
+				} else if (k.kind is c_isIndicator) {
+					ref var ri = ref styles.Indicator(k.index);
+					if (control == tAlpha) ri.alpha = Math.Clamp(tAlpha.Text.ToInt(), 0, 255);
+					else ri.color = col;
+				} else if (k.kind is c_isElement) {
+					ref var m = ref styles.ElementColor(k.index);
 					if (control == tAlpha) m = (m & 0xFFFFFF) | Math.Clamp(tAlpha.Text.ToInt(), 0, 255) << 24;
 					else m = (m & ~0xFFFFFF) | (col & 0xFFFFFF);
-					sciStyles.aaaSetElementColor(k.index, m);
-				} else if (k.kind == _StyleKind.Background) {
-					backColor = col;
-					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.aaaStyleBackColor(i, col);
+				} else if (k.kind is c_isBackground) {
+					styles.BackgroundColor = col;
 				}
+				styles.ToScintilla(sciStyles);
 			}
 			
 			_b.OkApply += e => {
-				var styles = new CiStyling.TStyles(sciStyles); //gets colors, bold, indicators
-				(styles.FontName, styles.FontSize) = font.Get();
-				
-				if (styles != CiStyling.TStyles.Settings) {
-					CiStyling.TStyles.Settings = styles;
-					foreach (var v in Panels.Editor.OpenDocs) {
-						styles.ToScintilla(v);
-						v.ESetLineNumberMarginWidth_();
-					}
-				}
-				
+				bool stylesChanged = styles != CiStyling.TStyles.Customized;
+				if (stylesChanged) CiStyling.TStyles.Customized = styles;
 				if (fontOutput.Apply(ref App.Settings.font_output)) Panels.Output.Scintilla.AaSetStyles();
 				if (fontRecipeText.Apply(ref App.Settings.font_recipeText) | fontRecipeCode.Apply(ref App.Settings.font_recipeCode)) Panels.Recipe.Scintilla.AaSetStyles();
-				if (fontFind.Apply(ref App.Settings.font_find)) Panels.Find.SetFont_(true);
+				if (fontFind.Apply(ref App.Settings.font_find) || stylesChanged) Panels.Find.CodeStylesChanged_();
 			};
 			
 			//[?] button
@@ -420,25 +428,27 @@ To apply changes after deleting etc, restart this application.
 		};
 	}
 	
-	enum _StyleKind { Style, Indicator, Element, Font, Background }
-	
-	record struct _TableItem(string name, _StyleKind kind, int index);
-	
 	void _CodeEditor() {
-		var b = _Page("Code editor").Columns(200, 20, -1);
+		var b = _Page("Code editor").Columns(-1, 20, -1);
 		b.R.StartStack(vertical: true); //left
 		
 		b.StartGrid<KGroupBox>("Completion list");
-		b.R.Add("Append ( )", out ComboBox complParen).Items("With Spacebar|Always|Never").Select(App.Settings.ci_complParen)
-			.Tooltip("Append ( ) when selected a method or a keyword like 'if'");
+		b.R.Add("Append ( )", out ComboBox complParen).Items("Space|Space, Tab, Enter, 2*click|None").Select(App.Settings.ci_complParen)
+			.Tooltip("These keys etc can be used to append ( ) when completing a function name or a keyword like 'if'.\nPlus characters ;.,:([{+-*/ etc.");
 		b.End();
 		
 		b.StartGrid<KGroupBox>("Statement completion");
 		b.R.Add("Hotkey", out ComboBox enterWith).Items("Ctrl+Enter|Shift+Enter|Ctrl+Shift+Enter").Select(App.Settings.ci_enterWith);
-		b.R.Add(out KCheckBox notClassicEnter, "Enter before )").Checked(!App.Settings.ci_classicEnter)
+		b.R.Add(out KCheckBox enterBeforeParen, "Enter before )").Checked(App.Settings.ci_enterBeforeParen)
 			.Tooltip("Key Enter before ) or ] completes statement like with Ctrl etc.\nExcept after comma or space or with Shift etc.");
+		b.R.Add(out KCheckBox enterBeforeSemicolon, "Enter before ;").Checked(App.Settings.ci_enterBeforeSemicolon)
+			.Tooltip("Key Enter before ; completes statement like with Ctrl etc.\nExcept after comma or space or with Shift etc.");
 		b.R.Add(out KCheckBox autoSemicolon, "Add ; when starting a statement").Checked(App.Settings.ci_semicolon);
 		b.End();
+		
+		b.End(); //left
+		
+		b.Skip().StartStack(vertical: true); //right
 		
 		b.StartGrid<KGroupBox>("Formatting");
 		b.R.Add(out KCheckBox formatCompact, "Compact").Checked(App.Settings.ci_formatCompact)
@@ -467,22 +477,13 @@ void Unchecked()
 }
 """);
 		b.R.Add(out KCheckBox formatTabIndent, "Tab-indent").Checked(App.Settings.ci_formatTabIndent)
-			.Tooltip("For indentation use tab character, not spaces");
+			.Tooltip("For indent use tab character, not spaces");
 		b.R.Add(out KCheckBox formatAuto, "Auto-format").Checked(App.Settings.ci_formatAuto)
 			.Tooltip("Automatically format statement on ;{} etc");
 		b.End();
 		
-		//b.StartGrid<KGroupBox>("Insert code");
-		//b.R.Add(out KCheckBox unexpandPath, "Unexpand path").Checked(App.Settings.ci_unexpandPath)
-		//	.Tooltip("Insert file path like folders.System + \"file.exe\"");
-		//b.End();
-		
-		b.End(); //left
-		
-		b.Skip().StartStack(vertical: true); //right
-		
-		b.StartGrid<KGroupBox>("Find references/implemetations, rename");
-		b.R.Add("Skip folders", out TextBox skipFolders, App.Model.WSSett.ci_skipFolders).Multiline(55, wrap: TextWrapping.NoWrap)
+		b.StartGrid<KGroupBox>("Find references, rename");
+		b.R.Add("Skip\nfolders", out TextBox skipFolders, App.Model.WSSett.ci_skipFolders).Multiline(55, wrap: TextWrapping.NoWrap)
 			.Tooltip(@"Don't search in these folders.
 Example:
 \Garbage
@@ -500,7 +501,8 @@ Example:
 		_b.OkApply += e => {
 			App.Settings.ci_complParen = complParen.SelectedIndex;
 			App.Settings.ci_enterWith = enterWith.SelectedIndex;
-			App.Settings.ci_classicEnter = !notClassicEnter.IsChecked;
+			App.Settings.ci_enterBeforeParen = enterBeforeParen.IsChecked;
+			App.Settings.ci_enterBeforeSemicolon = enterBeforeSemicolon.IsChecked;
 			App.Settings.ci_semicolon = autoSemicolon.IsChecked;
 			
 			if (formatCompact.IsChecked != App.Settings.ci_formatCompact || formatTabIndent.IsChecked != App.Settings.ci_formatTabIndent) {
@@ -510,15 +512,10 @@ Example:
 				
 				//note: don't SCI_SETUSETABS(false).
 				//	Eg VS does not use it, and it's good; VSCode uses, and it's bad, eg cannot insert tab in raw strings.
-				//	All autocorrect/autoindent/format code inserts spaces if need. Users rarely have to type indentation tabs.
-				//	And don't add options to set tab/indentation size. Too many options isn't good.
+				//	All autocorrect/autoindent/format code inserts spaces if need. Users rarely have to type indent tabs.
+				//	And don't add options to set tab/indent size. Too many options isn't good.
 			}
 			App.Settings.ci_formatAuto = formatAuto.IsChecked;
-			
-			//App.Settings.ci_unexpandPath = unexpandPath.IsChecked;
-			//App.Settings.ci_shiftEnterAlways = (byte)(shiftEnter.IsChecked ? 0 : 1);
-			//App.Settings.ci_shiftTabAlways = (byte)(shiftTab.IsChecked ? 0 : 1);
-			//App.Settings.ci_breakString = (byte)breakString.SelectedIndex;
 			
 			App.Model.WSSett.ci_skipFolders = skipFolders.TextOrNull();
 		};

@@ -38,8 +38,8 @@ class CiAutocorrect {
 	
 	/// <summary>
 	/// Called on Enter, Ctrl/Shift+Enter, Ctrl+;, Tab, Backspace and Delete, before passing it to Scintilla. Won't pass if returns true.
-	/// Enter: adds new line. If need, completes statement (if before `)` etc) and/or adds indentation. Always returns true.
-	/// Ctrl/Shift+Enter: The same as above, but anywhere. The hotkey depends on App.Settings.ci_enterWith; if not the hotkey, can just add new line + indentation.
+	/// Enter: adds new line. If need, completes statement (if before `)` etc) and/or adds indent. Always returns true.
+	/// Ctrl/Shift+Enter: The same as above, but anywhere. The hotkey depends on App.Settings.ci_enterWith; if not the hotkey, can just add new line + indent.
 	/// Ctrl+;: Like SciBeforeCharAdded(';'), but anywhere; and inserts semicolon now.
 	/// Tab: calls/returns SciBeforeCharAdded, which skips auto-added ')' etc.
 	/// Backspace: If inside an empty temp range, selects the '()' etc to erase and returns false.
@@ -84,28 +84,37 @@ class CiAutocorrect {
 	/// If ch is ';' and current position is at '(...|)' and the statement etc must end with ';': adds ';' if missing, sets current position after ';', and returns true.
 	/// If ch is '"' after two '"', may close raw string (add """") and return true.
 	/// Also called by SciBeforeKey on Backspace and Tab. Then ch is '\b' or '\t'.
-	/// If in a blank line, may add semicolon.
-	/// If there is selection, does nothing listed above; if ch is '{', '(' or '[', may surround the selected text.
+	/// If there is selection, does nothing listed above; if ch is '{', '(', '[' or '"', may surround the selected text.
+	/// If a new statement can start here, may add semicolon.
+	/// If at the very end, adds "\r\n" at the end.
 	/// </summary>
 	public bool SciBeforeCharAdded(SciCode doc, char ch) {
-		if (doc.aaaHasSelection) return _Selection();
+		var (pos8, selEnd8) = doc.aaaSelection(false);
+		bool hasSelection = selEnd8 > pos8, isBackspace = ch is '\b', isOpenBrac = false;
 		
-		int pos8 = doc.aaaCurrentPos8;
-		if (pos8 == doc.aaaLen8 && ch != '\b' && !CodeInfo._compl.IsVisibleUI) { //if pos8 is at the end of text, add newline
-			doc.aaaInsertText(false, pos8, "\r\n");
-		}
-		
-		if (_AutoSemicolon()) return false;
-		
-		if (ch == ';') return _OnSemicolon(anywhere: false);
-		
-		bool isBackspace = false, isOpenBrac = false;
-		
-		switch (ch) {
-		case '"' or '\'' or ')' or ']' or '}' or '>' or '\t': break; //skip auto-added char
-		case '\b': isBackspace = true; break; //on Backspace delete auto-added char too
-		case '[' or '{' or '(' or '<': isOpenBrac = true; break; //replace auto-added '()' when completing 'new Type' with '[]' or '{}'
-		default: return false;
+		if (isBackspace) {
+			if (hasSelection) return false;
+		} else {
+			if (selEnd8 == doc.aaaLen8 && !CodeInfo._compl.IsVisibleUI) { //if at the end of text, add newline
+				doc.aaaInsertText(false, selEnd8, "\r\n");
+				if (hasSelection) doc.aaaSelect(false, pos8, selEnd8);
+			}
+			
+			if (hasSelection) {
+				if (_Selection()) return true;
+				if (_AutoSemicolon()) doc.aaaSelect(false, pos8, selEnd8);
+				return false;
+			}
+			
+			if (_AutoSemicolon()) return false;
+			
+			if (ch == ';') return _OnSemicolon(anywhere: false);
+			
+			switch (ch) {
+			case '"' or '\'' or ')' or ']' or '}' or '>' or '\t': break; //skip auto-added char
+			case '[' or '{' or '(' or '<': isOpenBrac = true; break; //replace auto-added '()' when completing 'new Type' with '[]' or '{}'
+			default: return false;
+			}
 		}
 		
 		var r = doc.ETempRanges_Enum(pos8, this, endPosition: (ch == '"' || ch == '\''), utf8: true).FirstOrDefault();
@@ -141,16 +150,19 @@ class CiAutocorrect {
 			return false;
 		}
 		
+		//TODO: don't skip " if escaped, eg "text\"". Same for '.
+		
 		doc.aaaCurrentPos8 = to + 1;
 		return true;
 		
+		//TODO: add command to fold selected text. Or auto-fold local functions. Now can use //. but it adds garbage.
 		bool _Selection() {
-			//TODO: sometimes annoying. Don't do it in trivia, string, part-of-word etc.
-			if (ch is '(' or '{' or '[') {
-				var (start, end) = doc.aaaSelection(true);
+			if (ch is '{' or '(' or '[' or '"') {
+				var (start, end) = (doc.aaaPos16(pos8), doc.aaaPos16(selEnd8));
 				
 				//don't surround if probably it is unwanted
 				var s = doc.aaaSelectedText();
+				if (ch is '"' && !s.Like("\"*\"")) return false;
 				if (end - start == 1) {
 					if (char.IsPunctuation(s, 0) || char.IsSymbol(s, 0)) return false; //unlikely the coder wants to enclose a punctuation or operator char. Probably wants to replace. Eg `;' -> ` {  }`.
 				} else {
@@ -158,10 +170,28 @@ class CiAutocorrect {
 					if (ch is '(' && s.RxIsMatch(@"^\s*\{\s*\}\s*$")) return false; //maybe `new C {  }` -> `new C()`
 				}
 				
-				using var undo = new SciCode.aaaUndoAction(doc);
+				//don't surround in trivia, strings and inside a token
+				if (!CodeInfo.GetContextAndDocument(out var cd, start)) return false;
+				var tok1 = cd.syntaxRoot.FindTokenOnLeftOfPosition(start);
+				var tok2 = cd.syntaxRoot.FindToken(end);
+				TextSpan span1 = tok1.Span, span2 = tok2.Span;
+				
+				if (start >= span1.End && end <= span2.Start && tok2.GetPreviousToken() == tok1) return false; //trivia only
+				
+				bool istr = _IStr(tok1, start); //user may want to surround an interpolation (inside or outside).
+				if (istr) if (ch != '{' && !(ch == '(' && tok1.Parent is InterpolationSyntax)) return false;
+				
+				if ((span1.ContainsInside(start) && !istr) || (span2.ContainsInside(end) && !istr)) return false;
+				
+				//rejected. It's faster to delete the surrounded text afterwards.
+				//if (popupMenu.showSimple("1 &Surround|2 &Replace", PMFlags.ByCaret | PMFlags.Underline, owner: doc) is var pm && pm != 1) return pm != 2;
+				
+				using var undo = doc.aaaNewUndoAction();
 				string s1, s2;
 				if (ch is '(') (s1, s2) = ("(", ")");
 				else if (ch is '[') (s1, s2) = ("[", "]");
+				else if (ch is '"') (s1, s2) = s.Like("\"\"*\"\"") ? ("\"", "\"") : ("\"\"", "\"\"");
+				else if (istr) (s1, s2) = ("{", "}");
 				else {
 					(s1, s2) = ("{ ", " }");
 					var code = doc.aaaText;
@@ -175,6 +205,12 @@ class CiAutocorrect {
 				doc.aaaInsertText(true, start, s1);
 				doc.aaaSelect(true, start + s1.Length, end + s1.Length);
 				return true;
+				
+				static bool _IStr(in SyntaxToken t, int pos) {
+					var n = t.Parent;
+					if (n is InterpolatedStringTextSyntax or InterpolationSyntax) n = n.Parent;
+					return n is InterpolatedStringExpressionSyntax ise && ise.Contents.Span.ContainsOrTouches(pos);
+				}
 			}
 			return false;
 		}
@@ -182,39 +218,55 @@ class CiAutocorrect {
 		bool _AutoSemicolon() {
 			if (!App.Settings.ci_semicolon) return false;
 			
-			//is blank line?
-			for (int i = pos8; --i >= 0;) {
-				char c1 = doc.aaaCharAt8(i);
-				if (c1 is '\n' or ';' or '{' or '}' or '/') break;
-				if (!(c1 is ' ' or '\t')) return false;
-			}
-			for (int i = pos8; ; i++) {
-				char c1 = doc.aaaCharAt8(i);
-				if (c1 is '\r' or '\n' or '\0') break;
-				if (!(c1 is ' ' or '\t')) return false;
-			}
+			//TODO: later, if changed pos to after an empty statement (`;`) that is at the end of line, select it, let replace it with new text.
+			//	Also, when before `;` inserting text that ends with `;`.
 			
-			//is a statement-start character?
+			//is ch a statement-start character?
 			if (!SyntaxFacts.IsIdentifierStartCharacter(ch)) {
 				if (!(ch is (>= '0' and <= '9') or '@' or '$' or '*' or '(' or '"' or '\'')) return false;
 			}
 			
-			if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
-			
-			//is at a statement-start position?
-			var tok = cd.syntaxRoot.FindTokenOnLeftOfPosition(cd.pos);
-			if (!(tok.Kind() is 0 or SyntaxKind.SemicolonToken or SyntaxKind.OpenBraceToken or SyntaxKind.CloseBraceToken or SyntaxKind.ColonToken)) return false;
-			if (tok.RawKind != 0 && tok.Parent.GetStatementEtc(cd.pos) is { } node) {
-				if (node is MemberDeclarationSyntax) return false;
-				if (node is not BlockSyntax && node.Span.Contains(cd.pos)) return false;
+			//is caret at the end of line?
+			for (int i = selEnd8; ; i++) {
+				char c1 = doc.aaaCharAt8(i);
+				if (c1 is '\r' or '\n' or '\0' or '}') break;
+				if (!(c1 is ' ' or '\t')) return false;
 			}
+			//is caret at the start of line or after a statement-end or block-start character?
+			for (int i = pos8; --i >= 0;) {
+				char c1 = doc.aaaCharAt8(i);
+				if (c1 is '\n' or ';' or '{' or '}' or ':' or '/') break;
+				if (!(c1 is ' ' or '\t')) return false;
+			}
+			
+			//can a statement start here?
+			if (!CodeInfo.GetContextAndDocument(out var cd, doc.aaaPos16(pos8))) return false;
+			var tok = cd.syntaxRoot.FindTokenOnLeftOfPosition(cd.pos);
+			var node = tok.Parent;
+			switch (tok.Kind()) {
+			case 0: break;
+			case SyntaxKind.OpenBraceToken:
+				if (node is not BlockSyntax) return false;
+				break;
+			case SyntaxKind.CloseBraceToken:
+				if (!(node is BlockSyntax { Parent: StatementSyntax or GlobalStatementSyntax or ElseClauseSyntax or CatchClauseSyntax or FinallyClauseSyntax or SwitchSectionSyntax } or SwitchStatementSyntax)) return false;
+				break;
+			case SyntaxKind.SemicolonToken:
+				if (node is not StatementSyntax || cd.pos < node.Span.End) return false;
+				if (IsSwitchSectionEndStatement_(node)) return false; //after `break;` etc in `switch`, probably starting to type `case` or `default`
+				break;
+			case SyntaxKind.ColonToken:
+				if (!(node is SwitchLabelSyntax or LabeledStatementSyntax)) return false;
+				break;
+			default: return false;
+			}
+			if (CiUtil.IsPosInNonblankTrivia(cd.syntaxRoot, cd.pos, cd.code)) return false;
 			
 			doc.aaaInsertText(false, pos8, ";");
 			return true;
 		}
 		
-		//.
-		bool _RawString() { //close raw string now if need. In SciCharAdded too late, code is invalid and cannot detect correctly.
+		bool _RawString() { //. close raw string now if need. In SciCharAdded too late, code is invalid and cannot detect correctly.
 			if (pos8 > 3 && doc.aaaCharAt8(pos8 - 1) == '"' && doc.aaaCharAt8(pos8 - 2) == '"' && doc.aaaCharAt8(pos8 - 3) != '@') {
 				if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 				var pos16 = cd.pos;
@@ -249,14 +301,15 @@ class CiAutocorrect {
 				}
 			}
 			return false;
-		}
-		//..
+		}//..
 	}
+	
+	//CONSIDER: insert missing `break;` in `switch` when completed a statement.
 	
 	/// <summary>
 	/// Called on SCN_CHARADDED.
 	/// If ch is '(' etc, adds ')' etc. Similar with /*.
-	/// At the start of line corrects indentation of '}' (or formats the block) or '{'. Removes that of '#'.
+	/// At the start of line corrects indent of '}' (or formats the block) or '{'. Removes that of '#'.
 	/// Replaces code like 5s with 5.s(); etc.
 	/// If ch is '/' in XML comments, may add the end tag.
 	/// If ch is ';' or ':', may auto-format the completed statement or `case`.
@@ -272,7 +325,17 @@ class CiAutocorrect {
 			//never mind: formats even if ';' added in a wrong place, eg `Func(...|...)`. In VS too.
 		}
 		
-		string replaceText = ch switch { '"' => "\"", '\'' => "'", '(' => ")", '[' => "]", '{' => "}", '<' => ">", '*' => "*/", 's' or 't' or '}' or '#' or '/' => "", _ => null };
+		string replaceText = ch switch {
+			'"' => "\"",
+			'\'' => "'",
+			'(' => ")",
+			'[' => "]",
+			'{' => "}",
+			'<' => ">",
+			'*' => "*/",
+			's' or 't' or '}' or '#' or '/' => "",
+			_ => null
+		};
 		if (replaceText == null) return;
 		
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
@@ -282,48 +345,45 @@ class CiAutocorrect {
 		Debug.Assert(code[pos] == ch);
 		if (code[pos] != ch) return;
 		
-		bool isBeforeWord = ch != '}' && cd.pos < code.Length && SyntaxFacts.IsIdentifierStartCharacter(code[cd.pos]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
-		if (isBeforeWord && ch is not ('{' or '#' or '/')) return;
-		
 		var root = cd.syntaxRoot;
 		//if(!root.ContainsDiagnostics) return; //no. Don't use errors. It can do more bad than good. Tested.
 		
-		if (ch == 's') { //when typed like 5s or 500ms, replace with 5.s(); or 500.ms();
-			if (pos > 0 && code[pos - 1] == 'm') { pos--; replaceText = ".ms();"; } else replaceText = ".s();";
-			if (_IsNumericLiteralStatement(out _)) {
-				//never mind: should ignore if not int s/ms or double s. Error if eg long or double ms.
-				c.doc.aaaReplaceRange(true, pos, cd.pos, replaceText, moveCurrentPos: true);
-				c.ignoreChar = true;
-			}
-			return;
-		}
-		if (ch == 't') { //when typed like 5t, replace with for (int i = 0; i < 5; i++) {  }
-			if (_IsNumericLiteralStatement(out int spanStart)) {
-				var br = code.Eq(cd.pos, '{') ? null : "{  }";
-				replaceText = $"for (int i = 0; i < {code[spanStart..pos]}; i++) {br}";
-				c.doc.aaaReplaceRange(true, spanStart, cd.pos, replaceText);
-				c.doc.aaaCurrentPos16 = spanStart + replaceText.Length - (br == null ? 0 : 2);
-				c.ignoreChar = true;
-			}
-			return;
-		}
-		bool _IsNumericLiteralStatement(out int spanStart) {
-			if (pos > 0 && code[pos - 1].IsAsciiDigit()) {
-				var node = root.FindToken(pos - 1).Parent;
-				if (node.IsKind(SyntaxKind.NumericLiteralExpression) && node.Parent is ExpressionStatementSyntax) {
-					var span = node.Span;
-					spanStart = span.Start;
-					return span.Contains(pos - 1);
+		if (ch is 's' or 't') {
+			if (!SyntaxFacts.IsIdentifierPartCharacter(code.At_(cd.pos))) {
+				if (ch == 's') { //when typed like `5s` or `500ms`, replace with `5.s();` or `500.ms();`
+					if (pos > 0 && code[pos - 1] == 'm') { pos--; replaceText = ".ms();"; } else replaceText = ".s();";
+					if (_IsNumericLiteralStatement(out _)) {
+						//never mind: should ignore if not int s/ms or double s. Error if eg long or double ms.
+						_ReplaceST(pos, false);
+					}
+				}
+				if (ch == 't') { //when typed like `5t`, replace with snippet `for (int i = 0; i < 5; i++) {  }`
+					if (_IsNumericLiteralStatement(out int spanStart)) {
+						replaceText = $$"""for (int ${1:i} = 0; $1 < {{code[spanStart..pos]}}; $1++) { $0 }""";
+						_ReplaceST(spanStart, true);
+					}
 				}
 			}
-			spanStart = 0;
-			return false;
+			return;
+			
+			bool _IsNumericLiteralStatement(out int spanStart) {
+				if (pos > 0 && code[pos - 1].IsAsciiDigit()) {
+					var node = root.FindToken(pos - 1).Parent;
+					if (node.IsKind(SyntaxKind.NumericLiteralExpression) && node.Parent is ExpressionStatementSyntax) {
+						var span = node.Span;
+						spanStart = span.Start;
+						return span.Contains(pos - 1);
+					}
+				}
+				spanStart = 0;
+				return false;
+			}
 		}
 		
 		int replaceLength = 0, tempRangeFrom = 0, tempRangeTo = 0, newPos = 0, replaceSemicolonAt = 0;
 		
 		if (ch == '#') { //#directive
-			if (CodeUtil.IsLineStart(code, pos, out int i) && i < pos) {
+			if (CiUtil.IsLineStart(code, pos, out int i) && i < pos) {
 				if (root.FindTrivia(pos).IsDirective) {
 					c.doc.aaaDeleteRange(true, i, pos);
 				}
@@ -340,14 +400,14 @@ class CiAutocorrect {
 			var token = root.FindToken(pos);
 			var node = token.Parent;
 			
-			if (ch == '}') { //decrease indentation
+			if (ch == '}') { //decrease indent
 				if (!token.IsKind(SyntaxKind.CloseBraceToken) || pos != token.SpanStart) return;
 				if (App.Settings.ci_formatAuto) {
 					if (node.Parent is var p && p is (StatementSyntax and not BlockSyntax) or (MemberDeclarationSyntax and not GlobalStatementSyntax) or AccessorDeclarationSyntax) node = p;
 					if (node is StatementSyntax or MemberDeclarationSyntax or AccessorDeclarationSyntax) _AutoFormat(node, cd);
-				} else if (CodeUtil.IsLineStart(code, pos, out int i) && i > 1) {
+				} else if (CiUtil.IsLineStart(code, pos, out int i) && i > 1) {
 					if (node is not (BlockSyntax or SwitchStatementSyntax or MemberDeclarationSyntax or AccessorListSyntax or InitializerExpressionSyntax or AnonymousObjectCreationExpressionSyntax or SwitchExpressionSyntax or PropertyPatternClauseSyntax)) return;
-					var sInd = _GetIndentation();
+					var sInd = _GetIndent();
 					if (!code.Eq(i..pos, sInd)) {
 						c.doc.aaaReplaceRange(true, i, pos, sInd);
 						c.ignoreChar = true;
@@ -356,16 +416,11 @@ class CiAutocorrect {
 				return;
 			}
 			
-			string _GetIndentation() => new CiIndentation(cd, token.SpanStart, false, useDefaultOptions: true).ToString();
+			string _GetIndent() => new CiIndent(cd, token.SpanStart, false, useDefaultOptions: true).ToString();
 			//info: without useDefaultOptions would be `if (true)\r\n\t{  }` if not compact formatting. We need `if (true)\r\n{  }`.
 			
+			if (node is InterpolatedStringTextSyntax) node = node.Parent;
 			var kind = node.Kind();
-			if (kind == SyntaxKind.InterpolatedStringText) {
-				node = node.Parent;
-				kind = node.Kind();
-			}
-			
-			if (isBeforeWord && kind != SyntaxKind.Interpolation) return;
 			
 			var span = node.Span;
 			if (span.Start > pos) return; // > if pos is in node's leading trivia, eg comments or #if-disabled block
@@ -387,12 +442,8 @@ class CiAutocorrect {
 				}
 				if (span.Start != pos - (isVerbatim ? 1 : 0) - (isInterpolated ? 1 : 0)) return;
 			} else {
-				if (ch == '<' && !_IsGenericLessThan()) return; //can be operators
 				switch (kind) {
-				case SyntaxKind.CompilationUnit:
-				case SyntaxKind.CharacterLiteralExpression:
-				case SyntaxKind.StringLiteralExpression:
-				case SyntaxKind.Utf8StringLiteralExpression:
+				case SyntaxKind.CompilationUnit or SyntaxKind.CharacterLiteralExpression or SyntaxKind.StringLiteralExpression or SyntaxKind.Utf8StringLiteralExpression:
 					return;
 				case SyntaxKind.InterpolatedStringExpression:
 					//after next typed { in interpolated string remove } added after first {
@@ -404,7 +455,14 @@ class CiAutocorrect {
 					}
 					return;
 				default:
-					if (_IsInNonblankTrivia(node, pos)) return;
+					if (kind != SyntaxKind.Interpolation) {
+						var g = code.At_(cd.pos);
+						if (g > ' ' && !(g is '/' && code.At_(cd.pos + 1) is '/' or '*'))
+							if (!(g is ';' or ',' or ':' or '?' or '{' or '}' or '(' or ')' or '[' or ']' or '#')) return;
+						
+						if (CiUtil.IsPosInNonblankTrivia(node, pos, code)) return;
+					}
+					
 					if (ch == '{') {
 						if (kind == SyntaxKind.Interpolation) { //add } or }} etc if need
 							int n = 0;
@@ -419,10 +477,10 @@ class CiAutocorrect {
 								replaceText = " {  }";
 								tempRangeFrom++;
 								cd.pos--; replaceLength = 1; //replace the '{' too
-							} else if (CodeUtil.IsLineStart(code, pos, out int i) && i >= 4
+							} else if (CiUtil.IsLineStart(code, pos, out int i) && i >= 4
 								&& token.IsKind(SyntaxKind.OpenBraceToken) && pos == token.SpanStart) {
-								//if { at the start of line (and maybe after an indentation), correct indentation
-								var sInd = _GetIndentation();
+								//if { at the start of line (and maybe after an indent), correct indent
+								var sInd = _GetIndent();
 								if (!code.Eq(i..pos, sInd)) {
 									replaceText = sInd + "{  }";
 									tempRangeFrom = i + sInd.Length + 1;
@@ -434,31 +492,33 @@ class CiAutocorrect {
 							
 							replaceSemicolonAt = _ReplaceSemicolonAfterBrace(token);
 						}
-					}
-					break;
-				}
-				
-				bool _IsGenericLessThan() {
-					if (kind is SyntaxKind.TypeParameterList or SyntaxKind.TypeArgumentList) return true;
-					if (kind != SyntaxKind.LessThanExpression) return false;
-					var tok2 = token.GetPreviousToken(); if (!tok2.IsKind(SyntaxKind.IdentifierToken)) return false;
-					var semo = cd.semanticModel;
-					var sa = semo.GetSymbolInfo(tok2).GetAllSymbols();
-					if (!sa.IsEmpty) {
-						foreach (var v in sa) {
-							if (v is INamedTypeSymbol { IsGenericType: true } or IMethodSymbol { IsGenericMethod: true }) return true;
-							//bad: if eg IList and IList<T> are available, GetSymbolInfo gets only IList. Then no '>' completion. The same in VS.
-							//	OK if only IList<T> available. Methods OK.
+					} else if (ch == '<') {
+						if (!_IsGenericLessThan()) return; //can be operators
+						
+						bool _IsGenericLessThan() {
+							if (kind is SyntaxKind.TypeParameterList or SyntaxKind.TypeArgumentList) return true;
+							if (kind != SyntaxKind.LessThanExpression) return false;
+							var tok2 = token.GetPreviousToken(); if (!tok2.IsKind(SyntaxKind.IdentifierToken)) return false;
+							var semo = cd.semanticModel;
+							var sa = semo.GetSymbolInfo(tok2).GetAllSymbols();
+							if (!sa.IsEmpty) {
+								foreach (var v in sa) {
+									if (v is INamedTypeSymbol { IsGenericType: true } or IMethodSymbol { IsGenericMethod: true }) return true;
+									//never mind: if eg IList and IList<T> are available, GetSymbolInfo gets only IList. Then no '>' completion. The same in VS.
+									//	OK if only IList<T> available. Methods OK.
+								}
+							}
+							return false;
 						}
 					}
-					return false;
+					break;
 				}
 			}
 		}
 		
 		
 		if (newPos > 0) { // `{ | }`
-			using var undo = new SciCode.aaaUndoAction(cd.sci);
+			using var undo = cd.sci.aaaNewUndoAction();
 			if (replaceSemicolonAt > 0) cd.sci.aaaReplaceRange(true, replaceSemicolonAt, replaceSemicolonAt + 1, "");
 			c.doc.aaaReplaceRange(true, cd.pos, cd.pos + replaceLength, replaceText);
 			c.doc.aaaCurrentPos16 = newPos;
@@ -492,6 +552,18 @@ class CiAutocorrect {
 				}
 			}
 			return 0;
+		}
+		
+		void _ReplaceST(int from, bool snippet) {
+			int to = cd.pos;
+			if (App.Settings.ci_semicolon && CiUtil.SkipSpace(code, to) is int semicolonAt && code.Eq(semicolonAt, ';')) to = semicolonAt + 1;
+			if (snippet) {
+				c.doc.aaaReplaceRange(true, from, to, "");
+				CiSnippets.Surround(replaceText, from..from);
+			} else {
+				c.doc.aaaReplaceRange(true, from, to, replaceText, moveCurrentPos: true);
+			}
+			c.ignoreChar = true;
 		}
 	}
 	
@@ -578,7 +650,7 @@ class CiAutocorrect {
 	
 	static void _OnEnter(int mod) {
 		var doc = Panels.Editor.ActiveDoc;
-		using var undo = new SciCode.aaaUndoAction(doc);
+		using var undo = doc.aaaNewUndoAction();
 		if (mod < 0 && doc.aaaHasSelection) doc.Call(Sci.SCI_DELETEBACK);
 		if (!_OnEnter2(mod)) doc.Call(Sci.SCI_NEWLINE);
 	}
@@ -591,7 +663,7 @@ class CiAutocorrect {
 		int pos = cd.pos;
 		if (pos < 1) return false;
 		
-		bool anywhere = mod == App.Settings.ci_enterWith, canCorrect = anywhere, isEOF = false;
+		bool anywhere = mod == App.Settings.ci_enterWith, canCorrect = anywhere, canCorrectOnEnterBeforeParenEtc = false, isEOF = false;
 		
 		var tok1 = cd.syntaxRoot.FindToken(pos);
 		if (tok1.IsKind(SyntaxKind.EndOfFileToken)) {
@@ -605,11 +677,16 @@ class CiAutocorrect {
 		
 		if (!anywhere && mod != -2) {
 			if (tk1 is SyntaxKind.CloseParenToken or SyntaxKind.CloseBracketToken && tok1.SpanStart == pos) {
-				if (!(code[pos - 1] is ',' or ' ' || App.Settings.ci_classicEnter || mod >= 0)) {
-					canCorrect = nodeFromPos is BaseArgumentListSyntax or BaseParameterListSyntax or ArrayRankSpecifierSyntax
+				if (App.Settings.ci_enterBeforeParen && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
+					canCorrect = canCorrectOnEnterBeforeParenEtc = nodeFromPos
+						is BaseArgumentListSyntax or BaseParameterListSyntax or ArrayRankSpecifierSyntax
 						or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax
 						or CatchDeclarationSyntax or CatchFilterClauseSyntax
 						or (StatementSyntax and not BlockSyntax) || _IsSwitchCast(nodeFromPos);
+				}
+			} else if (tk1 is SyntaxKind.SemicolonToken) {
+				if (App.Settings.ci_enterBeforeSemicolon && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
+					canCorrect = canCorrectOnEnterBeforeParenEtc = nodeFromPos is not ForStatementSyntax;
 				}
 			} else if (!isEOF) {
 				int r = _InNonblankTriviaOrStringOrChar(cd, tok1);
@@ -641,6 +718,7 @@ class CiAutocorrect {
 		}
 		if (node == null || !node.Span.Contains(pos)) canCorrect = false;
 		
+		bool hasSemicolon = false;
 		if (canCorrect) {
 			bool needBraces = false, needSemicolon = false, needComma = false;
 			SyntaxToken afterToken = default;
@@ -722,7 +800,7 @@ class CiAutocorrect {
 			void _WithSemicolon(in SyntaxToken semicolonToken) {
 				if (!semicolonToken.IsKind(SyntaxKind.SemicolonToken)) { Debug_.Print(semicolonToken.Kind()); return; }
 				afterToken = semicolonToken;
-				if (_GetLastTokenForSemicolonStatementCompletion(ref afterToken, out bool isComplete)) needSemicolon = !isComplete;
+				if (_GetLastTokenForSemicolonStatementCompletion(ref afterToken, out hasSemicolon)) needSemicolon = !hasSemicolon;
 			}
 			
 			//for enum members and object/collection initializer expression elements
@@ -736,10 +814,10 @@ class CiAutocorrect {
 			
 			canCorrect = needBraces || needSemicolon || needComma;
 			if (afterToken.RawKind == 0) afterToken = node.GetLastToken();
-			pos = CodeUtil.SkipNewlineBack(code, canCorrect ? afterToken.Span.End : afterToken.FullSpan.End);
+			pos = CiUtil.SkipNewlineBack(code, canCorrect ? afterToken.Span.End : afterToken.FullSpan.End);
 			
 			if (canCorrect) {
-				CiIndentation ind = new(cd, node.SpanStart, forNewLine: false);
+				CiIndent ind = new(cd, node.SpanStart, forNewLine: false);
 				string s, sInd = ind.ToString();
 				int replaceSemicolonAt = 0;
 				if (needBraces) {
@@ -762,21 +840,7 @@ class CiAutocorrect {
 					cd.sci.aaaReplaceRange(true, replaceSemicolonAt, replaceSemicolonAt + 1, "");
 				}
 				
-				if (!anywhere) {
-					pos = cd.pos;
-					doc.AaTextChanged += _doc_AaTextChanged;
-					void _doc_AaTextChanged(KScintilla.AaEventHandlerArgs e) {
-						e.c.AaTextChanged -= _doc_AaTextChanged;
-						if (e.n.modificationType.Has(Sci.MOD.SC_PERFORMED_UNDO)) {
-							App.Dispatcher.InvokeAsync(() => {
-								if (Panels.Editor.ActiveDoc != doc) return;
-								doc.aaaCurrentPos16 = pos;
-								_OnEnter(-2);
-							});
-						}
-					}
-				}
-				
+				if (canCorrectOnEnterBeforeParenEtc) _OnUndoAddSimpleNewline();
 				return true;
 			} else {
 				doc.aaaCurrentPos16 = pos;
@@ -784,14 +848,17 @@ class CiAutocorrect {
 		}
 		
 		//auto-indent
-		{
-			var (from, to) = CodeUtil.SkipSpaceAround(code, pos); //remove spaces and tabs around the line break
+		if (hasSemicolon && App.Settings.ci_formatAuto && App.Settings.ci_semicolon) { //probably auto-added semicolon
+			CiIndent ind = new(cd, pos, forNewLine: true);
+			_InsertNodeCompletionTextWithAutoformat(cd, node, "\r\n" + ind, pos);
+		} else {
+			var (from, to) = CiUtil.SkipSpaceAround(code, pos); //remove spaces and tabs around the line break
 			if (from == 0) return false;
 			bool atStartOfLine = code[from - 1] == '\n';
 			bool atStartOfNonblankLine = atStartOfLine && !(to == code.Length || code[to] is '\r' or '\n');
 			
-			CiIndentation ind = new(cd, from, forNewLine: !atStartOfNonblankLine);
-			CiIndentation indBefore = atStartOfNonblankLine ? new(cd, from - (code.Eq(from - 2, '\r') ? 2 : 1), forNewLine: true) : default;
+			CiIndent ind = new(cd, from, forNewLine: !atStartOfNonblankLine);
+			CiIndent indBefore = atStartOfNonblankLine ? new(cd, from - (code.Eq(from - 2, '\r') ? 2 : 1), forNewLine: true) : default;
 			bool noInd = ind == 0 && indBefore == 0;
 			string sInd = ind.ToString(), sBefore = indBefore.ToString(), sAfter = "";
 			
@@ -814,7 +881,7 @@ class CiAutocorrect {
 						&& code[from - 1] == '{'
 						&& !(node is BlockSyntax && node.Parent is BlockSyntax or GlobalStatementSyntax)
 						&& node is not InterpolationSyntax
-						&& !CodeUtil.IsLineStart(code, from - 1, out int i1)
+						&& !CiUtil.IsLineStart(code, from - 1, out int i1)
 						) {
 						from = i1;
 						sBefore = "\r\n" + (ind - 1).ToString() + "{";
@@ -830,7 +897,23 @@ class CiAutocorrect {
 			doc.aaaGoToPos(true, from + s.Length - sAfter.Length);
 		}
 		
+		if (canCorrectOnEnterBeforeParenEtc) _OnUndoAddSimpleNewline();
 		return true;
+		
+		void _OnUndoAddSimpleNewline() {
+			int pos = cd.pos;
+			cd.sci.AaTextChanged += _doc_AaTextChanged;
+			void _doc_AaTextChanged(KScintilla.AaEventHandlerArgs e) {
+				e.c.AaTextChanged -= _doc_AaTextChanged;
+				if (e.n.modificationType.Has(Sci.MOD.SC_PERFORMED_UNDO)) {
+					App.Dispatcher.InvokeAsync(() => {
+						if (Panels.Editor.ActiveDoc != cd.sci) return;
+						cd.sci.aaaCurrentPos16 = pos;
+						_OnEnter(-2);
+					});
+				}
+			}
+		}
 	}
 	
 	/// <returns>0 no, 1 yes and corrected, 2 yes and not corrected, 3 string or char.</returns>
@@ -855,14 +938,14 @@ class CiAutocorrect {
 				break;
 			case SyntaxKind.SingleLineDocumentationCommentTrivia:
 				suffix = "/// ";
-				if (CodeUtil.IsLineStart(code, pos, out int sol)) pos = posStart = posEnd = CodeUtil.SkipNewlineBack(code, sol);
+				if (CiUtil.IsLineStart(code, pos, out int sol)) pos = posStart = posEnd = CiUtil.SkipNewlineBack(code, sol);
 				break;
 			default: return 0;
 			}
 			if (suffix != null) { //trim spaces
-				while (posStart > span.Start && CodeUtil.IsSpace(code[posStart - 1])) posStart--;
-				while (posEnd < span.End && CodeUtil.IsSpace(code[posEnd])) posEnd++;
-				if (kind is SyntaxKind.SingleLineDocumentationCommentTrivia && code.Eq(posStart - 3, "/// ") && CodeUtil.IsLineStart(code, posStart - 3)) posStart++; //let empty lines be `/// `, not '///`
+				while (posStart > span.Start && CiUtil.IsSpace(code[posStart - 1])) posStart--;
+				while (posEnd < span.End && CiUtil.IsSpace(code[posEnd])) posEnd++;
+				if (kind is SyntaxKind.SingleLineDocumentationCommentTrivia && code.Eq(posStart - 3, "/// ") && CiUtil.IsLineStart(code, posStart - 3)) posStart++; //let empty lines be `/// `, not '///`
 			}
 		} else {
 			if (span.ContainsInside(pos) && token.IsKind(SyntaxKind.CharacterLiteralToken)) return 3;
@@ -875,8 +958,8 @@ class CiAutocorrect {
 			}
 			if (isString == null && !si.isRawMultilineBetweenStartQuotesAndText) return 2;
 			if (si.isRawMultiline || si.isRawMultilineBetweenStartQuotesAndText) {
-				(posStart, posEnd) = CodeUtil.SkipSpaceAround(code, pos);
-				var sInd = new CiIndentation(cd, posStart, forNewLine: true, rawString: true).ToString();
+				(posStart, posEnd) = CiUtil.SkipSpaceAround(code, pos);
+				var sInd = new CiIndent(cd, posStart, forNewLine: true, rawString: true).ToString();
 				if (sInd.Length == 0) return 2;
 				string sIndBefore = !si.isRawMultilineBetweenStartQuotesAndText && code[posStart - 1] == '\n' ? sInd : null; //is start of line?
 				cd.sci.aaaReplaceRange(true, posStart, posEnd, sIndBefore + "\r\n" + sInd, moveCurrentPos: true);
@@ -896,7 +979,7 @@ class CiAutocorrect {
 		}
 		
 		var doc = cd.sci;
-		int indent = doc.aaaLineIndentationFromPos(true, posStart);
+		int indent = doc.aaaLineIndentFromPos(true, posStart);
 		if (indent < 1 /*&& prefix == null*/ && suffix == null && !insertEmptyLine) return 2;
 		
 		var b = new StringBuilder();
@@ -916,7 +999,7 @@ class CiAutocorrect {
 	}
 	
 	static bool _OnBackspaceOrDelete(SciCode doc, bool back) {
-		//when joining 2 non-empty lines with Delete or Backspace, remove indentation from the second line
+		//when joining 2 non-empty lines with Delete or Backspace, remove indent from the second line
 		if (doc.aaaHasSelection) return false;
 		int i = doc.aaaCurrentPos16;
 		var code = doc.aaaText;
@@ -938,10 +1021,10 @@ class CiAutocorrect {
 		//On Backspace in the last blank line before `}` in multiline `{ block }` deleted that line and adds new line after the block.
 		//Supports most `{ }` kinds and `[collection]`.
 		bool _BlockCompletion() {
-			var (from, to) = CodeUtil.SkipSpaceAround(code, i);
-			int nextLineAt = CodeUtil.SkipNewline(code, to);
+			var (from, to) = CiUtil.SkipSpaceAround(code, i);
+			int nextLineAt = CiUtil.SkipNewline(code, to);
 			if ((nextLineAt > to && code.At_(from - 1) == '\n')) {
-				int braceAt = nextLineAt; while (CodeUtil.IsSpace(code, braceAt)) braceAt++;
+				int braceAt = nextLineAt; while (CiUtil.IsSpace(code, braceAt)) braceAt++;
 				if (code.At_(braceAt) is '}' or ']') {
 					if (CodeInfo.GetDocumentAndFindToken(out var cd, out var tok, to) && tok.Kind() is var tk && tk is SyntaxKind.CloseBraceToken or SyntaxKind.CloseBracketToken) {
 						var node = tok.Parent;
@@ -950,9 +1033,9 @@ class CiAutocorrect {
 						int moveCaret = -2;
 						
 						if (node is ExpressionSyntax || (node is BlockSyntax && node.Parent is ExpressionSyntax)) {
-							//note: API returns incorrect indentation before `]` if no comma before
+							//note: API returns incorrect indent before `]` if no comma before
 							if (tok.GetNextToken(includeZeroWidth: true) is { RawKind: (int)SyntaxKind.SemicolonToken } tSemicolon) {
-								sInd = new CiIndentation(cd, tSemicolon.Parent.GetStatementEtc(cd.pos).Span.End, true).ToString();
+								sInd = new CiIndent(cd, tSemicolon.Parent.GetStatementEtc(cd.pos).Span.End, true).ToString();
 								if (needSemicolon = tSemicolon.IsMissing) to = tok.FullSpan.End; else to = tSemicolon.FullSpan.End;
 								format = true;
 							} else {
@@ -961,8 +1044,8 @@ class CiAutocorrect {
 								return true;
 							}
 						} else if (node is StatementSyntax or BaseTypeDeclarationSyntax or NamespaceDeclarationSyntax or AccessorListSyntax) {
-							var ind = new CiIndentation(cd, braceAt, false);
-							if (ind.Spaces + 4 < cd.sci.aaaLineIndentationFromPos(true, from, out int spaces) * 4 + spaces) return false; //maybe the coder just wants to delete extra indentation
+							var ind = new CiIndent(cd, braceAt, false);
+							if (ind.Spaces + 4 < cd.sci.aaaLineIndentFromPos(true, from, out int spaces) * 4 + spaces) return false; //maybe the coder just wants to delete extra indent
 							sInd = ind.ToString();
 							if (node is BlockSyntax && node.Parent is var p && !(p is BlockSyntax or GlobalStatementSyntax)) {
 								if (p is DoStatementSyntax dss && dss.WhileKeyword.IsMissing) (to, s) = (braceAt + 1, " while();");
@@ -977,7 +1060,7 @@ class CiAutocorrect {
 							if (code[to - 1] == '\n') s = sInd + "\r\n"; else { s = "\r\n" + sInd + "\r\n" + sInd; moveCaret -= sInd.Length; }
 						}
 						
-						using SciCode.aaaUndoAction undo = new(cd.sci);
+						using var undo = cd.sci.aaaNewUndoAction();
 						cd.sci.aaaInsertText(true, to, s);
 						cd.sci.aaaCurrentPos16 = to + s.Length + moveCaret;
 						if (needSemicolon) cd.sci.aaaInsertText(true, braceAt + 1, ";");
@@ -1012,7 +1095,7 @@ class CiAutocorrect {
 		var tk = tok.Kind();
 		if (ch == ':') {
 			if (n is not SwitchLabelSyntax sls) return;
-			if (!App.Settings.ci_formatAuto) maxTo = sls.Keyword.SpanStart; //just correct indentation
+			if (!App.Settings.ci_formatAuto) maxTo = sls.Keyword.SpanStart; //just correct indent
 		} else if (tk is SyntaxKind.SemicolonToken) {
 			if (n is StatementSyntax && n.Parent is var p && p is StatementSyntax and not BlockSyntax) n = p; //eg format `if(...) statement;`, not just `statement;`
 		} else if (tk is SyntaxKind.OpenBraceToken) {
@@ -1059,8 +1142,7 @@ class CiAutocorrect {
 		if (App.Settings.ci_formatAuto && node != null) {
 			int from = node.GetRealFullSpan(spanEnd: true).Start, to = pos, pos0 = pos;
 			if (ModifyCode.Format(cd, ref from, ref to, ref pos, ref pos) is { } a) {
-				Debug.Assert(pos >= a[^1].Span.End);
-				using SciCode.aaaUndoAction undo = new(cd.sci);
+				using var undo = cd.sci.aaaNewUndoAction();
 				cd.sci.aaaInsertText(true, pos0, sInsert);
 				for (int i = a.Count; --i >= 0;) {
 					var c = a[i];
@@ -1077,58 +1159,34 @@ class CiAutocorrect {
 		return r;
 	}
 	
-	static bool _IsInNonblankTrivia(SyntaxNode node, int pos) {
-		var trivia = node.FindTrivia(pos);
-		if (trivia.RawKind != 0) {
-			//print.it($"{trivia.Kind()}, {pos}, {trivia.FullSpan}, '{trivia}'");
-			var ts = trivia.Span;
-			if (!(pos > ts.Start && pos < ts.End)) { //pos is not inside trivia; possibly at start or end.
-				bool lookBefore = pos == ts.Start && trivia.IsKind(SyntaxKind.EndOfLineTrivia) && node.FullSpan.Start < pos;
-				if (!lookBefore) return false;
-				trivia = node.FindTrivia(pos - 1); //can be eg single-line comment
-				switch (trivia.Kind()) {
-				case SyntaxKind.MultiLineCommentTrivia:
-				case SyntaxKind.MultiLineDocumentationCommentTrivia:
-					return false;
-				}
-				//CiUtil.PrintNode(trivia);
-			}
-			switch (trivia.Kind()) {
-			case SyntaxKind.None:
-			case SyntaxKind.WhitespaceTrivia:
-			case SyntaxKind.EndOfLineTrivia:
-				break;
-			default:
-				return true; //mostly comments, directives and #if-disabled text
-			}
-		}
-		return false;
-	}
-	
 	/// <summary>
 	/// If <c>switch(word)</c> without <c>{}</c> is followed by another statement, Roslyn thinks <c>(word)</c> is a cast expression.
 	/// This function returns true if <i>node</i> is <b>CastExpressionSyntax</b> followed by <c>switch</c>.
 	/// </summary>
 	/// <param name="node">Parent node of <c>)</c> token.</param>
 	/// <returns></returns>
-	static bool _IsSwitchCast(SyntaxNode node) => node is CastExpressionSyntax ce && ce.OpenParenToken.GetPreviousToken() is { RawKind: (int)SyntaxKind.SwitchKeyword, Parent: SwitchStatementSyntax };
+	static bool _IsSwitchCast(SyntaxNode node)
+		=> node is CastExpressionSyntax ce && ce.OpenParenToken.GetPreviousToken() is { RawKind: (int)SyntaxKind.SwitchKeyword, Parent: SwitchStatementSyntax };
+	
+	internal static bool IsSwitchSectionEndStatement_(SyntaxNode n)
+		=> n.Parent is SwitchSectionSyntax && n is BreakStatementSyntax or ContinueStatementSyntax or GotoStatementSyntax or ReturnStatementSyntax or YieldStatementSyntax or ThrowStatementSyntax;
 	
 	#endregion
 }
 
 /// <summary>
-/// Gets indentation for a code line.
+/// Gets indent for a code line.
 /// </summary>
-struct CiIndentation {
+struct CiIndent {
 	int _spaces;
 	
 	/// <summary>
-	/// Determines indentation for line containing <i>pos</i>; if <i>forNewLine</i> - for new line that would be inserted at <i>pos</i>.
-	/// Can be used to determine the indentation of new line on <c>Enter</c>. Not for formatting of existing code.
-	/// Ignores current indentation of the line, but may use that of previous line.
+	/// Determines indent for line containing <i>pos</i>; if <i>forNewLine</i> - for new line that would be inserted at <i>pos</i>.
+	/// Can be used to determine the indent of new line on <c>Enter</c>. Not for formatting of existing code.
+	/// Ignores current indent of the line, but may use that of previous line.
 	/// Does not have the formatter problems (bad comment alignment etc).
 	/// </summary>
-	public CiIndentation(CodeInfo.Context cd, int pos, bool forNewLine, bool rawString = false, bool useDefaultOptions = false) {
+	public CiIndent(CodeInfo.Context cd, int pos, bool forNewLine, bool rawString = false, bool useDefaultOptions = false) {
 		var d = cd.document;
 		var root = cd.syntaxRoot;
 		string code = cd.code;
@@ -1176,20 +1234,20 @@ struct CiIndentation {
 		_spaces = k + ind.Offset;
 		
 		if (forNewLine && !rawString) {
-			//bad indentation after `break;` in `switch{}`
-			if (_spaces >= 4 && root.FindTokenOnLeftOfPosition(pos).Parent is BreakStatementSyntax bss && bss.Parent is SwitchSectionSyntax && !bss.SemicolonToken.IsMissing) {
+			//bad indent after `break;` etc in `switch{}`
+			if (_spaces >= 4 && root.FindTokenOnLeftOfPosition(pos) is { RawKind: (int)SyntaxKind.SemicolonToken } ts && CiAutocorrect.IsSwitchSectionEndStatement_(ts.Parent)) {
 				_spaces -= 4;
 			}
 		}
 	}
 	
-	public static CiIndentation operator ++(CiIndentation i) { i._spaces += 4; return i; }
+	public static CiIndent operator ++(CiIndent i) { i._spaces += 4; return i; }
 	
-	public static CiIndentation operator --(CiIndentation i) { i._spaces = Math.Max(0, i._spaces - 4); return i; }
+	public static CiIndent operator --(CiIndent i) { i._spaces = Math.Max(0, i._spaces - 4); return i; }
 	
-	public static CiIndentation operator +(CiIndentation i, int plus) => new() { _spaces = i._spaces + plus * 4 };
+	public static CiIndent operator +(CiIndent i, int plus) => new() { _spaces = i._spaces + plus * 4 };
 	
-	public static CiIndentation operator -(CiIndentation i, int minus) => new() { _spaces = Math.Max(0, i._spaces - minus * 4) };
+	public static CiIndent operator -(CiIndent i, int minus) => new() { _spaces = Math.Max(0, i._spaces - minus * 4) };
 	
 	public override string ToString() {
 		if (_spaces == 0) return "";
@@ -1202,5 +1260,5 @@ struct CiIndentation {
 	
 	public int Spaces => _spaces;
 	
-	public static implicit operator int(CiIndentation i) => (i._spaces + 3) / 4;
+	public static implicit operator int(CiIndent i) => (i._spaces + 3) / 4;
 }

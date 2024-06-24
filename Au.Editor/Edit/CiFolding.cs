@@ -167,7 +167,7 @@ class CiFolding {
 					if (c == '/' && _IsDotComment(s, ++i, out bool closing)) { //.
 						if (!_IsStartOfTrivia(false)) continue;
 						_AddFoldPoint(FoldKind.DotFold, rangeStart + i0, !closing);
-					} else if (c == '*' || CodeUtil.IsLineStart(s, i0)) {
+					} else if (c == '*' || CiUtil.IsLineStart(s, i0)) {
 						i = i0 + 2;
 						bool isLineComment = c == '/', isDocComment = false;
 						if (!isLineComment) {
@@ -188,7 +188,7 @@ class CiFolding {
 							for (; ; nlines++) {
 								if (nlines > 0) {
 									int lineStart = i;
-									while (i < s.Length && s[i] is '\t' or ' ') i++; //skip indentation
+									while (i < s.Length && s[i] is '\t' or ' ') i++; //skip indent
 									g1:
 									bool ok = s.Eq(i, '/') && s.Eq(i + 1, '/');
 									if (ok) {
@@ -201,7 +201,7 @@ class CiFolding {
 										if (i == s.Length) joinAt = 0; //join
 										else if (s[i] is '\r' or '\n') { //empty line. Continue, and later either join or split here.
 											joinAt = lineStart; joinNlines = nlines;
-											while (++i < s.Length && s[i] <= ' ') { } //skip empty lines and indentations
+											while (++i < s.Length && s[i] <= ' ') { } //skip empty lines and indents
 											goto g1;
 										}
 									}

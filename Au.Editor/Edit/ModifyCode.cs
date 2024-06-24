@@ -77,7 +77,7 @@ static class ModifyCode {
 			} else {
 				if (com) {
 					s.RxFindAll(@"(?m)^[\t ]*(.*)\R?", out RXMatch[] a);
-					//find smallest common indentation
+					//find smallest common indent
 					int indent = 0; //tabs*4 or spaces*1
 					foreach (var m in a) {
 						if (m[1].Length == 0) continue;
@@ -123,7 +123,7 @@ static class ModifyCode {
 		if (selection) {
 			(from, to) = (selStart, selEnd);
 			if (from == to) {
-				var node = CiUtil.GetStatementEtcFromPos(cd, from);
+				var node = cd.syntaxRoot.FindToken(from).Parent.GetStatementEtc(from);
 				if (node == null) return;
 				(from, to) = node.FullSpan;
 			}
@@ -149,7 +149,7 @@ static class ModifyCode {
 	}
 	
 	static void _FormatReplace(CodeInfo.Context cd, List<TextChange> a) {
-		using SciCode.aaaUndoAction undo = a.Count < 2 ? default : new(cd.sci);
+		using var undo = a.Count < 2 ? default : cd.sci.aaaNewUndoAction();
 		for (int i = a.Count; --i >= 0;) {
 			var c = a[i];
 			cd.sci.aaaReplaceRange(true, c.Span.Start, c.Span.End, c.NewText);
@@ -193,7 +193,7 @@ static class ModifyCode {
 			
 			void _Caret(int caret, ref int moveCaret) {
 				if (caret >= cEnd) {
-					if (caret == cEnd && cStart == cEnd && caret == caret1 && caret2 > caret) return; //inserting text at caret1. Eg adding indentation when caret1 is at SOL. Let selStart remain at SOL.
+					if (caret == cEnd && cStart == cEnd && caret == caret1 && caret2 > caret) return; //inserting text at caret1. Eg adding indent when caret1 is at SOL. Let selStart remain at SOL.
 					moveCaret += cStart - cEnd + newText.Length;
 				} else if (caret > cStart) moveCaret += cStart - caret + newText.Length;
 			}
@@ -225,7 +225,7 @@ static class ModifyCode {
 			if (root.GetText().Length != code.Length) { Debug_.Print("bad new code"); ac = null; return false; }
 		}
 		
-		//include \r\n before. Else may not correct indentation.
+		//include \r\n before. Else may not correct indent.
 		//	never mind: then formats all trivia before. We'll skip it.
 		if (from > 0 && code[from - 1] == '\n') from--;
 		if (from > 0 && code[from - 1] == '\r') from--;
@@ -285,7 +285,7 @@ static class ModifyCode {
 			if (commonStart + commonEnd > 0) ac[i] = v = new(TextSpan.FromBounds(v.Span.Start + commonStart, v.Span.End - commonEnd), sp2.ToString());
 			
 			//Some changes can be multiline. Eg when code contains `//comment\r\n\r\n//comment\r\n\r\n`. Would delete markers etc. Split.
-			if (v.NewText.Contains('\n')) {
+			if (sp1.Contains('\n')) {
 				var a1 = code.Lines(v.Span.ToRange(), preferMore: true);
 				var a2 = v.NewText.Lines(.., preferMore: true);
 				if (a1.Length != a2.Length) Debug_.Print(v);
@@ -312,8 +312,6 @@ static class ModifyCode {
 				ac.RemoveAt(i--);
 			}
 		}
-		
-		//TODO: if before are several blank lines, removes indentation from one of them.
 		
 		return ac.Count > 0;
 		
@@ -513,7 +511,7 @@ static class ModifyCode {
 		doc.EInicatorsFound_(aRepl.Select(o => o.start..o.end).ToList());
 		wait.doEvents(1000);
 		if (doc != Panels.Editor.ActiveDoc || doc.aaaText != cd.code) return;
-		using (new SciCode.aaaUndoAction(doc)) {
+		using (doc.aaaNewUndoAction()) {
 			foreach (var v in aRepl.OrderByDescending(o => o.end)) {
 				if (v.start > to) continue; to = v.start; //a variable in a replaced statement
 				doc.aaaReplaceRange(true, v.start, v.end, v.repl);
@@ -541,7 +539,7 @@ partial class SciCode {
 		var dmp = new DiffMatchPatch.diff_match_patch();
 		var a = dmp.diff_main(old, s, true); //the slowest part. Timeout 1 s; then a valid but smaller.
 		dmp.diff_cleanupEfficiency(a);
-		using (new SciCode.aaaUndoAction(this)) {
+		using (aaaNewUndoAction(onUndoDontChangeCaretPos: !isRange)) {
 			for (int i = a.Count - 1, j = old.Length; i >= 0; i--) {
 				var d = a[i];
 				if (d.operation == DiffMatchPatch.Operation.INSERT) {

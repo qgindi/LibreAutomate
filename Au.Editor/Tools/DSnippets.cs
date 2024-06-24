@@ -75,7 +75,7 @@ class DSnippets : KDialogWindow {
 		
 		b.R.Add<Label>("Code");
 		b.StartGrid().Columns(70, 70, 70, 70, 40).Align("R");
-		b.AddButton("Paste", _ => _PasteCode(clipboard.text)).Tooltip("Replaces code with the clipboard text without indentation tabs");
+		b.AddButton("Paste", _ => _PasteCode(clipboard.text)).Tooltip("Replaces code with the clipboard text without indent tabs");
 		b.AddButton("${n:text}", _ => _InsertVar("${1:}")).Tooltip("Tab stop with text");
 		b.AddButton("$n", _ => _InsertVar("$1")).Tooltip("Tab stop without text or with text of the first ${n:text}");
 		b.AddButton("$0", _ => _InsertVar("$0")).Tooltip("Final text cursor position");

@@ -79,7 +79,7 @@ class CiWinapi {
 		}
 
 		var hs = new HashSet<string>();
-		using (new KScintilla.aaaUndoAction(doc)) {
+		using (doc.aaaNewUndoAction()) {
 			_Insert(0, sr.GetSyntax(), text, item.Text, item.kind);
 		}
 

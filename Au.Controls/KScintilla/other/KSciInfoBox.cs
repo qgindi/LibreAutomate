@@ -27,11 +27,8 @@ public class KSciInfoBox : KScintilla {
 		aaaStyleClearAll();
 
 		aaaMarginSetWidth(1, 0);
-
-		SIZE z = AaInitBlankMargins;
-		z = Dpi.Scale(z, AaWnd);
-		Call(Sci.SCI_SETMARGINLEFT, 0, z.width);
-		Call(Sci.SCI_SETMARGINRIGHT, 0, z.height);
+		aaaMarginSetWidth(-1, AaInitBlankMargins.left);
+		aaaMarginSetWidth(-2, AaInitBlankMargins.right);
 	}
 
 	/// <summary>

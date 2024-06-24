@@ -666,7 +666,7 @@ System.Threading.Tasks.TaskCanceledException
 						if (++line == f.line) {
 							int pos = i + f.col - 1;
 							if (s.Eq(pos, "catch") || s.Eq(pos, "when")) {
-								var tok = CiUtil.GetSyntaxTree(s).FindToken(pos);
+								var tok = CiUtil.CreateSyntaxTree(s).FindToken(pos);
 								var cc = tok.Parent as CatchClauseSyntax;
 								if (cc == null && tok.Parent is CatchFilterClauseSyntax) cc = tok.Parent.Parent as CatchClauseSyntax;
 								if (cc != null) {

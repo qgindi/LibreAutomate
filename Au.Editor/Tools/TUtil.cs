@@ -596,7 +596,7 @@ static class TUtil {
 			} else if (what is PathCode.Run or PathCode.RunMenu) {
 				var b = new StringBuilder();
 				if (what is PathCode.RunMenu) {
-					var t = CodeUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
+					var t = CiUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
 					b.Append($"{t?.Name ?? "t"}[{_Str(name)}] = o => ");
 				}
 				b.Append("run.it(").Append(nameComment).Append(path).Append(args);

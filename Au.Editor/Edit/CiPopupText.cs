@@ -94,7 +94,7 @@ class CiPopupText {
 	}
 
 	public void Show(SciCode ownerControl, int pos16, bool hideIfOutside = false, bool above = false) {
-		var r = CiUtil.GetCaretRectFromPos(ownerControl, pos16, inScreen: true);
+		var r = ownerControl.EGetCaretRectFromPos(pos16, inScreen: true);
 		r.Inflate(50, 0);
 		Show(ownerControl, r, above ? Dock.Top : Dock.Bottom, hideIfOutside);
 	}

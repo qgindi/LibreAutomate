@@ -101,14 +101,13 @@ namespace Au;
 ///  print.it("//RxSplit:");
 /// print.it(s.RxSplit(@" *, *"));
 /// ]]></code></example>
-public unsafe class regexp
-{
+public unsafe class regexp {
 	readonly IntPtr _codeUnsafe; //pcre2_code_16*. Don't pass to PCRE API directly, because then GC can collect this object
 	Cpp.PcreCalloutT _pcreCallout; //our callout that calls the user's callout. This field protects the delegates from GC.
 	readonly byte _matchFlags; //RXMatchFlags specified in hi byte of ctor flags
-
+	
 	internal HandleRef _CodeHR => new HandleRef(this, _codeUnsafe); //pass this to PCRE API
-
+	
 	/// <summary>
 	/// Compiles regular expression string.
 	/// </summary>
@@ -133,7 +132,7 @@ public unsafe class regexp
 		if (_codeUnsafe == default) throw new ArgumentException(errStr.ToStringAndDispose());
 		GC.AddMemoryPressure(codeSize);
 	}
-
+	
 	///
 	~regexp() {
 		//print.it("dtor");
@@ -141,7 +140,7 @@ public unsafe class regexp
 		int codeSize = Cpp.Cpp_RegexDtor(_codeUnsafe);
 		GC.RemoveMemoryPressure(codeSize);
 	}
-
+	
 	/// <summary>
 	/// Sets callout callback function.
 	/// </summary>
@@ -207,7 +206,7 @@ public unsafe class regexp
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Finds a named group and returns its 1-based index. Returns -1 if not found.
 	/// </summary>
@@ -230,7 +229,7 @@ public unsafe class regexp
 			return R;
 		}
 	}
-
+	
 	/// <summary>
 	/// Returns the highest capture group number in the regular expression. If <c>(?|</c> not used, this is also the total count of capture groups.
 	/// </summary>
@@ -239,7 +238,7 @@ public unsafe class regexp
 		Cpp.pcre2_pattern_info(_CodeHR, Cpp.PCRE2_INFO_.CAPTURECOUNT, &R);
 		return R;
 	}
-
+	
 	//Calls Cpp_RegexMatch and returns its results.
 	//Throws if it returns less than -1.
 	//m.vec array is thread_local. Next call reallocates/overwrites it, except when called by a callout of the same call.
@@ -248,10 +247,10 @@ public unsafe class regexp
 	//rawFlags - pass flags as is. If false, calls _GetMatchFlags. If true, flags must be result of _GetMatchFlags.
 	//group - 0 or group number. Used only to throw if invalid.
 	int _PcreMatch(RStr s, int start, RXMatchFlags flags, bool rawFlags, out Cpp.RegexMatch m, bool needM, int group = 0) {
+		if (s == null) { m = default; return -1; }
 		fixed (char* p = s) {
-			if (p == null) { m = default; return -1; }
 			if (!rawFlags) flags = _GetMatchFlags(flags);
-			int rc = Cpp.Cpp_RegexMatch(_CodeHR, p, s.Length, start, flags, _pcreCallout, out m, needM, out BSTR errStr);
+			int rc = Cpp.Cpp_RegexMatch(_CodeHR, p != null ? p : (char*)&p, s.Length, start, flags, _pcreCallout, out m, needM, out BSTR errStr);
 			if (rc < -1) throw new AuException(errStr.ToStringAndDispose());
 			if (group != 0 && rc >= 0 && (uint)group >= m.vecCount) throw new ArgumentOutOfRangeException(nameof(group));
 			return rc;
@@ -259,7 +258,7 @@ public unsafe class regexp
 			//info: 0 is partial match, -1 is no match, <-1 is error
 		}
 	}
-
+	
 	//Gets span and returns start.
 	//If range is null, sets span = s and returns 0.
 	//Else if range is invalid, throws ArgumentOutOfRangeException.
@@ -271,14 +270,14 @@ public unsafe class regexp
 		if (end != span.Length) span = span[..end];
 		return i;
 	}
-
+	
 	static int _GetSpan(ref RStr span, Range? range) {
 		if (!range.HasValue) return 0;
 		var (i, end) = range.GetStartEnd(span.Length);
 		if (end != span.Length) span = span[..end];
 		return i;
 	}
-
+	
 	RXMatchFlags _GetMatchFlags(RXMatchFlags matchFlags, bool throwIfPartial = false) {
 		var f = (RXMatchFlags)_matchFlags | matchFlags;
 		if (throwIfPartial) {
@@ -287,7 +286,7 @@ public unsafe class regexp
 		}
 		return f;
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// </summary>
@@ -321,14 +320,13 @@ public unsafe class regexp
 		int start = _GetSpan(s, range, out var span);
 		return _PcreMatch(span, start, matchFlags, rawFlags: false, out _, needM: false) >= 0;
 	}
-
+	
 	/// <inheritdoc cref="IsMatch(string, Range?, RXMatchFlags)"/>
-	internal bool IsMatch_(RStr s, Range? range = null, RXMatchFlags matchFlags = 0) {
+	public bool IsMatch(RStr s, Range? range = null, RXMatchFlags matchFlags = 0) {
 		int start = _GetSpan(ref s, range);
 		return _PcreMatch(s, start, matchFlags, rawFlags: false, out _, needM: false) >= 0;
 	}
-	//Note: cannot use subject type ReadOnlySpan<char> with most functions, because need to store subject in RXGroup or RXMatch, which is not ref struct. And cannot use ReadOnlyMemory<char>.
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// Gets match info as <see cref="RXMatch"/>.
@@ -359,7 +357,7 @@ public unsafe class regexp
 		}
 		return rc >= 0;
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// Gets whole match or some group, as <see cref="RXGroup"/> (index, length, value).
@@ -400,7 +398,7 @@ public unsafe class regexp
 		result = new RXGroup(s, m.vec[group]);
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// Gets whole match or some group, as string.
@@ -415,9 +413,6 @@ public unsafe class regexp
 	/// If <c>null</c>, returns <c>false</c>, even if the regular expression matches empty string.
 	/// </param>
 	/// <param name="result">Receives the match value.</param>
-	/// <remarks>
-	/// This function is a simplified version of <see cref="Match(string, out RXMatch, Range?, RXMatchFlags)"/>.
-	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// var s = "one two22 three333 four";
@@ -432,29 +427,63 @@ public unsafe class regexp
 		result = g.Value;
 		return true;
 	}
-
-	/// <inheritdoc cref="Match(string, out RXMatch, Range?, RXMatchFlags)"/>
-	internal bool Match_(RStr s, out RXMatch result, Range? range = null, RXMatchFlags matchFlags = 0) {
-		//note: instead of 'Range? range = null' could be 'int start = 0', but then this overload (if public Match) could be easily confused with the string subject overload.
-		result = null;
+	
+	/// <summary>
+	/// Returns <c>true</c> if string span <i>s</i> matches this regular expression.
+	/// Gets whole match or some group, as <see cref="StartEnd"/>.
+	/// </summary>
+	/// <inheritdoc cref="Match(string, int, out RXGroup, Range?, RXMatchFlags)"/>
+	public bool Match(RStr s, int group, out StartEnd result, Range? range = null, RXMatchFlags matchFlags = 0) {
+		int start = _GetSpan(ref s, range);
+		int rc = _PcreMatch(s, start, matchFlags, rawFlags: false, out var m, needM: true, group);
+		if (rc < 0) {
+			result = default;
+			return false;
+		}
+		result = m.vec[group];
+		return true;
+	}
+	
+	/// <summary>
+	/// Returns <c>true</c> if string span <i>s</i> matches this regular expression.
+	/// Writes match info to caller-allocated memory (array, stackalloc array, etc).
+	/// </summary>
+	/// <param name="result">Receives match info: main match in <c>result[0]</c> and group matches in other elements. <b>Length</b> must be equal to the number of groups + 1. If a group does not exists, the element's <b>start</b> and <b>end</b> are <c>-1</c>.</param>
+	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+	/// <exception cref="ArgumentException"><i>result</i> array too short.</exception>
+	/// <inheritdoc cref="Match(string, out RXMatch, Range?, RXMatchFlags)" path="/param"/>
+	public bool Match(RStr s, Span<StartEnd> result, Range? range = null, RXMatchFlags matchFlags = 0) {
 		int start = _GetSpan(ref s, range);
 		int rc = _PcreMatch(s, start, matchFlags, rawFlags: false, out var m, needM: true);
 		if (rc >= 0 || m.mark != null) {
-			result = new RXMatch(this, null, rc, in m);
+			if (result.Length < m.vecCount) throw new ArgumentException("result array too short");
+			new Span<StartEnd>(m.vec, m.vecCount).CopyTo(result);
 		}
 		return rc >= 0;
 	}
-
+	
+	///// <inheritdoc cref="Match(string, out RXMatch, Range?, RXMatchFlags)"/>
+	///// <param name="result">Receives match info. Its "get string value" functions cannot be used.</param>
+	//public bool Match(RStr s, out RXMatch result, Range? range = null, RXMatchFlags matchFlags = 0) {
+	//	result = null;
+	//	int start = _GetSpan(ref s, range);
+	//	int rc = _PcreMatch(s, start, matchFlags, rawFlags: false, out var m, needM: true);
+	//	if (rc >= 0 || m.mark != null) {
+	//		result = new RXMatch(this, null, rc, in m);
+	//	}
+	//	return rc >= 0;
+	//}
+	
 	//Used by FindAllX and ReplaceAllX to easily find matches in loop.
-	struct _MatchEnum
-	{
+	struct _MatchEnum {
 		regexp _rx;
 		string _subject;
 		Cpp.RegexMatch _m;
 		RXMatchFlags _matchFlags;
 		int _group, _from, _to, _maxCount, _rc;
 		public int foundCount;
-
+		
 		//Throws if s is null or if invalid start/end or used 'partial' flags.
 		public _MatchEnum(regexp rx, string s, int group, Range? range, RXMatchFlags matchFlags, int maxCount = -1) {
 			Not_.Null(s);
@@ -467,7 +496,7 @@ public unsafe class regexp
 			foundCount = _rc = 0;
 			_m = default;
 		}
-
+		
 		//Calls Cpp_RegexMatch, remembers its results, increments foundCount if found.
 		//Returns false if it returns -1. Throws if it returns < -1. Throws if invalid group.
 		//To get results, use properties Match or GroupX. Don't call Next or any other match function before it.
@@ -480,7 +509,7 @@ public unsafe class regexp
 			foundCount++;
 			return true;
 		}
-
+		
 		void _SetNextFrom() {
 			var p = _m.vec[0]; //x=start, y=end
 			_from = p.end;
@@ -498,16 +527,16 @@ public unsafe class regexp
 				if (_from > _to) _maxCount = 0;
 			}
 		}
-
+		
 		public RXMatch Match => new RXMatch(_rx, _subject, _rc, in _m);
-
+		
 		public StartEnd GroupR => _m.vec[_group];
-
+		
 		public RXGroup GroupG => new(_subject, GroupR);
-
+		
 		public string GroupS { get { var r = GroupR; return r.start < 0 ? null : _subject[r.start..r.end]; } }
 	}
-
+	
 	/// <summary>
 	/// Finds all match instances of the regular expression.
 	/// </summary>
@@ -535,7 +564,7 @@ public unsafe class regexp
 		var e = new _MatchEnum(this, s, 0, range, matchFlags);
 		while (e.Next()) yield return e.Match;
 	}
-
+	
 	/// <returns>A lazy <b>IEnumerable&lt;string&gt;</b> that can be used with <c>foreach</c>.</returns>
 	/// <param name="group">
 	/// Group number (1-based index) of results. If 0 - whole match.
@@ -560,7 +589,7 @@ public unsafe class regexp
 		var e = new _MatchEnum(this, s, group, range, matchFlags);
 		while (e.Next()) yield return e.GroupS;
 	}
-
+	
 	/// <returns>A lazy <b>IEnumerable&lt;RXGroup&gt;</b> that can be used with <c>foreach</c>.</returns>
 	/// <example>
 	/// <code><![CDATA[
@@ -574,7 +603,7 @@ public unsafe class regexp
 		var e = new _MatchEnum(this, s, group, range, matchFlags);
 		while (e.Next()) yield return e.GroupG;
 	}
-
+	
 	/// <summary>
 	/// Finds all match instances of the regular expression. Gets array of <see cref="RXMatch"/>.
 	/// </summary>
@@ -593,7 +622,7 @@ public unsafe class regexp
 		result = FindAll(s, range, matchFlags).ToArray();
 		return result.Length != 0;
 	}
-
+	
 	/// <summary>
 	/// Finds all match instances of the regular expression. Gets array of strings.
 	/// </summary>
@@ -612,7 +641,7 @@ public unsafe class regexp
 		result = FindAll(s, group, range, matchFlags).ToArray();
 		return result.Length != 0;
 	}
-
+	
 	/// <summary>
 	/// Finds all match instances of the regular expression. Gets array of <see cref="RXGroup"/> (index, length, value).
 	/// </summary>
@@ -631,13 +660,13 @@ public unsafe class regexp
 		result = FindAllG(s, group, range, matchFlags).ToArray();
 		return result.Length != 0;
 	}
-
+	
 	int _Replace(string s, out string result, string repl, Func<RXMatch, string> replFunc, int maxCount, Range? range, RXMatchFlags matchFlags) {
 		StringBuilder b = null;
 		StringBuilder_ bCache = default;
 		int prevEnd = 0;
 		int replType = 0; //0 empty, 1 simple, 2 with $, 3 callback
-
+		
 		var e = new _MatchEnum(this, s, 0, range, matchFlags, maxCount);
 		while (e.Next()) {
 			//init variables
@@ -659,7 +688,7 @@ public unsafe class regexp
 			} else re = repl;
 			if (!re.NE()) b.Append(re);
 		}
-
+		
 		//append s part after last match
 		if (e.foundCount != 0) {
 			int nAfter = s.Length - prevEnd;
@@ -667,10 +696,10 @@ public unsafe class regexp
 			result = b.ToString();
 			bCache.Dispose();
 		} else result = s;
-
+		
 		return e.foundCount;
 	}
-
+	
 	/// <summary>
 	/// Finds and replaces all match instances of the regular expression.
 	/// </summary>
@@ -708,7 +737,7 @@ public unsafe class regexp
 		_Replace(s, out var R, repl, null, maxCount, range, matchFlags);
 		return R;
 	}
-
+	
 	/// <returns>The number of replacements made. Returns the result string through an out parameter.</returns>
 	/// <param name="result">The result string. Can be the same variable as the subject string.</param>
 	/// <example>
@@ -725,7 +754,7 @@ public unsafe class regexp
 		out string result, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0) {
 		return _Replace(s, out result, repl, null, maxCount, range, matchFlags);
 	}
-
+	
 	/// <summary>
 	/// Finds and replaces all match instances of the regular expression. Uses a callback function.
 	/// </summary>
@@ -749,7 +778,7 @@ public unsafe class regexp
 		_Replace(s, out var R, null, replFunc, maxCount, range, matchFlags);
 		return R;
 	}
-
+	
 	/// <summary>
 	/// Finds and replaces all match instances of the regular expression. Uses a callback function.
 	/// </summary>
@@ -772,7 +801,7 @@ public unsafe class regexp
 	public int Replace(string s, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0) {
 		return _Replace(s, out result, null, replFunc, maxCount, range, matchFlags);
 	}
-
+	
 	/// <summary>
 	/// Used by <b>_ReplaceAll</b> and <b>RXMatch.ExpandReplacement</b>.
 	/// Fully supports .NET regular expression substitution syntax. Also: replaces <c>$*</c> with the name of the last encountered mark; replaces <c>${+func}</c> etc with the return value of a function registered with <see cref="addReplaceFunc"/>.
@@ -784,14 +813,14 @@ public unsafe class regexp
 			while (s < eos) {
 				if (*s == '$') {
 					if (s > e) { b.Append(e, (int)(s - e)); e = s; }
-
+					
 					char ch = *++s;
-
+					
 					if (ch == '$') { //escaped $
 						e = s++;
 						continue;
 					}
-
+					
 					char* s1e = s; //for errors only
 					int group = -1;
 					if (ch == '{') { //${name} or ${number}
@@ -821,7 +850,7 @@ public unsafe class regexp
 							if (funcName == null || !s_userReplFuncs.TryGetValue(funcName, out var replFunc)) group = int.MaxValue;
 							else b.Append(replFunc(m, groupNumber, funcParam));
 						} else group = _GetGroup(s, t);
-
+						
 						int _GetGroup(char* start, char* end) {
 							if (*start >= '0' && *start <= '9') { //${number}. info: group name cannot start with a digit, then PCRE returns error.
 								int i = repl.ToInt((int)(start - s0), out int numEnd, STIFlags.NoHex);
@@ -832,7 +861,7 @@ public unsafe class regexp
 							}
 							return int.MaxValue;
 						}
-
+						
 						s = t + 1;
 					} else if (ch >= '0' && ch <= '9') { //$number
 						group = repl.ToInt((int)(s - s0), out int numEnd, STIFlags.NoHex);
@@ -857,24 +886,24 @@ public unsafe class regexp
 							b.Append(m.Mark);
 						} else group = int.MaxValue;
 					}
-
+					
 					if (group >= 0) {
 						//if $invalid, throw exception. Would be harmful to ignore when replacing in multiple files.
 						if (group >= m.GroupCountPlusOne) throw new ArgumentException($"Invalid regex replacement: {new string(--s1e, 0, (int)(s - s1e))}");
-
+						
 						var g = m[group];
 						if (g.Length > 0) b.Append(g.Subject_, g.Start, g.Length);
 					}
-
+					
 					e = s;
 				} else s++;
 			}
-
+			
 			int tail = (int)(eos - e);
 			if (tail > 0) b.Append(e, tail);
 		}
 	}
-
+	
 	/// <summary>
 	/// Adds or replaces a function that is called when a regular expression replacement string contains <c>${+name}</c> or <c>${+name(g)}</c> or <c>${+name(g, v)}</c>, where <i>g</i> is group number or name and <i>v</i> is any string.
 	/// </summary>
@@ -908,9 +937,9 @@ public unsafe class regexp
 		s_userReplFuncs[name] = replFunc;
 	}
 	static ConcurrentDictionary<string, Func<RXMatch, int, string, string>> s_userReplFuncs = new();
-
+	
 	//rejected: use pcre2_substitute. Not useful because: we cannot implement RXMatch.ExpandReplacement with it; we have addReplaceFunc.
-
+	
 	/// <summary>
 	/// Returns an array of substrings that in the subject string are delimited by regular expression matches.
 	/// </summary>
@@ -955,7 +984,7 @@ public unsafe class regexp
 		}
 		return new string[] { s };
 	}
-
+	
 	/// <summary>
 	/// Returns <see cref="RXGroup"/> array of substrings delimited by regular expression matches.
 	/// </summary>
@@ -986,7 +1015,7 @@ public unsafe class regexp
 		}
 		return new RXGroup[] { new RXGroup(s, 0, s.Length) };
 	}
-
+	
 	//rejected: probably rarely used. Or need IEnumerable<string> too.
 	//public IEnumerable<RXGroup> SplitE(string s, int maxCount = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 	//{
@@ -1006,7 +1035,7 @@ public unsafe class regexp
 	//	}
 	//	yield return new RXGroup(s, 0, s.Length);
 	//}
-
+	
 	//Calls pcre2_pattern_info(ALLOPTIONS), which returns flags passed to the ctor and possibly modified by (*OPTION) and possibly added UTF if contains non-ASCII characters.
 	//Actually RXFlags is long, where the high 32 bits is extended options. This func gets only the main options (the low 32 bits).
 	RXFlags _InfoAllOptions {
@@ -1016,7 +1045,7 @@ public unsafe class regexp
 			return R;
 		}
 	}
-
+	
 	/// <summary>
 	/// Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if <i>always</i> == <c>true</c>.
 	/// </summary>

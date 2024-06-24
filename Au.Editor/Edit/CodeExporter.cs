@@ -147,29 +147,31 @@ static class CodeExporter {
 			EStyle.Type => "tp",
 			EStyle.Variable => "vr",
 			EStyle.XmlDocTag => "xt",
-			_ => "xd" //XmlDocText
+			EStyle.XmlDocText => "xd",
+			_ => "st" //Rx (unused)
 		};
 	
-	static CiStyling.TStyles _styles = new(customized: false);
-	
-	static TStyle _StyleToStruct(EStyle style)
-		=> style switch {
-			EStyle.Comment => _styles.Comment,
-			EStyle.Constant => _styles.Constant,
-			EStyle.Excluded => _styles.Excluded,
-			EStyle.Function => _styles.Function,
-			EStyle.Keyword => _styles.Keyword,
-			EStyle.Label => _styles.Label,
-			EStyle.Namespace => _styles.Namespace,
-			EStyle.Number => _styles.Number,
-			EStyle.Operator => _styles.Operator,
-			EStyle.Preprocessor => _styles.Preprocessor,
-			EStyle.Punctuation => _styles.Punctuation,
-			EStyle.String => _styles.String,
-			EStyle.StringEscape => _styles.StringEscape,
-			EStyle.Type => _styles.Type,
-			EStyle.Variable => _styles.Variable,
-			EStyle.XmlDocTag => _styles.XmlDocTag,
-			_ => _styles.XmlDocText
+	static TStyle _StyleToStruct(EStyle style) {
+		var d = CiStyling.TStyles.Default;
+		return style switch {
+			EStyle.Comment => d.Comment,
+			EStyle.Constant => d.Constant,
+			EStyle.Excluded => d.Excluded,
+			EStyle.Function => d.Function,
+			EStyle.Keyword => d.Keyword,
+			EStyle.Label => d.Label,
+			EStyle.Namespace => d.Namespace,
+			EStyle.Number => d.Number,
+			EStyle.Operator => d.Operator,
+			EStyle.Preprocessor => d.Preprocessor,
+			EStyle.Punctuation => d.Punctuation,
+			EStyle.String => d.String,
+			EStyle.StringEscape => d.StringEscape,
+			EStyle.Type => d.Type,
+			EStyle.Variable => d.Variable,
+			EStyle.XmlDocTag => d.XmlDocTag,
+			EStyle.XmlDocText => d.XmlDocText,
+			_ => d.String //Rx (unused)
 		};
+	}
 }

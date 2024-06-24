@@ -176,7 +176,7 @@ partial class SciCode {
 					name = name.Escape();
 					
 					if (what is 4 or 13) {
-						var t = CodeUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
+						var t = CiUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
 						b.Append($"{t?.Name ?? "t"}[\"{name}\"] = o => ");
 					} else if (what is 1 or 2 or 11) {
 						b.Append($"string s{index} = ");

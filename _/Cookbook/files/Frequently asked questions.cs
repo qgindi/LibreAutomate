@@ -9,7 +9,3 @@
 
 /// <b>Can this program execute or convert Quick Macros scripts?<>
 /// No. <help editor/Compared with QM2>More info<>.
-
-/// <b>How to change the font size?<>
-/// You can change the code editor font in <b>Options > Font, colors<>.
-/// To change the recipe font size, use <mono>Ctrl<>+wheel and click <b>Save font size<>.

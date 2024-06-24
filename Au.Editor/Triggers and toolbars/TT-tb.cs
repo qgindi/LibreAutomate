@@ -250,7 +250,7 @@ partial class Program {
 		int pos = -1;
 		if (cbReplace?.SelectedItem is _Trigger u && _GetTriggerStatementFullRange2(u, out var span, replacing: true)) {
 			var doc = _OpenSourceFile(t.fn, span.Start);
-			using var undo = new KScintilla.aaaUndoAction(doc);
+			using var undo = doc.aaaNewUndoAction();
 			doc.aaaDeleteRange(true, span.Start, span.End);
 			pos = span.Start;
 			_Add();

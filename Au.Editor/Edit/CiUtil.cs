@@ -14,22 +14,156 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
-using Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Tags;
 using CAW::Microsoft.CodeAnalysis.FindSymbols;
-using Microsoft.CodeAnalysis.Completion;
 
 static class CiUtil {
+	#region simple string util
+	
 	/// <summary>
-	/// Finds node at <i>pos</i> and calls <see cref="CiUtilExt.GetStatementEtc"/>, which gets the first ancestor-or-this that is a statement or member/accessor declaration or using directive etc.
+	/// Returns <c>=> c is ' ' or '\t';</c>
 	/// </summary>
-	/// <inheritdoc cref="CiUtilExt.GetStatementEtc"/>
-	public static SyntaxNode GetStatementEtcFromPos(CodeInfo.Context cd, int pos, bool notAccessor = false) {
-		var cu = cd.syntaxRoot;
-		var node = cu.FindToken(pos).Parent;
-		return node.GetStatementEtc(pos, notAccessor);
+	public static bool IsSpace(char c) => c is ' ' or '\t';
+	
+	/// <summary>
+	/// Returns true if <i>pos</i> is in <i>code</i> and <c>code[pos] is ' ' or '\t'</c>.
+	/// </summary>
+	public static bool IsSpace(string code, int pos) => (uint)pos < code.Length && code[pos] is ' ' or '\t';
+	
+	/// <summary>
+	/// Skips <c>' '</c> and <c>'\t'</c> characters after <i>pos</i>.
+	/// </summary>
+	public static int SkipSpace(string code, int pos) {
+		while (IsSpace(code, pos)) pos++;
+		return pos;
 	}
+	
+	/// <summary>
+	/// Skips <c>' '</c> and <c>'\t'</c> characters before <i>pos</i>.
+	/// </summary>
+	public static int SkipSpaceBack(string code, int pos) {
+		while (IsSpace(code, pos - 1)) pos--;
+		return pos;
+	}
+	
+	/// <summary>
+	/// Returns the start and end of the range consisting of <c>' '</c> and <c>'\t'</c> characters around <i>pos</i>.
+	/// </summary>
+	public static (int start, int end) SkipSpaceAround(string code, int pos) {
+		int start = pos, end = pos;
+		while (IsSpace(code, start - 1)) start--;
+		while (IsSpace(code, end)) end++;
+		return (start, end);
+	}
+	
+	/// <summary>
+	/// If <i>pos</i> is at the end of a line and not at the end of the string, returns the start of next line. Else returns <i>pos</i>.
+	/// </summary>
+	public static int SkipNewline(string code, int pos) {
+		if (pos < code.Length && code[pos] == '\r') pos++;
+		if (pos < code.Length && code[pos] == '\n') pos++;
+		return pos;
+	}
+	
+	/// <summary>
+	/// If <i>pos</i> is at the start of a line, returns the end of previous line. Else returns <i>pos</i>.
+	/// </summary>
+	public static int SkipNewlineBack(string code, int pos) {
+		if (pos > 0 && code[pos - 1] == '\n') pos--;
+		if (pos > 0 && code[pos - 1] == '\r') pos--;
+		return pos;
+	}
+	
+	/// <summary>
+	/// Returns true if i is at a line start + any number of spaces and tabs.
+	/// </summary>
+	public static bool IsLineStart(RStr s, int i/*, out int startOfLine*/) {
+		while (i > 0 && s[i - 1] is '\t' or ' ') i--;
+		//startOfLine = j;
+		return i == 0 || s[i - 1] == '\n';
+	}
+	
+	/// <summary>
+	/// Returns true if i is at a line start + any number of spaces and tabs.
+	/// </summary>
+	/// <param name="startOfLine">Receives i or the start of horizontal whitespace before i.</param>
+	public static bool IsLineStart(RStr s, int i, out int startOfLine) {
+		while (i > 0 && s[i - 1] is '\t' or ' ') i--;
+		startOfLine = i;
+		return i == 0 || s[i - 1] == '\n';
+	}
+	
+	/// <summary>
+	/// Creates string containing n tabs or n*4 spaces, depending on <b>App.Settings.ci_formatTabIndent</b>.
+	/// See also <see cref="CiUtilExt.AppendIndent"/>.
+	/// </summary>
+	public static string CreateIndentString(int n) {
+		if (n < 1) return "";
+		if (App.Settings.ci_formatTabIndent) return new('\t', n);
+		return new(' ', n * 4);
+	}
+	
+	/// <summary>
+	/// Returns string with same indent as of the document line from pos.
+	/// The string must not contain multiline raw/verbatim strings; this func ignores it.
+	/// </summary>
+	public static string IndentStringForInsertSimple(string s, SciCode doc, int pos, bool indentFirstLine = false, int indentPlus = 0) {
+		if (s.Contains('\n')) {
+			int indent = doc.aaaLineIndentFromPos(true, pos) + indentPlus;
+			//if (!App.Settings.ci_formatTabIndent) s = s.RxReplace(@"(?m)^\t+", m => CreateIndentString(m.Length)); //rejected. This could be useful for snippets. But then also need to apply App.Settings.ci_formatCompact=false, eg move braces to new lines, indent switch block. Then also need to do all it in code inserted by tools. Better let users format code afterwards.
+			if (indent > 0) s = s.RxReplace(indentFirstLine ? @"(?m)^" : @"(?<=\n)", CreateIndentString(indent));
+		}
+		return s;
+	}
+	
+	public static string GoogleURL(string query) => App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(query);
+	
+	#endregion
+	
+	#region syntax
+	
+	/// <summary>
+	/// Returns true if <i>pos</i> is in trivia where normal tokens are not allowed. For example in comment, doccomment, directive, disabled text.
+	/// </summary>
+	public static bool IsPosInNonblankTrivia(SyntaxNode node, int pos, string code) {
+		if (pos > 0) {
+			bool minus1 = (pos == code.Length || SyntaxFacts.IsNewLine(code[pos])) && !SyntaxFacts.IsNewLine(code[pos - 1]); //end of text or non-empty line. At the left can be eg `//comment`.
+			if (minus1) pos--;
+			var trivia = node.FindTrivia(pos);
+			var tk = trivia.Kind();
+			if (!(tk is 0 or SyntaxKind.WhitespaceTrivia or SyntaxKind.EndOfLineTrivia)) {
+				var ts = trivia.Span;
+				//print.it($"{trivia.Kind()}, {pos}, {trivia.FullSpan}, {ts}, '{trivia}'");
+				if (tk is SyntaxKind.DisabledTextTrivia or SyntaxKind.EndIfDirectiveTrivia or SyntaxKind.ElifDirectiveTrivia or SyntaxKind.ElseDirectiveTrivia or SyntaxKind.BadDirectiveTrivia) return true;
+				if (minus1 && pos + 1 == ts.End && tk is SyntaxKind.MultiLineCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia) return false;
+				if (pos > trivia.FullSpan.Start && pos < ts.End) return true;
+			}
+		}
+		return false;
+	}
+	
+	/// <summary>
+	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
+	/// </summary>
+	public static bool IsScript(string code) {
+		var cu = CreateSyntaxTree(code);
+		var f = cu.Members.FirstOrDefault();
+		if (f != null) {
+			if (f is GlobalStatementSyntax) return true;
+			if (f is BaseNamespaceDeclarationSyntax nd) f = nd.Members.FirstOrDefault();
+			if (f is ClassDeclarationSyntax cd && cd.Members.OfType<MethodDeclarationSyntax>().FirstOrDefault()?.Identifier.Text == "Main") return true;
+		} else {
+			var u = cu.Usings.FirstOrDefault();
+			if (u != null && u.GlobalKeyword.RawKind != 0) return false; //global.cs?
+			return !cu.AttributeLists.Any(); //AssemblyInfo.cs?
+		}
+		return false;
+	}
+	
+	#endregion
+	
+	#region symbols
 	
 	public static (ISymbol symbol, CodeInfo.Context cd) GetSymbolFromPos(bool andZeroLength = false, bool preferVar = false) {
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return default;
@@ -172,7 +306,150 @@ static class CiUtil {
 		if (url != null) run.itSafe(url);
 	}
 	
-	public static string GoogleURL(string query) => App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(query);
+	/// <summary>
+	/// From position in code gets ArgumentSyntax and its IParameterSymbol.
+	/// </summary>
+	/// <param name="arg">Not null if returns true and the argument list isn't empty.</param>
+	/// <param name="ps">If returns true, the array contains 1 or more elements. Multiple if cannot resolve overload.</param>
+	public static bool GetArgumentParameterFromPos(BaseArgumentListSyntax als, int pos, SemanticModel semo, out ArgumentSyntax arg, out IParameterSymbol[] ps) {
+		arg = null; ps = null;
+		var args = als.Arguments;
+		var index = args.Count == 0 ? 0 : als.Arguments.IndexOf(o => pos <= o.FullSpan.End); //print.it(index);
+		if (index < 0) return default;
+		if (!CiUtil.GetFunctionSymbolInfoFromArgumentList(als, semo, out var si)) return default;
+		string name = null;
+		if (args.Count > 0) {
+			arg = args[index];
+			var nc = arg.NameColon;
+			if (nc != null) name = nc.Name.Identifier.Text;
+		}
+		ps = GetParameterSymbol(si, index, name, als.Arguments.Count, o => o.Type.TypeKind == TypeKind.Delegate)
+			.DistinctBy(o => o.Type.ToString()) //tested with Task.Run. 8 overloads, 4 distinct parameter types.
+			.ToArray();
+		return ps.Length > 0;
+	}
+	
+	/// <summary>
+	/// Gets IParameterSymbol of siFunction's parameter matching argument index or name.
+	/// Can return multiple if cannot resolve overload.
+	/// </summary>
+	/// <param name="siFunction">SymbolInfo of the method, ctor or indexer.</param>
+	/// <param name="index">Argument index. Not used if used name.</param>
+	/// <param name="name">Parameter name, if specified in the argument, else null.</param>
+	/// <param name="argCount">Count of arguments.</param>
+	/// <param name="filter"></param>
+	public static IEnumerable<IParameterSymbol> GetParameterSymbol(SymbolInfo siFunction, int index, string name, int argCount, Func<IParameterSymbol, bool> filter = null) {
+		foreach (var v in siFunction.GetAllSymbols()) {
+			if (_Get(v) is { } r) yield return r;
+		}
+		
+		IParameterSymbol _Get(ISymbol fsym) {
+			var parms = fsym switch { IMethodSymbol ms => ms.Parameters, IPropertySymbol ps => ps.Parameters, _ => default };
+			if (!parms.IsDefaultOrEmpty && parms.Length >= argCount) {
+				var ps = name != null ? parms.FirstOrDefault(o => o.Name == name) : index < parms.Length ? parms[index] : null;
+				if (ps != null) if (filter == null || filter(ps)) return ps;
+			}
+			return null;
+		}
+	}
+	
+	/// <summary>
+	/// Gets <b>ILocalSymbol</b> or <b>IParameterSymbol</b> of the nearest declared/accessible local variable or parameter of one of specified types.
+	/// Uses current document and caret position.
+	/// Returns null if not found.
+	/// </summary>
+	/// <param name="types">Fully qualified type name. The type must be in an assembly, not in source.</param>
+	/// <exception cref="ArgumentException">Type not found.</exception>
+	public static ISymbol GetNearestLocalVariableOfType(params string[] types) {
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return null;
+		var semo = cd.semanticModel;
+		var ats = types.Select(o => semo.Compilation.GetTypeByMetadataName(o) ?? throw new ArgumentException($"Type not found: {o}."));
+		var a = GetLocalVariablesAt(semo, cd.pos, o => ats.Contains(o));
+		return a.Count > 0 ? a[^1] : null;
+	}
+	
+	/// <summary>
+	/// Gets <b>ILocalSymbol</b> or <b>IParameterSymbol</b> of local variables and parameters that can be used at position <i>pos</i>. The order is the same as declared in code.
+	/// Not perfect.
+	/// </summary>
+	public static List<ISymbol> GetLocalVariablesAt(SemanticModel semo, int pos, Func<ITypeSymbol, bool> ofType = null) {
+		var a = new List<ISymbol>();
+		var scopes = _GetLocalScopes(semo, pos);
+		if (scopes.Count > 0) {
+			var e = semo.GetAllDeclaredSymbols(scopes[^1], default);
+			//var e=semo.GetAllDeclaredSymbols(scopes[^1], default, o => { CiUtil.PrintNode(o); return true; });
+			foreach (var v in e) {
+				//if (v is not (ILocalSymbol or IParameterSymbol)) print.it(v.Name, v.GetTypeDisplayName());
+				if (v is not (ILocalSymbol or IParameterSymbol)) continue;
+				if (ofType != null && !ofType(v.GetSymbolType())) continue;
+				var n2 = v.DeclaringSyntaxReferences.First().GetSyntax();
+				var s2 = _GetLocalScope(n2);
+				if (!scopes.Contains(s2)) {
+					//print.it($"<>    <c #ff8080>{v.Name}, {v.GetSymbolType()}<>");
+					continue;
+				}
+				var span = n2 is ForEachStatementSyntax fe ? fe.Identifier.Span : n2.Span;
+				if (pos <= span.End) {
+					//print.it($"<>    <c #c0c0c0>{v.Name}, {v.GetSymbolType()}<>");
+					continue;
+				}
+				//print.it(v.Name, v.GetSymbolType());
+				a.Add(v);
+			}
+		}
+		return a;
+	}
+	
+	/// <summary>
+	/// Gets ancestor scopes of local variables and parameters.
+	/// For { block } gets its parent if there may be declared variables/parameters that are visible only in that block; eg function declaration or foreach statement.
+	/// </summary>
+	/// <param name="semo"></param>
+	/// <param name="pos"></param>
+	static List<SyntaxNode> _GetLocalScopes(SemanticModel semo, int pos) {
+		var a = new List<SyntaxNode>();
+		var node = semo.SyntaxTree.GetCompilationUnitRoot().FindToken(pos).Parent;
+		bool inside = false;
+		foreach (var v in node.AncestorsAndSelf()) {
+			if (v is CompilationUnitSyntax) {
+				a.Add(v);
+				break;
+			}
+			if (!(inside || (inside = v.Span.ContainsInside(pos)))) continue;
+			if (_IsLocalScope(v)) {
+				a.Add(v);
+				if (v is BaseMethodDeclarationSyntax) break;
+				if (v is LocalFunctionStatementSyntax lf && lf.Modifiers.Any(SyntaxKind.StaticKeyword)) break;
+				if (v is AnonymousFunctionExpressionSyntax af && af.Modifiers.Any(SyntaxKind.StaticKeyword)) break;
+			} else if (v is BaseTypeDeclarationSyntax or NamespaceDeclarationSyntax) {
+				a.Clear();
+				break;
+			}
+		}
+		return a;
+	}
+	
+	/// <summary>
+	/// Returns true if local/parameter variabled declared inside n aren't visible outside.
+	/// </summary>
+	/// <param name="n"></param>
+	static bool _IsLocalScope(SyntaxNode n) {
+		if (n is BlockSyntax) return !_Is2(n.Parent);
+		return _Is2(n) || n is SwitchSectionSyntax or CompilationUnitSyntax;
+		
+		static bool _Is2(SyntaxNode n) => n is BaseMethodDeclarationSyntax
+			or LocalFunctionStatementSyntax
+			or AnonymousFunctionExpressionSyntax
+			or ForStatementSyntax
+			or CommonForEachStatementSyntax
+			or CatchClauseSyntax
+			or FixedStatementSyntax
+			or UsingStatementSyntax
+			or SwitchExpressionArmSyntax
+		;
+	}
+	
+	static SyntaxNode _GetLocalScope(SyntaxNode node) => node.FirstAncestorOrSelf<SyntaxNode>(o => _IsLocalScope(o));
 	
 	public static string GetSymbolHelpUrl(ISymbol sym) {
 		//print.it(sym);
@@ -232,18 +509,6 @@ static class CiUtil {
 			&& (t.BaseType?.Name == "NativeApi" || t.Name.Contains("Native") || t.Name.Ends("Api"));
 		
 		return GoogleURL(query);
-	}
-	
-	/// <summary>
-	/// Gets rectangle of caret if it was at the specified UTF-16 position.
-	/// If <i>pos16</i> less than 0, uses current caret position.
-	/// </summary>
-	public static RECT GetCaretRectFromPos(SciCode doc, int pos16 = -1, bool inScreen = false) {
-		int pos8 = pos16 < 0 ? doc.aaaCurrentPos8 : doc.aaaPos8(pos16);
-		int x = doc.Call(Sci.SCI_POINTXFROMPOSITION, 0, pos8), y = doc.Call(Sci.SCI_POINTYFROMPOSITION, 0, pos8);
-		var r = new RECT(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.aaaLineFromPos(false, pos8)) + 2);
-		if (inScreen) doc.AaWnd.MapClientToScreen(ref r);
-		return r;
 	}
 	
 	public static PSFormat GetParameterStringFormat(SyntaxNode node, SemanticModel semo, bool isString, bool ignoreInterpolatedString = false) {
@@ -317,6 +582,173 @@ static class CiUtil {
 			}
 		}
 	}
+	
+	/// <summary>
+	/// Calls Classifier.GetClassifiedSpansAsync and corrects overlapped items etc.
+	/// </summary>
+	public static async Task<List<ClassifiedSpan>> GetClassifiedSpansAsync(Document document, int from, int to, CancellationToken cancellationToken = default) {
+		var e = await Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(from, to)).ConfigureAwait(false);
+		return _CorrectClassifiedSpans(e);
+	}
+	
+	/// <summary>
+	/// Calls Classifier.GetClassifiedSpans and corrects overlapped items etc.
+	/// </summary>
+	public static List<ClassifiedSpan> GetClassifiedSpans(SemanticModel semo, Document document, int from, int to, CancellationToken cancellationToken = default) {
+		var proj = document.Project;
+		//var opt = new ClassificationOptions { ColorizeRegexPatterns = true, ColorizeJsonPatterns = true }; //default true true
+		var e = Classifier.GetClassifiedSpans(proj.Solution.Services, proj, semo, TextSpan.FromBounds(from, to), ClassificationOptions.Default, true, cancellationToken);
+		return _CorrectClassifiedSpans(e);
+	}
+	
+	static List<ClassifiedSpan> _CorrectClassifiedSpans(IEnumerable<ClassifiedSpan> espans) {
+		var a = espans as List<ClassifiedSpan>;
+		//print.clear(); foreach (var v in a) print.it(v.ClassificationType);
+		
+		//Order StringEscapeCharacter correctly. Now in $"string" they are randomly after or before the string. Must be after.
+		//	This code ignores regex and json tokens, because Classifier.GetClassifiedSpans does not produce them (why?). And callers don't support it too.
+		for (int k = a.Count; --k > 0;) {
+			if (a[k - 1].ClassificationType == ClassificationTypeNames.StringEscapeCharacter)
+				//if (a[k].ClassificationType == ClassificationTypeNames.StringLiteral || a[k].ClassificationType == ClassificationTypeNames.VerbatimStringLiteral)
+				if (a[k].TextSpan.Contains(a[k - 1].TextSpan))
+					Math2.Swap(ref a.Ref(k), ref a.Ref(k - 1));
+		}
+		
+		//remove StaticSymbol
+		int i = 0, j = 0;
+		for (; i < a.Count; i++) {
+			if (a[i].ClassificationType == ClassificationTypeNames.StaticSymbol) continue;
+			if (j != i) a[j] = a[i];
+			j++;
+		}
+		if ((i -= j) > 0) a.RemoveRange(a.Count - i, i);
+		
+		return a;
+	}
+	
+	/// <summary>
+	/// For C# code gets style bytes that can be used with SCI_SETSTYLINGEX for UTF-8 text.
+	/// Uses Classifier.GetClassifiedSpansAsync, like the code editor.
+	/// Controls that use this should set styles like this example, probably when handle created:
+	/// var styles = new CiStyling.TStyles { FontSize = 9 };
+	/// styles.ToScintilla(this);
+	/// </summary>
+	public static byte[] GetScintillaStylingBytes(string code) {
+		var styles8 = new byte[Encoding.UTF8.GetByteCount(code)];
+		var map8 = styles8.Length == code.Length ? null : Convert2.Utf8EncodeAndGetOffsets_(code).offsets;
+		using var ws = new AdhocWorkspace();
+		var document = CreateDocumentFromCode(ws, code, needSemantic: true);
+		var semo = document.GetSemanticModelAsync().Result;
+		var a = GetClassifiedSpansAsync(document, 0, code.Length).Result;
+		foreach (var v in a) {
+			//print.it(v.TextSpan, v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
+			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
+			if (style == EStyle.None) continue;
+			var (i, end) = v.TextSpan;
+			if (map8 != null) { i = map8[i]; end = map8[end]; }
+			while (i < end) styles8[i++] = (byte)style;
+		}
+		return styles8;
+	}
+	
+	public static CiItemKind MemberDeclarationToKind(MemberDeclarationSyntax m) {
+		return m switch {
+			ClassDeclarationSyntax => CiItemKind.Class,
+			StructDeclarationSyntax => CiItemKind.Structure,
+			RecordDeclarationSyntax rd => rd.IsKind(SyntaxKind.RecordStructDeclaration) ? CiItemKind.Structure : CiItemKind.Class,
+			EnumDeclarationSyntax => CiItemKind.Enum,
+			DelegateDeclarationSyntax => CiItemKind.Delegate,
+			InterfaceDeclarationSyntax => CiItemKind.Interface,
+			OperatorDeclarationSyntax or ConversionOperatorDeclarationSyntax or IndexerDeclarationSyntax => CiItemKind.Operator,
+			BaseMethodDeclarationSyntax => CiItemKind.Method,
+			// => CiItemKind.ExtensionMethod,
+			PropertyDeclarationSyntax => CiItemKind.Property,
+			EventDeclarationSyntax or EventFieldDeclarationSyntax => CiItemKind.Event,
+			FieldDeclarationSyntax f => f.Modifiers.Any(o => o.Text == "const") ? CiItemKind.Constant : CiItemKind.Field,
+			EnumMemberDeclarationSyntax => CiItemKind.EnumMember,
+			BaseNamespaceDeclarationSyntax => CiItemKind.Namespace,
+			_ => CiItemKind.None
+		};
+	}
+	
+	public static void TagsToKindAndAccess(ImmutableArray<string> tags, out CiItemKind kind, out CiItemAccess access) {
+		kind = CiItemKind.None;
+		access = default;
+		if (tags.IsDefaultOrEmpty) return;
+		kind = tags[0] switch {
+			WellKnownTags.Class => CiItemKind.Class,
+			WellKnownTags.Structure => CiItemKind.Structure,
+			WellKnownTags.Enum => CiItemKind.Enum,
+			WellKnownTags.Delegate => CiItemKind.Delegate,
+			WellKnownTags.Interface => CiItemKind.Interface,
+			WellKnownTags.Method => CiItemKind.Method,
+			WellKnownTags.ExtensionMethod => CiItemKind.ExtensionMethod,
+			WellKnownTags.Property => CiItemKind.Property,
+			WellKnownTags.Operator => CiItemKind.Operator,
+			WellKnownTags.Event => CiItemKind.Event,
+			WellKnownTags.Field => CiItemKind.Field,
+			WellKnownTags.Local => CiItemKind.LocalVariable,
+			WellKnownTags.Parameter => CiItemKind.LocalVariable,
+			WellKnownTags.RangeVariable => CiItemKind.LocalVariable,
+			WellKnownTags.Constant => CiItemKind.Constant,
+			WellKnownTags.EnumMember => CiItemKind.EnumMember,
+			WellKnownTags.Keyword => CiItemKind.Keyword,
+			WellKnownTags.Namespace => CiItemKind.Namespace,
+			WellKnownTags.Label => CiItemKind.Label,
+			WellKnownTags.TypeParameter => CiItemKind.TypeParameter,
+			//WellKnownTags.Snippet => CiItemKind.Snippet,
+			_ => CiItemKind.None
+		};
+		if (tags.Length > 1) {
+			access = tags[1] switch {
+				WellKnownTags.Private => CiItemAccess.Private,
+				WellKnownTags.Protected => CiItemAccess.Protected,
+				WellKnownTags.Internal => CiItemAccess.Internal,
+				_ => default
+			};
+		}
+	}
+	
+	//The order must match CiItemKind.
+	public static string[] ItemKindNames { get; } = new[] {
+		"Class",
+		"Structure",
+		"Interface",
+		"Enum",
+		"Delegate",
+		"Method",
+		"ExtensionMethod",
+		"Property",
+		"Operator",
+		"Event",
+		"Field",
+		"LocalVariable",
+		"Constant",
+		"EnumMember",
+		"Namespace",
+		"Keyword",
+		"Label",
+		"Snippet",
+		"TypeParameter"
+	};
+	
+	/// <summary>
+	/// Calls <b>string.Compare</b>. Moves items starting with an ASCII non-symbol char to the bottom.
+	/// </summary>
+	public class CompletionListSortComparer : IComparer<string> {
+		public int Compare(string x, string y) {
+			int r = _IsAsciiNonSymChar(x) - _IsAsciiNonSymChar(y);
+			if (r == 0) r = string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+			return r;
+			
+			static int _IsAsciiNonSymChar(string s) => s.Length > 0 && s[0] is char c && (char.IsAsciiLetterOrDigit(c) || c == '_' || c > 127) ? 0 : 1;
+		}
+	}
+	public static readonly CompletionListSortComparer SortComparer = new();
+	
+	#endregion
+	
+	#region create a temp syntax tree, document, compilation, solution
 	
 	/// <summary>
 	/// From C# code creates a Roslyn workspace+project+document for code analysis.
@@ -425,78 +857,15 @@ global using System.Windows.Media;
 	}
 	
 	/// <summary>
-	/// Calls Classifier.GetClassifiedSpansAsync and corrects overlapped items.
-	/// </summary>
-	public static async Task<List<ClassifiedSpan>> GetClassifiedSpansAsync(Document document, int from, int to, CancellationToken cancellationToken = default) {
-		var e = await Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(from, to)).ConfigureAwait(false);
-		var a = e as List<ClassifiedSpan>;
-		//order StringEscapeCharacter correctly. Now in $"string" they are randomly after or before the string. Must be after.
-		for (int k = a.Count; --k > 0;) {
-			if (a[k - 1].ClassificationType == ClassificationTypeNames.StringEscapeCharacter)
-				//if (a[k].ClassificationType == ClassificationTypeNames.StringLiteral || a[k].ClassificationType == ClassificationTypeNames.VerbatimStringLiteral)
-				if (a[k].TextSpan.Contains(a[k - 1].TextSpan))
-					Math2.Swap(ref a.Ref(k), ref a.Ref(k - 1));
-		}
-		//remove StaticSymbol
-		int i = 0, j = 0;
-		for (; i < a.Count; i++) {
-			if (a[i].ClassificationType == ClassificationTypeNames.StaticSymbol) continue;
-			if (j != i) a[j] = a[i];
-			j++;
-		}
-		if ((i -= j) > 0) a.RemoveRange(a.Count - i, i);
-		return a;
-	}
-	
-	/// <summary>
-	/// For C# code gets style bytes that can be used with SCI_SETSTYLINGEX for UTF-8 text.
-	/// Uses Classifier.GetClassifiedSpansAsync, like the code editor.
-	/// Controls that use this should set styles like this example, probably when handle created:
-	/// var styles = new CiStyling.TStyles { FontSize = 9 };
-	/// styles.ToScintilla(this);
-	/// </summary>
-	public static byte[] GetScintillaStylingBytes(string code) {
-		var styles8 = new byte[Encoding.UTF8.GetByteCount(code)];
-		var map8 = styles8.Length == code.Length ? null : Convert2.Utf8EncodeAndGetOffsets_(code).offsets;
-		using var ws = new AdhocWorkspace();
-		var document = CreateDocumentFromCode(ws, code, needSemantic: true);
-		var semo = document.GetSemanticModelAsync().Result;
-		var a = GetClassifiedSpansAsync(document, 0, code.Length).Result;
-		foreach (var v in a) {
-			//print.it(v.TextSpan, v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
-			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
-			if (style == EStyle.None) continue;
-			int i = v.TextSpan.Start, end = v.TextSpan.End;
-			if (map8 != null) { i = map8[i]; end = map8[end]; }
-			while (i < end) styles8[i++] = (byte)style;
-		}
-		return styles8;
-	}
-	
-	/// <summary>
 	/// Calls <b>CSharpSyntaxTree.ParseText</b> and returns <b>CompilationUnitSyntax</b>.
 	/// </summary>
-	public static CompilationUnitSyntax GetSyntaxTree(string code) {
+	public static CompilationUnitSyntax CreateSyntaxTree(string code) {
 		return CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)).GetCompilationUnitRoot();
 	}
 	
-	/// <summary>
-	/// Returns true if <i>code</i> contains global statements or is empty or the first method of the first class is named "Main".
-	/// </summary>
-	public static bool IsScript(string code) {
-		var cu = GetSyntaxTree(code);
-		var f = cu.Members.FirstOrDefault();
-		if (f != null) {
-			if (f is GlobalStatementSyntax) return true;
-			if (f is BaseNamespaceDeclarationSyntax nd) f = nd.Members.FirstOrDefault();
-			if (f is ClassDeclarationSyntax cd && cd.Members.OfType<MethodDeclarationSyntax>().FirstOrDefault()?.Identifier.Text == "Main") return true;
-		} else {
-			var u = cu.Usings.FirstOrDefault();
-			if (u != null && u.GlobalKeyword.RawKind != 0) return false; //global.cs?
-			return !cu.AttributeLists.Any(); //AssemblyInfo.cs?
-		}
-		return false;
-	}
+	#endregion
+	
+	#region DEBUG
 	
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
@@ -534,92 +903,8 @@ global using System.Windows.Media;
 		return sym.GetType().FindInterfaces((t, _) => t.Name.Ends("Symbol") && t.Name != "ISymbol", null).Select(o => o.Name);
 	}
 	
-#endif
-	
-	public static CiItemKind MemberDeclarationToKind(MemberDeclarationSyntax m) {
-		return m switch {
-			ClassDeclarationSyntax => CiItemKind.Class,
-			StructDeclarationSyntax => CiItemKind.Structure,
-			RecordDeclarationSyntax rd => rd.IsKind(SyntaxKind.RecordStructDeclaration) ? CiItemKind.Structure : CiItemKind.Class,
-			EnumDeclarationSyntax => CiItemKind.Enum,
-			DelegateDeclarationSyntax => CiItemKind.Delegate,
-			InterfaceDeclarationSyntax => CiItemKind.Interface,
-			OperatorDeclarationSyntax or ConversionOperatorDeclarationSyntax or IndexerDeclarationSyntax => CiItemKind.Operator,
-			BaseMethodDeclarationSyntax => CiItemKind.Method,
-			// => CiItemKind.ExtensionMethod,
-			PropertyDeclarationSyntax => CiItemKind.Property,
-			EventDeclarationSyntax or EventFieldDeclarationSyntax => CiItemKind.Event,
-			FieldDeclarationSyntax f => f.Modifiers.Any(o => o.Text == "const") ? CiItemKind.Constant : CiItemKind.Field,
-			EnumMemberDeclarationSyntax => CiItemKind.EnumMember,
-			BaseNamespaceDeclarationSyntax => CiItemKind.Namespace,
-			_ => CiItemKind.None
-		};
-	}
-	
-	public static void TagsToKindAndAccess(ImmutableArray<string> tags, out CiItemKind kind, out CiItemAccess access) {
-		kind = CiItemKind.None;
-		access = default;
-		if (tags.IsDefaultOrEmpty) return;
-		kind = tags[0] switch {
-			WellKnownTags.Class => CiItemKind.Class,
-			WellKnownTags.Structure => CiItemKind.Structure,
-			WellKnownTags.Enum => CiItemKind.Enum,
-			WellKnownTags.Delegate => CiItemKind.Delegate,
-			WellKnownTags.Interface => CiItemKind.Interface,
-			WellKnownTags.Method => CiItemKind.Method,
-			WellKnownTags.ExtensionMethod => CiItemKind.ExtensionMethod,
-			WellKnownTags.Property => CiItemKind.Property,
-			WellKnownTags.Operator => CiItemKind.Operator,
-			WellKnownTags.Event => CiItemKind.Event,
-			WellKnownTags.Field => CiItemKind.Field,
-			WellKnownTags.Local => CiItemKind.LocalVariable,
-			WellKnownTags.Parameter => CiItemKind.LocalVariable,
-			WellKnownTags.RangeVariable => CiItemKind.LocalVariable,
-			WellKnownTags.Constant => CiItemKind.Constant,
-			WellKnownTags.EnumMember => CiItemKind.EnumMember,
-			WellKnownTags.Keyword => CiItemKind.Keyword,
-			WellKnownTags.Namespace => CiItemKind.Namespace,
-			WellKnownTags.Label => CiItemKind.Label,
-			WellKnownTags.TypeParameter => CiItemKind.TypeParameter,
-			//WellKnownTags.Snippet => CiItemKind.Snippet,
-			_ => CiItemKind.None
-		};
-		if (tags.Length > 1) {
-			access = tags[1] switch {
-				WellKnownTags.Private => CiItemAccess.Private,
-				WellKnownTags.Protected => CiItemAccess.Protected,
-				WellKnownTags.Internal => CiItemAccess.Internal,
-				_ => default
-			};
-		}
-	}
-	
-	//The order must match CiItemKind.
-	public static string[] ItemKindNames { get; } = new[] {
-		"Class",
-		"Structure",
-		"Interface",
-		"Enum",
-		"Delegate",
-		"Method",
-		"ExtensionMethod",
-		"Property",
-		"Operator",
-		"Event",
-		"Field",
-		"LocalVariable",
-		"Constant",
-		"EnumMember",
-		"Namespace",
-		"Keyword",
-		"Label",
-		"Snippet",
-		"TypeParameter"
-	};
-	
-#if DEBUG
 	//unfinished. Just prints what we can get from CSharpSyntaxContext.
-	public static /*CiContextType*/void GetContextType(/*in CodeInfo.Context cd,*/ CSharpSyntaxContext c) {
+	public static /*CiContextType*/void DebugGetContextType(/*in CodeInfo.Context cd,*/ CSharpSyntaxContext c) {
 		//print.it("--------");
 		print.clear();
 		//print.it(cd.pos);
@@ -683,10 +968,9 @@ global using System.Windows.Media;
 		
 		//return CiContextType.Namespace;
 	}
-#endif
 	
 	//unfinished. Also does not support namespaces.
-	//public static CiContextType GetContextType(CompilationUnitSyntax t, int pos) {
+	//public static CiContextType DebugGetContextType(CompilationUnitSyntax t, int pos) {
 	//	var members = t.Members;
 	//	var ms = members.FullSpan;
 	//	//foreach(var v in members) print.it(v.GetType().Name, v); return 0;
@@ -715,38 +999,28 @@ global using System.Windows.Media;
 	//	return CiContextType.Namespace;
 	//}
 	
-	/// <summary>
-	/// Calls <b>string.Compare</b>. Moves items starting with an ASCII non-symbol char to the bottom.
-	/// </summary>
-	public class CompletionListSortComparer : IComparer<string> {
-		public int Compare(string x, string y) {
-			int r = _IsAsciiNonSymChar(x) - _IsAsciiNonSymChar(y);
-			if (r == 0) r = string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
-			return r;
-			
-			static int _IsAsciiNonSymChar(string s) => s.Length > 0 && s[0] is char c && (char.IsAsciiLetterOrDigit(c) || c == '_' || c > 127) ? 0 : 1;
-		}
-	}
-	public static readonly CompletionListSortComparer SortComparer = new();
+	//enum CiContextType
+	//{
+	//	/// <summary>
+	//	/// Outside class/method/topLevelStatements. Eg before using directives or at end of file.
+	//	/// Completion list must not include types.
+	//	/// </summary>
+	//	Namespace,
+	
+	//	/// <summary>
+	//	/// Inside class but outside method.
+	//	/// Completion list can include types but not functions and values.
+	//	/// </summary>
+	//	Class,
+	
+	//	/// <summary>
+	//	/// Inside method/topLevelStatements.
+	//	/// Completion list can include all symbols.
+	//	/// </summary>
+	//	Method
+	//}
+	
+#endif
+	
+	#endregion
 }
-
-//enum CiContextType
-//{
-//	/// <summary>
-//	/// Outside class/method/topLevelStatements. Eg before using directives or at end of file.
-//	/// Completion list must not include types.
-//	/// </summary>
-//	Namespace,
-
-//	/// <summary>
-//	/// Inside class but outside method.
-//	/// Completion list can include types but not functions and values.
-//	/// </summary>
-//	Class,
-
-//	/// <summary>
-//	/// Inside method/topLevelStatements.
-//	/// Completion list can include all symbols.
-//	/// </summary>
-//	Method
-//}

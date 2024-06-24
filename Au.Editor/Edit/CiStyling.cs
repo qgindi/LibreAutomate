@@ -165,7 +165,7 @@ partial class CiStyling {
 					_PN('s');
 					af = CiFolding.GetFoldPoints(cd.syntaxRoot, code, cancelToken);
 				});
-				if (_Cancelled()) return;
+				if (_Canceled()) return;
 			}
 			_PN('p');
 			
@@ -218,20 +218,21 @@ partial class CiStyling {
 				_PN('m'); //BAD: slow when [re]opening a file in a large project
 				for (int i = 0; i < ar8.Count; i++) {
 					var r = ar[i].r;
-					ar[i].a = await CiUtil.GetClassifiedSpansAsync(document, r.start, r.end, cancelToken).ConfigureAwait(false);
+					ar[i].a = CiUtil.GetClassifiedSpans(semo, document, r.start, r.end, cancelToken);
 				}
 				//info: GetClassifiedSpansAsync calls GetSemanticModelAsync and GetClassifiedSpans, like here.
 				//GetSemanticModelAsync+GetClassifiedSpans are slow, ~ 90% of total time.
 				//Tried to implement own "GetClassifiedSpans", but slow too, often slower, because GetSymbolInfo is slow.
 			});
-			if (_Cancelled()) return;
+			if (_Canceled()) return;
 			_PN('c');
 			
 			var b = new byte[end8 - start8];
 			
+			char prevPunctuation = default;
 			foreach (var (a, r) in ar) {
 				foreach (var v in a) {
-					//print.it(v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
+					//print.it($"<><c green>{v.ClassificationType}<> '{code[v.TextSpan.Start..v.TextSpan.End]}'");
 					EStyle style = StyleFromClassifiedSpan(v, semo);
 					
 					if (style == EStyle.None) {
@@ -241,16 +242,45 @@ partial class CiStyling {
 						default: Debug_.PrintIf(!v.ClassificationType.Starts("regex"), $"<c gray>{v.ClassificationType}, {v.TextSpan}<>"); break;
 						}
 #endif
-						continue;
-					}
-					
-					//int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
-					int spanStart16 = Math.Max(v.TextSpan.Start, r.start), spanEnd16 = Math.Min(v.TextSpan.End, r.end);
-					int spanStart8 = doc.aaaPos8(spanStart16), spanEnd8 = doc.aaaPos8(spanEnd16);
-					_SetStyleRange((byte)style);
-					
-					void _SetStyleRange(byte style) {
-						for (int i = spanStart8; i < spanEnd8; i++) b[i - start8] = style;
+					} else {
+						//int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
+						int spanStart16 = Math.Max(v.TextSpan.Start, r.start), spanEnd16 = Math.Min(v.TextSpan.End, r.end);
+						int spanStart8 = doc.aaaPos8(spanStart16), spanEnd8 = doc.aaaPos8(spanEnd16);
+						_SetStyleRange((byte)style);
+						if (style is EStyle.String && prevPunctuation is '(' or ',' or ':') _RegexString();
+						prevPunctuation = style is EStyle.Punctuation ? code[v.TextSpan.End - 1] : default;
+						
+						void _SetStyleRange(byte style) {
+							for (int i = spanStart8; i < spanEnd8; i++) b[i - start8] = style;
+						}
+						
+						void _RegexString() {//.
+							
+							//we need only verbatim and raw strings, and not interpolated
+							bool verbatim = v.ClassificationType == ClassificationTypeNames.VerbatimStringLiteral;
+							if (verbatim) {
+								if (v.TextSpan.Length < 4 || !code.Eq(v.TextSpan.Start, "@\"")) return;
+							} else {
+								if (v.TextSpan.Length < 7 || !code.Eq(v.TextSpan.Start, "\"\"\"")) return;
+							}
+							
+							var tok = cd.syntaxRoot.FindToken(v.TextSpan.Start); //fast here
+							if (tok.Parent is not LiteralExpressionSyntax { RawKind: (int)SyntaxKind.StringLiteralExpression } node) return;
+							var format = CiUtil.GetParameterStringFormat(tok.Parent, semo, true, ignoreInterpolatedString: true);
+							if (!(format is PSFormat.Regexp or PSFormat.NetRegex or PSFormat.Wildex)) return;
+							
+							var (from, to) = v.TextSpan;
+							if (verbatim) {
+								from += 2; if (code[to - 1] is '"') to--;
+							} else {
+								while (from < to && code[from] is '"') { from++; if (code[to - 1] is '"') to--; }
+								from = CiUtil.SkipNewline(code, CiUtil.SkipSpace(code, from));
+								to = CiUtil.SkipNewlineBack(code, CiUtil.SkipSpaceBack(code, to));
+								if (to <= from) return;
+							}
+							
+							RegexParser.GetScintillaStylingBytes(code.AsSpan(from..to), format, b.AsSpan((spanStart8 - start8 + from - v.TextSpan.Start)..));
+						}//..
 					}
 				}
 			}
@@ -278,7 +308,7 @@ partial class CiStyling {
 			if (cancelTS == _cancelTS) _cancelTS = null;
 		}
 		
-		bool _Cancelled() {
+		bool _Canceled() {
 			if (cancelToken.IsCancellationRequested) {
 				_PN();
 #if PRINT
@@ -350,7 +380,6 @@ partial class CiStyling {
 			ClassificationTypeNames.XmlDocCommentName => EStyle.XmlDocTag,
 			ClassificationTypeNames.XmlDocCommentProcessingInstruction => EStyle.XmlDocTag,
 			
-			//FUTURE: Regex. But how to apply it to regexp?
 			//ClassificationTypeNames. => EStyle.,
 			_ => EStyle.None
 		};
@@ -384,6 +413,13 @@ partial class CiStyling {
 		Excluded,
 		XmlDocText,
 		XmlDocTag, //tags, CDATA, ///, etc
+		RxText,
+		RxMeta,
+		RxChars,
+		RxOption,
+		RxEscape,
+		RxCallout,
+		RxComment,
 		
 		countUserDefined,
 		
@@ -395,25 +431,16 @@ partial class CiStyling {
 		LineNumber = 33, //STYLE_LINENUMBER
 	}
 	
-	public record struct TStyle(int color, bool bold = false, bool italic = false, bool underline = false) {
+	public record struct TStyle(int color, bool back = false, bool bold = false, bool italic = false, bool underline = false) {
 		public static implicit operator TStyle(int color) => new(color);
 	}
 	
-	public record TStyles { //note: must be record, because uses synthesized ==
+	public record struct TIndicator(int color, int alpha);
+	
+	public record class TStyles { //info: record class because need `with` and synthesized ==
 		public string FontName = "Consolas";
 		public double FontSize = 9;
 		public int BackgroundColor = 0xffffff;
-		public int IndicRefsColor = 0x80C000;
-		public int IndicBracesColor = 0x80C000;
-		public int IndicDebugColor = 0xFFF181;
-		public int IndicFoundColor = 0xffff00;
-		public int IndicRefsAlpha = 40;
-		public int IndicBracesAlpha = 255;
-		public int IndicDebugAlpha = 255;
-		public int IndicFoundAlpha = 255;
-		
-		public int SelColor = unchecked((int)0xA0A0A0A0);
-		public int SelNofocusColor = 0x60A0A0A0;
 		
 		public TStyle None; //black
 		public TStyle Comment = 0x60A000; //light green, towards yellow
@@ -425,7 +452,7 @@ partial class CiStyling {
 		public TStyle Keyword = 0x0000ff; //blue like in VS
 		public TStyle Namespace = 0x808000; //dark yellow
 		public TStyle Type = 0x0080c0; //like in VS but more blue
-		public TStyle Function = new(0, true); //black bold
+		public TStyle Function = new(0, bold: true); //black bold
 		public TStyle Variable = 0x204020; //dark green gray
 		public TStyle Constant = 0x204020; //like variable
 		public TStyle Label = 0xff00ff; //magenta
@@ -433,25 +460,60 @@ partial class CiStyling {
 		public TStyle Excluded = 0x808080; //gray
 		public TStyle XmlDocText = 0x408000; //green
 		public TStyle XmlDocTag = 0x808080; //gray
+		public TStyle RxText = 0xA07040;
+		public TStyle RxMeta = new(0xBDD8FF, true);
+		public TStyle RxChars = new(0xCBFF7D, true);
+		public TStyle RxOption = new(0xFFE47B, true);
+		public TStyle RxEscape = 0xFF60FF;
+		public TStyle RxCallout = new(0xFF8060, true);
+		public TStyle RxComment = 0x808080;
 		
 		public TStyle LineNumber = 0x808080;
 		
-		public static TStyles Settings {
-			get => s_styles ??= new TStyles(customized: true);
+		public TIndicator IndicRefs = new(0x80C000, 40);
+		public TIndicator IndicBraces = new(0x80C000, 255);
+		public TIndicator IndicDebug = new(0xFFF181, 255);
+		public TIndicator IndicFound = new(0xffff00, 255);
+		
+		public int SelColor = unchecked((int)0xA0A0A0A0);
+		public int SelNofocusColor = 0x60A0A0A0;
+		
+		/// <summary>
+		/// Default styles (without customizations).
+		/// Use as immutable. If need styles with some values changed, use code `CiStyling.TStyles.Default with { ... }`.
+		/// </summary>
+		public static TStyles Default { get; } = new(false);
+		
+		/// <summary>
+		/// Styles with customizations.
+		/// Use as immutable. If need styles with some values changed, use code `CiStyling.TStyles.Customized with { ... }`.
+		/// The setter clones the value, saves in file (or deletes the file if value is null), and applies the changed styles to all open documents.
+		/// </summary>
+		public static TStyles Customized {
+			get => s_customized ??= new TStyles(customized: true);
 			set {
-				s_styles = value;
-				if (value != null) value._Save();
-				else filesystem.delete(s_settingsFile);
+				if (value != null) {
+					s_customized = value with { };
+					value._Save();
+				} else {
+					s_customized = null;
+					filesystem.delete(s_settingsFile);
+				}
+				
+				foreach (var v in Panels.Editor.OpenDocs) {
+					Customized.ToScintilla(v);
+					v.ESetLineNumberMarginWidth_();
+				}
 			}
 		}
-		static TStyles s_styles;
+		static TStyles s_customized;
 		internal static readonly string s_settingsFile = AppSettings.DirBS + "Font.csv";
 		
-		public TStyles(bool customized) {
+		TStyles(bool customized) {
 			if (!customized || !filesystem.exists(s_settingsFile).File) return;
 			csvTable csv;
 			try { csv = csvTable.load(s_settingsFile); }
-			catch (Exception e1) { print.it(e1.ToStringWithoutStack()); return; }
+			catch (Exception e1) { print.it(e1); return; }
 			if (csv.ColumnCount < 2) return;
 			
 			foreach (var a in csv.Rows) {
@@ -479,22 +541,35 @@ partial class CiStyling {
 				case nameof(Excluded): _Style(ref Excluded); break;
 				case nameof(XmlDocText): _Style(ref XmlDocText); break;
 				case nameof(XmlDocTag): _Style(ref XmlDocTag); break;
+				case nameof(RxText): _Style(ref RxText, true); break;
+				case nameof(RxMeta): _Style(ref RxMeta, true); break;
+				case nameof(RxChars): _Style(ref RxChars, true); break;
+				case nameof(RxOption): _Style(ref RxOption, true); break;
+				case nameof(RxEscape): _Style(ref RxEscape, true); break;
+				case nameof(RxCallout): _Style(ref RxCallout, true); break;
+				case nameof(RxComment): _Style(ref RxComment, true); break;
 				case nameof(LineNumber): _Style(ref LineNumber); break;
-				case nameof(IndicRefsColor): _Int(ref IndicRefsColor); _Alpha(ref IndicRefsAlpha); break;
-				case nameof(IndicBracesColor): _Int(ref IndicBracesColor); _Alpha(ref IndicBracesAlpha); break;
-				case nameof(IndicDebugColor): _Int(ref IndicDebugColor); _Alpha(ref IndicDebugAlpha); break;
-				case nameof(IndicFoundColor): _Int(ref IndicFoundColor); _Alpha(ref IndicFoundAlpha); break;
+				case nameof(IndicRefs) or "IndicRefsColor": _Indic(ref IndicRefs); break; //fbc: "IndicRefsColor" etc
+				case nameof(IndicBraces) or "IndicBracesColor": _Indic(ref IndicBraces); break;
+				case nameof(IndicDebug) or "IndicDebugColor": _Indic(ref IndicDebug); break;
+				case nameof(IndicFound) or "IndicFoundColor": _Indic(ref IndicFound); break;
 				case nameof(SelColor): _Int(ref SelColor); break;
 				case nameof(SelNofocusColor): _Int(ref SelNofocusColor); break;
 				}
 				
-				void _Style(ref TStyle r) {
+				void _Style(ref TStyle r, bool hasBack = false) {
 					if (!a[1].NE() && a[1].ToInt(out int i)) r.color = i;
 					if (a.Length > 2 && !a[2].NE() && a[2].ToInt(out int i2)) {
 						r.bold = 0 != (i2 & 1);
 						r.italic = 0 != (i2 & 2);
 						r.underline = 0 != (i2 & 4);
-					} else r.bold = r.italic = r.underline = false;
+						if (hasBack) r.back = 0 != (i2 & 8);
+					}
+				}
+				
+				void _Indic(ref TIndicator r) {
+					int i = r.color; _Int(ref i); r.color = i;
+					i = r.alpha; _Alpha(ref i); r.alpha = i;
 				}
 				
 				void _Int(ref int value) {
@@ -529,89 +604,51 @@ partial class CiStyling {
 			_Style(nameof(Excluded), Excluded);
 			_Style(nameof(XmlDocText), XmlDocText);
 			_Style(nameof(XmlDocTag), XmlDocTag);
+			_Style(nameof(RxText), RxText);
+			_Style(nameof(RxMeta), RxMeta);
+			_Style(nameof(RxChars), RxChars);
+			_Style(nameof(RxOption), RxOption);
+			_Style(nameof(RxEscape), RxEscape);
+			_Style(nameof(RxCallout), RxCallout);
+			_Style(nameof(RxComment), RxComment);
 			_Style(nameof(LineNumber), LineNumber);
-			_Indic(nameof(IndicRefsColor), IndicRefsColor, IndicRefsAlpha);
-			_Indic(nameof(IndicBracesColor), IndicBracesColor, IndicBracesAlpha);
-			_Indic(nameof(IndicDebugColor), IndicDebugColor, IndicDebugAlpha);
-			_Indic(nameof(IndicFoundColor), IndicFoundColor, IndicFoundAlpha);
+			_Indic(nameof(IndicRefs), IndicRefs);
+			_Indic(nameof(IndicBraces), IndicBraces);
+			_Indic(nameof(IndicDebug), IndicDebug);
+			_Indic(nameof(IndicFound), IndicFound);
 			_Int(nameof(SelColor), SelColor);
 			_Int(nameof(SelNofocusColor), SelNofocusColor);
 			
 			void _Style(string name, TStyle r) {
 				b.Append(name).Append(", 0x").Append(r.color.ToString("X6"));
-				if (((r.bold ? 1 : 0) | (r.italic ? 2 : 0) | (r.underline ? 4 : 0)) is int i && i > 0) b.Append($", {i}");
+				if (((r.bold ? 1 : 0) | (r.italic ? 2 : 0) | (r.underline ? 4 : 0) | (r.back ? 8 : 0)) is int i && i > 0) b.Append($", {i}");
 				b.AppendLine();
 			}
 			
-			void _Int(string name, int i) => b.AppendLine($"{name}, 0x{i:X8}");
+			void _Indic(string name, TIndicator i) => b.AppendLine($"{name}, 0x{i.color:X6}, {i.alpha}");
 			
-			void _Indic(string name, int color, int alpha) => b.AppendLine($"{name}, 0x{color:X6}, {alpha}");
+			void _Int(string name, int i) => b.AppendLine($"{name}, 0x{i:X8}");
 			
 			filesystem.saveText(s_settingsFile, b.ToString());
 		}
 		
-		/// <summary>
-		/// Gets colors, bold, but not font properties.
-		/// </summary>
-		public TStyles(KScintilla sci) {
-			BackgroundColor = ColorInt.SwapRB(sci.Call(SCI_STYLEGETBACK));
-			
-			TStyle _Style(EStyle k) {
-				int color = ColorInt.SwapRB(sci.Call(SCI_STYLEGETFORE, (int)k));
-				bool bold = 0 != sci.Call(SCI_STYLEGETBOLD, (int)k);
-				bool italic = 0 != sci.Call(SCI_STYLEGETITALIC, (int)k);
-				bool underline = 0 != sci.Call(SCI_STYLEGETUNDERLINE, (int)k);
-				
-				return new TStyle(color, bold, italic, underline);
-			}
-			
-			None = _Style(EStyle.None);
-			Comment = _Style(EStyle.Comment);
-			String = _Style(EStyle.String);
-			StringEscape = _Style(EStyle.StringEscape);
-			Number = _Style(EStyle.Number);
-			Punctuation = _Style(EStyle.Punctuation);
-			Operator = _Style(EStyle.Operator);
-			Keyword = _Style(EStyle.Keyword);
-			Namespace = _Style(EStyle.Namespace);
-			Type = _Style(EStyle.Type);
-			Function = _Style(EStyle.Function);
-			Variable = _Style(EStyle.Variable);
-			Constant = _Style(EStyle.Constant);
-			Label = _Style(EStyle.Label);
-			Preprocessor = _Style(EStyle.Preprocessor);
-			Excluded = _Style(EStyle.Excluded);
-			XmlDocText = _Style(EStyle.XmlDocText);
-			XmlDocTag = _Style(EStyle.XmlDocTag);
-			
-			LineNumber = _Style(EStyle.LineNumber);
-			
-			IndicRefsColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicRefs));
-			IndicBracesColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicBraces));
-			IndicDebugColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicDebug));
-			IndicFoundColor = ColorInt.SwapRB(sci.Call(SCI_INDICGETFORE, SciCode.c_indicFound));
-			IndicRefsAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicRefs);
-			IndicBracesAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicBraces);
-			IndicDebugAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicDebug);
-			IndicFoundAlpha = sci.Call(SCI_INDICGETALPHA, SciCode.c_indicFound);
-			
-			SelColor = sci.aaaGetElementColor(SC_ELEMENT_SELECTION_BACK).argb;
-			SelNofocusColor = sci.aaaGetElementColor(SC_ELEMENT_SELECTION_INACTIVE_BACK).argb;
-		}
-		
-		/// <param name="multiFont">Set font only for code styles.</param>
-		public void ToScintilla(KScintilla sci, bool multiFont = false) {
-			if (!multiFont) sci.aaaStyleFont(STYLE_DEFAULT, FontName, FontSize);
-			sci.aaaStyleBackColor(STYLE_DEFAULT, BackgroundColor);
+		/// <param name="multiFont">Set font only for code styles, not for STYLE_DEFAULT.</param>
+		public void ToScintilla(KScintilla sci, bool multiFont = false, string fontName = null, double? fontSize = null, int? backgroundColor = null) {
+			if (!multiFont) sci.aaaStyleFont(STYLE_DEFAULT, fontName ?? FontName, fontSize ?? FontSize);
+			sci.aaaStyleBackColor(STYLE_DEFAULT, backgroundColor ?? BackgroundColor);
 			//if(None.color != 0) sci.aaaStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
 			sci.aaaStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
 			
 			void _Set(EStyle k, TStyle sty) {
-				sci.aaaStyleForeColor((int)k, sty.color);
+				if (sty.back) {
+					sci.aaaStyleBackColor((int)k, sty.color);
+					sci.aaaStyleForeColor((int)k, None.color);
+				} else sci.aaaStyleForeColor((int)k, sty.color);
+				
 				if (sty.bold) sci.aaaStyleBold((int)k, true);
 				if (sty.italic) sci.aaaStyleItalic((int)k, true);
 				if (sty.underline) sci.aaaStyleUnderline((int)k, true);
-				if (multiFont) sci.aaaStyleFont((int)k, FontName, FontSize);
+				if (multiFont) sci.aaaStyleFont((int)k, fontName ?? FontName, fontSize ?? FontSize);
 			}
 			
 			_Set(EStyle.None, None);
@@ -632,16 +669,23 @@ partial class CiStyling {
 			_Set(EStyle.Excluded, Excluded);
 			_Set(EStyle.XmlDocText, XmlDocText);
 			_Set(EStyle.XmlDocTag, XmlDocTag);
+			_Set(EStyle.RxText, RxText);
+			_Set(EStyle.RxMeta, RxMeta);
+			_Set(EStyle.RxChars, RxChars);
+			_Set(EStyle.RxOption, RxOption);
+			_Set(EStyle.RxEscape, RxEscape);
+			_Set(EStyle.RxCallout, RxCallout);
+			_Set(EStyle.RxComment, RxComment);
 			
 			_Set((EStyle)STYLE_LINENUMBER, LineNumber);
 			
 			sci.aaaStyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
 			
-			_Indic(SciCode.c_indicRefs, IndicRefsColor, IndicRefsAlpha, INDIC_FULLBOX);
-			_Indic(SciCode.c_indicBraces, IndicBracesColor, IndicBracesAlpha, INDIC_GRADIENT);
-			_Indic(SciCode.c_indicDebug, IndicDebugColor, IndicDebugAlpha, INDIC_FULLBOX);
-			_Indic(SciCode.c_indicDebug2, IndicDebugColor, 128 + IndicDebugAlpha / 2, INDIC_GRADIENTCENTRE);
-			_Indic(SciCode.c_indicFound, IndicFoundColor, IndicFoundAlpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicRefs, IndicRefs.color, IndicRefs.alpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicBraces, IndicBraces.color, IndicBraces.alpha, INDIC_GRADIENT);
+			_Indic(SciCode.c_indicDebug, IndicDebug.color, IndicDebug.alpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicDebug2, IndicDebug.color, 128 + IndicDebug.alpha / 2, INDIC_GRADIENTCENTRE);
+			_Indic(SciCode.c_indicFound, IndicFound.color, IndicFound.alpha, INDIC_FULLBOX);
 			_Indic(SciCode.c_indicSnippetField, 0xe0a000, 60, INDIC_FULLBOX);
 			_Indic(SciCode.c_indicSnippetFieldActive, 0x80E000, 60, INDIC_FULLBOX);
 #if DEBUG
@@ -661,79 +705,57 @@ partial class CiStyling {
 			sci.aaaSetElementColor(SC_ELEMENT_SELECTION_INACTIVE_BACK, SelNofocusColor);
 		}
 		
-		//rejected. Bad colors. Should use some quite intelligent algorithm.
-		//public void InvertAllColors() {
-		//	None.color ^= 0xffffff;
-		//	Comment.color ^= 0xffffff;
-		//	String.color ^= 0xffffff;
-		//	StringEscape.color ^= 0xffffff;
-		//	Number.color ^= 0xffffff;
-		//	Punctuation.color ^= 0xffffff;
-		//	Operator.color ^= 0xffffff;
-		//	Keyword.color ^= 0xffffff;
-		//	Namespace.color ^= 0xffffff;
-		//	Type.color ^= 0xffffff;
-		//	Function.color ^= 0xffffff;
-		//	Variable.color ^= 0xffffff;
-		//	Constant.color ^= 0xffffff;
-		//	Label.color ^= 0xffffff;
-		//	Preprocessor.color ^= 0xffffff;
-		//	Excluded.color ^= 0xffffff;
-		//	XmlDocText.color ^= 0xffffff;
-		//	XmlDocTag.color ^= 0xffffff;
-		//	BackgroundColor ^= 0xffffff;
-		//	... ^= 0xffffff;
-		//}
+		public ref TStyle this[EStyle style] {
+			get {
+				switch (style) {
+				case EStyle.None: return ref None;
+				case EStyle.Comment: return ref Comment;
+				case EStyle.String: return ref String;
+				case EStyle.StringEscape: return ref StringEscape;
+				case EStyle.Number: return ref Number;
+				case EStyle.Punctuation: return ref Punctuation;
+				case EStyle.Operator: return ref Operator;
+				case EStyle.Keyword: return ref Keyword;
+				case EStyle.Namespace: return ref Namespace;
+				case EStyle.Type: return ref Type;
+				case EStyle.Function: return ref Function;
+				case EStyle.Variable: return ref Variable;
+				case EStyle.Constant: return ref Constant;
+				case EStyle.Label: return ref Label;
+				case EStyle.Preprocessor: return ref Preprocessor;
+				case EStyle.Excluded: return ref Excluded;
+				case EStyle.XmlDocText: return ref XmlDocText;
+				case EStyle.XmlDocTag: return ref XmlDocTag;
+				case EStyle.RxText: return ref RxText;
+				case EStyle.RxMeta: return ref RxMeta;
+				case EStyle.RxChars: return ref RxChars;
+				case EStyle.RxOption: return ref RxOption;
+				case EStyle.RxEscape: return ref RxEscape;
+				case EStyle.RxCallout: return ref RxCallout;
+				case EStyle.RxComment: return ref RxComment;
+				case EStyle.LineNumber: return ref LineNumber;
+				}
+				throw new InvalidEnumArgumentException();
+			}
+		}
 		
-		//not used
-		//public TStyle GetStyle(EStyle k) {
-		//	return k switch {
-		//		EStyle.None => None,
-		//		EStyle.Comment => Comment,
-		//		EStyle.String => String,
-		//		EStyle.StringEscape => StringEscape,
-		//		EStyle.Number => Number,
-		//		EStyle.Punctuation => Punctuation,
-		//		EStyle.Operator => Operator,
-		//		EStyle.Keyword => Keyword,
-		//		EStyle.Namespace => Namespace,
-		//		EStyle.Type => Type,
-		//		EStyle.Function => Function,
-		//		EStyle.Variable => Variable,
-		//		EStyle.Constant => Constant,
-		//		EStyle.Label => Label,
-		//		EStyle.Preprocessor => Preprocessor,
-		//		EStyle.Excluded => Excluded,
-		//		EStyle.XmlDocText => XmlDocText,
-		//		EStyle.XmlDocTag => XmlDocTag,
-		//		EStyle.LineNumber => LineNumber,
-		//		_ => default,
-		//	};
-		//}
+		public ref TIndicator Indicator(int indicator) {
+			switch (indicator) {
+			case SciCode.c_indicRefs: return ref IndicRefs;
+			case SciCode.c_indicBraces: return ref IndicBraces;
+			case SciCode.c_indicDebug: return ref IndicDebug;
+			case SciCode.c_indicFound: return ref IndicFound;
+			}
+			throw new InvalidEnumArgumentException();
+		}
 		
-		//public void SetStyle(EStyle k, TStyle style) {
-		//	switch(k) {
-		//	case EStyle.None: None = style; break;
-		//	case EStyle.Comment: Comment = style; break;
-		//	case EStyle.String: String = style; break;
-		//	case EStyle.StringEscape: StringEscape = style; break;
-		//	case EStyle.Number: Number = style; break;
-		//	case EStyle.Punctuation: Punctuation = style; break;
-		//	case EStyle.Operator: Operator = style; break;
-		//	case EStyle.Keyword: Keyword = style; break;
-		//	case EStyle.Namespace: Namespace = style; break;
-		//	case EStyle.Type: Type = style; break;
-		//	case EStyle.Function: Function = style; break;
-		//	case EStyle.Variable: Variable = style; break;
-		//	case EStyle.Constant: Constant = style; break;
-		//	case EStyle.Label: Label = style; break;
-		//	case EStyle.Preprocessor: Preprocessor = style; break;
-		//	case EStyle.Excluded: Excluded = style; break;
-		//	case EStyle.XmlDocText: XmlDocText = style; break;
-		//	case EStyle.XmlDocTag: XmlDocTag = style; break;
-		//	case EStyle.LineNumber: LineNumber = style; break;
-		//	}
-		//}
+		public ref int ElementColor(int element) {
+			switch (element) {
+			case Sci.SC_ELEMENT_SELECTION_BACK: return ref SelColor;
+			case Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK: return ref SelNofocusColor;
+			}
+			throw new InvalidEnumArgumentException();
+		}
 	}
 	
 	/// <summary>

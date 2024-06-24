@@ -24,7 +24,8 @@ static class Menus {
 		iconUndo = "*Ionicons.UndoiOS" + brown,
 		iconPaste = "*Material.ContentPaste" + brown,
 		//iconReferences = "*Codicons.References"
-		iconReferences = "*Material.MapMarkerMultiple" + blue //or MapMarkerMultipleOutline
+		iconReferences = "*Material.MapMarkerMultiple" + blue, //or MapMarkerMultipleOutline
+		iconRegex = "*FileIcons.Regex" + blue
 		;
 	
 	[Command(target = "Files")]
@@ -344,7 +345,7 @@ static class Menus {
 			
 			[Command("Indent selected lines", keysText = "Tab", image = "*Material.FormatIndentIncrease" + brown, separator = true)]
 			public static void Indent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_TAB); }
-			//TODO3: now does not indent empty lines if was no indentation.
+			//TODO3: now does not indent empty lines if was no indent.
 			
 			[Command("Unindent selected lines", keysText = "Shift+Tab", image = "*Material.FormatIndentDecrease" + brown)]
 			public static void Unindent() { Panels.Editor.ActiveDoc.Call(Sci.SCI_BACKTAB); }
@@ -410,7 +411,7 @@ static class Menus {
 		[Command(keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline" + blue)]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 		
-		[Command(underlined: 'x', image = "*FileIcons.Regex" + blue, keysText = "Ctrl+Space in string")]
+		[Command(underlined: 'x', image = iconRegex, keysText = "Ctrl+Space in string")]
 		public static void Regex() { CiTools.CmdShowRegexWindow(); }
 		
 		[Command(image = "*MaterialDesign.ColorLens" + blue)]
