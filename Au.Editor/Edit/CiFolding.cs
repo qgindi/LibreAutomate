@@ -1,11 +1,6 @@
-//#if DEBUG
 //#define PRINT
-//#endif
 
 extern alias CAW;
-
-using Au.Controls;
-using static Au.Controls.Sci;
 
 using Microsoft.CodeAnalysis;
 using CAW::Microsoft.CodeAnalysis;
@@ -16,10 +11,12 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 
+using Au.Controls;
+using static Au.Controls.Sci;
+
 class CiFolding {
 	//Called from CiStyling._Work -> Task.Run when document opened or modified (250 ms timer).
 	//We always set/update folding for entire code. Makes slower, but without it sometimes bad folding.
-	//Optimized, but still not very fast if big code.
 	public static List<SciFoldPoint> GetFoldPoints(SyntaxNode root, string code, CancellationToken cancelToken) {
 #if PRINT
 		using var p1 = perf.local();
@@ -29,7 +26,6 @@ class CiFolding {
 			p1.Next(ch);
 #endif
 		}
-		//using var p2 = new perf.Instance { Incremental = true };
 		
 		List<SciFoldPoint> af = null;
 		s_foldPoints.Clear();
@@ -51,59 +47,102 @@ class CiFolding {
 			_AddFoldPoint(what, end, false, true, separator);
 		}
 		
-		var nodes = root.DescendantNodes(static o => {
-			//don't descend into functions etc. Much faster.
-			//CONSIDER: fold local functions and anonymous methods. But then much slower.
-			if (o is MemberDeclarationSyntax) return o is BaseNamespaceDeclarationSyntax or TypeDeclarationSyntax;
-			return o is CompilationUnitSyntax;
-		});
-		SyntaxNode prevNode = null;
-		foreach (var v_ in nodes) {
-			var v = v_; if (v is GlobalStatementSyntax g) v = g.Statement;
-			//CiUtil.PrintNode(v);
-			//print.it(v.GetType().Name);
-			//bool noSeparator = false;
-			bool separatorBefore = false, isType = false;
+		IEnumerable<SyntaxNode> nodes;
+#if !true //slow
+		if (code.Length > 200_000) { //fast, but does not fold anything inside functions and statements
+			nodes = root.DescendantNodes(static o => {
+				if (o is MemberDeclarationSyntax) return o is BaseNamespaceDeclarationSyntax or TypeDeclarationSyntax;
+				return o is CompilationUnitSyntax;
+			});
+		} else { //slow
+			nodes = root.DescendantNodes();
+		}
+#else //2-3 times faster
+		if (code.Length > 500_000) { //fast, but does not fold anything inside functions and statements
+			nodes = root.DescendantNodes(static o => {
+				if (o is MemberDeclarationSyntax) return o is BaseNamespaceDeclarationSyntax or TypeDeclarationSyntax;
+				return o is CompilationUnitSyntax;
+			});
+		} else {
+			nodes = root.DescendantNodes(n => {
+				//note: all this code is just to make faster. It does not add any features.
+				if (n is StatementSyntax) { //don't descend into statements that don't contain `{` etc
+					var nspan = n.Span;
+					if (nspan.Length < 20) return false;
+					var s = code.AsSpan(nspan.ToRange());
+					int i = s.IndexOf(1, '{');
+					if (s[0] != '{') { //not BlockSyntax
+						if (i > 0) {
+							if (s[^1] == '}' || n is IfStatementSyntax { Statement: BlockSyntax } or DoStatementSyntax) i = s.IndexOf(i + 1, '{');
+						} else if (s[^1] is ';' && s[^2] is ']' or '"') { //maybe like `int[] a = [ multiline ];` or `var s = """multiline""";`
+							return s.Contains('\n');
+						}
+					}
+					if (i < 0 && s.Contains('\n')) {
+						i = s.IndexOf("\";");
+						if (i < 0) i = s.IndexOf("];");
+					}
+					return i >= 0;
+				}
+				return true;
+			});
+		}
+#endif
+		SyntaxNode prevStatementOrMember = null;
+		foreach (var n in nodes) {
+			if (n is GlobalStatementSyntax g) continue;
+			//CiUtil.PrintNode(n, indent: true);
+			
+			FoldKind foldKind = FoldKind.Member;
 			int foldStart = -1;
-			switch (v) {
+			bool separatorBefore = false;
+			SyntaxNode prevSibling = null;
+			
+			switch (n) {
 			case BaseTypeDeclarationSyntax d: //class, struct, interface, enum
 				foldStart = d.Identifier.SpanStart;
-				isType = true;
+				foldKind = FoldKind.Type;
+				separatorBefore = _PrevSibling(n) is StatementSyntax and not LocalFunctionStatementSyntax;
 				break;
 			case BaseMethodDeclarationSyntax d: //method, ctor, etc
 				if (d.Body == null && d.ExpressionBody == null) continue; //extern, interface, partial
 				foldStart = d.ParameterList.SpanStart; //not perfect, but the best common property
-				separatorBefore = prevNode is BaseFieldDeclarationSyntax;
+				separatorBefore = _PrevSibling(n) is BaseFieldDeclarationSyntax;
 				break;
 			case BasePropertyDeclarationSyntax d: //property, indexer, event
 				foldStart = d.Type.FullSpan.End; //not perfect, but the best common property
-				separatorBefore = prevNode is BaseFieldDeclarationSyntax;
+				separatorBefore = _PrevSibling(n) is BaseFieldDeclarationSyntax;
 				break;
 			case LocalFunctionStatementSyntax d:
+				if (d.Parent is GlobalStatementSyntax) separatorBefore = !(_PrevSibling(n) is null or LocalFunctionStatementSyntax);
+				else if (_ManyLines(n, 3)) foldKind = FoldKind.Statement;
+				else break;
 				foldStart = d.Identifier.SpanStart;
-				separatorBefore = prevNode is not (LocalFunctionStatementSyntax or null);
 				break;
-				//rejected. 1. Then would need more code for the "hide all" command, to exclude namespaces. 2. Namespaces can be without { } (C# 10).
-				//case NamespaceDeclarationSyntax d:
-				//	foldStart = d.Name.SpanStart;
-				//	break;
-				//rejected. Would make DescendantNodes slow.
-				//case AnonymousFunctionExpressionSyntax d when d.ExpressionBody == null && v.Parent is ArgumentSyntax: //lambda, delegate(){}
-				//	foldStart = v.SpanStart;
-				//	noSeparator = true;
-				//	break;
+			case AnonymousFunctionExpressionSyntax d when d.ExpressionBody == null: //lambda, delegate(){}
+			case InitializerExpressionSyntax or CollectionExpressionSyntax:
+			case LiteralExpressionSyntax { RawKind: (int)SyntaxKind.StringLiteralExpression } or InterpolatedStringExpressionSyntax:
+				if (_ManyLines(n, n is AnonymousFunctionExpressionSyntax ? 3 : 5)) {
+					foldStart = n.SpanStart;
+					foldKind = FoldKind.Statement;
+				}
+				break;
+			case NamespaceDeclarationSyntax d:
+				foldStart = d.Name.SpanStart;
+				foldKind = FoldKind.Namespace;
+				break;
 			}
 			
 			if (foldStart >= 0) {
-				_AddFoldPoints(isType ? FoldKind.Type : FoldKind.Member, foldStart, v.Span.End, separator: 1);
+				_AddFoldPoints(foldKind, foldStart, n.Span.End, separator: (ushort)(foldKind == FoldKind.Statement ? 0 : 1));
 				
-				//add separator before local function preceded by statement of other type.
+				//add separator before top-level local function preceded by statement of other type.
 				//	Also before other functions preceded by field or simple event.
 				if (separatorBefore) {
-					int i = prevNode.Span.End; //add separator at the bottom of line containing position i
-					if (v is LocalFunctionStatementSyntax) { //if there are empty lines, set i at the last empty line
+					int i = _PrevSibling(n).Span.End; //add separator at the bottom of line containing position i
+					if (n is LocalFunctionStatementSyntax) { //if there are empty lines, set i at the last empty line
 						var kPrev = SyntaxKind.EndOfLineTrivia;
-						foreach (var t in v.GetLeadingTrivia()) {
+						foreach (var t in n.GetLeadingTrivia()) {
 							var k = t.Kind();
 							if (k == SyntaxKind.EndOfLineTrivia && k == kPrev) i = t.SpanStart;
 							kPrev = k;
@@ -113,18 +152,35 @@ class CiFolding {
 					if (i <= ushort.MaxValue) af[^2] = af[^2] with { separator = (ushort)i };
 				}
 			}
-			prevNode = v;
+			if (n is StatementSyntax or MemberDeclarationSyntax) prevStatementOrMember = n;
 			if (cancelToken.IsCancellationRequested) return null;
+			
+			SyntaxNode _PrevSibling(SyntaxNode n) {
+				if (prevSibling != null) return prevSibling;
+				var p = n.Parent;
+				var r = prevStatementOrMember;
+				while (r != null) {
+					var p2 = r.Parent;
+					if (p2 == p || p2 is GlobalStatementSyntax) break;
+					r = p2;
+				}
+				return prevSibling = r;
+			}
+			
+			bool _ManyLines(SyntaxNode n, int lines) {
+				var s = code.AsSpan(n.Span.ToRange());
+				for (int i = 0; ;) {
+					i = s.IndexOf(i, '\n') + 1;
+					if (i == 0) return false;
+					if (--lines <= 1) return true;
+				}
+			}
 		}
 		_PN('n');
 		
 		List<TextSpan> disabledRanges = null;
 		var dir = root.GetDirectives(o => o is RegionDirectiveTriviaSyntax or EndRegionDirectiveTriviaSyntax or BranchingDirectiveTriviaSyntax or EndIfDirectiveTriviaSyntax);
-		_PN('d');
-		//print.it(dir.Count);
 		foreach (var v in dir) {
-			//print.it(v.IsActive, v.GetType());
-			//if(v is BranchingDirectiveTriviaSyntax br) print.it(br, br.BranchTaken, br.GetRelatedDirectives());
 			if (v is RegionDirectiveTriviaSyntax or EndRegionDirectiveTriviaSyntax) {
 				_AddFoldPoint(FoldKind.Region, v.SpanStart, v is RegionDirectiveTriviaSyntax);
 			} else if (v is BranchingDirectiveTriviaSyntax br && !br.BranchTaken) {
@@ -140,10 +196,10 @@ class CiFolding {
 				}
 			}
 		}
-		_PN();
+		_PN('d');
 		
 		//Find comments that need to fold:
-		//	1. Blocks of //comments of >= 4 lines. Include empty lines, but split at the last empty line if last comments are followed by non-comments or other type of comments.
+		//	1. Blocks of //comments of >= 5 lines. Include empty lines, but split at the last empty line if last comments are followed by non-comments or other type of comments.
 		//	2. Blocks of ///comments of >= 2 lines.
 		//	3. /*...*/ comments of >= 2 lines. Same for /**...*/.
 		//	4. //. is like #region, but can be not at the start of line too. Must not be followed by a non-space character.
@@ -215,7 +271,7 @@ class CiFolding {
 								if (i == s.Length) { nlines++; break; }
 								i++;
 							}
-							if (nlines < 4) continue;
+							if (nlines < 5) continue;
 						}
 						if (!_IsStartOfTrivia(isLineComment)) continue;
 						_AddFoldPoints(isDocComment ? FoldKind.Doc : FoldKind.Comment, rangeStart + i0, rangeStart + i);
@@ -233,7 +289,6 @@ class CiFolding {
 						//p2.First();
 						int start = rangeStart + i0;
 						var t = root.FindToken(start);
-						//TODO3: possible optimization. Instead of root.FindToken use node.FindToken, where node is of function etc whose full span contains start.
 						var span = t.Span;
 						//p2.Next();
 						if (span.Contains(start)) { i = span.End - rangeStart; return false; }
@@ -291,7 +346,7 @@ class CiFolding {
 	}
 	
 	[Flags]
-	internal enum FoldKind : byte { Member = 1, Type = 2, Region = 4, Comment = 8, Doc = 16, DotFold = 32, Disabled = 64 }
+	internal enum FoldKind { Member = 1, Type = 2, Region = 4, Comment = 8, Doc = 16, DotFold = 32, Disabled = 64, Statement = 128, Namespace = 256 }
 	
 	/// <summary>
 	/// Fold points (start position and kind) of the last <see cref="GetFoldPoints"/>. Later used for the context menu.

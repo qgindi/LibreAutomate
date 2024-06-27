@@ -71,12 +71,6 @@ partial class CiCompletion {
 		if (!popupListHidden) _popupList.Hide();
 	}
 	
-	public void SciUpdateUI(SciCode doc) { //modified, position changed, clicked
-		//int pos = doc.CurrentPosChars;
-		//var node = CiTools.NodeAt(pos);
-		//print.it(CiTools.IsInString(ref node, pos));
-	}
-	
 	/// <summary>
 	/// Called before <see cref="CiAutocorrect.SciCharAdded"/> and before passing the character to Scintilla.
 	/// If showing popup list, synchronously commits the selected item if need (inserts text).
@@ -1052,7 +1046,7 @@ partial class CiCompletion {
 		
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
 		CiAutocorrect.EBrackets bracketsOperation = default;
-		int positionBack = 0, bracketsFrom = 0, bracketsLen = 0;
+		int caretBack = 0, bracketsFrom = 0, bracketsLen = 0;
 		//bool isEnter = key == KKey.Enter;
 		string sAppend = null;
 		
@@ -1106,17 +1100,17 @@ partial class CiCompletion {
 					//		b.AppendIndent(indent + 1);
 					//		b.AppendLine().AppendIndent(indent).Append('}');
 					//		sAppend = b.ToString();
-					//		positionBack = indent + 3;
+					//		caretBack = indent + 3;
 					//	} else {
 					//		sAppend = " {  }";
-					//		positionBack = 2;
+					//		caretBack = 2;
 					//	}
 					//	bracketsFrom = startPos + s.Length + 2;
 					//	bracketsLen = sAppend.Length - 3;
 					//} else
 					if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !data.noAutoSelect && !doc.aaaText.Eq(startPos + len, ch)) { //info: noAutoSelect when lambda argument
 						sAppend ??= ch == '(' ? "()" : "<>";
-						positionBack = 1;
+						caretBack = 1;
 						bracketsFrom = startPos + s.Length + sAppend.Length - 1;
 					} else {
 						ch = default;
@@ -1125,7 +1119,7 @@ partial class CiCompletion {
 					}
 				}
 			} else if (!(ch is '(' or '<' or '[' or '{' || data.noAutoSelect)) { //completed with ;,.?- etc
-				if (_NeedParenthesis()) sAppend = "()";
+				if (isComplex = _NeedParenthesis()) sAppend = "()";
 			}
 			
 			bool _NeedParenthesis() {//.
@@ -1161,8 +1155,11 @@ partial class CiCompletion {
 			if (!isComplex && s == data.filterText) return CiComplResult.None;
 			
 			if (!doc.aaaText.Eq(startPos..(startPos + len), s)) doc.aaaSetAndReplaceSel(true, startPos, startPos + len, s); else doc.aaaCurrentPos16 = startPos + len;
-			if (sAppend != null) doc.aaaReplaceSel(sAppend);
-			if (positionBack > 0) doc.aaaCurrentPos16 -= positionBack;
+			if (sAppend != null) {
+				doc.aaaReplaceSel(sAppend);
+				if (caretBack == 0 && ch == ';' && doc.aaaCharAt8(doc.aaaCurrentPos8) == ';') caretBack = -1; //skip `;`
+			}
+			if (caretBack != 0) doc.aaaCurrentPos8 -= caretBack;
 			if (bracketsFrom > 0) {
 				CodeInfo._correct.BracketsAdded(doc, bracketsFrom, bracketsFrom + bracketsLen, bracketsOperation);
 			}

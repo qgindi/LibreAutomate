@@ -1,3 +1,5 @@
+//#define PRINT
+
 extern alias CAW;
 
 //Code colors. Also calls functions of folding, images, errors.

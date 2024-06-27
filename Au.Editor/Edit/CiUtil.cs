@@ -430,7 +430,7 @@ static class CiUtil {
 	}
 	
 	/// <summary>
-	/// Returns true if local/parameter variabled declared inside n aren't visible outside.
+	/// Returns true if local/parameter variables declared inside n aren't visible outside.
 	/// </summary>
 	/// <param name="n"></param>
 	static bool _IsLocalScope(SyntaxNode n) {
@@ -596,8 +596,8 @@ static class CiUtil {
 	/// </summary>
 	public static List<ClassifiedSpan> GetClassifiedSpans(SemanticModel semo, Document document, int from, int to, CancellationToken cancellationToken = default) {
 		var proj = document.Project;
-		//var opt = new ClassificationOptions { ColorizeRegexPatterns = true, ColorizeJsonPatterns = true }; //default true true
-		var e = Classifier.GetClassifiedSpans(proj.Solution.Services, proj, semo, TextSpan.FromBounds(from, to), ClassificationOptions.Default, true, cancellationToken);
+		var opt = new ClassificationOptions { ColorizeRegexPatterns = false, ColorizeJsonPatterns = true }; //default true true, but don't work; turn off regex anyway.
+		var e = Classifier.GetClassifiedSpans(proj.Solution.Services, proj, semo, TextSpan.FromBounds(from, to), opt, true, cancellationToken);
 		return _CorrectClassifiedSpans(e);
 	}
 	
@@ -868,9 +868,16 @@ global using System.Windows.Media;
 	#region DEBUG
 	
 #if DEBUG
-	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false) {
+	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false, bool indent = false) {
 		if (x == null) { print.it("null"); return; }
-		if (printNode) print.it($"<><c blue>{pos}, {x.Span}, {x.FullSpan}, k={x.Kind()}, t={x.GetType().Name},<> '<c green><\a>{(x is CompilationUnitSyntax ? null : x.ToString().Limit(10, middle: true, lines: true))}</\a><>'");
+		if (printNode) {
+			string si = null;
+			if (indent) {
+				int i = x.Ancestors().Count();
+				if (--i > 0) si = new('\t', i);
+			}
+			print.it($"<>{si}<c blue>{pos}, {x.Span}, {x.FullSpan}, k={x.Kind()}, t={x.GetType().Name},<> '<c green><\a>{(x is CompilationUnitSyntax ? null : x.ToString().Limit(10, middle: true, lines: true))}</\a><>'");
+		}
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 	

@@ -151,7 +151,7 @@ static class InsertCode {
 		
 		string breakLine = null;
 		for (; pos > 0 && code[pos - 1] != '\n'; pos--) if (code[pos - 1] is not (' ' or '\t')) { breakLine = "\r\n"; break; }
-		int replTo = pos; while (replTo < code.Length && code[replTo] is ' ' or '\t') replTo++;
+		int replTo = CiUtil.SkipSpace(code, pos);
 		
 		var d = k.sci;
 		
@@ -185,8 +185,10 @@ static class InsertCode {
 			if (go >= 0) s = s.Remove(go, 1);
 		}
 		
-		CodeInfo.Pasting(d, silent: true);
-		d.aaaSetAndReplaceSel(true, pos, replTo, s);
+		d.aaaSelect(true, pos, replTo);
+		CodeInfo.Pasting(d, s, silent: true);
+		d.aaaReplaceSel(s);
+		CodeInfo.Pasted(d, s);
 		
 		if (go >= 0) d.aaaGoToPos(true, pos + go);
 		else if (flags.Has(ICSFlags.SelectNewCode)) d.aaaSelect(true, pos + s.TrimEnd('\t').Length, pos, true);

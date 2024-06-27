@@ -1783,7 +1783,7 @@ new elmFinder || 5
 			default: return;
 			}
 			var (ok, results) = EnableDisableJab(enable);
-			if (results != null) print.it($"<><c {(ok ? "black" : "red")}>{results}<>");
+			dialog.show(null, results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.CenterOwner);
 		}
 		
 		/// <summary>
@@ -1791,7 +1791,7 @@ new elmFinder || 5
 		/// Returns: ok = false if failed or canceled. results = null if canceled.
 		/// </summary>
 		public static (bool ok, string results) EnableDisableJab(bool enable/*, bool allUsers*/) {
-			if (!GetJavaPath(out var dir)) return (false, "Cannot find Java " + (osVersion.is32BitProcess ? "32" : "64") + "-bit. Make sure it is installed.");
+			if (!GetJavaPath(out var dir)) return (false, "Cannot find Java 64-bit. Make sure it is installed.");
 			
 			//if(!allUsers) {
 			string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;

@@ -202,15 +202,13 @@ static class RegexParser {
 	
 	static void _ToScintillaStylingBytes(RStr s, List<RXSpan> a, Span<byte> styles8) {
 		var map8 = s.IsAscii() ? null : Convert2.Utf8EncodeAndGetOffsets_(s).offsets;
-		int end8 = 0;
+		styles8[..(map8?[^1] ?? s.Length)].Fill((byte)EStyle.RxText);
 		foreach (var v in a) {
 			//print.it(v, s[v.start..v.end].ToString());
 			var (i, end) = (v.start, v.end);
 			if (map8 != null) { i = map8[i]; end = map8[end]; }
-			styles8[end8..i].Fill((byte)EStyle.RxText); end8 = end;
 			while (i < end) styles8[i++] = (byte)v.token;
 		}
-		styles8[end8..(map8?[^1] ?? s.Length)].Fill((byte)EStyle.RxText);
 	}
 	
 	/// <summary>

@@ -49,6 +49,10 @@ static unsafe class Test {
 		//var token = cd.syntaxRoot.FindToken(cd.pos);
 		//var node = token.Parent.GetStatementEtc(cd.pos);
 		//CiUtil.PrintNode(node, printErrors: true);
+
+#if !IDE_LA
+
+#endif
 	}
 
 	public static void MonitorGC() {

@@ -76,7 +76,7 @@ partial class SciCode {
 		}
 		
 		unsafe void _Drop(POINT xy, int effect) {
-			_GetDropPos(ref xy, out int pos8);
+			_GetDropPos(ref xy, out _);
 			var z = new Sci_DragDropData { x = xy.x, y = xy.y };
 			string s = null;
 			var b = new StringBuilder();
@@ -150,8 +150,9 @@ partial class SciCode {
 						z.text = p8;
 						z.len = s8.Length;
 						if (0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
-						CodeInfo.Pasting(_sci);
+						CodeInfo.Pasting(_sci, s);
 						_sci.Call(SCI_DRAGDROP, 2, &z);
+						CodeInfo.Pasted(_sci, s);
 					}
 				} else { //file, script or URL
 					if (isCodeFile) InsertCode.Statements(s, ICSFlags.NoFocus);

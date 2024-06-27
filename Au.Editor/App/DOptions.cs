@@ -623,7 +623,7 @@ Example:
 		b.R.Add(out KCheckBox cDisableLAW, "Disable \"lock active window\"").Checked(disableLAW);
 		bool underlineAK = Api.SystemParametersInfo(Api.SPI_GETKEYBOARDCUES);
 		b.R.Add(out KCheckBox cUnderlineAK, "Underline menu/dialog item access keys").Checked(underlineAK);
-		b.R.AddButton("Java...", _ => Delm.Java.EnableDisableJabUI(this)).Width(70, "L").Disabled(!Delm.Java.GetJavaPath(out _));
+		b.R.AddButton("Java...", _ => Delm.Java.EnableDisableJabUI(this)).Width(70, "L");
 		b.End();
 		
 		_b.OkApply += e => {

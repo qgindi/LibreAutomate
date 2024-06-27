@@ -7,6 +7,9 @@ using System.Windows.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+//TODO: cursor starts flickering when rclciked while the left mouse button is down.
+//	Bug report: https://sourceforge.net/p/scintilla/bugs/2443/
+
 partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;
@@ -245,8 +248,10 @@ partial class SciCode : KScintilla {
 					Panels.Editor.UpdateUI_EditEnabled_();
 				}
 			}
-			if ((n.updated & (UPDATE.SC_UPDATE_CONTENT | UPDATE.SC_UPDATE_SELECTION)) == UPDATE.SC_UPDATE_SELECTION) SnippetMode_?.SciPosChanged();
-			if (isActive) CodeInfo.SciUpdateUI(this, n.updated);
+			if (isActive) {
+				if ((n.updated & (UPDATE.SC_UPDATE_CONTENT | UPDATE.SC_UPDATE_SELECTION)) == UPDATE.SC_UPDATE_SELECTION) SnippetMode_?.SciPosChanged();
+				CodeInfo.SciUpdateUI(this, n.updated);
+			}
 			break;
 		case NOTIF.SCN_CHARADDED when isActive:
 			//print.it($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
@@ -534,13 +539,15 @@ partial class SciCode : KScintilla {
 				aaaSetText(text);
 				break;
 			case 3: //Paste
-				CodeInfo.Pasting(this);
+				CodeInfo.Pasting(this, text);
 				aaaReplaceSel(text);
+				CodeInfo.Pasted(this, text);
 				break;
 			} //rejected: option to rename this file
 		} else {
-			CodeInfo.Pasting(this);
+			CodeInfo.Pasting(this, s1);
 			Call(SCI_PASTE); //not aaaReplaceSel, because can be SCI_SETMULTIPASTE etc
+			CodeInfo.Pasted(this, s1);
 		}
 	}
 	

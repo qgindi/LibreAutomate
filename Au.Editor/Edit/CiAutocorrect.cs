@@ -143,6 +143,14 @@ class CiAutocorrect {
 		//}
 		if (isOpenBrac && r.OwnerData != (object)"new") return false;
 		
+		if (ch is '"' or '\'') { //don't skip `"` if escaped, eg `"text\""`. Same for `'`.
+			int i = pos8; while (doc.aaaCharAt8(i - 1) is '\\') i--;
+			if (0 != ((pos8 - i) & 1)) {
+				bool verbatim = ch is '"' && doc.aaaCharAt8(i - 2) is var c2 && (c2 is '@' || (c2 is '$' && doc.aaaCharAt8(i - 3) is '@'));
+				if (!verbatim) return false;
+			}
+		}
+		
 		r.Remove();
 		
 		if (isBackspace || isOpenBrac) {
@@ -150,12 +158,9 @@ class CiAutocorrect {
 			return false;
 		}
 		
-		//TODO: don't skip " if escaped, eg "text\"". Same for '.
-		
 		doc.aaaCurrentPos8 = to + 1;
 		return true;
 		
-		//TODO: add command to fold selected text. Or auto-fold local functions. Now can use //. but it adds garbage.
 		bool _Selection() {
 			if (ch is '{' or '(' or '[' or '"') {
 				var (start, end) = (doc.aaaPos16(pos8), doc.aaaPos16(selEnd8));
@@ -218,9 +223,6 @@ class CiAutocorrect {
 		bool _AutoSemicolon() {
 			if (!App.Settings.ci_semicolon) return false;
 			
-			//TODO: later, if changed pos to after an empty statement (`;`) that is at the end of line, select it, let replace it with new text.
-			//	Also, when before `;` inserting text that ends with `;`.
-			
 			//is ch a statement-start character?
 			if (!SyntaxFacts.IsIdentifierStartCharacter(ch)) {
 				if (!(ch is (>= '0' and <= '9') or '@' or '$' or '*' or '(' or '"' or '\'')) return false;
@@ -235,7 +237,7 @@ class CiAutocorrect {
 			//is caret at the start of line or after a statement-end or block-start character?
 			for (int i = pos8; --i >= 0;) {
 				char c1 = doc.aaaCharAt8(i);
-				if (c1 is '\n' or ';' or '{' or '}' or ':' or '/') break;
+				if (c1 is '\n' or ';' or '{' or '}' or ':' or ')' or '/' or 'e' or 'o') break;
 				if (!(c1 is ' ' or '\t')) return false;
 			}
 			
@@ -254,9 +256,18 @@ class CiAutocorrect {
 			case SyntaxKind.SemicolonToken:
 				if (node is not StatementSyntax || cd.pos < node.Span.End) return false;
 				if (IsSwitchSectionEndStatement_(node)) return false; //after `break;` etc in `switch`, probably starting to type `case` or `default`
+				if (node is EmptyStatementSyntax && cd.pos == node.Span.End) {
+					cd.sci.aaaGoToPos(true, node.SpanStart);
+					return true;
+				}
 				break;
 			case SyntaxKind.ColonToken:
 				if (!(node is SwitchLabelSyntax or LabeledStatementSyntax)) return false;
+				break;
+			case SyntaxKind.CloseParenToken:
+				if (!(node is IfStatementSyntax or ForStatementSyntax or CommonForEachStatementSyntax or WhileStatementSyntax or FixedStatementSyntax or LockStatementSyntax or UsingStatementSyntax)) return false;
+				break;
+			case SyntaxKind.ElseKeyword or SyntaxKind.DoKeyword:
 				break;
 			default: return false;
 			}
@@ -537,7 +548,7 @@ class CiAutocorrect {
 		static void _ReplaceSemicolonAfterColon() {
 			if (App.Settings.ci_semicolon && CodeInfo.GetContextAndDocument(out var cd)) {
 				var tok = cd.syntaxRoot.FindTokenOnRightOfPosition(cd.pos);
-				if (tok.IsKind(SyntaxKind.SemicolonToken) && tok.GetPreviousToken().Parent is LabeledStatementSyntax) {
+				if (tok.Parent is EmptyStatementSyntax && tok.GetPreviousToken().Parent is LabeledStatementSyntax or CaseSwitchLabelSyntax) {
 					var (from, to) = tok.Span;
 					cd.sci.aaaReplaceRange(true, from, to, "");
 				}
@@ -684,9 +695,9 @@ class CiAutocorrect {
 						or CatchDeclarationSyntax or CatchFilterClauseSyntax
 						or (StatementSyntax and not BlockSyntax) || _IsSwitchCast(nodeFromPos);
 				}
-			} else if (tk1 is SyntaxKind.SemicolonToken) {
+			} else if (tk1 is SyntaxKind.SemicolonToken && tok1.SpanStart == pos) {
 				if (App.Settings.ci_enterBeforeSemicolon && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
-					canCorrect = canCorrectOnEnterBeforeParenEtc = nodeFromPos is not ForStatementSyntax;
+					canCorrect = canCorrectOnEnterBeforeParenEtc = !(nodeFromPos is ForStatementSyntax or EmptyStatementSyntax);
 				}
 			} else if (!isEOF) {
 				int r = _InNonblankTriviaOrStringOrChar(cd, tok1);
@@ -1123,6 +1134,28 @@ class CiAutocorrect {
 		if (maxTo > from) to = maxTo;
 		//CiUtil.DebugHiliteRange(from, to); wait.doEvents(); 500.ms(); CiUtil.DebugHiliteRange(0, 0);
 		ModifyCode.Format(cd, from, to);
+	}
+	
+	//Called after pasted, dropped or inserted statement(s).
+	public void SciPasted(SciCode doc, string text) {
+		//If inserting text before or after `;` and it is an empty statement, delete the `;` if it is redundant.
+		if (App.Settings.ci_semicolon) {
+			int end8 = doc.aaaSelectionEnd8, start8 = end8 - Encoding.UTF8.GetByteCount(text);
+			if (doc.aaaRangeText(false, start8, end8) != text) {
+				Debug_.Print("dropped on itself?");
+				return;
+			}
+			bool semicolonBefore = doc.aaaCharAt8(start8 - 1) is ';', semicolonAfter = !semicolonBefore && doc.aaaCharAt8(end8) is ';';
+			if (semicolonAfter) semicolonAfter = text is [.., ';'] or [.., ';', '\r', '\n'] or [.., ';', '\n'];
+			if (semicolonBefore || semicolonAfter) {
+				int pos = doc.aaaPos16(semicolonBefore ? start8 - 1 : end8);
+				if (CodeInfo.GetDocumentAndFindNode(out var cd, out var node, pos) && node is EmptyStatementSyntax && node.SpanStart == cd.pos) {
+					if (semicolonAfter) doc.aaaReplaceRange(false, end8, end8 + 1, ""); else doc.aaaReplaceRange(false, start8 - 1, start8, "");
+					//rejected: if inserted after `;`, and semicolon missing at the end of text, insert semicolon there. Unreliable etc.
+				}
+			}
+		}
+		//bad: the user also may want to auto-delete or move the auto-added `;` when it isn't an empty statement. Eg when text dropped/pasted after `int i = ;`. But impossible to know.
 	}
 	
 	#region util

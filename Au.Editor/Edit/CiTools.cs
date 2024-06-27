@@ -9,14 +9,6 @@ using System.Windows.Controls;
 //	Now can select in the Icons dialog or capture with Duiimage.
 
 class CiTools {
-	//#if DEBUG
-	//	public static void RegexTest(int position)
-	//	{
-	//		var node = NodeAt(position);
-	//		print.it(IsInString(ref node, position));
-	//	}
-	//#endif
-	
 	public bool HideTempWindows() {
 		bool v1 = _regexWindow?.IsVisible ?? false, v2 = _keysWindow?.IsVisible ?? false;
 		if (v1) _regexWindow.Close();
