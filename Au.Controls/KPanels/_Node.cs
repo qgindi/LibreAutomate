@@ -22,6 +22,7 @@ public partial class KPanels {
 		_DockState _state, _savedDockState;
 		_Floating _floatWindow;
 		string _floatSavedRect;
+		_WindowStyle _windowStyle;
 		//_Flags _flags;
 		bool _dontSave;
 		
@@ -101,6 +102,7 @@ public partial class KPanels {
 				if (!_IsDocument) {
 					_savedDockState = (_DockState)(x.Attr("state", 0) & 3);
 					_floatSavedRect = x.Attr("floatRect");
+					x.Attr(out _windowStyle, "window");
 				}
 				if (!_IsStack) x.Attr(out _captionAt, "captionAt");
 				
@@ -268,6 +270,7 @@ public partial class KPanels {
 					if (_state != 0) x.WriteAttributeString("state", ((int)_state).ToString());
 					_floatWindow?.Save();
 					if (_floatSavedRect != null) x.WriteAttributeString("floatRect", _floatSavedRect);
+					if (_windowStyle != 0) x.WriteAttributeString("window", _windowStyle.ToString());
 				}
 			}
 			

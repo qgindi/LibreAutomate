@@ -259,6 +259,7 @@ class CiAutocorrect {
 				if (node is EmptyStatementSyntax && cd.pos == node.Span.End) {
 					cd.sci.aaaGoToPos(true, node.SpanStart);
 					return true;
+			//TODO: on '/' skip `;` like on ';'
 				}
 				break;
 			case SyntaxKind.ColonToken:
@@ -277,7 +278,7 @@ class CiAutocorrect {
 			return true;
 		}
 		
-		bool _RawString() { //. close raw string now if need. In SciCharAdded too late, code is invalid and cannot detect correctly.
+		bool _RawString() { //close raw string now if need. In SciCharAdded too late, code is invalid and cannot detect correctly.
 			if (pos8 > 3 && doc.aaaCharAt8(pos8 - 1) == '"' && doc.aaaCharAt8(pos8 - 2) == '"' && doc.aaaCharAt8(pos8 - 3) != '@') {
 				if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 				var pos16 = cd.pos;
@@ -312,7 +313,7 @@ class CiAutocorrect {
 				}
 			}
 			return false;
-		}//..
+		}
 	}
 	
 	//CONSIDER: insert missing `break;` in `switch` when completed a statement.
@@ -1142,7 +1143,7 @@ class CiAutocorrect {
 		if (App.Settings.ci_semicolon) {
 			int end8 = doc.aaaSelectionEnd8, start8 = end8 - Encoding.UTF8.GetByteCount(text);
 			if (doc.aaaRangeText(false, start8, end8) != text) {
-				Debug_.Print("dropped on itself?");
+				Debug_.Print($"dropped on itself? Text: '{text}'");
 				return;
 			}
 			bool semicolonBefore = doc.aaaCharAt8(start8 - 1) is ';', semicolonAfter = !semicolonBefore && doc.aaaCharAt8(end8) is ';';

@@ -256,8 +256,7 @@ partial class CiStyling {
 							for (int i = spanStart8; i < spanEnd8; i++) b[i - start8] = style;
 						}
 						
-						void _RegexString() {//.
-							
+						void _RegexString() {
 							//we need only verbatim and raw strings, and not interpolated
 							bool verbatim = v.ClassificationType == ClassificationTypeNames.VerbatimStringLiteral;
 							if (verbatim) {
@@ -282,7 +281,7 @@ partial class CiStyling {
 							}
 							
 							RegexParser.GetScintillaStylingBytes(code.AsSpan(from..to), format, b.AsSpan((spanStart8 - start8 + from - v.TextSpan.Start)..));
-						}//..
+						}
 					}
 				}
 			}

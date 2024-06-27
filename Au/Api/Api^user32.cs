@@ -1398,6 +1398,14 @@ static unsafe partial class Api {
 	
 	internal const uint MIIM_STRING = 0x40;
 	
+	[DllImport("user32.dll")]
+	internal static extern IntPtr GetSystemMenu(wnd hWnd, bool bRevert);
+	
+	[DllImport("user32.dll")]
+	internal static extern bool EnableMenuItem(IntPtr hMenu, uint uIDEnableItem, uint uEnable);
+	
+	internal const uint MF_GRAYED = 0x1;
+	
 	internal const uint SIF_RANGE = 0x1;
 	internal const uint SIF_PAGE = 0x2;
 	internal const uint SIF_POS = 0x4;

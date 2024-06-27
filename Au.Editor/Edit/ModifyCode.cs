@@ -208,6 +208,9 @@ static class ModifyCode {
 	}
 	
 	static bool _Format(CodeInfo.Context cd, int from, int to, out List<TextChange> ac, string code = null) {
+		ac = null;
+		if ((uint)(to - from) > 500_000) return false; //too slow
+		
 		bool changedCode = code != null;
 		code ??= cd.code;
 		string code0 = code;
@@ -222,7 +225,7 @@ static class ModifyCode {
 		int nw = (s_rx1 ??= new(@"(?m)^\h*\K(?=\R|//(?!/(?!/)))")).Replace(code, c_mark, out code, range: from..to);
 		if (nw > 0 || changedCode) {
 			root = root.SyntaxTree.WithChangedText(SourceText.From(code)).GetCompilationUnitRoot();
-			if (root.GetText().Length != code.Length) { Debug_.Print("bad new code"); ac = null; return false; }
+			if (root.GetText().Length != code.Length) { Debug_.Print("bad new code"); return false; }
 		}
 		
 		//include \r\n before. Else may not correct indent.
@@ -233,7 +236,7 @@ static class ModifyCode {
 		//	VS adds space or newline when using "Format selection", but not when auto-format.
 		
 		try { ac = Formatter.GetFormattedTextChanges(root, TextSpan.FromBounds(from, to + nw * c_markLen), cd.document.Project.Solution.Services, FormattingOptions) as List<TextChange>; }
-		catch (Exception e1) { Debug_.Print(e1); ac = null; return false; } //https://www.libreautomate.com/forum/showthread.php?tid=7622
+		catch (Exception e1) { Debug_.Print(e1); return false; } //https://www.libreautomate.com/forum/showthread.php?tid=7622
 		if (ac.Count == 0) return false;
 		
 		//part 2 of the workaround. Remove marker traces from ac. Then ac will match the original code (the caller's version).

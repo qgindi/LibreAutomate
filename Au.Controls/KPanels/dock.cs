@@ -10,6 +10,9 @@ public partial class KPanels {
 		[Flags]
 		enum _DockState { Hide = 1, Float = 2, }
 		
+		[Flags]
+		enum _WindowStyle { Topmost = 1, Unowned = 2, }
+		
 		void _CaptionContextMenu(object sender, ContextMenuEventArgs e) {
 			if (!_IsGoodMouseEvent(sender, e, out var target)) return;
 			e.Handled = true;
@@ -35,6 +38,15 @@ public partial class KPanels {
 				
 				void _CaptionAtItem(Dock ca) {
 					m.AddRadio(ca.ToString(), ca == thisOrParentTab._captionAt, o => thisOrParentTab._SetCaptionAt(ca));
+				}
+			});
+			
+			m.Submenu("Window", m => {
+				_WindowItem(_WindowStyle.Topmost, "Topmost");
+				_WindowItem(_WindowStyle.Unowned, "Unowned, can min/max");
+				
+				void _WindowItem(_WindowStyle ws, string s) {
+					m.AddCheck(s, _windowStyle.Has(ws), o => { _windowStyle ^= ws; _floatWindow?.ChangeWindowStyle(ws); });
 				}
 			});
 			

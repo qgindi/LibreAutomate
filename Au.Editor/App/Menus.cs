@@ -557,9 +557,6 @@ static class Menus {
 			
 			[Command("White space", checkable = true)]
 			public static void Output_white_space() { Panels.Output.WhiteSpace ^= true; }
-			
-			[Command("Topmost when floating", checkable = true)]
-			public static void Output_topmost_when_floating() { Panels.Output.Topmost ^= true; }
 		}
 	}
 	

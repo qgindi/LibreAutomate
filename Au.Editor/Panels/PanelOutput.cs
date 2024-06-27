@@ -38,10 +38,8 @@ class PanelOutput {
 		_inInitSettings = true;
 		if (WrapLines) WrapLines = true;
 		if (WhiteSpace) WhiteSpace = true;
-		if (Topmost) App.Commands[nameof(Menus.Tools.Output.Output_topmost_when_floating)].Checked = true; //see also OnParentChanged, below
 		_c.AaNoMouseSetFocus = MButtons.Middle;
 		_inInitSettings = false;
-		_leaf.FloatingChanged += (_, floating) => _SetTopmost(floating ? 1 : 0);
 	}
 	bool _inInitSettings;
 	
@@ -50,8 +48,6 @@ class PanelOutput {
 		set {
 			Debug.Assert(!_inInitSettings || value);
 			if (!_inInitSettings) App.Settings.output_wrap = value;
-			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in KScintilla.aaOnHandleCreated
-			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in KScintilla.aaOnHandleCreated
 			_c.Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : 0);
 			App.Commands[nameof(Menus.Tools.Output.Output_wrap_lines)].Checked = value;
 		}
@@ -67,51 +63,6 @@ class PanelOutput {
 			App.Commands[nameof(Menus.Tools.Output.Output_white_space)].Checked = value;
 		}
 	}
-	
-	public bool Topmost {
-		get => App.Settings.output_topmost;
-		set {
-			App.Settings.output_topmost = value;
-			App.Commands[nameof(Menus.Tools.Output.Output_topmost_when_floating)].Checked = value;
-			if (_leaf.Floating) _SetTopmost(2);
-		}
-	}
-	
-	//action: 0 dock, 1 undock, 2 changed while floating
-	void _SetTopmost(int action) {
-		var w = P.Hwnd().Window;
-		if (action >= 1) {
-			if (Topmost) {
-				WndUtil.SetOwnerWindow(w, default);
-				w.ZorderTopmost();
-				//w.SetExStyle(WSE.APPWINDOW, SetAddRemove.Add);
-				//wnd.getwnd.root.ActivateL(); w.ActivateL(); //let taskbar add button
-			} else if (action == 2) {
-				w.ZorderNoTopmost();
-				WndUtil.SetOwnerWindow(w, App.Hmain);
-			}
-		}
-		
-		//Windows bug: sometimes the floating/topmost output panel becomes behind normal windows, although has topmost style. Until clicked.
-		//	To reproduce: in a ribbon show a dropdown, eg a popup menu. If can't reproduce, try others.
-		bool needTimer = Topmost && action >= 1;
-		if (needTimer != _workaround1.isTimer) {
-			if (_workaround1.isTimer = needTimer) App.Timer1s += _WorkaroundTimer; else App.Timer1s -= _WorkaroundTimer;
-			if (needTimer) _workaround1.w = w;
-		}
-		void _WorkaroundTimer() {
-			//print.it("timer");
-			var wa = wnd.active;
-			if (!wa.Is0 && !wa.IsTopmost) {
-				var ww = _workaround1.w;
-				if (!ww.ZorderIsAbove(wa)) {
-					//print.it("workaround");
-					ww.ZorderTop();
-				}
-			}
-		}
-	}
-	(bool isTimer, wnd w) _workaround1;
 	
 	internal class KScintilla_ : KScintilla {
 		PanelOutput _p;

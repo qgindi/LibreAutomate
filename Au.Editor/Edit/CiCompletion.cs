@@ -1080,13 +1080,13 @@ partial class CiCompletion {
 						ch = '(';
 						break;
 					default:
-						if (_NeedParenthesis()) ch = '(';
+						if (_NeedParentheses()) ch = '(';
 						break;
 					}
 					break;
 				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Interface or CiItemKind.Enum or CiItemKind.Delegate:
 					if (ci.DisplayTextSuffix == "<>") ch = '<';
-					else if (_NeedParenthesis()) ch = '(';
+					else if (_NeedParentheses()) ch = '(';
 					break;
 				}
 				
@@ -1119,10 +1119,10 @@ partial class CiCompletion {
 					}
 				}
 			} else if (!(ch is '(' or '<' or '[' or '{' || data.noAutoSelect)) { //completed with ;,.?- etc
-				if (isComplex = _NeedParenthesis()) sAppend = "()";
+				if (_NeedParentheses()) sAppend = "()";
 			}
 			
-			bool _NeedParenthesis() {//.
+			bool _NeedParentheses() {
 				if (item.kind is CiItemKind.Method or CiItemKind.ExtensionMethod) return true;
 				if (ch == '.') return false; //if 'new Word.', often can be eg 'new Word.Word()' but rarely 'new Word().'
 				switch (item.kind) {
@@ -1145,19 +1145,18 @@ partial class CiCompletion {
 				//If 'new Type', adds '()'.
 				//If then coder types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
 			}
-			//..
 			
 			//bool _IsGeneric()
 			//	=> ci.Properties.TryGetValue("IsGeneric", out var v1) && v1.Eqi("True");
 		}
 		
 		try {
-			if (!isComplex && s == data.filterText) return CiComplResult.None;
+			if (sAppend == null && s == data.filterText) return CiComplResult.None;
 			
 			if (!doc.aaaText.Eq(startPos..(startPos + len), s)) doc.aaaSetAndReplaceSel(true, startPos, startPos + len, s); else doc.aaaCurrentPos16 = startPos + len;
 			if (sAppend != null) {
 				doc.aaaReplaceSel(sAppend);
-				if (caretBack == 0 && ch == ';' && doc.aaaCharAt8(doc.aaaCurrentPos8) == ';') caretBack = -1; //skip `;`
+				if (ch == ';' && caretBack == 0 && doc.aaaCharAt8(doc.aaaCurrentPos8) == ';') { caretBack = -1; isComplex = true; } //skip `;`
 			}
 			if (caretBack != 0) doc.aaaCurrentPos8 -= caretBack;
 			if (bracketsFrom > 0) {

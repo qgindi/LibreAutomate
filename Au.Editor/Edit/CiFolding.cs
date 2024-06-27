@@ -469,39 +469,33 @@ partial class SciCode {
 		if (0 != Call(SCI_GETFOLDEXPANDED, line)) {
 			//get text for SCI_TOGGLEFOLDSHOWTEXT
 			string s = aaaLineText(line), s2 = null;
-			int i = 0; while (i < s.Length && s[i] is ' ' or '\t') i++;
-			if (s.Eq(i, "///")) { //let s2 = summary text
-				s_rxFold.summary1 ??= new regexp(@"\h*<summary>\h*$", RXFlags.ANCHORED);
-				if (s_rxFold.summary1.IsMatch(s, (i + 3)..)) {
-					i = aaaLineStart(false, line + 1);
-					int len = aaaLen8;
-					if (i < len) {
-						const int maxLen = 100;
-						s = aaaRangeText(false, i, Math.Min(len, i + maxLen + 10));
-						int to = s.Find("</summary>");
-						bool limited = to < 0;
-						if (limited) to = Math.Min(s.Length, maxLen); //Min to avoid partial </summary> at the end
-						s_rxFold.summary2 ??= new regexp(@"\h*///\h*\K.+");
-						using (new StringBuilder_(out var b)) {
-							foreach (var g in s_rxFold.summary2.FindAllG(s, 0, 0..to)) {
-								if (b.Length > 0) b.Append(' ');
-								b.Append(s, g.Start, g.Length);
+			int i = CiUtil.SkipSpace(s, 0);
+			if (!s.Eq(i, '#')) {
+				if (!s.Eq(i, "//")) {
+					int last = Call(SCI_GETLASTCHILD, line, -1);
+					s = aaaLineText(last);
+					if (s.Length > 2) if (s.Ends("*/") || (s.Ends("\";") && s[^3] != '\"')) s = s[^2..]; //`text*/` -> `*/` or `text";` -> `";`
+					s2 = "... " + s;
+				} else if (s.Eq(i, "///")) { //let s2 = summary text
+					s_rxFold.summary1 ??= new regexp(@"\h*<summary>\h*$", RXFlags.ANCHORED);
+					if (s_rxFold.summary1.IsMatch(s, (i + 3)..)) {
+						i = aaaLineStart(false, line + 1);
+						int len = aaaLen8;
+						if (i < len) {
+							const int maxLen = 100;
+							s = aaaRangeText(false, i, Math.Min(len, i + maxLen + 10));
+							int to = s.Find("</summary>");
+							bool limited = to < 0;
+							if (limited) to = Math.Min(s.Length, maxLen); //Min to avoid partial </summary> at the end
+							s_rxFold.summary2 ??= new regexp(@"\h*///\h*\K.+");
+							using (new StringBuilder_(out var b)) {
+								foreach (var g in s_rxFold.summary2.FindAllG(s, 0, 0..to)) {
+									if (b.Length > 0) b.Append(' ');
+									b.Append(s, g.Start, g.Length);
+								}
+								if (limited) b.Append(" …");
+								s2 = b.ToString();
 							}
-							if (limited) b.Append(" …");
-							s2 = b.ToString();
-						}
-					}
-				}
-			} else { //if like 'void Method() {', let s2 = "... }"
-				for (; i < s.Length; i++) {
-					char c = s[i];
-					if (c == '{') { s2 = "... }"; break; }
-					if (c == '/' && i < s.Length - 1) {
-						c = s[i + 1];
-						if (c == '/') break;
-						if (c == '*') {
-							if (i >= s.Length - 4) break;
-							i = s.Find("*/", i + 2); if (++i == 0) break;
 						}
 					}
 				}
@@ -515,6 +509,7 @@ partial class SciCode {
 			for (int last = Call(SCI_GETLASTCHILD, line, -1); ++line < last;) {
 				EFoldLine(line);
 			}
+			//never mind: probably should not fold inside functions and statements.
 		}
 	}
 	static (regexp summary1, regexp summary2) s_rxFold;

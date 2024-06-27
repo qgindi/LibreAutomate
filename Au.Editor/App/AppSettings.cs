@@ -118,7 +118,7 @@ record AppSettings : JSettings {
 	public icons_t icons;
 	
 	//panel Output
-	public bool output_wrap, output_white, output_topmost;
+	public bool output_wrap, output_white;
 	
 	//panel Outline
 	public byte outline_flags;

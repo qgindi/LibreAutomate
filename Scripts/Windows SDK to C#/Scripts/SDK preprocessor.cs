@@ -41,7 +41,6 @@ void _Preprocess(bool is64bit, string outFile) {
 	//In old version was used this. Now errors. Now no errors without the CRT. When compared output, everything is almost the same, with few non-important changes.
 	//-I "{SDK_Include}" -I "{CRT_Include}" -idirafter "{VS_CRT_Include}"
 	
-	//.
 	/* some clang command line options
  -emit-ast
  -fdiagnostics-parseable-fixits
@@ -78,7 +77,6 @@ void _Preprocess(bool is64bit, string outFile) {
   -w                      Suppress all warnings
   -x <language>           Treat subsequent input files as having type <language>
 	*/
-	//..
 	
 	string s = File.ReadAllText(intermFile);
 	

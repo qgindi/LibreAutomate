@@ -13,7 +13,10 @@ public static class script {
 	/// If role <b>miniProgram</b> (default), returns the script file name without extension.
 	/// Else returns <see cref="AppDomain.FriendlyName"/>, like <c>"MainAssemblyName"</c>.
 	/// </remarks>
-	public static string name => s_name ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 with ".exe", now without (now it is the entry assembly name)
+	public static string name {
+		get => s_name ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 with ".exe", now without (now it is the entry assembly name)
+		internal set { s_name = value; }
+	}
 	static string s_name;
 	
 	/// <summary>

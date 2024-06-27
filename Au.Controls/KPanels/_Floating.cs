@@ -27,8 +27,11 @@ public partial class KPanels {
 					}
 				}
 				
-				var style = WS.THICKFRAME | WS.POPUP | WS.CLIPCHILDREN; if (node._IsStack) style |= WS.CAPTION;
-				var estyle = WSE.TOOLWINDOW | WSE.WINDOWEDGE; if (_noActivate) estyle |= WSE.NOACTIVATE;
+				var style = WS.THICKFRAME | WS.POPUP | WS.CLIPCHILDREN;
+				if (_node._IsStack) style |= WS.CAPTION;
+				if (_node._windowStyle.Has(_WindowStyle.Unowned)) style |= WS.CAPTION | WS.MAXIMIZEBOX | WS.MINIMIZEBOX | WS.SYSMENU;
+				var estyle = _node._windowStyle.Has(_WindowStyle.Unowned) ? WSE.APPWINDOW | WSE.WINDOWEDGE : WSE.TOOLWINDOW | WSE.WINDOWEDGE;
+				
 				RECT rect = default;
 				bool defaultRect = onDrag | (_node._floatSavedRect == null);
 				if (defaultRect) {
@@ -45,15 +48,18 @@ public partial class KPanels {
 				base.SourceInitialized += (_, _) => {
 					var w = this.Hwnd();
 					w.SetStyle(style);
-					if (_noActivate) w.SetExStyle(estyle);
+					if (_noActivate) w.SetExStyle(WSE.NOACTIVATE, WSFlags.Add);
 				};
 				
 				base.Title = script.name + " - " + _node.ToString();
-				base.Owner = _owner;
 				base.WindowStartupLocation = WindowStartupLocation.Manual;
-				base.WindowStyle = WindowStyle.ToolWindow;
-				base.ShowInTaskbar = false; //never mind: if false, WPF creates a "Hidden Window", probably as owner, even if owner specified
 				base.ShowActivated = false;
+				if (!_node._windowStyle.Has(_WindowStyle.Unowned)) {
+					if (!_node._windowStyle.Has(_WindowStyle.Topmost)) base.Owner = _owner;
+					base.WindowStyle = WindowStyle.ToolWindow;
+					base.ShowInTaskbar = false; //never mind: if false, WPF creates a "Hidden Window", probably as owner, even if owner specified
+				}
+				if (_node._windowStyle.Has(_WindowStyle.Topmost)) base.Topmost = true;
 				
 				if (defaultRect) this.SetRect(rect);
 				else WndSavedRect.Restore(this, _node._floatSavedRect);
@@ -79,7 +85,7 @@ public partial class KPanels {
 			}
 			
 			protected override void OnClosing(CancelEventArgs e) {
-				//print.it("closing", e.Cancel);
+				//print.it("closing", e.Cancel, _node._state);
 				if (!e.Cancel) {
 					_owner.IsVisibleChanged -= _Owner_IsVisibleChanged;
 					Save();
@@ -146,6 +152,12 @@ public partial class KPanels {
 						//never mind: if clicked or dragged resizable border, on mouse up OS activates the window.
 					}
 					break;
+				case Api.WM_CLOSE:
+					if (_node._state == _DockState.Float) { //closing not by _SetDockState
+						handled = true;
+						_node._SetDockState(0);
+					}
+					break;
 				}
 				
 				return default;
@@ -184,6 +196,29 @@ public partial class KPanels {
 				//}
 				
 				//return target;
+			}
+			
+			public void ChangeWindowStyle(_WindowStyle style) {
+				bool on = _node._windowStyle.Has(style);
+				var w = this.Hwnd();
+				if (style == _WindowStyle.Topmost) {
+					bool unowned = _node._windowStyle.Has(_WindowStyle.Unowned);
+					if (on) {
+						if (!unowned) base.Owner = null;
+						w.ZorderTopmost();
+					} else {
+						w.ZorderNoTopmost();
+						if (!unowned) base.Owner = _owner;
+					}
+				} else if (style == _WindowStyle.Unowned) {
+					bool topmost = _node._windowStyle.Has(_WindowStyle.Topmost);
+					if (!topmost) base.Owner = on ? null : _owner; //or `WndUtil.SetOwnerWindow(w, on ? default : _owner.Hwnd());`
+					w.SetExStyle(w.ExStyle & ~(WSE.TOOLWINDOW | WSE.APPWINDOW) | (on ? WSE.APPWINDOW : WSE.TOOLWINDOW));
+					var ws = WS.CAPTION | WS.MAXIMIZEBOX | WS.MINIMIZEBOX | WS.SYSMENU;
+					if (!on && _node._IsStack) ws &= ~WS.CAPTION;
+					w.SetStyle(ws, on ? WSFlags.Add | WSFlags.UpdateNonclient : WSFlags.Remove | WSFlags.UpdateNonclient);
+					base.ShowInTaskbar = on;
+				}
 			}
 		}
 		

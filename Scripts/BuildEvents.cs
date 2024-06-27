@@ -3,9 +3,7 @@
 /*/ role exeProgram; testInternal Au; outputPath C:\code\au\Other\Programs; console true; /*/
 /*/ role exeProgram; testInternal Au; outputPath %folders.ThisApp%\..\Other\Programs; console true; /*/
 
-//.
 script.setup(exception: UExcept.Dialog | UExcept.Print);
-//..
 
 //print.ignoreConsole = true;
 //print.qm2.use = true;
