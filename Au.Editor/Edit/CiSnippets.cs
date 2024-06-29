@@ -18,11 +18,12 @@ static class CiSnippets {
 	class _CiComplItemSnippet : CiComplItem {
 		public readonly XElement x;
 		public _Context context;
-		public readonly bool custom;
+		public readonly string customFile, sortText;
 		
-		public _CiComplItemSnippet(string name, XElement x, bool custom) : base(CiComplProvider.Snippet, default, name, CiItemKind.Snippet) {
+		public _CiComplItemSnippet(string name, XElement x, string customFile) : base(CiComplProvider.Snippet, default, name, CiItemKind.Snippet) {
 			this.x = x;
-			this.custom = custom;
+			this.customFile = customFile;
+			sortText = name.Ends("Snippet") ? name[..^7] : name.Ends("Surround") ? name[..^8] : name;
 		}
 	}
 	
@@ -125,8 +126,8 @@ static class CiSnippets {
 			_LoadFile(DefaultFile, false);
 			if (a.Count == 0) return;
 			a.Sort((x, y) => { //for the surround list
-				int r = CiUtil.SortComparer.Compare(x.Text, y.Text);
-				if (r == 0) return (x.custom ? 0 : 1) - (y.custom ? 0 : 1); //custom first
+				int r = CiUtil.SortComparer.Compare(x.sortText, y.sortText);
+				if (r == 0) return (x.customFile != null ? 0 : 1) - (y.customFile != null ? 0 : 1); //custom first
 				return r;
 			});
 			_DetectContextsOfSnippets(a);
@@ -137,12 +138,13 @@ static class CiSnippets {
 					var hidden = DSnippets.GetHiddenSnippets(custom ? pathname.getName(file) : "default");
 					if (hidden?.Contains("") == true) return;
 					
+					var customFile = custom ? pathname.getName(file) : null;
 					var xroot = LoadSnippetsFile_(file);
 					if (xroot == null) return;
 					foreach (var xs in xroot.Elements("snippet")) {
 						var name = xs.Attr("name");
 						if (hidden?.Contains(name) == true) continue;
-						a.Add(new _CiComplItemSnippet(name, xs, custom));
+						a.Add(new _CiComplItemSnippet(name, xs, customFile));
 					}
 				}
 				catch (Exception ex) { print.it("Failed to load snippets from " + file + "\r\n\t" + ex.ToStringWithoutStack()); }
@@ -158,7 +160,7 @@ static class CiSnippets {
 			if (!surround && v.Text.Ends("Surround")) continue;
 			if (inDirective) {
 				if (v.Text[0] != '#') continue;
-				v = new _CiComplItemSnippet(v.Text[1..], v.x, v.custom); //like in VS. Else typing-filtering does not work.
+				v = new _CiComplItemSnippet(v.Text[1..], v.x, v.customFile); //like in VS. Else typing-filtering does not work.
 			}
 			v.group = 0; v.hidden = 0; v.hilite = 0; v.moveDown = 0;
 			v.ci.Span = span;
@@ -307,7 +309,7 @@ static class CiSnippets {
 	
 	public static int Compare(CiComplItem i1, CiComplItem i2) {
 		if (i1 is _CiComplItemSnippet x && i2 is _CiComplItemSnippet y) {
-			return (x.custom ? 0 : 1) - (y.custom ? 0 : 1); //sort custom first
+			return (x.customFile != null ? 0 : 1) - (y.customFile != null ? 0 : 1); //sort custom first
 		}
 		return 0;
 	}
@@ -316,7 +318,9 @@ static class CiSnippets {
 		var snippet = item as _CiComplItemSnippet;
 		var m = new CiText();
 		m.StartParagraph();
-		m.Append("Snippet "); m.Bold(item.Text); m.Append(".");
+		m.Append("Snippet ");
+		m.StartBold(); m.Hyperlink($"^snippet {snippet.Text}|{snippet.customFile ?? "default"}", item.Text); m.EndBold(); //DSnippets.ShowSingle(snippet.Text);
+		m.Append(".");
 		_AppendInfo(snippet.x);
 		bool isList = snippet.x.HasElements;
 		if (isList) {
@@ -511,8 +515,7 @@ static class CiSnippets {
 			}
 		}
 		
-		var snippetMode = new CiSnippetMode(ref s, doc, varName, surroundText);
-		snippetMode.Start(pos, endPos, s);
+		new CiSnippetMode(pos, endPos, s, doc, varName, surroundText);
 		
 		if (_GetAttr("print", out var attrPrint)) {
 			print.it(attrPrint.Insert(attrPrint.Starts("<>") ? 2 : 0, "Snippet " + xSnippet.Attr("name") + " says: "));
@@ -538,7 +541,6 @@ class CiSnippetMode {
 	}
 	
 	SciCode _doc;
-	List<_Dollar> _dollars;
 	_Field[] _fields;
 	_Field _activeField, _modifiedField;
 	StartEnd _range;
@@ -548,7 +550,7 @@ class CiSnippetMode {
 	
 	const string c_markComment = "/*\f\v*/", c_markAlt = "__\f\v__";
 	
-	public CiSnippetMode(ref string s, SciCode doc, string varName, string selectedText) {
+	public CiSnippetMode(int pos, int endPos, string s, SciCode doc, string varName, string selectedText) {
 		_doc = doc;
 		_isSurround = !selectedText.NE();
 		
@@ -558,6 +560,7 @@ class CiSnippetMode {
 		//in a `/* */` use c_markAlt instead of c_markComment
 		var blockComments = s.RxIsMatch(@"/\*.+?\*/") && CiUtil.CreateSyntaxTree(s) is { } cu ? cu.DescendantTrivia().Where(o => o.Kind() is SyntaxKind.MultiLineCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia).Select(o => o.Span).ToArray() : null;
 		
+		List<_Dollar> dollars = null;
 		if (s.Contains('$')) {
 			StringBuilder b = new();
 			int i = 0;
@@ -569,7 +572,7 @@ class CiSnippetMode {
 					var v = m[3].Value;
 					b.Append(_Variable(v));
 				} else { //field, eg ${1:i} or $1
-					_dollars ??= new();
+					dollars ??= new();
 					
 					int n = m[1].Value.ToInt();
 					if (n == 0) {
@@ -579,7 +582,7 @@ class CiSnippetMode {
 					
 					string v = _Trim(m[2].Value);
 					if (v.NE()) {
-						if (n != 0) foreach (var q in _dollars) if (q.n == n && q.text != null) { v = q.text; break; } //eg `${n:s}, $n`. But ignore `$n, ${n:s}`, it's insane.
+						if (n != 0) foreach (var q in dollars) if (q.n == n && q.text != null) { v = q.text; break; } //eg `${n:s}, $n`. But ignore `$n, ${n:s}`, it's insane.
 					} else if (v.Starts('$')) {
 						v = _Variable(v[1..]);
 					}
@@ -588,7 +591,7 @@ class CiSnippetMode {
 					string v2 = v;
 					v ??= blockComments?.Any(o => o.ContainsInside(m.Start)) == true ? c_markAlt : c_markComment;
 					
-					_dollars.Add(new(n, v2, b.Length, v.Length));
+					dollars.Add(new(n, v2, b.Length, v.Length));
 					b.Append(v);
 				}
 			}
@@ -599,6 +602,8 @@ class CiSnippetMode {
 		}
 		
 		if (escaped) s = s.Replace('\uf100', '$').Replace('\uf101', '}').Replace('\uf102', '\\');
+		
+		_Start(pos, endPos, s, dollars);
 		
 		string _Variable(string v) {
 			string def = null;
@@ -637,45 +642,49 @@ class CiSnippetMode {
 		//	isFileTemplate.
 	}
 	
-	public void Start(int pos, int endPos, string s) {
-		bool deleteSemicolon = s.At_(CiUtil.SkipNewlineBack(s, s.Length) - 1) is ';' or '}';
-		
+	//s - snippet code modified by ctor.
+	void _Start(int pos, int endPos, string s, List<_Dollar> dollars) {
 		int pos0 = pos;
-		ModifyCode.FormatForInsert(ref s, ref pos, endPos, _dollars == null ? null : _ChangesCallback);
+		ModifyCode.FormatForInsert(ref s, ref pos, endPos, dollars == null ? null : _ChangesCallback);
 		
 		void _ChangesCallback(IList<TextChange> a) {
-			var dollars = _dollars.AsSpan();
-			foreach (ref var v in dollars) v.offset += pos0 - pos;
-			for (int i = dollars.Length; --i >= 0;) {
-				int dStart = dollars[i].offset + pos, dEnd = dStart + dollars[i].len;
+			var d = dollars.AsSpan();
+			foreach (ref var v in d) v.offset += pos0 - pos;
+			for (int i = d.Length; --i >= 0;) {
+				int dStart = d[i].offset + pos, dEnd = dStart + d[i].len;
 				//print.it($"dStart={dStart}, dEnd={dEnd}");
 				foreach (var v in a) {
 					int cStart = v.Span.Start, cEnd = v.Span.End;
 					if (cStart >= dEnd) break;
 					Debug.Assert(!((cStart < dStart && cEnd > dStart) || (cStart < dEnd && cEnd > dEnd))); //a change must not span dStart or dEnd
 					var dif = v.NewText.Length - (cEnd - cStart);
-					if (cStart <= dStart) dollars[i].offset += dif;
-					else dollars[i].len += dif;
+					if (cStart <= dStart) d[i].offset += dif;
+					else d[i].len += dif;
 				}
 			}
 		}
 		
-		if (deleteSemicolon && _doc.aaaText.RxMatch(@"\G\h*;", 0, out RXGroup g, range: endPos..)) {
-			endPos += g.Length;
-			if (s.Ends(' ')) s = s[..^1]; //added when formatting
+		//delete semicolon?
+		if (_doc.aaaText.Eq(endPos, ';') ) {
+			var cu = CiUtil.CreateSyntaxTree(s);
+			var tok = cu.GetLastToken(includeSkipped: true, includeDirectives: true);
+			if (tok.Kind() is SyntaxKind.SemicolonToken or SyntaxKind.CloseBraceToken || tok.Parent is DirectiveTriviaSyntax || tok.Parent?.Parent is DirectiveTriviaSyntax) {
+				endPos++;
+				if (s.Ends(' ')) s = s[..^1]; //added when formatting
+			}
 		}
 		
 		//CodeInfo.Pasting(_doc, silent: true); //to auto-add missing using directives //rejected. Does not work well with EReplaceTextGently (because it makes multiple modifications). Namespaces can be specified in snippet.
-		if (_dollars == null) {
+		if (dollars == null) {
 			_doc.aaaReplaceRange(true, pos, endPos, s, true);
 		} else {
 			//remove markers of empty fields
-			for (int i = _dollars.Count; --i >= 0;) {
-				if (_dollars[i].text == null) {
-					int len = _dollars[i].len;
-					s = s.Remove(_dollars[i].offset, len);
-					_dollars.Ref(i).len = 0;
-					for (int j = i + 1; j < _dollars.Count; j++) _dollars.Ref(j).offset -= len;
+			for (int i = dollars.Count; --i >= 0;) {
+				if (dollars[i].text == null) {
+					int len = dollars[i].len;
+					s = s.Remove(dollars[i].offset, len);
+					dollars.Ref(i).len = 0;
+					for (int j = i + 1; j < dollars.Count; j++) dollars.Ref(j).offset -= len;
 				}
 			}
 			//never mind: the formatter splits line `/*mark*/code` -> `/*mark*/\r\ncode`
@@ -684,13 +693,13 @@ class CiSnippetMode {
 			else _doc.aaaReplaceRange(true, pos, endPos, s);
 			
 			int nDollar0 = 0; //max 1
-			foreach (ref var v in _dollars.AsSpan()) {
+			foreach (ref var v in dollars.AsSpan()) {
 				v.offset += pos;
 				if (v.n == 0) nDollar0++;
 			}
 			
-			if (_dollars.Count == 1) {
-				var d = _dollars[0];
+			if (dollars.Count == 1) {
+				var d = dollars[0];
 				_doc.aaaSelect(true, d.offset, d.offset + d.len, makeVisible: true);
 				
 				//show signature if like `Method($0...``. Also may need to add temp range.
@@ -705,11 +714,11 @@ class CiSnippetMode {
 					if (showSignature) CodeInfo.ShowSignature();
 				}
 			} else {
-				_fields = new _Field[_dollars.Count - nDollar0];
+				_fields = new _Field[dollars.Count - nDollar0];
 				_finalCaretPos = -1;
 				
 				int fi = 0, iStart = 0, nStart = int.MaxValue;
-				foreach (var v in _dollars) {
+				foreach (var v in dollars) {
 					if (v.n == 0) {
 						_finalCaretPos = _doc.aaaPos8(v.offset);
 					} else {
@@ -737,7 +746,7 @@ class CiSnippetMode {
 		
 		_doc.aaaIndicatorClear(SciCode.c_indicSnippetField);
 		
-		_FieldLeaved();
+		_FieldLeaved(true);
 		
 		if (goToFinal) _doc.aaaGoToPos(false, _finalCaretPos >= 0 ? _finalCaretPos : _range.end);
 	}
@@ -747,7 +756,10 @@ class CiSnippetMode {
 		_FieldLeaved();
 		_activeField = field;
 		foreach (var f in _fields) {
-			if (f.n == field.n) _doc.aaaIndicatorAdd(SciCode.c_indicSnippetFieldActive, false, f.start..f.end, f.n);
+			if (f.n == field.n) {
+				_doc.aaaIndicatorAdd(SciCode.c_indicSnippetFieldActive, false, f.start..f.end, f.n);
+				_doc.aaaIndicatorClear(SciCode.c_indicSnippetField, false, f.start..f.end); //erase c_indicSnippetField to avoid mixed color
+			}
 		}
 		if (select) {
 			_ignorePosChanged = true;
@@ -756,11 +768,16 @@ class CiSnippetMode {
 		}
 	}
 	
-	void _FieldLeaved() {
+	void _FieldLeaved(bool ending = false) {
 		if (_activeField == null) return;
-		_activeField = null;
+		var af = _activeField; _activeField = null;
 		_doc.aaaIndicatorClear(SciCode.c_indicSnippetFieldActive);
-		_ReplaceTextOfRelatedFields();
+		if (!ending) { //restore c_indicSnippetField erased by _SetActiveField
+			foreach (var v in _fields) {
+				if (v.n == af.n) _doc.aaaIndicatorAdd(SciCode.c_indicSnippetField, false, v.start..v.end, v.n);
+			}
+		}
+		_ReplaceTextOfRelatedFields(ending);
 	}
 	
 	_Field _FieldFromPos(int pos, int pos2) {
@@ -813,8 +830,7 @@ class CiSnippetMode {
 		if (_finalCaretPos >= pos2) _finalCaretPos += len;
 		_range.end += len;
 		
-		_doc.aaaIndicatorAdd(SciCode.c_indicSnippetField, false, field.start..field.end, field.n);
-		if (_activeField != null) _doc.aaaIndicatorAdd(SciCode.c_indicSnippetFieldActive, false, field.start..field.end, field.n);
+		_doc.aaaIndicatorAdd(_activeField != null ? SciCode.c_indicSnippetFieldActive : SciCode.c_indicSnippetField, false, field.start..field.end, field.n);
 		
 		_modifiedField = field;
 		
@@ -867,7 +883,7 @@ class CiSnippetMode {
 		}
 	}
 	
-	unsafe void _ReplaceTextOfRelatedFields() {
+	unsafe void _ReplaceTextOfRelatedFields(bool ending) {
 		var field = _modifiedField; if (field == null) return;
 		_modifiedField = null;
 		if (_fields.Any(o => o.n == field.n && o != field)) {
@@ -903,7 +919,7 @@ class CiSnippetMode {
 				MemoryUtil.Free(text);
 				_ignoreModified = false;
 			}
-			if (_doc.SnippetMode_ == this) { //else called from End()
+			if (!ending) {
 				foreach (var f in _fields) {
 					if (f.n == field.n && f != field) {
 						_doc.aaaIndicatorAdd(SciCode.c_indicSnippetField, false, f.start..f.end, f.n);

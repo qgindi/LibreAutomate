@@ -284,7 +284,7 @@ static class CiFind {
 	}
 	
 	public static void SciUpdateUI(SciCode doc, bool modified) {
-		if (modified || 0 == doc.aaaIndicGetValue(SciCode.c_indicRefs, doc.aaaCurrentPos8) || doc.aaaHasSelection)
+		if (modified || 0 == doc.aaaIndicatorGetValue(SciCode.c_indicRefs, doc.aaaCurrentPos8) || doc.aaaHasSelection)
 			doc.aaaIndicatorClear(SciCode.c_indicRefs);
 		doc.aaaIndicatorClear(SciCode.c_indicBraces);
 		_cancelTS?.Cancel();
@@ -337,7 +337,10 @@ static class CiFind {
 					}
 				}
 				
-				foreach (var v in ar) cd.sci.aaaIndicatorAdd(SciCode.c_indicRefs, true, v);
+				foreach (var v in ar) {
+					if (cd.sci.SnippetMode_ != null && 0 != (cd.sci.aaaIndicatorGetAll(v.Start.Value, true) & 1 << SciCode.c_indicSnippetFieldActive)) continue; //avoid mixed color
+					cd.sci.aaaIndicatorAdd(SciCode.c_indicRefs, true, v);
+				}
 			}
 			catch (OperationCanceledException) { return; }
 			catch (Exception e1) { Debug_.Print(e1); } //Roslyn bug: when caret at '!=' in 'if (Sheet != App.ActiveSheet)' (COM)
@@ -628,7 +631,7 @@ static class CiFind {
 					var a = _a[j].a;
 					for (int i = 0; i < a.Count; i++) {
 						if (a[i].marker == 0) continue;
-						if (0 != _sciPreview.aaaIndicGetValue(PanelFound.Indicators.Excluded, _sciPreview.aaaLineStart(false, line++)))
+						if (0 != _sciPreview.aaaIndicatorGetValue(PanelFound.Indicators.Excluded, _sciPreview.aaaLineStart(false, line++)))
 							a.RemoveAt(i--);
 					}
 					if (a.Count == 0) _a.RemoveAt(j--);

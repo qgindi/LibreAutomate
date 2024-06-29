@@ -10,6 +10,8 @@ To restart as administrator the program uses Windows Task Scheduler task `\Au\Au
 
 **/v** - show the main window when started, regardless of program settings.
 
+**/a** - indicates that the program started automatically and therefore must ignore **Options > Program > Visible if not auto-started**. Used by **Options > Program > Start with Windows**.
+
 **/reload** - if the program is running, reload current workspace.
 
 **"script name or relative path in current workspace"** - run the script. Can be followed by script's command line arguments (the *args* variable).

@@ -261,9 +261,9 @@ class PanelFound {
 			case Api.WM_CONTEXTMENU:
 				if (kind == Found.SymbolRename) {
 					int i = aaaCurrentPos8;
-					if (0 != aaaIndicGetValue(Indicators.Link2, i)) {
+					if (0 != aaaIndicatorGetValue(Indicators.Link2, i)) {
 						var v = aaaLineStartEndFromPos(false, i);
-						if (0 == aaaIndicGetValue(Indicators.Excluded, i)) aaaIndicatorAdd(Indicators.Excluded, false, v.start..v.end);
+						if (0 == aaaIndicatorGetValue(Indicators.Excluded, i)) aaaIndicatorAdd(Indicators.Excluded, false, v.start..v.end);
 						else aaaIndicatorClear(Indicators.Excluded, false, v.start..v.end);
 					}
 				}

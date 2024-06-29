@@ -1446,11 +1446,18 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <seealso cref="IsAscii(RStr)"/>
 	public static bool IsAscii(this string t) => t.AsSpan().IsAscii();
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
+#if NET8_0_OR_GREATER
 	public static bool IsAscii(this RStr t) => !t.ContainsAnyExceptInRange((char)0, (char)127);
+#else
+	public static bool IsAscii(this RStr t) { //much slower with long strings
+		foreach (char c in t) if (c > 0x7f) return false;
+		return true;
+	}
+#endif
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static int LengthThrowIfNull_(this RStr t) {

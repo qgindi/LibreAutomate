@@ -41,7 +41,7 @@ record AppSettings : JSettings {
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings\";
 #endif
 	
-	public bool runHidden;
+	public bool runHidden, startVisibleIfNotAutoStarted;
 	public string user, workspace;
 	public string[] recentWS;
 	public bool checkForUpdates;

@@ -76,6 +76,22 @@ static class CiUtil {
 	}
 	
 	/// <summary>
+	/// Skips <c>' '</c>, <c>'\t'</c>, <c>'\r'</c> and <c>'\n'</c> characters after <i>pos</i>.
+	/// </summary>
+	public static int SkipSpaceAndNewline(string code, int pos) {
+		while (pos < code.Length && code[pos] is ' ' or '\t' or '\r' or '\n') pos++;
+		return pos;
+	}
+	
+	/// <summary>
+	/// Skips <c>' '</c>, <c>'\t'</c>, <c>'\r'</c> and <c>'\n'</c> characters before <i>pos</i>.
+	/// </summary>
+	public static int SkipSpaceAndNewlineBack(string code, int pos) {
+		while (pos > 0 && code[pos - 1] is ' ' or '\t' or '\r' or '\n') pos--;
+		return pos;
+	}
+	
+	/// <summary>
 	/// Returns true if i is at a line start + any number of spaces and tabs.
 	/// </summary>
 	public static bool IsLineStart(RStr s, int i/*, out int startOfLine*/) {

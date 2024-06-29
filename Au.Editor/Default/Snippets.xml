@@ -2,11 +2,16 @@
 
 	<!--context="Function"-->
 
-	<snippet name="ifElseSnippet" info="if { code } else { code }.">
+	<snippet name="ifElseSnippet" info="if { code } else { code }">
 		<![CDATA[if (${1:true}) {
 	${SELECTED_TEXT}$0
 } else {
 	
+}]]>
+	</snippet>
+	<snippet name="ifSurround" info="if { code }">
+		<![CDATA[if (${1:true}) {
+	${SELECTED_TEXT}$0
 }]]>
 	</snippet>
 	<snippet name="forLoopSnippet" info="Repeat { code } count times." more="See also: Cookbook recipe &quot;for, foreach&quot;.">

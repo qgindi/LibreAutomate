@@ -113,9 +113,17 @@ public partial class KScintilla {
 	/// <summary>
 	/// SCI_INDICATORVALUEAT.
 	/// </summary>
-	public int aaaIndicGetValue(int indic, int pos, bool utf16 = false) {
+	public int aaaIndicatorGetValue(int indic, int pos, bool utf16 = false) {
 		if (utf16) pos = aaaPos8(pos);
 		return Call(SCI_INDICATORVALUEAT, indic, pos);
+	}
+	
+	/// <summary>
+	/// SCI_INDICATORALLONFOR. Returns a bitmap value representing which indicators are non-zero at <i>pos</i>.
+	/// </summary>
+	public int aaaIndicatorGetAll(int pos, bool utf16 = false) {
+		if (utf16) pos = aaaPos8(pos);
+		return Call(SCI_INDICATORALLONFOR, pos);
 	}
 	
 	#endregion

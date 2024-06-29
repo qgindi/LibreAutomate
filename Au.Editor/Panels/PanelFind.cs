@@ -65,7 +65,8 @@ class PanelFind {
 		foreach (var v in new[] { _cCase, _cWord, _cRegex }) v.CheckChanged += _CheckedChanged;
 		
 		P.IsVisibleChanged += (_, _) => {
-			Panels.Editor.ActiveDoc?.EInicatorsFound_(P.IsVisible ? _aEditor : null);
+			if (P.IsVisible) UpdateQuickResults();
+			else foreach (var d in Panels.Editor.OpenDocs) d.EInicatorsFound_(null);
 		};
 	}
 	
@@ -320,8 +321,7 @@ This setting also is used by 'Find references' etc.
 		if (!P.IsVisible) return;
 		
 		_timerUQR ??= new timer(_ => {
-			_FindAllInEditor();
-			Panels.Editor.ActiveDoc?.EInicatorsFound_(_aEditor);
+			Panels.Editor.ActiveDoc?.EInicatorsFound_(_FindAllInEditor());
 		});
 		
 		_timerUQR.After(150);
@@ -562,13 +562,12 @@ This setting also is used by 'Find references' etc.
 		return true;
 	}
 	
-	List<Range> _aEditor = new(); //all found in editor text
-	
-	void _FindAllInEditor() {
-		_aEditor.Clear();
-		if (!_GetTextToFind(out var ttf, noRecent: true, noErrorTooltip: true)) return;
-		var text = Panels.Editor.ActiveDoc?.aaaText; if (text.NE()) return;
-		_FindAllInString(text, ttf, (start, end) => _aEditor.Add(start..end));
+	List<Range> _FindAllInEditor() {
+		if (!_GetTextToFind(out var ttf, noRecent: true, noErrorTooltip: true)) return null;
+		var text = Panels.Editor.ActiveDoc?.aaaText; if (text.NE()) return null;
+		List<Range> a = new(); //all found in editor text
+		_FindAllInString(text, ttf, (start, end) => a.Add(start..end));
+		return a;
 	}
 	
 	#endregion

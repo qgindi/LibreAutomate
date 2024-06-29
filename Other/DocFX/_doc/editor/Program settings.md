@@ -19,13 +19,16 @@ If you want to copy settings and workspaces to another computer, copy folder `Do
 #### Start with Windows
 Run this program at Windows startup. This setting is saved in the Registry.
 
-#### Start hidden; hide when closing
-Don't show the window when the program started. To show the window, you can click the tray icon or run the program again. When you close the window, the program does not exit; just hides the window.
+#### Start hidden; let X hide
+Don't show the main window when the program started. To show the window, you can click the tray icon or run the program again. When you close the window, the program does not exit; just hides the window.
 
 If unchecked, shows the window at startup. The program exits when you close the window.
 
+#### Visible if not auto-started
+Apply the **Start hidden** part of the above setting only if the program started with command line `/a`. Note: `/a` is used by **Start with Windows**.
+
 #### Check for updates
-Every day connect to `libreautomate.com` to get program version info. If a new version available, print this info in the output panel.
+Every day connect to `libreautomate.com` to get program version info. If a new version available, print it in the output panel.
 
 ### Workspace
 These settings are workspace-specific. Security: the scripts will not run on other computers, unless the user settings file copied there too.

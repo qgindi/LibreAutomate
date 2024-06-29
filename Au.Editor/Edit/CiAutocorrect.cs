@@ -102,7 +102,7 @@ class CiAutocorrect {
 			
 			if (hasSelection) {
 				if (_Selection()) return true;
-				if (_AutoSemicolon()) doc.aaaSelect(false, pos8, selEnd8);
+				_AutoSemicolon();
 				return false;
 			}
 			
@@ -257,9 +257,9 @@ class CiAutocorrect {
 				if (node is not StatementSyntax || cd.pos < node.Span.End) return false;
 				if (IsSwitchSectionEndStatement_(node)) return false; //after `break;` etc in `switch`, probably starting to type `case` or `default`
 				if (node is EmptyStatementSyntax && cd.pos == node.Span.End) {
+					if (hasSelection) cd.sci.aaaReplaceSel("");
 					cd.sci.aaaGoToPos(true, node.SpanStart);
 					return true;
-			//TODO: on '/' skip `;` like on ';'
 				}
 				break;
 			case SyntaxKind.ColonToken:
@@ -274,7 +274,8 @@ class CiAutocorrect {
 			}
 			if (CiUtil.IsPosInNonblankTrivia(cd.syntaxRoot, cd.pos, cd.code)) return false;
 			
-			doc.aaaInsertText(false, pos8, ";");
+			doc.aaaInsertText(false, selEnd8, ";");
+			if (hasSelection) doc.aaaSelect(false, pos8, selEnd8);
 			return true;
 		}
 		
@@ -469,8 +470,10 @@ class CiAutocorrect {
 				default:
 					if (kind != SyntaxKind.Interpolation) {
 						var g = code.At_(cd.pos);
-						if (g > ' ' && !(g is '/' && code.At_(cd.pos + 1) is '/' or '*'))
-							if (!(g is ';' or ',' or ':' or '?' or '{' or '}' or '(' or ')' or '[' or ']' or '#')) return;
+						if (g > ' ' && !(g is '/' && code.At_(cd.pos + 1) is '/' or '*')) {
+							if (!(g is ';' or ',' or '.' or ':' or '?' or '{' or '}' or '(' or ')' or '[' or ']' or '#')) return;
+							if ((ch, g) is ('(', '(')) return;
+						}
 						
 						if (CiUtil.IsPosInNonblankTrivia(node, pos, code)) return;
 					}

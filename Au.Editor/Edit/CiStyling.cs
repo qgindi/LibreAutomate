@@ -475,6 +475,8 @@ partial class CiStyling {
 		public TIndicator IndicBraces = new(0x80C000, 255);
 		public TIndicator IndicDebug = new(0xFFF181, 255);
 		public TIndicator IndicFound = new(0xffff00, 255);
+		public TIndicator IndicSnippetField = new(0xe0a000, 60);
+		public TIndicator IndicSnippetFieldActive = new(0x33ADFF, 60);
 		
 		public int SelColor = unchecked((int)0xA0A0A0A0);
 		public int SelNofocusColor = 0x60A0A0A0;
@@ -554,6 +556,8 @@ partial class CiStyling {
 				case nameof(IndicBraces) or "IndicBracesColor": _Indic(ref IndicBraces); break;
 				case nameof(IndicDebug) or "IndicDebugColor": _Indic(ref IndicDebug); break;
 				case nameof(IndicFound) or "IndicFoundColor": _Indic(ref IndicFound); break;
+				case nameof(IndicSnippetField): _Indic(ref IndicSnippetField); break;
+				case nameof(IndicSnippetFieldActive): _Indic(ref IndicSnippetFieldActive); break;
 				case nameof(SelColor): _Int(ref SelColor); break;
 				case nameof(SelNofocusColor): _Int(ref SelNofocusColor); break;
 				}
@@ -617,6 +621,8 @@ partial class CiStyling {
 			_Indic(nameof(IndicBraces), IndicBraces);
 			_Indic(nameof(IndicDebug), IndicDebug);
 			_Indic(nameof(IndicFound), IndicFound);
+			_Indic(nameof(IndicSnippetField), IndicSnippetField);
+			_Indic(nameof(IndicSnippetFieldActive), IndicSnippetFieldActive);
 			_Int(nameof(SelColor), SelColor);
 			_Int(nameof(SelNofocusColor), SelNofocusColor);
 			
@@ -687,8 +693,8 @@ partial class CiStyling {
 			_Indic(SciCode.c_indicDebug, IndicDebug.color, IndicDebug.alpha, INDIC_FULLBOX);
 			_Indic(SciCode.c_indicDebug2, IndicDebug.color, 128 + IndicDebug.alpha / 2, INDIC_GRADIENTCENTRE);
 			_Indic(SciCode.c_indicFound, IndicFound.color, IndicFound.alpha, INDIC_FULLBOX);
-			_Indic(SciCode.c_indicSnippetField, 0xe0a000, 60, INDIC_FULLBOX);
-			_Indic(SciCode.c_indicSnippetFieldActive, 0x80E000, 60, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicSnippetField, IndicSnippetField.color, IndicSnippetField.alpha, INDIC_FULLBOX);
+			_Indic(SciCode.c_indicSnippetFieldActive, IndicSnippetFieldActive.color, IndicSnippetFieldActive.alpha, INDIC_FULLBOX);
 #if DEBUG
 			_Indic(SciCode.c_indicTestBox, 0xff0000, 60, INDIC_FULLBOX);
 			sci.aaaIndicatorDefine(SciCode.c_indicTestStrike, INDIC_STRIKE, 0xff0000);
@@ -746,6 +752,8 @@ partial class CiStyling {
 			case SciCode.c_indicBraces: return ref IndicBraces;
 			case SciCode.c_indicDebug: return ref IndicDebug;
 			case SciCode.c_indicFound: return ref IndicFound;
+			case SciCode.c_indicSnippetField: return ref IndicSnippetField;
+			case SciCode.c_indicSnippetFieldActive: return ref IndicSnippetFieldActive;
 			}
 			throw new InvalidEnumArgumentException();
 		}

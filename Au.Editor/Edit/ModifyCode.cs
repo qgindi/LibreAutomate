@@ -340,8 +340,7 @@ static class ModifyCode {
 	/// </summary>
 	/// <returns><c>true</c> if formatted.</returns>
 	public static bool FormatForInsert(ref string s, ref int start, int end, Action<IList<TextChange>> changes = null) {
-		if (s.NE()) return false;
-		if (!CodeInfo.GetContextAndDocument(out var cd, start, metaToo: true)) return false;
+		if (!CodeInfo.GetContextAndDocument(out var cd, start, metaToo: true) || s.NE()) return false;
 		
 		var code = cd.code.ReplaceAt(start..end, s);
 		int end2 = start + s.Length;

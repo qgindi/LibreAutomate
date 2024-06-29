@@ -106,7 +106,7 @@ static partial class App {
 		
 		_app.MainWindow = Wmain = new MainWindow();
 		//perf.next('w');
-		if (!Settings.runHidden || CommandLine.StartVisible) ShowWindow();
+		if (!Settings.runHidden || CommandLine.StartVisible || (App.Settings.startVisibleIfNotAutoStarted && !CommandLine.AutoStarted)) ShowWindow();
 		//perf.next('W');
 		
 		s_timer = timer.every(1000, _TimerProc);

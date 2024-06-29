@@ -593,7 +593,7 @@ partial class SciCode : KScintilla {
 			_indicHaveFound = false;
 			aaaIndicatorClear(c_indicFound);
 		}
-		if (a == null || a.Count == 0) return;
+		if (a.NE_()) return;
 		_indicHaveFound = true;
 		
 		foreach (var v in a) aaaIndicatorAdd(c_indicFound, true, v);

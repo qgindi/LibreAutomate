@@ -50,6 +50,9 @@ static class CommandLine {
 						case "v":
 							StartVisible = true;
 							break;
+						case "a":
+							AutoStarted = true;
+							break;
 						case "reload":
 							cmd = -5;
 							break;
@@ -125,6 +128,11 @@ static class CommandLine {
 	/// true if /v
 	/// </summary>
 	public static bool StartVisible;
+	
+	/// <summary>
+	/// true if /sww
+	/// </summary>
+	public static bool AutoStarted;
 	
 	/// <summary>
 	/// true if /raa

@@ -21,8 +21,10 @@ using System.Windows.Documents;
 using System.Text.Json.Nodes;
 
 class DSnippets : KDialogWindow {
-	public static void ShowSingle() {
-		ShowSingle(() => new DSnippets());
+	/// <param name="openSnippet">Open this snippet. Must be <c>"snippetName|fileName.ext"</c>.</param>
+	public static void ShowSingle(string openSnippet = null) {
+		var d = ShowSingle(() => new DSnippets());
+		if (openSnippet != null) d._SelectAndOpen(openSnippet);
 	}
 	
 	List<_Item> _files;
@@ -314,6 +316,18 @@ class DSnippets : KDialogWindow {
 		_tv.SelectSingle(t, andFocus: true);
 		_tv.EnsureVisible(t);
 		if (t != _ti) _Open(t);
+	}
+	
+	void _SelectAndOpen(string s) {
+		if (!s.Split2_('|', out var snippet, out var file, 1, 1)) return;
+		foreach (var f in _files) {
+			if (f.text.Eqi(file)) {
+				if (f.Children().FirstOrDefault(o => o.text == snippet) is { } t) {
+					_SelectAndOpen(t);
+				}
+				break;
+			}
+		}
 	}
 	
 	void _Remove(_Item t, bool cut = false) {
@@ -680,7 +694,7 @@ class DSnippets : KDialogWindow {
 			foreach (var xSnippet in xSnippets.Elements(ns + "CodeSnippet")) {
 				if (xSnippet.Attr("Format") is string format && !format.Starts("1.")) { print.warning($"Snippet format {format} not supported."); continue; }
 				var xs = xSnippet.Element(ns + "Snippet");
-				var s = xs.Elem(ns + "Code", "Language", "csharp")?.Value;
+				var s = xs.Elem(ns + "Code", "Language", "csharp", true)?.Value;
 				if (_ImportSkip(s)) continue;
 				
 				List<(string id, string def)> ad = null;

@@ -52,11 +52,12 @@ class DOptions : KDialogWindow {
 		var b = _Page("Program").Columns(-1, 20, -1);
 		
 		//left column
-		b.StartGrid().Columns(-1, 0);
+		b.StartGrid();
 		b.R.Add(out KCheckBox startWithWin, "Start with Windows"); //note: must be the first checkbox in Options, and don't change text, because used for the forum registration security question
-		b.R.Add(out KCheckBox startHidden, "Start hidden; hide when closing").Checked(App.Settings.runHidden);
-		b.R.Add(out KCheckBox checkForUpdates, "Check for updates every day").Checked(App.Settings.checkForUpdates)
-			.AddButton("Now", o => App.CheckForUpdates(o.Button));
+		b.R.Add(out KCheckBox startHidden, wpfBuilder.formattedText($"Start hidden; let <s b='#C42B1C' c='white' FontFamily='Segoe UI Symbol' FontSize='11'>  ✖  </s> hide")).Checked(App.Settings.runHidden);
+		b.R.Add(out KCheckBox visibleIfNotAutoStarted, "Visible if not auto-started").Margin(22).Checked(App.Settings.startVisibleIfNotAutoStarted).xBindCheckedEnabled(startHidden);
+		b.R.Add(out KCheckBox checkForUpdates, "Check for updates every day").Checked(App.Settings.checkForUpdates);
+		b.R.AddButton("Check for updates now", o => App.CheckForUpdates(o.Button)).Margin(22).Width(150, "L");
 		b.End();
 		
 		//right column
@@ -64,25 +65,24 @@ class DOptions : KDialogWindow {
 		b.End();
 		
 		b.End();
-		
-		//b.Loaded += () => {
-		
-		//};
+
 		const string c_rkRun = @"Software\Microsoft\Windows\CurrentVersion\Run";
-		bool init_startWithWin = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) is string s1 && filesystem.more.isSameFile(s1.Trim('"'), process.thisExePath);
-		startWithWin.IsChecked = init_startWithWin;
+		string init_swwValue = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) as string;
+		bool init_swwYes = true == init_swwValue?.RxMatch($"^\"(.+?)\"", 1, out string s1) && filesystem.more.isSameFile(s1, process.thisExePath);
+		startWithWin.IsChecked = init_swwYes;
 		if (App.IsPortable) startWithWin.Checked += (_, _) => dialog.showWarning("Portable mode warning", "This setting will be saved in the Registry. Portable apps should not do it.", owner: this);
 		
 		_b.OkApply += e => {
-			if (startWithWin.IsChecked != init_startWithWin) {
+			if (startWithWin.IsChecked != init_swwYes || (init_swwYes && !init_swwValue.Ends(" /a"))) {
 				try {
 					using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
-					if (init_startWithWin) rk.DeleteValue("Au.Editor");
-					else rk.SetValue("Au.Editor", $"\"{process.thisExePath}\"");
+					if (init_swwYes = startWithWin.IsChecked) rk.SetValue("Au.Editor", init_swwValue = $"\"{process.thisExePath}\" /a");
+					else rk.DeleteValue("Au.Editor");
 				}
 				catch (Exception ex) { print.it("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 			}
 			App.Settings.runHidden = startHidden.IsChecked;
+			App.Settings.startVisibleIfNotAutoStarted = visibleIfNotAutoStarted.IsChecked;
 			App.Settings.checkForUpdates = checkForUpdates.IsChecked;
 		};
 	}
@@ -178,7 +178,7 @@ class DOptions : KDialogWindow {
 		var b = _Page("Font, colors", WBPanelType.Dock);
 		b.Options(bindLabelVisibility: true);
 		
-		b.Add(out KScintilla sciStyles).Width(150);
+		b.Add(out KScintilla sciStyles).Width(180);
 		sciStyles.AaInitBorder = true;
 		sciStyles.Name = "styles";
 		//note: not readonly. Eg users may want to paste and see any character in multiple fonts.
@@ -282,7 +282,7 @@ class DOptions : KDialogWindow {
 				("Variable", c_isStyle, (int)EStyle.Variable),
 				("Constant", c_isStyle, (int)EStyle.Constant),
 				("GotoLabel", c_isStyle, (int)EStyle.Label),
-				("#preprocessor", c_isStyle, (int)EStyle.Preprocessor),
+				("#directive", c_isStyle, (int)EStyle.Preprocessor),
 				("#if-disabled", c_isStyle, (int)EStyle.Excluded),
 				("/// doc text", c_isStyle, (int)EStyle.XmlDocText),
 				("/// <doc tag>", c_isStyle, (int)EStyle.XmlDocTag),
@@ -299,9 +299,11 @@ class DOptions : KDialogWindow {
 				("Symbol highlight", c_isIndicator, SciCode.c_indicRefs),
 				("Brace highlight", c_isIndicator, SciCode.c_indicBraces),
 				("Debug highlight", c_isIndicator, SciCode.c_indicDebug),
+				("Snippet field", c_isIndicator, SciCode.c_indicSnippetField),
+				("Snippet field active", c_isIndicator, SciCode.c_indicSnippetFieldActive),
 
 				("Selection", c_isElement, Sci.SC_ELEMENT_SELECTION_BACK),
-				("Sel. no focus", c_isElement, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
+				("Selection no focus", c_isElement, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
 			];
 			
 			sciStyles.aaaText = string.Join("\r\n", table.Select(o => o.name));
@@ -321,7 +323,7 @@ class DOptions : KDialogWindow {
 			sciStyles.AaNotify += e => {
 				switch (e.n.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
-					int i = sciStyles.aaaIndicGetValue(indicHidden, sciStyles.aaaLineStartFromPos(false, sciStyles.aaaCurrentPos8)) - 1;
+					int i = sciStyles.aaaIndicatorGetValue(indicHidden, sciStyles.aaaLineStartFromPos(false, sciStyles.aaaCurrentPos8)) - 1;
 					if (i != currentItem && i >= 0) {
 						currentItem = i;
 						var k = table[i];
