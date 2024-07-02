@@ -140,7 +140,7 @@ namespace Au.More {
 			int n = nChars + 1; if (!ansiString) n *= 2; //bytes with '\0'
 			using FastBuffer<byte> b = new(n);
 			if (!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, b.p, n, null)) return null;
-			if (findLength) nChars = ansiString ? BytePtr_.Length(b.p, nChars) : CharPtr_.Length((char*)b.p, nChars);
+			if (findLength) nChars = ansiString ? Ptr_.Length(b.p, nChars) : Ptr_.Length((char*)b.p, nChars);
 			enc ??= Encoding.Default;
 			return ansiString ? new((sbyte*)b.p, 0, nChars, enc) : new((char*)b.p, 0, nChars);
 		}

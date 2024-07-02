@@ -198,7 +198,7 @@ namespace Au.More {
 		/// </summary>
 		public int FindStringLength() {
 			if (sizeof(T) != 2) throw new InvalidOperationException();
-			return CharPtr_.Length((char*)_p, _n);
+			return Ptr_.Length((char*)_p, _n);
 		}
 
 		/// <summary>
@@ -207,7 +207,7 @@ namespace Au.More {
 		/// </summary>
 		public int FindByteStringLength() {
 			if (sizeof(T) != 1) throw new InvalidOperationException();
-			return BytePtr_.Length((byte*)_p, _n);
+			return Ptr_.Length((byte*)_p, _n);
 		}
 	}
 }

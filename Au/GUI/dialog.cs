@@ -1592,12 +1592,13 @@ namespace Au {
 			string buttons = "1 OK|2 Cancel", Action<DEventArgs> onButtonClick = null
 			) {
 			if (buttons.NE()) buttons = "1 OK|2 Cancel";
+			if (editType == 0) editType = DEdit.Text;
 			
 			var d = new dialog(text1, text2, buttons, flags, 0, owner,
 				expandedText, footer, title, controls,
 				0, x, y, screen, secondsTimeout, onLinkClick);
 			
-			d.SetEditControl(editType == DEdit.None ? DEdit.Text : editType, editText, comboItems);
+			d.SetEditControl(editType, editText, comboItems);
 			if (onButtonClick != null) d.ButtonClicked += onButtonClick;
 			
 			bool r = 1 == d.ShowDialog();

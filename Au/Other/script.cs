@@ -6,6 +6,8 @@ namespace Au;
 /// </summary>
 /// <seealso cref="process"/>
 public static class script {
+	#region properties
+	
 	/// <summary>
 	/// Gets the script name, like <c>"Script123"</c>.
 	/// </summary>
@@ -24,7 +26,6 @@ public static class script {
 	/// </summary>
 	public static SRole role { get; internal set; }
 	
-#if true
 	/// <summary>
 	/// Gets path of the caller source code file.
 	/// </summary>
@@ -55,43 +56,6 @@ public static class script {
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //replaced with sourcePath. Limited and unclear.
 	public static string path => sourcePath(true);
-#else
-	/// <summary>
-	/// Gets path of the caller source code file or of its folder.
-	/// </summary>
-	/// <param name="folder">Get path of the parent folder.</param>
-	/// <param name="f_">[](xref:caller_info)</param>
-	/// <seealso cref="CallerFilePathAttribute"/>
-	/// <seealso cref="folders.sourceCode(string)"/>
-	public static string sourcePath(bool folder = false, [CallerFilePath] string f_ = null) {
-		return folder ? pathname.getDirectory(f_) : f_;
-	}
-	
-	/// <summary>
-	/// Gets path of the main source code file of this program or of a library.
-	/// </summary>
-	/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
-	/// <param name="folder">Get path of the parent folder.</param>
-	/// <param name="inWorkspace">Get path in the workspace, like <c>@"\Script1.cs"</c> or <c>@"\Folder1\Script1.cs"</c>.</param>
-	/// <returns><c>null</c> if failed.</returns>
-	/// <remarks>
-	/// When compiling, LibreAutomate adds <see cref="PathInWorkspaceAttribute"/> to the assembly. Then at run time this function gets its value. Returns <c>null</c> if compiled by some other compiler.
-	/// </remarks>
-	/// <seealso cref="folders.sourceCodeMain(Assembly)"/>
-	public static string sourcePath(Assembly asm, bool folder = false, bool inWorkspace = false) {
-		asm ??= AssemblyUtil_.GetEntryAssembly();
-		if (asm?.GetCustomAttribute<PathInWorkspaceAttribute>() is not { } a) return null;
-		var s = inWorkspace ? a.Path : a.FilePath;
-		return folder ? pathname.getDirectory(s) : s;
-	}
-	
-	/// <summary>
-	/// Gets workspace path of the main source code file of this program, like <c>@"\Script1.cs"</c> or <c>@"\Folder1\Script1.cs"</c>.
-	/// Calls <see cref="sourcePath(Assembly, bool, bool)"/>.
-	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)] //replaced with sourcePath. Limited and unclear.
-	public static string path => sourcePath(null, folder: false, inWorkspace: true);
-#endif
 	
 	/// <summary>
 	/// Returns <c>true</c> if this script task was started from editor with the <b>Run</b> button or menu command.
@@ -122,6 +86,476 @@ public static class script {
 			//don't cache. It makes JIT slower. Now fast after JIT.
 		}
 	}
+	
+	#endregion
+	
+	#region AppModuleInit_, setup
+	
+	/// <summary>
+	/// If role <b>miniProgram</b> or <b>exeProgram</b>, default compiler adds module initializer that calls this with <i>auCompiler</i> <c>true</c>.
+	/// When compiling single-file exe with <b>dotnet publish</b>, adds module initializer that calls this with <i>auCompiler</i> <c>false</c>.
+	/// If using other compiler, called from <b>script.setup</b> with <i>auCompiler</i> <c>false</c>.
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public static unsafe void AppModuleInit_(bool auCompiler) {
+		if (s_appModuleInit) return;
+		s_appModuleInit = true;
+		
+		process.thisProcessCultureIsInvariant = true;
+		
+		Cpp.Cpp_UEF(true); //2 ms. Loads the C++ dll.
+		
+		Api.SetErrorMode(Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
+		//SEM_NOGPFAULTERRORBOX disables WER. See also the workaround below. //CONSIDER: add setup parameter enableWER.
+		//SEM_FAILCRITICALERRORS disables some error message boxes, eg when removable media not found; MSDN recommends too.
+		
+		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
+		
+		AppDomain.CurrentDomain.ProcessExit += (_, _) => {
+			Exiting_ = true;
+			Cpp.Cpp_UEF(false);
+		};
+		
+		if (role == SRole.ExeProgram) {
+			//set STA thread if Main without [MTAThread]
+			if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA) { //speed: 150 mcs
+				if (null == Assembly.GetEntryAssembly().EntryPoint.GetCustomAttribute<MTAThreadAttribute>()) { //1.5 ms
+					process.ThisThreadSetComApartment_(ApartmentState.STA); //1.6 ms
+				}
+			}
+			
+			int pidEditor = 0;
+			if (auCompiler) {
+				MiniProgram_.ResolveNugetRuntimes_(AppContext.BaseDirectory);
+				
+				var cd = Environment.CurrentDirectory;
+				const string c_ep = "\\Roslyn\\.exeProgram";
+				if (cd.Ends(c_ep, true)) { //started from editor
+					Environment.CurrentDirectory = folders.ThisApp;
+					
+					var p = &SharedMemory_.Ptr->script;
+					pidEditor = p->pidEditor;
+					s_wndEditorMsg = (wnd)p->hwndMsg;
+					s_idMainFile = p->idMainFile;
+					if (0 != (p->flags & 2)) script.testing = true;
+					if (0 != (p->flags & 4)) ScriptEditor.IsPortable = true;
+					if (0 != (p->flags & 8)) s_wrPipeName = p->pipe;
+					if (0 != (p->flags & 16)) MiniProgram_.RedirectConsole_();
+					folders.Editor = new(cd[..^c_ep.Length]);
+					folders.Workspace = new(p->workspace);
+					
+					var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.exeProgram.1");
+					if (!Api.SetEvent(hevent)) Environment.Exit(4);
+					Api.CloseHandle(hevent);
+				}
+			}
+			
+			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor);
+		}
+	}
+	static bool s_appModuleInit;
+	static UExcept s_setupException = UExcept.Print;
+	internal static Exception s_unhandledException; //for process.thisProcessExit
+	internal static wnd s_wndEditorMsg;
+	
+	internal static bool Exiting_ { get; private set; }
+	
+	[DebuggerNonUserCode]
+	static void _UnhandledException(object sender, UnhandledExceptionEventArgs u) {
+		if (!u.IsTerminating) return; //never seen, but anyway
+		Exiting_ = true;
+		Cpp.Cpp_UEF(false);
+		var e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
+		s_unhandledException = e;
+		if (Debugger.IsAttached) return;
+		if (s_setupException.Has(UExcept.Print)) print.it(e);
+		if (s_setupException.Has(UExcept.Dialog)) {
+			var text = e.ToStringWithoutStack();
+			if (ScriptEditor.Available) {
+				var st = new StackTrace(e, true);
+				var b = new StringBuilder(text);
+				b.Append("\n");
+				for (int i = 0; i < st.FrameCount; i++) {
+					var f = st.GetFrame(i);
+					if (f.HasSource()) b.Append($"\n<a href=\"{i}\">{f.GetMethod()?.Name}</a> in {pathname.getName(f.GetFileName())}:{f.GetFileLineNumber()}");
+				}
+				dialog.show("Task failed", b.ToString(), "Close", flags: DFlags.ExpandDown, expandedText: e.ToString(), onLinkClick: _Link1);
+				void _Link1(DEventArgs e) {
+					if (s_setupException.Has(UExcept.Print)) e.d.Send.Close();
+					var f = st.GetFrame(e.LinkHref.ToInt());
+					ScriptEditor.Open(f.GetFileName(), f.GetFileLineNumber(), Math.Max(0, f.GetFileColumnNumber() - 1));
+				}
+			} else {
+				dialog.show("Task failed", text, "Close", expandedText: e.ToString());
+			}
+		}
+		
+		//workaround for .NET bug: randomly changes error mode.
+		//	Usually 0x3 -> 0x8001 (removed SEM_NOGPFAULTERRORBOX), sometimes even 0x0. Usually never restores.
+		//	Then on unhandled exception starts werfault.exe (with "wait" cursor), and the process exits with 1 s delay, even if WER disabled.
+		//	Tested: same in a standard simplest .NET program. But less frequently.
+		//	Usually it happens while _AuxThread is starting, often in Cpp_UEF (now removed). Rarely if _AuxThread not used.
+		//	Several ms before or after the script code starts.
+		//	The bug is in several places in CLR code.
+		//		It sets error mode, then executes code without lock and exception handling, then restores (if no exception).
+		//		Why it does not use SetThreadErrorMode? Why it uses the obsolete flag SEM_NOOPENFILEERRORBOX? Why it does not check maybe SEM_FAILCRITICALERRORS is already set (as recommended in doc)? Why it does not | the new error mode flags with current flags?
+		//	Could move _AuxThread to the C++ dll (not very easy).
+		//		Or move most of the _AuxThread startup code to the main thread (making script startup slower).
+		//		But it just would make this less frequent.
+		//		Anyway, moved Cpp_UEF here. It's better to load the dll sync, not at a random time later.
+		//	Never mind. This workaround solves the biggest problem for this library. Maybe future .NET will fix it.
+		Api.SetErrorMode(Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
+	}
+	
+	[StructLayout(LayoutKind.Sequential, Size = 256 + 1024)] //note: this struct is in shared memory. Size must be same in all library versions.
+	internal unsafe struct SharedMemoryData_ {
+		public int flags; //1 not received (let editor wait), 2 testing, 4 isPortable, 8 has pipe
+		public int pidEditor;
+		public int hwndMsg;
+		public uint idMainFile;
+		int _pipeLen;
+		fixed char _pipeData[64];
+		int _workspaceLen;
+		fixed char _workspaceData[1024];
+		
+		public string pipe {
+			get { fixed (char* p = _pipeData) return new(p, 0, _pipeLen); }
+			set {
+				fixed (char* p = _pipeData) value.AsSpan().CopyTo(new Span<char>(p, 64));
+				_pipeLen = value.Length;
+			}
+		}
+		
+		public string workspace {
+			get { fixed (char* p = _workspaceData) return new(p, 0, _workspaceLen); }
+			set {
+				fixed (char* p = _workspaceData) value.AsSpan().CopyTo(new Span<char>(p, 1024));
+				_workspaceLen = value.Length;
+			}
+		}
+	}
+	
+	/// <summary>
+	/// Adds various features to this script task (running script): tray icon, exit on <c>Ctrl+Alt+Delete</c>, etc.
+	/// </summary>
+	/// <param name="trayIcon">Add tray icon. See <see cref="trayIcon"/>.</param>
+	/// <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
+	/// <param name="lockExit">
+	/// End this process when the active desktop has been switched (PC locked, <c>Ctrl+Alt+Delete</c>, screen saver, etc, except UAC consent).
+	/// Then to end this process you can use hotkeys <c>Win+L</c> (lock computer) and <c>Ctrl+Alt+Delete</c>.
+	/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
+	/// </param>
+	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/> with <i>usePrint</i> <c>true</c>. It makes <see cref="Debug.Assert"/> etc useful when not debugging.</param>
+	/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
+	/// <param name="exitKey">
+	/// If not 0, the script task will end when this key pressed. Will call <see cref="Environment.Exit"/>.
+	/// Example: <c>exitKey: KKey.MediaStop</c>.
+	/// <para>
+	/// Recommended keys: media, volume, browser and applaunch keys. They work even when the process of the active window is admin (UAC) and this script isn't. In any case, the key does not work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>. Also the key does not work when at that time a modifier key is pressed by a script; it also can be dangerous because may generate a trigger or hotkey used by an app or OS.
+	/// </para>
+	/// </param>
+	/// <param name="pauseKey">
+	/// Let <see cref="pause"/> pause/resume when this key pressed. Default: <c>ScrollLock</c> (<c>Fn+S</c>, <c>Fn+K</c> or similar).
+	/// If <c>CapsLock</c>, pauses when it is toggled (even if was toggled at startup) and resumes when untoggled.
+	/// <para>
+	/// <c>ScrollLock</c>, <c>CapsLock</c> and <c>NumLock</c> are the most reliable. Other keys have the same problems as with <i>exitKey</i>.
+	/// </para>
+	/// </param>
+	/// <param name="f_">[](xref:caller_info). Don't use. Or use like <c>f_: null</c> to disable script editing via tray icon.</param>
+	/// <exception cref="InvalidOperationException">Already called.</exception>
+	/// <remarks>
+	/// Tip: in <b>Options > Templates</b> you can set default code for new scripts.
+	/// 
+	/// If your program was compiled not in LibreAutomate, call this function (maybe with zero arguments) if you want the program behave like if it was compiled with LibreAutomate (invariant culture, <b>STAThread</b>, unhandled exception action).
+	/// 
+	/// Does nothing if role <b>editorExtension</b> or if running in WPF preview mode.
+	/// </remarks>
+	public static void setup(bool trayIcon = false, bool sleepExit = false, bool lockExit = false, bool debug = false, UExcept exception = UExcept.Print, KKey exitKey = 0, KKey pauseKey = KKey.ScrollLock, [CallerFilePath] string f_ = null) {
+		if (role == SRole.EditorExtension || isWpfPreview) return;
+		if (s_setupOnce) throw new InvalidOperationException("script.setup already called");
+		s_setupOnce = true;
+		
+		s_setupException = exception;
+		if (!s_appModuleInit) AppModuleInit_(auCompiler: false); //if role miniProgram, called by MiniProgram_.Init; else if default compiler, the call is compiled into code; else called now.
+		
+		if (debug) DebugTraceListener.Setup(usePrint: true); //info: default false, because slow and rarely used.
+		
+		s_exitKey = exitKey;
+		s_pauseKey = pauseKey;
+		s_pauseSetupDone = true;
+		
+		if (sleepExit || lockExit || exitKey != 0 || pauseKey is not (0 or KKey.CapsLock)) {
+			s_sleepExit = sleepExit;
+			s_lockExit = lockExit;
+			s_exitKey = exitKey;
+			s_auxThread.QueueAPC(static () => {
+				if (s_sleepExit) {
+					if (osVersion.minWin8) {
+						//if Modern Standby, need RegisterSuspendResumeNotification to receive WM_POWERBROADCAST.
+						//	The API and MS are unavailable on Win7.
+						//	The API supports window handle and callback. With handle less problems.
+						var h1 = Api.RegisterSuspendResumeNotification(s_auxWnd.Handle, 0);
+						process.thisProcessExit += _ => { Api.UnregisterSuspendResumeNotification(h1); };
+					} else {
+						WndUtil.CreateWindowDWP_(messageOnly: false, t_eocWP = (w, m, wp, lp) => {
+							if (m == Api.WM_POWERBROADCAST && wp == Api.PBT_APMSUSPEND) _SleepLockExit(true);
+							return Api.DefWindowProc(w, m, wp, lp);
+						}); //message-only windows don't receive WM_POWERBROADCAST, unless used RegisterSuspendResumeNotification
+					}
+				}
+				
+				if (s_lockExit) {
+					new WinEventHook(EEvent.SYSTEM_DESKTOPSWITCH, 0, k => {
+						if (miscInfo.isInputDesktop()) return;
+						if (process.exists("consent.exe", ofThisSession: true)) return; //UAC
+						k.hook.Dispose();
+						_SleepLockExit(false);
+					});
+					//tested: on Win+L works immediately. OS switches desktop 2 times. At first briefly, then makes defaul again, then on key etc switches again to show password field.
+				}
+				
+				if (s_exitKey != 0) {
+					if (!_RegisterKey(s_exitKey, 16)) {
+						long i1 = 0;
+						timer.every(500, t => {
+							if (_RegisterKey(s_exitKey, 16)) t.Stop();
+							else if (++i1 == 4) print.warning($"{name}: script.setup failed to register the exit key. Will retry.", -1);
+						});
+					}
+				}
+				
+				if (s_pauseKey is not (0 or KKey.CapsLock)) _PauseSetKey();
+			});
+		}
+		
+		if (trayIcon) _TrayIcon(f_: f_);
+	}
+	static bool s_setupOnce, s_sleepExit, s_lockExit;
+	static KKey s_exitKey;
+	[ThreadStatic] static WNDPROC t_eocWP;
+	
+	/// <summary>
+	/// Ensures that multiple processes that call this function don't run simultaneously. Like C# <c>lock</c> keyword for threads.
+	/// </summary>
+	/// <param name="mutex">Mutex name. If another process called this function with this mutex name, this process cannot run, and this function calls <c>Environment.Exit(3);</c>.</param>
+	/// <param name="wait">Milliseconds to wait until this process can run. No timeout if -1.</param>
+	/// <param name="silent">Don't print <c>"cannot run"</c>.</param>
+	/// <exception cref="InvalidOperationException">This function already called.</exception>
+	/// <remarks>
+	/// This function is useful when this script has role <b>exeProgram</b> and the compiled program is launched not from the script editor, because then the <c>/*/ ifRunning /*/</c> property is ignored.
+	/// </remarks>
+	/// <seealso cref="AppSingleInstance"/>
+	public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false) {
+		//FUTURE: parameter bool endOther. Like meta ifRunning restart.
+		
+		var m = Api.CreateMutex(null, false, mutex ?? "Au-mutex-script.single"); //tested: don't need Api.SECURITY_ATTRIBUTES.ForLowIL
+		if (default != Interlocked.CompareExchange(ref s_singleMutex, m, default)) { Api.CloseHandle(m); throw new InvalidOperationException(); }
+		var r = Api.WaitForSingleObject(s_singleMutex, wait);
+		if (r is not (0 or Api.WAIT_ABANDONED)) {
+			if (!silent) print.it($"<>Note: script task <open {sourcePath(true)}|||script.single>{name}<> cannot run because a task is running.");
+			Environment.Exit(3);
+		}
+		//never mind: should release mutex.
+		//	Cannot release in process exit event. It runs in another thread.
+		//	Cannot use UsingEndAction, because then caller code must be like 'using var single = script.single();'.
+		//return new(() => Api.ReleaseMutex(s_singleMutex));
+	}
+	static IntPtr s_singleMutex;
+	
+	/// <summary>
+	/// Adds standard tray icon.
+	/// </summary>
+	/// <param name="delay">Delay, milliseconds.</param>
+	/// <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
+	/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="script.run"/>).</param>
+	/// <param name="f_">[](xref:caller_info). Don't use. Or set = <c>null</c> to disable script editing via the tray icon.</param>
+	/// <remarks>
+	/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
+	/// 
+	/// Does nothing if role <b>editorExtension</b>.
+	/// </remarks>
+	/// <example>
+	/// Shows how to change icon and tooltip.
+	/// <code><![CDATA[
+	/// script.trayIcon(init: t => { t.Icon = icon.stock(StockIcon.HELP); t.Tooltip = "Example"; });
+	/// ]]></code>
+	/// Shows how to add menu items.
+	/// <code><![CDATA[
+	/// script.trayIcon(menu: (t, m) => {
+	/// 	m["Example"] = o => { dialog.show("Example"); };
+	/// 	m["Run other script"] = o => { script.run("Example"); };
+	/// });
+	/// ]]></code>
+	/// </example>
+	/// <seealso cref="Au.trayIcon"/>
+	public static void trayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
+		if (role == SRole.EditorExtension) return;
+		if (!s_appModuleInit) AppModuleInit_(auCompiler: false);
+		_TrayIcon(delay, init, menu, f_);
+	}
+	
+	static void _TrayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
+		s_auxThread.QueueAPC(() => timer.after(delay, _Delayed));
+		
+		void _Delayed(timer t_) {
+			var ti = new trayIcon { Tooltip = script.name };
+			init?.Invoke(ti);
+			ti.Icon ??= icon.trayIcon();
+			bool canEdit = f_ != null && ScriptEditor.Available;
+			if (canEdit) ti.Click += _ => ScriptEditor.Open(f_);
+			ti.RightClick += e => {
+				var m = new popupMenu();
+				if (menu != null) {
+					menu(ti, m);
+					if (m.Last != null && !m.Last.IsSeparator) m.Separator();
+				}
+				if (canEdit) m["Open script"] = _ => ScriptEditor.Open(f_);
+				m["End task"] = _ => Environment.Exit(2);
+				if (canEdit) m["End and open"] = _ => { ScriptEditor.Open(f_); Environment.Exit(2); };
+				m.Show(PMFlags.AlignCenterH | PMFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
+			};
+			ti.Visible = true;
+		}
+	}
+	
+	#endregion
+	
+	#region aux thread
+	
+	internal static unsafe void Starting_(string name, int pidEditor, bool preloaded = false) {
+		s_name = name;
+		s_auxThread = new(() => _AuxThread(pidEditor, preloaded));
+		//using CreateThread because need thread handle ASAP
+	}
+	static NativeThread_ s_auxThread;
+	
+	/// <summary>
+	/// Gets the aux thread object. Auto-creates if need (starts thread and does not wait).
+	/// Thread-safe.
+	/// </summary>
+	internal static NativeThread_ GetAuxThread_() {
+		if (s_auxThread != null) return s_auxThread;
+		Debug.Assert(role != SRole.MiniProgram);
+		lock ("s_auxThread") {
+			return s_auxThread ??= new(() => _AuxThread(0, false));
+		}
+	}
+	
+	//Auxiliary thread for various tasks:
+	//	Exit when editor process terminated or crashed.
+	//	Terminate script processes in a less brutal way.
+	//	Tray icon.
+	//	script.setup(sleepExit, lockExit)
+	//	Cpp_InactiveWindowWorkaround for miniProgram.
+	//	Can be used for various triggers.
+	//	Etc.
+	static unsafe void _AuxThread(int pidEditor, bool preloaded) {
+		Thread.CurrentThread.Name = "Au.Aux";
+		WndUtil.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE, c_msg_IconImageCache_ClearAll);
+		WndUtil.RegisterWindowClass(c_auxWndClassName, _AuxWndProc);
+		s_auxWnd = WndUtil.CreateMessageOnlyWindow(c_auxWndClassName, Api.GetCurrentProcessId().ToS());
+		
+		_MessageLoop(pidEditor, preloaded);
+		
+		[MethodImpl(MethodImplOptions.NoInlining)] //need fast JIT of the main func, to make s_auxWnd available ASAP
+		static void _MessageLoop(int pidEditor, bool preloaded) {
+			//pidEditor 0 if exeProgram started not from editor
+			var hp = pidEditor == 0 ? default : (IntPtr)Handle_.OpenProcess(pidEditor, Api.SYNCHRONIZE);
+			
+			//Cpp.Cpp_UEF(true); //moved to AppModuleInit_
+			
+			if (preloaded) Cpp.Cpp_InactiveWindowWorkaround(true);
+			
+			s_auxThread.ThreadInited();
+			
+			int nh = hp == default ? 0 : 1;
+			for (; ; ) {
+				var k = Api.MsgWaitForMultipleObjectsEx(nh, &hp, -1, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
+				if (k == nh) {
+					if (!wait.doEvents()) break;
+				} else if (k == 0) { //editor process terminated or crashed
+					_AuxExit();
+				} else if (k != Api.WAIT_IO_COMPLETION) {
+					Debug_.Print(k);
+					break;
+				}
+			}
+		}
+	}
+	
+	/// <summary>
+	/// Class name of the auxiliary message-only window.
+	/// </summary>
+	internal const string c_auxWndClassName = "Au.Task.m3gVxcTJN02pDrHiQ00aSQ";
+	
+	static unsafe nint _AuxWndProc(wnd w, int message, nint wp, nint lp) {
+		switch (message) {
+		//case Api.WM_COPYDATA:
+		//	return 0;
+		//case Api.WM_USER:
+		//	return 0;
+		case Api.WM_POWERBROADCAST:
+			if (s_sleepExit && osVersion.minWin8 && wp == Api.PBT_APMSUSPEND) _SleepLockExit(true);
+			break;
+		case Api.WM_HOTKEY:
+			if (wp is >= 0 and <= 15) {
+				s_paused ^= true;
+			} else if (wp is >= 16 and <= 31) {
+				Environment.Exit(2);
+			}
+			break;
+		case c_msg_IconImageCache_ClearAll:
+			IconImageCache.ClearAll_();
+			break;
+		case Api.WM_SETTEXT when wp != 0:
+			try {
+				string s = new((char*)lp);
+				if (wp == c_msg_wmsettext_UpdateEnvVar) { //sent from LA by EnvVarUpdater on WM_SETTINGCHANGE
+					var csv = csvTable.parse(s);
+					foreach (var a in csv.Rows) Environment.SetEnvironmentVariable(a[0], a[1]);
+				}
+			}
+			catch (Exception e1) { Debug_.Print(e1); }
+			return 0;
+		}
+		
+		var R = Api.DefWindowProc(w, message, wp, lp);
+		
+		if (message == Api.WM_DESTROY) _AuxExit();
+		
+		return R;
+	}
+	
+	internal const int c_msg_IconImageCache_ClearAll = Api.WM_USER + 5;
+	internal const int c_msg_wmsettext_UpdateEnvVar = -100;
+	
+	static void _AuxExit() {
+		Environment.Exit(1);
+		
+		//same speed
+		//process.thisProcessExitInvoke();
+		//Api.ExitProcess(1);
+	}
+	
+	/// <summary>
+	/// Gets the message-only window of the aux thread.
+	/// Waits if still not created.
+	/// </summary>
+	internal static wnd AuxWnd_ {
+		get {
+			if (s_auxWnd.Is0) {
+				GetAuxThread_();
+				while (s_auxWnd.Is0) {
+					Debug_.Print("waiting for s_auxWnd");
+					Thread.Sleep(12);
+				}
+			}
+			return s_auxWnd;
+		}
+	}
+	static wnd s_auxWnd;
+	
+	#endregion
 	
 	#region run
 	
@@ -501,331 +935,7 @@ public static class script {
 	
 	#endregion
 	
-	/// <summary>
-	/// If role <b>miniProgram</b> or <b>exeProgram</b>, default compiler adds module initializer that calls this with <i>auCompiler</i> <c>true</c>.
-	/// When compiling single-file exe with <b>dotnet publish</b>, adds module initializer that calls this with <i>auCompiler</i> <c>false</c>.
-	/// If using other compiler, called from <b>script.setup</b> with <i>auCompiler</i> <c>false</c>.
-	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	public static unsafe void AppModuleInit_(bool auCompiler) {
-		if (s_appModuleInit) return;
-		s_appModuleInit = true;
-		
-		process.thisProcessCultureIsInvariant = true;
-		
-		Cpp.Cpp_UEF(true); //2 ms. Loads the C++ dll.
-		
-		Api.SetErrorMode(Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
-		//SEM_NOGPFAULTERRORBOX disables WER. See also the workaround below. //CONSIDER: add setup parameter enableWER.
-		//SEM_FAILCRITICALERRORS disables some error message boxes, eg when removable media not found; MSDN recommends too.
-		
-		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
-		
-		AppDomain.CurrentDomain.ProcessExit += (_, _) => {
-			Exiting_ = true;
-			Cpp.Cpp_UEF(false);
-		};
-		
-		if (role == SRole.ExeProgram) {
-			//set STA thread if Main without [MTAThread]
-			if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA) { //speed: 150 mcs
-				if (null == Assembly.GetEntryAssembly().EntryPoint.GetCustomAttribute<MTAThreadAttribute>()) { //1.5 ms
-					process.ThisThreadSetComApartment_(ApartmentState.STA); //1.6 ms
-				}
-			}
-			
-			int pidEditor = 0;
-			if (auCompiler) {
-				MiniProgram_.ResolveNugetRuntimes_(AppContext.BaseDirectory);
-				
-				var cd = Environment.CurrentDirectory;
-				const string c_ep = "\\Roslyn\\.exeProgram";
-				if (cd.Ends(c_ep, true)) { //started from editor
-					Environment.CurrentDirectory = folders.ThisApp;
-					
-					var p = &SharedMemory_.Ptr->script;
-					pidEditor = p->pidEditor;
-					s_wndEditorMsg = (wnd)p->hwndMsg;
-					s_idMainFile = p->idMainFile;
-					if (0 != (p->flags & 2)) script.testing = true;
-					if (0 != (p->flags & 4)) ScriptEditor.IsPortable = true;
-					if (0 != (p->flags & 8)) s_wrPipeName = p->pipe;
-					folders.Editor = new(cd[..^c_ep.Length]);
-					folders.Workspace = new(p->workspace);
-					
-					var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.exeProgram.1");
-					if (!Api.SetEvent(hevent)) Environment.Exit(4);
-					Api.CloseHandle(hevent);
-				}
-			}
-			
-			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor);
-		}
-	}
-	static bool s_appModuleInit;
-	static UExcept s_setupException = UExcept.Print;
-	internal static Exception s_unhandledException; //for process.thisProcessExit
-	internal static wnd s_wndEditorMsg;
-	
-	internal static bool Exiting_ { get; private set; }
-	
-	[DebuggerNonUserCode]
-	static void _UnhandledException(object sender, UnhandledExceptionEventArgs u) {
-		if (!u.IsTerminating) return; //never seen, but anyway
-		Exiting_ = true;
-		Cpp.Cpp_UEF(false);
-		var e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
-		s_unhandledException = e;
-		if (Debugger.IsAttached) return;
-		if (s_setupException.Has(UExcept.Print)) print.it(e);
-		if (s_setupException.Has(UExcept.Dialog)) {
-			var text = e.ToStringWithoutStack();
-			if (ScriptEditor.Available) {
-				var st = new StackTrace(e, true);
-				var b = new StringBuilder(text);
-				b.Append("\n");
-				for (int i = 0; i < st.FrameCount; i++) {
-					var f = st.GetFrame(i);
-					if (f.HasSource()) b.Append($"\n<a href=\"{i}\">{f.GetMethod()?.Name}</a> in {pathname.getName(f.GetFileName())}:{f.GetFileLineNumber()}");
-				}
-				dialog.show("Task failed", b.ToString(), "Close", flags: DFlags.ExpandDown, expandedText: e.ToString(), onLinkClick: _Link1);
-				void _Link1(DEventArgs e) {
-					if (s_setupException.Has(UExcept.Print)) e.d.Send.Close();
-					var f = st.GetFrame(e.LinkHref.ToInt());
-					ScriptEditor.Open(f.GetFileName(), f.GetFileLineNumber(), Math.Max(0, f.GetFileColumnNumber() - 1));
-				}
-			} else {
-				dialog.show("Task failed", text, "Close", expandedText: e.ToString());
-			}
-		}
-		
-		//workaround for .NET bug: randomly changes error mode.
-		//	Usually 0x3 -> 0x8001 (removed SEM_NOGPFAULTERRORBOX), sometimes even 0x0. Usually never restores.
-		//	Then on unhandled exception starts werfault.exe (with "wait" cursor), and the process exits with 1 s delay, even if WER disabled.
-		//	Tested: same in a standard simplest .NET program. But less frequently.
-		//	Usually it happens while _AuxThread is starting, often in Cpp_UEF (now removed). Rarely if _AuxThread not used.
-		//	Several ms before or after the script code starts.
-		//	The bug is in several places in CLR code.
-		//		It sets error mode, then executes code without lock and exception handling, then restores (if no exception).
-		//		Why it does not use SetThreadErrorMode? Why it uses the obsolete flag SEM_NOOPENFILEERRORBOX? Why it does not check maybe SEM_FAILCRITICALERRORS is already set (as recommended in doc)? Why it does not | the new error mode flags with current flags?
-		//	Could move _AuxThread to the C++ dll (not very easy).
-		//		Or move most of the _AuxThread startup code to the main thread (making script startup slower).
-		//		But it just would make this less frequent.
-		//		Anyway, moved Cpp_UEF here. It's better to load the dll sync, not at a random time later.
-		//	Never mind. This workaround solves the biggest problem for this library. Maybe future .NET will fix it.
-		Api.SetErrorMode(Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
-	}
-	
-	[StructLayout(LayoutKind.Sequential, Size = 256 + 1024)] //note: this struct is in shared memory. Size must be same in all library versions.
-	internal unsafe struct SharedMemoryData_ {
-		public int flags; //1 not received (let editor wait), 2 testing, 4 isPortable, 8 has pipe
-		public int pidEditor;
-		public int hwndMsg;
-		public uint idMainFile;
-		int _pipeLen;
-		fixed char _pipeData[64];
-		int _workspaceLen;
-		fixed char _workspaceData[1024];
-		
-		public string pipe {
-			get { fixed (char* p = _pipeData) return new(p, 0, _pipeLen); }
-			set {
-				fixed (char* p = _pipeData) value.AsSpan().CopyTo(new Span<char>(p, 64));
-				_pipeLen = value.Length;
-			}
-		}
-		
-		public string workspace {
-			get { fixed (char* p = _workspaceData) return new(p, 0, _workspaceLen); }
-			set {
-				fixed (char* p = _workspaceData) value.AsSpan().CopyTo(new Span<char>(p, 1024));
-				_workspaceLen = value.Length;
-			}
-		}
-	}
-	
-	/// <summary>
-	/// Adds various features to this script task (running script): tray icon, exit on <c>Ctrl+Alt+Delete</c>, etc.
-	/// </summary>
-	/// <param name="trayIcon">Add tray icon. See <see cref="trayIcon"/>.</param>
-	/// <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
-	/// <param name="lockExit">
-	/// End this process when the active desktop has been switched (PC locked, <c>Ctrl+Alt+Delete</c>, screen saver, etc, except UAC consent).
-	/// Then to end this process you can use hotkeys <c>Win+L</c> (lock computer) and <c>Ctrl+Alt+Delete</c>.
-	/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
-	/// </param>
-	/// <param name="debug">Call <see cref="DebugTraceListener.Setup"/> with <i>usePrint</i> <c>true</c>. It makes <see cref="Debug.Assert"/> etc useful when not debugging.</param>
-	/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
-	/// <param name="exitKey">
-	/// If not 0, the script task will end when this key pressed. Will call <see cref="Environment.Exit"/>.
-	/// Example: <c>exitKey: KKey.MediaStop</c>.
-	/// <para>
-	/// Recommended keys: media, volume, browser and applaunch keys. They work even when the process of the active window is admin (UAC) and this script isn't. In any case, the key does not work if somewhere used for a global hotkey, trigger, <i>exitKey</i> or <i>pauseKey</i>. Also the key does not work when at that time a modifier key is pressed by a script; it also can be dangerous because may generate a trigger or hotkey used by an app or OS.
-	/// </para>
-	/// </param>
-	/// <param name="pauseKey">
-	/// Let <see cref="pause"/> pause/resume when this key pressed. Default: <c>ScrollLock</c> (<c>Fn+S</c>, <c>Fn+K</c> or similar).
-	/// If <c>CapsLock</c>, pauses when it is toggled (even if was toggled at startup) and resumes when untoggled.
-	/// <para>
-	/// <c>ScrollLock</c>, <c>CapsLock</c> and <c>NumLock</c> are the most reliable. Other keys have the same problems as with <i>exitKey</i>.
-	/// </para>
-	/// </param>
-	/// <param name="f_">[](xref:caller_info). Don't use. Or use like <c>f_: null</c> to disable script editing via tray icon.</param>
-	/// <exception cref="InvalidOperationException">Already called.</exception>
-	/// <remarks>
-	/// Tip: in <b>Options > Templates</b> you can set default code for new scripts.
-	/// 
-	/// If your program was compiled not in LibreAutomate, call this function (maybe with zero arguments) if you want the program behave like if it was compiled with LibreAutomate (invariant culture, <b>STAThread</b>, unhandled exception action).
-	/// 
-	/// Does nothing if role <b>editorExtension</b> or if running in WPF preview mode.
-	/// </remarks>
-	public static void setup(bool trayIcon = false, bool sleepExit = false, bool lockExit = false, bool debug = false, UExcept exception = UExcept.Print, KKey exitKey = 0, KKey pauseKey = KKey.ScrollLock, [CallerFilePath] string f_ = null) {
-		if (role == SRole.EditorExtension || isWpfPreview) return;
-		if (s_setupOnce) throw new InvalidOperationException("script.setup already called");
-		s_setupOnce = true;
-		
-		s_setupException = exception;
-		if (!s_appModuleInit) AppModuleInit_(auCompiler: false); //if role miniProgram, called by MiniProgram_.Init; else if default compiler, the call is compiled into code; else called now.
-		
-		if (debug) DebugTraceListener.Setup(usePrint: true); //info: default false, because slow and rarely used.
-		
-		s_exitKey = exitKey;
-		s_pauseKey = pauseKey;
-		s_pauseSetupDone = true;
-		
-		if (sleepExit || lockExit || exitKey != 0 || pauseKey is not (0 or KKey.CapsLock)) {
-			s_sleepExit = sleepExit;
-			s_lockExit = lockExit;
-			s_exitKey = exitKey;
-			s_auxThread.QueueAPC(static () => {
-				if (s_sleepExit) {
-					if (osVersion.minWin8) {
-						//if Modern Standby, need RegisterSuspendResumeNotification to receive WM_POWERBROADCAST.
-						//	The API and MS are unavailable on Win7.
-						//	The API supports window handle and callback. With handle less problems.
-						var h1 = Api.RegisterSuspendResumeNotification(s_auxWnd.Handle, 0);
-						process.thisProcessExit += _ => { Api.UnregisterSuspendResumeNotification(h1); };
-					} else {
-						WndUtil.CreateWindowDWP_(messageOnly: false, t_eocWP = (w, m, wp, lp) => {
-							if (m == Api.WM_POWERBROADCAST && wp == Api.PBT_APMSUSPEND) _SleepLockExit(true);
-							return Api.DefWindowProc(w, m, wp, lp);
-						}); //message-only windows don't receive WM_POWERBROADCAST, unless used RegisterSuspendResumeNotification
-					}
-				}
-				
-				if (s_lockExit) {
-					new WinEventHook(EEvent.SYSTEM_DESKTOPSWITCH, 0, k => {
-						if (miscInfo.isInputDesktop()) return;
-						if (process.exists("consent.exe", ofThisSession: true)) return; //UAC
-						k.hook.Dispose();
-						_SleepLockExit(false);
-					});
-					//tested: on Win+L works immediately. OS switches desktop 2 times. At first briefly, then makes defaul again, then on key etc switches again to show password field.
-				}
-				
-				if (s_exitKey != 0) {
-					if (!_RegisterKey(s_exitKey, 16)) {
-						long i1 = 0;
-						timer.every(500, t => {
-							if (_RegisterKey(s_exitKey, 16)) t.Stop();
-							else if (++i1 == 4) print.warning($"{name}: script.setup failed to register the exit key. Will retry.", -1);
-						});
-					}
-				}
-				
-				if (s_pauseKey is not (0 or KKey.CapsLock)) _PauseSetKey();
-			});
-		}
-		
-		if (trayIcon) _TrayIcon(f_: f_);
-	}
-	static bool s_setupOnce, s_sleepExit, s_lockExit;
-	static KKey s_exitKey;
-	[ThreadStatic] static WNDPROC t_eocWP;
-	
-	/// <summary>
-	/// Ensures that multiple processes that call this function don't run simultaneously. Like C# <c>lock</c> keyword for threads.
-	/// </summary>
-	/// <param name="mutex">Mutex name. If another process called this function with this mutex name, this process cannot run, and this function calls <c>Environment.Exit(3);</c>.</param>
-	/// <param name="wait">Milliseconds to wait until this process can run. No timeout if -1.</param>
-	/// <param name="silent">Don't print <c>"cannot run"</c>.</param>
-	/// <exception cref="InvalidOperationException">This function already called.</exception>
-	/// <remarks>
-	/// This function is useful when this script has role <b>exeProgram</b> and the compiled program is launched not from the script editor, because then the <c>/*/ ifRunning /*/</c> property is ignored.
-	/// </remarks>
-	/// <seealso cref="AppSingleInstance"/>
-	public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false) {
-		//FUTURE: parameter bool endOther. Like meta ifRunning restart.
-		
-		var m = Api.CreateMutex(null, false, mutex ?? "Au-mutex-script.single"); //tested: don't need Api.SECURITY_ATTRIBUTES.ForLowIL
-		if (default != Interlocked.CompareExchange(ref s_singleMutex, m, default)) { Api.CloseHandle(m); throw new InvalidOperationException(); }
-		var r = Api.WaitForSingleObject(s_singleMutex, wait);
-		if (r is not (0 or Api.WAIT_ABANDONED)) {
-			if (!silent) print.it($"<>Note: script task <open {sourcePath(true)}|||script.single>{name}<> cannot run because a task is running.");
-			Environment.Exit(3);
-		}
-		//never mind: should release mutex.
-		//	Cannot release in process exit event. It runs in another thread.
-		//	Cannot use UsingEndAction, because then caller code must be like 'using var single = script.single();'.
-		//return new(() => Api.ReleaseMutex(s_singleMutex));
-	}
-	static IntPtr s_singleMutex;
-	
-	/// <summary>
-	/// Adds standard tray icon.
-	/// </summary>
-	/// <param name="delay">Delay, milliseconds.</param>
-	/// <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
-	/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="script.run"/>).</param>
-	/// <param name="f_">[](xref:caller_info). Don't use. Or set = <c>null</c> to disable script editing via the tray icon.</param>
-	/// <remarks>
-	/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
-	/// 
-	/// Does nothing if role <b>editorExtension</b>.
-	/// </remarks>
-	/// <example>
-	/// Shows how to change icon and tooltip.
-	/// <code><![CDATA[
-	/// script.trayIcon(init: t => { t.Icon = icon.stock(StockIcon.HELP); t.Tooltip = "Example"; });
-	/// ]]></code>
-	/// Shows how to add menu items.
-	/// <code><![CDATA[
-	/// script.trayIcon(menu: (t, m) => {
-	/// 	m["Example"] = o => { dialog.show("Example"); };
-	/// 	m["Run other script"] = o => { script.run("Example"); };
-	/// });
-	/// ]]></code>
-	/// </example>
-	/// <seealso cref="Au.trayIcon"/>
-	public static void trayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
-		if (role == SRole.EditorExtension) return;
-		if (!s_appModuleInit) AppModuleInit_(auCompiler: false);
-		_TrayIcon(delay, init, menu, f_);
-	}
-	
-	static void _TrayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
-		s_auxThread.QueueAPC(() => timer.after(delay, _Delayed));
-		
-		void _Delayed(timer t_) {
-			var ti = new trayIcon { Tooltip = script.name };
-			init?.Invoke(ti);
-			ti.Icon ??= icon.trayIcon();
-			bool canEdit = f_ != null && ScriptEditor.Available;
-			if (canEdit) ti.Click += _ => ScriptEditor.Open(f_);
-			ti.RightClick += e => {
-				var m = new popupMenu();
-				if (menu != null) {
-					menu(ti, m);
-					if (m.Last != null && !m.Last.IsSeparator) m.Separator();
-				}
-				if (canEdit) m["Open script"] = _ => ScriptEditor.Open(f_);
-				m["End task"] = _ => Environment.Exit(2);
-				if (canEdit) m["End and open"] = _ => { ScriptEditor.Open(f_); Environment.Exit(2); };
-				m.Show(PMFlags.AlignCenterH | PMFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
-			};
-			ti.Visible = true;
-		}
-	}
+	#region debug, pause
 	
 	/// <summary>
 	/// Attaches the LibreAutomate's debugger to this process, or waits for a debugger attached to this process.
@@ -869,145 +979,6 @@ public static class script {
 		
 		//note: don't add Debugger.Break(); in this func. It creates problems.
 	}
-	
-	#region aux thread
-	
-	internal static unsafe void Starting_(string name, int pidEditor, bool preloaded = false) {
-		s_name = name;
-		s_auxThread = new(() => _AuxThread(pidEditor, preloaded));
-		//using CreateThread because need thread handle ASAP
-	}
-	static NativeThread_ s_auxThread;
-	
-	/// <summary>
-	/// Gets the aux thread object. Auto-creates if need (starts thread and does not wait).
-	/// Thread-safe.
-	/// </summary>
-	internal static NativeThread_ GetAuxThread_() {
-		if (s_auxThread != null) return s_auxThread;
-		Debug.Assert(role != SRole.MiniProgram);
-		lock ("s_auxThread") {
-			return s_auxThread ??= new(() => _AuxThread(0, false));
-		}
-	}
-	
-	//Auxiliary thread for various tasks:
-	//	Exit when editor process terminated or crashed.
-	//	Terminate script processes in a less brutal way.
-	//	Tray icon.
-	//	script.setup(sleepExit, lockExit)
-	//	Cpp_InactiveWindowWorkaround for miniProgram.
-	//	Can be used for various triggers.
-	//	Etc.
-	static unsafe void _AuxThread(int pidEditor, bool preloaded) {
-		Thread.CurrentThread.Name = "Au.Aux";
-		WndUtil.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE, c_msg_IconImageCache_ClearAll);
-		WndUtil.RegisterWindowClass(c_auxWndClassName, _AuxWndProc);
-		s_auxWnd = WndUtil.CreateMessageOnlyWindow(c_auxWndClassName, Api.GetCurrentProcessId().ToS());
-		
-		_MessageLoop(pidEditor, preloaded);
-		
-		[MethodImpl(MethodImplOptions.NoInlining)] //need fast JIT of the main func, to make s_auxWnd available ASAP
-		static void _MessageLoop(int pidEditor, bool preloaded) {
-			//pidEditor 0 if exeProgram started not from editor
-			var hp = pidEditor == 0 ? default : (IntPtr)Handle_.OpenProcess(pidEditor, Api.SYNCHRONIZE);
-			
-			//Cpp.Cpp_UEF(true); //moved to AppModuleInit_
-			
-			if (preloaded) Cpp.Cpp_InactiveWindowWorkaround(true);
-			
-			s_auxThread.ThreadInited();
-			
-			int nh = hp == default ? 0 : 1;
-			for (; ; ) {
-				var k = Api.MsgWaitForMultipleObjectsEx(nh, &hp, -1, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
-				if (k == nh) {
-					if (!wait.doEvents()) break;
-				} else if (k == 0) { //editor process terminated or crashed
-					_AuxExit();
-				} else if (k != Api.WAIT_IO_COMPLETION) {
-					Debug_.Print(k);
-					break;
-				}
-			}
-		}
-	}
-	
-	/// <summary>
-	/// Class name of the auxiliary message-only window.
-	/// </summary>
-	internal const string c_auxWndClassName = "Au.Task.m3gVxcTJN02pDrHiQ00aSQ";
-	
-	static unsafe nint _AuxWndProc(wnd w, int message, nint wp, nint lp) {
-		switch (message) {
-		//case Api.WM_COPYDATA:
-		//	return 0;
-		//case Api.WM_USER:
-		//	return 0;
-		case Api.WM_POWERBROADCAST:
-			if (s_sleepExit && osVersion.minWin8 && wp == Api.PBT_APMSUSPEND) _SleepLockExit(true);
-			break;
-		case Api.WM_HOTKEY:
-			if (wp is >= 0 and <= 15) {
-				s_paused ^= true;
-			} else if (wp is >= 16 and <= 31) {
-				Environment.Exit(2);
-			}
-			break;
-		case c_msg_IconImageCache_ClearAll:
-			IconImageCache.ClearAll_();
-			break;
-		case Api.WM_SETTEXT when wp != 0:
-			try {
-				string s = new((char*)lp);
-				if (wp == c_msg_wmsettext_UpdateEnvVar) { //sent from LA by EnvVarUpdater on WM_SETTINGCHANGE
-					var csv = csvTable.parse(s);
-					foreach (var a in csv.Rows) Environment.SetEnvironmentVariable(a[0], a[1]);
-				}
-			}
-			catch (Exception e1) { Debug_.Print(e1); }
-			return 0;
-		}
-		
-		var R = Api.DefWindowProc(w, message, wp, lp);
-		
-		if (message == Api.WM_DESTROY) _AuxExit();
-		
-		return R;
-	}
-	
-	internal const int c_msg_IconImageCache_ClearAll = Api.WM_USER + 5;
-	internal const int c_msg_wmsettext_UpdateEnvVar = -100;
-	
-	static void _AuxExit() {
-		Environment.Exit(1);
-		
-		//same speed
-		//process.thisProcessExitInvoke();
-		//Api.ExitProcess(1);
-	}
-	
-	/// <summary>
-	/// Gets the message-only window of the aux thread.
-	/// Waits if still not created.
-	/// </summary>
-	internal static wnd AuxWnd_ {
-		get {
-			if (s_auxWnd.Is0) {
-				GetAuxThread_();
-				while (s_auxWnd.Is0) {
-					Debug_.Print("waiting for s_auxWnd");
-					Thread.Sleep(12);
-				}
-			}
-			return s_auxWnd;
-		}
-	}
-	static wnd s_auxWnd;
-	
-	#endregion
-	
-	#region pause
 	
 	/// <summary>
 	/// If was pressed the pause key, waits until the user presses it again.
@@ -1098,26 +1069,26 @@ public static class script {
 		return Api.RegisterHotKey(s_auxWnd, idBase, Api.MOD_NOREPEAT, key);
 		
 		//rejected: try to register all mod combinations. Else does not work if the script pressed a mod key at that time.
-//		for (int i = 0; i < 16; i++) {
-//			var k = key;
-//			if (k == KKey.Pause && 0 != (i & Api.MOD_CONTROL)) k = KKey.Break; //Ctrl+Pause = Break
-//			if (!Api.RegisterHotKey(s_auxWnd, idBase + i, (uint)i | Api.MOD_NOREPEAT, k)) {
-//#if !true
-//				//print.it(i, k, s_auxWnd, lastError.message);
-//				if (k == KKey.Pause && i == 8) continue; //Win+Pause opens something in Windows Settings
-//				while (--i >= 0) Api.UnregisterHotKey(s_auxWnd, idBase + i);
-//				return false;
-//				//any failed to register hotkey would be dangerous, because the user-pressed key combined with script-pressed modifiers would invoke the hotkey in its owner app
-
-//				//Not good. Many keys fail because a hotkey with some modifiers is registered. Eg Esc, arrows, Home. Many are registered by OS with mod Win.
-//				//	Maybe instead just print warning "Failed to register hotkey X. It can be dangerous... Consider using media keys etc instead.". Fail only if cannot register the key without modifiers.
-//				//	Or use LL hook. Then can detect script-pressed keys. But no, it's too heavy; maybe every script will have script.setup with that key.
-//#else
-//				if (i == 0) return false;
-//#endif
-//			}
-//		}
-//		return true;
+		//		for (int i = 0; i < 16; i++) {
+		//			var k = key;
+		//			if (k == KKey.Pause && 0 != (i & Api.MOD_CONTROL)) k = KKey.Break; //Ctrl+Pause = Break
+		//			if (!Api.RegisterHotKey(s_auxWnd, idBase + i, (uint)i | Api.MOD_NOREPEAT, k)) {
+		//#if !true
+		//				//print.it(i, k, s_auxWnd, lastError.message);
+		//				if (k == KKey.Pause && i == 8) continue; //Win+Pause opens something in Windows Settings
+		//				while (--i >= 0) Api.UnregisterHotKey(s_auxWnd, idBase + i);
+		//				return false;
+		//				//any failed to register hotkey would be dangerous, because the user-pressed key combined with script-pressed modifiers would invoke the hotkey in its owner app
+		
+		//				//Not good. Many keys fail because a hotkey with some modifiers is registered. Eg Esc, arrows, Home. Many are registered by OS with mod Win.
+		//				//	Maybe instead just print warning "Failed to register hotkey X. It can be dangerous... Consider using media keys etc instead.". Fail only if cannot register the key without modifiers.
+		//				//	Or use LL hook. Then can detect script-pressed keys. But no, it's too heavy; maybe every script will have script.setup with that key.
+		//#else
+		//				if (i == 0) return false;
+		//#endif
+		//			}
+		//		}
+		//		return true;
 	}
 	
 	#endregion

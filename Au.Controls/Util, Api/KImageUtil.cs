@@ -152,59 +152,57 @@ namespace Au.Controls {
 		/// Gets image type from string.
 		/// </summary>
 		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:".</param>
-		/// <param name="s">File path etc. See <see cref="ImageType"/>. It is UTF8 because used directly with Scintilla text.</param>
-		/// <param name="length">If -1, calls CharPtr_.Length(s).</param>
-		internal static ImageType ImageTypeFromString(out int prefixLength, byte* s, int length = -1) {
+		/// <param name="s">File path etc. See <see cref="ImageType"/>. It is UTF-8 because used directly with Scintilla text.</param>
+		internal static ImageType ImageTypeFromString(out int prefixLength, RByte s) {
 			prefixLength = 0;
-			if (length < 0) length = BytePtr_.Length(s);
-			if (length < 2) return default; //C:\x.bmp or .h
+			if (s.Length < 2) return default; //C:\x.bmp or .h
 			char c1 = (char)s[0], c2 = (char)s[1];
-			
-			//FUTURE: rewrite this old code. Use Span etc. See SciCode.GetImages_.
 			
 			//special strings
 			switch (c1) {
 			case 'i':
-				if (BytePtr_.AsciiStarts(s, "image:")) {
-					if (length < 10) return default;
+				if (s.StartsWith("image:"u8)) {
+					if (s.Length < 10) return default;
 					prefixLength = 6;
 					return ImageType.Base64Image;
 				}
-				if (BytePtr_.AsciiStarts(s, "imagefile:")) {
-					s += 10; length -= 10;
-					if (length < 8) return default;
+				if (s.StartsWith("imagefile:"u8)) {
+					s = s[10..];
+					if (s.Length < 8) return default;
 					prefixLength = 10;
 					c1 = (char)s[0]; c2 = (char)s[1];
 				}
 				break;
-			//case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
+			//case 'r': if (s.StartsWith("resource:"u8)) return ImageType.Resource; break;
 			case '<':
-				if (BytePtr_.AsciiFindString(s, length, "xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'") > 0) {
-					if (BytePtr_.AsciiFindString(s, length, "<Path ") >= 0) return ImageType.Xaml;
-					if (BytePtr_.AsciiFindString(s, length, "<GeometryDrawing ") >= 0) return ImageType.Xaml;
+				if (s.IndexOf("xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'"u8) > 0) {
+					if (s.IndexOf("<Path "u8) >= 0) return ImageType.Xaml;
+					if (s.IndexOf("<GeometryDrawing "u8) >= 0) return ImageType.Xaml;
 				}
 				return default;
 			case '*':
-				if (_DetectIconString(new(s, length))) return ImageType.XamlIconName;
+				if (_DetectIconString(s)) return ImageType.XamlIconName;
 				return default;
 			}
 			
 			//file path
-			if (length >= 8 && (c1 == '%' || (c2 == ':' && c1.IsAsciiAlpha()) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
-				byte* ext = s + length - 3;
-				if (ext[-1] == '.') {
-					if (BytePtr_.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
-					if (BytePtr_.AsciiStartsi(ext, "png")) return ImageType.PngGifJpg;
-					if (BytePtr_.AsciiStartsi(ext, "gif")) return ImageType.PngGifJpg;
-					if (BytePtr_.AsciiStartsi(ext, "jpg")) return ImageType.PngGifJpg;
-					if (BytePtr_.AsciiStartsi(ext, "ico")) return ImageType.Ico;
-					if (BytePtr_.AsciiStartsi(ext, "cur")) return ImageType.Cur;
-					if (BytePtr_.AsciiStartsi(ext, "ani")) return ImageType.Cur;
-				} else if (((char)ext[2]).IsAsciiDigit()) { //can be like C:\x.dll,10
-					byte* k = ext + 1, k2 = s + 8;
-					for (; k > k2; k--) if (!((char)*k).IsAsciiDigit()) break;
-					if (*k == '-') k--;
-					if (*k == ',' && k[-4] == '.' && ((char)k[-1]).IsAsciiAlpha()) return ImageType.IconLib;
+			if (s.Length >= 8 && (c1 == '%' || (c2 == ':' && c1.IsAsciiAlpha()) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
+				if (s[^4] == '.') {
+					Span<byte> e = stackalloc byte[3];
+					for (int j = 0, k = s.Length - 3; j < 3; ) e[j++] = (byte)char.ToLowerInvariant((char)s[k++]);
+					if (e.SequenceEqual("bmp"u8)) return ImageType.Bmp;
+					if (e.SequenceEqual("png"u8)) return ImageType.PngGifJpg;
+					if (e.SequenceEqual("gif"u8)) return ImageType.PngGifJpg;
+					if (e.SequenceEqual("jpg"u8)) return ImageType.PngGifJpg;
+					if (e.SequenceEqual("ico"u8)) return ImageType.Ico;
+					if (e.SequenceEqual("cur"u8)) return ImageType.Cur;
+					if (e.SequenceEqual("ani"u8)) return ImageType.Cur;
+				} else if (((char)s[^1]).IsAsciiDigit()) { //can be like C:\x.dll,10
+					int i = s.LastIndexOf((byte)',');
+					if (i >= 8 && s[i - 4] == '.' && char.IsAsciiLetter((char)s[i - 1])) {
+						if (s[++i] == '-') i++;
+						if (!s[i..].ContainsAnyExceptInRange((byte)'0', (byte)'9')) return ImageType.IconLib;
+					}
 				}
 			}
 			
@@ -231,8 +229,7 @@ namespace Au.Controls {
 		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:".</param>
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
 		public static ImageType ImageTypeFromString(out int prefixLength, string s) {
-			var b = Convert2.Utf8Encode(s);
-			fixed (byte* p = b) return ImageTypeFromString(out prefixLength, p, b.Length - 1);
+			return ImageTypeFromString(out prefixLength, Encoding.UTF8.GetBytes(s));
 		}
 		
 		/// <summary>

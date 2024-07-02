@@ -275,9 +275,11 @@ partial class Compiler {
 				//} else if(filesystem.exists(configFile, true).File) {
 				//	filesystem.delete(configFile);
 				//}
-			} else if (!_meta.Console) {
-				//if using assembly System.Console in miniProgram script, let it redirect Console.Write etc to print.it.
-				//	Don't redirect always, it's slow. Console.Write etc rarely used when there is print.it.
+			}
+			
+			if (!_meta.Console && _meta.Role is MCRole.miniProgram or MCRole.exeProgram && !addMetaFlags.Has(MCFlags.Publish)) {
+				//if using assembly System.Console, let it redirect Console.Write etc to print.it, and Console.ReadLine to dialog.showInput.
+				//	Don't redirect always, it's slow.
 				//Speed of this code: 50 mcs.
 				asmStream.Position = 0;
 				using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
@@ -714,7 +716,7 @@ partial class Compiler {
 			var b = File.ReadAllBytes(appHost);
 			//p1.Next();
 			//write assembly name in placeholder memory. In AppHost.cpp: char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
-			int i = BytePtr_.AsciiFindString(b, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
+			int i = b.AsSpan().IndexOf("hi7yl8kJNk+gqwTDFi7ekQ"u8) - 1;
 			i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
 			b[i] = 0;
 			

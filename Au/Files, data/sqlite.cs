@@ -52,7 +52,7 @@ namespace Au {
 	/// </example>
 	public unsafe class sqlite : IDisposable {
 		IntPtr _db;
-
+		
 		/// <summary>
 		/// Opens or creates a database file.
 		/// </summary>
@@ -89,7 +89,7 @@ namespace Au {
 			}
 			Execute("PRAGMA foreign_keys=ON;PRAGMA secure_delete=ON;" + sql);
 		}
-
+		
 		///
 		protected virtual void Dispose(bool disposing) {
 			if (_db != default) {
@@ -98,7 +98,7 @@ namespace Au {
 				_db = default;
 			}
 		}
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_close_v2</sqlite>.
 		/// If fails, prints a warning.
@@ -107,16 +107,16 @@ namespace Au {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
-
+		
 		///
 		~sqlite() => Dispose(false);
-
+		
 		/// <summary><b>sqlite3*</b></summary>
 		public static implicit operator IntPtr(sqlite c) => c._db;
-
+		
 		/// <summary><b>sqlite3*</b></summary>
 		public IntPtr Handle => _db;
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_exec</sqlite> to execute one or more SQL statements that don't return data.
 		/// </summary>
@@ -128,7 +128,7 @@ namespace Au {
 			var r = SLApi.sqlite3_exec(_db, b, default, default, &es);
 			if (r != 0) throw new SLException(r, "sqlite3_exec", SLUtil_.ToStringAndFree(es));
 		}
-
+		
 		/// <summary>
 		/// Executes single SQL statement that does not return data. Binds values.
 		/// </summary>
@@ -143,7 +143,7 @@ namespace Au {
 			using var p = Statement(sql, bind);
 			p.Step();
 		}
-
+		
 		/// <summary>
 		/// Executes single SQL statement that does not return data. To bind values calls callback function.
 		/// </summary>
@@ -159,7 +159,7 @@ namespace Au {
 			bind(p);
 			p.Step();
 		}
-
+		
 		/// <summary>
 		/// Returns <c>new sqliteStatement(this, sql)</c>.
 		/// </summary>
@@ -167,7 +167,7 @@ namespace Au {
 		/// <seealso cref="sqliteStatement"/>
 		/// <inheritdoc cref="sqliteStatement(sqlite, string, bool)"/>
 		public sqliteStatement Statement(string sql) => new sqliteStatement(this, sql);
-
+		
 		/// <summary>
 		/// Returns <c>new sqliteStatement(this, sql).BindAll(bind)</c>.
 		/// </summary>
@@ -185,9 +185,9 @@ namespace Au {
 		/// <inheritdoc cref="sqliteStatement(sqlite, string, bool)"/>
 		/// <inheritdoc cref="sqliteStatement.BindAll" path="/param"/>
 		public sqliteStatement Statement(string sql, params object[] bind) => new sqliteStatement(this, sql).BindAll(bind);
-
+		
 		#region get
-
+		
 		/// <summary>
 		/// Executes single SQL statement and gets single value.
 		/// </summary>
@@ -205,7 +205,7 @@ namespace Au {
 			value = R ? p.GetInt(0) : default;
 			return R;
 		}
-
+		
 		/// <remarks>
 		/// Also can be used to get <b>ulong</b>, 64-bit enum, maybe <b>DateTime</b>.
 		/// </remarks>
@@ -216,7 +216,7 @@ namespace Au {
 			value = R ? p.GetLong(0) : default;
 			return R;
 		}
-
+		
 		///// <remarks></remarks>
 		///// <inheritdoc cref="Get(out int, string, object[])"/>
 		//public bool Get(out DateTime value, bool convertToLocal, string sql, params object[] bind)
@@ -226,7 +226,7 @@ namespace Au {
 		//	value = R ? p.GetDateTime(0, convertToLocal) : default;
 		//	return R;
 		//}
-
+		
 		/// <remarks></remarks>
 		/// <inheritdoc cref="Get(out int, string, object[])"/>
 		public bool Get(out bool value, string sql, params object[] bind) {
@@ -235,7 +235,7 @@ namespace Au {
 			value = R ? p.GetBool(0) : default;
 			return R;
 		}
-
+		
 		/// <remarks>
 		/// Also can be used to get <b>float</b>.
 		/// </remarks>
@@ -246,7 +246,7 @@ namespace Au {
 			value = R ? p.GetDouble(0) : default;
 			return R;
 		}
-
+		
 		/// <remarks></remarks>
 		/// <inheritdoc cref="Get(out int, string, object[])"/>
 		public bool Get(out string value, string sql, params object[] bind) {
@@ -255,7 +255,7 @@ namespace Au {
 			value = R ? p.GetText(0) : default;
 			return R;
 		}
-
+		
 		/// <remarks></remarks>
 		/// <inheritdoc cref="Get(out int, string, object[])"/>
 		public bool Get<T>(out T[] value, string sql, params object[] bind) where T : unmanaged {
@@ -264,7 +264,7 @@ namespace Au {
 			value = R ? p.GetArray<T>(0) : default;
 			return R;
 		}
-
+		
 		/// <remarks></remarks>
 		/// <inheritdoc cref="Get(out int, string, object[])"/>
 		public bool Get<T>(out List<T> value, string sql, params object[] bind) where T : unmanaged {
@@ -273,7 +273,7 @@ namespace Au {
 			value = R ? p.GetList<T>(0) : default;
 			return R;
 		}
-
+		
 		/// <remarks>
 		/// Can be used to get various value types, for example <b>decimal</b>, <b>Guid</b>, <b>RECT</b>.
 		/// </remarks>
@@ -284,7 +284,7 @@ namespace Au {
 			value = R ? p.GetStruct<T>(0) : default;
 			return R;
 		}
-
+		
 		/// <summary>
 		/// Executes single SQL statement and returns <c>true</c> if it returns at least one row of data.
 		/// </summary>
@@ -294,24 +294,24 @@ namespace Au {
 			using var p = Statement(sql, bind);
 			return p.Step();
 		}
-
+		
 		#endregion
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_last_insert_rowid</sqlite>.
 		/// </summary>
 		public long LastInsertRowid => SLApi.sqlite3_last_insert_rowid(_db);
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_changes</sqlite>.
 		/// </summary>
 		public int Changes => SLApi.sqlite3_changes(_db);
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_get_autocommit</sqlite>.
 		/// </summary>
 		public bool IsInTransaction => 0 == SLApi.sqlite3_get_autocommit(_db);
-
+		
 		/// <summary>
 		/// Returns <c>new SLTransaction(this, sql, sqlOfDispose)</c>.
 		/// See <see cref="SLTransaction(sqlite, string, string)"/>.
@@ -319,7 +319,7 @@ namespace Au {
 		/// <inheritdoc cref="SLTransaction(sqlite, string, string)"/>
 		public SLTransaction Transaction(string sql = "BEGIN", string sqlOfDispose = "ROLLBACK")
 			=> new SLTransaction(this, sql, sqlOfDispose);
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if the table exists.
 		/// </summary>
@@ -330,9 +330,9 @@ namespace Au {
 		public bool TableExists(string table) {
 			return Any("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", table);
 		}
-
+		
 		#region util
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if default database text encoding is not UTF-8.
 		/// </summary>
@@ -346,7 +346,7 @@ namespace Au {
 			}
 		}
 		byte __isUtf16; //0 not queried, 1 utf8 or failed, 2 utf16
-
+		
 		string _RawGetText(string sql) {
 			string r = null;
 			fixed (char* p = sql) {
@@ -360,10 +360,10 @@ namespace Au {
 			}
 			return r;
 		}
-
+		
 		#endregion
 	}
-
+	
 	/// <summary>
 	/// Creates and executes a SQLite prepared statement.
 	/// </summary>
@@ -375,7 +375,7 @@ namespace Au {
 	public unsafe class sqliteStatement : IDisposable {
 		sqlite _db;
 		IntPtr _st;
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_prepare16_v3</sqlite>.
 		/// </summary>
@@ -394,7 +394,7 @@ namespace Au {
 				if (tail != null && tail - p != sql.Length) throw new NotSupportedException("sql contains more than single SQL statement");
 			}
 		}
-
+		
 		///
 		protected virtual void Dispose(bool disposing) {
 			if (_st != default) {
@@ -403,7 +403,7 @@ namespace Au {
 				_st = default;
 			}
 		}
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_finalize</sqlite>.
 		/// </summary>
@@ -411,21 +411,21 @@ namespace Au {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
-
+		
 		///
 		~sqliteStatement() => Dispose(false);
-
+		
 		/// <summary><b>sqlite3_stmt*</b></summary>
 		public static implicit operator IntPtr(sqliteStatement s) => s._st;
-
+		
 		/// <summary><b>sqlite3_stmt*</b></summary>
 		public IntPtr Handle => _st;
-
+		
 		/// <summary>
 		/// The database connection.
 		/// </summary>
 		public sqlite DB => _db;
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_step</sqlite>, and returns <c>true</c> if results data available (<sqlite>sqlite3_step</sqlite> returned <b>SQLITE_ROW</b>).
 		/// </summary>
@@ -436,7 +436,7 @@ namespace Au {
 			if (r != SLError.Done) _Err(r, "sqlite3_step");
 			return false;
 		}
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_reset</sqlite> and/or <sqlite>sqlite3_clear_bindings</sqlite>.
 		/// </summary>
@@ -449,51 +449,51 @@ namespace Au {
 			if (clearBindings) SLApi.sqlite3_clear_bindings(_st);
 			return this;
 		}
-
+		
 		#region bind
-
+		
 		int _B(SLIndexOrName p) {
 			if (p.name == null) return p.index;
 			int r = SLApi.sqlite3_bind_parameter_index(_st, Convert2.Utf8Encode(p.name));
 			if (r == 0) throw new SLException($"Parameter '{p.name}' does not exist in the SQL statement.");
 			return r;
 		}
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_int</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, int value)
 			=> _Err(SLApi.sqlite3_bind_int(_st, _B(sqlParam), value), "sqlite3_bind_int");
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_int</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, uint value)
 			=> Bind(sqlParam, (int)value);
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_int64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, long value)
 			=> _Err(SLApi.sqlite3_bind_int64(_st, _B(sqlParam), value), "sqlite3_bind_int64");
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_int64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, ulong value)
 			=> Bind(sqlParam, (long)value);
-
+		
 		/// <summary>Calls <google>sqlite3_bind_int</google> (0 or 1).</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, bool value)
 			=> Bind(sqlParam, value ? 1 : 0);
-
+		
 		/// <summary>Binds an enum value as <b>int</b> or <b>long</b>. Calls <sqlite>sqlite3_bind_int</sqlite> or <sqlite>sqlite3_bind_int64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
@@ -501,60 +501,60 @@ namespace Au {
 		[MethodImpl(MethodImplOptions.NoInlining)] //ensure that value is copied to the parameter, because must not be smaller than int
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, T value) where T : unmanaged, Enum
 			=> Bind(sqlParam, sizeof(T) == 8 ? *(long*)&value : *(int*)&value);
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_double</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, double value)
 			=> _Err(SLApi.sqlite3_bind_double(_st, _B(sqlParam), value), "sqlite3_bind_double");
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_text16</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, string value)
 			=> _Err(SLApi.sqlite3_bind_text16(_st, _B(sqlParam), value, (value?.Length ?? 0) * 2), "sqlite3_bind_text16");
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind(SLIndexOrName sqlParam, void* blob, long nBytes)
 			=> _Err(SLApi.sqlite3_bind_blob64(_st, _B(sqlParam), blob, nBytes), "sqlite3_bind_blob64");
-
+		
 		sqliteStatement _Bind(SLIndexOrName sqlParam, RByte blob) {
 			fixed (byte* p = blob) return Bind(sqlParam, p, blob.Length);
 		}
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, ReadOnlySpan<T> blob) where T : unmanaged
 			=> _Bind(sqlParam, MemoryMarshal.AsBytes(blob));
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, Span<T> blob) where T : unmanaged
 			=> _Bind(sqlParam, MemoryMarshal.AsBytes(blob));
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, T[] array) where T : unmanaged
 			=> Bind(sqlParam, array.AsSpan());
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
 		/// <exception cref="SLException">Failed.</exception>
 		public sqliteStatement Bind<T>(SLIndexOrName sqlParam, List<T> list) where T : unmanaged
 			=> Bind(sqlParam, CollectionsMarshal.AsSpan(list));
-
+		
 		/// <summary>Binds a value as blob. Calls <sqlite>sqlite3_bind_blob64</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
@@ -562,7 +562,7 @@ namespace Au {
 		/// <remarks>Can be any value type that does not contain fields of reference types. Examples: <b>Guid</b>, <b>POINT</b>, <b>int</b>, <b>decimal</b>.</remarks>
 		public sqliteStatement BindStruct<T>(SLIndexOrName sqlParam, T value) where T : unmanaged
 			=> Bind(sqlParam, &value, sizeof(T));
-
+		
 		/// <summary>Calls <sqlite>sqlite3_bind_null</sqlite>.</summary>
 		/// <returns>this.</returns>
 		/// <param name="sqlParam">Parameter name or 1-based index.</param>
@@ -570,21 +570,21 @@ namespace Au {
 		/// <remarks>Usually don't need to call this function. Unset parameter values are null. The <b>Bind</b> functions set null too if the value is null.</remarks>
 		public sqliteStatement BindNull(SLIndexOrName sqlParam)
 			=> _Err(SLApi.sqlite3_bind_null(_st, _B(sqlParam)), "sqlite3_bind_null");
-
+		
 		//rejected. 1. Currently we don't have a Blob class. 2. Can do in SQL: zeroblob(nBytes).
 		///// <summary>Calls <sqlite>sqlite3_bind_zeroblob</sqlite>.</summary>
 		///// <returns>this.</returns>
 		///// <exception cref="SLException">Failed.</exception>
 		//public Statement BindZeroBlob(SLIndexOrName sqlParam, int nBytes)
 		//	=> _Err(SLApi.sqlite3_bind_zeroblob(_st, _B(sqlParam), nBytes), "sqlite3_bind_zeroblob");
-
+		
 		//rejected. DateTime can be stored in many ways. Let users decide how they want to store it, and explicitly convert to long, string, etc.
 		///// <summary>Calls <c>sqlite3_bind_int64(value.ToBinary())</c>.</summary>
 		///// <returns>this.</returns>
 		///// <exception cref="SLException">Failed.</exception>
 		//public Statement Bind(SLIndexOrName sqlParam, DateTime value, bool convertToUtc = false)
 		//	=> Bind(sqlParam, (convertToUtc ? value.ToUniversalTime() : value).ToBinary());
-
+		
 		/// <summary>
 		/// Used by <see cref="BindAll"/>.
 		/// </summary>
@@ -636,7 +636,7 @@ namespace Au {
 			return;
 			gi: Bind(i, k);
 		}
-
+		
 		/// <summary>
 		/// Binds multiple values of any supported types.
 		/// </summary>
@@ -670,18 +670,18 @@ namespace Au {
 				}
 			return this;
 		}
-
+		
 		#endregion
-
+		
 		#region get
-
+		
 		int _C(SLIndexOrName p) {
 			if (p.name == null) return p.index;
 			int r = ColumnIndex(p.name);
 			if (r < 0) throw new SLException($"Column '{p.name}' does not exist in query results.");
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_int</google>.
 		/// </summary>
@@ -695,7 +695,7 @@ namespace Au {
 			if (r == 0) _WarnGet();
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_int64</google>.
 		/// </summary>
@@ -709,14 +709,14 @@ namespace Au {
 			if (r == 0) _WarnGet();
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_int64</google> and returns <c>true</c> if the value is not 0.
 		/// </summary>
 		/// <param name="column">Column name of 0-based index in results.</param>
 		/// <exception cref="SLException">The column does not exist in query results.</exception>
 		public bool GetBool(SLIndexOrName column) => GetLong(column) != 0;
-
+		
 		///// <summary>
 		///// Calls <c>DateTime.FromBinary(sqlite3_column_int64(column))</c>.
 		///// </summary>
@@ -730,7 +730,7 @@ namespace Au {
 		//	if(convertToLocal && r.Kind == DateTimeKind.Utc) r = r.ToLocalTime();
 		//	return r;
 		//}
-
+		
 		/// <summary>
 		/// Calls <google>qlite3_column_double</google>.
 		/// </summary>
@@ -741,7 +741,7 @@ namespace Au {
 			if (r == 0) _WarnGet();
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_text</google>.
 		/// </summary>
@@ -759,7 +759,7 @@ namespace Au {
 			_WarnGet();
 			return null;
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_blob</google>.
 		/// </summary>
@@ -773,7 +773,7 @@ namespace Au {
 			if (r == null) { nBytes = 0; _WarnGet(); } else nBytes = SLApi.sqlite3_column_bytes(_st, icol);
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_blob</google>.
 		/// </summary>
@@ -784,18 +784,18 @@ namespace Au {
 			var p = GetBlob(column, out int n);
 			return new(p, n);
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_blob</google>.
 		/// </summary>
 		/// <returns>The returned memory is managed by SQLite and will become invalid when calling other SQLite functions afterwards.</returns>
 		/// <param name="column">Column name of 0-based index in results.</param>
 		/// <exception cref="SLException">The column does not exist in query results.</exception>
-		public ReadOnlySpan<T> GetBlob<T>(SLIndexOrName column) where T: unmanaged {
+		public ReadOnlySpan<T> GetBlob<T>(SLIndexOrName column) where T : unmanaged {
 			var p = GetBlob(column, out int n);
 			return new(p, n / sizeof(T));
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_blob</google> and creates array.
 		/// </summary>
@@ -811,7 +811,7 @@ namespace Au {
 			fixed (T* p = r) MemoryUtil.Copy(t, p, nb);
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_blob</google> and creates <b>List&lt;T&gt;</b>.
 		/// </summary>
@@ -825,7 +825,7 @@ namespace Au {
 			for (int i = 0; i < ne; i++) r.Add(t[i]);
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Calls <google>sqlite3_column_blob</google> and creates a variable of any value type that does not have fields of reference types.
 		/// </summary>
@@ -837,58 +837,53 @@ namespace Au {
 			if (t != null && nb == sizeof(T)) MemoryUtil.Copy(t, &r, nb);
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_column_count</sqlite>.
 		/// </summary>
 		public int ColumnCount => SLApi.sqlite3_column_count(_st);
-
+		
 		/// <summary>
 		/// Calls <sqlite>sqlite3_column_name</sqlite>.
 		/// </summary>
 		public string ColumnName(int index) => Convert2.Utf8Decode(SLApi.sqlite3_column_name(_st, index));
-
+		
 		/// <summary>
 		/// Finds column by name in results.
 		/// </summary>
 		/// <returns>0-based index, or -1 if not found.</returns>
 		/// <param name="name">Column name in results, as returned by <sqlite>sqlite3_column_name</sqlite>. Case-sensitive.</param>
+		[SkipLocalsInit]
 		public int ColumnIndex(string name) {
 			int n = ColumnCount;
-			if (n > 0 && !name.NE()) {
-				if (name.IsAscii()) {
-					for (int i = 0; i < n; i++) {
-						byte* b = SLApi.sqlite3_column_name(_st, i);
-						if (BytePtr_.AsciiEq(b, name)) return i;
-					}
-				} else {
-					var bname = Convert2.Utf8Encode(name);
-					for (int i = 0; i < n; i++) {
-						byte* b = SLApi.sqlite3_column_name(_st, i);
-						if (BytePtr_.Eq(b, bname)) return i;
-					}
+			if (n > 0 && !name.NE() && !name.Contains('\0')) {
+				Span<byte> sa = stackalloc byte[name.Length * 3];
+				var bname = sa[..Encoding.UTF8.GetBytes(name, sa)];
+				for (int i = 0; i < n; i++) {
+					byte* b = SLApi.sqlite3_column_name(_st, i);
+					if (*b == bname[0] && MemoryMarshal.CreateReadOnlySpanFromNullTerminated(b).SequenceEqual(bname)) return i;
 				}
 			}
 			return -1;
 		}
-
+		
 		#endregion
-
+		
 		#region util
-
+		
 		[DebuggerStepThrough]
 		sqliteStatement _Err(SLError r, string func) {
 			if (r != 0 && r != SLError.Row) throw new SLException(r, _db, func);
 			return this;
 		}
-
+		
 		//rejected: not thread-safe. Other .NET wrappers ignore it too.
 		//void _Err(string func)
 		//{
 		//	var r = SLApi.sqlite3_errcode(_db);
 		//	if(r != 0 && r != SLError.Row) throw new SLException(r, _db, func);
 		//}
-
+		
 		/// <summary>
 		/// Called by <b>GetX</b> functions when <b>sqlite3_column_x</b> returns <c>null</c>/0.
 		/// Shows warning if <sqlite>sqlite3_errcode</sqlite> is not 0 or Row.
@@ -898,7 +893,7 @@ namespace Au {
 			var r = SLApi.sqlite3_errcode(_db);
 			if (r != 0 && r != SLError.Row) SLUtil_.Warn(r, m_, "Note: it may be a false positive if this database connection is used by multiple threads simultaneously without locking.");
 		}
-
+		
 		#endregion
 	}
 }
@@ -910,7 +905,7 @@ namespace Au.Types {
 	/// </summary>
 	public sealed class SLTransaction : IDisposable {
 		sqlite _db;
-
+		
 		/// <summary>
 		/// Begins a SQLite transaction and prepares for automatic rollback if not explicitly committed.
 		/// Usage: <c>using(var trans = new SLTransaction(db)) { ... trans.Commit(); }</c>
@@ -929,7 +924,7 @@ namespace Au.Types {
 			_db = db;
 			SqlOfDispose = sqlOfDispose;
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="Rollback"/> if not called <see cref="Commit"/> or <see cref="Rollback"/>.
 		/// </summary>
@@ -942,7 +937,7 @@ namespace Au.Types {
 		~SLTransaction() {
 			if (_db != null) print.warning($"Non-disposed SLTransaction variable.");
 		}
-
+		
 		/// <summary>
 		/// Executes a rollback SQL (if in transaction) and disables <see cref="Dispose"/>.
 		/// Usually don't need to call this function explicitly. It is implicitly called when disposing this variable if the transaction was not committed.
@@ -957,7 +952,7 @@ namespace Au.Types {
 				_db.Execute(sql);
 			_db = null;
 		}
-
+		
 		/// <summary>
 		/// Executes a commit SQL and disables <see cref="Dispose"/>.
 		/// </summary>
@@ -968,16 +963,16 @@ namespace Au.Types {
 			_db.Execute(sql);
 			_db = null;
 		}
-
+		
 		/// <summary>
 		/// Gets or sets SQL to execute when disposing this variable if not called <see cref="Commit"/> or <see cref="Rollback"/>.
 		/// Initially = parameter <c>sqlOfDispose</c> of constructor.
 		/// </summary>
 		public string SqlOfDispose { get; set; }
-
+		
 		//public string ErrorMessage { get; set; }
 	}
-
+	
 	/// <summary>
 	/// Used for parameter types of some <see cref="sqliteStatement"/> functions.
 	/// Has implicit conversions from <b>int</b> and <b>string</b>. If <b>int</b>, the value is interpreted as index. If <b>string</b> - as name.
@@ -992,27 +987,27 @@ namespace Au.Types {
 		public static implicit operator SLIndexOrName(string name) => new(name);
 #pragma warning restore CS1591
 	}
-
+	
 	/// <summary>
 	/// Exception thrown by <see cref="sqlite"/>, <see cref="sqliteStatement"/> and related types.
 	/// </summary>
 	public class SLException : Exception {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		public SLException(string message) : base(message) { }
-
+		
 		internal SLException(SLError r, string prefix = null, string suffix = null)
 			: base(SLUtil_.Concat(prefix, SLApi.Errstr(r), suffix)) {
 			Debug.Assert(r != 0 && r != SLError.Done && r != SLError.Row);
 			ErrorCode = r;
 		}
-
+		
 		internal SLException(SLError r, IntPtr db, string prefix = null)
 			: base(SLUtil_.Concat(prefix, r, db)) {
 			Debug.Assert(r != 0 && r != SLError.Done && r != SLError.Row);
 			ErrorCode = r;
 		}
 #pragma warning restore CS1591
-
+		
 		/// <summary>
 		/// The called SQLite API function returned this error code.
 		/// </summary>
@@ -1027,28 +1022,28 @@ namespace Au.More {
 			SLApi.sqlite3_free(utf8);
 			return r;
 		}
-
+		
 		//currently not used
 		//internal static void Err(SLError r, sqlite db, string func)
 		//{
 		//	if(r != 0) throw new SLException(r, db, func);
 		//}
-
+		
 		internal static void Warn(SLError r, string func, string suffix = null) {
 			if (r != 0) print.warning(SLUtil_.Concat(func, SLApi.Errstr(r), suffix));
 		}
-
+		
 		internal static string Concat(string s1, string s2, string s3) {
 			using (new StringBuilder_(out var b)) {
 				_Append(s1); _Append(s2); if (s3 != s2) _Append(s3);
 				return b.ToString();
-
+				
 				void _Append(string s) => b.AppendSentence(s, s?.Starts("sqlite3_") ?? false); //avoid uppercase for function names
 			}
 		}
-
+		
 		internal static string Concat(string s1, SLError r, IntPtr db)
 			=> Concat(s1, SLApi.Errstr(r), SLApi.sqlite3_errcode(db) == 0 ? null : SLApi.Errmsg(db));
 	}
-
+	
 }

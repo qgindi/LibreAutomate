@@ -546,7 +546,7 @@ namespace Au.Types {
 			
 			//rejected:
 			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
-			//int len2 = CharPtr_.Length(p, len); Debug_.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
+			//int len2 = Ptr_.Length(p, len); Debug_.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
 			
 			string r = len == 0 ? "" : new string(p, 0, len);
 			Dispose();

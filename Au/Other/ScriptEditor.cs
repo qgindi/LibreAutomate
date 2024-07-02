@@ -221,7 +221,7 @@ public static class ScriptEditor {
 	/// ]]></code>
 	/// </example>
 	public static bool TestCurrentFileInProject(params (string file, Action action)[] files) {
-		if (GetFileInfo(false) is {  } f && f.kind is EFileKind.Class) {
+		if (GetFileInfo(false) is { } f && f.kind is EFileKind.Class) {
 			var s = f.name[..^3];
 			foreach (var (n, a) in files) {
 				if (n.Eqi(s)) {
@@ -232,7 +232,7 @@ public static class ScriptEditor {
 		}
 		return false;
 	}
-
+	
 	
 	//rejected. Use folders.Editor.
 	///// <summary>

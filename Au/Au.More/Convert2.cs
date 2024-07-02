@@ -381,7 +381,7 @@ public static unsafe class Convert2 {
 	/// <remarks>
 	/// Finds <c>'\0'</c> and calls <see cref="Encoding.GetString"/>. Don't use this function when UTF-8 string length is known; call <c>Encoding.UTF8.GetString</c> directly.
 	/// </remarks>
-	public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, BytePtr_.Length(utf8));
+	public static string Utf8Decode(byte* utf8) => utf8 == null ? null : Encoding.UTF8.GetString(utf8, Ptr_.Length(utf8));
 
 	/// <summary>
 	/// Converts string to UTF-8. If non-ASCII, gets UTF-8 character offsets.

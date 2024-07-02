@@ -49,7 +49,7 @@ public unsafe partial class KScintilla {
 	/// The string can be null if the Scintilla message allows it.
 	/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 	/// </summary>
-	public int aaaSetString(int sciMessage, nint wParam, ReadOnlySpan<byte> lParam) {
+	public int aaaSetString(int sciMessage, nint wParam, RByte lParam) {
 		fixed (byte* p = lParam) {
 			Debug.Assert(p == null || p[lParam.Length] == 0);
 			return Call(sciMessage, wParam, p);
@@ -64,7 +64,7 @@ public unsafe partial class KScintilla {
 	/// </summary>
 	public int aaaSetStringString(int sciMessage, RStr wParamlParam) {
 		fixed (byte* s = _ToUtf8(wParamlParam, out var len)) {
-			int i = BytePtr_.Length(s);
+			int i = Ptr_.Length(s);
 			Debug.Assert(i < len);
 			return Call(sciMessage, (nint)s, s + i + 1);
 		}
@@ -1064,6 +1064,14 @@ public unsafe partial class KScintilla {
 	}
 	
 	/// <summary>
+	/// Gets direct pointer to a text range in Scintilla buffer (SCI_GETRANGEPOINTER).
+	/// Does not validate arguments, just asserts to >= from.
+	/// </summary>
+	/// <param name="from">UTF-8 start position.</param>
+	/// <param name="to">UTF-8 end position.</param>
+	public RByte aaaRangeSpan(int from, int to) => new(aaaRangePointer(from, to), to - from);
+	
+	/// <summary>
 	/// SCI_REPLACESEL.
 	/// </summary>
 	/// <param name="s">Replacement text. Can be null.</param>
@@ -1219,7 +1227,7 @@ public unsafe partial class KScintilla {
 			}
 			if (s[0] == 0xFE && s[1] == 0xFF) return _Encoding.Utf16BE;
 			if (len >= 4 && *(uint*)s == 0xFFFE0000) return _Encoding.Utf32BE;
-			int zeroAt = BytePtr_.Length(s, len);
+			int zeroAt = Ptr_.Length(s, len);
 			if (zeroAt == len - 1) len--; //WordPad saves .rtf files with '\0' at the end
 			if (zeroAt == len) { //no '\0'
 				byte* p = s, pe = s + len; for (; p < pe; p++) if (*p >= 128) break; //is ASCII?
@@ -1227,7 +1235,7 @@ public unsafe partial class KScintilla {
 				return _Encoding.Utf8NoBOM;
 			}
 			var u = (char*)s; len /= 2;
-			if (CharPtr_.Length(u, len) == len) //no '\0'
+			if (Ptr_.Length(u, len) == len) //no '\0'
 				if (0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0)) return _Encoding.Utf16NoBOM;
 			return _Encoding.Binary;
 		}

@@ -282,7 +282,7 @@ public static partial class print {
 	/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="it"/>.
 	/// </summary>
 	/// <remarks>
-	/// The default value is <c>true</c> in non-console scripts with role <b>miniProgram</b> (default) that use <see cref="Console"/> functions.
+	/// The default value is <c>true</c> in non-console scripts that use class <see cref="Console"/> and have role <b>miniProgram</b> (default); also <b>exeProgram</b> if started from the script editor. Also in these scripts <b>Console.ReadLine</b> uses <see cref="dialog.showInput"/>.
 	/// 
 	/// If <b>Console.Write</b> text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <b>Console.WriteLine</b>.
 	/// 
@@ -431,7 +431,7 @@ public static partial class print {
 			if (logFileTimestamp) {
 				Api.GetLocalTime(out var t);
 				Api.wsprintfA(p, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-				int nn = BytePtr_.Length(p);
+				int nn = Ptr_.Length(p);
 				Encoding.UTF8.GetBytes(s, new Span<byte>(p + nn, n));
 				n += nn;
 				if (s.Starts("<>")) {

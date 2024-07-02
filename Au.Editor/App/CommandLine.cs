@@ -366,7 +366,7 @@ static class CommandLine {
 		//Normally it is like "C:\...\Au.Editor.exe /s sessionId" or "C:\...\Au.Editor.exe /s sessionId arguments",
 		//	but if started from Task Scheduler it is "C:\...\Au.Editor.exe /s $(Arg0)".
 		
-		int len = CharPtr_.Length(s1) + 1;
+		int len = Ptr_.Length(s1) + 1;
 		var span = new Span<char>(s1, len);
 		var s2 = span.ToArray();
 		int i = span.IndexOf("/s") + 1; //info: it's safe. Can't be "C:/s/..." because the scheduled task wasn't created like this.

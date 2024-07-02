@@ -370,7 +370,7 @@ EndFragment:0000000000
 
 				Encoding enc = ClipFormats.GetTextEncoding_(format, out bool unknown);
 				if (unknown) {
-					if ((len & 1) != 0 || BytePtr_.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect  //never mind: it is UTF-8, not ANSI. Rarely used, especially with non-ASCII text.
+					if ((len & 1) != 0 || Ptr_.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect  //never mind: it is UTF-8, not ANSI. Rarely used, especially with non-ASCII text.
 				}
 
 				if (enc == null) {

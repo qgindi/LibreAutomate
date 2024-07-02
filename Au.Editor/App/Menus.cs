@@ -85,11 +85,11 @@ static class Menus {
 			[Command(keysText = "Enter")]
 			public static void Open() { App.Model.OpenSelected(1); }
 			
-			[Command]
+			[Command(image = "*MaterialDesign.OpenInNew" + black)]
 			public static void Open_in_default_app() { App.Model.OpenSelected(3); }
 			
-			[Command]
-			public static void Select_in_explorer() { App.Model.OpenSelected(4); }
+			[Command(image = "*Material.FolderMarker" + darkYellow)]
+			public static void Select_in_Explorer() { App.Model.OpenSelected(4); }
 			
 			[Command(separator = true, target = "", keys = "Ctrl+F4", keysText = "M-click")]
 			public static void Close() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseSelectedOrCurrent); }

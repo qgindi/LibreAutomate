@@ -350,7 +350,7 @@ public unsafe class SciTags {
 					currentStyle = v.style;
 					if (v.kind == 1) m.links.Add((v.i, (int)(t - s0), v.s));
 				} else { //currently can be only 2 for <fold>
-					if (!(s - tag == 6 && BytePtr_.AsciiStarts(tag + 1, "fold"))) goto ge;
+					if (!(s - tag == 6 && new RByte(tag + 1, 4).StartsWith("fold"u8))) goto ge;
 					m.folds.Add((v.i, (int)(t - s0)));
 					m.links.Add((v.i, v.i + v.attrLen, ""));
 				}
@@ -446,12 +446,12 @@ public unsafe class SciTags {
 				continue;
 			case 1 << 16 | '_': //<_>text where tags are ignored</_>
 			case 1 << 16 | '\a': //<\a>text where tags are ignored</\a>
-				i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if (i2 < 0) goto ge;
+				i2 = new RByte(s, (int)(sEnd - s)).IndexOf(ch == '_' ? "</_>"u8 : "</\a>"u8); if (i2 < 0) goto ge;
 				while (i2-- > 0) _Write(*s++, currentStyle);
 				s += 4;
 				continue;
 			case 4 << 16 | 'c' when span.SequenceEqual("code"u8): //<code>code</code>
-				i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), "</code>"); if (i2 < 0) goto ge;
+				i2 = new RByte(s, (int)(sEnd - s)).IndexOf("</code>"u8); if (i2 < 0) goto ge;
 				if (CodeStylesProvider != null) {
 					int iStartCode = (int)(t - s0);
 					m.codes.Add(new(iStartCode, iStartCode + i2));

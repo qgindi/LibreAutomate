@@ -82,7 +82,7 @@ public class OcrGoogleCloud : IOcrEngine {
 	//Reads response until "fullTextAnnotation".
 	//Can make the download size smaller > 10 times.
 	static unsafe JsonNode _ReadResponse(HttpResponseMessage rm) {
-		var find = "\"fullTextAnnotation\":";
+		var find = "\"fullTextAnnotation\":"u8;
 		using var ab = new ArrayBuilder_<byte>() { Capacity = 250_000 };
 		int have = 0;
 		using (var stream = rm.Content.ReadAsStream()) {
@@ -91,7 +91,7 @@ public class OcrGoogleCloud : IOcrEngine {
 				int n = stream.Read(new Span<byte>(ab.Ptr + have, ab.Capacity - have - 10));
 				if (n == 0) break;
 				int old = Math.Min(find.Length, have);
-				int i = BytePtr_.AsciiFindString(ab.Ptr + have - old, n + old, find);
+				int i = new RByte(ab.Ptr + have - old, n + old).IndexOf(find);
 				if (i > 0) {
 					i += have - old;
 					while (ab.Ptr[i - 1] is 32 or 9 or 10 or 13 or (byte)',') i--;

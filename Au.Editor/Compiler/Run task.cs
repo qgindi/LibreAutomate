@@ -528,7 +528,7 @@ class RunningTasks {
 				}
 			}
 			if (!preloadedProcessExists) {
-				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, r.notInCache, runFromEditor, f.Id, debugAttach);
+				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, r.notInCache, runFromEditor, f.Id, debugAttach, r.flags.Has(MiniProgram_.MPFlags.RedirectConsole));
 				if (pid == 0) return 0; //failed to start debugging
 			}
 			Api.AllowSetForegroundWindow(pid);
@@ -559,7 +559,7 @@ class RunningTasks {
 				
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if (usePreloaded) {
-					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null, r.notInCache, false, 0, null); }
+					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null, r.notInCache, false, 0, null, false); }
 					catch (Exception ex) { Debug_.Print(ex); }
 				}
 			}
@@ -618,7 +618,7 @@ class RunningTasks {
 	/// Starts task process.
 	/// Returns (processId, processHandle). Throws if failed.
 	/// </summary>
-	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach) {
+	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach, bool redirectConsoleInExe) {
 		(int pid, WaitHandle hProcess) r;
 		string cwd;
 		
@@ -646,6 +646,7 @@ class RunningTasks {
 			if (runFromEditor) flags |= 2;
 			if (App.IsPortable) flags |= 4;
 			if (wrPipeName != null) { flags |= 8; p->pipe = wrPipeName; }
+			if (redirectConsoleInExe) flags |= 16;
 			p->flags = flags;
 			p->workspace = folders.Workspace;
 		} else cwd = folders.ThisApp;
