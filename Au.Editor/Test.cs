@@ -24,14 +24,15 @@ static unsafe class Test {
 	//public static void RxTest([StringSyntax("Regex")] this string t) { }
 
 	public static void FromMenubar() {
-		print.clear();
+		//print.clear();
 
 		//new Regex(@"\A\[^a-b]\a text\d\b (?<name>moo)");
 
 		//RxTest(@"\d");
 		//@"\d".RxTest();
 
-		//var d = Panels.Editor.ActiveDoc;
+		var d = Panels.Editor.ActiveDoc;
+		print.it(d.aaaText.Length);
 		////int pos = d.aaaCurrentPos16;
 		////d.aaaInsertText(true, 0, "//");
 		//using (new SciCode.aaaUndoAction(d)) {
@@ -39,7 +40,7 @@ static unsafe class Test {
 		//	d.aaaGoToPos(true, 2);
 		//	//d.aaaReplaceRange(true, 0, 1, "//");
 		//}
-		if (!CodeInfo.GetContextAndDocument(out var cd)) return;
+		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;
 		//print.it(CiUtil.IsPosInNonblankTrivia(cd.syntaxRoot, cd.pos, cd.code));
 		//var trivia = cd.syntaxRoot.FindTrivia(cd.pos, keys.isNumLock);
 		//print.it(cd.pos);

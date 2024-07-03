@@ -1458,6 +1458,18 @@ public static unsafe partial class ExtString {
 		return true;
 	}
 #endif
+	
+	/// <summary>
+	/// Returns <c>true</c> if does not contain non-ASCII character bytes.
+	/// </summary>
+#if NET8_0_OR_GREATER
+	public static bool IsAscii(this RByte t) => !t.ContainsAnyExceptInRange((byte)0, (byte)127);
+#else
+	public static bool IsAscii(this RByte t) { //much slower with long strings
+		foreach (char c in t) if (c > 0x7f) return false;
+		return true;
+	}
+#endif
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static int LengthThrowIfNull_(this RStr t) {

@@ -343,7 +343,7 @@ static class CiFind {
 				}
 			}
 			catch (OperationCanceledException) { return; }
-			catch (Exception e1) { Debug_.Print(e1); } //Roslyn bug: when caret at '!=' in 'if (Sheet != App.ActiveSheet)' (COM)
+			catch (Exception e1) { Debug_.Print(e1); } //Roslyn bug: when caret at '!=' in 'if (Sheet != App.ActiveSheet)' (COM). Also once "Unexpected value 'PointerElementAccess'".
 			finally {
 				cancelTS.Dispose();
 				if (cancelTS == _cancelTS) _cancelTS = null;

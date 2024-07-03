@@ -24,7 +24,7 @@ New parameters:
 - .
 
 Improved:
-- **print.redirectConsoleOutput** is initially `true` in `exeProgram` scripts started from LA (previously only `miniProgram`). Also <b>Console.ReadLine</b> uses **dialog.showInput**.
+-
 
 Fixed bugs:
 - .

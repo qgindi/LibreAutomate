@@ -393,21 +393,24 @@ static class CodeInfo {
 	}
 	
 	/// <summary>
-	/// Call this before pasting, dropping or inserting text when may need special processing, eg auto-inserting 'using' directives.
+	/// Use with `using` before pasting, dropping or inserting text when may need special processing, eg auto-inserting 'using' directives.
 	/// </summary>
-	/// <param name="silent">Insert missing usings without showing dialog.</param>
-	public static void Pasting(SciCode doc, string text, bool silent = false) {
-		if (!_CanWork(doc)) return;
-		_diag.Pasting(doc, silent);
-	}
-	
-	/// <summary>
-	/// Call this after <see cref="Pasting"/> and then inserting text.
-	/// Caret must be at the end of the inserted text. The inserted text can be selected (eg when dropped).
-	/// </summary>
-	public static void Pasted(SciCode doc, string text) {
-		if (!_CanWork(doc)) return;
-		_correct.SciPasted(doc, text);
+	public class Pasting : IDisposable {
+		SciCode _doc;
+		CiAutocorrect.Pasting _ac;
+		
+		/// <param name="silent">Insert missing usings without showing dialog.</param>
+		public Pasting(SciCode doc, bool silent = false) {
+			if (!_CanWork(doc)) return;
+			_doc = doc;
+			_diag.Pasting(_doc, silent);
+			_ac = new(_doc);
+		}
+		
+		public void Dispose() {
+			if (_doc == null) return;
+			_ac.After();
+		}
 	}
 	
 	public class Context {

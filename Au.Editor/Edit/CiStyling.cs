@@ -569,7 +569,7 @@ partial class CiStyling {
 						r.italic = 0 != (i2 & 2);
 						r.underline = 0 != (i2 & 4);
 						if (hasBack) r.back = 0 != (i2 & 8);
-					}
+					} else r.bold = r.italic = r.underline = r.back = false;
 				}
 				
 				void _Indic(ref TIndicator r) {

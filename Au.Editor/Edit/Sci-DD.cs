@@ -150,9 +150,8 @@ partial class SciCode {
 						z.text = p8;
 						z.len = s8.Length;
 						if (0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
-						CodeInfo.Pasting(_sci, s);
-						_sci.Call(SCI_DRAGDROP, 2, &z);
-						CodeInfo.Pasted(_sci, s);
+						using (new CodeInfo.Pasting(_sci))
+							_sci.Call(SCI_DRAGDROP, 2, &z);
 					}
 				} else { //file, script or URL
 					if (isCodeFile) InsertCode.Statements(s, ICSFlags.NoFocus);

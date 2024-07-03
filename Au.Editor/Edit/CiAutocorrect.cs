@@ -1140,26 +1140,47 @@ class CiAutocorrect {
 		ModifyCode.Format(cd, from, to);
 	}
 	
-	//Called after pasted, dropped or inserted statement(s).
-	public void SciPasted(SciCode doc, string text) {
-		//If inserting text before or after `;` and it is an empty statement, delete the `;` if it is redundant.
-		if (App.Settings.ci_semicolon) {
-			int end8 = doc.aaaSelectionEnd8, start8 = end8 - Encoding.UTF8.GetByteCount(text);
-			if (doc.aaaRangeText(false, start8, end8) != text) {
-				Debug_.Print($"dropped on itself? Text: '{text}'");
-				return;
+	//Used when pasting, dropping or inserting statement(s).
+	//If inserting text before or after `;` and it is an empty statement, deletes the `;` if it is redundant.
+	internal class Pasting {
+		SciCode _doc;
+		int _insertedCount, _deleteSemicolonAt = -1;
+		
+		public Pasting(SciCode doc) {
+			if (App.Settings.ci_semicolon) {
+				_doc = doc;
+				_doc.AaTextChanged += _doc_AaTextChanged;
 			}
-			bool semicolonBefore = doc.aaaCharAt8(start8 - 1) is ';', semicolonAfter = !semicolonBefore && doc.aaaCharAt8(end8) is ';';
-			if (semicolonAfter) semicolonAfter = text is [.., ';'] or [.., ';', '\r', '\n'] or [.., ';', '\n'];
-			if (semicolonBefore || semicolonAfter) {
-				int pos = doc.aaaPos16(semicolonBefore ? start8 - 1 : end8);
-				if (CodeInfo.GetDocumentAndFindNode(out var cd, out var node, pos) && node is EmptyStatementSyntax && node.SpanStart == cd.pos) {
-					if (semicolonAfter) doc.aaaReplaceRange(false, end8, end8 + 1, ""); else doc.aaaReplaceRange(false, start8 - 1, start8, "");
-					//rejected: if inserted after `;`, and semicolon missing at the end of text, insert semicolon there. Unreliable etc.
+		}
+		
+		unsafe void _doc_AaTextChanged(KScintilla.AaEventHandlerArgs e) {
+			if (e.n.modificationType.Has(Sci.MOD.SC_MOD_INSERTTEXT) && ++_insertedCount == 1) {
+				int start8 = e.n.position, end8 = start8 + e.n.length;
+				var doc = e.c;
+				bool semicolonBefore = doc.aaaCharAt8(start8 - 1) is ';', semicolonAfter = !semicolonBefore && doc.aaaCharAt8(end8) is ';';
+				if (semicolonAfter) semicolonAfter = new RByte(e.n.textUTF8, e.n.length) is [.., (byte)';'] or [.., (byte)';', (byte)'\r', (byte)'\n'] or [.., (byte)';', (byte)'\n'];
+				if (semicolonBefore || semicolonAfter) _deleteSemicolonAt = semicolonBefore ? start8 - 1 : end8;
+			}
+		}
+		
+		public void After() {
+			if (_doc != null) {
+				_doc.AaTextChanged -= _doc_AaTextChanged;
+				if (_insertedCount == 1 && _deleteSemicolonAt >= 0) {
+					int pos8 = _deleteSemicolonAt;
+					if (_doc.aaaCharAt8(pos8) != ';') {
+						Debug_.Print("not ;");
+					} else {
+						int pos = _doc.aaaPos16(pos8);
+						if (CodeInfo.GetDocumentAndFindNode(out var cd, out var node, pos) && node is EmptyStatementSyntax && node.SpanStart == cd.pos) {
+							_doc.aaaReplaceRange(false, pos8, pos8 + 1, "");
+							//rejected: if inserted after `;`, and semicolon missing at the end of text, insert semicolon there. Unreliable etc.
+							//bad: the user also may want to auto-delete or move the auto-added `;` when it isn't an empty statement. Eg when text dropped/pasted after `int i = ;`. But impossible to know.
+						}
+					}
 				}
 			}
 		}
-		//bad: the user also may want to auto-delete or move the auto-added `;` when it isn't an empty statement. Eg when text dropped/pasted after `int i = ;`. But impossible to know.
 	}
 	
 	#region util

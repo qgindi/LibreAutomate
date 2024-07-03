@@ -33,7 +33,7 @@ May need to delete test code. Or use #if DEBUG, like in Tests.cs.
 
 May need to add new OS version to class osVersion. Usually once/year.
 
-Change version info (see above).
+Change version info (see above) in global2.cs and index.md.
 
 Build solution in config Release/AnyCPU. Build in config Release/x86.
 	NOTE: use the "Rebuild solution" command, else VS may not update something.

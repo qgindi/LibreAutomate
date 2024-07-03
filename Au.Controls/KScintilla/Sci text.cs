@@ -418,7 +418,7 @@ public unsafe partial class KScintilla {
 	/// </remarks>
 	public string aaaText {
 		get {
-			//print.qm2.write($"Text: cached={_text != null}");
+			//if (Name == "document") print.qm2.write($"Text: cached={_text != null}");
 			if (_text == null && !_w.Is0) _text = aaaGetText_(); //_NotifyModified sets _text=null
 			return _text;
 		}
@@ -1233,6 +1233,7 @@ public unsafe partial class KScintilla {
 				byte* p = s, pe = s + len; for (; p < pe; p++) if (*p >= 128) break; //is ASCII?
 				if (p < pe && 0 == Api.MultiByteToWideChar(Api.CP_UTF8, Api.MB_ERR_INVALID_CHARS, s, len, null, 0)) return _Encoding.Ansi;
 				return _Encoding.Utf8NoBOM;
+				//CONSIDER: System.Text.Unicode.Utf8.IsValid
 			}
 			var u = (char*)s; len /= 2;
 			if (Ptr_.Length(u, len) == len) //no '\0'

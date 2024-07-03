@@ -539,15 +539,13 @@ partial class SciCode : KScintilla {
 				aaaSetText(text);
 				break;
 			case 3: //Paste
-				CodeInfo.Pasting(this, text);
-				aaaReplaceSel(text);
-				CodeInfo.Pasted(this, text);
+				using (new CodeInfo.Pasting(this))
+					aaaReplaceSel(text);
 				break;
 			} //rejected: option to rename this file
 		} else {
-			CodeInfo.Pasting(this, s1);
-			Call(SCI_PASTE); //not aaaReplaceSel, because can be SCI_SETMULTIPASTE etc
-			CodeInfo.Pasted(this, s1);
+			using (new CodeInfo.Pasting(this))
+				Call(SCI_PASTE); //not aaaReplaceSel, because can be SCI_SETMULTIPASTE etc
 		}
 	}
 	

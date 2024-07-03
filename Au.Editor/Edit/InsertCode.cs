@@ -21,9 +21,6 @@ enum ICSFlags {
 	/// <summary>If text contains '%', remove it and finally move caret there.</summary>
 	GoToPercent = 1,
 	
-	/// <summary>Collapse folding points in inserted code.</summary>
-	Fold = 2,
-	
 	/// <summary>Activate editor window.</summary>
 	ActivateEditor = 4,
 	
@@ -186,24 +183,12 @@ static class InsertCode {
 		}
 		
 		d.aaaSelect(true, pos, replTo);
-		CodeInfo.Pasting(d, s, silent: true);
-		d.aaaReplaceSel(s);
-		CodeInfo.Pasted(d, s);
-		
-		if (go >= 0) d.aaaGoToPos(true, pos + go);
-		else if (flags.Has(ICSFlags.SelectNewCode)) d.aaaSelect(true, pos + s.TrimEnd('\t').Length, pos, true);
-		else if (flags.Has(ICSFlags.GoToStart)) d.aaaGoToPos(true, pos);
-		
-		if (flags.Has(ICSFlags.Fold)) _FoldInsertedCode(d, pos, s.LineCount());
-		
-		static void _FoldInsertedCode(SciCode doc, int start, int nLines) {
-			string text = doc.aaaText;
-			timer.after(400, _ => { //because fold points are added async, 250 ms timer + async/await
-				var d = Panels.Editor.ActiveDoc; if (d != doc || d.aaaText != text) return;
-				for (int line = d.aaaLineFromPos(true, start), i = line + nLines - 1; --i >= line;) {
-					d.EFoldLine(i);
-				}
-			});
+		using (new CodeInfo.Pasting(d, silent: true)) {
+			d.aaaReplaceSel(s);
+			
+			if (go >= 0) d.aaaGoToPos(true, pos + go);
+			else if (flags.Has(ICSFlags.SelectNewCode)) d.aaaSelect(true, pos + s.TrimEnd('\t').Length, pos, true);
+			else if (flags.Has(ICSFlags.GoToStart)) d.aaaGoToPos(true, pos);
 		}
 		
 		var w = d.AaWnd.Window;
