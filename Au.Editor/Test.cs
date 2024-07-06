@@ -32,7 +32,7 @@ static unsafe class Test {
 		//@"\d".RxTest();
 
 		var d = Panels.Editor.ActiveDoc;
-		print.it(d.aaaText.Length);
+		//print.it(d.aaaText.Length, d.aaaText, d.aaaText.Select(o => (ushort)o));
 		////int pos = d.aaaCurrentPos16;
 		////d.aaaInsertText(true, 0, "//");
 		//using (new SciCode.aaaUndoAction(d)) {
@@ -50,6 +50,7 @@ static unsafe class Test {
 		//var token = cd.syntaxRoot.FindToken(cd.pos);
 		//var node = token.Parent.GetStatementEtc(cd.pos);
 		//CiUtil.PrintNode(node, printErrors: true);
+		
 
 #if !IDE_LA
 		

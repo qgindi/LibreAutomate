@@ -7,9 +7,6 @@ using System.Windows.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-//TODO: cursor starts flickering when rclciked while the left mouse button is down.
-//	Bug report: https://sourceforge.net/p/scintilla/bugs/2443/
-
 partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;
@@ -125,10 +122,10 @@ partial class SciCode : KScintilla {
 	}
 	
 	//Called by PanelEdit.Open.
-	internal void EInit_(byte[] text, bool newFile, bool noTemplate) {
+	internal void EInit_(bool newFile, bool noTemplate) {
 		Debug.Assert(!AaWnd.Is0);
 		
-		bool editable = _fls.SetText(this, text);
+		bool editable = _fls.SetText(this);
 		if (!EIsBinary) {
 			_fn._UpdateFileModTime();
 			//if (_fn.DontSave) aaaIsReadonly = true; //rejected. Never make editor readonly when opened a text file. Would need too many `if (doc.aaaIsReadonly) return;` etc everywhere.
@@ -146,19 +143,11 @@ partial class SciCode : KScintilla {
 		
 		//detect \r without '\n', because it is not well supported. Also NEL, LS, PS.
 		if (editable) {
-			bool badNewlines = false;
-			for (int i = 0; i < text.Length - 1;) { //ends with '\0'
-				switch (text[i++]) {
-				case 13 when text[i] != 10: badNewlines = true; break;
-				case 0xc2 when text[i] == 0x85: badNewlines = true; break;
-				case 0xe2 when text[i] == 0x80 && text[i + 1] is 0xa8 or 0xa9: badNewlines = true; break;
-				}
-			}
-			if (badNewlines) {
+			if (_fls.DetectBadNewlines()) {
 				print.it($@"<>Note: text of {_fn.Name} contains unusual line end characters. <+badNL s>Show<>, <+badNL h>hide<>, <+badNL f>fix<>.");
 				if (!s_badNewlines) {
 					s_badNewlines = true;
-					Panels.Output.Scintilla.AaTags.AddLinkTag("+badNL", s1 => {
+					Panels.Output.Scintilla.AaTags.AddLinkTag("+badNL", static s1 => {
 						var doc = Panels.Editor.ActiveDoc;
 						if (doc != null) {
 							if (s1.Starts('f')) {
@@ -173,6 +162,8 @@ partial class SciCode : KScintilla {
 				}
 			}
 		}
+		
+		_fls.FinishedLoading();
 	}
 	static bool s_badNewlines;
 	

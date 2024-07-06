@@ -31,7 +31,7 @@ public static class KExtWpf {
 	/// </summary>
 	public static wpfBuilder xAddText(this wpfBuilder b, out KTextBox t, string text = null) {
 		b.Add(out t, text).Multiline(..55, wrap: TextWrapping.NoWrap);
-		if (b.Panel is Grid) b.Padding(new Thickness(0, -1, 0, 1)).Margin(left: 4);
+		if (b.Panel is Grid) b.Padding(new Thickness(0, 0, 0, 1)).Margin(left: 4);
 		return b;
 	}
 	
@@ -45,6 +45,7 @@ public static class KExtWpf {
 	/// <param name="check">Checkbox state.</param>
 	public static KCheckTextBox xAddCheckText(this wpfBuilder b, string name, string text = null, bool noR = false, bool check = false) {
 		xAddCheck(b, out KCheckBox c, name, noR, check);
+		var m = c.Margin; if (m.Top <= 1) c.Margin = m with { Top = m.Top + 1 };
 		xAddText(b, out var t, text);
 		return new(c, t);
 	}
@@ -92,8 +93,8 @@ public static class KExtWpf {
 	}
 	
 	static void _xSetOther(wpfBuilder b, FrameworkElement e) {
-		b.Height(18).Margin(left: 4);
-		if (e is Control) b.Padding(new Thickness(4, 0, 4, 0)); //tested with Button and ComboBox
+		b.Height(19).Margin(left: 4);
+		if (e is Control) b.Padding(e is ComboBox ? new Thickness(4, 1, 4, 0) : new Thickness(4, 0, 4, 0)); //tested with Button and ComboBox
 	}
 	
 	/// <summary>

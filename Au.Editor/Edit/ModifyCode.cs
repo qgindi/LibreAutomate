@@ -291,8 +291,9 @@ static class ModifyCode {
 			if (sp1.Contains('\n')) {
 				var a1 = code.Lines(v.Span.ToRange(), preferMore: true);
 				var a2 = v.NewText.Lines(.., preferMore: true);
-				if (a1.Length != a2.Length) Debug_.Print(v);
-				else {
+				if (a1.Length != a2.Length) {
+					//Debug_.Print(v); //usually it's OK. Eg `foo\n{` -> `foo {`.
+				} else {
 					bool insert = false;
 					for (int j = 0; j < a1.Length; j++) {
 						if (a1[j].Length == a2[j].Length && code.Eq(a1[j].Range, v.NewText.AsSpan(a2[j].Range))) continue;

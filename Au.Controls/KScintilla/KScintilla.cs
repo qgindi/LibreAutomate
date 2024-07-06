@@ -34,6 +34,10 @@ public unsafe partial class KScintilla : HwndHost {
 		//filesystem.more.loadDll64or32Bit_("Lexilla.dll");
 	}
 	
+	public KScintilla() {
+		_adapter = new(this);
+	}
+	
 	//public nint AaSciPtr => _sciPtr;
 	public nint AaSciPtr {
 		get {
@@ -111,7 +115,7 @@ public unsafe partial class KScintilla : HwndHost {
 		
 		AaOnHandleCreated();
 		
-		if (!_text.NE()) aaaSetText(_text, SciSetTextFlags.NoUndoNoNotify); //after derived classes set styles etc
+		_adapter.HandleCreated(); //after derived classes set styles etc
 		
 		_wndprocScintilla = Api.SetWindowLongPtr(_w, GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndproc = _WndProc));
 		//WPF will subclass this window. It respects the GWL.WNDPROC subclass, but breaks SetWindowSubclass.
@@ -317,9 +321,7 @@ public unsafe partial class KScintilla : HwndHost {
 				var mt = n.modificationType;
 				//if(this.Name!= "Output_text") print.it(mt, n.position);
 				if (mt.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
-					_text = null;
-					_posState = default;
-					_aPos.Clear();
+					_adapter.TextModified();
 					
 					bool inserted = mt.Has(MOD.SC_MOD_INSERTTEXT);
 					_RdOnModified(inserted, n);

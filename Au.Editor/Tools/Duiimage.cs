@@ -66,7 +66,7 @@ class Duiimage : KDialogWindow {
 		b.R.AddButton("Window...", _bWnd_Click).And(-70).Add(out controlC, "Control").Disabled();
 		b.xStartPropertyGrid();
 		rectC = b.xAddCheckText("Rectangle", "0, 0, ^0, ^0");
-		b.And(21).AddButton("...", _bRect_Click);
+		b.And(21).AddButton("···", _bRect_Click).Height(19);
 		wiflagsC = b.xAddCheckCombo("Flags", "WindowDC|PrintWindow");
 		diffC = b.xAddCheckText("Color diff", "10");
 		b.And(60).AddButton("Detect", _bDiff_Click).Tooltip("Detects the smallest diff value that allows to find the image");

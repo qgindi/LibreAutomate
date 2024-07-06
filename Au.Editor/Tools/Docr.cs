@@ -59,17 +59,17 @@ class Docr : KDialogWindow {
 		//row 3
 		//left
 		b.R.StartGrid();
-		b.R.Add("Find text:", out textC, row2: 0).Focus();
+		b.R.Add("Find text:", out textC, row2: 0);
 		skipC = b.R.xAddCheckText("Skip");
 		b.End();
 		//right
 		b.Skip().xStartPropertyGrid();
 		rectC = b.xAddCheckText("Rectangle", "0, 0, ^0, ^0");
-		b.And(21).AddButton("...", _bRect_Click).Tooltip("Select rectangle in window");
+		b.And(21).AddButton("···", _bRect_Click).Tooltip("Select rectangle in window").Height(19); //info: the '·' in "···" is U+00B7, because '.' is too low
 		wiflagsC = b.xAddCheckCombo("Flags", "WindowDC|PrintWindow");
 		scaleC = b.xAddCheckText("Scale");
 		engineC = b.xAddCheckCombo("OCR engine", "Win10|Tesseract|GoogleCloud|MicrosoftAzure");
-		b.And(21).AddButton("...", _bEngine_Click).Tooltip("OCR engine parameters");
+		b.And(21).AddButton("···", _bEngine_Click).Tooltip("OCR engine parameters").Height(19);
 		b.xEndPropertyGrid();
 
 		b.Row(100).xAddInBorder(out _code);

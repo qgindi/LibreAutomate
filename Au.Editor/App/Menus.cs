@@ -25,7 +25,7 @@ static class Menus {
 		iconPaste = "*Material.ContentPaste" + brown,
 		//iconReferences = "*Codicons.References"
 		iconReferences = "*Material.MapMarkerMultiple" + blue, //or MapMarkerMultipleOutline
-		iconRegex = "*FileIcons.Regex" + blue
+		iconRegex = "*FileIcons.Regex @14" + blue
 		;
 	
 	[Command(target = "Files")]

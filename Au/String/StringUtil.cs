@@ -267,16 +267,17 @@ public static class StringUtil {
 	public static Encoding GetEncoding(string name) => _GetEncoding(name ?? throw new ArgumentNullException());
 	
 	/// <summary>Calls <see cref="Encoding.GetEncoding(int)"/>, and <b>Encoding.RegisterProvider</b> if need.</summary>
+	/// <param name="codepage">If -1, uses the current Windows ANSI code page (API <b>GetACP</b>).</param>
 	/// <returns><c>null</c> if failed.</returns>
-	public static Encoding GetEncoding(int codepage) => _GetEncoding(null, codepage);
+	public static Encoding GetEncoding(int codepage) => _GetEncoding(null, codepage == -1 ? Api.GetACP() : codepage);
 	
 	static Encoding _GetEncoding(string name = null, int codepage = 0) {
+		g1:
 		try { return name != null ? Encoding.GetEncoding(name) : Encoding.GetEncoding(codepage); }
 		catch {
 			if (Interlocked.CompareExchange(ref s_encodingInited, 1, 0) == 0) {
 				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-				try { return name != null ? Encoding.GetEncoding(name) : Encoding.GetEncoding(codepage); }
-				catch {  }
+				goto g1;
 			}
 		}
 		return null;

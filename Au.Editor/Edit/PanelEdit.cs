@@ -79,18 +79,16 @@ class PanelEdit {
 			ActiveDocChanged?.Invoke();
 		} else {
 			var path = f.FilePath;
-			byte[] text = null;
-			KScintilla.aaaFileLoaderSaver fls = default;
-			try { text = fls.Load(path); }
-			catch (Exception ex) { print.it("Failed to open file. " + ex.Message); }
-			if (text == null) return false;
+			KScintilla.aaaFileLoaderSaver fls = new();
+			try { fls.Load(path); }
+			catch (Exception ex) { print.it("Failed to open file. " + ex.Message); return false; }
 			
 			_ShowHideActiveDoc(false);
 			doc = new SciCode(f, fls);
 			_docs.Add(doc);
 			f.OpenDoc = _activeDoc = doc;
 			P.Children.Add(doc);
-			doc.EInit_(text, newFile, noTemplate);
+			doc.EInit_(newFile, noTemplate);
 			_UpdateUI_IsOpen();
 			UpdateUI_EditEnabled_();
 			ActiveDocChanged?.Invoke();

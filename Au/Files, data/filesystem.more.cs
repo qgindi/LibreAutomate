@@ -196,6 +196,31 @@ partial class filesystem {
 		}
 		
 		/// <summary>
+		/// Detects whether the path is on a SSD drive.
+		/// </summary>
+		/// <param name="path">Any path. The function uses just the drive part. Can be just <c>"C:"</c>.</param>
+		/// <returns><c>true</c> if succeeded and the path is on a SSD drive.</returns>
+		/// <remarks>
+		/// Unreliable. For SSD drives usually returns true. For other drives usually fails and returns false.
+		/// </remarks>
+		internal unsafe static bool IsOnSSD_(string path) {
+			if (!path.Like(@"\\.\?:") && !path.Starts(@"\\?\PhysicalDrive")) {
+				var b = stackalloc char[300];
+				if (!Api.GetVolumePathName(path, b, 300)) return false;
+				string s = new(b);
+				if (!Api.GetVolumeNameForVolumeMountPoint(s, b, 300)) return false;
+				s = new(b);
+				path = s.TrimEnd('\\');
+			}
+			using var h = Api.CreateFile(path, 0, Api.FILE_SHARE_READ | Api.FILE_SHARE_WRITE, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
+			if (h.Is0) return false;
+			var query = new Api.STORAGE_PROPERTY_QUERY { PropertyId = 7 };
+			Api.DEVICE_SEEK_PENALTY_DESCRIPTOR spt = default;
+			bool r = Api.DeviceIoControl(h, Api.IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(Api.STORAGE_PROPERTY_QUERY), &spt, sizeof(Api.DEVICE_SEEK_PENALTY_DESCRIPTOR), out _);
+			return r && spt.IncursSeekPenalty == 0;
+		}
+		
+		/// <summary>
 		/// Loads unmanaged dll of correct 64/32 bitness.
 		/// </summary>
 		/// <param name="fileName">Dll file name like <c>"name.dll"</c>.</param>
@@ -210,26 +235,26 @@ partial class filesystem {
 		/// </remarks>
 		internal unsafe static void LoadDll64or32Bit_(string fileName) {
 			//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
-
+			
 			string rel = (sizeof(nint) == 4 ? @"32\" : @"64\") + fileName;
 			//note: don't use osVersion.is32BitProcess here. Its static ctor makes this func slower at startup.
 			//	And folders.ThisAppBS is slow first time, therefore call AppContext.BaseDirectory directly.
-
+			
 			//Au.dll dir + 64/32
 			var asm = typeof(more).Assembly;
 			if (asm.Location is [_, ..] s1) {
 				s1 = s1[..(s1.LastIndexOf('\\') + 1)] + rel;
 				if (NativeLibrary.TryLoad(s1, out _)) return;
 			}
-
+			
 			//like [DllImport]. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json.
 			//	Also finds in temp dir when <PublishSingleFile>+<IncludeNativeLibrariesForSelfExtract>.
 			if (NativeLibrary.TryLoad(fileName, asm, null, out _)) return;
-
+			
 			//environment variable + 64/32
 			if (Environment.GetEnvironmentVariable("Au.Path") is string s2)
 				if (NativeLibrary.TryLoad(pathname.combine(s2, rel), out _)) return;
-
+			
 			throw new DllNotFoundException(fileName + " not found");
 		}
 		
