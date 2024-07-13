@@ -8,7 +8,8 @@ New cookbook recipes:
 - .
 
 Improved:
-- .
+- **editorExtension** scripts can use `await`. Previously would hang.
+- Improvements in the **Portable LibreAutomate setup** tool.
 
 Fixed bugs:
 - .
@@ -24,9 +25,9 @@ New parameters:
 - .
 
 Improved:
--
+- .
 
 Fixed bugs:
-- .
+- **print.it** and **print.list** skip first empty-string items of **IEnumerable**.
 
 ### Breaking changes

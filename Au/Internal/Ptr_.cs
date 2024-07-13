@@ -6,7 +6,10 @@ namespace Au.More;
 internal static unsafe class Ptr_ {
 	#region char*
 	
-	//public static RStr ToRSpan(char* p) => MemoryMarshal.CreateReadOnlySpanFromNullTerminated(p);
+	/// <summary>
+	/// Gets span from start to <c>'\0'</c>.
+	/// </summary>
+	public static RStr ToRSpan(char* p) => MemoryMarshal.CreateReadOnlySpanFromNullTerminated(p);
 	
 	/// <summary>
 	/// Gets the number of characters in <i>p</i> until <c>'\0'</c>.
@@ -28,7 +31,10 @@ internal static unsafe class Ptr_ {
 	
 	#region byte*
 	
-	//public static RByte ToRSpan(byte* p) => MemoryMarshal.CreateReadOnlySpanFromNullTerminated(p);
+	/// <summary>
+	/// Gets span from start to <c>'\0'</c>.
+	/// </summary>
+	public static RByte ToRSpan(byte* p) => MemoryMarshal.CreateReadOnlySpanFromNullTerminated(p);
 	
 	/// <summary>
 	/// Gets the number of bytes in <i>p</i> until <c>'\0'</c>.

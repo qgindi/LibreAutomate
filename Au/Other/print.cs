@@ -159,8 +159,9 @@ public static partial class print {
 		string s = "null";
 		if (value != null)
 			using (new StringBuilder_(out var b)) {
+				bool once = false;
 				foreach (var v in value) {
-					if (b.Length > 0) b.Append(separator);
+					if (!once) once = true; else b.Append(separator);
 					util.toString(b, v, compact: true);
 				}
 				s = b.ToString();

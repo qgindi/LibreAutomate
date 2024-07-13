@@ -232,7 +232,7 @@ static partial class App {
 	}
 	
 	static void _SetThisAppFoldersEtc() {
-		if (filesystem.exists(folders.ThisAppBS + "data").Directory) {
+		if (filesystem.exists(folders.ThisAppBS + "data")) {
 			IsPortable = true;
 			ScriptEditor.IsPortable = true;
 		}
@@ -271,7 +271,7 @@ static partial class App {
 	
 	internal static void OnMainWindowLoaded_() {
 		if (IsPortable) {
-			print.it($"<>Info: <help editor/Portable app>portable mode<>. Using <link {folders.ThisAppBS + "data"}>data<> folder.");
+			print.it($"<>Info: <help editor/Portable app>portable mode<>. Using <link {folders.PortableData_}>data<> folder.");
 		} else {
 			//in v0.12 changed some spec folders from "...\Au" to "...\LibreAutomate\_script"
 			//	FUTURE: delete this code.

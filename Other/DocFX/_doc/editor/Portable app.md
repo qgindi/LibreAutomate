@@ -8,7 +8,7 @@ LibreAutomate can run as a [portable application](https://en.wikipedia.org/wiki/
 ## Setup
 In non-portable LibreAutomate use menu **Tools > Portable**. The tool installs portable LibreAutomate, for example in a USB drive.
 
-The tool copies program files, .NET runtime, current workspace (scripts etc) and program user documents folder (settings etc).
+The tool copies LibreAutomate program files, .NET runtime, current workspace (scripts etc) and the user documents folder of LibreAutomate (settings etc).
 
 ## Run
 Run `Au.Editor.exe` (it may be displayed as `LibreAutomate C#`).
@@ -23,7 +23,7 @@ LibreAutomate uses these special folders: [folders.ThisAppDocuments](), [folders
 
 Scripts can write anywhere, but should use only the above special folders. Other useful functions: [ScriptEditor.IsPortable](), [folders.ThisAppDriveBS]().
 
-The `data` subfolder can be a relative symbolic link to another folder. The tool creates a link if text in the data folder field is not `data`.
+If you want to store data in an external folder, replace the `data` subfolder with a symbolic link. NTFS filesystem supports it; exFAT doesn't. Example: `filesystem.more.createSymbolicLink(@"D:\PortableApps\LibreAutomate\data", @"..\..\Documents\LibreAutomate", CSLink.Directory);`.
 
 If non-portable LibreAutomate is installed on that computer:
 - Portable and non-portable programs cannot run simultaneously.

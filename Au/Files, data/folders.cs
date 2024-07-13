@@ -295,13 +295,23 @@ namespace Au {
 		
 		static string _DefThisApp(string baseDir, string portableSubdir, bool warning = false) {
 			bool ee = script.role == SRole.EditorExtension;
-			if (ScriptEditor.IsPortable) return Editor.Path + @"\data\" + portableSubdir + (ee ? null : @"\_script");
-			//return baseDir + (ee ? @"\LibreAutomate" : @"\Au"); //old
+			
+			if (ScriptEditor.IsPortable) return PortableData_ + "\\" + portableSubdir + (ee ? null : @"\_script");
+			
 			return baseDir + (ee ? @"\LibreAutomate" : @"\LibreAutomate\_script");
 		}
-		
+
+		internal static string PortableData_ => __portableData ??= GetPortableDataDir_(Editor.Path);
+		static string __portableData;
+
+		static internal string GetPortableDataDir_(string appPath) {
+			var s = appPath + @"\data";
+			//if (filesystem.exists(s, true).File) return pathname.normalize(filesystem.loadText(s), appPath);
+			return s;
+		}
+
 		#endregion
-		
+
 		/// <summary>
 		/// Gets or sets path of folder "temporary files of this application".
 		/// </summary>
@@ -559,7 +569,7 @@ namespace Au {
 			var s = typeof(Accessibility.IAccessible).Assembly.Location;
 			if (s.NE()) return NetRuntimeBS; //single-file app
 			s = pathname.getDirectory(s, withSeparator: true);
-			Debug.Assert(s != NetRuntimeBS || s == ThisAppBS);
+			Debug.Assert(s != NetRuntimeBS || s.Starts(ThisAppBS));
 			return s;
 			//note: cannot get NetRuntimeDesktopBS from NetRuntimeBS.
 			//	Can be different version, eg Microsoft.NETCore.App\8.0.0-rc.1.23419.4 and Microsoft.WindowsDesktop.App\8.0.0-rc.1.23420.5.

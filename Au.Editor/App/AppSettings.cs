@@ -181,6 +181,7 @@ System.Threading.Tasks.TaskCanceledException
 	
 	//DPortable
 	public string portable_dir;
+	public string[] portable_skip;
 	
 	//DOcr
 	public Au.Tools.OcrEngineSettings ocr;
@@ -235,4 +236,6 @@ record WorkspaceSettings : JSettings {
 	User _cu;
 	
 	public string ci_skipFolders;
+	
+	public string syncfs_skip;
 }

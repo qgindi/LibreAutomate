@@ -19,18 +19,12 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 
-static unsafe class Test {
-
-	//public static void RxTest([StringSyntax("Regex")] this string t) { }
-
+static  class Test {
+	
 	public static void FromMenubar() {
-		//print.clear();
+		print.clear();
 
-		//new Regex(@"\A\[^a-b]\a text\d\b (?<name>moo)");
-
-		//RxTest(@"\d");
-		//@"\d".RxTest();
-
+		
 		var d = Panels.Editor.ActiveDoc;
 		//print.it(d.aaaText.Length, d.aaaText, d.aaaText.Select(o => (ushort)o));
 		////int pos = d.aaaCurrentPos16;
@@ -46,22 +40,22 @@ static unsafe class Test {
 		//print.it(cd.pos);
 		//CiUtil.PrintNode(trivia);
 		//print.it(trivia.Span, trivia.FullSpan);
-
+		
 		//var token = cd.syntaxRoot.FindToken(cd.pos);
 		//var node = token.Parent.GetStatementEtc(cd.pos);
 		//CiUtil.PrintNode(node, printErrors: true);
 		
-
+		
 #if !IDE_LA
 		
 #endif
 	}
-
+	
 	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;
 		//	new TestGC();
-
+		
 		//	//timer.every(50, _ => {
 		//	//	if(!s_debug) {
 		//	//		s_debug = true;
@@ -71,7 +65,7 @@ static unsafe class Test {
 		//}
 	}
 	//static bool s_debug2;
-
+	
 	class TestGC {
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;

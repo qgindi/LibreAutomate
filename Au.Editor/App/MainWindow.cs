@@ -182,6 +182,7 @@ partial class MainWindow : Window {
 			if (wParam != 0) {
 				_appActivatedTimer ??= new(_ => {
 					Panels.Editor.OnAppActivated_();
+					App.Model.SyncWithFilesystem();
 					if (App.Settings.checkForUpdates) App.CheckForUpdates();
 					Git.AutoBackup(false);
 				});

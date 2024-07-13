@@ -197,7 +197,8 @@ public sealed unsafe class consoleProcess : IDisposable {
 			if (nr > 0) {
 				var b = _b.AsSpan(0, nr);
 				
-				Debug_.PrintIf(b[0] is 0xfe or 0xef or 0xff); //BOM? Never noticed.
+				//BOM? Noticed with: robocopy /unicode (UTF-16 BOM followed by ASCII).
+				if (b is [0xEF, 0xBB, 0xBF, ..]) b = b[3..]; else if (b is [0xFF, 0xFE, ..]) b = b[2..];
 				
 				if (_skipN && _b[0] == 10) {
 					_skipN = false;

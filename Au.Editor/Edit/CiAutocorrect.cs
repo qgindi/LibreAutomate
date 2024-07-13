@@ -1,3 +1,7 @@
+//TODO: reject auto-enclosing. Add "enclose" commands with hotkeys Ctrl+{ etc. Now too annoying.
+
+//TODO: replace empty statement on '{` after it.
+
 extern alias CAW;
 
 using System.Windows.Input;

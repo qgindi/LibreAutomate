@@ -1,4 +1,4 @@
-﻿#define MyAppName "LibreAutomate C#"
+#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
 #define MyAppVersion "1.3.2"
 #define MyAppPublisher "Gintaras Didžgalvis"
@@ -201,7 +201,7 @@ begin
   
   //If the above failed, use this hardcoded URL. This URL is updated for each new .NET 8.0.x version.
   //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates this string in this .iss file.
-  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/76e5dbb2-6ae3-4629-9a84-527f8feb709c/09002599b32d5d01dc3aa5dcdffcc984/windowsdesktop-runtime-8.0.6-win-x64.exe';
+  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/bb581716-4cca-466e-9857-512e2371734b/5fe261422a7305171866fd7812d0976f/windowsdesktop-runtime-8.0.7-win-x64.exe';
   
   //rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
   //url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';

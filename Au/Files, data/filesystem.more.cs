@@ -198,20 +198,23 @@ partial class filesystem {
 		/// <summary>
 		/// Detects whether the path is on a SSD drive.
 		/// </summary>
-		/// <param name="path">Any path. The function uses just the drive part. Can be just <c>"C:"</c>.</param>
+		/// <param name="path">Any path. The function uses just the drive part. Can be just <c>"C:"</c>. Fails if a network path.</param>
 		/// <returns><c>true</c> if succeeded and the path is on a SSD drive.</returns>
 		/// <remarks>
 		/// Unreliable. For SSD drives usually returns true. For other drives usually fails and returns false.
 		/// </remarks>
 		internal unsafe static bool IsOnSSD_(string path) {
-			if (!path.Like(@"\\.\?:") && !path.Starts(@"\\?\PhysicalDrive")) {
+			try {
+				if (path.Starts(@"\\?\")) path = path[4..];
+				var di = new DriveInfo(path);
+				if (!(di.DriveType is DriveType.Fixed or DriveType.Removable) || !di.IsReady) return false;
+				
 				var b = stackalloc char[300];
-				if (!Api.GetVolumePathName(path, b, 300)) return false;
-				string s = new(b);
-				if (!Api.GetVolumeNameForVolumeMountPoint(s, b, 300)) return false;
-				s = new(b);
-				path = s.TrimEnd('\\');
+				if (!Api.GetVolumeNameForVolumeMountPoint(di.Name, b, 300)) return false;
+				path = new(Ptr_.ToRSpan(b).TrimEnd('\\'));
 			}
+			catch { return false; }
+			
 			using var h = Api.CreateFile(path, 0, Api.FILE_SHARE_READ | Api.FILE_SHARE_WRITE, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
 			if (h.Is0) return false;
 			var query = new Api.STORAGE_PROPERTY_QUERY { PropertyId = 7 };

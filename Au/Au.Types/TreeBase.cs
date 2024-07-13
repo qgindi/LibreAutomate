@@ -364,12 +364,13 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// Gets all descendant nodes (direct children, their children and so on).
 	/// </summary>
 	/// <param name="andSelf">Include this node. Default <c>false</c>.</param>
-	public IEnumerable<T> Descendants(bool andSelf = false) {
+	/// <param name="stepInto">If not <c>null</c>, the callback function is called for each descendant node that has childred. Let it return <c>false</c> to skip descendants of that node.</param>
+	public IEnumerable<T> Descendants(bool andSelf = false, Func<T, bool> stepInto = null) {
 		var n = this as T;
 		if (andSelf) yield return n;
 		while (true) {
 			T last = n._lastChild;
-			if (last != null) {
+			if (last != null && !(stepInto is {  } si && n != this && !si(n))) {
 				n = last._next;
 			} else {
 				while (n != null && n != this && n == n._parent._lastChild) n = n._parent;

@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using Au.Controls;
 
 #if SCRIPT
-DPortable.aaShow();
+DPortable.ShowSingle();
 file
 #endif
 
@@ -18,7 +18,7 @@ class DPortable : KDialogWindow {
 		}
 		ShowSingle(() => new DPortable());
 	}
-
+	
 	string _dirPortableApp = App.Settings.portable_dir;
 	string _dirThisApp = folders.ThisApp;
 	string _dirNet = folders.NetRuntime;
@@ -27,34 +27,59 @@ class DPortable : KDialogWindow {
 	string _dirScriptDataRoaming = folders.ThisAppDataRoaming + "_script";
 	string _dirThisAppDocuments = folders.ThisAppDocuments;
 	string _dirWorkspace = App.Model.WorkspaceDirectory;
-	string _dirData;
-	bool _exists, _replacePF, _replaceData;
-
+	bool _exists, _copyPF, _copyWs, _copyDoc;
+	string _skipDirsWs, _skipDirsDoc, _skipDirsApp;
+	
 	DPortable() {
+#if SCRIPT
+		print.clear();
+		
 		//test with smaller folders
-		//_dirThisApp = folders.ProgramFiles + "LibreAutomate";
-		//_dirWorkspace = folders.ThisAppDocuments + "Main";
-
+		_dirThisApp = folders.ProgramFiles + "LibreAutomate";
+		_dirWorkspace = folders.ThisAppDocuments + "Main";
+		
+		(string[] portable_skip, int _) sett = default;
+#else
+		var sett = App.Settings;
+#endif
+		if (sett.portable_skip.Lenn_() != 3) sett.portable_skip = [".git\r\n\\exe", ".git", "\\Git"];
+		
+		if (_dirPortableApp.NE() && folders.RemovableDrive0.Path is string drive) App.Settings.portable_dir = _dirPortableApp = drive + @"PortableApps\LibreAutomate";
 		if (filesystem.more.comparePaths(_dirThisApp, _dirNet) is CPResult.Same or CPResult.AContainsB) _dirNet = _dirNetDesktop = null;
 		if (!filesystem.exists(_dirScriptDataLocal).Directory) _dirScriptDataLocal = null;
 		if (!filesystem.exists(_dirScriptDataRoaming).Directory) _dirScriptDataRoaming = null;
-
+		
 		InitWinProp("Portable LibreAutomate setup", App.Wmain);
-		var b = new wpfBuilder(this).WinSize(450);
-
-		if (_dirPortableApp.NE() && folders.RemovableDrive0.Path is string drive) App.Settings.portable_dir = _dirPortableApp = drive + @"PortableApps\LibreAutomate";
+		var b = new wpfBuilder(this).WinSize(500);
+		
 		b.R.Add("Install in folder", out TextBox tDir).Focus().Validation(_ => _ValidateFolder());
-
+		
 		b.R.StartStack(out KGroupBox gExists, "The folder already exists", vertical: true);
 		gExists.Visibility = Visibility.Collapsed;
-		b.Add(out KCheckBox cReplacePF, "Replace program files (LA, .NET)").Tooltip("Replace everything in the portable program folder except the data folder");
-		b.Add(out KCheckBox cReplaceData, "Replace data (scripts, settings, etc)").Tooltip("Replace the data folder")
-			.Validation(_ => _exists && !cReplacePF.IsChecked && !cReplaceData.IsChecked ? "Please check one or both 'Replace'" : null);
+		b.Add(out KCheckBox cUpdatePF, "Update program files (LA, .NET)");
+		b.Add(out KCheckBox cUpdateWs, "Update workspace (scripts etc)");
+		b.Add(out KCheckBox cUpdateDoc, "Update settings and other data")
+			.Validation(_ => _exists && !cUpdatePF.IsChecked && !cUpdateWs.IsChecked && !cUpdateDoc.IsChecked ? "All 'Update' unchecked" : null);
 		b.End();
-
-		b.R.Add("Data folder", out ComboBox cbData).Items(@"data|..\..\Documents\LibreAutomate").Editable()
-			.Tooltip("Folder for scripts, settings and other data. Relative to the program folder.\nShould be either \"data\" or outside of the program folder.");
-
+		
+		b.R.StartGrid<KGroupBox>("Skip folders").Columns(-1, 20, -1, 20, -1);
+		var tSkipWs = _AddSkip(0, _dirWorkspace, "workspace");
+		var tSkipDoc = _AddSkip(1, _dirThisAppDocuments, "documents");
+		var tSkipApp = _AddSkip(2, _dirThisApp, "program");
+		b.End();
+		
+		TextBox _AddSkip(int dir, string linkPath, string linkName) {
+			if (dir > 0) b.Skip();
+			b.StartStack(vertical: true);
+			b.Add<TextBlock>().FormatText($"In <a href=\"{linkPath}\">{linkName}</a>");
+			b.Add(out TextBox t, sett.portable_skip[dir])
+				.Multiline(60, TextWrapping.NoWrap)
+				.Tooltip("These folders will not be copied. Existing folders will not be deleted or updated.\r\nExamples:\r\nDescendantFolderName\r\n\\DirectChildFolderName\r\n\\Folder1\\Folder2");
+			t.TextChanged += (_, _) => { sett.portable_skip[dir] = t.Text; };
+			b.End();
+			return t;
+		}
+		
 		b.R.AddSeparator();
 		b.R.StartOkCancel();
 		b.AddButton("Print details", _ => _PrintDetails()).Width(100);
@@ -62,139 +87,117 @@ class DPortable : KDialogWindow {
 		b.AddButton("Cancel", null, WBBFlags.Cancel);
 		b.AddButton("Help", _ => HelpUtil.AuHelp("editor/Portable app")).Width(70);
 		b.End();
-
+		
 		b.End();
-
+		
 		tDir.TextChanged += (_, _) => {
 			App.Settings.portable_dir = _dirPortableApp = tDir.Text.Trim();
 			_exists = filesystem.exists(_dirPortableApp).Directory;
 			gExists.Visibility = _exists ? Visibility.Visible : Visibility.Collapsed;
-			bool ntfs = true; try { ntfs = new DriveInfo(_dirPortableApp).DriveFormat == "NTFS"; } catch {  }
-			cbData.IsEnabled = ntfs;
-			if (!ntfs) {
-				cbData.Text = "data";
-			} else if (_exists) {
-				var data = _dirPortableApp + @"\data";
-				if (filesystem.more.getFinalPath(_dirPortableApp, out var s1, format: FPFormat.PrefixAlways) && filesystem.more.getFinalPath(data, out var s2, format: FPFormat.PrefixAlways)) {
-					cbData.Text = Path.GetRelativePath(s1, s2);
-				}
-			}
 		};
 		tDir.Text = _dirPortableApp;
-
+		
 		b.OkApply += e => {
-			_replacePF = cReplacePF.IsChecked;
-			_replaceData = cReplaceData.IsChecked;
-			_dirData = cbData.Text; if (_dirData.NE()) _dirData = "data";
-
+			_copyPF = !_exists || cUpdatePF.IsChecked;
+			_copyWs = !_exists || cUpdateWs.IsChecked;
+			_copyDoc = !_exists || cUpdateDoc.IsChecked;
+			_skipDirsWs = tSkipWs.Text;
+			_skipDirsDoc = tSkipDoc.Text;
+			_skipDirsApp = tSkipApp.Text;
+			
 			Task.Run(() => {
 				try { _InstallThread(); }
 				catch (Exception e1) { dialog.showError(@"Failed", e1.ToString()); }
 			});
 		};
 	}
-
+	
 	void _InstallThread() {
-		if (!_exists || (_replacePF && _replaceData)) {
-			print.it("<><lc YellowGreen>Installing portable LibreAutomate<>");
-			if (_exists) _DeleteOldData();
-			_CopyPF();
-			_CopyData();
-		} else {
-			var dirData = _dirPortableApp + @"\data";
-			if (_replacePF) {
-				print.it("<><lc YellowGreen>Replacing portable LibreAutomate program files<>");
-				var temp = _dirPortableApp + "-data";
-				print.it($"Moving old data folder to {temp}");
-				filesystem.move(dirData, temp);
-				try {
-					_CopyPF();
-				}
-				finally {
-					print.it($"Moving old data folder to {dirData}");
-					filesystem.move(temp, dirData);
-				}
-			} else if (_replaceData) {
-				print.it("<><lc YellowGreen>Replacing portable LibreAutomate data<>");
-				_DeleteOldData();
-				_CopyData();
-			}
-		}
-
+		//using var p1 = perf.local();
+		print.it($"<><lc YellowGreen>{(_exists ? "Updating" : "Installing")} portable LibreAutomate. Please wait until DONE.<>");
+		if (_copyPF) _CopyPF();
+		if (_copyDoc || _copyWs) _CopyData();
 		print.it($"<>DONE. Installed in <link>{_dirPortableApp}<>.");
-
+		
 		void _CopyPF() {
-			if (_exists) {
-				print.it("Deleting old folder");
-				filesystem.delete(_dirPortableApp);
-			}
-
-			_Copy(_dirThisApp, _dirPortableApp);
-			filesystem.delete(Directory.GetFiles(_dirPortableApp, "unins*"), FDFlags.CanFail); //4 MB
-
+			_Copy(_dirThisApp, _dirPortableApp, "/mir /xf unins* /xd dotnet data", _skipDirsApp);
+			
 			if (_dirNet != null) {
 				var dotnet = _dirPortableApp + @"\dotnet";
-				_Copy(_dirNet, dotnet, FIfExists.Delete);
-				_Copy(_dirNetDesktop, dotnet, FIfExists.MergeDirectory);
+				_Copy(_dirNet, dotnet, "/e");
+				_Copy(_dirNetDesktop, dotnet, "/e");
 			}
 		}
-
+		
 		void _CopyData() {
-			var data = _dirPortableApp + @"\data";
-			if (_dirData.Eqi("data")) {
-				_dirData = data;
-			} else {
-				filesystem.more.createSymbolicLink(data, _dirData, CSLink.Directory, elevate: true); //probably relative link
-				_dirData = pathname.normalize(_dirData, _dirPortableApp);
-			}
-
-			if (_dirScriptDataLocal != null) _Copy(_dirScriptDataLocal, _dirData + @"\appLocal\_script");
-			if (_dirScriptDataRoaming != null) _Copy(_dirScriptDataRoaming, _dirData + @"\appRoaming\_script");
-
-			_Copy(_dirThisAppDocuments, _dirData + @"\doc");
-
-			_WorkspaceAndSettings();
-		}
-
-		static void _Copy(string dir, string dirTo, FIfExists _ifExists = FIfExists.Fail) {
-			print.it($"Copying {pathname.unprefixLongPath(dir)}");
-			filesystem.copy(dir, dirTo, _ifExists);
-		}
-
-		void _WorkspaceAndSettings() {
-			string ws1 = _dirWorkspace, ws2, doc1 = _dirThisAppDocuments;
-			switch (filesystem.more.comparePaths(ref doc1, ref ws1)) {
-			case CPResult.AContainsB:
-				ws2 = ws1[doc1.Length..];
-				break;
-			case CPResult.None:
-				var copyTo = pathname.makeUnique(_dirData + @"\doc\" + pathname.getName(ws1), isDirectory: true);
-				_Copy(ws1, copyTo, FIfExists.Fail);
-				ws2 = "\\" + pathname.getName(copyTo);
-				break;
-			default: throw new AuException();
-			}
-			ws2 = "%folders.ThisAppDocuments%" + ws2;
-
+			var data = _dirPortableApp + @"\data\";
+			
+			if (_copyDoc && _dirScriptDataLocal != null) _Copy(_dirScriptDataLocal, data + @"AppLocal\_script", $"""/mir /xd "{_dirScriptDataLocal}\iconCache" """);
+			if (_copyDoc && _dirScriptDataRoaming != null) _Copy(_dirScriptDataRoaming, data + @"AppRoaming\_script", "/mir");
+			
+			string portableWsName = pathname.getName(_dirWorkspace), portableWsPath = $@"{data}doc\{portableWsName}";
+			if (_copyDoc) _Copy(_dirThisAppDocuments, data + "doc", $"""/mir /xd "{_dirWorkspace}" "{portableWsPath}" """, _skipDirsDoc);
+			if (!_copyWs) _copyWs = !filesystem.exists(portableWsPath);
+			if (_copyWs) _Copy(_dirWorkspace, portableWsPath, $"""/mir /xd "{_dirWorkspace}\.compiled" "{_dirWorkspace}\.temp" """, _skipDirsWs);
+			
 			print.it("Changing settings");
-			var settFile = _dirData + @"\doc\.settings\Settings.json";
-			var j = JsonNode.Parse(filesystem.loadBytes(settFile));
-			j["workspace"] = ws2;
-			//print.it(j);
-			//print.it(ws1, ws2);
-			filesystem.saveText(settFile, j.ToJsonString());
+			var file = data + @"doc\.settings\Settings.json";
+			var j = JsonNode.Parse(filesystem.loadBytes(file));
+			j["workspace"] = $@"%folders.ThisAppDocuments%\{portableWsName}";
+			filesystem.saveText(file, j.ToJsonString());
+			if (_copyWs) {
+				file = portableWsPath + @"\settings.json";
+				var s = filesystem.loadText(file);
+				s = s.Replace("\"gitBackup\": true", "\"gitBackup\": false");
+				filesystem.saveText(file, s);
+			}
 		}
-
-		void _DeleteOldData() {
-			var data = _dirPortableApp + @"\data";
-			if (filesystem.exists(data)) {
-				print.it("Deleting old data");
-				if (filesystem.more.getFinalPath(data, out var s)) filesystem.delete(s); //if symlink, delete target
-				filesystem.delete(data);
+		
+		static void _Copy(string dir, string dirTo, string how, string skipDirs = null) {
+			dir = pathname.unprefixLongPath(dir); //robocopy unaware about "\\?\"
+			dirTo = pathname.unprefixLongPath(dirTo);
+			
+			print.it($"Copying {dir}");
+			var s = $"""
+"{dir}" "{dirTo}" {how} /xj /r:0 /w:1 /np /mt{_GetSkipDirsCL()}
+""";
+			//info: the `/r:0` turns off the robocopy's slow and unreliable retries. Use this loop instead.
+			//tested: with `/mt` (multithreaded) faster eg 20 -> 17 s or 49 -> 31 s. Faster even if HDD.
+			
+			for (int i = 0; ;) {
+				int r = run.console(out var so, "robocopy.exe", s);
+				//print.it($"<><c red>{r}<>"); print.it(so);
+				if ((uint)r < 8) break;
+				if (++i == 5) {
+					print.it($"<><c red>Failed to copy '{dir}' to '{dirTo}'.<>\r\n<\a>{so}</\a>");
+					if (r == 16) throw new AuException();
+					break;
+				}
+				100.ms();
+			}
+			
+			//CONSIDER: options:
+			//	1. Keep new and newer portable files. (instead of /mir use /e /xo; or /mir /xo /xx)
+			//		Bad: if both files modified...
+			//	2. Copy symbolic link target. And workspace link target.
+			
+			string _GetSkipDirsCL() {
+				if (skipDirs == null) return null;
+				var a = skipDirs.Lines(noEmpty: true);
+				if (a.Length == 0) return null;
+				StringBuilder b = new(" /xd");
+				foreach (var s in a) {
+					//workaround for: robocopy does not support relative paths. Can be either filename or full path.
+					//	If filename, skips all source and dest descendants with that name.
+					//	To achieve the same with a relative path, specify full paths in both source and dest dir.
+					if (s.Starts('\\')) b.Append($" \"{dir}{s}\" \"{dirTo}{s}\"");
+					else b.Append($" \"{s}\"");
+				}
+				return b.ToString();
 			}
 		}
 	}
-
+	
 	void _PrintDetails() {
 		long sizeProg = filesystem.more.calculateDirectorySize(_dirThisApp);
 		long sizeNet = _dirNet == null ? 0 : filesystem.more.calculateDirectorySize(_dirNet) + filesystem.more.calculateDirectorySize(_dirNetDesktop);
@@ -204,7 +207,7 @@ class DPortable : KDialogWindow {
 		long sizeDoc = filesystem.more.calculateDirectorySize(_dirThisAppDocuments);
 		bool wsInDoc = filesystem.more.comparePaths(_dirThisAppDocuments, _dirWorkspace) == CPResult.AContainsB;
 		long sizeWs = filesystem.more.calculateDirectorySize(_dirWorkspace); if (wsInDoc) sizeDoc -= sizeWs;
-
+		
 		var b = new StringBuilder();
 		b.Append($"""
 <><lc YellowGreen>Portable LibreAutomate setup details<>
@@ -218,6 +221,7 @@ Folder sizes (MB):
 
 """);
 		_BigFiles(_dirWorkspace, "workspace");
+		_BigFiles(_dirThisAppDocuments, "documents");
 		void _BigFiles(string dir, string name) {
 			var a = filesystem.enumDirectories(dir)
 				.Select(o => (o.Name, size: _MB(filesystem.more.calculateDirectorySize(o.FullPath))))
@@ -230,17 +234,17 @@ Folder sizes (MB):
 			b.AppendLine($"Some big folders in <link {_dirThisApp}>program<> folder (MB):\r\n\t{"Libraries",-15} {n1}");
 		}
 		_Links(b);
-
+		
 		print.clear();
 		print.it(b.ToString());
 		print.scrollToTop();
-
+		
 		static int _MB(long size) {
 			const long MB = 1024 * 1024;
 			//return (int)((size + MB / 2) / MB); //round
 			return (int)(size / MB);
 		}
-
+		
 		void _Links(StringBuilder b) {
 			int n = 0;
 			foreach (var f in App.Model.Root.Descendants()) {
@@ -251,10 +255,10 @@ Folder sizes (MB):
 			}
 		}
 	}
-
+	
 	string _ValidateFolder() {
 		if (_dirPortableApp.NE()) return "Where to install?";
-
+		
 		//error if workspace is in portable folder (shared). Or part of it (link target).
 		if (filesystem.exists(_dirPortableApp)) {
 			bool bad = filesystem.more.comparePaths(_dirPortableApp, _dirWorkspace) is CPResult.AContainsB or CPResult.BContainsA or CPResult.Same;
@@ -272,7 +276,7 @@ Folder sizes (MB):
 			}
 			if (bad) return "Current workspace or part of it is in the portable folder, or vice versa.";
 		}
-
+		
 		return null;
 	}
 }
