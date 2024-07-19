@@ -287,10 +287,12 @@ class Class1 {
 		string dir1 = App.Model.DllDirectory, dir2 = folders.ThisAppBS + "Libraries", initDir = null;
 		bool exists1 = filesystem.exists(dir1).Directory, exists2 = filesystem.exists(dir2).Directory;
 		if (exists1 || exists2) {
-			var m = new popupMenu();
+			var m = new popupMenu { CheckDontClose = true };
 			if (exists1) m.Add(1, @"%folders.Workspace%\dll");
 			if (exists2) m.Add(2, @"%folders.ThisApp%\Libraries");
 			m.Add(3, "Last used folder");
+			m.Separator();
+			m.AddCheck("Unexpand path (option)", App.Settings.tools_pathUnexpand, o => App.Settings.tools_pathUnexpand ^= true);
 			int r = m.Show(owner: this); if (r == 0) return;
 			if (r == 1) initDir = dir1; else if (r == 2) initDir = dir2;
 		}

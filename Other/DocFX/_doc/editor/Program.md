@@ -28,9 +28,11 @@ Click an item to open in the code editor. Right-click to show context menu. Midd
 
 All changes are saved automatically.
 
-C# code files have .cs extension, but it is hidden. Yellow background if the file is open in the code editor.
+Deleted files and folders are moved to the Recycle Bin if possible.
 
-Deleted files and folders are moved to the Recycle Bin if possible. To restore a file or folder, find it there and restore; then find in File Explorer and drag and drop to the **Files** panel.
+Yellow background if the file is open in the code editor.
+
+C# code files have `.cs` extension, but it is hidden.
 
 File properties are documented in the **Properties** dialog.
 
@@ -41,8 +43,8 @@ Files are of these types:
 - Other files - files that cannot be edited. Images etc. For example can be added to assembly resources.
 
 Folders are of these types:
-- simple folders.
-- folders named like `@Project` are [project](xref:class_project) folders.
+- Simple folders.
+- Folders named like `@Name` are [project](xref:class_project) folders.
 
 The collection of files and folders is a *workspace*. It is a folder on disk. In the folder:
 - Folder `files` contains files and folders of the workspace.
@@ -51,6 +53,7 @@ The collection of files and folders is a *workspace*. It is a folder on disk. In
 - File `bookmarks.csv` - saved bookmarks.
 - Folder `.state` contains code editor states for files, such as folding, markers and current position.
 - The `.xxx` folders are created and used by the program for various purposes.
+- Folders `exe` and `dll` - default folders for files created when compiling code files with role `exeProgram` or `classLibrary`.
 
 ### Open
 List of files open in the code editor.

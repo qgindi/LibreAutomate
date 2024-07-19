@@ -46,6 +46,18 @@ Script with delay.cs, 3s
 Another script with delay.cs, 300ms
 ```
 
+#### Hide/ignore files and folders
+List of ignored files and folders. Matching files/folders are not displayed in the **Files** panel, and the program ignores them (cannot find, compile, etc). Line format: wildcard, not case-sensitive; use `//Line` for comments. Compared is file path in workspace (like `\Folder\File.ext`). The synchronization with the filesystem occurs whenever the program becomes active (active window).
+
+```
+Example:
+*.bak
+*\FolderAnywhere
+\Folder
+\Folder1\Folder2
+//Comment
+```
+
 #### Auto backup (Git commit)
 Silently run [Git](xref:git) commit when LibreAutomate is visible the first time after loading this workspace or activated later after several hours from the last backup. It creates a local backup of workspace files (scripts etc). To upload etc, you can use menu **File > Git**.
 

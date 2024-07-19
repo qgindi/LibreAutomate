@@ -1,7 +1,3 @@
-//TODO: reject auto-enclosing. Add "enclose" commands with hotkeys Ctrl+{ etc. Now too annoying.
-
-//TODO: replace empty statement on '{` after it.
-
 extern alias CAW;
 
 using System.Windows.Input;
@@ -88,7 +84,6 @@ class CiAutocorrect {
 	/// If ch is ';' and current position is at '(...|)' and the statement etc must end with ';': adds ';' if missing, sets current position after ';', and returns true.
 	/// If ch is '"' after two '"', may close raw string (add """") and return true.
 	/// Also called by SciBeforeKey on Backspace and Tab. Then ch is '\b' or '\t'.
-	/// If there is selection, does nothing listed above; if ch is '{', '(', '[' or '"', may surround the selected text.
 	/// If a new statement can start here, may add semicolon.
 	/// If at the very end, adds "\r\n" at the end.
 	/// </summary>
@@ -105,7 +100,6 @@ class CiAutocorrect {
 			}
 			
 			if (hasSelection) {
-				if (_Selection()) return true;
 				_AutoSemicolon();
 				return false;
 			}
@@ -165,71 +159,12 @@ class CiAutocorrect {
 		doc.aaaCurrentPos8 = to + 1;
 		return true;
 		
-		bool _Selection() {
-			if (ch is '{' or '(' or '[' or '"') {
-				var (start, end) = (doc.aaaPos16(pos8), doc.aaaPos16(selEnd8));
-				
-				//don't surround if probably it is unwanted
-				var s = doc.aaaSelectedText();
-				if (ch is '"' && !s.Like("\"*\"")) return false;
-				if (end - start == 1) {
-					if (char.IsPunctuation(s, 0) || char.IsSymbol(s, 0)) return false; //unlikely the coder wants to enclose a punctuation or operator char. Probably wants to replace. Eg `;' -> ` {  }`.
-				} else {
-					if (ch is '{' && s.RxIsMatch(@"^\s*\(\s*\)\s*$")) return false; //eg coder wants to replace `new C()` -> `new C {  }`
-					if (ch is '(' && s.RxIsMatch(@"^\s*\{\s*\}\s*$")) return false; //maybe `new C {  }` -> `new C()`
-				}
-				
-				//don't surround in trivia, strings and inside a token
-				if (!CodeInfo.GetContextAndDocument(out var cd, start)) return false;
-				var tok1 = cd.syntaxRoot.FindTokenOnLeftOfPosition(start);
-				var tok2 = cd.syntaxRoot.FindToken(end);
-				TextSpan span1 = tok1.Span, span2 = tok2.Span;
-				
-				if (start >= span1.End && end <= span2.Start && tok2.GetPreviousToken() == tok1) return false; //trivia only
-				
-				bool istr = _IStr(tok1, start); //user may want to surround an interpolation (inside or outside).
-				if (istr) if (ch != '{' && !(ch == '(' && tok1.Parent is InterpolationSyntax)) return false;
-				
-				if ((span1.ContainsInside(start) && !istr) || (span2.ContainsInside(end) && !istr)) return false;
-				
-				//rejected. It's faster to delete the surrounded text afterwards.
-				//if (popupMenu.showSimple("1 &Surround|2 &Replace", PMFlags.ByCaret | PMFlags.Underline, owner: doc) is var pm && pm != 1) return pm != 2;
-				
-				using var undo = doc.aaaNewUndoAction();
-				string s1, s2;
-				if (ch is '(') (s1, s2) = ("(", ")");
-				else if (ch is '[') (s1, s2) = ("[", "]");
-				else if (ch is '"') (s1, s2) = s.Like("\"\"*\"\"") ? ("\"", "\"") : ("\"\"", "\"\"");
-				else if (istr) (s1, s2) = ("{", "}");
-				else {
-					(s1, s2) = ("{ ", " }");
-					var code = doc.aaaText;
-					if (code[end - 1] is '\n') {
-						s2 = "}\r\n";
-						if (start == 0 || code[start - 1] is '\n') s1 = "{\r\n";
-						else s1 = App.Settings.ci_formatCompact ? "{\r\n" : "\r\n{\r\n";
-					}
-				}
-				doc.aaaInsertText(true, end, s2);
-				doc.aaaInsertText(true, start, s1);
-				doc.aaaSelect(true, start + s1.Length, end + s1.Length);
-				return true;
-				
-				static bool _IStr(in SyntaxToken t, int pos) {
-					var n = t.Parent;
-					if (n is InterpolatedStringTextSyntax or InterpolationSyntax) n = n.Parent;
-					return n is InterpolatedStringExpressionSyntax ise && ise.Contents.Span.ContainsOrTouches(pos);
-				}
-			}
-			return false;
-		}
-		
 		bool _AutoSemicolon() {
 			if (!App.Settings.ci_semicolon) return false;
 			
 			//is ch a statement-start character?
 			if (!SyntaxFacts.IsIdentifierStartCharacter(ch)) {
-				if (!(ch is (>= '0' and <= '9') or '@' or '$' or '*' or '(' or '"' or '\'')) return false;
+				if (!(ch is (>= '0' and <= '9') or '@' or '$' or '*' or '(' or '"' or '\'' or '{')) return false;
 			}
 			
 			//is caret at the end of line?
@@ -276,6 +211,7 @@ class CiAutocorrect {
 				break;
 			default: return false;
 			}
+			if (ch is '{') return false; //`{` can just replace empty statement `;` (see `case SyntaxKind.SemicolonToken`)
 			if (CiUtil.IsPosInNonblankTrivia(cd.syntaxRoot, cd.pos, cd.code)) return false;
 			
 			doc.aaaInsertText(false, selEnd8, ";");

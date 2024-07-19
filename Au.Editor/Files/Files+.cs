@@ -94,18 +94,9 @@ class DNewWorkspace : KDialogWindow {
 
 class RepairWorkspace {
 	const int c_markerInfo = 0;
-	static HashSet<string> _clickedLinks = new();
 	
-	public static void Repair(bool inSelectedFolder) {
+	public static void Repair() {
 		var rootFolder = App.Model.Root;
-		if (inSelectedFolder) {
-			var a = FilesModel.TreeControl.SelectedItems;
-			if (a.Length == 1 && a[0].IsFolder) rootFolder = a[0];
-			else {
-				dialog.showInfo(null, "Please right-click or select a folder.", owner: App.Hmain);
-				return;
-			}
-		}
 		
 		using var workingState = Panels.Found.Prepare(PanelFound.Found.Repair, "Repair", out var b);
 		if (workingState.NeedToInitControl) {
@@ -113,67 +104,23 @@ class RepairWorkspace {
 			k.aaaMarkerDefine(c_markerInfo, Sci.SC_MARK_BACKGROUND, backColor: 0xEEE8AA);
 		}
 		
-		//--------------
+		//broken links
 		
-		b.Marker(c_markerInfo).Text("These items represent files that already don't exist. You may want to delete them from the Files panel.").NL();
-		_Missing(rootFolder);
-		void _Missing(FileNode folder) {
-			foreach (var f in folder.Children()) {
-				var path = f.FilePath;
-				if (!filesystem.exists(path)) {
-					int linkLen = 0;
-					for (var s = path; !(s = pathname.getDirectory(s)).NE();) {
-						if (filesystem.exists(s).Directory) { linkLen = s.Length; break; }
-					}
-					b.NL().Link(f, f.ItemPath); if (f.IsFolder) b.Text(f.IsLink ? " (folder link)" : " (folder)"); else if (f.IsLink) b.Text(" (file link)");
-					var dir = path[..linkLen];
-					b.NL().Link2(() => { run.itSafe(dir); }, $"\tMissing: {dir}").Text(path.AsSpan(linkLen..)).NL();
-				} else if (f.IsFolder) {
-					_Missing(f);
-				}
+		b.Marker(c_markerInfo).Text("Broken links (missing target). You may want to delete them from the Files panel.").NL();
+		var links = rootFolder.Descendants().Where(o => o.IsLink && !filesystem.exists(o.FilePath)).ToArray();
+		if (links.Length > 0) {
+			foreach (var f in links) {
+				b.NL().Link(f, f.ItemPath); if (f.IsFolder) b.Text(" (folder)");
+				b.Text(" -> ").Text(f.FilePath);
 			}
-		}
-		//note: don't use folder.Descendants(). It would also print files in missing folders.
-		
-		//--------------
-		
-		b.NL().Marker(c_markerInfo).Text("These files are in the workspace folder but not in the Files panel. You may want to import or delete them.").NL();
-		_clickedLinks.Clear();
-		_Orphaned(rootFolder);
-		void _Orphaned(FileNode folder) {
-			var folderPath = folder.FilePath;
-			if (!filesystem.exists(folderPath, true).Directory) return;
-			var hs = folder.Children().Select(o => o.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
-			foreach (var v in filesystem.enumerate(folderPath, FEFlags.IgnoreInaccessible | FEFlags.UseRawPath)) {
-				if (v.IsNtfsLink) continue;
-				var filePath = v.FullPath;
-				if (hs.Contains(filePath)) continue;
-				b.NL().Link(() => { run.selectInExplorer(filePath); }, filePath); if (v.IsDirectory) b.Text(" (folder)");
-				b.Text("\r\n\t").Link(() => _Import(folder, filePath), "Import");
-				if (folder != App.Model.Root) b.Text(" to folder ").Link(() => { folder.SelectSingle(); FilesModel.TreeControl.Expand(folder, true); }, folder.ItemPath);
-				b.NL();
-			}
-			
-			foreach (var f in folder.Children()) {
-				if (f.IsFolder) _Orphaned(f);
-			}
+			b.NL();
+		} else {
+			b.Text("\r\nNone.\r\n");
 		}
 		
-		void _Import(FileNode folder, string filePath) {
-			if (!_clickedLinks.Add(filePath) || folder.IsAlien || !filesystem.exists(filePath)) return;
-			var pos = FNInsert.Last;
-			if (folder == App.Model.Root) {
-				pos = FNInsert.First;
-			} else {
-				folder.SelectSingle();
-				FilesModel.TreeControl.Expand(folder, true);
-			}
-			//print.it(folder, filePath, pos);
-			App.Model.ImportFiles(new[] { filePath }, new(folder, pos), ImportFlags.DontPrint);
-		}
+		//biggest files
 		
-		//--------------
-		
+		b.NL().Marker(c_markerInfo).Text("Big files. You may want to delete some files if not used. Size in KB.").NL();
 		List<(long size, FileNode f)> biggest = new();
 		_Biggest(rootFolder);
 		void _Biggest(FileNode folder) {
@@ -187,10 +134,11 @@ class RepairWorkspace {
 			}
 		}
 		if (biggest.Any()) {
-			b.NL().Marker(c_markerInfo).Text("Big files. You may want to delete some files if not used. Size in KB.").NL();
 			foreach (var (size, f) in biggest.OrderByDescending(o => o.size)) {
 				b.NL().Text($"{size / 1024} ").Link(f, f.ItemPath);
 			}
+		} else {
+			b.Text("\r\nNone.\r\n");
 		}
 		
 		//--------------

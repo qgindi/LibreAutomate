@@ -211,6 +211,64 @@ static class EdComUtil {
 	
 }
 
+/// <summary>
+/// Gets relative path from full path when recursively enumerating a directory. Optionally with a prefix. Almost no garbage.
+/// </summary>
+class RelativePath {
+	char[] _a;
+	int _fullPathBaseLen;
+	string _prefix;
+	
+	public RelativePath(string prefix) {
+		_prefix = prefix ?? "";
+		_a = new char[_prefix.Length + 300];
+		prefix.CopyTo(_a);
+	}
+	
+	public RStr GetRelativePath(string fullPath) {
+		if (_fullPathBaseLen == 0) _fullPathBaseLen = fullPath.LastIndexOf('\\');
+		int len1 = fullPath.Length - _fullPathBaseLen, len2 = len1 + _prefix.Length;
+		if (_a.Length < len2) Array.Resize(ref _a, len2 + 300);
+		fullPath.CopyTo(_fullPathBaseLen, _a, _prefix.Length, len1);
+		return _a.AsSpan(0, len2);
+	}
+}
+
+/// <summary>
+/// Wildcard-compares paths with a list of strings.
+/// </summary>
+class WildcardList {
+	readonly string[] _a;
+	
+	/// <summary>
+	/// Creates a list of strings from a multiline string.
+	/// </summary>
+	/// <param name="list">Multiline string. Use <c>//</c> to comment out a line.</param>
+	/// <param name="replaceSlash">Replace <c>'/'</c> with <c>'\\'</c> (to match file paths).</param>
+	public WildcardList(string list, bool replaceSlash = true) {
+		if (list.NE()) {
+			_a = Array.Empty<string>();
+		} else {
+			List<string> a = new();
+			foreach (var s in list.Lines(noEmpty: true)) {
+				if (s.Starts("//")) continue;
+				if (s.FindNot(@"*/\") < 0) continue; //wildcard like "*" or "\*" or "\" etc has no sense. Either matches always or never. Prevent accidentally excluding all files etc.
+				a.Add(replaceSlash ? s.Replace('/', '\\') : s);
+			}
+			_a = a.ToArray();
+		}
+	}
+	
+	/// <summary>
+	/// Wildcard-compares <i>s</i> with the list of wildcard strings.
+	/// </summary>
+	/// <returns>true if a <i>s</i> matches a wildcard string.</returns>
+	public bool IsMatch(RStr s, bool ignoreCase) {
+		foreach (var v in _a) if (s.Like(v, ignoreCase)) return true;
+		return false;
+	}
+}
+
 //class TempEnvVar : IDisposable {
 //	string[] _vars;
 //	public TempEnvVar(params (string name, string value)[] vars) {

@@ -6,7 +6,7 @@ namespace Au.Triggers;
 /// <remarks>
 /// This class manages action triggers. Action triggers are used to call functions (aka <i>trigger actions</i>) in a running script in response to events such as hotkey, typed text, mouse action, activated window. To launch scripts are used other ways: manually, at startup, command line, <see cref="script.run"/>, output link.
 /// 
-/// If your script class has a field or property like <c>readonly ActionTriggers Triggers = new();</c>, through it you can access all trigger types (hotkey, window, etc) and add triggers to them.
+/// If your script has a variable, field or property like <c>ActionTriggers Triggers = new();</c>, through it you can access all trigger types (hotkey, window, etc) and add triggers to them.
 /// 
 /// Code syntax to add an action trigger:
 /// <code>Triggers.TriggerType[parameters] = action;</code>
@@ -22,7 +22,7 @@ namespace Au.Triggers;
 /// 
 /// Also you can set options (<see cref="TriggerOptions"/>), window scopes (<see cref="TriggerScopes"/>) and custom scopes (<see cref="TriggerFuncs"/>) for triggers added afterwards.
 /// 
-/// Finally call <see cref="Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
+/// Finally call <see cref="Run"/>. It runs all the time and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
 /// 
 /// To quickly restart the script when editing, click the <b>Run</b> button.
 /// 
@@ -36,7 +36,7 @@ namespace Au.Triggers;
 /// using Au.Triggers;
 /// 
 /// ActionTriggers Triggers = new();
-/// //readonly ActionTriggers Triggers = new(); //or add this field in your script class
+/// //readonly ActionTriggers Triggers = new(); //or add this field if you'll use triggers in a class
 /// 
 /// //you can set options for triggers added afterwards
 /// Triggers.Options.Thread(0, 500);

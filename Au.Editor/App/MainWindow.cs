@@ -178,11 +178,11 @@ partial class MainWindow : Window {
 			handled = true;
 			RegHotkeys.WmHotkey_(wParam);
 			break;
-		case Api.WM_ACTIVATEAPP:
+		case Api.WM_ACTIVATEAPP: //note: not received at startup, because sets the hook when the window is already active
 			if (wParam != 0) {
 				_appActivatedTimer ??= new(_ => {
 					Panels.Editor.OnAppActivated_();
-					App.Model.SyncWithFilesystem();
+					App.Model.SyncWithFilesystem(); //async
 					if (App.Settings.checkForUpdates) App.CheckForUpdates();
 					Git.AutoBackup(false);
 				});

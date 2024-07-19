@@ -96,23 +96,29 @@ class DOptions : KDialogWindow {
 		b.Add("Run scripts when workspace loaded", out TextBox startupScripts, App.Model.UserSettings.startupScripts).Multiline(110, TextWrapping.NoWrap)
 			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.csv\"")
 			.Validation(_startupScripts_Validation);
-		b.End();
 		
-		//right column
-		b.Skip().StartStack(vertical: true);
-		b.Add(out KCheckBox cBackup, "Auto-backup (Git commit)").Checked(App.Model.UserSettings.gitBackup).Margin("T6")
+		b.Add(out KCheckBox cBackup, "Auto-backup (Git commit)").Checked(App.Model.UserSettings.gitBackup).Margin("T10")
 			.Tooltip("Silently run Git commit when LibreAutomate is visible the first time after loading this workspace or activated later after several hours from the last backup.\nIt creates a local backup of workspace files (scripts etc). To upload etc, you can use menu File > Git.");
 		cBackup.Checked += (_, _) => { if (!Git.IsReady) App.Dispatcher.InvokeAsync(Git.Setup); };
 		b.End();
 		
+		//right column
+		b.Skip().StartStack(vertical: true);
+		b.Add("Hide/ignore files and folders", out TextBox tSyncFsSkip, App.Model.WSSett.syncfs_skip).Multiline(110, TextWrapping.NoWrap)
+			.Tooltip(@"Hide and don't use files and folders whose paths in workspace would match a wildcard from this list.
+Example:
+*.bak
+*\FolderAnywhere
+\Folder
+\Folder1\Folder2
+//Comment");
 		b.End();
 		
-		//b.Loaded += () => {
-		
-		//};
+		b.End();
 		
 		_b.OkApply += e => {
 			App.Model.UserSettings.startupScripts = startupScripts.Text.Trim().NullIfEmpty_();
+			App.Model.WSSett.syncfs_skip = tSyncFsSkip.Text.NullIfEmpty_();
 			App.Model.UserSettings.gitBackup = cBackup.IsChecked;
 		};
 		

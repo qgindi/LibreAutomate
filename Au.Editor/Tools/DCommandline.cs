@@ -8,7 +8,7 @@ class DCommandline : KDialogWindow {
 	wpfBuilder _b;
 	CheckBox _cEditorNoPath, _cScriptNoPath, _cWait;
 	TextBox _tArgs;
-
+	
 	DCommandline() {
 		InitWinProp("Script command line triggers", App.Wmain);
 		var b = _b = new wpfBuilder(this).WinSize(440);
@@ -26,11 +26,11 @@ class DCommandline : KDialogWindow {
 		b.End();
 		b.End();
 	}
-
+	
 	public static void ShowSingle() {
 		ShowSingle(() => new DCommandline());
 	}
-
+	
 	//action: 1 clipboard, 2 shortcut, 3 schedule
 	string _FormatCL(int action) {
 		var f = App.Model.CurrentFile; if (f == null) return null;
@@ -45,9 +45,9 @@ class DCommandline : KDialogWindow {
 		}
 		_AppendQ(_cScriptNoPath.IsChecked == true ? f.Name : f.ItemPath, wait);
 		var args = _tArgs.Text; if (args.Length > 0) sb.Append(' ').Append(args);
-
+		
 		return sb.ToString();
-
+		
 		void _AppendQ(string s, bool wait = false) {
 			bool q = s.Contains(' ');
 			if (q) sb.Append('"');
@@ -56,12 +56,17 @@ class DCommandline : KDialogWindow {
 			if (q) sb.Append('"');
 		}
 	}
-
+	
 	void _Shortcut() {
 		if (App.IsPortable && 1 != dialog.showWarning("Portable mode warning", "This will create a shortcut file. Portable apps should not create files on host computer.\r\n\r\nDo you want to continue?", "1 Yes|2 No", owner: this)) return;
 		var s = _FormatCL(2); if (s == null) return;
-		var name = App.Model.CurrentFile.DisplayName;
-		if (!dialog.showInput(out string lnk, "Shortcut path", editText: $@"%folders.Desktop%\{name}.lnk")) return;
+		var d = new FileOpenSaveDialog("38939d61-1971-45f5-8ce5-0c405aab792c") {
+			FileNameText = App.Model.CurrentFile.DisplayName + ".lnk",
+			FileTypes = "Shortcut|*.lnk",
+			InitFolderFirstTime = folders.Desktop,
+			Title = "Create shortcut"
+		};
+		if (!d.ShowSave(out var lnk, this)) return;
 		try {
 			using var sh = shortcutFile.create(lnk);
 			sh.TargetPath = process.thisExePath;
@@ -70,7 +75,7 @@ class DCommandline : KDialogWindow {
 		}
 		catch (Exception e1) { dialog.showError("Failed", e1.ToStringWithoutStack(), owner: this); }
 	}
-
+	
 	void _Schedule() {
 		var s = _FormatCL(3); if (s == null) return;
 		var user = Environment.UserName;
@@ -87,12 +92,12 @@ class DCommandline : KDialogWindow {
 			}
 		}
 		WinTaskScheduler.EditTask(folder, name);
-
+		
 		//never mind: non-admin process can't create folders and tasks.
 		//	But somehow can do it in the QM2 tasks folder.
 		//	Now I don't know how to set folder security permissions.
 	}
-
+	
 	static bool _IsScheduled() {
 		return WinTaskScheduler.TaskExists(@"Au\" + Environment.UserName, App.Model.CurrentFile.DisplayName);
 	}

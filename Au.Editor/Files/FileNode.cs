@@ -199,7 +199,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <summary>
 	/// File name. Without extension if ends with ".cs".
 	/// </summary>
-	public string DisplayName => _displayName ??= _name.RemoveSuffix(".cs", true);
+	public string DisplayName => _displayName ??= IsCodeFile ? _name.RemoveSuffix(".cs", true) : _name;
 	
 	void _SetName(string name) {
 		if (_name != null) _model._nameMap.MultiRemove_(_name, this); //renaming

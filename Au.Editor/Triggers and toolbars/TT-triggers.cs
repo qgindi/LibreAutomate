@@ -65,7 +65,7 @@ partial class TriggersAndToolbars {
 		};
 		b.Row((-1, ..400)).Add("Action", out ListBox lbAction);
 		ScrollViewer.SetHorizontalScrollBarVisibility(lbAction, ScrollBarVisibility.Disabled);
-		b.R.Add(out Label lInfo);
+		b.R.xAddInfoBlockT(null); var tInfo = b.Last as TextBlock;
 		b.R.AddOkCancel(out var bOK, out _, out _);
 		b.End();
 		if (iType > 0) abc[iType - 1].IsChecked = true;
@@ -83,13 +83,13 @@ partial class TriggersAndToolbars {
 			}
 			bool enable = iType > 0;
 			if (enable) {
-				lInfo.Content = iType == 4
-					? "Now in code click where to insert the new trigger.\nThen click OK, select window, OK, edit code if need."
-					: "Now in code click where to insert the new trigger.\nThen click OK, and edit the new code.\nTo set window scope can be used " + App.Settings.hotkeys.tool_quick + ".";
+				tInfo.Text = iType == 4
+					? "Now in code click where to insert the new trigger.\nThen click OK, select window, OK, edit code if need.\nFinally click Run to [re]start the triggers script."
+					: "Now in code click where to insert the new trigger.\nThen click OK, and edit the new code.\nTo set window scope can be used " + App.Settings.hotkeys.tool_quick + ".\nFinally click Run to [re]start the triggers script.";
 				lbAction.ItemsSource = iType == 2 ? aa : aa.Skip(5);
 				lbAction.SelectedIndex = 0;
 			}
-			lInfo.Visibility = enable ? Visibility.Visible : Visibility.Hidden;
+			tInfo.Visibility = enable ? Visibility.Visible : Visibility.Hidden;
 			bOK.IsEnabled = enable;
 		}
 

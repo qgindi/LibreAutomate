@@ -20,11 +20,33 @@ using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 
 static  class Test {
+	//public static void Para(params ReadOnlySpan<string> a) {
+	//	print.it(a.Length);
+	//	foreach(var v in a) {
+	//		print.it(v);
+	//	}
+	//}
+
+	//public static void Para2(params ReadOnlySpan<string> a) => Para(a);
+
+	//public static void Para3(params IEnumerable<string> a) {
+	//	print.it(a.Count());
+	//	foreach(var v in a) {
+	//		print.it(v);
+	//	}
+	//}
 	
 	public static void FromMenubar() {
 		print.clear();
 
-		
+		//Para("one", "two");
+		//Para();
+		//Para(new string[] {"a", "b"});
+		//Para2("one", "two");
+		//Para3((new string[] { "a", "b" }).Where(o => o is "a"));
+
+		//App.Model.SyncWithFilesystem(true);
+
 		var d = Panels.Editor.ActiveDoc;
 		//print.it(d.aaaText.Length, d.aaaText, d.aaaText.Select(o => (ushort)o));
 		////int pos = d.aaaCurrentPos16;
@@ -40,17 +62,17 @@ static  class Test {
 		//print.it(cd.pos);
 		//CiUtil.PrintNode(trivia);
 		//print.it(trivia.Span, trivia.FullSpan);
-		
+
 		//var token = cd.syntaxRoot.FindToken(cd.pos);
 		//var node = token.Parent.GetStatementEtc(cd.pos);
 		//CiUtil.PrintNode(node, printErrors: true);
-		
-		
+
+
 #if !IDE_LA
-		
+
 #endif
 	}
-	
+
 	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;

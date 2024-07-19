@@ -203,14 +203,14 @@ s - sign
 					string appDir = folders.ThisAppBS, nugetDir = App.Model.NugetDirectoryBS, dllDir = App.Model.DllDirectoryBS;
 					for (; j < refs.Count; j++) {
 						string s1 = refs[j].FilePath, prefix = "|*";
-						if (s1.Starts(appDir, true)) {
-							s1 = s1[appDir.Length..];
-						} else if (s1.Starts(nugetDir, true)) {
+						if (s1.Starts(nugetDir, true)) { //note: in portable LA it is in app dir
 							s1 = s1[nugetDir.Length..];
 							prefix = "|**";
-						} else if (s1.Starts(dllDir, true)) {
+						} else if (s1.Starts(dllDir, true)) { //note: in portable LA it is in app dir
 							s1 = s1[dllDir.Length..];
 							prefix = "|*?";
+						} else if (s1.Starts(appDir, true)) {
+							s1 = s1[appDir.Length..];
 						} else {
 							s1 = folders.unexpandPath(s1);
 						}

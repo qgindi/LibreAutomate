@@ -328,29 +328,42 @@ static class GenerateCode {
 		var baseFromPos = position < 0 && node.GetAncestorOrThis<BaseTypeSyntax>() is BaseTypeSyntax bts ? semo.GetTypeInfo(bts.Type).Type as INamedTypeSymbol : null;
 		
 		List<(INamedTypeSymbol type, List<ISymbol> members)> types = new();
-		bool hasInterfaces = false;
-		if (baseFromPos != null) _GetOfType(baseFromPos);
-		else {
+		bool implementInterfaces = false;
+		if (baseFromPos != null) {
+			_GetOfType(baseFromPos);
+			_Interfaces(baseFromPos);
+		} else {
 			if (baseClass != null) _GetOfType(baseClass);
-			foreach (var t in thisType.Interfaces) _GetOfType(t);
+			_Interfaces(thisType);
+		}
+		
+		void _Interfaces(INamedTypeSymbol t) { //gets direct base interfases and their all base interfaces. Unlike AllInterfaces, skips base interfaces of base classes.
+			foreach (var v in t.Interfaces) {
+				_GetOfType(v);
+				_Interfaces(v);
+			}
 		}
 		
 		//note: GetAllUnimplementedMembersInThis gets not all members. Eg for ITreeViewItem skips properties that have default impl (but includes such methods). Or gets some garbage.
 		void _GetOfType(INamedTypeSymbol t) {
 			List<ISymbol> members = null;
 			bool isInterface = t.TypeKind == TypeKind.Interface;
-			hasInterfaces |= isInterface;
 			foreach (var m in t.GetMembers()) {
 				if (!m.IsAbstract) if (!isInterface || m.IsStatic || m.DeclaredAccessibility == acc.Private) continue;
 				if (m is not (IMethodSymbol { MethodKind: MethodKind.Ordinary or MethodKind.UserDefinedOperator or MethodKind.Conversion } or IPropertySymbol or IEventSymbol)) continue;
 				ISymbol k = isInterface ? thisType.FindImplementationForInterfaceMember(m) : thisType.FindImplementationForAbstractMember(m);
-				if (k != null && k.ContainingType != thisType) k = null;
+				//if (k != null && k.ContainingType != thisType) k = null;
 				if (k == null) {
 					if (members == null) types.Add((t, members = new()));
 					members.Add(m);
 				}
 			}
-			members?.Sort((x, y) => (y.IsAbstract ? 1 : 0) - (x.IsAbstract ? 1 : 0));
+			if (members != null) {
+				members.Sort((x, y) => (y.IsAbstract ? 1 : 0) - (x.IsAbstract ? 1 : 0));
+				implementInterfaces |= isInterface;
+			}
+			
+			if (!isInterface && t.BaseType.IsAbstract) _GetOfType(t.BaseType);
 		}
 		
 		if (types.Count == 0) {
@@ -359,7 +372,7 @@ static class GenerateCode {
 		}
 		
 		bool explicitly;
-		string buttons = hasInterfaces
+		string buttons = implementInterfaces
 			? "1 Implement\nLike 'public Type Member'|2 Implement explicitly\nLike 'Type Interface.Member'|0 Cancel"
 			: "1 Implement|0 Cancel";
 		switch (dialog.show("Implement", "This will add members that were not implemented.", buttons, flags: DFlags.CommandLinks, owner: App.Hmain)) {

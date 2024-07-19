@@ -682,11 +682,11 @@ static class TUtil {
 		}
 		
 		string appDir = folders.ThisAppBS, dllDir = App.Model.DllDirectoryBS;
-		if (a[0].Starts(appDir, true)) {
-			for (int i = 0; i < a.Length; i++) a[i] = a[i][appDir.Length..];
-		} else if (a[0].Starts(dllDir, true)) {
+		if (a[0].Starts(dllDir, true)) { //note: in portable LA it is in app dir
 			for (int i = 0; i < a.Length; i++) a[i] = @"%dll%\" + a[i][dllDir.Length..];
-		} else if (!App.Settings.tools_pathUnexpand) { //unexpand path
+		} else if (a[0].Starts(appDir, true) && !(App.IsPortable && a[0].Starts(appDir + @"data\", true))) {
+			for (int i = 0; i < a.Length; i++) a[i] = a[i][appDir.Length..];
+		} else if (App.Settings.tools_pathUnexpand) { //unexpand path
 			for (int i = 0; i < a.Length; i++) a[i] = folders.unexpandPath(a[i]);
 		}
 		

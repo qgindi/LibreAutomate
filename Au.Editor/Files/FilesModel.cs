@@ -191,6 +191,7 @@ partial class FilesModel {
 			SetCurrentFile(Root.FirstChild, newFile: true);
 		} else {
 			LoadState(openFiles: true);
+			SyncWithFilesystem(); //async
 		}
 		ThisWorkspaceLoadedAndDocumentsOpened?.Invoke();
 		AnyWorkspaceLoadedAndDocumentsOpened?.Invoke();
@@ -708,34 +709,33 @@ partial class FilesModel {
 			(false, true) => "The file will be deleted. Will use the Recycle Bin, if possible.",
 			_ => null
 		};
-		var con = hasNonlinks ? new DControls { Checkbox = "Don't delete file" } : null;
-		var r = dialog.show("Deleting", text, "1 OK|0 Cancel", owner: TreeControl, controls: con, expandedText: expandedText);
+		var r = dialog.show("Deleting", text, "1 OK|0 Cancel", owner: TreeControl, expandedText: expandedText);
 		if (r == 0) return;
 		
 		foreach (var f in a) {
 			if (f.IsDeleted) continue; //deleted together with the parent folder
-			_Delete(f, dontDeleteFile: con?.IsChecked ?? false); //info: and saves everything, now and/or later
+			_Delete(f); //info: and saves everything, now and/or later
 		}
 		
 		Save.WorkspaceLater();
 		CodeInfo.FilesChanged();
 	}
 	
-	bool _Delete(FileNode f, bool dontDeleteFile = false, bool recycleBin = true) {
+	bool _Delete(FileNode f, bool recycleBin = true, bool syncing = false) {
 		var e = f.Descendants(true);
 		
 		CloseFiles(e);
 		Uncut();
 		
-		string filePath = f.FilePath;
-		if (dontDeleteFile || f.IsLink) {
-			string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
-			print.it($"<>Info: {s1} <explore>{filePath}<>");
-		} else {
-			if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
-			//TODO3: add all paths to List, and delete finally in single call.
-			
-			//FUTURE: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
+		if (!syncing) {
+			string filePath = f.FilePath;
+			if (f.IsLink) {
+				print.it($"<>Info: The deleted item was a link to <explore>{filePath}<>");
+			} else {
+				if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
+				//CONSIDER: add all paths to List, and delete finally in single call.
+				//CONSIDER: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
+			}
 		}
 		
 		EditGoBack.OnFileDeleted(e);
@@ -750,8 +750,7 @@ partial class FilesModel {
 		}
 		
 		f.Remove();
-		UpdateControlItems();
-		//FUTURE: call event to update other controls.
+		if (!syncing) UpdateControlItems();
 		return true;
 	}
 	
@@ -1188,8 +1187,7 @@ partial class FilesModel {
 			for (int i = 0; i < a.Length; i++) {
 				var s = a[i];
 				if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
-					var s1 = $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.";
-					dialog.show("Files from Recycle Bin", s1, icon: DIcon.Info, owner: TreeControl, onLinkClick: e => run.itSafe(e.LinkHref));
+					print.it($"<>Cannot import files directly from Recycle Bin.");
 					return;
 				}
 				if (wsDirs.FirstOrDefault(o => o.PathStarts(s, orEquals: true)) is { } s2) {

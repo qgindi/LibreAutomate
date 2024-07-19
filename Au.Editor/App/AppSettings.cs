@@ -237,5 +237,11 @@ record WorkspaceSettings : JSettings {
 	
 	public string ci_skipFolders;
 	
-	public string syncfs_skip;
+	public string syncfs_skip = """
+*\.git
+*\.vs
+*\bin
+*\obj
+
+""";
 }

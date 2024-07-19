@@ -221,15 +221,16 @@ class PanelFind {
 		b.R.StartGrid<KGroupBox>("Find in files");
 		b.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|Other files").Select(_SearchIn);
 		b.R.Add(
-			new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "Skip files where path in workspace matches a wildcard from this list" },
+			new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "Skip files whose paths in workspace match a wildcard from this list" },
 			out TextBox tSkip,
-			string.Join("\r\n", _SkipWildex),
+			App.Settings.find_skip,
 			row2: 0)
 			.Multiline(100, TextWrapping.NoWrap)
 			.Tooltip(@"Example:
 *.exe
 \FolderA\*
-*\FolderB\*");
+*\FolderB\*
+//Comment");
 		b.R.Add(out KCheckBox cParallel, "Load files in parallel threads").Checked(App.Settings.find_parallel)
 			.Tooltip("""
 Load files in multiple threads simultaneously.
@@ -245,15 +246,9 @@ This setting also is used by 'Find references' etc.
 		b.Window.ShowInTaskbar = false;
 		if (!b.ShowDialog(App.Wmain)) return;
 		App.Settings.find_searchIn = cbFileType.SelectedIndex;
-		App.Settings.find_skip = tSkip.Text; _aSkipWildcards = null;
+		App.Settings.find_skip = tSkip.Text; _skip = null;
 		App.Settings.find_parallel = cParallel.IsChecked;
 		App.Settings.find_printSlow = tSlow.Text.ToInt();
-		
-		//FUTURE: option to use cache to make faster.
-		//	Now, if many files, first time can be very slow because of AV eg Windows Defender.
-		//	To make faster, I added Windows Defender exclusion for cs file type. Remove when testing cache etc.
-		//	When testing WD impact, turn off/on its real-time protection and restart this app.
-		//	For cache use SQLite database in App.Model.CacheDirectory. Add text of files of size eg < 100 KB.
 		
 		//rejected: support wildex in 'skip'. Not useful.
 	}
@@ -576,8 +571,7 @@ This setting also is used by 'Find references' etc.
 	
 	int _SearchIn => Math.Clamp(App.Settings.find_searchIn, 0, 2);
 	
-	string[] _SkipWildex => _aSkipWildcards ??= (App.Settings.find_skip ?? "").Lines(true);
-	string[] _aSkipWildcards;
+	WildcardList _skip;
 	readonly string[] _aSkipImagesEtc = [".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani", ".snk", ".dll"];
 	
 	async void _FindAllInFiles(WBButtonClickArgs e) {
@@ -619,7 +613,7 @@ This setting also is used by 'Find references' etc.
 					if (searchIn == 1) continue;
 					if (v.Name.Ends(true, _aSkipImagesEtc) > 0) continue;
 				}
-				if (_SkipWildex.Length > 0 && v.ItemPath.Like(true, _SkipWildex) > 0) continue;
+				if ((_skip ??= new(App.Settings.find_skip)).IsMatch(v.ItemPath, true)) continue;
 				aSearchInFiles.Add((v, v.FilePath, 0, 0));
 			}
 			

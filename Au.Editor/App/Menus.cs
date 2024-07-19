@@ -155,10 +155,7 @@ static class Menus {
 			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
 			
 			[Command("...", separator = true)]
-			public static void Repair_workspace() { RepairWorkspace.Repair(false); }
-			
-			[Command("...")]
-			public static void Repair_this_folder() { RepairWorkspace.Repair(true); }
+			public static void Repair_workspace() { RepairWorkspace.Repair(); }
 			
 			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black, tooltip = "Save all changes now (don't wait for auto-save). Editor text, files, settings etc.")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
@@ -310,17 +307,17 @@ static class Menus {
 		
 		[Command(separator = true)]
 		public static class Selection {
-			[Command(keys = "Ctrl+/", image = "*BoxIcons.RegularCommentAdd" + brown)]
-			public static void Comment_selection() { ModifyCode.Comment(true); }
-			
-			[Command(keys = "Ctrl+\\", image = "*BoxIcons.RegularCommentMinus" + brown)]
-			public static void Uncomment_selection() { ModifyCode.Comment(false); }
-			
-			[Command(keys = "Ctrl+Shift+/", image = "*BoxIcons.RegularComment" + brown)]
+			[Command(keys = "Ctrl+/", image = "*BoxIcons.RegularComment" + brown)]
 			public static void Toggle_comment() { ModifyCode.Comment(null); }
 			
-			[Command(keysText = "R-click margin", keys = "Ctrl+Alt+/", image = "*BoxIcons.RegularComment" + brown)]
+			[Command(keysText = "R-click margin", image = "*BoxIcons.RegularComment" + brown)]
 			public static void Toggle_line_comment() { ModifyCode.Comment(null, notSlashStar: true); }
+			
+			[Command(image = "*BoxIcons.RegularCommentAdd" + brown)]
+			public static void Comment_selection() { ModifyCode.Comment(true); }
+			
+			[Command(image = "*BoxIcons.RegularCommentMinus" + brown)]
+			public static void Uncomment_selection() { ModifyCode.Comment(false); }
 			
 			[Command("...", image = "*RemixIcon.BracesLine" + brown, separator = true)]
 			public static void Surround() { CiSnippets.Surround(); }

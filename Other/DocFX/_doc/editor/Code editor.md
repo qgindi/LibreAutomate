@@ -79,8 +79,6 @@ While the list is visible, you can press the **[+]** button or `Ctrl+Space` to s
 ### Bracket completion
 When you type `(`, `[`, `{`, `<`, `"` or `'`, editor adds the closing `)`, `]`, `}`, `>`, `"` or `'`. Then, while the text cursor is before the added `)` etc, typing another `)` or `Tab` just leaves the enclosed area. Also then `Backspace` erases both characters.
 
-It works differently if there is selected text. Then `(`, `[` or `{` surrounds that text, like `(selected)` or `{ selected }`. Surrounds with `{ }` differently if the selection ends with a newline. Also `"` surrounds a selected `"string"` with more `"` (makes raw string).
-
 ### Statement completion
 When you press `Enter` immediately before `)` or `]`, editor adds missing `;` or `{  }`, adds new line, moves the text cursor, and formats the statement. Except if before is `,` or space character. Next **Undo** command undoes the change and adds new line without statement completion. This feature can be disabled in **Options**.
 
