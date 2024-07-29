@@ -1,6 +1,6 @@
 #define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.3.2"
+#define MyAppVersion "1.4.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -59,6 +59,7 @@ Source: "32\7za.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Default\*"; DestDir: "{app}\Default"; Flags: ignoreversion
 Source: "Default\Workspace\files\*"; DestDir: "{app}\Default\Workspace\files"; Flags: ignoreversion recursesubdirs
 Source: "Default\Workspace\files.xml"; DestDir: "{app}\Default\Workspace"; Flags: ignoreversion
+Source: "Default\Themes\*"; DestDir: "{app}\Default\Themes"; Flags: ignoreversion
 Source: "Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
 Source: "Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
 

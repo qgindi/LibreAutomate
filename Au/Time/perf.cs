@@ -363,17 +363,6 @@ namespace Au {
 			//print.it(n);
 		}
 		
-		//rejected: Not very useful. Not very easy to understand the purpose. Adds some overhead.
-		///// <summary>
-		///// Executes <i>code</i> (lambda) <i>count</i> times, and then calls <see cref="Next"/>.
-		///// </summary>
-		//public static void execute(int count, Action code) => s_static.Execute(count, code);
-		
-		///// <summary>
-		///// <i>countAll</i> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
-		///// </summary>
-		//public static void executeMulti(int countAll, int countEach, params Action[] codes) => s_static.ExecuteMulti(countAll, countEach, codes);
-		
 		/// <summary>
 		/// Gets a reference to a <see cref="Instance"/> variable in shared memory.
 		/// </summary>

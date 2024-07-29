@@ -20,52 +20,14 @@ using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 
 static  class Test {
-	//public static void Para(params ReadOnlySpan<string> a) {
-	//	print.it(a.Length);
-	//	foreach(var v in a) {
-	//		print.it(v);
-	//	}
-	//}
-
-	//public static void Para2(params ReadOnlySpan<string> a) => Para(a);
-
-	//public static void Para3(params IEnumerable<string> a) {
-	//	print.it(a.Count());
-	//	foreach(var v in a) {
-	//		print.it(v);
-	//	}
-	//}
 	
 	public static void FromMenubar() {
 		print.clear();
 
-		//Para("one", "two");
-		//Para();
-		//Para(new string[] {"a", "b"});
-		//Para2("one", "two");
-		//Para3((new string[] { "a", "b" }).Where(o => o is "a"));
-
-		//App.Model.SyncWithFilesystem(true);
+		
 
 		var d = Panels.Editor.ActiveDoc;
-		//print.it(d.aaaText.Length, d.aaaText, d.aaaText.Select(o => (ushort)o));
-		////int pos = d.aaaCurrentPos16;
-		////d.aaaInsertText(true, 0, "//");
-		//using (new SciCode.aaaUndoAction(d)) {
-		//	d.aaaInsertText(true, 0, "//");
-		//	d.aaaGoToPos(true, 2);
-		//	//d.aaaReplaceRange(true, 0, 1, "//");
-		//}
 		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-		//print.it(CiUtil.IsPosInNonblankTrivia(cd.syntaxRoot, cd.pos, cd.code));
-		//var trivia = cd.syntaxRoot.FindTrivia(cd.pos, keys.isNumLock);
-		//print.it(cd.pos);
-		//CiUtil.PrintNode(trivia);
-		//print.it(trivia.Span, trivia.FullSpan);
-
-		//var token = cd.syntaxRoot.FindToken(cd.pos);
-		//var node = token.Parent.GetStatementEtc(cd.pos);
-		//CiUtil.PrintNode(node, printErrors: true);
 
 
 #if !IDE_LA

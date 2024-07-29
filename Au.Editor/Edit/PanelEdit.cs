@@ -155,8 +155,9 @@ class PanelEdit {
 	/// <summary>
 	/// Closes all documents and destroys controls.
 	/// Called by FilesModel.UnloadingWorkspace_.
+	/// Note: does not update the files model and treeview; to close normally use FilesModel.CloseX.
 	/// </summary>
-	public void CloseAll(bool saveTextIfNeed) {
+	internal void CloseAll_(bool saveTextIfNeed) {
 		_activeDoc?.ETempRanges_HidingOrClosingActiveDoc_();
 		if (saveTextIfNeed) App.Model.Save.TextNowIfNeed();
 		_activeDoc = null;

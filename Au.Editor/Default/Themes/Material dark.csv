@@ -1,0 +1,42 @@
+Font, Consolas, 9.75
+Background, 0x263238
+None, 0xEEFFFF
+Comment, 0x7E99A5
+String, 0xC3E88D
+StringEscape, 0xFFD68F
+Number, 0xF78C6C
+Punctuation, 0xEEFFFF
+Operator, 0x89DDFF
+Keyword, 0x89DDFF
+Namespace, 0xFFCB6B
+Type, 0xFFCB6B
+Function, 0x82AAFF, 1
+Event, 0x82AAFF, 1
+LocalVariable, 0xEEFFFF
+Field, 0xEEFFFF
+Constant, 0xEEFFFF
+Label, 0xFFCB6B
+Preprocessor, 0x89DDFF
+Excluded, 0x9B9B9B
+XmlDocText, 0x7E99A5
+XmlDocTag, 0x546E7A
+RxText, 0xC3E88D
+RxMeta, 0x05C3BA
+RxChars, 0x2EABFE
+RxOption, 0x05C3BA
+RxEscape, 0xFFD68F
+RxCallout, 0xF979AE
+RxComment, 0x57A64A
+LineNumber, 0x808080
+LineNumberMargin, 0x404C52
+MarkerMargin, 0x263238
+IndicRefs, 0x408000, 40
+IndicBraces, 0x80C000, 255
+IndicDebug, 0xC7CC75, 128
+IndicFound, 0x67370B, 255
+IndicSnippetField, 0xE0A000, 60
+IndicSnippetFieldActive, 0x33ADFF, 60
+SelColor, 0x466568, 160
+SelNofocusColor, 0x466568, 96
+Caret, 0xEEFFFF, 2
+CaretLine, 0x404040, 1

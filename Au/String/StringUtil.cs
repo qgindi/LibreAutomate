@@ -15,7 +15,7 @@ public static class StringUtil {
 	/// <remarks>
 	/// Used to parse parameters like <i>name</i> of <see cref="wnd.Child"/>.
 	/// </remarks>
-	internal static int ParseParam3Stars(ref string s, params string[] names) {
+	internal static int ParseParam3Stars_(ref string s, params ReadOnlySpan<string> names) {
 		if (s == null || !s.Starts("***")) return 0;
 		for (int i = 0; i < names.Length; i++) {
 			var ni = names[i];
@@ -260,7 +260,7 @@ public static class StringUtil {
 		//Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 	});
 	
-	internal static JsonSerializerOptions JsonOptions => s_jsOptions.Value;
+	internal static JsonSerializerOptions JsonOptions_ => s_jsOptions.Value;
 	
 	/// <summary>Calls <see cref="Encoding.GetEncoding(string)"/>, and <b>Encoding.RegisterProvider</b> if need.</summary>
 	/// <returns><c>null</c> if failed.</returns>

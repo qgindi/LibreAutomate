@@ -525,7 +525,7 @@ class CiGoTo {
 				a.AddRange(nt.GetBaseTypes().SkipLast(1).Concat(nt.AllInterfaces));
 			}
 		} else if (sym.Kind is SymbolKind.Method or SymbolKind.Property or SymbolKind.Event) {
-			a.AddRange(CAW::Microsoft.CodeAnalysis.FindSymbols.FindReferences.BaseTypeFinder.FindOverriddenAndImplementedMembersAsync(sym, cd.document.Project.Solution, default).Result);
+			a.AddRange(CAW::Microsoft.CodeAnalysis.FindSymbols.FindReferences.BaseTypeFinder.FindOverriddenAndImplementedMembers(sym, cd.document.Project.Solution, default));
 		}
 		if (a.Count == 0) return;
 		if (a.Count == 1) sym = a[0];

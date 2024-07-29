@@ -135,10 +135,12 @@ public partial class KScintilla {
 	/// </summary>
 	/// <param name="margin"></param>
 	/// <param name="type">SC_MARGIN_.</param>
+	/// <param name="markersMask">SCI_SETMARGINMASKN.</param>
 	/// <param name="sensitive">SCI_SETMARGINSENSITIVEN.</param>
 	/// <param name="cursorArrow">SCI_SETMARGINCURSORN. True SC_CURSORARROW, false SC_CURSORREVERSEARROW.</param>
-	public void aaaMarginSetType(int margin, int type, bool? sensitive = null, bool? cursorArrow = null) {
+	public void aaaMarginSetType(int margin, int type, int? markersMask = null, bool? sensitive = null, bool? cursorArrow = null) {
 		Call(SCI_SETMARGINTYPEN, margin, type);
+		if (markersMask.HasValue) Call(SCI_SETMARGINMASKN, margin, markersMask.Value);
 		if (sensitive.HasValue) Call(SCI_SETMARGINSENSITIVEN, margin, sensitive.Value);
 		if (cursorArrow.HasValue) Call(SCI_SETMARGINCURSORN, margin, cursorArrow == true ? SC_CURSORARROW : SC_CURSORREVERSEARROW);
 	}
@@ -228,11 +230,8 @@ public partial class KScintilla {
 		
 		aaaMarginSetWidth(foldMargin, 12);
 		
-		//separator lines below functions, types and namespaces
-		if (separatorMarker >= 0) {
-			Call(SCI_MARKERDEFINE, separatorMarker, SC_MARK_UNDERLINE);
-			Call(SCI_MARKERSETBACK, separatorMarker, 0xe0e0e0);
-		}
+		//separator lines below functions, types etc
+		if (separatorMarker >= 0) aaaMarkerDefine(separatorMarker, SC_MARK_UNDERLINE, backColor: 0xa0a0a0);
 	}
 	
 	/// <summary>

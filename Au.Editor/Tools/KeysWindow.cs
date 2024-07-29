@@ -56,8 +56,8 @@ class KeysWindow : InfoWindow { //KPopup
 			int pos = cd.pos, from = si.textSpan.Start, to = si.textSpan.End;
 			
 			switch (s) {
-			case "text": _AddArg(", \"!\b\""); return;
-			case "html": _AddArg(", \"%\b\""); return;
+			case "text": _AddArg(", \"!`|`\""); return;
+			case "html": _AddArg(", \"%`|`\""); return;
 			case "sleepMs": _AddArg(", 100"); return;
 			case "keyCode": _AddArg(", KKey.Left"); return;
 			case "scanCode": _AddArg(", new KKeyScan(1, false)"); return;
@@ -76,13 +76,13 @@ class KeysWindow : InfoWindow { //KPopup
 				}
 			}
 			if (s.Ends(false, "Alt", "Ctrl", "Shift", "Win") > 0) suffix = "+";
-			else if (!addArg && pos < to && k2 > ' ' && k2 is not (')' or '+' or '*')) suffix = "\b ";
+			else if (!addArg && pos < to && k2 > ' ' && k2 is not (')' or '+' or '*')) suffix = "`|` ";
 			
 			if (!_GetTrueKeyName()) return;
 			s = prefix + s + suffix;
 			
 			if (addArg) {
-				_AddArg($", \"{s}\b\"");
+				_AddArg($", \"{s}`|`\"");
 				return;
 			}
 			

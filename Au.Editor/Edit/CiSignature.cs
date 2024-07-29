@@ -98,7 +98,7 @@ class CiSignature {
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
 					//print.it(p);
-					var r2 = await p.GetItemsAsync(cd.document, cd.pos, trigger, SignatureHelpOptions.Default, cancelToken).ConfigureAwait(false);
+					var r2 = await p.GetItemsAsync(cd.document, cd.pos, trigger, MemberDisplayOptions.Default, cancelToken).ConfigureAwait(false);
 					//never mind: GetItemsAsync may throw exception. Rare.
 					
 					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often

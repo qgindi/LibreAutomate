@@ -359,9 +359,9 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
-		/// <param name="patterns">One or more wildcard strings. The array and strings cannot be <c>null</c>.</param>
+		/// <param name="patterns">One or more wildcard strings. The strings cannot be <c>null</c>.</param>
 		/// <exception cref="ArgumentNullException">A string in <i>patterns</i> is <c>null</c>.</exception>
-		public static int Like(this string t, bool ignoreCase = false, params string[] patterns) {
+		public static int Like(this string t, bool ignoreCase = false, params ReadOnlySpan<string> patterns) {
 			for (int i = 0; i < patterns.Length; i++) if (t.Like(patterns[i], ignoreCase)) return i + 1;
 			return 0;
 		}

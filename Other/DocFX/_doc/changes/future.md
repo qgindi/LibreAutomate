@@ -1,8 +1,12 @@
-## Version 1.4.0 (2024-07-15)
+## Version 1.4.0 (2024-07-29)
 
 ### Editor
 
+Uses C# 13.
+
 The **Files** panel reflects workspace changes made not in the editor (added/deleted files). See also **Options > Workspace > Hide/ignore files and folders**.
+
+Dark themes. See **Options > Font, colors**.
 
 Improvements in the **Portable LibreAutomate setup** tool.
 
@@ -10,7 +14,7 @@ Improvements in the **Portable LibreAutomate setup** tool.
 
 Removed feature "surround selected text when typed `(` etc".
 
-Fixed some bugs.
+Fixed several bugs.
 
 ### Library
 
@@ -19,4 +23,4 @@ Fixed bugs:
 
 ### Breaking changes
 
-The **Files** panel now is synchronized with the filesystem. Because of this, some unwanted files/folders may be added. The program prints the added files; please review them.
+The **Files** panel now is synchronized with the filesystem. Because of this, some unwanted files/folders may be added. The program prints links to the added files.

@@ -18,8 +18,8 @@ using System.Windows.Controls;
 /// <summary>Flags for <see cref="InsertCode.Statements"/>.</summary>
 [Flags]
 enum ICSFlags {
-	/// <summary>If text contains '%', remove it and finally move caret there.</summary>
-	GoToPercent = 1,
+	/// <summary>If text contains <c>`|`</c>, remove it and finally move caret there.</summary>
+	GoTo = 1,
 	
 	/// <summary>Activate editor window.</summary>
 	ActivateEditor = 4,
@@ -177,9 +177,9 @@ static class InsertCode {
 		//insert
 		
 		int go = -1;
-		if (flags.Has(ICSFlags.GoToPercent)) {
-			go = s.IndexOf('%');
-			if (go >= 0) s = s.Remove(go, 1);
+		if (flags.Has(ICSFlags.GoTo)) {
+			go = s.IndexOf("`|`");
+			if (go >= 0) s = s.Remove(go, 3);
 		}
 		
 		d.aaaSelect(true, pos, replTo);
@@ -200,7 +200,7 @@ static class InsertCode {
 	/// Inserts text in code editor at current position, not as new line, replaces selection.
 	/// If editor is null or readonly, does nothing.
 	/// </summary>
-	/// <param name="s">If contains '%', removes it and moves caret there.</param>
+	/// <param name="s">If contains <c>`|`</c>, removes it and moves caret there; must be single line.</param>
 	public static void TextSimply(string s) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		var d = Panels.Editor.ActiveDoc;
@@ -213,12 +213,8 @@ static class InsertCode {
 	/// At current position, not as new line, replaces selection.
 	/// </summary>
 	/// <param name="c">If null, uses the focused control, else sets focus.</param>
-	/// <param name="s">
-	/// If contains '%', removes it and moves caret there.
-	/// Alternatively use '\b', then does not touch '%'.
-	/// If contains '%' or \b, must be single line.
-	/// </param>
-	public static void TextSimplyInControl(FrameworkElement c, string s) { //TODO3: flags for processing % etc
+	/// <param name="s">If contains <c>`|`</c>, removes it and moves caret there; must be single line.</param>
+	public static void TextSimplyInControl(FrameworkElement c, string s) {
 		if (c == null) {
 			c = App.FocusedElement;
 			if (c == null) return;
@@ -228,11 +224,10 @@ static class InsertCode {
 				c.Focus();
 		}
 		
-		int i = s.IndexOf('\b');
-		if (i < 0) i = s.IndexOf('%');
+		int i = s.IndexOf("`|`");
 		if (i >= 0) {
-			Debug.Assert(!s.Contains('\r'));
-			s = s.Remove(i, 1);
+			Debug.Assert(!s.Contains('\n'));
+			s = s.Remove(i, 3);
 			i = s.Length - i;
 		}
 		

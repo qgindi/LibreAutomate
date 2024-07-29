@@ -148,7 +148,7 @@ class PanelRecipe {
 				var s8 = Encoding.UTF8.GetBytes("\r\n" + s + "\r\n");
 				_c.aaaAppendText8(s8, scroll: false);
 				int n2 = _c.aaaLineCount - 1;
-				for (int i = n1; i < n2; i++) _c.Call(SCI_MARKERADD, i, 0);
+				for (int i = n1; i < n2; i++) _c.Call(SCI_MARKERADDSET, i, 3);
 				ac.Add((s, offset8, s8.Length - 4));
 			}
 		}
@@ -198,8 +198,8 @@ class PanelRecipe {
 			Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
 			
 			aaaMarginSetWidth(1, 14);
-			Call(SCI_MARKERDEFINE, 0, SC_MARK_FULLRECT);
-			Call(SCI_MARKERSETBACK, 0, 0xA0E0B0);
+			aaaMarkerDefine(0, SC_MARK_FULLRECT, backColor: 0xB0E0A0);
+			aaaMarkerDefine(1, SC_MARK_BACKGROUND, backColor: 0xF0F0F0);
 			
 			AaSetStyles();
 			Call(SCI_SETZOOM, App.Settings.recipe_zoom);
@@ -228,7 +228,7 @@ class PanelRecipe {
 			//aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
 			//aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
 			aaaStyleFont(STYLE_DEFAULT, App.Settings.font_recipeText.name, App.Settings.font_recipeText.size);
-			CiStyling.TStyles.Default.ToScintilla(this, multiFont: true, fontName: App.Settings.font_recipeCode.name, fontSize: App.Settings.font_recipeCode.size);
+			CiStyling.TTheme.Default.ToScintilla(this, multiFont: true, fontName: App.Settings.font_recipeCode.name, fontSize: App.Settings.font_recipeCode.size);
 		}
 		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {

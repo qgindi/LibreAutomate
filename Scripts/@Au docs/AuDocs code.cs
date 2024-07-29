@@ -9,7 +9,7 @@ using EStyle = CiStyling.EStyle;
 
 partial class AuDocs {
 	static void _CreateCodeCss(string siteDir) {
-		var s = CiStyling.TStyles.Default;
+		var s = CiStyling.TTheme.Default;
 		var b = new StringBuilder();
 		
 		_Style("c", s.Comment);
@@ -18,6 +18,7 @@ partial class AuDocs {
 		_Style("f", s.Function);
 		_Style("k", s.Keyword);
 		_Style("goto", s.Label);
+		_Style("v", s.LocalVariable);
 		_Style("ns", s.Namespace);
 		_Style("n", s.Number);
 		_Style("o", s.Operator);
@@ -26,7 +27,6 @@ partial class AuDocs {
 		_Style("s", s.String);
 		_Style("se", s.StringEscape);
 		_Style("t", s.Type);
-		_Style("v", s.Variable);
 		_Style("x1", s.XmlDocTag);
 		_Style("x2", s.XmlDocText);
 		
@@ -88,9 +88,10 @@ partial class AuDocs {
 					EStyle.Comment => "c",
 					EStyle.Constant => "const",
 					EStyle.Excluded => "ex",
-					EStyle.Function => "f",
+					EStyle.Function or EStyle.Event => "f",
 					EStyle.Keyword => "k",
 					EStyle.Label => "goto", //not "label", it is used in DocFX CSS
+					EStyle.LocalVariable or EStyle.Field => "v",
 					EStyle.Namespace => "ns",
 					EStyle.Number => "n",
 					EStyle.Operator => "o",
@@ -99,7 +100,6 @@ partial class AuDocs {
 					EStyle.String => "s",
 					EStyle.StringEscape => "se",
 					EStyle.Type => "t",
-					EStyle.Variable => "v",
 					EStyle.XmlDocTag => "x1",
 					EStyle.XmlDocText => "x2",
 					_ => null,

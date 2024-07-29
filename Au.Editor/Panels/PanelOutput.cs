@@ -58,7 +58,6 @@ class PanelOutput {
 		set {
 			Debug.Assert(!_inInitSettings || value);
 			if (!_inInitSettings) App.Settings.output_white = value;
-			_c.Call(SCI_SETWHITESPACEFORE, 1, 0xFF0080);
 			_c.Call(SCI_SETVIEWWS, value);
 			App.Commands[nameof(Menus.Tools.Output.Output_white_space)].Checked = value;
 		}
@@ -79,10 +78,10 @@ class PanelOutput {
 		}
 		
 		protected override void AaOnHandleCreated() {
-			_p._c_HandleCreated();
 			aaaMarginSetWidth(1, 3);
-			
 			AaSetStyles();
+			_p._c_HandleCreated();
+			
 			AaTags.CodeStylesProvider = CiUtil.GetScintillaStylingBytes;
 			
 			SciTags.AddCommonLinkTag("open", _OpenLink);
@@ -102,7 +101,13 @@ class PanelOutput {
 		}
 		
 		public void AaSetStyles() {
-			CiStyling.TStyles.Default.ToScintilla(this, fontName: App.Settings.font_output.name, fontSize: App.Settings.font_output.size, backgroundColor: 0xF7F7F7);
+			var t = CiStyling.TTheme.Default with {
+				FontName = App.Settings.font_output.name,
+				FontSize = App.Settings.font_output.size,
+				Background = 0xF7F7F7,
+			};
+			t.ToScintilla(this);
+			Call(SCI_SETWHITESPACESIZE, 2); //not DPI-scaled
 		}
 		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
@@ -205,7 +210,7 @@ class PanelOutput {
 				if (h.Count > 50) h.Dequeue();
 			}
 			
-			_p._leaf.Visible = true; //TODO3: if(App.Hwnd.IsVisible) ?
+			_p._leaf.Visible = true;
 		}
 		static regexp s_rx1, s_rx2;
 		

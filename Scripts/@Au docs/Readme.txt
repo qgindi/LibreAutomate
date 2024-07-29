@@ -1,3 +1,4 @@
+Us the latest DocFX. Older version may not support new C# features.
 DocFX should use the latest VS.
 
 info: we don't use the full text search feature.

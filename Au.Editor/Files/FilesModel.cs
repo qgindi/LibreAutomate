@@ -465,7 +465,7 @@ partial class FilesModel {
 		UnloadingThisWorkspace?.Invoke(); //closes dialogs that contain workspace-specific data, eg Properties
 		UnloadingAnyWorkspace?.Invoke();
 		_currentFile = null;
-		Panels.Editor.CloseAll(saveTextIfNeed: false);
+		Panels.Editor.CloseAll_(saveTextIfNeed: false);
 		_openFiles.Clear();
 		_UpdateOpenFiles(null);
 	}

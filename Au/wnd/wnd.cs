@@ -2603,9 +2603,7 @@ namespace Au {
 		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="lastError"/>.
 		/// </summary>
 		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be <c>null</c>.</param>
-		public int ClassNameIs(params string[] classNames) {
-			//I expect this func will be often used instead of slow code like 'if (w.ClassName == "a" || w.ClassName == "b" || ...)'.
-			
+		public int ClassNameIs(params ReadOnlySpan<string> classNames) {
 			string s = ClassName; if (s == null) return 0;
 			return s.Like(true, classNames);
 		}
@@ -2631,9 +2629,7 @@ namespace Au {
 		/// Also returns 0 if fails to get name (probably window closed or 0 handle). Supports <see cref="lastError"/>.
 		/// </summary>
 		/// <param name="names">Window names. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be <c>null</c>.</param>
-		public int NameIs(params string[] names) {
-			//I expect this func will be often used instead of slow code like 'if (w.Name == "a" || w.Name == "b" || ...)'.
-			
+		public int NameIs(params ReadOnlySpan<string> names) {
 			string s = Name; if (s == null) return 0;
 			return s.Like(true, names);
 		}
@@ -2810,9 +2806,7 @@ namespace Au {
 		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="lastError"/>.
 		/// </summary>
 		/// <param name="programNames">Program names, like <c>"notepad.exe"</c>. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be <c>null</c>.</param>
-		public int ProgramNameIs(params string[] programNames) {
-			//I expect this func will be often used instead of slow code like 'if (w.ProgramName == "a" || w.ProgramName == "b" || ...)'.
-			
+		public int ProgramNameIs(params ReadOnlySpan<string> programNames) {
 			string s = ProgramName; if (s == null) return 0;
 			return s.Like(true, programNames);
 		}

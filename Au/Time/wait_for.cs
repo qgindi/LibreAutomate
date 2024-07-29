@@ -121,7 +121,7 @@ namespace Au {
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
 		/// Does not use <see cref="WaitLoop"/> and <b>Seconds.Period/MaxPeriod</b>.
 		/// </remarks>
-		public static int forHandle(Seconds timeout, WHFlags flags, params IntPtr[] handles) {
+		public static int forHandle(Seconds timeout, WHFlags flags, params ReadOnlySpan<IntPtr> handles) {
 			return WaitS_(timeout, flags, handles);
 		}
 		
@@ -136,7 +136,7 @@ namespace Au {
 		/// <br/>• <c>1+handles.Length</c> if <i>msgCallback</i> returned <c>true</c>,
 		/// <br/>• <c>2+handles.Length</c> if stop became <c>true</c>.
 		/// </returns>
-		internal static int WaitS_(Seconds timeout, WHFlags flags, IntPtr[] handles = null, Delegate msgCallback = null, WaitVariable_ stopVar = null) {
+		internal static int WaitS_(Seconds timeout, WHFlags flags, ReadOnlySpan<IntPtr> handles = default, Delegate msgCallback = null, WaitVariable_ stopVar = null) {
 			if (timeout.Period != null || timeout.MaxPeriod != null) print.warning("This wait function does not use Seconds.Period/MaxPeriod.");
 			if (flags.Has(WHFlags.DoEvents)) {
 				if (timeout.DoEvents != null) print.warning("This wait function does not use Seconds.DoEvents. It always works like if it is true.");

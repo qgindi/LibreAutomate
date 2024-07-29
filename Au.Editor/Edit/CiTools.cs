@@ -99,10 +99,10 @@ class CiTools {
 				SyntaxKind k1 = t1.Kind(), k2 = t2.Kind();
 				bool good1 = k1 is SyntaxKind.OpenParenToken or SyntaxKind.CommaToken, good2 = k2 is SyntaxKind.CloseParenToken or SyntaxKind.CommaToken;
 				string s;
-				if (good1 && good2) s = "\"%\""; else if (good1) s = "\"%\", "; else if (good2) s = ", \"%\""; else s = ", \"%\", ";
+				if (good1 && good2) s = "\"`|`\""; else if (good1) s = "\"`|`\", "; else if (good2) s = ", \"`|`\""; else s = ", \"`|`\", ";
 				InsertCode.TextSimply(s);
 			} else {
-				InsertCode.Statements("keys.send(\"%\");", ICSFlags.GoToPercent);
+				InsertCode.Statements("keys.send(\"`|`\");", ICSFlags.GoTo);
 			}
 			retry = true;
 			goto g1;

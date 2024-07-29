@@ -42,6 +42,7 @@
 		<None Remove="Default\Commands.xml" />
 		<None Remove="Default\Layout.xml" />
 		<None Remove="Default\Snippets.xml" />
+		<None Remove="Default\Themes\*.csv" />
 		<None Remove="Tools\Keys.txt" />
 		<None Remove="Tools\Regex.txt" />
 	</ItemGroup>
@@ -56,6 +57,9 @@
 		</Content>
 		<Content Include="Default\Snippets.xml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Default\Themes\*.csv">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 

@@ -456,7 +456,7 @@ static class CiFind {
 				//p1.Next('s');
 				
 				SymbolRenameOptions sro = new(_overloads, _strings, _comments | _disabled);
-				rlocs = await Renamer.FindRenameLocationsAsync(solution, sym, sro, CAW::Microsoft.CodeAnalysis.CodeActions.CodeActionOptions.DefaultProvider, default);
+				rlocs = await Renamer.FindRenameLocationsAsync(solution, sym, sro, default);
 			}
 			finally { Au.Compiler.TestInternal.RefsEnd(); }
 			//p1.Next('f');

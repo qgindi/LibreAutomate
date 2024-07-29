@@ -1902,7 +1902,7 @@ static void DrawMarkUnderline(Surface *surface, const EditModel &model, const Vi
 		if ((marks & 1) && (vsDraw.markers[markBit].markType == MarkerSymbol::Underline) &&
 			(vsDraw.markers[markBit].layer == Layer::Base)) {
 			PRectangle rcUnderline = rcLine;
-			rcUnderline.top = rcUnderline.bottom - 2;
+			rcUnderline.top = rcUnderline.bottom - 1; //au: was 2
 			surface->FillRectangleAligned(rcUnderline, Fill(vsDraw.markers[markBit].back));
 		}
 		marks >>= 1;

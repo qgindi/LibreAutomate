@@ -18,8 +18,8 @@ partial class SciCode : KScintilla {
 	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
 	public const int
 		c_marginFold = 0,
-		c_marginMarkers = 1,
-		c_marginImages = 2,
+		c_marginImages = 1,
+		c_marginMarkers = 2,
 		c_marginLineNumbers = 3,
 		c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
 	
@@ -64,20 +64,15 @@ partial class SciCode : KScintilla {
 			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
 			));
 		
-		aaaMarginSetType(c_marginFold, SC_MARGIN_SYMBOL);
+		aaaMarginSetType(c_marginImages, SC_MARGIN_COLOUR, markersMask: 0);
+		Call(SCI_SETMARGINBACKN, c_marginImages, Api.GetSysColor(Api.COLOR_BTNFACE));
 		
-		//Call(SCI_SETMARGINMASKN, 1, 0);
-		//Call(SCI_SETMARGINMASKN, c_marginMarkers, ~SC_MASK_FOLDERS);
-		aaaMarginSetType(c_marginMarkers, SC_MARGIN_COLOUR, sensitive: true, cursorArrow: true);
-		Call(SCI_SETMARGINBACKN, c_marginMarkers, 0xFFFFFF);
+		aaaMarginSetType(c_marginMarkers, SC_MARGIN_COLOUR, markersMask: 0x1FFFFFF, sensitive: true, cursorArrow: true);
 		aaaMarginSetWidth(c_marginMarkers, 16);
-		
-		//aaaMarginSetType(c_marginImages, SC_MARGIN_SYMBOL);
-		//Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
 		
 		aaaMarginSetType(c_marginLineNumbers, SC_MARGIN_NUMBER);
 		
-		aaaMarginSetWidth(c_marginChanges, 4);
+		aaaMarginSetWidth(c_marginChanges, 10);
 		aaaMarginSetWidth(-1, 2);
 		
 		Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
@@ -86,13 +81,8 @@ partial class SciCode : KScintilla {
 		Call(SCI_SETEXTRADESCENT, 1); //eg to avoid drawing fold separator lines on text
 		Call(SCI_SETMOUSEDWELLTIME, 500);
 		
-		Call(SCI_SETCARETLINEFRAME, 1);
-		aaaSetElementColor(SC_ELEMENT_CARET_LINE_BACK, 0xEEEEEE);
-		Call(SCI_SETCARETLINEVISIBLEALWAYS, 1);
+		CiStyling.TTheme.Current.ToScintilla(this);
 		
-		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
-		
-		CiStyling.TStyles.Customized.ToScintilla(this);
 		_OnHandleCreatedOrDpiChanged();
 		if (_fn.IsCodeFile) CiFolding.InitFolding(this);
 		_InitDragDrop();
@@ -120,6 +110,8 @@ partial class SciCode : KScintilla {
 		CodeInfo._styling.DocHandleDestroyed(this);
 		base.DestroyWindowCore(hwnd);
 	}
+	
+	//~SciCode() { print.it("~SciCode"); } //note: never called, because Dispose (called by PanelEdit) calls GC.SuppressFinalize. To test this, call GC.ReRegisterForFinalize(this) in DestroyWindowCore.
 	
 	//Called by PanelEdit.Open.
 	internal void EInit_(bool newFile, bool noTemplate) {
@@ -166,11 +158,6 @@ partial class SciCode : KScintilla {
 		_fls.FinishedLoading();
 	}
 	static bool s_badNewlines;
-	
-	//protected override void Dispose(bool disposing) {
-	//	print.qm2.write($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
-	//	base.Dispose(disposing);
-	//}
 	
 	internal void EOpenDocActivated() {
 		_fn._CheckModifiedExternally(this);

@@ -105,6 +105,7 @@ static class CodeExporter {
 		_Style(EStyle.Function);
 		_Style(EStyle.Keyword);
 		_Style(EStyle.Label);
+		_Style(EStyle.LocalVariable);
 		_Style(EStyle.Namespace);
 		_Style(EStyle.Number);
 		_Style(EStyle.Operator);
@@ -113,7 +114,6 @@ static class CodeExporter {
 		_Style(EStyle.String);
 		_Style(EStyle.StringEscape);
 		_Style(EStyle.Type);
-		_Style(EStyle.Variable);
 		_Style(EStyle.XmlDocTag);
 		_Style(EStyle.XmlDocText);
 		
@@ -134,9 +134,10 @@ static class CodeExporter {
 			EStyle.Comment => "cm",
 			EStyle.Constant => "cn",
 			EStyle.Excluded => "ex",
-			EStyle.Function => "fn",
+			EStyle.Function or EStyle.Event => "fn",
 			EStyle.Keyword => "kw",
 			EStyle.Label => "lb",
+			EStyle.LocalVariable or EStyle.Field => "vr",
 			EStyle.Namespace => "ns",
 			EStyle.Number => "nr",
 			EStyle.Operator => "op",
@@ -145,33 +146,10 @@ static class CodeExporter {
 			EStyle.String => "st",
 			EStyle.StringEscape => "se",
 			EStyle.Type => "tp",
-			EStyle.Variable => "vr",
 			EStyle.XmlDocTag => "xt",
 			EStyle.XmlDocText => "xd",
 			_ => "st" //Rx (unused)
 		};
 	
-	static TStyle _StyleToStruct(EStyle style) {
-		var d = CiStyling.TStyles.Default;
-		return style switch {
-			EStyle.Comment => d.Comment,
-			EStyle.Constant => d.Constant,
-			EStyle.Excluded => d.Excluded,
-			EStyle.Function => d.Function,
-			EStyle.Keyword => d.Keyword,
-			EStyle.Label => d.Label,
-			EStyle.Namespace => d.Namespace,
-			EStyle.Number => d.Number,
-			EStyle.Operator => d.Operator,
-			EStyle.Preprocessor => d.Preprocessor,
-			EStyle.Punctuation => d.Punctuation,
-			EStyle.String => d.String,
-			EStyle.StringEscape => d.StringEscape,
-			EStyle.Type => d.Type,
-			EStyle.Variable => d.Variable,
-			EStyle.XmlDocTag => d.XmlDocTag,
-			EStyle.XmlDocText => d.XmlDocText,
-			_ => d.String //Rx (unused)
-		};
-	}
+	static TStyle _StyleToStruct(EStyle style) => CiStyling.TTheme.Default[style];
 }

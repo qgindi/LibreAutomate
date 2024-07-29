@@ -5,9 +5,6 @@ using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
 
-//TODO3: when disabling main window, also disable its owned windows. At least floating panels.
-//	Because for dialogs often is used 'owner: App.Hmain'.
-
 partial class MainWindow : Window {
 	protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
 		if (e.Property == VisibilityProperty && (Visibility)e.NewValue == Visibility.Visible) {

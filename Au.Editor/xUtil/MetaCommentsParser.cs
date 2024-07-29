@@ -1,7 +1,5 @@
 using Au.Compiler;
 
-//TODO3: preserve order.
-
 /// <seealso cref="MetaComments.FindMetaComments"/>
 /// <seealso cref="MetaComments.EnumOptions"/>
 class MetaCommentsParser {
@@ -97,9 +95,10 @@ class MetaCommentsParser {
 		_Append("icon", icon, true);
 		_Append("manifest", manifest, true);
 		_Append("sign", sign, true);
-		_Append("bit32", bit32);
 		_Append("console", console);
+		_Append("bit32", bit32);
 		_Append("xmlDoc", xmlDoc);
+		
 		_Append("miscFlags", miscFlags);
 		_Append("noRef", noRef);
 		_Append("startFaster", startFaster);

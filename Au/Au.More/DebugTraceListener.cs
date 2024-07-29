@@ -41,7 +41,13 @@ public class DebugTraceListener : DefaultTraceListener {
 			if (!AssertUiEnabled) return; //like default listener
 
 			s = $"{s}{st1}\n\nProcess id: {process.thisProcessId}";
-			int r = dialog.showWarning("Debug assertion failed", s, "1 Exit|2 Ignore|3 script.debug|4 Debugger.Launch", expandedText: st);
+			
+			//int r = dialog.showWarning("Debug assertion failed", s, "1 Exit|2 Ignore|3 script.debug|4 Debugger.Launch", expandedText: st); //no. Need to block all messages in this thread, to prevent reentering this or executing code somewhere else.
+			//int r = Task.Run(() => dialog.showWarning("Debug assertion failed", s, "1 Exit|2 Ignore|3 script.debug|4 Debugger.Launch", expandedText: st)).Result; //no. It seems .NET adds messages (eg WM_TIMER) to a queue, and finally reposts all.
+			int r = 0;
+			var thread = run.thread(() => { r = dialog.showWarning("Debug assertion failed", s, "1 Exit|2 Ignore|3 script.debug|4 Debugger.Launch", expandedText: st); });
+			do 100.ms(); while (thread.IsAlive);
+			
 			if (r == 1) Api.ExitProcess(-1);
 			if (r == 2) return;
 			if (r == 4) Debugger.Launch();

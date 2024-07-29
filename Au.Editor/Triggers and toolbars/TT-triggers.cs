@@ -100,19 +100,19 @@ partial class TriggersAndToolbars {
 		if (iType == 2) sAction = sAction.Replace("multiline replacement", "\r\n\r\n");
 		string s = null;
 		if (iType == 1) {
-			s = """hk["%"]""";
+			s = """hk["`|`"]""";
 		} else if (iType == 2) {
-			s = sAction.Starts("\"") ? """tr["%"]""" : """tt["%"]""";
+			s = sAction.Starts("\"") ? """tr["`|`"]""" : """tt["`|`"]""";
 		} else if (iType == 3) {
-			s = """Triggers.Mouse[TM%]""";
+			s = """Triggers.Mouse[TM`|`]""";
 		} else if (iType == 4) {
 			var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
 			if (!d.ShowAndWait()) return;
-			s = $"Triggers.Window[TWEvent.%ActiveNew, {d.AaResultCode}]";
+			s = $"Triggers.Window[TWEvent.`|`ActiveNew, {d.AaResultCode}]";
 		}
 		s = $"{s} = {sAction};";
 		_CorrectTriggerPlace();
-		InsertCode.Statements(s, ICSFlags.GoToPercent);
+		InsertCode.Statements(s, ICSFlags.GoTo);
 		CodeInfo.ShowSignature();
 		if (iType == 3) CodeInfo.ShowCompletionList();
 	}

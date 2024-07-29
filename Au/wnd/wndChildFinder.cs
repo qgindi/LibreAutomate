@@ -56,7 +56,7 @@ public class wndChildFinder {
 			_className = cn;
 		}
 		if (name != null) {
-			switch (StringUtil.ParseParam3Stars(ref name, "text", "elmName", "wfName"/*, "label"*/)) {
+			switch (StringUtil.ParseParam3Stars_(ref name, "text", "elmName", "wfName"/*, "label"*/)) {
 			case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***text \", \"***elmName \", \"***wfName \"."); //, \"***label \"
 			case 1: _nameIs = _NameIs.text; break;
 			case 2: _nameIs = _NameIs.elmName; break;

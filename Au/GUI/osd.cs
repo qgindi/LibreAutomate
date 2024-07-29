@@ -240,7 +240,7 @@ namespace Au.Types {
 		
 		#region topmost workaround
 		
-		//TODO3: find a better workaround for: our topmost window is below some other topmost windows (Win8+).
+		//Workaround for: our topmost window is below some other topmost windows (Win8+).
 		//	Window examples:
 		//	A. Windows Start menu, search, TaskListThumbnailWnd.
 		//	B. uiAccess apps, eg on-screen keyboard, Inspect, NVDA, QM2 uiAccess.

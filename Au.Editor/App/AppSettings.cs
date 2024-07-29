@@ -101,6 +101,7 @@ record AppSettings : JSettings {
 	
 	//code editor
 	public bool edit_wrap, edit_noImages;
+	public string edit_theme;
 	
 	//code info, autocorrection, formatting
 	public bool ci_complGroup = true, ci_enterBeforeParen = true, ci_enterBeforeSemicolon = true, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true, ci_semicolon = true;

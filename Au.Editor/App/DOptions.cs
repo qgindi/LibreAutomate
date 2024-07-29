@@ -65,7 +65,7 @@ class DOptions : KDialogWindow {
 		b.End();
 		
 		b.End();
-
+		
 		const string c_rkRun = @"Software\Microsoft\Windows\CurrentVersion\Run";
 		string init_swwValue = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) as string;
 		bool init_swwYes = true == init_swwValue?.RxMatch($"^\"(.+?)\"", 1, out string s1) && filesystem.more.isSameFile(s1, process.thisExePath);
@@ -149,11 +149,8 @@ Example:
 		public ComboBox name;
 		public TextBox size;
 		
-		public void Init(List<string> fonts, string fontName, double fontSize) {
+		public void Init(string[] fonts) {
 			name.ItemsSource = fonts;
-			name.SelectedItem = fontName; if (name.SelectedItem == null) name.Text = fontName;
-			
-			size.Text = fontSize.ToS("0.##");
 			size.MouseWheel += static (o, e) => {
 				var tb = o as TextBox;
 				if (!tb.Text.ToNumber(out double d)) d = 9;
@@ -161,7 +158,15 @@ Example:
 			};
 		}
 		
-		public void Init(List<string> fonts, AppSettings.font_t f) => Init(fonts, f.name, f.size);
+		public void Init(string[] fonts, AppSettings.font_t f) {
+			Init(fonts);
+			Set(f.name, f.size);
+		}
+		
+		public void Set(string fontName, double fontSize) {
+			name.SelectedItem = fontName; if (name.SelectedItem is null) name.Text = fontName;
+			size.Text = fontSize.ToS("0.##");
+		}
 		
 		public (string name, double size) Get() {
 			var s = name.Text.Trim(); if (s == "" || s.Starts("[ ")) s = "Consolas";
@@ -179,7 +184,8 @@ Example:
 	}
 	
 	void _FontAndColors() {
-		//CONSIDER: make easier to set dark theme for code.
+		CiStyling.TTheme theme = null, savedTheme = null;
+		bool ignoreColorEvents = false;
 		
 		var b = _Page("Font, colors", WBPanelType.Dock);
 		b.Options(bindLabelVisibility: true);
@@ -200,6 +206,7 @@ Example:
 		var fontRecipeText = _AddFontControls("Recipe text");
 		var fontRecipeCode = _AddFontControls("Recipe code");
 		var fontFind = _AddFontControls("Find");
+		b.R.xAddInfoBlockT("Only editor font depends on theme.");
 		b.End();
 		b.R.StartGrid();
 		var pColor = b.Panel as Grid;
@@ -211,12 +218,13 @@ Example:
 		b.Add(out KCheckBox cUnderline, "Underline");
 		b.Add(out KCheckBox cBackground, "Background");
 		b.End();
-		b.R.Add("Opacity 0-255", out TextBox tAlpha).Width(50, "L");
+		b.R.Add("", out TextBox tAlpha).Width(50, "L");
+		var lAlpha = b.Last2 as Label;
 		b.End();
 		b.Row(-1);
 		b.R.AddSeparator();
 		b.R.StartStack();
-		b.Add(out Button bInfo, "?").Width(20);
+		b.AddButton("Theme ▾", _ThemesButtonClicked).Width(70);
 		b.End().Align("r");
 		b.End();
 		b.End();
@@ -228,11 +236,9 @@ Example:
 			sciStyles.aaaSetElementColor(Sci.SC_ELEMENT_CARET_LINE_BACK, 0xE0E0E0);
 			sciStyles.Call(Sci.SCI_SETCARETLINEVISIBLEALWAYS, 1);
 			
-			var styles = CiStyling.TStyles.Customized with { };
-			
 			//font
 			
-			List<string> fonts = new(), fontsMono = new(), fontsVar = new();
+			List<string> fontsMono = new(), fontsVar = new();
 			using (var dc = new ScreenDC_()) {
 				unsafe {
 					_Api.EnumFontFamiliesEx(dc, default, (lf, tm, fontType, lParam) => {
@@ -246,13 +252,9 @@ Example:
 			}
 			fontsMono.Sort();
 			fontsVar.Sort();
-			fonts.Add("[ Fixed-width fonts ]");
-			fonts.AddRange(fontsMono);
-			fonts.Add("");
-			fonts.Add("[ Variable-width fonts ]");
-			fonts.AddRange(fontsVar);
+			string[] fonts = ["[ Fixed-width fonts ]", .. fontsMono, "", "[ Variable-width fonts ]", .. fontsVar];
 			
-			font.Init(fonts, styles.FontName, styles.FontSize);
+			font.Init(fonts);
 			fontOutput.Init(fonts, App.Settings.font_output);
 			fontRecipeText.Init(fonts, App.Settings.font_recipeText);
 			fontRecipeCode.Init(fonts, App.Settings.font_recipeCode);
@@ -263,11 +265,8 @@ Example:
 			const int indicHidden = 0;
 			sciStyles.aaaIndicatorDefine(indicHidden, Sci.INDIC_HIDDEN);
 			sciStyles.aaaMarginSetWidth(1, 0);
-			styles.ToScintilla(sciStyles);
 			
-			bool ignoreColorEvents = false;
-			
-			const int c_isStyle = 0, c_isIndicator = 1, c_isElement = 2, c_isFont = 3, c_isBackground = 4;
+			const int c_isStyle = 0, c_isIndicator = 1, c_isElementAlpha = 2, c_isFont = 3, c_isBackground = 4, c_isElementThickness = 5, c_isElementColorOnly = 6;
 			
 			(string name, int kind, int index)[] table = [
 				("Font", c_isFont, 0),
@@ -285,7 +284,9 @@ Example:
 				("Namespace", c_isStyle, (int)EStyle.Namespace),
 				("Type", c_isStyle, (int)EStyle.Type),
 				("Function", c_isStyle, (int)EStyle.Function),
-				("Variable", c_isStyle, (int)EStyle.Variable),
+				("Event", c_isStyle, (int)EStyle.Event),
+				("Local variable", c_isStyle, (int)EStyle.LocalVariable),
+				("Field variable", c_isStyle, (int)EStyle.Field),
 				("Constant", c_isStyle, (int)EStyle.Constant),
 				("GotoLabel", c_isStyle, (int)EStyle.Label),
 				("#directive", c_isStyle, (int)EStyle.Preprocessor),
@@ -299,7 +300,9 @@ Example:
 				("Regexp escape", c_isStyle, (int)EStyle.RxEscape),
 				("Regexp callout", c_isStyle, (int)EStyle.RxCallout),
 				("Regexp comment", c_isStyle, (int)EStyle.RxComment),
-				("Line number", c_isStyle, (int)EStyle.LineNumber),
+				("Line number text", c_isStyle, (int)EStyle.LineNumber),
+				("Line number margin", c_isElementColorOnly, -1),
+				("Marker margin", c_isElementColorOnly, -2),
 
 				("Text highlight", c_isIndicator, SciCode.c_indicFound),
 				("Symbol highlight", c_isIndicator, SciCode.c_indicRefs),
@@ -308,19 +311,26 @@ Example:
 				("Snippet field", c_isIndicator, SciCode.c_indicSnippetField),
 				("Snippet field active", c_isIndicator, SciCode.c_indicSnippetFieldActive),
 
-				("Selection", c_isElement, Sci.SC_ELEMENT_SELECTION_BACK),
-				("Selection no focus", c_isElement, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
+				("Selection", c_isElementAlpha, Sci.SC_ELEMENT_SELECTION_BACK),
+				("Selection no focus", c_isElementAlpha, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
+				
+				("Caret", c_isElementThickness, Sci.SC_ELEMENT_CARET),
+				("Caret line frame", c_isElementThickness, Sci.SC_ELEMENT_CARET_LINE_BACK),
 			];
 			
 			sciStyles.aaaText = string.Join("\r\n", table.Select(o => o.name));
 			for (int i = 0; i < table.Length; i++) {
 				int lineStart = sciStyles.aaaLineStart(false, i), lineEnd = sciStyles.aaaLineEnd(false, i);
 				sciStyles.aaaIndicatorAdd(indicHidden, false, lineStart..lineEnd, i + 1);
-				if (table[i].kind is c_isStyle) {
+				var kind = table[i].kind;
+				if (kind is c_isStyle) {
 					sciStyles.Call(Sci.SCI_STARTSTYLING, lineStart);
 					sciStyles.Call(Sci.SCI_SETSTYLING, lineEnd - lineStart, table[i].index);
-				} else if (table[i].kind is c_isIndicator) {
+				} else if (kind is c_isIndicator) {
 					sciStyles.aaaIndicatorAdd(table[i].index, false, lineStart..lineEnd);
+				} else if (kind is c_isElementColorOnly && table[i].index is -1) { //line number margin
+					sciStyles.Call(Sci.SCI_STARTSTYLING, lineStart);
+					sciStyles.Call(Sci.SCI_SETSTYLING, lineEnd - lineStart, Sci.STYLE_LINENUMBER);
 				}
 			}
 			
@@ -342,9 +352,10 @@ Example:
 							ignoreColorEvents = true;
 							int col;
 							pFontStyle.Visibility = k.kind is c_isStyle ? Visibility.Visible : Visibility.Collapsed;
-							tAlpha.Visibility = k.kind is c_isElement or c_isIndicator ? Visibility.Visible : Visibility.Collapsed;
+							tAlpha.Visibility = k.kind is c_isIndicator or c_isElementAlpha or c_isElementThickness ? Visibility.Visible : Visibility.Collapsed;
+							lAlpha.Content = k.kind is c_isElementThickness ? "Thickness 1-4" : "Opacity 0-255";
 							if (k.kind is c_isStyle) {
-								ref var rs = ref styles[(EStyle)k.index];
+								ref var rs = ref theme[(EStyle)k.index];
 								col = rs.color;
 								cBold.IsChecked = rs.bold;
 								cItalic.IsChecked = rs.italic;
@@ -353,15 +364,17 @@ Example:
 								if (back) cBackground.IsChecked = rs.back;
 								cBackground.Visibility = back ? Visibility.Visible : Visibility.Collapsed;
 							} else if (k.kind is c_isIndicator) {
-								ref var ri = ref styles.Indicator(k.index);
+								ref var ri = ref theme.Indicator(k.index);
 								col = ri.color;
 								tAlpha.Text = ri.alpha.ToS();
-							} else if (k.kind is c_isElement) {
-								col = styles.ElementColor(k.index);
+							} else if (k.kind is c_isElementAlpha or c_isElementThickness) {
+								col = theme.Element(k.index);
 								tAlpha.Text = (col >>> 24).ToS();
 								col &= 0xFFFFFF;
+							} else if (k.kind is c_isElementColorOnly) {
+								col = theme.Element(k.index) & 0xFFFFFF;
 							} else { //Background
-								col = styles.BackgroundColor;
+								col = theme.Background;
 							}
 							colorPicker.Color = col;
 							ignoreColorEvents = false;
@@ -373,8 +386,8 @@ Example:
 			
 			//when changed values of controls
 			TextChangedEventHandler textChanged = (_, _) => {
-				(styles.FontName, styles.FontSize) = font.Get();
-				styles.ToScintilla(sciStyles);
+				(theme.FontName, theme.FontSize) = font.Get();
+				theme.ToScintilla(sciStyles);
 			};
 			font.name.AddHandler(TextBoxBase.TextChangedEvent, textChanged);
 			font.size.AddHandler(TextBoxBase.TextChangedEvent, textChanged);
@@ -391,49 +404,55 @@ Example:
 				var k = table[currentItem];
 				int col = colorPicker.Color;
 				if (k.kind is c_isStyle) {
-					ref var rs = ref styles[(EStyle)k.index];
+					ref var rs = ref theme[(EStyle)k.index];
 					if (control == cBold) rs.bold = cBold.IsChecked;
 					else if (control == cItalic) rs.italic = cItalic.IsChecked;
 					else if (control == cUnderline) rs.underline = cUnderline.IsChecked;
 					else if (control == cBackground) rs.back = cBackground.IsChecked;
 					else rs.color = col;
 				} else if (k.kind is c_isIndicator) {
-					ref var ri = ref styles.Indicator(k.index);
+					ref var ri = ref theme.Indicator(k.index);
 					if (control == tAlpha) ri.alpha = Math.Clamp(tAlpha.Text.ToInt(), 0, 255);
 					else ri.color = col;
-				} else if (k.kind is c_isElement) {
-					ref var m = ref styles.ElementColor(k.index);
-					if (control == tAlpha) m = (m & 0xFFFFFF) | Math.Clamp(tAlpha.Text.ToInt(), 0, 255) << 24;
-					else m = (m & ~0xFFFFFF) | (col & 0xFFFFFF);
+				} else if (k.kind is c_isElementAlpha or c_isElementThickness or c_isElementColorOnly) {
+					ref var m = ref theme.Element(k.index);
+					if (control == tAlpha) {
+						bool cl = k.kind is c_isElementThickness; //note: don't allow caret line frame 0, which set line background color instead of frame, because it would be mixed with translucent indicators
+						m = (m & 0xFFFFFF) | Math.Clamp(tAlpha.Text.ToInt(), cl ? 1 : 0, cl ? 4 : 255) << 24;
+					} else m = (m & ~0xFFFFFF) | (col & 0xFFFFFF);
 				} else if (k.kind is c_isBackground) {
-					styles.BackgroundColor = col;
+					theme.Background = col;
 				}
-				styles.ToScintilla(sciStyles);
+				theme.ToScintilla(sciStyles);
 			}
 			
 			_b.OkApply += e => {
-				bool stylesChanged = styles != CiStyling.TStyles.Customized;
-				if (stylesChanged) CiStyling.TStyles.Customized = styles;
+				bool stylesChanged = theme != savedTheme;
+				bool stylesOrThemeChanged = CiStyling.TTheme.OptionsApply(theme, stylesChanged);
+				if (stylesChanged) { savedTheme = CiStyling.TTheme.Current; theme = savedTheme with { }; }
+				
+				if (fontFind.Apply(ref App.Settings.font_find) || stylesOrThemeChanged) Panels.Find.CodeStylesChanged_();
 				if (fontOutput.Apply(ref App.Settings.font_output)) Panels.Output.Scintilla.AaSetStyles();
 				if (fontRecipeText.Apply(ref App.Settings.font_recipeText) | fontRecipeCode.Apply(ref App.Settings.font_recipeCode)) Panels.Recipe.Scintilla.AaSetStyles();
-				if (fontFind.Apply(ref App.Settings.font_find) || stylesChanged) Panels.Find.CodeStylesChanged_();
 			};
 			
-			//[?] button
-			bInfo.Click += (_, _) => {
-				string link = CiStyling.TStyles.s_settingsFile;
-				dialog.show(null, $@"Changed font/color settings are saved in file
-<a href=""{link}"">{link}</a>
-
-To reset: delete the file.
-To reset some colors etc: delete some lines.
-To change all: replace the file.
-To backup: copy the file.
-
-To apply changes after deleting etc, restart this application.
-", icon: DIcon.Info, onLinkClick: e => { run.selectInExplorer(e.LinkHref); });
-			};
+			_OpenTheme(CiStyling.TTheme.Current);
 		};
+		
+		void _OpenTheme(CiStyling.TTheme t) {
+			savedTheme = t;
+			theme = savedTheme with { };
+			
+			font.Set(theme.FontName, theme.FontSize);
+			theme.ToScintilla(sciStyles);
+			sciStyles.aaaGoToPos(false, 0);
+		}
+		
+		void _ThemesButtonClicked(WBButtonClickArgs e) {
+			var t = CiStyling.TTheme.OptionsMenu(theme, this);
+			if (t is null) return;
+			_OpenTheme(t);
+		}
 	}
 	
 	void _CodeEditor() {

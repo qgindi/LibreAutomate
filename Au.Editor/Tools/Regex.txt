@@ -48,12 +48,12 @@
 <+a>(?J)<>  -  allow duplicate group names.
 
 <b>How to remove options, set multiple, etc<>
-<+a (?%)>(?msi)<>  -  set multiple options.
-<+a (?-%)>(?-im)<>  -  remove options.
-<+a (?%-)>(?si-m)<>  -  set and remove options.
+<+a (?`|`)>(?msi)<>  -  set multiple options.
+<+a (?-`|`)>(?-im)<>  -  remove options.
+<+a (?`|`-)>(?si-m)<>  -  set and remove options.
 <+a>(?^)<>  -  remove options <.r>imsnx<>.
-<+a (?^%)>(?^im)<>  -  remove <.r>imsnx<> and add <.r>im<>.
-<+a (?%:)>(?i:...)<>  -  another way to set options in non-capturing groups. The same as <.r>(?:(?i)...)<>.
+<+a (?^`|`)>(?^im)<>  -  remove <.r>imsnx<> and add <.r>im<>.
+<+a (?`|`:)>(?i:...)<>  -  another way to set options in non-capturing groups. The same as <.r>(?:(?i)...)<>.
 
 These options can be set anywhere in regular expression and are applied until its end or until the end of the <.r>(...)<> group/assertion/etc or until unset.
 
@@ -127,11 +127,11 @@ Escape sequences for non-printing characters:
 <+a>\r<>  -  carriage return (character code 13).
 <+a>\r\n<>  -  Windows newline sequence. See also "any newline" <+p charTypes>\R<>.
 <+a>\t<>  -  tab (character code 9).
-<+a \x%>\xhh<>  -  character with hex character code hh.
-<+a \x{%}>\x{hhhh}<>  -  character with hex character code hhhh.
-<+a \N{U+%}>\N{U+hhhh}<>  -  character with Unicode hex code point hhhh.
+<+a \x`|`>\xhh<>  -  character with hex character code hh.
+<+a \x{`|`}>\x{hhhh}<>  -  character with hex character code hhhh.
+<+a \N{U+`|`}>\N{U+hhhh}<>  -  character with Unicode hex code point hhhh.
 
-<+a \Q%\E>\Q...\E<>  -  literal text. There are no metacharacters and escape sequences.
+<+a \Q`|`\E>\Q...\E<>  -  literal text. There are no metacharacters and escape sequences.
 
 Metacharacter <.r>\<> also has other uses. With regex functions use <c green>@"verbatim string"<> to avoid C# escape sequences for every <.r>\<>.
 
@@ -155,8 +155,8 @@ Metacharacter <.r>\<> also has other uses. With regex functions use <c green>@"v
 <+a>\H<>  -  character that is not a horizontal white space character.
 <+a>\v<>  -  vertical white space character (newlines).
 <+a>\V<>  -  character that is not a vertical white space character.
-<+a \p{%}>\p{Xx}<>  -  character with the Xx <+p charProp>property<> or in <+p scripts>script<>.
-<+a \P{%}>\P{Xx}<>  -  character without the Xx <+p charProp>property<> or not in <+p scripts>script<>.
+<+a \p{`|`}>\p{Xx}<>  -  character with the Xx <+p charProp>property<> or in <+p scripts>script<>.
+<+a \P{`|`}>\P{Xx}<>  -  character without the Xx <+p charProp>property<> or not in <+p scripts>script<>.
 <+a>\X<>  -  Unicode extended grapheme cluster.
 
 <b>Options<>
@@ -172,11 +172,11 @@ Metacharacter <.r>\<> also has other uses. With regex functions use <c green>@"v
 
 <.h>Character classes<>
 
-<+a [%]>[abc]<>  -  character a, b or c.
-<+a [^%]>[^abc]<>  -  any character except a, b, c.
-<+a [^\r\n%]>[^abc\r\n]<>  -  any character except a, b, c and newlines.
-<+a [%-]>[a-z]<>  -  one of characters in range a to z.
-<+a [^%-]>[^a-z]<>  -  any character not in range a to z.
+<+a [`|`]>[abc]<>  -  character a, b or c.
+<+a [^`|`]>[^abc]<>  -  any character except a, b, c.
+<+a [^\r\n`|`]>[^abc\r\n]<>  -  any character except a, b, c and newlines.
+<+a [`|`-]>[a-z]<>  -  one of characters in range a to z.
+<+a [^`|`-]>[^a-z]<>  -  any character not in range a to z.
 
 Can include several ranges, characters plus ranges, character types like <.r>\d<> (digit), escaped characters like <.r>\n<>, POSIX character classes like <.r>[:alpha:]<>. For literal <.r>^ - ] \<> use <.r>\^ \- \] \\<>.
 
@@ -218,9 +218,9 @@ See also: <+p charProp>Unicode character properties<> and <+p scripts>scripts<>.
 <+a>?<>  -  0 or 1. Lazy <+a>??<>, possessive <+a>?+<>.
 <+a>*<>  -  0 or more. Lazy <+a>*?<>, possessive <+a>*+<>.
 <+a>+<>  -  1 or more. Lazy <+a>+?<>, possessive <+a>++<>.
-<+a {%}>{n}<>  -  exactly n.
-<+a {%,}>{n,m}<>  -  at least n, no more than m. Lazy <+a {%,}?>{n,m}?<>, possessive <+a {%,}+>{n,m}+<>.
-<+a {%,}>{n,}<>  -  n or more. Lazy <+a {%,}?>{n,}?<>, possessive <+a {%,}+>{n,}+<>.
+<+a {`|`}>{n}<>  -  exactly n.
+<+a {`|`,}>{n,m}<>  -  at least n, no more than m. Lazy <+a {`|`,}?>{n,m}?<>, possessive <+a {`|`,}+>{n,m}+<>.
+<+a {`|`,}>{n,}<>  -  n or more. Lazy <+a {`|`,}?>{n,}?<>, possessive <+a {`|`,}+>{n,}+<>.
 
 A quantifier after a character/group/etc specifies how many times it must match.
 Examples: <.r><.r>.*<><> - 0 or more characters; <.r><.r>(\d{3}-)+<><> - 1 or more groups of 3 digits and -.
@@ -280,11 +280,11 @@ Often used in a group like <.r>(one|two)<> or in a "followed/preceded by" assert
 
 <.h>Groups and backreferences<>
 
-<+a (%)>(...)<>  -  capturing group.
-<+a (?'%')>(?'name'...)<>  -  named capturing group. Or <+a "(?<%>)">(?<name>...)<>, <+a "(?P<%>)">(?P<name>...)<>.
-<+a (?:%)>(?:...)<>  -  non-capturing group.
-<+a (?|%)>(?|...)<>  -  nested groups like A and B in <.r>(?|(A)s|(B))<> have the same number. Non-capturing.
-<+a "(?>%)">(?>...)<>  -  atomic non-capturing group. Or <+a (*atomic:%)>(*atomic:...)<>.
+<+a (`|`)>(...)<>  -  capturing group.
+<+a (?'`|`')>(?'name'...)<>  -  named capturing group. Or <+a "(?<`|`>)">(?<name>...)<>, <+a "(?P<`|`>)">(?P<name>...)<>.
+<+a (?:`|`)>(?:...)<>  -  non-capturing group.
+<+a (?|`|`)>(?|...)<>  -  nested groups like A and B in <.r>(?|(A)s|(B))<> have the same number. Non-capturing.
+<+a "(?>`|`)">(?>...)<>  -  atomic non-capturing group. Or <+a (*atomic:`|`)>(*atomic:...)<>.
 
 Groups are used:
 1. To localize/isolate several <+p or>alternatives<> like <.r>(one|two)<> or <+p>options<> like <.r>((?i)...)<>.
@@ -302,11 +302,11 @@ Groups can be nested, like <.r>(group1(group2))<>.
 Atomic groups can be used to avoid unnecessary backtracking and thus improve performance. Once the group matched, it cannot be backtracked (retried to find alternative matches) when next regex part does not match. For simple cases can instead be used <+p repetition>possessive quantifiers<>, which is the same just simpler syntax.
 
 <b>Backreferences<>
-<+a \g%>\gn<>  -  reference to group n (1, 2, ...). Or <+a \%>\n<>, but can be ambiguous.
-<+a \g{%}>\g{n}<>  -  reference to group n. Use when followed by a digit.
-<+a \g-%>\g-n<> or <+a \g{-%}>\g{-n}<>  -  relative reference to a group started at the left.
-<+a \g+%>\g+n<> or <+a \g{+%}>\g{+n}<>  -  relative reference to a group at the right.
-<+a \k'%'>\k'name'<>  -  reference by name. Or <+a "\k<%>">\k<name><>, <+a \g{%}>\g{name}<>, <+a \k{%}>\k{name}<>, <+a (?P=%)>(?P=name)<>.
+<+a \g`|`>\gn<>  -  reference to group n (1, 2, ...). Or <+a \`|`>\n<>, but can be ambiguous.
+<+a \g{`|`}>\g{n}<>  -  reference to group n. Use when followed by a digit.
+<+a \g-`|`>\g-n<> or <+a \g{-`|`}>\g{-n}<>  -  relative reference to a group started at the left.
+<+a \g+`|`>\g+n<> or <+a \g{+`|`}>\g{+n}<>  -  relative reference to a group at the right.
+<+a \k'`|`'>\k'name'<>  -  reference by name. Or <+a "\k<`|`>">\k<name><>, <+a \g{`|`}>\g{name}<>, <+a \k{`|`}>\k{name}<>, <+a (?P=`|`)>(?P=name)<>.
 
 A backreference matches the same substring as the referenced group matched most recently.
 
@@ -319,14 +319,14 @@ A backreference matches the same substring as the referenced group matched most 
 
 <.h>Assertions "followed by", "preceded by" and setting the start of match<>
 
-<+a (?=%)>(?=...)<>  -  positive lookahead assertion. It means "followed by ...".
-<+a (*pla:%)>(*pla:...)<> or <+a (*positive_lookahead:%)>(*positive_lookahead:...)<>  -  the same.
-<+a (?!%)>(?!...)<>  -  negative lookahead assertion. It means "not followed by ...".
-<+a (*nla:%)>(*nla:...)<> or <+a (*negative_lookahead:%)>(*negative_lookahead:...)<>  -  the same.
-<+a (?<=%)>(?<=...)<>  -  positive lookbehind assertion. It means "preceded by ...".
-<+a (*plb:%)>(*plb:...)<> or <+a (*positive_lookbehind:%)>(*positive_lookbehind:...)<>  -  the same.
-<+a (?<!%)>(?<!...)<>  -  negative lookbehind assertion. It means "not preceded by ...".
-<+a (*nlb:%)>(*nlb:...)<> or <+a (*negative_lookbehind:%)>(*negative_lookbehind:...)<>  -  the same.
+<+a (?=`|`)>(?=...)<>  -  positive lookahead assertion. It means "followed by ...".
+<+a (*pla:`|`)>(*pla:...)<> or <+a (*positive_lookahead:`|`)>(*positive_lookahead:...)<>  -  the same.
+<+a (?!`|`)>(?!...)<>  -  negative lookahead assertion. It means "not followed by ...".
+<+a (*nla:`|`)>(*nla:...)<> or <+a (*negative_lookahead:`|`)>(*negative_lookahead:...)<>  -  the same.
+<+a (?<=`|`)>(?<=...)<>  -  positive lookbehind assertion. It means "preceded by ...".
+<+a (*plb:`|`)>(*plb:...)<> or <+a (*positive_lookbehind:`|`)>(*positive_lookbehind:...)<>  -  the same.
+<+a (?<!`|`)>(?<!...)<>  -  negative lookbehind assertion. It means "not preceded by ...".
+<+a (*nlb:`|`)>(*nlb:...)<> or <+a (*negative_lookbehind:`|`)>(*negative_lookbehind:...)<>  -  the same.
 
 An assertion is a test on the string part following or preceding the current matching point that does not consume any characters. For example, regex <.r>ab(?=cd)<> matches ab followed by cd, but does not include cd in the reported match.
 
@@ -357,8 +357,8 @@ one
 three<>
 
 <b>Comments<>
-<+a #%>#comment<>  -  comment in extended mode.
-<+a (?#%)>(?#comment)<>  -  comment in any mode.
+<+a #`|`>#comment<>  -  comment in extended mode.
+<+a (?#`|`)>(?#comment)<>  -  comment in any mode.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2api.html#SEC20>Extended syntax (flag PCRE2_EXTENDED)<>
@@ -367,20 +367,20 @@ three<>
 
 <.h>Conditional groups<>
 
-<+a (?(%))>(?(condition)yes-pattern)<>  -  "if condition is true then use yes-pattern".
-<+a (?(%)|)>(?(condition)yes-pattern|no-pattern)<>  -  "if condition is true then use yes-pattern, else no-pattern".
+<+a (?(`|`))>(?(condition)yes-pattern)<>  -  "if condition is true then use yes-pattern".
+<+a (?(`|`)|)>(?(condition)yes-pattern|no-pattern)<>  -  "if condition is true then use yes-pattern, else no-pattern".
 
 Conditions:
 <.r>n<>  -  reference to group n (1, 2, ...). True if the group has already been matched.
-<+a -%>-n<>  -  relative reference to a group started at the left.
-<+a +%>+n<>  -  relative reference to a group at the right.
-<+a "'%'">'name'<>  -  reference to a named group. Or <+a "<%>"><name><>.
+<+a -`|`>-n<>  -  relative reference to a group started at the left.
+<+a +`|`>+n<>  -  relative reference to a group at the right.
+<+a "'`|`'">'name'<>  -  reference to a named group. Or <+a "<`|`>"><name><>.
 <+a>R<>  -  overall recursion.
-<+a R%>Rn<>  -  specific numbered group recursion.
-<+a R&%>R&name<>  -  specific named group recursion.
-<+a ?%>assertion<>  -  <+p assertions>assertion<>. Example: <.r>(?(?=\d)yes|no)<>.
-<+a VERSION=%.>VERSION=n.m<>  -  test PCRE2 version.
-<+a "VERSION>=%.">VERSION>=n.m<>  -  test PCRE2 version.
+<+a R`|`>Rn<>  -  specific numbered group recursion.
+<+a R&`|`>R&name<>  -  specific named group recursion.
+<+a ?`|`>assertion<>  -  <+p assertions>assertion<>. Example: <.r>(?(?=\d)yes|no)<>.
+<+a VERSION=`|`.>VERSION=n.m<>  -  test PCRE2 version.
+<+a "VERSION>=`|`.">VERSION>=n.m<>  -  test PCRE2 version.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC23>Conditional groups<>
@@ -389,12 +389,12 @@ Conditions:
 
 <.h>Subroutines and recursion<>
 
-<+a "(?%)">(?n)<>  -  call subroutine by group number n (1, 2, ...). Or <+a "\g'%'">\g'n'<>, <+a "\g<%>"><_>\g<n></_><>.
-<+a "(?-%)">(?-n)<>  -  call subroutine by relative number. Or <+a "\g'-%'">\g'-n'<>, <+a "\g<-%>"><_>\g<-n></_><>.
-<+a "(?+%)">(?+n)<>  -  call subroutine by relative number. Or <+a "\g'+%'">\g'+n'<>, <+a "\g<+%>"><_>\g<+n></_><>.
-<+a "(?&%)">(?&name)<>  -  call subroutine by group name. Or <+a "\g'%'">\g'name'<>, <+a "\g<%>"><_>\g<name></_><>, <+a "(?P>%)">(?P>name)<>.
+<+a "(?`|`)">(?n)<>  -  call subroutine by group number n (1, 2, ...). Or <+a "\g'`|`'">\g'n'<>, <+a "\g<`|`>"><_>\g<n></_><>.
+<+a "(?-`|`)">(?-n)<>  -  call subroutine by relative number. Or <+a "\g'-`|`'">\g'-n'<>, <+a "\g<-`|`>"><_>\g<-n></_><>.
+<+a "(?+`|`)">(?+n)<>  -  call subroutine by relative number. Or <+a "\g'+`|`'">\g'+n'<>, <+a "\g<+`|`>"><_>\g<+n></_><>.
+<+a "(?&`|`)">(?&name)<>  -  call subroutine by group name. Or <+a "\g'`|`'">\g'name'<>, <+a "\g<`|`>"><_>\g<name></_><>, <+a "(?P>`|`)">(?P>name)<>.
 <+a>(?R)<>  -  recurse whole pattern.
-<+a (?(DEFINE)(%))>(?(DEFINE)(subroutine))<>  -  define a subroutine; don't evaluate it now.
+<+a (?(DEFINE)(`|`))>(?(DEFINE)(subroutine))<>  -  define a subroutine; don't evaluate it now.
 
 Recursive regex examples:
 <+a>\(([^()]++|(?R))*\)<>  -  match a string enclosed in ( ) that may contain any number of enclosed substrings, like <c green>(...)<> or <c green>(..(..)+(..))<> or <c green>(..((..)..)..)<>.
@@ -411,8 +411,8 @@ A capturing group <.r>(...)<> can be reused in other parts of regular expression
 <.h>Callouts<>
 
 <+a>(?C)<>  -  callout (assumed number 0).
-<+a (?C%)>(?Cn)<>  -  callout with numerical data n.
-<+a (?C'%')>(?C'text')<>  -  callout with string data.
+<+a (?C`|`)>(?Cn)<>  -  callout with numerical data n.
+<+a (?C'`|`')>(?C'text')<>  -  callout with string data.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC28>Callouts<>
@@ -426,14 +426,14 @@ All backtracking control verbs may be in the form <.r>(*VERB:NAME)<>. For <.r>(*
 
 <+a>(*ACCEPT)<>  -  force successful match.
 <+a>(*FAIL)<>  -  force backtrack; synonym <+a>(*F)<>.
-<+a (*MARK:%)>(*MARK:NAME)<>  -  set name to be passed back; synonym <+a (*:%)>(*:NAME)<>.
+<+a (*MARK:`|`)>(*MARK:NAME)<>  -  set name to be passed back; synonym <+a (*:`|`)>(*:NAME)<>.
 
 The following act only when a subsequent match failure causes a backtrack to reach them. They all force a match failure, but they differ in what happens afterwards. Those that advance the start-of-match point do so only if the pattern is not anchored.
 
 <+a>(*COMMIT)<>  -  overall failure, no advance of starting point.
 <+a>(*PRUNE)<>  -  advance to next starting character.
 <+a>(*SKIP)<>  -  advance to current matching position.
-<+a (*SKIP:%)>(*SKIP:NAME)<>  -  advance to position corresponding to an earlier <.r>(*MARK:NAME)<>; if not found, the <.r>(*SKIP)<> is ignored.
+<+a (*SKIP:`|`)>(*SKIP:NAME)<>  -  advance to position corresponding to an earlier <.r>(*MARK:NAME)<>; if not found, the <.r>(*SKIP)<> is ignored.
 <+a>(*THEN)<>  -  local failure, backtrack to next alternation.
 
 The effect of one of these verbs in a group called as a subroutine is confined to the subroutine call.
@@ -505,8 +505,8 @@ The effect of one of these verbs in a group called as a subroutine is confined t
 
 Some characters belong to certain scripts, like Greek, Arabic or Han.
 
-<+a \p{%}>\p{Xxx}<>  -  a character in script Xxx.
-<+a \P{%}>\P{Xxx}<>  -  a character not in script Xxx.
+<+a \p{`|`}>\p{Xxx}<>  -  a character in script Xxx.
+<+a \P{`|`}>\P{Xxx}<>  -  a character not in script Xxx.
 
 <b>Script names<>
 
@@ -516,8 +516,8 @@ Adlam, Ahom, Anatolian_Hieroglyphs, Arabic, Armenian, Avestan, Balinese, Bamum, 
 
 A script run is a sequence of characters that are all from the same script.
 
-<+a (*sr:%)>(*sr:...)<> - script run. Matches only if <.r>...<> belongs to a single script.
-<+a (*asr:%)>(*asr:...)<> - atomic script run (backtracking is not allowed into the <.r>...<>).
+<+a (*sr:`|`)>(*sr:...)<> - script run. Matches only if <.r>...<> belongs to a single script.
+<+a (*asr:`|`)>(*asr:...)<> - atomic script run (backtracking is not allowed into the <.r>...<>).
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#uniextseq>Unicode character properties and scripts<>
@@ -529,16 +529,16 @@ A script run is a sequence of characters that are all from the same script.
 
 <+a>$0<>  -  whole match.
 <+a>$1<>  <+a>$2<>  <+a>$3<>  <+a>$4<>  <+a>$5<>  <+a>$6<>  <+a>$7<>  <+a>$8<>  <+a>$9<>  <+a>$10<>  -  string part that matches a capturing group <.r>(...)<>.
-<+a ${%}>${n}<>  -  the same as above. Here n is a group number. Example: <.r>${10}<>.
-<+a ${%}>${name}<>  -  string part that matches a named group like <.r>(?'name'...)<>.
+<+a ${`|`}>${n}<>  -  the same as above. Here n is a group number. Example: <.r>${10}<>.
+<+a ${`|`}>${name}<>  -  string part that matches a named group like <.r>(?'name'...)<>.
 <+a>$+<>  -  string part that matches the last group.
 <+a>$`<>  -  string part before match.
 <+a>$'<>  -  string part after match.
 <+a>$_<>  -  whole string.
 <+a>$*<>  -  the name of the last reached mark or other named <+p backtracking>verb<> like <.r>(*MARK:NAME)<>.
-<+a ${+%}>${+func}<>  -  call a function added with <help>regexp.addReplaceFunc<> and use its return value.
-<+a ${+%}>${+func(group)}<>  -  call function with group number or name.
-<+a ${+%}>${+func(group, string)}<>  -  call function with some string.
+<+a ${+`|`}>${+func}<>  -  call a function added with <help>regexp.addReplaceFunc<> and use its return value.
+<+a ${+`|`}>${+func(group)}<>  -  call function with group number or name.
+<+a ${+`|`}>${+func(group, string)}<>  -  call function with some string.
 <+a>$$<>  -  $ character.
 
 These are used in the replacement text, not in the regular expression.

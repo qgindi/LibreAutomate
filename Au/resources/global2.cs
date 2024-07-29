@@ -21,10 +21,6 @@ global using SystemInformation = System.Windows.Forms.SystemInformation;
 global using RStr = System.ReadOnlySpan<char>;
 global using RByte = System.ReadOnlySpan<byte>;
 global using System.ComponentModel;
-//global using Win32Exception = System.ComponentModel.Win32Exception;
-//global using EditorBrowsable = System.ComponentModel.EditorBrowsableAttribute;
-//global using EditorBrowsableState = System.ComponentModel.EditorBrowsableState;
-//global using CancelEventArgs = System.ComponentModel.CancelEventArgs;
 global using IEnumerable = System.Collections.IEnumerable;
 global using IEnumerator = System.Collections.IEnumerator;
 
@@ -45,6 +41,6 @@ namespace Au.More;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class Au_ {
 	///
-	public const string Version = "1.3.2";
+	public const string Version = "1.4.0";
 }
 #endif

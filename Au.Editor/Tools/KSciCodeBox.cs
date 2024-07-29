@@ -16,7 +16,7 @@ class KSciCodeBox : KScintilla {
 
 		aaaMarginSetWidth(1, 0);
 		aaaIsReadonly = true;
-		CiStyling.TStyles.Customized.ToScintilla(this, fontSize: 9);
+		CiStyling.TTheme.Current.ToScintilla(this, fontSize: 9);
 	}
 
 	protected override void AaOnSciNotify(ref Sci.SCNotification n) {

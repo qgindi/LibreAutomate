@@ -79,7 +79,7 @@ class PanelFind {
 	}
 	
 	void _SetCodeStyles(KScintilla k) {
-		CiStyling.TStyles.Customized.ToScintilla(k, fontName: App.Settings.font_find.name, fontSize: App.Settings.font_find.size);
+		CiStyling.TTheme.Current.ToScintilla(k, fontName: App.Settings.font_find.name, fontSize: App.Settings.font_find.size);
 		k.aaaStyleForeColor(255, 0xa0a0a0); //watermark
 		
 		if (k.Parent is Border { Parent: Grid g } b) {

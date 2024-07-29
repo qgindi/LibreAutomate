@@ -61,20 +61,30 @@ Example:
 #### Auto backup (Git commit)
 Silently run [Git](xref:git) commit when LibreAutomate is visible the first time after loading this workspace or activated later after several hours from the last backup. It creates a local backup of workspace files (scripts etc). To upload etc, you can use menu **File > Git**.
 
-### Code
+### Font, colors
+Font and colors of various code elements displayed in the code editor area. Also fonts of some other UI parts.
+
+#### Theme
+Select a predefined set of code editor font/colors, aka *theme*.
+
+Default themes are read-only. Changes to a default theme are saved as a separate theme "Theme \[customized\]"; it's a csv file in the user settings folder. Changes are saved when you click **OK** or **Apply**.
+
+You can add more theme files to the program's default themes folder. For example copy a customized theme file and rename.
+
+### Code editor
 Code formatting and intellisense options.
 
 #### Completion list > Append ()
 When you select a function in the completion list, whether/when to append `()`. Can append always, never or only when selected with the `Spacebar` key (but not `Tab`, doubleclick, etc).
 
-### Compiler
+### Templates
+Initial code of new scripts and class files. Can be empty.
+
+### Other
 #### Always print "Compiled"
 Always print a \"Compiled\" message when a script etc compiled successfully.
 If unchecked, prints only if role is **exeProgram** or **classLibrary**.
 If 3-rd state, prints when executing the **Compile** command, but not when compiling implicitly (for example before launching the script).
-
-### Templates
-Initial code of new scripts and class files. Can be empty.
 
 ### OS
 These are Windows settings, not settings of this program. They are applied to all programs. This program will not restore them when uninstalling.

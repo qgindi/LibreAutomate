@@ -367,8 +367,7 @@ public static unsafe partial class ExtMisc {
 	/// <param name="value"></param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public static T[] InsertAt<T>(this T[] t, int index, T value = default) {
-		if (index == -1) index = t.Length;
-		if ((uint)index > t.Length) throw new ArgumentOutOfRangeException();
+		if (index == -1) index = t.Length; else if ((uint)index > t.Length) throw new ArgumentOutOfRangeException();
 		var r = new T[t.Length + 1];
 		for (int i = 0; i < index; i++) r[i] = t[i];
 		for (int i = index; i < t.Length; i++) r[i + 1] = t[i];
@@ -381,28 +380,18 @@ public static unsafe partial class ExtMisc {
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <param name="t"></param>
-	/// <param name="index"></param>
+	/// <param name="index">Where to insert. If -1, adds to the end.</param>
 	/// <param name="values"></param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	public static T[] InsertAt<T>(this T[] t, int index, params T[] values) {
-		if ((uint)index > t.Length) throw new ArgumentOutOfRangeException();
-		int n = values?.Length ?? 0; if (n == 0) return t;
+	public static T[] InsertAt<T>(this T[] t, int index, params ReadOnlySpan<T> values) {
+		if (index == -1) index = t.Length; else if ((uint)index > t.Length) throw new ArgumentOutOfRangeException();
+		int n = values.Length; if (n == 0) return t;
 		
 		var r = new T[t.Length + n];
 		for (int i = 0; i < index; i++) r[i] = t[i];
 		for (int i = index; i < t.Length; i++) r[i + n] = t[i];
 		for (int i = 0; i < n; i++) r[i + index] = values[i];
 		return r;
-	}
-	
-	internal static void WriteInt(this byte[] t, int x, int index) {
-		if (index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
-		fixed (byte* p = t) *(int*)(p + index) = x;
-	}
-	
-	internal static int ReadInt(this byte[] t, int index) {
-		if (index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
-		fixed (byte* p = t) return *(int*)(p + index);
 	}
 	
 	#endregion

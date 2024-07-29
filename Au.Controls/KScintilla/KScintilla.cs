@@ -87,7 +87,7 @@ public unsafe partial class KScintilla : HwndHost {
 		Call(SCI_SETSCROLLWIDTHTRACKING, 1);
 		Call(SCI_SETSCROLLWIDTH, 1); //TODO3: later make narrower when need, eg when folded long lines (alas there is no direct notification). Maybe use timer.
 		if (!AaInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
-		Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
+		Call(SCI_SETCARETWIDTH, 2); //not DPI-scaled
 		
 		//Need to set selection colors or layer, because the default inactive selection color is darker than active.
 		//	It is 0x3F808080, but alpha is ignored if SC_LAYER_BASE (default).
@@ -223,7 +223,6 @@ public unsafe partial class KScintilla : HwndHost {
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		if (!_w.Is0 && newDpi.PixelsPerDip != oldDpi.PixelsPerDip) {
 			_dpi = newDpi.PixelsPerInchY.ToInt();
-			Call(SCI_SETCARETWIDTH, Dpi.Scale(2, _dpi));
 			_MarginWidthsDpiChanged();
 		}
 		base.OnDpiChanged(oldDpi, newDpi);

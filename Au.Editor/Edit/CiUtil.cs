@@ -646,7 +646,7 @@ static class CiUtil {
 	/// For C# code gets style bytes that can be used with SCI_SETSTYLINGEX for UTF-8 text.
 	/// Uses Classifier.GetClassifiedSpansAsync, like the code editor.
 	/// Controls that use this should set styles like this example, probably when handle created:
-	/// <c>var styles = new CiStyling.TStyles { FontSize = 9 };
+	/// <c>var styles = new CiStyling.TTheme { FontSize = 9 };
 	/// styles.ToScintilla(this);</c>
 	/// </summary>
 	public static byte[] GetScintillaStylingBytes(string code) {

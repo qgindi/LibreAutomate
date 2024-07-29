@@ -435,7 +435,7 @@ public partial class KMenuCommands {
 						var k = new MenuItem();
 						var image = _mi.Icon;
 						bool onlyImage = image != null && imageAt == null;
-						if (image == null || onlyImage) k.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. TODO3: not good on Win7
+						if (image == null || onlyImage) k.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. Never mind: not good on Win7.
 						CopyToMenu(k, text: btext);
 						if (onlyImage) { k.Header = k.Icon; k.Icon = null; } //make narrower
 						if (ButtonTooltip != null) k.ToolTip = ButtonTooltip; else if (onlyImage) k.ToolTip = ButtonText + "...";

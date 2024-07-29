@@ -42,7 +42,7 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
-	public static int Eq(this string t, bool ignoreCase, params string[] strings) {
+	public static int Eq(this string t, bool ignoreCase, params ReadOnlySpan<string> strings) {
 		for (int i = 0; i < strings.Length; i++) if (Eq(t, strings[i], ignoreCase)) return i + 1;
 		return 0;
 	}
@@ -83,7 +83,7 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
-	public static int Eq(this string t, int startIndex, bool ignoreCase = false, params string[] strings) {
+	public static int Eq(this string t, int startIndex, bool ignoreCase = false, params ReadOnlySpan<string> strings) {
 		for (int i = 0; i < strings.Length; i++) if (t.Eq(startIndex, strings[i], ignoreCase)) return i + 1;
 		return 0;
 	}
@@ -163,7 +163,7 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
-	public static int Ends(this string t, bool ignoreCase, params string[] strings) {
+	public static int Ends(this string t, bool ignoreCase, params ReadOnlySpan<string> strings) {
 		for (int i = 0; i < strings.Length; i++) if (Ends(t, strings[i], ignoreCase)) return i + 1;
 		return 0;
 	}
@@ -208,7 +208,7 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
-	public static int Starts(this string t, bool ignoreCase, params string[] strings) {
+	public static int Starts(this string t, bool ignoreCase, params ReadOnlySpan<string> strings) {
 		for (int i = 0; i < strings.Length; i++) if (Starts(t, strings[i], ignoreCase)) return i + 1;
 		return 0;
 	}
