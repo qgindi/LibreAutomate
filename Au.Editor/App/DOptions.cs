@@ -18,7 +18,7 @@ class DOptions : KDialogWindow {
 	TabControl _tc;
 	
 	DOptions() {
-		InitWinProp("Options", App.Wmain);
+		InitWinProp(@"Options", App.Wmain);
 		
 		_b = new wpfBuilder(this).WinSize(600);
 		_b.Row(-1).Add(out _tc).Height(300..);

@@ -201,6 +201,9 @@ public static class ExtWpf {
 			t.WindowStartupLocation = WindowStartupLocation.Manual;
 			if (wstate == WindowState.Minimized) t.ShowActivated = false;
 			
+			bool maxInactive = wstate is WindowState.Maximized && !t.ShowActivated;
+			if (maxInactive) t.WindowState = WindowState.Normal; //WPF would throw exception, although it's easy to create maximized inactive window with CreateWindowEx
+			
 			WindowsHook.ThreadCbt(k => {
 				if (k.code == HookData.CbtEvent.CREATEWND) {
 					var c = k.CreationInfo->lpcs;
@@ -208,6 +211,7 @@ public static class ExtWpf {
 						var name = c->Name;
 						if (name.Length > 25 && name.StartsWith("m8KFOuCJOUmjziONcXEi3A ")) {
 							k.hook.Dispose();
+							
 							var s = name[23..].ToString();
 							if (name[^1] == ';') {
 								c->x = s.ToInt(0, out int e); c->y = s.ToInt(e);
@@ -247,8 +251,23 @@ public static class ExtWpf {
 				HwndSource.RemoveSourceChangedHandler(t, eh);
 				t.Title = title;
 				//if (wstate == WindowState.Normal && !t.ShowActivated) t.Hwnd().ZorderTop(); //it seems don't need it
+				
+				if (maxInactive) t.Loaded += (_, _) => _MaximizeNoActivate(t.Hwnd());
 			};
 			HwndSource.AddSourceChangedHandler(t, eh);
+			
+			static void _MaximizeNoActivate(wnd w) {
+				//HACK
+				w.GetWindowPlacement_(out var p, false); //without this, later restored rect is like max
+				w.SetStyle(WS.MAXIMIZE, WSFlags.Add);
+				var r = screen.of(w).WorkArea;
+				w.SetWindowPos(SWPFlags.FRAMECHANGED | SWPFlags.NOACTIVATE | SWPFlags.NOZORDER, r.left, r.top, r.Width, r.Height);
+				//p.showCmd = 3; w.SetWindowPlacement_(ref p, false);
+#if DEBUG
+				w.GetWindowPlacement_(out var p2, false);
+				Debug_.PrintIf(p2.rcNormalPosition != p.rcNormalPosition || p2.showCmd != 3);
+#endif
+			}
 		}
 	}
 #elif true //does not change Title, but I don't like creating window handle before showing window

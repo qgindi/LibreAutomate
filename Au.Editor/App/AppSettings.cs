@@ -182,6 +182,7 @@ System.Threading.Tasks.TaskCanceledException
 	
 	//DPortable
 	public string portable_dir;
+	public int portable_check = -1;
 	public string[] portable_skip;
 	
 	//DOcr

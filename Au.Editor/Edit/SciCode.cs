@@ -66,6 +66,7 @@ partial class SciCode : KScintilla {
 		
 		aaaMarginSetType(c_marginImages, SC_MARGIN_COLOUR, markersMask: 0);
 		Call(SCI_SETMARGINBACKN, c_marginImages, Api.GetSysColor(Api.COLOR_BTNFACE));
+		aaaMarginSetWidth(c_marginImages, 0);
 		
 		aaaMarginSetType(c_marginMarkers, SC_MARGIN_COLOUR, markersMask: 0x1FFFFFF, sensitive: true, cursorArrow: true);
 		aaaMarginSetWidth(c_marginMarkers, 16);

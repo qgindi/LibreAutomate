@@ -8,7 +8,7 @@ LibreAutomate can run as a [portable application](https://en.wikipedia.org/wiki/
 ## Setup
 In non-portable LibreAutomate use menu **Tools > Portable**. The tool installs portable LibreAutomate, for example in a USB drive.
 
-The tool copies LibreAutomate program files, .NET runtime, current workspace (scripts etc) and the user documents folder of LibreAutomate (settings etc).
+The tool copies LibreAutomate program files, .NET runtime, current workspace (scripts etc), settings, script data and the user documents folder of LibreAutomate.
 
 ## Run
 Run `Au.Editor.exe` (it may be displayed as `LibreAutomate C#`).

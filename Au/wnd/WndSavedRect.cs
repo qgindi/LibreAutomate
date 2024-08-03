@@ -135,9 +135,7 @@ public struct WndSavedRect {
 		bool ret = FromString(saved, out var v);
 		if (ret) {
 			var r = v.NormalizeRect();
-			if (v.Maximize
-				&& w.ShowActivated /*exception when showing if ShowActivated false*/
-				) w.WindowState = System.Windows.WindowState.Maximized;
+			if (v.Maximize) w.WindowState = System.Windows.WindowState.Maximized;
 			w.SetRect(r);
 		}
 		if (save != null) {

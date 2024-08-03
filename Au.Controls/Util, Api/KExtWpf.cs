@@ -318,7 +318,7 @@ public static class KExtWpf {
 	/// Adds <b>TextBlock</b> with green background, wrapping and some padding.
 	/// </summary>
 	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, string text) { //not overload. Somehow then it is used with $"string" too.
-		return t.Add(out TextBlock r, text).Wrap().Brush(0xf0f8e0).Padding(1, 2, 1, 4);
+		return t.Add(out TextBlock r, text).Wrap().Brush(WpfUtil_.IsHighContrastDark ? 0x2E4D00 : 0xf0f8e0).Padding(1, 2, 1, 4);
 	}
 	
 	/// <summary>

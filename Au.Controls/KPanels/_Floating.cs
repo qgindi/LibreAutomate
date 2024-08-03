@@ -153,6 +153,7 @@ public partial class KPanels {
 					}
 					break;
 				case Api.WM_CLOSE:
+					if (w.IsMinimized) w.ShowNotMinimized(); //without this would be exception (why?)
 					if (_node._state == _DockState.Float) { //closing not by _SetDockState
 						handled = true;
 						_node._SetDockState(0);
@@ -211,6 +212,7 @@ public partial class KPanels {
 						if (!unowned) base.Owner = _owner;
 					}
 				} else if (style == _WindowStyle.Unowned) {
+					if (!on) w.ShowNotMinMax();
 					bool topmost = _node._windowStyle.Has(_WindowStyle.Topmost);
 					if (!topmost) base.Owner = on ? null : _owner; //or `WndUtil.SetOwnerWindow(w, on ? default : _owner.Hwnd());`
 					w.SetExStyle(w.ExStyle & ~(WSE.TOOLWINDOW | WSE.APPWINDOW) | (on ? WSE.APPWINDOW : WSE.TOOLWINDOW));

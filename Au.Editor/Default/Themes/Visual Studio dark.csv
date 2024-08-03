@@ -28,7 +28,7 @@ RxEscape, 0xFFD68F
 RxCallout, 0xF979AE
 RxComment, 0x57A64A
 LineNumber, 0xA0A0A0
-LineNumberMargin, 0x505050
+LineNumberMargin, 0x20384A
 MarkerMargin, 0x1E1E1E
 IndicRefs, 0x408000, 40
 IndicBraces, 0x80C000, 255
