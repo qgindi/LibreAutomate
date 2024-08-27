@@ -17,7 +17,7 @@ namespace Au;
 /// <remarks>
 /// This class uses WPF (Windows Presentation Foundation). Creates window at run time. No designer. No WPF and XAML knowledge required, unless you want something advanced.
 /// 
-/// To start, use snippet <b>wpfSnippet</b> or menu <b>File > New > Dialogs</b>. Also look in Cookbook.
+/// To start, use snippet <b>wpfDialogSnippet</b> or menu <b>File > New > Dialogs</b>. Also look in Cookbook.
 /// 
 /// Most functions return <c>this</c>, to enable method chaining, aka fluent interface, like with <b>StringBuilder</b>. See example.
 /// 

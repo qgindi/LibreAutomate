@@ -14,11 +14,9 @@ using CAW::Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using CAW::Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
+using Au.Compiler;
 
 static class ModifyCode {
-	//TODO3: if tries to uncomment /// doc comment, remove /// . Now does nothing. VS removes // and leaves /.
-	//	Only if <code>.
-	
 	/// <summary>
 	/// Comments out (adds // or /**/) or uncomments selected text or current line.
 	/// </summary>
@@ -26,7 +24,7 @@ static class ModifyCode {
 	/// <param name="notSlashStar">Comment out lines, even if there is not-full-line selection.</param>
 	public static void Comment(bool? comment, bool notSlashStar = false) {
 		//how to comment/uncomment: // or /**/
-		if (!CodeInfo.GetContextAndDocument(out var cd, -2)) return;
+		if (!CodeInfo.GetContextAndDocument(out var cd, -2, metaToo: true)) return;
 		var doc = cd.sci;
 		int selStart = cd.pos, selEnd = doc.aaaSelectionEnd16, replStart = selStart, replEnd = selEnd;
 		bool com, slashStar = false, isSelection = selEnd > selStart;
@@ -36,12 +34,21 @@ static class ModifyCode {
 		if (!notSlashStar) {
 			var trivia = root.FindTrivia(selStart);
 			if (trivia.IsMultiLineComment()) {
-				var span = trivia.Span;
-				if (slashStar = comment != true && selEnd <= trivia.Span.End) {
-					com = false;
-					replStart = span.Start; replEnd = span.End;
-					s = code[(replStart + 2)..(replEnd - 2)];
-				} else notSlashStar = true;
+				if (selStart > cd.meta.start && selEnd < cd.meta.end) {
+					if (slashStar = !isSelection) {
+						var t = MetaComments.EnumOptions(code, new(cd.meta.start, cd.meta.end)).FirstOrDefault(o => selStart >= o.nameStart && selEnd <= o.valueEnd);
+						if (t.code == null) return;
+						if (comment is null) comment = !t.IsDisabled; else if (comment == t.IsDisabled) return;
+						replStart = replEnd = t.nameStart;
+						if (comment == true) s = "//"; else replEnd += code.Eq(replStart, "//") ? 2 : 1;
+					} else notSlashStar = true;
+				} else {
+					var span = trivia.Span;
+					if (slashStar = comment != true && selEnd <= trivia.Span.End) {
+						(replStart, replEnd) = span;
+						s = code[(replStart + 2)..(replEnd - 2)];
+					} else notSlashStar = true;
+				}
 			}
 		}
 		
@@ -57,9 +64,13 @@ static class ModifyCode {
 			//are all lines //comments ?
 			bool allLinesComments = true;
 			for (int i = replStart; i < replEnd; i++) {
-				var trivia = root.FindTrivia(i);
-				if (trivia.IsWhitespace()) trivia = root.FindTrivia(i = trivia.Span.End);
-				if (trivia.Kind() is not (SyntaxKind.SingleLineCommentTrivia or SyntaxKind.EndOfLineTrivia)) { allLinesComments = false; break; }
+				i = CiUtil.SkipSpace(code, i);
+				if (!(code.At_(i) is '\r' or '\n')) {
+					if (root.FindTrivia(i).Kind() is var tk && !(tk is SyntaxKind.SingleLineCommentTrivia || (tk is SyntaxKind.DisabledTextTrivia or SyntaxKind.MultiLineCommentTrivia or SyntaxKind.MultiLineDocumentationCommentTrivia && code.Eq(i, "//")))) {
+						allLinesComments = false;
+						break;
+					}
+				}
 				i = code.IndexOf('\n', i, replEnd - i); if (i < 0) break;
 			}
 			if (allLinesComments) {
@@ -77,7 +88,7 @@ static class ModifyCode {
 			} else {
 				if (com) {
 					s.RxFindAll(@"(?m)^[\t ]*(.*)\R?", out RXMatch[] a);
-					//find smallest common indent
+					//find smallest common indentation
 					int indent = 0; //tabs*4 or spaces*1
 					foreach (var m in a) {
 						if (m[1].Length == 0) continue;

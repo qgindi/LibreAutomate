@@ -64,11 +64,12 @@ A script can use packages from multiple folders if they are compatible.");
 		foreach (var v in filesystem.enumDirectories(_nugetDir)) _folders.Add(v.Name);
 		foreach (var v in _folders) _cbFolder.Items.Add(v);
 		if (_folders.Count > 0) _cbFolder.SelectedIndex = 0; //probably "-"
+		_cbFolder.Items.Add(new Separator());
 		var cbiAddFolder = new ComboBoxItem { Content = "New folder..." };
 		_cbFolder.Items.Add(cbiAddFolder);
 		cbiAddFolder.Selected += (_, e) => Dispatcher.InvokeAsync(() => _AddFolder());
 		
-		void _Enabled_Install() { bInstall.IsEnabled = (uint)_cbFolder.SelectedIndex < _cbFolder.Items.Count - 1 && !_tPackage.Text.Trim().NE(); }
+		void _Enabled_Install() { bInstall.IsEnabled = (uint)_cbFolder.SelectedIndex < _cbFolder.Items.Count - 2 && !_tPackage.Text.Trim().NE(); }
 		_tPackage.TextChanged += (_, e) => {
 			_Enabled_Install();
 			_SelectInTree();
@@ -142,7 +143,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 			catch (Exception e1) { dialog.showError("Failed to create folder", e1.ToStringWithoutStack(), owner: this); return; }
 			Closed += (_, _) => Api.RemoveDirectory(path); //delete if empty. Maybe the user will choose to install to another folder or will not install.
 		}
-		int i = _cbFolder.Items.Count - 1;
+		int i = _cbFolder.Items.Count - 2;
 		_cbFolder.Items.Insert(i, name);
 		_cbFolder.SelectedIndex = i;
 		_folders.Add(name);
@@ -173,6 +174,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<DebugType>none</DebugType>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<AssemblyName>___</AssemblyName>
 	</PropertyGroup>
 
 	<!-- Copy XML files -->
@@ -184,9 +186,14 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 
 </Project>
 """;
-		} else { //may need to update <TargetFramework>
-			var s = filesystem.loadText(proj);
-			if (!s.Contains(c_targetFramework)) writeProjText = s.RxReplace(@"<TargetFramework>.+?</TargetFramework>", c_targetFramework, 1);
+		} else { //may need to update something
+			string s = filesystem.loadText(proj), s0 = s;
+			if (!s.Contains(c_targetFramework)) s = s.RxReplace(@"<TargetFramework>.+?</TargetFramework>", c_targetFramework, 1);
+			
+			//previously was no <AssemblyName>___</AssemblyName>. Then usually error if the folder name == a dll name, because the main dll name was the same.
+			if (!s.Contains("<AssemblyName>___</AssemblyName>") && s.RxMatch(@"\R\h*</PropertyGroup>", 0, out RXGroup g1)) s = s.Insert(g1.Start, "\r\n		<AssemblyName>___</AssemblyName>");
+			
+			if (s != s0) writeProjText = s;
 		}
 		if (writeProjText != null) {
 			try { File.WriteAllText(proj, writeProjText); }
@@ -198,8 +205,6 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		
 		//now need only package name
 		package = package.RxReplace(@"^\s*(\S+).*", "$1");
-		
-		if (folder.Eqi(package)) print.it("<><c orange>Warning: folder name should not be the same as package name."); //will fail if same
 		
 		await _Build(folder, package, sAdd);
 		CodeInfo.StopAndUpdateStyling();
@@ -270,7 +275,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 				}
 				
 				//save relative paths etc of output files in file "nuget.xml"
-				//	Don't use ~.deps.json. It contains only used dlls, but may also need other files, eg exe.
+				//	Don't use ___.deps.json. It contains only used dlls, but may also need other files, eg exe.
 				//	For testing can be used NuGet package Microsoft.PowerShell.SDK. It has dlls for testing almost all cases.
 				
 				var npath = _nugetDir + @"\nuget.xml";
@@ -290,7 +295,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 					var s = f.Name; //like @"\file" or @"\dir\file"
 					bool runtimes = false;
 					if (f.Level == 0) {
-						if (s.Starts(@"\~.")) continue;
+						if (s.Starts(@"\___.")) continue;
 					} else {
 						runtimes = s.Starts(@"\runtimes\win", true);
 						Debug_.PrintIf(!(runtimes || s.Ends(".resources.dll") || s.Starts(@"\ref\")), s); //ref is used by Microsoft.PowerShell.SDK as data files
@@ -387,7 +392,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 			}
 			
 			try {
-				filesystem.delete($@"{folderPath}\{folder}.dll");
+				filesystem.delete($@"{folderPath}\___.dll");
 				foreach (var v in Directory.GetFiles(folderPath, "*.json")) filesystem.delete(v);
 				//filesystem.delete($@"{folderPath}\obj\Debug");
 				filesystem.delete($@"{folderPath}\obj");

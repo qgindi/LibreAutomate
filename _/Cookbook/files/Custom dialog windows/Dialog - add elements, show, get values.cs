@@ -1,4 +1,4 @@
-/// Class <see cref="wpfBuilder"/> allows to create <google>WPF<> dialog windows quite easily without a visual designer. To start creating a dialog, use snippet <b>wpfSnippet<>: type <.c>wpf<> and select from the list. Or menu <b>File > New > Dialogs<>.
+/// Class <see cref="wpfBuilder"/> allows to create <google>WPF<> dialog windows quite easily without a visual designer. To start creating a dialog, use snippet <b>wpfDialogSnippet<>: type <.c>wpf<> and select from the list. Or menu <b>File > New > Dialogs<>.
 
 using System.Windows;
 using System.Windows.Controls;

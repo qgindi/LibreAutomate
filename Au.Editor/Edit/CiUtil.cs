@@ -327,7 +327,8 @@ static class CiUtil {
 	/// </summary>
 	/// <param name="arg">Not null if returns true and the argument list isn't empty.</param>
 	/// <param name="ps">If returns true, the array contains 1 or more elements. Multiple if cannot resolve overload.</param>
-	public static bool GetArgumentParameterFromPos(BaseArgumentListSyntax als, int pos, SemanticModel semo, out ArgumentSyntax arg, out IParameterSymbol[] ps) {
+	/// <param name="filter"></param>
+	public static bool GetArgumentParameterFromPos(BaseArgumentListSyntax als, int pos, SemanticModel semo, out ArgumentSyntax arg, out IParameterSymbol[] ps, Func<IParameterSymbol, bool> filter = null) {
 		arg = null; ps = null;
 		var args = als.Arguments;
 		var index = args.Count == 0 ? 0 : als.Arguments.IndexOf(o => pos <= o.FullSpan.End); //print.it(index);
@@ -339,7 +340,7 @@ static class CiUtil {
 			var nc = arg.NameColon;
 			if (nc != null) name = nc.Name.Identifier.Text;
 		}
-		ps = GetParameterSymbol(si, index, name, als.Arguments.Count, o => o.Type.TypeKind == TypeKind.Delegate)
+		ps = GetParameterSymbol(si, index, name, als.Arguments.Count, filter)
 			.DistinctBy(o => o.Type.ToString()) //tested with Task.Run. 8 overloads, 4 distinct parameter types.
 			.ToArray();
 		return ps.Length > 0;

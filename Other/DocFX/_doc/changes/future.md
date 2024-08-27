@@ -1,0 +1,36 @@
+## Version 1.5.0 (2024-)
+
+### Editor
+Changes in `/*/ meta comments /*/`:
+- Options can be separated by newlines without semicolon.
+- Options can be commented out like `//option value;`.
+
+New tools:
+- .
+
+New cookbook recipes:
+- Passwords in scripts.
+
+Improved:
+- Several improvements.
+
+Fixed bugs:
+- Possible exception when a script is starting. Very rare.
+
+### Library
+New classes:
+- .
+
+New members:
+- **print.it** and **print.util.toString** overloads for binary data displayed in hex editor format.
+
+New parameters:
+- .
+
+Improved:
+- .
+
+Fixed bugs:
+- **consoleProcess** functions **Write** and **Prompt** don't auto-append newline if input encoding is **Encoding.Unicode**.
+
+### Breaking changes

@@ -32,4 +32,4 @@ bool _Dialog1() {
 	return true;
 }
 
-//See also: snippet wpfSnippet.
+//See also: snippet wpfDialogSnippet.

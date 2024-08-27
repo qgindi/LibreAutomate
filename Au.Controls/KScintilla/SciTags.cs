@@ -246,7 +246,7 @@ public unsafe class SciTags {
 			
 			//limit
 			int len = _c.aaaLen8;
-			if (len > 4 * 1024 * 1024) {
+			if (len > 10_000_000) {
 				len = _c.aaaLineStartFromPos(false, len / 2);
 				if (len > 0) _c.aaaReplaceRange(false, 0, len, "...\r\n");
 			}

@@ -7,7 +7,7 @@ class MetaCommentsParser {
 	public string role, ifRunning, uac, bit32,
 		optimize, warningLevel, noWarnings, nullable, testInternal, define, preBuild, postBuild,
 		outputPath, console, icon, manifest, sign, xmlDoc, miscFlags, noRef, startFaster;
-	List<string> _pr, _r, _com, _nuget, _c, _resource, _file;
+	List<string> _pr, _r, _com, _nuget, _c, _resource, _file, _disabled;
 	
 	public List<string> pr => _pr ??= new();
 	public List<string> r => _r ??= new();
@@ -23,7 +23,7 @@ class MetaCommentsParser {
 		var meta = MetaComments.FindMetaComments(code);
 		if (meta.end == 0) return;
 		MetaRange = meta;
-		foreach (var t in MetaComments.EnumOptions(code, meta)) _ParseOption(t.Name, t.Value.ToString());
+		foreach (var t in MetaComments.EnumOptions(code, meta)) _ParseOption(t.Name, t.Value);
 		Multiline = code[meta.start..meta.end].Contains('\n');
 	}
 	
@@ -59,6 +59,7 @@ class MetaCommentsParser {
 		case "c": c.Add(value); break;
 		case "resource": resource.Add(value); break;
 		case "file": file.Add(value); break;
+		case null: (_disabled ??= new()).Add(value); break;
 		}
 	}
 	
@@ -75,6 +76,7 @@ class MetaCommentsParser {
 			if (i > 1) dir = dir.Remove(i); else dir = null;
 		}
 		
+		var sep = Multiline ? "\r\n" : "; ";
 		var b = new StringBuilder();
 		b.Append(prepend).Append(Multiline ? "/*/\r\n" : "/*/ ");
 		_Append("role", role); //must be the first
@@ -111,6 +113,10 @@ class MetaCommentsParser {
 		_AppendList("resource", _resource, true);
 		_AppendList("file", _file, true);
 		
+		if (_disabled != null) {
+			b.AppendJoin(sep, _disabled).Append(sep);
+		}
+		
 		if (b.Length <= 5) return "";
 		b.Append("/*/");
 		b.Append(append);
@@ -119,7 +125,7 @@ class MetaCommentsParser {
 		void _Append(string name, string value, bool relativePath = false) {
 			if (value != null) {
 				if (relativePath && dir != null && value.Starts(dir, true)) value = value[dir.Length..];
-				b.Append(name).Append(' ').Append(value).Append(Multiline ? ";\r\n" : "; ");
+				b.Append(name).Append(' ').Append(value).Append(sep);
 			}
 		}
 		

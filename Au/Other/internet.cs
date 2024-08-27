@@ -535,6 +535,7 @@ namespace Au.Types {
 			try {
 				ArgumentNullException.ThrowIfNull(stream, nameof(stream));
 				t.EnsureSuccessStatusCode();
+				if (cancel.IsCancellationRequested) return false;
 				long size = t.Content.Headers.ContentLength ?? 0;
 				//print.it(size);
 				//print.it(t);
@@ -563,7 +564,7 @@ namespace Au.Types {
 				static Stream _DecompStream(string ce, Stream s)
 					=> ce switch { "br" => new BrotliStream(s, CompressionMode.Decompress), "gzip" => new GZipStream(s, CompressionMode.Decompress), _ => new DeflateStream(s, CompressionMode.Decompress) };
 				
-				var b = new byte[81920];
+				var b = new byte[16384];
 				long have = 0; int n, ppercent = 0, ptime = Environment.TickCount;
 				while ((n = stream1.Read(b)) > 0) {
 					stream2.Write(b, 0, n);
@@ -577,6 +578,7 @@ namespace Au.Types {
 						time = Environment.TickCount;
 						if (updateProgress = time - ptime > 200) ptime = time;
 					}
+					
 					if (pd != null) {
 						if (!pd.IsOpen) { pd = null; return false; }
 						if (updateProgress) {
@@ -584,7 +586,12 @@ namespace Au.Types {
 							else pd.Send.ChangeText2(_DialogText(have), resizeDialog: false);
 						}
 					} else {
-						if (updateProgress) progress(new(size, have, percent));
+						if (updateProgress) {
+							ProgressArgs pa = new(size, have, percent);
+							progress(pa);
+							if (pa.Cancel) return false;
+						}
+						if (cancel.IsCancellationRequested) return false;
 					}
 				}
 				
@@ -631,14 +638,23 @@ namespace Au.Types {
 				t.EnsureSuccessStatusCode();
 			}
 			if (progress != null && SynchronizationContext.Current is { } ct && ct.GetType() != typeof(SynchronizationContext)) { //call in this thread
-				var p = progress;
-				progress = o => ct.Post(k => ((Action<ProgressArgs>)k)(o), p);
-				//progress = o => ct.Post(Unsafe.As<SendOrPostCallback>(p), o); //works, but...
+				bool canceled = false;
+				var progress0 = progress;
+				progress = pa => {
+					//runs sync in task thread
+					if (canceled) { pa.Cancel = true; return; }
+					ct.Post(_ => {
+						//runs async in caller's thread
+						if (canceled) return;
+						progress0(pa);
+						if (pa.Cancel) canceled = true;
+					}, null);
+				};
 				
 				//note: don't use Progress<T>. With default synccontext it calls in random thread pool thread.
 				//	This code works like Progress<T> with other synccontexts.
 			}
-			return Task.Run(() => Download(t, stream, progress, cancel, disposeStream), cancel);
+			return Task.Run(() => Download(t, stream, progress, cancel, disposeStream));
 		}
 		
 		/// <summary>
@@ -656,10 +672,15 @@ namespace Au.Types {
 	}
 	
 	/// <summary>
-	/// Arguments for a progress callback function or event.
+	/// Arguments for a progress callback function.
 	/// </summary>
 	/// <param name="Total">The max expected value. Or 0 if unknown.</param>
 	/// <param name="Current">The current value.</param>
 	/// <param name="Percent"><c>Current * 100 / Total</c>. Or 0 if unknown.</param>
-	public record class ProgressArgs(long Total, long Current, int Percent);
+	public record class ProgressArgs(long Total, long Current, int Percent) {
+		/// <summary>
+		/// The callback function can use this to cancel the operation.
+		/// </summary>
+		public bool Cancel { get; set; }
+	}
 }

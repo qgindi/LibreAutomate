@@ -1513,7 +1513,11 @@ partial class FilesModel {
 				if (isFolder == 1) {
 					_CreateMenu(item, x, relPath + "\\", level + 1);
 				} else {
-					item.Click += (_, e) => App.Model.NewItemX(x, beginRenaming: true);
+					item.Click += (_, e) => {
+						s_inContextMenuCommand = true;
+						App.Model.NewItemX(x, beginRenaming: true);
+						s_inContextMenuCommand = false;
+					};
 					var ft = FileNode.XmlTagToFileType(tag, canThrow: false);
 					item.Icon = ft == FNType.Other
 						? new Image { Source = icon.of(templDir + relPath)?.ToWpfImage() }

@@ -348,10 +348,13 @@ public sealed unsafe class consoleProcess : IDisposable {
 	/// <param name="noNL">Don't append character <c>'\n'</c> when <i>text</i> does not end with <c>'\n'</c>.</param>
 	/// <exception cref="AuException">Failed.</exception>
 	public void Write(string text, bool noNL = false) {
-		bool ok = true;
-		if (!text.NE()) ok = Api.WriteFile2(_hInWrite, (InputEncoding ?? _encoding ?? Encoding.UTF8).GetBytes(text), out _);
-		if (!noNL && ok && text is not [.., '\n']) ok = Api.WriteFile2(_hInWrite, "\n"u8, out _);
-		if (!ok) throw new AuException(0);
+		if (!text.NE()) _Write(text);
+		if (!noNL && text is not [.., '\n']) _Write("\n");
+		
+		void _Write(string s) {
+			bool ok = Api.WriteFile2(_hInWrite, (InputEncoding ?? _encoding ?? Encoding.UTF8).GetBytes(s), out _);
+			if (!ok) throw new AuException(0);
+		}
 	}
 	
 	/// <summary>

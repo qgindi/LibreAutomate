@@ -534,6 +534,8 @@ class MetaComments {
 	StartEnd _metaRange; //current
 	
 	void _ParseOption(string name, string value, int iName, int iValue) {
+		if (name is null) return; //disabled
+		
 		//print.it(name, value);
 		_nameFrom = iName; _nameTo = iName + name.Length;
 		_valueFrom = iValue; _valueTo = iValue + value.Length;
@@ -856,7 +858,7 @@ class MetaComments {
 		if (_GetFile(value, FNFind.Class) is not FileNode f) return false;
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 		if (f == MainFile.f) return _ErrorV("circular reference");
-		if (ProjectReferences is {  } pr) foreach (var v in pr) if (v.f == f) return false;
+		if (ProjectReferences is { } pr) foreach (var v in pr) if (v.f == f) return false;
 		MetaComments m = null;
 		if (!_flags.Has(MCFlags.ForCodeInfo)) {
 			if (!Compiler.Compile(CCReason.CompileIfNeed, out var r, f, projFolder, needMeta: true, addMetaFlags: (_flags & MCFlags.Publish) | MCFlags.IsPR))
@@ -871,7 +873,7 @@ class MetaComments {
 	}
 	
 	void _NuGet(string value, string alias) {
-		foreach (var v in NugetPackages) if(v.package.Eqi(value)) return;
+		foreach (var v in NugetPackages) if (v.package.Eqi(value)) return;
 		NugetPackages.Add((value, alias));
 		if (_flags.Has(MCFlags.Publish) && !_flags.Has(MCFlags.IsPR)) return;
 		try {
@@ -1035,19 +1037,24 @@ class MetaComments {
 	/// <param name="code">Code that starts with metacomments "/*/ ... /*/".</param>
 	/// <param name="meta">The range of metacomments, returned by <see cref="FindMetaComments"/>.</param>
 	/// <seealso cref="MetaCommentsParser"/>
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static IEnumerable<Token> EnumOptions(string code, StartEnd meta) {
 		for (int i = meta.start + 3, iEnd = meta.end - 3; i < iEnd; i++) {
 			Token t = default;
 			for (; i < iEnd; i++) if (code[i] > ' ') break; //find next option
 			if (i == iEnd) break;
 			t.nameStart = i;
-			while (i < iEnd && code[i] > ' ') i++; //find separator after name
-			t.nameLen = i - t.nameStart;
-			while (i < iEnd && code[i] <= ' ') i++; //find value
+			if (i < iEnd && code[i] is '/') {
+				t.nameEnd = i;
+			} else {
+				while (i < iEnd && code[i] is > ' ' and not ';') i++; //find separator after name
+				t.nameEnd = i;
+				while (i < iEnd && code[i] is ' ' or '\t') i++; //find value
+			}
 			t.valueStart = i;
-			for (; i < iEnd; i++) if (code[i] == ';') break; //find ; after value
+			i = code.AsSpan(i, iEnd - i).IndexOfAny(';', '\n'); if (i < 0) i = iEnd; else i += t.valueStart; //find ; or newline after value
 			int j = i; while (j > t.valueStart && code[j - 1] <= ' ') j--; //rtrim
-			t.valueLen = j - t.valueStart;
+			t.valueEnd = j;
 			t.code = code;
 			yield return t;
 		}
@@ -1057,15 +1064,14 @@ class MetaComments {
 	/// <see cref="EnumOptions"/>.
 	/// </summary>
 	public struct Token {
-		public int nameStart, nameLen, valueStart, valueLen;
+		public int nameStart, nameEnd, valueStart, valueEnd;
 		public string code;
 		
-		public string Name => code.Substring(nameStart, nameLen);
-		public string Value => code.Substring(valueStart, valueLen);
-		public bool NameIs(string s) => s.Length == nameLen && code.Eq(nameStart, s);
-		public bool ValueIs(string s) => s.Length == valueLen && code.Eq(valueStart, s);
-		
-		public Range ValueRange => valueStart..(valueStart + valueLen);
+		public string Name => nameEnd > nameStart ? code[nameStart..nameEnd] : null;
+		public string Value => code[valueStart..valueEnd];
+		public bool NameIs(string s) => code.Eq(nameStart..nameEnd, s);
+		public bool ValueIs(string s) => code.Eq(valueStart..valueEnd, s);
+		public bool IsDisabled => nameEnd == nameStart;
 	}
 }
 

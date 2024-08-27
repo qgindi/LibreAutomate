@@ -571,13 +571,16 @@ class Class1 {
 			_f.FileType = _f.IsScript ? FNType.Class : FNType.Script;
 			Close();
 		});
-		info.aaaText = $"""
+		
+		var dialogInfo = $"""
 File type: <help editor/{(_isClass ? "Class files, projects>C# class file" : "Scripts>C# script")}<>  (<+changeFileType>change...<>)
 File path: <explore>{_f.FilePath}<>
 
 C# file properties here are similar to C# project properties in Visual Studio.
 Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edited there too.
 """;
+		info.aaaText = dialogInfo;
+		info.AaAddElem(this, dialogInfo);
 		
 		info.AaAddElem(role, """
 <b>role</b> - the purpose of this C# code file. What type of assembly to create and how to execute.

@@ -106,7 +106,7 @@ finally {  }]]>
 			<![CDATA[Task.Run(() => { $0 });]]>
 		</list>
 	</snippet>
-	<snippet name="dsDialogShowSnippet" info="Standard dialog window." more="See also: wpfSnippet.">
+	<snippet name="dsDialogShowSnippet" info="Standard dialog window." more="See also: wpfDialogSnippet.">
 		<list item="OK button">
 			<![CDATA[dialog.show("${1:header}", $"${2:text}"$3);]]>
 		</list>
@@ -365,7 +365,7 @@ default: return;
 	${VAR}[""] = o => {  };
 });]]>
 	</snippet>
-	<snippet name="wpfSnippet" info="Create dialog window." more="See also: dialogSnippet, menu File &gt; New &gt; Dialogs." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Input;System.Windows.Media">
+	<snippet name="wpfDialogSnippet" info="Create dialog window." more="See also: dialogSnippet, menu File &gt; New &gt; Dialogs." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Input;System.Windows.Media">
 		<![CDATA[var b = new wpfBuilder("${1:Window}").WinSize(400);
 b.R.Add("Text", out TextBox text1).Focus();
 b.R.Add("Combo", out ComboBox combo1).Items("Zero|One|Two");

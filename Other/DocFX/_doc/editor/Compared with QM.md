@@ -49,7 +49,7 @@ LibreAutomate has triggers to execute parts of a running script. Trigger types: 
 
 LibreAutomate does not have item types like "menu", "toolbar" and "autotext". Instead use classes **popupMenu**, **toolbar** and **AutotextTriggers**.
 
-To create dialogs now can be used class **wpfBuilder** and snippet **wpfSnippet**.
+To create dialogs now can be used class **wpfBuilder** and snippet **wpfDialogSnippet**.
 
 Currently LibreAutomate has only the most important tools for creating code.
 

@@ -430,7 +430,7 @@ public static class script {
 	static NativeThread_ s_auxThread;
 	
 	/// <summary>
-	/// Gets the aux thread object. Auto-creates if need (starts thread and does not wait).
+	/// Gets the aux thread object. Auto-creates (starts thread and does not wait) if used in an app that does not call <b>Starting_</b> at startup (compiled not by LA).
 	/// Thread-safe.
 	/// </summary>
 	internal static NativeThread_ GetAuxThread_() {
@@ -466,7 +466,7 @@ public static class script {
 			
 			if (preloaded) Cpp.Cpp_InactiveWindowWorkaround(true);
 			
-			s_auxThread.ThreadInited();
+			NativeThread_.OfThisThread.ThreadInited();
 			
 			int nh = hp == default ? 0 : 1;
 			for (; ; ) {

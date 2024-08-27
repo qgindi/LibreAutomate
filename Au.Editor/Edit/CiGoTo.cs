@@ -441,7 +441,7 @@ class CiGoTo {
 		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(cd);
 		if (sym != null) {
 			if (sym is IParameterSymbol or ITypeParameterSymbol && !sym.IsInSource()) return;
-			if (_GetFoldersPath(token, out var fp, false)) {
+			if (_GetFoldersPath(token, out var fp, sym)) {
 				run.itSafe(fp);
 			} else {
 				var g = new CiGoTo(sym);
@@ -455,8 +455,8 @@ class CiGoTo {
 			int pos = cd.pos;
 			if (pos < cd.meta.end && pos > cd.meta.start) {
 				foreach (var t in Au.Compiler.MetaComments.EnumOptions(cd.code, cd.meta)) {
-					if (pos >= t.valueStart && pos <= t.valueStart + t.valueLen) {
-						_Open(cd.code[t.valueStart..(t.valueStart + t.valueLen)]);
+					if (pos >= t.valueStart && pos <= t.valueEnd) {
+						_Open(cd.code[t.valueStart..t.valueEnd]);
 						break;
 					}
 				}
@@ -488,7 +488,7 @@ class CiGoTo {
 				if (!pathname.isFullPathExpand(ref s, strict: false)) {
 					var f = App.Model.Find(s);
 					if (f != null) { App.Model.SetCurrentFile(f); return true; }
-					if (token.RawKind == 0 || !_GetFoldersPath(token, out var fp, true)) return false;
+					if (token.RawKind == 0 || !_GetFoldersPath(token, out var fp, null)) return false;
 					s = pathname.combine(fp, s);
 				}
 				var fe = filesystem.exists(s); if (!fe) return false;
@@ -499,8 +499,9 @@ class CiGoTo {
 		}
 		
 		//If t is "string" in 'folders.Folder + "string"' or Folder in 'folders.Folder', gets folder path and return true.
-		static bool _GetFoldersPath(SyntaxToken t, out string s, bool isString) {
+		static bool _GetFoldersPath(SyntaxToken t, out string s, ISymbol sym) {
 			s = null;
+			bool isString = sym is null;
 			if (isString) {
 				t = t.GetPreviousToken(); if (!t.IsKind(SyntaxKind.PlusToken)) return false;
 				t = t.GetPreviousToken();
@@ -510,7 +511,11 @@ class CiGoTo {
 			t = t.GetPreviousToken(); if (!t.IsKind(SyntaxKind.DotToken)) return false;
 			t = t.GetPreviousToken(); if (!t.IsKind(SyntaxKind.IdentifierToken) || t.Text != "folders") return false;
 			s = folders.getFolder(s2);
-			return s != null;
+			if (s is null) return false;
+			if (true == sym?.IsInSource()) {
+				return 2 == popupMenu.showSimple("1 Go to definition|2 Open folder");
+			}
+			return true;
 		}
 	}
 	

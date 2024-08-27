@@ -64,7 +64,7 @@ class DPortable : KDialogWindow {
 			b.xAddInfoBlockF($"<a href=\"{local}\">{local.Limit(70, middle: true)}</a>{(i == 0 ? "" : " -> \\")}{portableRelative}").Padding("T1 B2");
 			b.End();
 			
-			b.Add(out d.tSkip, d.skip = App.Settings.portable_skip[i]).Multiline(wrap: TextWrapping.NoWrap).Width(100..500)
+			b.Add(out d.tSkip, d.skip = App.Settings.portable_skip[i]).Multiline(wrap: TextWrapping.NoWrap).Size(..500, ..120)
 				.Tooltip("These folders will not be copied. Existing folders will not be deleted or updated.\r\nExamples:\r\nDescendantFolderName\r\n\\DirectChildFolderName\r\n\\Folder1\\Folder2\r\n//comment");
 			d.tSkip.TextChanged += (o, _) => { App.Settings.portable_skip[i] = d.skip = (o as TextBox).Text; };
 			
@@ -191,6 +191,8 @@ class DPortable : KDialogWindow {
 				if (s[0] is '\\' or '/') b.Append($" \"{dir}{s}\" \"{dirTo}{s}\"");
 				else b.Append($" \"{s}\"");
 			}
+			
+			//TODO2: allow to reinclude subfolders and files, like <+>\.nuget\subfolder.
 		}
 		
 		if (log) b.Append(" /l /bytes /nfl /njh");

@@ -25,6 +25,8 @@ static class GenerateCode {
 	/// Called from CiCompletion._ShowList on char '/'. If need, inserts XML doc comment with empty summary, param and returns tags.
 	/// </summary>
 	public static void DocComment(CodeInfo.Context cd) {
+		//TODO: delegate: add <param> etc like for method.
+		
 		int pos = cd.pos;
 		string code = cd.code;
 		SciCode doc = cd.sci;
@@ -90,32 +92,28 @@ static class GenerateCode {
 		//FUTURE: show tool to insert code, not just print.
 		//	With name edit field. Options to insert as method or local func. Option to use `#region events`. Option to add `print.it("EventName");`.
 		
-		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return false;
+		if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 		int pos = cd.pos;
 		var semo = cd.semanticModel;
 		
-		if (token.IsKind(SyntaxKind.SemicolonToken)) {
-			if (pos > token.SpanStart) return false;
-			token = token.GetPreviousToken();
-		}
+		var node = cd.syntaxRoot.FindTokenOnLeftOfPosition(cd.pos).Parent;
 		
-		for (var node = token.Parent; node != null; node = node.Parent) {
+		for (; node != null; node = node.Parent) {
 			if (node is AssignmentExpressionSyntax aes) {
 				if (node.Kind() is SyntaxKind.SimpleAssignmentExpression or SyntaxKind.AddAssignmentExpression or SyntaxKind.SubtractAssignmentExpression)
-					//if (pos >= aes.OperatorToken.Span.End)
 					return _GetTypeAndFormat(aes.Left, aes);
 			} else if (node is BaseArgumentListSyntax als) {
 				if (!node.Span.ContainsInside(pos)) continue;
-				if (CiUtil.GetArgumentParameterFromPos(als, pos, semo, out _, out var ps)) {
+				if (CiUtil.GetArgumentParameterFromPos(als, pos, semo, out _, out var ps, o => o.Type.TypeKind == TypeKind.Delegate || o.Type.SpecialType == SpecialType.System_Delegate)) {
 					bool ok = false;
 					foreach (var v in ps) ok |= _Format(v.Type);
 					return ok;
 				}
+			} else if (node is VariableDeclarationSyntax vds) {
+				return _GetTypeAndFormat(vds.Type);
 			} else if (node is ReturnStatementSyntax rss) {
-				//if (pos >= rss.ReturnKeyword.Span.End)
 				return _GetTypeAndFormat(rss.GetAncestor<MethodDeclarationSyntax>()?.ReturnType);
 			} else if (node is ArrowExpressionClauseSyntax ae) {
-				//if (pos >= ae.ArrowToken.Span.End)
 				switch (node.Parent) {
 				case MethodDeclarationSyntax m: return _GetTypeAndFormat(m.ReturnType);
 				case PropertyDeclarationSyntax p: return _GetTypeAndFormat(p.Type);
@@ -132,7 +130,11 @@ static class GenerateCode {
 		}
 		
 		bool _Format(ITypeSymbol type, AssignmentExpressionSyntax aes = null) {
-			if (type is not INamedTypeSymbol t || t is IErrorTypeSymbol || t.TypeKind != TypeKind.Delegate) return false;
+			if (type is not INamedTypeSymbol t || t is IErrorTypeSymbol) return false;
+			if(t.TypeKind != TypeKind.Delegate) {
+				if (t.SpecialType == SpecialType.System_Delegate && type.ContainingAssembly.GetTypeByMetadataName("System.Action") is { } tsa) t = tsa;
+				else return false;
+			}
 			var b = new StringBuilder("<><lc #A0C0A0>Delegate method and lambda<>\r\n<code>");
 			string methodName = "_RenameMe";
 			if (aes != null) {

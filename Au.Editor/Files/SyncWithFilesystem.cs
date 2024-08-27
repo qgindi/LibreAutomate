@@ -18,7 +18,7 @@ partial class FilesModel {
 				//print.it(rd.itemPath, rd.fullPath);
 				
 				RelativePath rel = new(rd.itemPath);
-				rd.tree = _Dir(new(rd.fullPath));
+				rd.tree = _Dir(new(pathname.expand(rd.fullPath)));
 				
 				_DirTree _Dir(DirectoryInfo parent) {
 					_DirTree t = new(parent.Name) { children = new() };

@@ -86,7 +86,7 @@ public static class EditorExtension {
 			bool isAsync = false;
 			if (entryPoint.IsSpecialName) {
 				var ep2 = entryPoint.DeclaringType.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
-					.FirstOrDefault(static o => o.ReturnType == typeof(Task) && o.Name is "<Main>$" or "Main" && o.GetParameters() is { } pa && (pa.Length == 0 || (pa.Length == 1 && pa[0].ParameterType == typeof(string[]))) && o.IsDefined(typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute)));
+					.FirstOrDefault(static o => o.ReturnType is var rt && (rt == typeof(Task) || rt == typeof(Task<int>)) && o.Name is "<Main>$" or "Main" && o.GetParameters() is { } pa && (pa.Length == 0 || (pa.Length == 1 && pa[0].ParameterType == typeof(string[]))) && o.IsDefined(typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute)));
 				if (isAsync = ep2 != null) entryPoint = ep2;
 			}
 			

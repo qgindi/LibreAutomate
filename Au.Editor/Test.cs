@@ -19,22 +19,22 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 
-static  class Test {
+using Au.Compiler;
+
+static class Test {
 	
 	public static void FromMenubar() {
-		print.clear();
+		//print.clear();
 
 		
-
 		var d = Panels.Editor.ActiveDoc;
 		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;
-
-
+		
 #if !IDE_LA
 
 #endif
 	}
-
+	
 	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;

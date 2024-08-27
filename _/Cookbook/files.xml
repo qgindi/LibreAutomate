@@ -166,14 +166,15 @@
     <s n="Dialog - use triggers.cs" i="384" />
     <s n="-Dialog - rejected or future.cs" i="297" />
   </d>
-  <d n="Math, convert" i="129">
+  <d n="Math, convert, security" i="129">
     <s n="Math functions.cs" i="145" />
     <s n="Convert to-from string.cs" i="148" />
     <s n="Convert Base64, hex, UTF-8, encoding, urlencode, htmlencode.cs" i="147" />
     <s n="Other conversions.cs" i="146" />
     <s n="Random numbers and strings, GUID.cs" i="149" />
-    <s n="Encrypt, hash.cs" i="157" />
     <s n="Compress data.cs" i="130" />
+    <s n="Encrypt, hash.cs" i="157" />
+    <s n="Passwords in scripts.cs" i="385" />
     <s n="-Color.cs" i="169" />
   </d>
   <d n="Text" i="18">

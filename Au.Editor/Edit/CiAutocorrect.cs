@@ -193,7 +193,7 @@ class CiAutocorrect {
 				if (!(node is BlockSyntax { Parent: StatementSyntax or GlobalStatementSyntax or ElseClauseSyntax or CatchClauseSyntax or FinallyClauseSyntax or SwitchSectionSyntax } or SwitchStatementSyntax)) return false;
 				break;
 			case SyntaxKind.SemicolonToken:
-				if (node is not StatementSyntax || cd.pos < node.Span.End) return false;
+				if (!(node is StatementSyntax or UsingDirectiveSyntax or ExternAliasDirectiveSyntax) || cd.pos < node.Span.End) return false;
 				if (IsSwitchSectionEndStatement_(node)) return false; //after `break;` etc in `switch`, probably starting to type `case` or `default`
 				if (node is EmptyStatementSyntax && cd.pos == node.Span.End) {
 					if (hasSelection) cd.sci.aaaReplaceSel("");
@@ -208,6 +208,9 @@ class CiAutocorrect {
 				if (!(node is IfStatementSyntax or ForStatementSyntax or CommonForEachStatementSyntax or WhileStatementSyntax or FixedStatementSyntax or LockStatementSyntax or UsingStatementSyntax)) return false;
 				break;
 			case SyntaxKind.ElseKeyword or SyntaxKind.DoKeyword:
+				break;
+			case SyntaxKind.CloseBracketToken:
+				if (!(node is AttributeListSyntax { Target: {  } alst } && alst.Identifier.Kind() is SyntaxKind.ModuleKeyword or SyntaxKind.AssemblyKeyword)) return false;
 				break;
 			default: return false;
 			}

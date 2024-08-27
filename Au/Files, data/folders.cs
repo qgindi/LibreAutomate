@@ -300,18 +300,18 @@ namespace Au {
 			
 			return baseDir + (ee ? @"\LibreAutomate" : @"\LibreAutomate\_script");
 		}
-
+		
 		internal static string PortableData_ => __portableData ??= GetPortableDataDir_(Editor.Path);
 		static string __portableData;
-
+		
 		static internal string GetPortableDataDir_(string appPath) {
 			var s = appPath + @"\data";
 			//if (filesystem.exists(s, true).File) return pathname.normalize(filesystem.loadText(s), appPath);
 			return s;
 		}
-
+		
 		#endregion
-
+		
 		/// <summary>
 		/// Gets or sets path of folder "temporary files of this application".
 		/// </summary>
@@ -469,26 +469,28 @@ namespace Au {
 		/// </remarks>
 		public static string WorkspaceDriveBS { get; private set; }
 		
-		/// <summary>
-		/// Gets drive type (fixed, removable, network, etc) of <see cref="WorkspaceDriveBS"/>.
-		/// </summary>
-		public static DriveType workspaceDriveType => s_driveTypeWS ??= _GetDriveType(WorkspaceDriveBS);
-		static DriveType? s_driveTypeWS;
-		
+#if !DEBUG //fbc
 		/// <summary>
 		/// Gets drive type (fixed, removable, network, etc) of <see cref="ThisAppDriveBS"/>.
 		/// </summary>
-		public static DriveType thisAppDriveType => s_driveTypeApp ??= _GetDriveType(ThisAppDriveBS);
-		static DriveType? s_driveTypeApp;
+		[EditorBrowsable(EditorBrowsableState.Never)] //more annoying than useful. Intellisense selects it when the user types "thisApp". And maybe this class isn't the best place for it. Probably users will not look for such function here or somewhere in this library; they'll use DriveInfo. In any case, this is not very useful because: 1. Detects external SSD as Fixed; 2. The removable drive (SSD or not) may be used either as portable or always with the same computer.
+		public static DriveType thisAppDriveType => __driveTypeApp ??= __GetDriveType(ThisAppDriveBS);
+		static DriveType? __driveTypeApp;
+		
+		/// <summary>
+		/// Gets drive type (fixed, removable, network, etc) of <see cref="WorkspaceDriveBS"/>.
+		/// </summary>
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static DriveType workspaceDriveType => __GetDriveType(WorkspaceDriveBS);
 		
 		//note: don't use this func with any paths. It is for the above 2 funcs only.
-		static DriveType _GetDriveType(string path) {
+		static DriveType __GetDriveType(string path) {
 			path = pathname.unprefixLongPath(path);
 			if (path.Starts(@"\\")) return DriveType.Network; //GetDriveType does not support it. DriveInfo throws exception.
 			return (DriveType)Api.GetDriveType(path);
 		}
+#endif
 		
-#if true
 		/// <summary>
 		/// Gets folder path of the caller source code file.
 		/// </summary>
@@ -503,22 +505,6 @@ namespace Au {
 		/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
 		/// <seealso cref="script.sourcePath(bool, Assembly)"/>
 		public static FolderPath sourceCodeMain(Assembly asm = null) => new(pathname.getDirectory(script.sourcePath(false, asm)));
-#else
-		/// <summary>
-		/// Gets folder path of the caller source code file.
-		/// </summary>
-		/// <param name="f_">[](xref:caller_info)</param>
-		/// <seealso cref="CallerFilePathAttribute"/>
-		/// <seealso cref="script.sourcePath(bool, string)"/>
-		public static FolderPath sourceCode([CallerFilePath] string f_ = null) => new(pathname.getDirectory(f_));
-
-		/// <summary>
-		/// Gets folder path of the main source code file of this program or of a library.
-		/// </summary>
-		/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
-		/// <seealso cref="script.sourcePath(Assembly, bool, bool)"/>
-		public static FolderPath sourceCodeMain(Assembly asm = null) => new(script.sourcePath(asm, folder: true));
-#endif
 		
 		/// <summary>
 		/// Gets non-redirected path of the System32 folder.

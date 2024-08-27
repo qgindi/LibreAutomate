@@ -189,6 +189,15 @@ public static partial class print {
 	}
 	
 	/// <summary>
+	/// Writes binary data to the output, formatted like in a hex editor.
+	/// </summary>
+	/// <param name="value"></param>
+	/// <param name="columns">The number of bytes in a row.</param>
+	public static void it(RByte value, int columns) {
+		it(util.toString(value, columns));
+	}
+	
+	/// <summary>
 	/// Gets or sets object that actually writes text when is called <see cref="it"/>.
 	/// </summary>
 	/// <remarks>
@@ -621,6 +630,44 @@ public static partial class print {
 			}
 		}
 		static readonly object[] s_oaNull = { null };
+		
+		/// <summary>
+		/// Converts binary data to a hexadecimal + characters string, similar to the format used in hex editors.
+		/// </summary>
+		/// <param name="data"></param>
+		/// <param name="columns">The number of bytes in a row.</param>
+		public static string toString(ReadOnlySpan<byte> data, int columns) {
+			//rejected: , char escapeChar = '.' /// <param name="escapeChar">Character for bytes other than the printable ASCII characters (32-126).</param>
+			
+			int len = data.Length;
+			int rows = (len + columns - 1) / columns;
+			var b = new StringBuilder(rows * (columns * 3 + 4 + columns + 2));
+			
+			for (int i = 0; i < len; i += columns) {
+				//hex
+				for (int j = 0; j < columns && i + j < len; j++) {
+					byte k = data[i + j];
+					b.Append(_ToHexChar(k >> 4)).Append(_ToHexChar(k & 0x0F)).Append(' ');
+				}
+				
+				//padding if not enough columns
+				for (int j = len - i; j < columns; j++) b.Append("   ");
+				
+				b.Append("    ");
+				
+				//text
+				for (int j = 0; j < columns && i + j < len; j++) {
+					byte k = data[i + j];
+					b.Append(k >= 32 && k <= 126 ? (char)k : '.');
+				}
+				
+				b.AppendLine();
+			}
+			
+			return b.ToString();
+			
+			static char _ToHexChar(int h) => (char)(h < 10 ? h + '0' : h - 10 + 'A');
+		}
 	}
 	
 #pragma warning disable 1591 //no XML doc

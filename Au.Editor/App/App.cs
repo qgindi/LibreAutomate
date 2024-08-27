@@ -235,6 +235,11 @@ static partial class App {
 		if (filesystem.exists(folders.ThisAppBS + "data")) {
 			IsPortable = true;
 			ScriptEditor.IsPortable = true;
+			
+			//CONSIDER: when changed user (SID), delete folders.ThisAppDataLocal (\data\appLocal).
+			//	LA/Au currently uses it only for the icon cache.
+			//	But some scripts may not want it.
+			//	Probably should delete folders.ThisAppTemp (\data\temp).
 		}
 		
 		script.role = SRole.EditorExtension;

@@ -18,6 +18,7 @@ unsafe class NativeThread_ {
 
 	/// <summary>
 	/// Starts new background thread using API <b>CreateThread</b>.
+	/// <para>Note: in thread proc use <see cref="OfThisThread"/>, not a static field inited like <c>s_thread = new NativeThread_(...);</c>, because <i>s_thread</i> may be still null.</para>
 	/// </summary>
 	/// <param name="proc">Thread procedure.</param>
 	/// <param name="sta">Set <b>ApartmentState.STA</b>.</param>
@@ -62,7 +63,8 @@ unsafe class NativeThread_ {
 	/// The thread procedure must call this when finished thread initialization and going to run an alertable message loop.
 	/// If constructor was called with <i>waitInited</i> <c>true</c>, it will return (stop waiting).
 	/// If actions were queued, executes them now.
-	/// Example: <c>NativeThread2_.OfThisThread.ThreadInited();</c>
+	/// Example: <c>NativeThread_.OfThisThread.ThreadInited();</c>
+	/// Note: don't use code like <c>s_thread.ThreadInited();</c>, because <i>s_thread</i> (inited like <c>s_thread = new NativeThread_(...);</c>) may be still null.
 	/// </summary>
 	public void ThreadInited() {
 		if (_initEvent != 0) Api.SetEvent(_initEvent);
