@@ -273,7 +273,6 @@ namespace Au {
 		/// Returns <c>true</c> if ends with <c>':'</c> preceded by a drive letter, like <c>"C:"</c> or <c>"more\C:"</c>, but not like <c>"moreC:"</c>.
 		/// </summary>
 		static bool _EndsWithDriveWithoutSep(RStr s) {
-			if (s == null) return false;
 			int i = s.Length - 1;
 			if (i < 1 || s[i] != ':') return false;
 			if (!s[--i].IsAsciiAlpha()) return false;

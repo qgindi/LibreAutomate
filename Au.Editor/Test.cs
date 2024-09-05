@@ -26,6 +26,9 @@ static class Test {
 	public static void FromMenubar() {
 		//print.clear();
 
+		//TODO: completion list empty if:
+		//	Showed for eg all, and checked only classes. Then selected something. Then typed dot.
+		//	It seems the classes filter remains from previous list instance.
 		
 		var d = Panels.Editor.ActiveDoc;
 		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;

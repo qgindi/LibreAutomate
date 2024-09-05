@@ -2,7 +2,7 @@
 
 //This library does not use C#/WinRT (Microsoft.Windows.SDK.NET.dll and WinRT.Runtime.dll).
 //Would be easier, but it has problems:
-//	- Adds 2 files, 22 MB. It's better to avoid it in this library.
+//	- Adds 2 files, 22 MB.
 //	- OCR: if once used in a STA thread, then does not work in MTA threads.
 //	- OCR: slower.
 
@@ -56,7 +56,14 @@ static unsafe partial class WinRT {
 
 		public bool IsNull => _u == default;
 		
-		int _QI(Type type, out IntPtr r) { var guid = type.GUID; return Marshal.QueryInterface(_u, ref guid, out r); }
+		int _QI(Type type, out IntPtr r) {
+#if NET9_0_OR_GREATER //changed ref -> in
+			return Marshal.QueryInterface(_u, type.GUID, out r);
+#else
+			var guid = type.GUID;
+			return Marshal.QueryInterface(_u, ref guid, out r);
+#endif
+		}
 
 		/// <summary>
 		/// Calls <b>QueryInterface</b>. Throws exception if failed.
@@ -253,6 +260,7 @@ static unsafe partial class WinRT {
 		public static implicit operator string(_Hstring s) => s.ToString();
 		
 		public override string ToString() {
+			if (_h == default) return null;
 			char* p = WindowsGetStringRawBuffer(_h, out int len);
 			return new(p, 0, len);
 		}

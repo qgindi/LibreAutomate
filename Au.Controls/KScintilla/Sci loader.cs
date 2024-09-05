@@ -6,11 +6,11 @@ public unsafe partial class KScintilla {
 	public class aaaFileLoaderSaver {
 		_Encoding _enc;
 		byte[] _text;
-		
+
 		public bool IsBinary => _enc == _Encoding.Binary;
-		
+
 		public bool IsImage { get; private set; }
-		
+
 		/// <summary>
 		/// Loads file as UTF-8.
 		/// Supports any encoding (UTF-8, UTF-16, etc), BOM. Remembers it for Save.
@@ -25,35 +25,35 @@ public unsafe partial class KScintilla {
 				_text = Encoding.UTF8.GetBytes($"<image \"{file}\">");
 				return;
 			}
-			
+
 			using var fr = filesystem.loadStream(file);
-			
+
 			if (fr.Length > 100_000_000) {
 				_text = "//Cannot edit. The file is too big, more than 100_000_000 bytes."u8.ToArray();
 				return;
 			}
-			
+
 			int fileSize = (int)fr.Length;
 			var b = new byte[fileSize];
-			fr.Read(b, 0, fileSize);
-			
+			if (fr.Read(b, 0, fileSize) != fileSize) throw null;
+
 			_enc = _DetectEncoding(b);
 			//print.it(_enc);
 			if (_enc == _Encoding.Binary) {
 				_text = "//Cannot edit. The file is binary, not text."u8.ToArray();
 				return;
 			}
-			
+
 			if (_enc == _Encoding.Utf8_BOM && !System.Text.Unicode.Utf8.IsValid(b[3..])) b = b.ToStringUTF8().ToUTF8(); //else Scintilla text would be bad
-			
+
 			if (_EncodingEnumToObject() is { } e) {
 				int bomLength = (int)_enc >>> 4;
 				b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength);
 			}
-			
+
 			_text = b;
 		}
-		
+
 		Encoding _EncodingEnumToObject() {
 			switch (_enc) {
 			case _Encoding.Utf16_BOM or _Encoding.Utf16: return Encoding.Unicode;
@@ -64,7 +64,7 @@ public unsafe partial class KScintilla {
 			}
 			return null;
 		}
-		
+
 		static unsafe _Encoding _DetectEncoding(RByte s) {
 			int len = s.Length;
 			//is too short to have a BOM?
@@ -86,43 +86,43 @@ public unsafe partial class KScintilla {
 			if (zeroAt >= 0) return _Encoding.Binary;
 			return System.Text.Unicode.Utf8.IsValid(s) ? _Encoding.Utf8 : _Encoding.Ansi;
 		}
-		
+
 		enum _Encoding : byte {
 			/// <summary>Not a text file, or loading failed, or not initialized.</summary>
 			Binary = 0, //must be 0
-			
+
 			/// <summary>ASCII or UTF-8 without BOM.</summary>
 			Utf8 = 1,
-			
+
 			/// <summary>UTF-8 with BOM (3 bytes).</summary>
 			Utf8_BOM = 1 | (3 << 4),
-			
+
 			/// <summary>ANSI containing non-ASCII characters, unknown code page.</summary>
 			Ansi = 2,
-			
+
 			/// <summary>UTF-16 without BOM.</summary>
 			Utf16 = 3,
-			
+
 			/// <summary>UTF-16 big endian without BOM.</summary>
 			Utf16BE = 4,
-			
+
 			/// <summary>UTF-16 with BOM (2 bytes).</summary>
 			Utf16_BOM = 3 | (2 << 4),
-			
+
 			/// <summary>UTF-16 with big endian BOM (2 bytes).</summary>
 			Utf16BE_BOM = 4 | (2 << 4),
-			
+
 			/// <summary>UTF-32 with BOM (4 bytes).</summary>
 			Utf32_BOM = 5 | (4 << 4),
-			
+
 			/// <summary>UTF-32 with big endian BOM (4 bytes).</summary>
 			Utf32BE_BOM = 6 | (4 << 4),
-			
+
 			//rejected. .NET does not save/load with UTF-7 BOM, so we too. Several different BOM of different length.
 			///// <summary>UTF-7 with BOM.</summary>
 			//Utf7_BOM,
 		}
-		
+
 		/// <summary>
 		/// Sets control text.
 		/// If the file is image, binary or too big (&gt;100_000_000), sets to display the image or/and some short info text, makes the control read-only, sets <b>Save</b> to throw exception, and returns false. Else returns true.
@@ -140,7 +140,7 @@ public unsafe partial class KScintilla {
 			k.Call(SCI_SETREADONLY, 1);
 			return false;
 		}
-		
+
 		/// <summary>
 		/// Returns true if text contains newlines other than <c>\r\n</c> and <c>\n</c>.
 		/// </summary>
@@ -157,11 +157,11 @@ public unsafe partial class KScintilla {
 			}
 			return false;
 		}
-		
+
 		public void FinishedLoading() {
 			_text = null; //GC
 		}
-		
+
 		/// <summary>
 		/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="filesystem.save"/>.
 		/// </summary>
@@ -171,11 +171,11 @@ public unsafe partial class KScintilla {
 		/// <exception cref="InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
 		public unsafe void Save(KScintilla k, string file, string tempDirectory = null) {
 			if (_enc == _Encoding.Binary) throw new InvalidOperationException();
-			
+
 			//_enc = _Encoding.; //test
-			
+
 			Encoding e = _EncodingEnumToObject();
-			
+
 			int bom = (int)_enc >> 4; //BOM length
 			uint bomm = 0; //BOM memory
 			if (e != null) bomm = _enc switch {
@@ -185,9 +185,9 @@ public unsafe partial class KScintilla {
 				_ => 0
 			};
 			else if (bom == 3) bomm = 0xBFBBEF; //UTF8; else bom 0
-			
+
 			//print.it(_enc, bom, bomm, e);
-			
+
 			filesystem.save(file, temp => {
 				using var fs = File.Create(temp);
 				if (bomm != 0) { uint u = bomm; fs.Write(new RByte((byte*)&u, bom)); } //rare
@@ -200,7 +200,7 @@ public unsafe partial class KScintilla {
 					fs.Write(new RByte(bytes, len));
 				}
 			}, tempDirectory: tempDirectory);
-			
+
 			//print.it("file", File.ReadAllBytes(file));
 		}
 	}

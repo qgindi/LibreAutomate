@@ -247,7 +247,7 @@ public unsafe class regexp {
 	//rawFlags - pass flags as is. If false, calls _GetMatchFlags. If true, flags must be result of _GetMatchFlags.
 	//group - 0 or group number. Used only to throw if invalid.
 	int _PcreMatch(RStr s, int start, RXMatchFlags flags, bool rawFlags, out Cpp.RegexMatch m, bool needM, int group = 0) {
-		if (s == null) { m = default; return -1; }
+		if (s.IsNull()) { m = default; return -1; } //null
 		fixed (char* p = s) {
 			if (!rawFlags) flags = _GetMatchFlags(flags);
 			int rc = Cpp.Cpp_RegexMatch(_CodeHR, p != null ? p : (char*)&p, s.Length, start, flags, _pcreCallout, out m, needM, out BSTR errStr);

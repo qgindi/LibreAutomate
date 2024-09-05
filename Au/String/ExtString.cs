@@ -1474,7 +1474,7 @@ public static unsafe partial class ExtString {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static int LengthThrowIfNull_(this RStr t) {
 		int n = t.Length;
-		if (n == 0 && t == default) throw new ArgumentNullException();
+		if (n == 0 && t.IsNull()) throw new ArgumentNullException();
 		return n;
 	}
 
@@ -1579,7 +1579,7 @@ public static unsafe partial class ExtString {
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	public static int IndexOf(this RStr t, int index, RStr s, bool ignoreCase = false) {
-		if (s == default) throw new ArgumentNullException();
+		if (s.IsNull()) throw new ArgumentNullException();
 		int i = t[index..].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		return i < 0 ? i : i + index;
 	}
@@ -1591,7 +1591,7 @@ public static unsafe partial class ExtString {
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	public static int IndexOf(this RStr t, Range range, RStr s, bool ignoreCase = false) {
-		if (s == default) throw new ArgumentNullException();
+		if (s.IsNull()) throw new ArgumentNullException();
 		int i = t[range].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		if (i < 0) return i;
 		return i + range.Start.GetOffset(t.Length);

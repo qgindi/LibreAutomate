@@ -78,6 +78,7 @@ class CiComplItem : ITreeViewItem {
 	/// Gets displayed text without prefix, suffix (eg generic) and green comments (group or inline description).
 	/// In most cases it is simple name, but in some cases can be eg "Namespace.Name", "Name(parameters)", etc.
 	/// </summary>
+	/// <value><c>ci.DisplayText</c></value>
 	public string Text => _ci.DisplayText;
 	
 	public CiComplProvider Provider => _provider;
@@ -94,9 +95,9 @@ class CiComplItem : ITreeViewItem {
 		bool isComment = !desc.NE();
 		if (_dtext != null && !isComment && commentOffset == 0) return;
 		_dtext = this.Text + _ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
-		if (!_ci.DisplayTextPrefix.NE()) {
-			_dtext = _ci.DisplayTextPrefix + _dtext;
-			Debug_.PrintIf(_ci.DisplayTextPrefix != "(", $"{_dtext}, {_ci.DisplayTextPrefix}"); //seen only of casts, eg "(" + "int" + ")"
+		if (_ci.DisplayTextPrefix is string dt && dt.Length > 0) {
+			_dtext = dt + _dtext;
+			Debug_.PrintIf(dt != "(", $"{_dtext}, {dt}"); //seen only of casts, eg "(" + "int" + ")"
 		}
 		commentOffset = isComment ? _dtext.Length - desc.Length - 6 : 0;
 	}

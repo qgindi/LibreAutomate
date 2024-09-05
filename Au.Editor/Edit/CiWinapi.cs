@@ -23,8 +23,9 @@ class CiWinapi {
 		//Also should do the same in 'as' context, and partially in 'is' context. But Roslyn doesn't, so we too.
 		var sql = "SELECT name, kind FROM api";
 		if (onlyTypes) sql += " WHERE kind<=4"; //see CiItemKind
-
-		items.Capacity = items.Count + 60000;
+		
+		perf.first();
+		items.Capacity = items.Count + 250_000;
 		using var db = EdDatabases.OpenWinapi();
 		using var stat = db.Statement(sql);
 		while (stat.Step()) {
@@ -33,6 +34,7 @@ class CiWinapi {
 			var ci = new CiComplItem(CiComplProvider.Winapi, span, name, kind/*, CiItemAccess.Internal*/);
 			items.Add(ci);
 		}
+		perf.nw('D');
 
 		return new() { _typenameStart = typenameStart, _canInsert = typeSym.IsFromSource() };
 

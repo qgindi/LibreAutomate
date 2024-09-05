@@ -91,6 +91,10 @@ VS must support that .NET version. Install the .NET SDK if need.
 
 Update .NET version in all C# projects (.csproj) except Au.Net4.
 
+Update .NET SDK version in global.json.
+	Using it to force VS to use .NET 8 SDK.
+	Because: if installed .NET 9 Preview SDK, VS uses it to build projects that use .NET 8. Then app crashes when starting.
+
 In project DatabasesEtc, in file Program.cs:
 	Enable only the call to RefTxt.Create, and run.
 	Enable only the call to RefAndDoc.Create, and run.

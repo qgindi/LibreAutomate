@@ -490,7 +490,7 @@ public unsafe class SciImages {
 				s = new(n.textUTF8, len);
 			}
 		}
-		if (s == null) {
+		if (s.IsNull()) {
 			firstLine = _c.aaaLineFromPos(false, from);
 			int from2 = _c.aaaLineStart(false, firstLine);
 			if (!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text

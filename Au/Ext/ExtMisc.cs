@@ -156,6 +156,12 @@ public static unsafe partial class ExtMisc {
 	public static (int Offset, int Length) GetOffsetAndLength(this Range? t, int length)
 		=> t?.GetOffsetAndLength(length) ?? (0, length);
 	
+	/// <summary>
+	/// Returns <c>true</c> if null pointer.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsNull<T>(this ReadOnlySpan<T> t) => t == ReadOnlySpan<T>.Empty;
+	
 	//currently not used. Creates shorter string than ToString.
 	///// <summary>
 	///// Converts this <b>Guid</b> to Base64 string.

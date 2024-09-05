@@ -1,7 +1,5 @@
 extern alias CAW;
 
-//note: the Roslyn project has been modified. Eg added Symbols property to the CompletionItem class.
-
 using System.Collections.Immutable;
 using Au.Controls;
 
@@ -24,19 +22,6 @@ using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //CONSIDER: if string starts with <>, on < show list of output tags. User suggestion. And useful for me. Maybe even show a list of standard colors and the color control.
 //	Also need a tool for wildcard expression.
 //	Now users can in "string" press F1 or Ctrl+Space to open the help page.
-
-//Roslyn bug: in code like below, after `is C.` the list contains only types. VS OK.
-/*
-int i = 0;
-if (i is C.) ; //bad
-if (i == C.) ; //OK
-if (i is 4 or C.) ; //OK
-
-static class C {
-public const int CONST = 10;
-public struct STRUCT {  }
-}
-*/
 
 partial class CiCompletion {
 	CiPopupList _popupList;
@@ -173,11 +158,11 @@ partial class CiCompletion {
 		CompletionService completionService = null;
 		SemanticModel model = null;
 		CompilationUnitSyntax root = null;
-		//ISymbol symL = null; //symbol at left of . etc
 		CSharpSyntaxContext syncon = null;
 		ITypeSymbol typeL = null; //not null if X. where X is not type/namespace/unknown
-		ISymbol symL = null;
+		ISymbol symL = null; //symbol at left of . etc
 		int typenameStart = -1;
+		INamedTypeSymbol nativeApiClass = null;
 		
 		var cancelTS = _cancelTS = new CancellationTokenSource();
 		var cancelToken = cancelTS.Token;
@@ -289,8 +274,10 @@ partial class CiCompletion {
 										symL = model.GetSymbolInfo(node).Symbol;
 										Debug_.PrintIf(symL is INamespaceSymbol, node);
 										//print.it(symL, symL is INamedTypeSymbol);
-										if (symL is INamedTypeSymbol) typenameStart = node.SpanStart;
-										else typeL = ti;
+										if (symL is INamedTypeSymbol ints1) {
+											typenameStart = node.SpanStart;
+											if (CiWinapi.IsWinapiClassSymbol(ints1)) nativeApiClass = ints1.BaseType;
+										} else typeL = ti;
 									}
 #else //need just canGroup
 									if (model.GetSymbolInfo(node).Symbol is INamespaceSymbol) canGroup = false;
@@ -413,6 +400,10 @@ partial class CiCompletion {
 							}
 							break;
 						}
+					} else if (nativeApiClass != null && sym.ContainingType == nativeApiClass) {
+						//d.items.Add(new CiComplItem(provider, ci) { moveDown = CiComplItemMoveDownBy.Name });
+						d.items.Add(new CiComplItem(provider, ci) { hidden = CiComplItemHiddenBy.Always });
+						continue;
 					}
 				}
 				
@@ -474,7 +465,6 @@ partial class CiCompletion {
 					break;
 				case CiItemKind.Class:
 					if (!isDot && sym is INamedTypeSymbol ins && _IsOurScriptClass(ins)) v.moveDown = CiComplItemMoveDownBy.Name;
-					if (typenameStart >= 0 && ci.DisplayText == "l" && CiWinapi.IsWinapiClassSymbol(symL as INamedTypeSymbol)) v.hidden = CiComplItemHiddenBy.Always; //not continue;, then no groups
 					break;
 				case CiItemKind.EnumMember when !isDot:
 					//workaround for: if Enum.Member, members are sorted by value, not by name. Same in VS.
@@ -546,10 +536,10 @@ partial class CiCompletion {
 				//snippets, winapi
 				if (isDot) {
 					if (typeL != null) { //eg variable.x
-					} else if (symL is INamedTypeSymbol nts && CiWinapi.IsWinapiClassSymbol(nts)) { //type.x
+					} else if (nativeApiClass != null) { //api.x
 						int i = d.items.Count;
 						bool newExpr = syncon.TargetToken.Parent.Parent is ObjectCreationExpressionSyntax or StackAllocArrayCreationExpressionSyntax; //info: syncon.IsObjectCreationTypeContext false
-						d.winapi = CiWinapi.AddWinapi(nts, d.items, span, typenameStart, newExpr);
+						d.winapi = CiWinapi.AddWinapi(symL as INamedTypeSymbol, d.items, span, typenameStart, newExpr);
 						int n = d.items.Count - i;
 						if (n > 0) {
 							snippetsGroup = new List<int>(n);
@@ -713,7 +703,7 @@ partial class CiCompletion {
 				_popupList = new CiPopupList(this);
 				_popupList.PopupWindow.Hidden += (_, _) => _CancelUI(popupListHidden: true);
 			}
-			_popupList.Show(doc, span.Start, _data.items, groupsList); //and calls SelectBestMatch
+			_popupList.Show(doc, span.Start, _data.items, groupsList, winApi: nativeApiClass != null); //and calls SelectBestMatch
 		}
 		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; }
 		//catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { return; }
@@ -848,10 +838,21 @@ partial class CiCompletion {
 		return -1;
 	}
 	
-	public void SelectBestMatch(IEnumerable<CompletionItem> listItems, bool grouped) {
+	public void SelectBestMatch(List<CiComplItem> visibleListItems, bool grouped) {
 		CiComplItem ci = null;
 		var filterText = _data.filterText;
-		if (!(/*_data.noAutoSelect ||*/ filterText == "_")) { //noAutoSelect when lambda argument
+		
+		bool noSelect = visibleListItems.Count == 0 || filterText == "_";
+		if (!noSelect && visibleListItems.Count > 4_000 && filterText.Length <= 2) { //make the winapi list faster
+			if (filterText.Length < 2) noSelect = true;
+			else {
+				ci = visibleListItems.FirstOrDefault(o => o.Text.Starts(filterText));
+				ci ??= visibleListItems.FirstOrDefault(o => o.Text.Starts(filterText, true));
+				noSelect = ci != null;
+			}
+		}
+		
+		if (!noSelect) {
 			
 			//rejected. Need FilterItems anyway, eg to select enum type or 'new' type.
 			//if(filterText.NE()) {
@@ -860,52 +861,51 @@ partial class CiCompletion {
 			//}
 			
 			//perf.first();
-			var visible = listItems.ToImmutableArray();
-			if (!visible.IsEmpty) {
-				//perf.next();
-				var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
-				//perf.next();
-				//if (filterText.Length > 0) print.it("-", fi);
-				//print.it(visible.Length, fi.Length);
-				if (!fi.IsDefaultOrEmpty) {
-					if (fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) {
-						var v = fi[0];
-						if (!v.DisplayTextPrefix.NE() && fi.Length > 1 && fi.FirstOrDefault(o => o.DisplayTextPrefix.NE()) is { } vv) v = vv; //eg "(nint)" -> "Name"
-						ci = v.Attach as CiComplItem;
-						
-						//rejected. Not sure it's better.
-						//For normal priority items should ignore group and select by alphabet.
-						//	Else often selects eg an Au or System namespace item instead of keyword. Probably it is not what users like.
-						//if (grouped && fi.Length > 1 && filterText.Length > 1 && ci.ci.SortText.Starts(filterText[0])) {
-						//	for(int i = 1; i < fi.Length; i++) {
-						//		var v = fi[i].Attach as CiComplItem;
-						//		if (v.moveDown != 0) break;
-						//		if (v.group == ci.group) continue;
-						//		string s1 = v.ci.SortText, s2 = ci.ci.SortText;
-						//		if (s1.NE() || s2.NE() || s1[0] != s2[0]) continue;
-						//		if (string.CompareOrdinal(s1, s2) < 0) ci = v;
-						//	}
-						//	//foreach(var v in fi) print.it(v, v.Rules.MatchPriority, v.Rules.SelectionBehavior); //all 0, Default
-						//}
-					}
-				} else if (filterText == "" && !_data.isDot && !_data.unimported) {
-					//Workaround for bug in new Roslyn: does not select enum when the target type is enum.
-					//	The same after keyword 'new'.
-					//	Never mind: does not prefer the target type when typed eg single letter and the list also contains static fields or props of that type like "Type.Member". It never worked.
-					//	VS works well in all cases. Maybe it does not use this Roslyn API, or uses different Roslyn version.
-					//	FUTURE: test after updating Roslyn, maybe fixed.
-					foreach (var v in _data.items) {
-						//if (v.ci is var j && j.DisplayText.Starts("DEdit")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
-						//if (j.ci is var j && j.Properties.ContainsKey("Symbols")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
-						if (v.kind is CiItemKind.Enum or CiItemKind.Class or CiItemKind.Structure or CiItemKind.Delegate && v.ci.Properties.ContainsKey("Symbols")) { //TODO3: unreliable
-							ci = v;
-							break;
-						}
+			var visible = visibleListItems.Select(o => o.ci).ToImmutableArray();
+			//perf.next();
+			var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
+			//perf.next();
+			//if (filterText.Length > 0) print.it("-", fi);
+			//print.it(visible.Length, fi.Length);
+			if (!fi.IsDefaultOrEmpty) {
+				if (fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) {
+					var v = fi[0];
+					if (!v.DisplayTextPrefix.NE() && fi.Length > 1 && fi.FirstOrDefault(o => o.DisplayTextPrefix.NE()) is { } vv) v = vv; //eg "(nint)" -> "Name"
+					ci = v.Attach as CiComplItem;
+					
+					//rejected. Not sure it's better.
+					//For normal priority items should ignore group and select by alphabet.
+					//	Else often selects eg an Au or System namespace item instead of keyword. Probably it is not what users like.
+					//if (grouped && fi.Length > 1 && filterText.Length > 1 && ci.ci.SortText.Starts(filterText[0])) {
+					//	for(int i = 1; i < fi.Length; i++) {
+					//		var v = fi[i].Attach as CiComplItem;
+					//		if (v.moveDown != 0) break;
+					//		if (v.group == ci.group) continue;
+					//		string s1 = v.ci.SortText, s2 = ci.ci.SortText;
+					//		if (s1.NE() || s2.NE() || s1[0] != s2[0]) continue;
+					//		if (string.CompareOrdinal(s1, s2) < 0) ci = v;
+					//	}
+					//	//foreach(var v in fi) print.it(v, v.Rules.MatchPriority, v.Rules.SelectionBehavior); //all 0, Default
+					//}
+				}
+			} else if (filterText == "" && !_data.isDot && !_data.unimported) {
+				//Workaround for bug in new Roslyn: does not select enum when the target type is enum.
+				//	The same after keyword 'new'.
+				//	Never mind: does not prefer the target type when typed eg single letter and the list also contains static fields or props of that type like "Type.Member". It never worked.
+				//	VS works well in all cases. Maybe it does not use this Roslyn API, or uses different Roslyn version.
+				//	FUTURE: test after updating Roslyn, maybe fixed.
+				foreach (var v in _data.items) {
+					//if (v.ci is var j && j.DisplayText.Starts("DEdit")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
+					//if (j.ci is var j && j.Properties.ContainsKey("Symbols")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
+					if (v.kind is CiItemKind.Enum or CiItemKind.Class or CiItemKind.Structure or CiItemKind.Delegate && v.ci.Properties.ContainsKey("Symbols")) { //TODO3: unreliable
+						ci = v;
+						break;
 					}
 				}
 			}
 			//perf.nw('b');
 		}
+		
 		if (_data.noAutoSelect && ci != null) _popupList.SuggestedItem = ci;
 		else _popupList.SelectedItem = ci;
 	}

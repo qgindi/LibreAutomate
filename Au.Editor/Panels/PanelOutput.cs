@@ -139,11 +139,12 @@ class PanelOutput {
 			var s = m.Text; int i;
 			if (s.Length >= 22) {
 				if (s.Starts("<><lc #") && s.Eq(13, ">Compilation: ")) { //compilation
-					s_rx1 ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
+					s_rx1 ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ((?:error|warning) \w+)");
 					m.Text = s_rx1.Replace(s, x => {
 						var f = App.Model?.FindByFilePath(x[1].Value);
 						if (f == null) return x[0].Value;
-						return $"<open {f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}>{f.Name}{x[2].Value}<>: ";
+						var sEW = x[5].Value;
+						return $"<open {f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}>{f.Name}{x[2].Value}<>: <c {(sEW[0] == 'e' ? "red" : "green")}>{sEW}<>";
 					});
 				} else if ((i = s.Find("\n   at ") + 1) > 0 && s.Find(":line ", i) > 0) { //stack trace with source file info
 					var b = _sb ??= new StringBuilder(s.Length + 2000);
