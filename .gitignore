@@ -252,3 +252,4 @@ ModelManifest.xml
 !/_/Cookbook/files.xml
 
 *.bak
+/Au/global.json
