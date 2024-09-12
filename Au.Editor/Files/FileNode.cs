@@ -658,6 +658,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 	
 	FileNode _FindRelative(string name, FNFind kind, bool orAnywhere = false) {
+		Model.FoundMultiple = null;
 		bool retry = false; gRetry:
 #if true //fast, but allocates
 		int i = name.LastIndexOf('\\');
@@ -665,6 +666,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		if (_model._nameMap.MultiGet_(lastName, out FileNode v, out var a)) {
 			if (a != null) {
 				foreach (var f in a) if (_Cmp(f)) return f;
+				if (orAnywhere && i < 0) Model.FoundMultiple = a;
 			} else {
 				if (_Cmp(v)) return v;
 				if (orAnywhere && i < 0) return v;

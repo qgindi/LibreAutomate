@@ -25,8 +25,6 @@ static class GenerateCode {
 	/// Called from CiCompletion._ShowList on char '/'. If need, inserts XML doc comment with empty summary, param and returns tags.
 	/// </summary>
 	public static void DocComment(CodeInfo.Context cd) {
-		//TODO: delegate: add <param> etc like for method.
-		
 		int pos = cd.pos;
 		string code = cd.code;
 		SciCode doc = cd.sci;
@@ -60,7 +58,8 @@ static class GenerateCode {
 		BaseParameterListSyntax pl = node switch {
 			BaseMethodDeclarationSyntax met => met.ParameterList,
 			RecordDeclarationSyntax rec => rec.ParameterList,
-			IndexerDeclarationSyntax ids => ids.ParameterList,
+			IndexerDeclarationSyntax ind => ind.ParameterList,
+			DelegateDeclarationSyntax del => del.ParameterList,
 			_ => null
 		};
 		if (pl != null) {
@@ -68,8 +67,10 @@ static class GenerateCode {
 			foreach (var p in pl.Parameters) {
 				b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
 			}
-			if ((node is MethodDeclarationSyntax mm && !code.Eq(mm.ReturnType.Span, "void")) || node is IndexerDeclarationSyntax)
-				b.Append("\r\n/// <returns></returns>");
+			if ((node is MethodDeclarationSyntax met2 && !code.Eq(met2.ReturnType.Span, "void"))
+				|| node is IndexerDeclarationSyntax
+				|| (node is DelegateDeclarationSyntax del2 && !code.Eq(del2.ReturnType.Span, "void"))
+				) b.Append("\r\n/// <returns></returns>");
 			
 			s = b.ToString();
 			//rejected: <typeparam name="TT"></typeparam>. Rarely used.

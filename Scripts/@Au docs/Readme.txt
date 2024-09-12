@@ -1,5 +1,5 @@
 Us the latest DocFX. Older version may not support new C# features.
-DocFX should use the latest VS.
+If there are some strange errors, likely DocFX uses wrong SDK version. Try to temporarily rename folders of SDKs that should not be used.
 
 info: we don't use the full text search feature.
 	Uses CPU 10-20 s after each page [re]load.

@@ -47,14 +47,8 @@ Also try snippet nativeApiSnippet (select it from the completion list when text 
 for example at the end of script). It adds a special class. Then anywhere in script just type class name, dot,
 and select from the list. It adds the declaration to the class, and more declarations if need.
 
-The database contains ~51000 declarations. They are not perfect. You can edit.
-If some really useful API are missing, tell about it: https://www.libreautomate.com/forum/ or support@quickmacros.com.
-
-See also:
-https://github.com/dahall/Vanara
-https://github.com/microsoft/CsWin32
-https://github.com/microsoft/win32metadata
-https://www.pinvoke.net
+The database contains ~200_000 declarations. They are not perfect. You can edit.
+Data source: https://github.com/microsoft/win32metadata
 */";
 			code.AaSetText(s);
 		}

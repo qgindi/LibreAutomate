@@ -792,11 +792,10 @@ class MetaComments {
 	static readonly Dictionary<Type, (string name, int value)[]> s_enumCache = new();
 	
 	FileNode _GetFile(string s, FNFind kind) {
-		//TODO: does not find eg DiffMatchPatch.cs if just filename. OK if relative path.
-		
 		var f = _f.f.FindRelative(s, kind, orAnywhere: true);
 		if (f == null) {
-			if (kind == FNFind.Folder) _ErrorV($"folder '{s}' does not exist in this workspace");
+			if (App.Model.FoundMultiple != null) _ErrorV($"multiple '{s}' exist in this workspace. Use path, or rename a file.");
+			else if (kind == FNFind.Folder) _ErrorV($"folder '{s}' does not exist in this workspace");
 			else if (kind != FNFind.Any && null != _f.f.FindRelative(s, FNFind.File)) _ErrorV($"expected a {(kind == FNFind.Class ? "class" : "C#")} file");
 			else _ErrorV($"file '{s}' does not exist in this workspace");
 			return null;

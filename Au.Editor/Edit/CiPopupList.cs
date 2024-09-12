@@ -88,6 +88,7 @@ class CiPopupList {
 	}
 	
 	private void _KindButton_Click(object sender, RoutedEventArgs e) {
+		if (_a == null) return;
 		int kindsChecked = 0, kindsVisible = 0;
 		for (int i = 0; i < _kindButtons.Length; i++) {
 			var v = _kindButtons[i];
@@ -229,13 +230,15 @@ class CiPopupList {
 			return;
 		}
 		
+		_a = null; //let _KindButton_Click ignore the "unchecked" event triggered by the `v.IsChecked = false;`
+		foreach (var v in _kindButtons) v.IsChecked = false;
+		
 		_a = a;
 		_groups = groups;
 		_groupsEnabled = _groups != null && _groupButton.IsChecked == true;
 		_doc = doc;
 		_winApi = winApi;
 		
-		foreach (var v in _kindButtons) v.IsChecked = false;
 		_groupButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		_unimportedButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		UpdateVisibleItems();

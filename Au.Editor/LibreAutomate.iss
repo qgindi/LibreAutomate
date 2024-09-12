@@ -1,6 +1,6 @@
-#define MyAppName "LibreAutomate C#"
+﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.4.1"
+#define MyAppVersion "1.5.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -72,7 +72,7 @@ Source: "cookbook.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 
 ;CONSIDER: don't include big not frequently updated files. Auto-download on demand.
-;All .db except cookbook, Roslyn, both sqlite3.dll, 7za.exe. Makes smaller: 25 MB -> 3.7 MB (5 MB just without .db and Roslyn).
+;All .db except cookbook, Roslyn folder. Makes smaller: 33 MB -> 5 MB.
 
 [Dirs]
 Name: "{commonappdata}\LibreAutomate"; Flags: uninsalwaysuninstall; Permissions: authusers-modify
