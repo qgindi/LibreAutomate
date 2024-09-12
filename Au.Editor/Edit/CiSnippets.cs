@@ -20,7 +20,7 @@ static class CiSnippets {
 		public _Context context;
 		public readonly string customFile, sortText;
 		
-		public _CiComplItemSnippet(string name, XElement x, string customFile) : base(CiComplProvider.Snippet, default, name, CiItemKind.Snippet) {
+		public _CiComplItemSnippet(string name, XElement x, string customFile) : base(CiComplProvider.Snippet, name, CiItemKind.Snippet) {
 			this.x = x;
 			this.customFile = customFile;
 			sortText = name.Ends("Snippet") ? name[..^7] : name.Ends("Surround") ? name[..^8] : name;
@@ -163,7 +163,7 @@ static class CiSnippets {
 				v = new _CiComplItemSnippet(v.Text[1..], v.x, v.customFile); //like in VS. Else typing-filtering does not work.
 			}
 			v.group = 0; v.hidden = 0; v.hilite = 0; v.moveDown = 0;
-			v.ci.Span = span;
+			v.GetCI().Span = span;
 			items.Add(v);
 		}
 	}
@@ -458,7 +458,8 @@ static class CiSnippets {
 			x = a[g - 1];
 		}
 		
-		_Commit(doc, item.ci.Span.Start, item.ci.Span.End + codeLenDiff, x);
+		var span = item.GetCI().Span;
+		_Commit(doc, span.Start, span.End + codeLenDiff, x);
 	}
 	
 	static void _Commit(SciCode doc, int pos, int endPos, XElement x, string surroundText = null) {

@@ -6,9 +6,9 @@
 print.clear();
 
 string clangPath = @"C:\Program Files\LLVM\bin\clang.exe";
-string SDK_Include = @"C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um";
-string Shared_Include = @"C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared";
-//string CRT_Include = @"C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt";
+string SDK_Include = @"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um";
+string Shared_Include = @"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared";
+//string CRT_Include = @"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt";
 //string VS_CRT_Include=@"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include" //vcruntime.h etc missing in SDK
 
 _Preprocess(true, @"C:\code\au\Other\Api\Api-preprocessed-64.cpp");
@@ -133,6 +133,9 @@ void _Preprocess(bool is64bit, string outFile) {
 	//replace inline functions LongToHandle/LongToPtr to IntPtr cast
 	s = s.RxReplace(@"(?ms)^__inline\s+void\s*\*\s*(U?LongTo(?:Handle|Ptr))\s*\([^{]+\{[^}]+\}", "#define $1(h) (IntPtr)(h)");
 	
+	//expand HRESULT_FROM_WIN32
+	s = s.RxReplace(@"\bHRESULT_FROM_WIN32\((\w+)\)", "(0x80070000|$1)");
+	
 	//remove unused SAL annotations (defined as '^"text"; most removed by our #undef/#define)
 	s = s.RxReplace(@"\^""\w+""", m => {
 		var s = m.Value;
@@ -230,8 +233,10 @@ void _Preprocess(bool is64bit, string outFile) {
 	//somehow one '_VARIANT_BOOL bool;' not removed
 	s = s.RxReplace(@"\b_VARIANT_BOOL bool;", " ");
 	
-	//remove C_ASSERT
+	//remove other converter-unsuported noise
 	s = s.RxReplace(@"\btypedef\s+char\s+__C_ASSERT__\b[^;]*;", " ");
+	s = s.RxReplace(@"\Rnoexcept\R;", ";");
+	s = s.RxReplace(@"\btypedef struct\K const\b", "");
 	
 	//replace 'inline namespace' to 'namespace inline'
 	s = s.RxReplace(@"\binline\s+namespace\b", "namespace inline"); //0 in SDK

@@ -68,7 +68,7 @@ class CiGoTo {
 			
 			if (asm.GetAttributes().FirstOrDefault(o => o.AttributeClass.Name == "AssemblyMetadataAttribute" && "RepositoryUrl" == o.ConstructorArguments[0].Value as string)?.ConstructorArguments[1].Value is string s && s.Length > 0) {
 				if (s.Starts("git:")) s = s.ReplaceAt(0, 3, "https"); //eg .NET
-				if (s.Starts("https://github.com/")) _repo = s[19..];
+				if (s.Starts("https://github.com/")) _repo = s.Ends(".git") ? s[19..^4] : s[19..];
 				Debug_.PrintIf(_repo.NE(), s);
 			}
 			

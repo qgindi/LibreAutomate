@@ -75,6 +75,7 @@ Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 ;All .db except cookbook, Roslyn, both sqlite3.dll, 7za.exe. Makes smaller: 25 MB -> 3.7 MB (5 MB just without .db and Roslyn).
 
 [Dirs]
+Name: "{commonappdata}\LibreAutomate"; Flags: uninsalwaysuninstall; Permissions: authusers-modify
 Name: "{app}\Roslyn\.exeProgram"; Attribs: hidden
 ;why Inno stops here when debugging?
 

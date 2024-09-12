@@ -112,8 +112,6 @@ partial class CiCompletion {
 	//static bool s_workaround1;
 	
 	async void _ShowList(char ch) {
-		//print.clear();
-		
 		//using
 		//var p1 = perf.local();
 		
@@ -471,7 +469,7 @@ partial class CiCompletion {
 					if (ci.SortText != ci.DisplayText) {
 						string ss = ci.SortText, se = sym.ContainingType.Name;
 						if (ss.Length == se.Length + 5 && ss.Starts(se) && ss[se.Length] == '_') //like "EnumName_0001"
-							v.ci = ci = ci.WithSortText(se + "." + sym.Name);
+							v.SetCI(ci = ci.WithSortText(se + "." + sym.Name));
 					}
 					break;
 				case CiItemKind.EnumMember when isDot:
@@ -539,7 +537,7 @@ partial class CiCompletion {
 					} else if (nativeApiClass != null) { //api.x
 						int i = d.items.Count;
 						bool newExpr = syncon.TargetToken.Parent.Parent is ObjectCreationExpressionSyntax or StackAllocArrayCreationExpressionSyntax; //info: syncon.IsObjectCreationTypeContext false
-						d.winapi = CiWinapi.AddWinapi(symL as INamedTypeSymbol, d.items, span, typenameStart, newExpr);
+						d.winapi = CiWinapi.AddWinapi(symL as INamedTypeSymbol, d.items, typenameStart, newExpr);
 						int n = d.items.Count - i;
 						if (n > 0) {
 							snippetsGroup = new List<int>(n);
@@ -758,9 +756,9 @@ partial class CiCompletion {
 			char c0Lower = textLower[0], c0Upper = textUpper[0];
 			foreach (var v in d.items) {
 				if (v.kind == CiItemKind.None) continue; //eg regex completion
-				var s = v.ci.FilterText;
-				//Debug_.PrintIf(v.ci.FilterText != v.Text, $"{v.ci.FilterText}, {v.Text}");
-				//print.it(v.Text, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
+				var s = v.FilterText;
+				//Debug_.PrintIf(v.FilterText != v.Text, $"{v.FilterText}, {v.Text}");
+				//print.it(v.Text, v.FilterText, v.ci.SortText, v.ci.ToString());
 				bool found = false;
 				int iFirst = _FilterFindChar(s, 0, c0Lower, c0Upper), iFirstFirst = iFirst;
 				if (iFirst >= 0) {
@@ -796,7 +794,7 @@ partial class CiCompletion {
 				}
 				
 				if (found) {
-					v.hilite <<= v.ci.DisplayTextPrefix.Lenn();
+					v.hilite <<= v.DisplayTextPrefix.Lenn();
 					
 					//if DisplayText != FilterText, correct or clear hilites. Eg cref.
 					if (s != v.Text) {
@@ -860,11 +858,8 @@ partial class CiCompletion {
 			//	return;
 			//}
 			
-			//perf.first();
-			var visible = visibleListItems.Select(o => o.ci).ToImmutableArray();
-			//perf.next();
+			var visible = visibleListItems.Select(o => o.GetCI()).ToImmutableArray();
 			var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
-			//perf.next();
 			//if (filterText.Length > 0) print.it("-", fi);
 			//print.it(visible.Length, fi.Length);
 			if (!fi.IsDefaultOrEmpty) {
@@ -897,13 +892,12 @@ partial class CiCompletion {
 				foreach (var v in _data.items) {
 					//if (v.ci is var j && j.DisplayText.Starts("DEdit")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
 					//if (j.ci is var j && j.Properties.ContainsKey("Symbols")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
-					if (v.kind is CiItemKind.Enum or CiItemKind.Class or CiItemKind.Structure or CiItemKind.Delegate && v.ci.Properties.ContainsKey("Symbols")) { //TODO3: unreliable
+					if (v.kind is CiItemKind.Enum or CiItemKind.Class or CiItemKind.Structure or CiItemKind.Delegate && v.GetCI().Properties.ContainsKey("Symbols")) { //TODO3: unreliable
 						ci = v;
 						break;
 					}
 				}
 			}
-			//perf.nw('b');
 		}
 		
 		if (_data.noAutoSelect && ci != null) _popupList.SuggestedItem = ci;
@@ -940,8 +934,8 @@ partial class CiCompletion {
 		var symbols = ci.Symbols;
 		if (symbols != null) return CiText.FromSymbols(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
 		if (ci.kind == CiItemKind.Namespace) return null; //extern alias
-		Debug_.PrintIf(!(ci.kind == CiItemKind.None || ci.ci.Flags.Has(CompletionItemFlags.Expanded)), ci.kind); //None if Regex
-		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.ci).Result; //fast if Regex, else not tested
+		Debug_.PrintIf(!(ci.kind == CiItemKind.None || ci.GetCI().Flags.Has(CompletionItemFlags.Expanded)), ci.kind); //None if Regex
+		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.GetCI()).Result; //fast if Regex, else not tested
 		return r == null ? null : CiText.FromTaggedParts(r.TaggedParts);
 	}
 	
@@ -984,15 +978,19 @@ partial class CiCompletion {
 #endif
 		}
 		
-		var ci = item.ci;
-		string s; int startPos, len;
+		string s, displayTextSuffix = null;
+		int startPos, len;
 		bool isComplex = false;
 		bool ourProvider = item.Provider is CiComplProvider.Winapi;
+		
 		if (ourProvider) {
 			s = item.Text;
 			startPos = currentFrom;
 			len = currentTo - startPos;
+			//info: item.ci is null
 		} else {
+			var ci = item.GetCI(); 
+			displayTextSuffix = ci.DisplayTextSuffix;
 			var change = data.completionService.GetChangeAsync(data.document, ci).Result;
 			//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 			
@@ -1085,7 +1083,7 @@ partial class CiCompletion {
 					}
 					break;
 				case CiItemKind.Class or CiItemKind.Structure or CiItemKind.Interface or CiItemKind.Enum or CiItemKind.Delegate:
-					if (ci.DisplayTextSuffix == "<>") ch = '<';
+					if (displayTextSuffix == "<>") ch = '<';
 					else if (_NeedParentheses()) ch = '(';
 					break;
 				}

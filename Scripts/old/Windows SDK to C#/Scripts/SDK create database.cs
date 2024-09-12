@@ -1,6 +1,7 @@
 /*/ testInternal Au,Au.Editor; r Au.Editor.dll; /*/
 
-string dbFile = folders.ThisAppBS + @"winapi.db";
+//string dbFile = folders.ThisAppBS + @"winapi.db";
+string dbFile = @"C:\code\au\Other\Api\winapi.db";
 filesystem.delete(dbFile);
 
 string s = File.ReadAllText(@"C:\code\au\Other\Api\Api.cs");

@@ -1,6 +1,8 @@
 ## Version 1.5.0 (2024-)
 
 ### Editor
+New much bigger Windows API database.
+
 Changes in `/*/ meta comments /*/`:
 - Options can be separated by newlines without semicolon.
 - Options can be commented out like `//option value;`.

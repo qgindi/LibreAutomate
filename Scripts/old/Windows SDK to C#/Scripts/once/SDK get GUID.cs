@@ -1,9 +1,11 @@
 /// Gets GUID names/data from .lib files.
 /// Saves in "C:\code\au\Other\Api\GuidMap.txt".
 
+/*/ c ..\SdkUtil.cs; /*/
+
 print.clear();
 
-string libDir = @"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64";
+string libDir = @"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64";
 (string, string)[] libs = {
 	(libDir, "*.lib"),
 };
@@ -18,7 +20,7 @@ filesystem.saveText(@"C:\code\au\Other\Api\GuidMap.txt", r);
 //
 //flags: 1 include subfolders
 string _CreateGuidMap(int flags) {
-	string dumpbin = folders.ProgramFiles + @"Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\bin\Hostx64\x64\dumpbin.exe";
+	string dumpbin = SdkUtil.GetVisualStudioToolsFolderPath(true) + @"\dumpbin.exe";
 	
 	var files = new List<FEFile>();
 	foreach (var (dir, fn) in libs) {

@@ -155,24 +155,10 @@ class CiPopupList {
 	}
 	
 	void _SortAndSetControlItems() {
-		if (_winApi) { //TODO
-			_av.Sort((c1, c2) => {
-				int diff = c1.moveDown - c2.moveDown;
-				if (diff != 0) return diff;
-				
-				if (_groupsEnabled) {
-					diff = c1.group - c2.group;
-					if (diff != 0) return diff;
-					
-					if (_groups[c1.group].NE()) {
-						CiItemKind k1 = c1.kind, k2 = c2.kind;
-						diff = k1 - k2;
-						if (diff != 0) return diff;
-					}
-				}
-				
-				return string.Compare(c1.ci.SortText, c2.ci.SortText, StringComparison.OrdinalIgnoreCase);
-			});
+		if (_winApi) {
+			if (!_groupsEnabled) { //the database table is already grouped/sorted
+				_av.Sort((c1, c2) => string.Compare(c1.Text, c2.Text, StringComparison.OrdinalIgnoreCase));
+			}
 		} else {
 			_av.Sort((c1, c2) => {
 				int diff = c1.moveDown - c2.moveDown;
@@ -194,14 +180,13 @@ class CiPopupList {
 					}
 				}
 				
-				int r = CiUtil.SortComparer.Compare(c1.ci.SortText, c2.ci.SortText);
+				int r = CiUtil.SortComparer.Compare(c1.GetCI().SortText, c2.GetCI().SortText);
 				if (r == 0) {
 					r = CiSnippets.Compare(c1, c2); //custom snippet first
 				}
 				return r;
 			});
 		}
-		perf.next('s');
 		
 		CiComplItem prev = null;
 		foreach (var v in _av) {
@@ -209,20 +194,15 @@ class CiPopupList {
 			v.SetDisplayText(group);
 			prev = v;
 		}
-		perf.next();
 		
 		_tv.SetItems(_av);
-		perf.next('i');
 	}
 	
 	public void UpdateVisibleItems() {
-		perf.first();
 		int n1 = 0; foreach (var v in _a) if (v.hidden == 0) n1++;
 		_av = new(n1);
 		foreach (var v in _a) if (v.hidden == 0) _av.Add(v);
-		perf.next();
 		_SortAndSetControlItems();
-		perf.next();
 		
 		//Occasionally app used to crash without an error UI when typing a word and should show completions.
 		//	Windows event log shows exception with call stack, which shows that _av.Select called with _av=null.
@@ -233,7 +213,6 @@ class CiPopupList {
 		if (_av == null) return;
 		
 		_compl.SelectBestMatch(_av, _groupsEnabled); //pass items sorted like in the visible list
-		perf.next();
 		
 		//Still _av and _a null sometimes (see above comments). It means, Roslyn code called by SelectBestMatch pumps messages.
 		//	It started when started using the Windows "Text cursor indicator" feature. It aggressively sends many WM_GETOBJECT.
@@ -242,8 +221,6 @@ class CiPopupList {
 		int kinds = 0;
 		foreach (var v in _a) if ((v.hidden & ~CiComplItemHiddenBy.Kind) == 0) kinds |= 1 << (int)v.kind;
 		for (int i = 0; i < _kindButtons.Length; i++) _kindButtons[i].Visibility = 0 != (kinds & (1 << i)) ? Visibility.Visible : Visibility.Collapsed;
-		//perf.nw();
-		//print.it(_a.Count, _av.Count);
 	}
 	
 	public void Show(SciCode doc, int position, List<CiComplItem> a, List<string> groups, bool winApi) {
@@ -262,7 +239,6 @@ class CiPopupList {
 		_groupButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		_unimportedButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		UpdateVisibleItems();
-		//perf.next();
 		
 		var r = _doc.EGetCaretRectFromPos(position, inScreen: true);
 		r.left -= Dpi.Scale(50, _doc);
@@ -281,6 +257,8 @@ class CiPopupList {
 		_av = null;
 		_groups = null;
 		_suggestedItem = null;
+		
+		if (_winApi) Task.Run(() => GC.Collect());
 	}
 	
 	public CiComplItem SelectedItem {

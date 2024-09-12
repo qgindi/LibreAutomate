@@ -17,53 +17,38 @@ class CiComplItem : ITreeViewItem {
 	string _dtext;
 	object _symbols; //ISymbol or List<ISymbol> or IReadonlyList<ISymbol> or null
 	
-	public CompletionItem ci {
-		get => _ci;
-		set {
-			_ci = value;
-			_ci.Attach = this;
+	public CompletionItem GetCI([CallerMemberName] string m_ = null) {
+		if (_ci == null) { //initially null if winapi provider
+			SetCI(CompletionItem.Create(_dtext));
+			Debug_.PrintIf(m_ != "SelectBestMatch", "CompletionItem auto-created for a winapi provider item");
 		}
+		return _ci;
+	}
+	
+	public void SetCI(CompletionItem c) {
+		_ci = c;
+		_ci.Attach = this;
 	}
 	
 	public CiComplItem(CiComplProvider provider, CompletionItem ci) {
 		_provider = provider;
 		_symbols = ci.Symbols;
-		this.ci = ci;
+		SetCI(ci);
 		CiUtil.TagsToKindAndAccess(ci.Tags, out kind, out access);
 		//ci.DebugPrint();
 	}
 	
-	//not used
-	//public CiComplItem(CiComplProvider provider, TextSpan span, ISymbol sym, CiItemKind kind, string name = null) {
-	//	_provider = provider;
-	//	_symbols = sym;
-	//	this.kind = kind;
-	//	bool gen = sym switch { INamedTypeSymbol nt => nt.IsGenericType, IMethodSymbol ms => ms.IsGenericMethod, _ => false };
-	//	ci = CompletionItem.Create(name ?? sym.JustName(), displayTextSuffix: gen ? "<>" : null);
-	//}
-	
-	public CiComplItem(CiComplProvider provider, TextSpan span, string name, CiItemKind kind, CiItemAccess access = default) {
+	public CiComplItem(CiComplProvider provider, string name, CiItemKind kind, CiItemAccess access = default) {
 		_provider = provider;
 		this.kind = kind;
 		this.access = access;
-		ci = CompletionItem.Create(name);
-		_ci.Span = span;
+		if (provider == CiComplProvider.Winapi) {
+			_dtext = name;
+		} else {
+			SetCI(CompletionItem.Create(name));
+			//_ci.Span = span; //FUTURE: may need this for our new providers. Current providers (Winapi, Snippets) don't use this.
+		}
 	}
-	
-	//not used
-	//internal void AddOverload(ISymbol sym) {
-	//	switch (_symbols) {
-	//	case ISymbol s:
-	//		_symbols = new List<ISymbol> { s, sym };
-	//		break;
-	//	case List<ISymbol> a:
-	//		a.Add(sym);
-	//		break;
-	//	default:
-	//		Debug.Assert(false);
-	//		break;
-	//	}
-	//}
 	
 	public IEnumerable<ISymbol> Symbols {
 		get {
@@ -78,8 +63,11 @@ class CiComplItem : ITreeViewItem {
 	/// Gets displayed text without prefix, suffix (eg generic) and green comments (group or inline description).
 	/// In most cases it is simple name, but in some cases can be eg "Namespace.Name", "Name(parameters)", etc.
 	/// </summary>
-	/// <value><c>ci.DisplayText</c></value>
-	public string Text => _ci.DisplayText;
+	public string Text => _ci?.DisplayText ?? _dtext;
+	
+	public string FilterText => _ci?.FilterText ?? _dtext;
+	
+	public string DisplayTextPrefix => _ci?.DisplayTextPrefix;
 	
 	public CiComplProvider Provider => _provider;
 	
@@ -91,11 +79,12 @@ class CiComplItem : ITreeViewItem {
 	#endregion
 	
 	public void SetDisplayText(string comment) {
+		if (_ci == null) return;
 		var desc = _ci.InlineDescription; if (desc.NE()) desc = comment;
 		bool isComment = !desc.NE();
 		if (_dtext != null && !isComment && commentOffset == 0) return;
-		_dtext = this.Text + _ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
-		if (_ci.DisplayTextPrefix is string dt && dt.Length > 0) {
+		_dtext = _ci.DisplayText + _ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
+		if (_ci.DisplayTextPrefix is var dt && dt.Length > 0) {
 			_dtext = dt + _dtext;
 			Debug_.PrintIf(dt != "(", $"{_dtext}, {dt}"); //seen only of casts, eg "(" + "int" + ")"
 		}

@@ -4,9 +4,11 @@
 /// FuncZ dllX.dll|#ordinal
 /// FuncY dllX.dll|FuncNameInDll
 
+/*/ c ..\SdkUtil.cs; /*/
+
 print.clear();
 
-string libDir = @"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64";
+string libDir = @"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64";
 string sysDir = (string)folders.System + "\\";
 object[] libs = {
 	(libDir, "*.lib"),
@@ -28,7 +30,7 @@ filesystem.saveText(@"C:\code\au\Other\Api\DllMap.txt", r);
 //
 //flags: 1 include subfolders, 2 include system dlls for libs, 4 use cached dumpbin results if exists
 string _CreateDllMap(int flags) {
-	string dumpbin = folders.ProgramFiles + @"Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\bin\Hostx64\x64\dumpbin.exe";
+	string dumpbin = SdkUtil.GetVisualStudioToolsFolderPath(true) + @"\dumpbin.exe";
 	string sLib = null, sDll = null;
 	
 	//cache dumpbin results when developing post-dumpbin code

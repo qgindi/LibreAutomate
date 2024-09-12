@@ -57,6 +57,8 @@ static class EdDatabases {
 		//}
 		return new sqlite(path, SLFlags.SQLITE_OPEN_READONLY);
 	}
+	
+	public static string WinapiFile => folders.ThisAppBS + "winapi.db";
 }
 
 /// <summary>

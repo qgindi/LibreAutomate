@@ -53,7 +53,8 @@ unsafe partial class Converter {
 			}
 		}
 		
-		string callConv = iCallConv == 0 ? "Cdecl" : _ConvertCallConv(iCallConv);
+		//string callConv = iCallConv == 0 ? "Cdecl" : _ConvertCallConv(iCallConv); //no. Now many __stdcall functions are declared without __stdcall (WINAPI etc). I could't find where it is documented, but it means now __stdcall is default.
+		string callConv = iCallConv == 0 ? null : _ConvertCallConv(iCallConv);
 		string returnType, returnAttr = null; bool isHRESULT = false;
 		if (ptr == 0 && _TokIs(d.outTypenameToken, "HRESULT")) {
 			isHRESULT = true;
@@ -131,7 +132,7 @@ unsafe partial class Converter {
 	List<string> _funcUnknownDll = new List<string>();
 	
 	void _FunctionsFinally() {
-		if (_funcUnknownDll.Count > 50) {
+		if (_funcUnknownDll.Count > 100) {
 			print.it("Warning: too many unknown dll:");
 			print.it(_funcUnknownDll);
 		}
