@@ -319,6 +319,8 @@ static class Menus {
 			[Command(image = "*BoxIcons.RegularCommentMinus" + brown)]
 			public static void Uncomment_selection() { ModifyCode.Comment(false); }
 			
+			//TODO: Toggle multiline (parameters, collections, etc). Hotkey Ctrl+L.
+			
 			[Command("...", image = "*RemixIcon.BracesLine" + brown, separator = true)]
 			public static void Surround() { CiSnippets.Surround(); }
 			
@@ -475,8 +477,13 @@ static class Menus {
 		[Command]
 		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 		
-		[Command(separator = true)]
+		[Command("...", separator = true)]
 		public static void Script_triggers() { DCommandline.ShowSingle(); }
+		
+		//TODO: separate command for scheduler. Maybe own UI.
+		
+		[Command(separator = true, tooltip = "Finds triggers of current script.\nFinds its name in '@Triggers and toolbars' files in trigger actions, toolbar button actions and other code.\nAlso finds scheduled tasks, workspace startup scripts and class file test scripts.")]
+		public static void Find_triggers() { TriggersAndToolbars.AllTriggersMenu(App.Model.CurrentFile); }
 	}
 	
 	[Command(target = "Edit")]
@@ -601,7 +608,7 @@ Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<
 		}
 	}
 	
-#if DEBUG
+#if DEBUG || IDE_LA
 	//[Command(target = "", keys = "F11")] //no, dangerous, eg can accidentally press instead of F12
 	[Command]
 	public static void TEST() { Test.FromMenubar(); }

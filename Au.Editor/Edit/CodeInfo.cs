@@ -553,9 +553,7 @@ static class CodeInfo {
 		return true;
 	}
 	
-	public static Workspace CurrentWorkspace { get; private set; }
-	
-	//public static MetaComments Meta => _meta;
+	public static CiWorkspace CurrentWorkspace { get; private set; }
 	
 	static void _CreateWorkspace(SciCode sci) {
 		//TODO3: use same workspace if project/solution not changed.
@@ -563,62 +561,12 @@ static class CodeInfo {
 		//	Now eg slow GetSemanticModelAsync when [re]opening a file in a large project/solution.
 		
 		_diag.ClearMetaErrors();
-		TestInternal.CiClear();
-		CurrentWorkspace = new AdhocWorkspace();
 		
-		Dictionary<FileNode, ProjectReference> dPR = null;
-		
-		_solution = CurrentWorkspace.CurrentSolution;
-		_projectId = _AddProject(sci.EFile, true, isWpfPreview: sci.EIsWpfPreview);
-		
-		ProjectId _AddProject(FileNode f, bool isMain, bool isWpfPreview = false) {
-			var fCurrentDoc = f;
-			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
-			
-			var m = new MetaComments(MCFlags.ForCodeInfoInEditor | (isWpfPreview ? MCFlags.WpfPreview : 0));
-			m.Parse(f, projFolder);
-			//if (isMain) _meta = m;
-			
-			if (m.TestInternal is string[] testInternal) TestInternal.CiAdd(m.Name, testInternal);
-			
-			var projectId = ProjectId.CreateNewId();
-			CiProjects.AttachFileOf(projectId, f);
-			var adi = new List<DocumentInfo>();
-			foreach (var f1 in m.CodeFiles) {
-				var docId = DocumentId.CreateNewId(projectId);
-				CiProjects.AttachFileOf(docId, f1.f);
-				var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
-				adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
-				if (f1.f == fCurrentDoc && isMain) {
-					_documentId = docId;
-				}
-			}
-			//TODO3: reuse document+syntaxtree of global.cs and its meta c files if their text not changed.
-			
-			List<ProjectReference> aPR = null;
-			if (m.ProjectReferences is { } a1) {
-				dPR ??= new();
-				foreach (var v in a1) {
-					if (!dPR.TryGetValue(v.f, out var pr)) {
-						pr = new ProjectReference(_AddProject(v.f, false));
-						dPR.Add(v.f, pr);
-					}
-					(aPR ??= new()).Add(pr);
-				}
-			}
-			
-			var pi = ProjectInfo.Create(projectId, VersionStamp.Default, m.Name, m.Name, LanguageNames.CSharp, null, null,
-				m.CreateCompilationOptions(),
-				m.CreateParseOptions(),
-				adi,
-				aPR,
-				m.References.Refs);
-			
-			_solution = _solution.AddProject(pi);
-			//info: does not add to CurrentWorkspace.CurrentSolution. Now _solution != CurrentWorkspace.CurrentSolution. Even after Workspace.ApplyChanges.
-			
-			return projectId;
-		}
+		var fn = sci.EFile;
+		var ws = CurrentWorkspace = new(fn, sci.EIsWpfPreview ? CiWorkspace.Caller.CodeInfoWpfPreview : CiWorkspace.Caller.CodeInfoNormal);
+		_solution = ws.Solution;
+		_projectId = ws.Projects[0].projectId;
+		_documentId = ws.GetDocId(fn);
 	}
 	
 	private static void _Timer025sWhenVisible() {

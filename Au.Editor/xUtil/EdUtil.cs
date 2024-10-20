@@ -39,6 +39,23 @@ static class EdResources {
 	public static string FolderArrow(bool open) => open ? @"resources/images/expanddown_16x.xaml" : @"resources/images/expandright_16x.xaml";
 }
 
+static class EdWpf {
+	public static TextBlock TextAndHelp(string text, string helpTopic) {
+		helpTopic = HelpUtil.AuHelpUrl(helpTopic);
+		var img = ImageUtil.LoadWpfImageElement("*Entypo.HelpWithCircle #008EEE @14");
+		var s1 = text.NE() ? "" : "  ";
+		return wpfBuilder.formattedText($"{text}{s1}<a href=\"{helpTopic}\">{img}</a>");
+	}
+	
+	public static TextBlock TextAndHelp<T>(string text) => TextAndHelp(text, typeof(T).ToString());
+	
+	public static TextBlock TextAndHelp(string text, Func<string> helpTopic) {
+		var img = ImageUtil.LoadWpfImageElement("*Entypo.HelpWithCircle #008EEE @14");
+		var s1 = text.NE() ? "" : "  ";
+		return wpfBuilder.formattedText($"{text}{s1}<a {() => { run.itSafe(HelpUtil.AuHelpUrl(helpTopic())); }}>{img}</a>");
+	}
+}
+
 /// <summary>
 /// Opens databases ref.db, doc.db (created by project DatabasesEtc) or winapi.db (created by script "SDK create database").
 /// </summary>

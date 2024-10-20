@@ -16,7 +16,7 @@
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<IsPublishable>True</IsPublishable>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
-		<NoWarn>1701;1702;8002;419,CS8981</NoWarn>
+		<NoWarn>1701;1702;8002;419;8981</NoWarn>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 		<NoWin32Manifest>true</NoWin32Manifest>
 	</PropertyGroup>

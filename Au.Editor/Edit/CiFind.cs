@@ -551,7 +551,7 @@ static class CiFind {
 			
 			var b = new wpfBuilder("Rename symbol").Width(300..);
 			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
-			b.R.Add(out TextBox newName, _oldName).Font("Consolas").Focus()
+			b.R.Add(out KTextBox newName, _oldName).Font("Consolas").Focus()
 				.Validation(_ => SyntaxFacts.IsValidIdentifier(newName.Text.TrimStart('@')) ? null : "Invalid name");
 			newName.SelectAll();
 			b.R.Add(out KCheckBox cOverloads, "Include overloads").Hidden(!hasOverloads).Checked(0 != (App.Settings.ci_rename & 1));

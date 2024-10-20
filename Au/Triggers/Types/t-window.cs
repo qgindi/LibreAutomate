@@ -73,13 +73,13 @@ public enum TWEvent {
 }
 
 /// <summary>
-/// Window events for the <i>later</i> parameter of window triggers.
+/// Window events for the <i>later</i> parameter of window triggers. See <see cref="WindowTriggers.this"/>.
 /// </summary>
 [Flags]
 public enum TWLater : ushort {
 	/// <summary>
 	/// Name changed.
-	/// This event occurs only when the window is active. If name changed while inactive - when activated.
+	/// This event occurs only when the window is active. If name changed while inactive - when afterwards activated.
 	/// </summary>
 	Name = 1,
 
@@ -100,26 +100,25 @@ public enum TWLater : ushort {
 	Inactive = 8,
 
 	/// <summary>
-	/// Became visible.
+	/// Became visible (<see cref="wnd.IsVisible"/> true).
 	/// The window can be new or was temporarily hidden.
-	/// This event occurs when changed the <see cref="wnd.IsVisible"/> property, and not when changed the <see cref="wnd.IsCloaked"/> property, therefore the window is not actually visible if cloaked.
+	/// The window is not actually visible if cloaked, minimized, etc.
 	/// </summary>
 	Visible = 16,
 
 	/// <summary>
-	/// Became invisible.
+	/// Became invisible (<see cref="wnd.IsVisible"/> false).
 	/// This event also occurs when closing the window, if it was visible; then the window possibly is already destroyed, and the handle is invalid.
-	/// This event occurs when changed the <see cref="wnd.IsVisible"/> property, and not when changed the <see cref="wnd.IsCloaked"/> property.
 	/// </summary>
 	Invisible = 32,
 
 	/// <summary>
-	/// The window has been cloaked. See <see cref="wnd.IsCloaked"/>.
+	/// The window has been cloaked (<see cref="wnd.IsCloaked"/> true).
 	/// </summary>
 	Cloaked = 64,
 
 	/// <summary>
-	/// The window has been uncloaked. See <see cref="wnd.IsCloaked"/>.
+	/// The window has been uncloaked (<see cref="wnd.IsCloaked"/> false).
 	/// </summary>
 	Uncloaked = 128,
 

@@ -28,7 +28,7 @@ class CiTools {
 		_ShowWindow(_regexWindow, doc, pos16, dontCover);
 		
 		if (!replace && si.isClassic) {
-			doc.aaaInsertText(true, si.stringNode.SpanStart, "@");
+			doc.aaaInsertText(true, si.stringNode.SpanStart, "@"); //never mind: user may want `new regexp("""""")`
 			spanStart++; spanEnd++;
 		}
 		

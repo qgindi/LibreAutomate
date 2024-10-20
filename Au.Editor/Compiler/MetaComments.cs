@@ -184,11 +184,11 @@ class MetaComments {
 	
 	/// <summary>
 	/// Meta option 'warningLevel'.
-	/// Default: <see cref="DefaultWarningLevel"/> (default 6).
+	/// Default: <see cref="DefaultWarningLevel"/>.
 	/// </summary>
 	public int WarningLevel { get; private set; }
 	
-	public const int DefaultWarningLevel = 6; //wave 7 adds 1 warning ("The type name only contains lower-cased ascii characters"), not useful
+	public const int DefaultWarningLevel = 8; //wave 7 adds 1 warning ("The type name only contains lower-cased ascii characters"), not useful
 	
 	/// <summary>
 	/// Meta option 'noWarnings'.
@@ -197,10 +197,9 @@ class MetaComments {
 	public List<string> NoWarnings { get; private set; }
 	
 	/// <summary>
-	/// Gets or sets default meta option 'noWarnings' value. Initially CS1701,CS1702.
+	/// Gets or sets default meta option 'noWarnings' value. Initially CS1701,CS1702 (from default VS project properties) and CS8981 (lowercase typename).
 	/// </summary>
-	public static string[] DefaultNoWarnings { get; set; } = ["CS1701", "CS1702"];
-	//CS1701,CS1702: from default VS project properties.
+	public static string[] DefaultNoWarnings { get; set; } = ["CS1701", "CS1702", "CS8981"];
 	
 	/// <summary>
 	/// Meta 'testInternal'.

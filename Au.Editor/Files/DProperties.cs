@@ -113,7 +113,7 @@ class DProperties : KDialogWindow {
 		b.AddButton(out addFile, "Other file ▾", _ButtonClick_addFile);
 		b.End();
 		
-		b.Add<AdornerDecorator>().Add(out findInLists, flags: WBAdd.ChildOfLast).Watermark("Find in lists")
+		b.Add<AdornerDecorator>().Add(out findInLists, WBAdd.ChildOfLast).Watermark("Find in lists")
 			.Tooltip("In button drop-down lists show only items containing this text.\n\nTip: to hide garbage files, put them in folder(s) named \"Garbage\".");
 		
 		b.End();
@@ -171,7 +171,7 @@ class DProperties : KDialogWindow {
 		//Compile
 		if (_meta.optimize == "true") optimize.IsChecked = true;
 		define.Text = _meta.define;
-		_InitCombo(warningLevel, "7|6|5|4|3|2|1|0", _meta.warningLevel, 1);
+		_InitCombo(warningLevel, "8|7|6|5|4|3|2|1|0", _meta.warningLevel, 0);
 		noWarnings.Text = _meta.noWarnings;
 		_InitCombo(nullable, "disable|enable|warnings|annotations", _meta.nullable);
 		testInternal.Text = _meta.testInternal;
@@ -237,7 +237,7 @@ class DProperties : KDialogWindow {
 		
 		_meta.optimize = _Get(optimize);
 		_meta.define = _Get(define);
-		_meta.warningLevel = _Get(warningLevel, defaultIndex: 1);
+		_meta.warningLevel = _Get(warningLevel, defaultIndex: 0);
 		_meta.noWarnings = _Get(noWarnings);
 		_meta.nullable = _Get(nullable, defaultIndex: 0);
 		_meta.testInternal = _Get(testInternal);
@@ -699,8 +699,8 @@ If no optimize true, DEBUG and TRACE are added implicitly.
 These symbols also are visible in class files compiled together, eg as part of project.
 See also <google C# #define>#define<>.
 """);
-		info.AaAddElem(warningLevel, """
-<b>warningLevel</b> - <google C# Compiler Options, WarningLevel>warning level<>. Default 6.
+		info.AaAddElem(warningLevel, $"""
+<b>warningLevel</b> - <google C# Compiler Options, WarningLevel>warning level<>. Default: {MetaComments.DefaultWarningLevel}.
 0 - no warnings.
 1 - only severe warnings.
 2 - level 1 plus some less-severe warnings.
@@ -710,9 +710,10 @@ See also <google C# #define>#define<>.
 
 This option is also applied to class files compiled together, eg as part of project.
 """);
-		info.AaAddElem(noWarnings, """
+		info.AaAddElem(noWarnings, $"""
 <b>noWarnings</b> - don't show these warnings.
 Example: 151,3001,120
+Always added: {string.Join(',', MetaComments.DefaultNoWarnings)}.
 
 This option is also applied to class files compiled together, eg as part of project.
 See also <google C# #pragma warning>#pragma warning<>.

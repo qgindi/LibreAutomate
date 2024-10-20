@@ -25,7 +25,7 @@ class PanelFound {
 		var bCloseOF = tb.AddButton("*Codicons.CloseAll" + Menus.black, _ => _sci?.CloseOpenedFiles(), "Close opened files", enabled: false);
 		
 		b.Add<Border>().Border(thickness2: new(1, 0, 0, 0)).SpanRows(2);
-		b.Add(out _grid, flags: WBAdd.ChildOfLast);
+		b.Add(out _grid, WBAdd.ChildOfLast);
 		
 		b.Row(-1).Add(out _lb).Span(1).Border(thickness2: new(0, 1, 0, 0)).UiaName("Found_pages");
 		_lb.SelectionChanged += (_, _) => {

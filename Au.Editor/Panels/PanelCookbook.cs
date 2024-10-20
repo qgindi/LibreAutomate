@@ -10,8 +10,10 @@ using Au.Controls;
 //CONSIDER: option to show Recipe panel when Cookbook panel is really visible and hide when isn't.
 
 //TODO3: add some synonyms:
-//	string/text, folder/directory, program/app/application, run/open, email/mail, regular expression/regex
+//	string/text, folder/directory, program/app/application, run/open, internet/web, email/mail, regular expression/regex
 //	See _DebugGetWords.
+
+//CONSIDER: auto-search in text too, and somehow separate results. Now some users don't know how to search in text; or it's inconvenient.
 
 class PanelCookbook {
 	KTreeView _tv;
@@ -33,7 +35,7 @@ class PanelCookbook {
 		P.UiaSetName("Cookbook panel");
 		
 		var b = new wpfBuilder(P).Columns(-1, 0, 0).Brush(SystemColors.ControlBrush);
-		b.R.Add(out _search).Tooltip("Part of recipe name.\nMiddle-click to clear.").UiaName("Find recipe");
+		b.R.Add(out _search).Tooltip("Part of recipe name.\nTo search in recipe text, click the button next to this field.\nMiddle-click to clear.").UiaName("Find recipe");
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += (_, _) => _Search(false);
 		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };

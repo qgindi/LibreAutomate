@@ -1,3 +1,6 @@
+//TODO: in some apps in some cases pastes old clipboard text.
+//	Try: restore clipboard async, in new foreground thread.
+
 namespace Au;
 
 /// <summary>

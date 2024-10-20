@@ -20,7 +20,7 @@ using Au.Controls;
 using System.Windows.Input;
 
 class CiFindGo : KDialogWindow {
-	TextBox _tQuery;
+	KTextBox _tQuery;
 	KCheckBox _cFuzzy, _cKeepOpen;
 	KTreeView _tv;
 	CancellationTokenSource _cancelTS;

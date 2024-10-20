@@ -605,7 +605,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 
 /// <summary>
 /// Arguments for actions of autotext triggers.
-/// Use function <see cref="Replace"/> to replace user-typed text.
+/// You can use functions <see cref="Replace"/> and <see cref="Menu"/> to replace user-typed text.
 /// </summary>
 public class AutotextTriggerArgs : TriggerArgs {
 	///
@@ -653,15 +653,16 @@ public class AutotextTriggerArgs : TriggerArgs {
 	/// <summary>
 	/// Replaces the user-typed text with the specified text or/and HTML.
 	/// </summary>
-	/// <param name="text">The replacement text. Can be <c>null</c>.</param>
+	/// <param name="text">
+	/// The replacement text. Can be <c>null</c>.
+	/// Can contain <c>[[|]]</c> to move the text cursor (caret) there with the <c>Left</c> key; not if <i>html</i> specified.
+	/// </param>
 	/// <param name="html">
 	/// The replacement HTML. Can be full HTML or fragment. See <see cref="clipboardData.AddHtml"/>.
 	/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
 	/// </param>
 	/// <remarks>
 	/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>.
-	/// 
-	/// If the replacement text contains substring <c>"[[|]]"</c>, removes it and moves the text cursor (caret) there with the <c>Left</c> key. See example. Not if <i>html</i> specified.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -985,7 +986,7 @@ public class TAMenuItem {
 	/// Sets menu item label and replacement text.
 	/// </summary>
 	/// <param name="label">Menu item label. If <c>null</c>, uses <b>Text</b>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
-	/// <param name="text">The replacement text. Can be <c>null</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
+	/// <param name="text">The replacement text. Can be <c>null</c>. Can contain caret placeholder <c>[[|]]</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="html">The replacement HTML. Can be <c>null</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	public TAMenuItem(string label, string text, string html = null, [CallerLineNumber] int l_ = 0) {

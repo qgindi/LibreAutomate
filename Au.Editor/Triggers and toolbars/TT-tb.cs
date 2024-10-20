@@ -31,19 +31,19 @@ partial class TriggersAndToolbars {
 	INamedTypeSymbol _programSym;
 	Dictionary<FileNode, SyntaxTree> _fnToSt;
 	Dictionary<SyntaxTree, FileNode> _fnFromSt;
-
+	
 	TriggersAndToolbars() {
 		_Update();
 	}
-
+	
 	void _NewToolbar() {
 		var w = new KDialogWindow { Title = "New toolbar" };
-		var b = new wpfBuilder(w).WinSize(450).Columns(50, -1);
+		var b = new wpfBuilder(w).WinSize(500).Columns(50, -1);
 		b.WinProperties(resizeMode: ResizeMode.NoResize, showInTaskbar: false);
-
+		
 		b.R.Add("Name", out TextBox tName, "Toolbar_").Focus()
 			.Validation(_ => tName.Text is "" or "Toolbar_" ? "No name" : !SyntaxFacts.IsValidIdentifier(tName.Text) ? "Invalid function name" : null);
-
+		
 		b.R.Add("In file", out ComboBox cbFile);
 		cbFile.ShouldPreserveUserEnteredPrefix = true;
 		cbFile.Items.Add("<new file>");
@@ -51,7 +51,7 @@ partial class TriggersAndToolbars {
 			cbFile.Items.Add(_fnFromSt[st]);
 		}
 		cbFile.SelectedIndex = 0;
-
+		
 		b.R.Add("Code", out ComboBox cbTrigger).Items("Window trigger, attach to window|Window trigger, attach, auto-hide at screen edge|Show at startup, auto-hide at screen edge|Mouse trigger, auto-hide at screen edge|No trigger");
 		b.R.Skip().Add(out KCheckBox cLaterName, "Show/hide whenever window name changes");
 		b.R.StartGrid().Columns(50, -1, 20, 0, -1).Hidden(null)
@@ -60,21 +60,24 @@ partial class TriggersAndToolbars {
 		var cbScreen = _ScreenComboBoxInit(b);
 		b.End();
 		var pScreen = b.Last;
+		var windowTriggerPage = _AddWindowPage(b);
+		
 		cbTrigger.SelectionChanged += (_, _) => {
 			int si = cbTrigger.SelectedIndex;
-			cLaterName.Visibility = si is 0 or 1 ? Visibility.Visible : Visibility.Collapsed;
 			pScreen.Visibility = si is 1 or 2 or 3 ? Visibility.Visible : Visibility.Collapsed;
+			cLaterName.Visibility = si is 0 or 1 ? Visibility.Visible : Visibility.Collapsed;
+			windowTriggerPage.Visibility = si is 0 or 1 ? Visibility.Visible : Visibility.Collapsed;
 		};
-
+		
 		b.R.AddOkCancel();
 		b.End();
-
+		
 		b.Loaded += () => { tName.CaretIndex = tName.Text.Length; };
-
-		if (!b.ShowDialog(App.Wmain)) return;
-
+		
+		if (!w.ShowAndWait(App.Wmain)) return;
+		
 		string sName = _GetUniqueNameInProgram(tName.Text);
-
+		
 		int iTrigger = cbTrigger.SelectedIndex;
 		string sAutoHide = null;
 		if (iTrigger is 0 or 4) { //window, none
@@ -111,16 +114,16 @@ partial class TriggersAndToolbars {
 		
 """;
 		}
-
+		
 		var sArg = iTrigger switch {
 			0 or 1 => "WindowTriggerArgs ta",
 			3 => "MouseTriggerArgs ta",
 			_ => "TriggerArgs ta = null"
 		};
-
+		
 		bool laterName = iTrigger is 0 or 1 && cLaterName.IsChecked;
 		string sRetType = laterName ? "toolbar" : "void", sRetCode = laterName ? "\r\n\t\t\r\n\t\treturn t;" : null;
-
+		
 		var text = $$"""
 
 	{{sRetType}} {{sName}}({{sArg}}) {
@@ -155,7 +158,7 @@ partial class TriggersAndToolbars {
 	}
 
 """;
-
+		
 		if (cbFile.SelectedItem is not FileNode f) { //new file
 			text = $$"""
 using Au.Triggers;
@@ -175,15 +178,15 @@ partial class Program {
 			var programNode = _ProgramClassNodeFromST(_fnToSt[f]); if (programNode == null) return;
 			_OpenSourceFile(f).aaaInsertText(true, programNode.CloseBraceToken.SpanStart, text);
 		}
-
+		
 		_Update();
 		var t = _toolbars[Array.FindIndex(_toolbars, o => o.Name == sName)];
-
+		
 		//trigger
 		if (iTrigger != 4) {
 			wait.doEvents(30); //workaround for bad scrolling (mouse/screen) etc
 			if (iTrigger is 0 or 1) { //window
-				_AddTriggerWindow(t);
+				_AddTriggerWindow(t, windowTriggerPage);
 			} else if (iTrigger == 2) { //startup
 				_AddTriggerStartup(t);
 			} else { //mouse
@@ -192,13 +195,13 @@ partial class Program {
 			_Update();
 			if (!_StillExists(ref t)) return;
 		}
-
+		
 		//go to the toolbar function
 		int i = t.location.SourceSpan.Start;
 		timer.after(iTrigger != 4 ? 500 : 10, _ => { //workaround for bad scrolling. Also briefly shows the trigger.
 			_OpenSourceFile(f)?.aaaGoToPos(true, i);
 		});
-
+		
 		//maybe a settings file exists with this name, probably orphaned
 		var jsFolder = folders.Workspace + ".toolbars";
 		var jsPath = jsFolder + "\\" + sName + ".json";
@@ -209,28 +212,37 @@ partial class Program {
 				print.it($"<>Note: A toolbar settings file with this name ({sName}) has been found, and moved to the Recycle Bin to avoid confusion.\r\n\tInfo: Each toolbar has a settings file with the same name, saved <link {jsFolder}>here<>. The program does not delete settings files of deleted or renamed toolbars. You can delete unused files. Deleting a used file resets the position, size and context menu settings of that toolbar.");
 		}
 	}
-
-	void _SetToolbarTrigger(_Toolbar t, _Trigger tr) {
-		var w = new KDialogWindow { Title = "New trigger for " + t.Name };
-		var b = new wpfBuilder(w).WinSize(450);
-		b.WinProperties(resizeMode: ResizeMode.NoResize, showInTaskbar: false);
-
+	
+	static DPwnd _AddWindowPage(wpfBuilder b) {
+		DPwnd p = new("Window");
+		b.R.Add(p).Margin("LR")
+			.Validation(o => p.IsVisible && !p.HasResult ? "Window not specified" : null);
+		return p;
+	}
+	
+	void _SetToolbarTrigger() {
+		var t = _ToolbarFromCurrentPos(); if (t == null) return;
+		
+		var w = new KDialogWindow { Title = "New trigger for " + t.Name, ShowInTaskbar = false };
+		var b = new wpfBuilder(w).WinSize(500);
+		
 		ComboBox cbReplace = null, cbEdge = null, cbScreen = null;
-
+		DPwnd windowTriggerPage = null;
+		
 		if (t.triggers.Length > 0) {
 			b.R.Add("Replace trigger", out cbReplace);
 			cbReplace.Items.Add("Don't replace");
-			foreach (var v in t.triggers) { int it = cbReplace.Items.Add(v); if (v == tr) cbReplace.SelectedIndex = it; }
-			b.Validation(o => cbReplace.SelectedIndex < 0 ? "Empty 'Replace trigger'" : null);
+			foreach (var v in t.triggers) cbReplace.Items.Add(v);
+			cbReplace.SelectedIndex = 0;
 		}
-
+		
 		int iTrigger = -1; //0 window, 1 startup, 2 mouse
 		if (t.method.Parameters.Length > 0) {
 			var pt = t.method.Parameters[0].Type;
 			if (pt == _compilation.GetTypeByMetadataName("Au.Triggers.WindowTriggerArgs")) iTrigger = 0;
 			else if (pt == _compilation.GetTypeByMetadataName("Au.Triggers.MouseTriggerArgs")) iTrigger = 2;
 		}
-
+		
 		b.R.Add("Trigger type", out ComboBox cbTrigger).Disabled(iTrigger >= 0)
 			.Items(iTrigger switch { 0 => "Window", 2 => "Mouse", _ => "Window|Show at startup" });
 		if (iTrigger == 2) {
@@ -238,15 +250,18 @@ partial class Program {
 				.And(170).StartGrid();
 			cbScreen = _ScreenComboBoxInit(b);
 			b.End();
+		} else if (iTrigger <= 0) {
+			windowTriggerPage = _AddWindowPage(b);
+			cbTrigger.SelectionChanged += (_, _) => { windowTriggerPage.Visibility = cbTrigger.SelectedIndex == 0 ? Visibility.Visible : Visibility.Collapsed; };
 		}
 		//b.R.Add(out KCheckBox cRestart, "Restart TT script").Checked(); //rejected
-
+		
 		b.R.AddOkCancel();
 		b.End();
-
-		if (!b.ShowDialog(App.Wmain)) return;
+		
+		if (!w.ShowAndWait(App.Wmain)) return;
 		if (!_StillExists(ref t)) return;
-
+		
 		int pos = -1;
 		if (cbReplace?.SelectedItem is _Trigger u && _GetTriggerStatementFullRange2(u, out var span, replacing: true)) {
 			var doc = _OpenSourceFile(t.fn, span.Start);
@@ -258,11 +273,11 @@ partial class Program {
 			_Add();
 		}
 		_Update();
-
+		
 		void _Add() {
 			if (iTrigger < 0) iTrigger = cbTrigger.SelectedIndex;
 			if (iTrigger == 0) {
-				_AddTriggerWindow(t, pos);
+				_AddTriggerWindow(t, windowTriggerPage, pos);
 			} else if (iTrigger == 1) {
 				_AddTriggerStartup(t, pos);
 			} else if (iTrigger == 2) {
@@ -270,38 +285,31 @@ partial class Program {
 			}
 		}
 	}
-
-	void _SetToolbarTrigger() {
-		var (t, tr) = _ToolbarFromCurrentPos();
-		if (t != null) _SetToolbarTrigger(t, tr);
-	}
-
-	(_Toolbar tb, _Trigger tr) _ToolbarFromCurrentPos() {
-		var doc = Panels.Editor.ActiveDoc; if (doc == null) return default;
+	
+	_Toolbar _ToolbarFromCurrentPos() {
+		var doc = Panels.Editor.ActiveDoc; if (doc == null) return null;
 		int pos = doc.aaaCurrentPos16;
 		var f = doc.EFile;
 		//is pos in a toolbar function?
 		var t = _toolbars.FirstOrDefault(o => o.fn == f && o.method.DeclaringSyntaxReferences[0].Span.ContainsOrTouches(pos));
-		if (t != null) return (t, null);
+		if (t != null) return t;
 		//is pos in a name of a toolbar function?
-		foreach (var tb in _toolbars) {
-			foreach (var tr in tb.triggers) if (tr.fn == f && tr.location.SourceSpan.ContainsOrTouches(pos)) return (tb, tr);
+		foreach (var v in _toolbars) {
+			foreach (var tr in v.triggers) if (tr.fn == f && tr.location.SourceSpan.ContainsOrTouches(pos)) return v;
 		}
 		//get the first toolbar in the file
-		return (_toolbars.FirstOrDefault(o => o.fn == f), null);
+		return _toolbars.FirstOrDefault(o => o.fn == f);
 	}
-
+	
 	//void _EditToolbar(_Toolbar t) {
 	//	_OpenSourceFile(t, t.location.SourceSpan);
 	//}
-
+	
 	//rejected. It's better if the user reviews that code and deletes manually.
 	//void _DeleteToolbar(_Toolbar t, bool commentOut) {}
-
-	void _AddTriggerWindow(_Toolbar t, int pos = -1) {
-		var d = new Dwnd(default, DwndFlags.ForTrigger, "Window trigger");
-		if (!d.ShowAndWait()) return;
-		string sTrigger = d.AaResultCode, sAction = t.Name, sSep = " ";
+	
+	void _AddTriggerWindow(_Toolbar t, DPwnd p, int pos = -1) {
+		string sTrigger = p.AaResultCode, sAction = t.Name, sSep = " ";
 		if (!t.method.ReturnsVoid) {
 			sTrigger += ", later: TWLater.Name";
 			sAction = $"ta => ta.ShowToolbarWhenWindowName({sAction}, \"*window_name_when_the_toolbar_is_visible*\")";
@@ -314,27 +322,27 @@ Please edit window name strings in the toolbar trigger code.
 		}
 		_AddTrigger(t, $"Triggers.Window[TWEvent.ActiveOnce, {sTrigger}] ={sSep}{sAction};", pos);
 	}
-
+	
 	void _AddTriggerStartup(_Toolbar t, int pos = -1) {
 		_AddTrigger(t, $"{t.Name}();", pos);
 	}
-
+	
 	void _AddTriggerMouse(_Toolbar t, string edge, ComboBox cbScreen, int pos = -1) {
 		string s = _ScreenComboBoxResult(cbScreen, true);
 		if (s != null) s = ", screen: " + s;
 		_AddTrigger(t, $"Triggers.Mouse[TMEdge.{edge}{s}] = {t.Name};", pos);
 	}
-
+	
 	void _AddTrigger(_Toolbar t, string s, int pos) {
 		if (pos < 0) pos = _FindToolbarTriggersFunction(t).node.Body.CloseBraceToken.SpanStart;
 		if (null == _OpenSourceFile(t.fn, pos)) return;
 		InsertCode.Statements(s, ICSFlags.SelectNewCode);
 	}
-
+	
 	static void _EditTrigger(_Trigger t) {
 		_OpenSourceFile(t.fn, t.location.SourceSpan);
 	}
-
+	
 	//bool _DeleteTrigger(_Trigger t/*, bool commentOut = false*/) {
 	//	if (!_GetTriggerStatementFullRange2(t, out var span, replacing: false)) return false;
 	//	var doc = _OpenSourceFile(t.fn, span.Start);
@@ -348,19 +356,19 @@ Please edit window name strings in the toolbar trigger code.
 	//	_Update();
 	//	return true;
 	//}
-
+	
 	ComboBox _ScreenComboBoxInit(wpfBuilder b) {
 		b.Add("Screen", out ComboBox cb);
 		cb.Items.Add("Primary");
 		cb.SelectedIndex = 0;
-
+		
 		var a = screen.all;
 		if (a.Length > 1) {
 			//add functions of screen.at
 			foreach (var v in typeof(screen.at).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Static | BindingFlags.Public)) {
 				cb.Items.Add("screen.at." + v.Name);
 			}
-
+			
 			//if defined type "screens", add its public static properties that return screen
 			//	This code works, but probably this feature would be rarely used. Now undocumented.
 			//if (_compilation.GetSymbolsWithName("screens", SymbolFilter.Type).FirstOrDefault() is INamedTypeSymbol screens) {
@@ -370,34 +378,34 @@ Please edit window name strings in the toolbar trigger code.
 			//		cb.Items.Add("screens." + v.Name);
 			//	}
 			//}
-
+			
 			//if (a.Length == 2) cb.Items.Add("screen.index(1)"); //no. More screens may be added in the future, and indices may change then.
 		}
-
+		
 		return cb;
 	}
-
+	
 	static string _ScreenComboBoxResult(ComboBox cbScreen, bool trigger) {
 		int iScreen = cbScreen.SelectedIndex;
 		if (iScreen == 0) return null;
 		var s = cbScreen.Items[iScreen] as string;
 		//if (s.Starts("screens.")) return s;
 		//if (s.Starts("screen.at."))
-			return s + (trigger ? "(true)" : "()");
+		return s + (trigger ? "(true)" : "()");
 		//return trigger ? s.Insert(^1, ", lazy: true") : s;
 	}
-
+	
 	static bool _GetTriggerStatementFullRange2(_Trigger t, out TextSpan span, bool replacing) {
 		if (_GetTriggerStatementFullRange(t, out span, replacing)) return true;
 		print.it("This trigger should be deleted manually: " + t.text + "\r\n\tIt depends on other code which should be edited, deleted or reviewed.");
 		if (!replacing) _EditTrigger(t);
 		return false;
 	}
-
+	
 	static bool _GetTriggerStatementFullRange(_Trigger t, out TextSpan span, bool replacing) {
 		span = default;
 		var node = t.location.FindNode(default);
-	g1:
+		g1:
 		var ss = node.GetAncestor<StatementSyntax>();
 		if (ss == null) return false;
 		//print.clear(); CiUtil.PrintNode(ss); CiUtil.PrintNode(ss.Parent);
@@ -417,7 +425,7 @@ Please edit window name strings in the toolbar trigger code.
 		span = TextSpan.FromBounds(from, ss.FullSpan.End);
 		return true;
 	}
-
+	
 	/// <summary>
 	/// Finds the toolbar in current _toolbars.
 	/// If _toolbars changed and does not contain t, tries to find in the new _toolbars and updates t; returns false if not found (the toolbar code has been deleted).
@@ -427,29 +435,29 @@ Please edit window name strings in the toolbar trigger code.
 		t = _toolbars.FirstOrDefault(o => o.EqualsMethodQName(tt));
 		return t != null && !t.fn.IsDeleted;
 	}
-
+	
 	static SciCode _OpenSourceFile(FileNode f, int pos = -1) {
 		if (App.Model.OpenAndGoTo(f, columnOrPos: pos)) return Panels.Editor.ActiveDoc;
 		return null;
 	}
-
+	
 	static SciCode _OpenSourceFile(FileNode f, TextSpan span) {
 		if (!App.Model.OpenAndGoTo(f)) return null;
 		var doc = Panels.Editor.ActiveDoc;
 		doc.aaaSelect(true, span.End, span.Start, true);
 		return doc;
 	}
-
+	
 	IEnumerable<IMethodSymbol> _EnumToolbarTriggersFunctions() {
 		var at = _programSym.GetTypeMembers("ToolbarsAttribute")[0];
 		foreach (var m in _programSym.GetMembers().OfType<IMethodSymbol>()) {
 			foreach (var a in m.GetAttributes()) if (a.AttributeClass == at) yield return m;
 		}
 	}
-
+	
 	ClassDeclarationSyntax _ProgramClassNodeFromST(SyntaxTree tree)
 		=> _programSym.Locations.FirstOrDefault(o => o.SourceTree == tree)?.FindNode(default) as ClassDeclarationSyntax;
-
+	
 	string _GetUniqueNameInProgram(string name) {
 		if (_programSym.MemberNames.Contains(name)) {
 			for (int i = 2; ; i++) {
@@ -459,16 +467,16 @@ Please edit window name strings in the toolbar trigger code.
 		}
 		return name;
 	}
-
+	
 	(IMethodSymbol sym, MethodDeclarationSyntax node) _FindToolbarTriggersFunction(_Toolbar t) {
 		bool retry = false;
-	g1:
+		g1:
 		foreach (var m in _EnumToolbarTriggersFunctions()) {
 			var loc = m.Locations[0];
 			if (loc.SourceTree == t.tree) return (m, loc.FindNode(default) as MethodDeclarationSyntax);
 		}
 		if (retry) return default; retry = true;
-
+		
 		//create the function
 		string name = _GetUniqueNameInProgram("Toolbars");
 		var programNode = _ProgramClassNodeFromST(t.tree);
@@ -487,16 +495,17 @@ void {{name}}() {
 		t = _toolbars.First(o => o.EqualsMethodQName(t));
 		goto g1;
 	}
-
+	
 	void _Update() {
 		var a = new List<_Toolbar>();
 		var at = new List<_Trigger>();
-		var proj = global::TriggersAndToolbars.GetProject(create: true);
-		using var ws = new AdhocWorkspace();
-		(_sln, _meta) = CiUtil.CreateSolutionFromFileNode(ws, proj);
-		_compilation = _sln.Projects.First().GetCompilationAsync().Result;
-		var ttoolbar = _compilation.GetTypeByMetadataName("Au." + nameof(toolbar));
-
+		var proj = TriggersAndToolbars.GetProject(create: true);
+		using var ws = new CiWorkspace(proj, CiWorkspace.Caller.Other);
+		_meta = ws.Meta;
+		_sln = ws.Solution;
+		_compilation = ws.GetCompilation();
+		var ntToolbar = _compilation.GetTypeByMetadataName("Au.toolbar");
+		
 		_fnToSt = new();
 		_fnFromSt = new();
 		int iTree = 0;
@@ -505,18 +514,18 @@ void {{name}}() {
 			var f = _meta.CodeFiles[iTree++].f;
 			_fnToSt[f] = tree;
 			_fnFromSt[tree] = f;
-
+			
 			var semo = _compilation.GetSemanticModel(tree);
 			var cu = semo.SyntaxTree.GetCompilationUnitRoot();
 			var k = semo.GetExistingSymbols(cu, default);
 			IMethodSymbol mPrev = null;
 			foreach (var v in k) {
-				if (v is ILocalSymbol loc && loc.Type == ttoolbar) {
+				if (v is ILocalSymbol loc && loc.Type == ntToolbar) {
 					if (loc.DeclaringSyntaxReferences[0].GetSyntax() is VariableDeclaratorSyntax vd && vd.Initializer is EqualsValueClauseSyntax evc && evc.Value is ObjectCreationExpressionSyntax or InvocationExpressionSyntax) {
 						var m = loc.ContainingSymbol as IMethodSymbol;
 						if (m == mPrev) continue; mPrev = m; //get single toolbar in function
 						var t = new _Toolbar { method = m, location = m.Locations[0], Name = m.Name, fn = f, tree = tree, variable = loc, };
-
+						
 						at.Clear();
 						foreach (var x in SymbolFinder.FindCallersAsync(m, _sln).Result) {
 							foreach (var y in x.Locations) {
@@ -545,17 +554,17 @@ void {{name}}() {
 						}
 						t.triggers = at.ToArray();
 						if (at.Any()) t.TriggerText = string.Join('\n', at.Select(o => o.text));
-
+						
 						a.Add(t);
 					}
 				}
 			}
 		}
-
+		
 		_toolbars = a.ToArray();
 		_programSym = _compilation.GlobalNamespace.GetTypeMembers("Program")[0];
 	}
-
+	
 	class _Toolbar {
 		public FileNode fn;
 		public SyntaxTree tree;
@@ -563,17 +572,17 @@ void {{name}}() {
 		public Location location;
 		public ILocalSymbol variable; //currently not used. In the future may be used for adding toolbar buttons.
 		public _Trigger[] triggers;
-
+		
 		public string Name { get; set; }
 		public string TriggerText { get; set; }
-
+		
 		/// <summary>Equals method qualified name.</summary>
 		public bool EqualsMethodQName(_Toolbar t) => Name == t.Name && method.ToString() == t.method.ToString();
-
+		
 		/// <summary>Equals SourceTree and SourceSpan.</summary>
 		public bool EqualsMethodLocation(Location loc) => loc.SourceTree.FilePath == location.SourceTree.FilePath && loc.SourceSpan.Start == location.SourceSpan.Start;
 	}
-
+	
 	record _Trigger(FileNode fn, Location location, string text, bool isTrigger) {
 		public override string ToString() => text;
 	}

@@ -10,8 +10,11 @@ using EStyle = CiStyling.EStyle;
 using System.Windows.Input;
 
 class DOptions : KDialogWindow {
-	public static void AaShow() {
-		ShowSingle(() => new DOptions());
+	public enum EPage { Program, Workspace, FontAndColors, CodeEditor, Templates, Hotkeys, Other, OS }
+	
+	public static void AaShow(EPage? page = null) {
+		var d = ShowSingle(() => new DOptions());
+		if (page != null) d._tc.SelectedIndex = (int)page.Value;
 	}
 	
 	wpfBuilder _b;

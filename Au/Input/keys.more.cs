@@ -1,12 +1,10 @@
 namespace Au;
 
-partial class keys
-{
+partial class keys {
 	/// <summary>
 	/// Miscellaneous rarely used keyboard-related functions.
 	/// </summary>
-	public static partial class more
-	{
+	public static partial class more {
 		/// <summary>
 		/// Converts key name to <see cref="KKey"/>.
 		/// </summary>
@@ -16,7 +14,7 @@ partial class keys
 			keyName ??= "";
 			return _KeynameToKey(keyName, 0, keyName.Length);
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="parseKeyName"/> and throws <b>ArgumentException</b> if invalid key string.
 		/// </summary>
@@ -26,7 +24,7 @@ partial class keys
 			if (k == 0) throw new ArgumentException("Unknown key name or error in key string.");
 			return k;
 		}
-
+		
 		/// <summary>
 		/// Converts key name to <see cref="KKey"/>.
 		/// </summary>
@@ -40,7 +38,7 @@ partial class keys
 			if ((uint)startIndex > s.Length || (uint)length > s.Length - startIndex) throw new ArgumentOutOfRangeException();
 			return _KeynameToKey(s, startIndex, length);
 		}
-
+		
 		/// <summary>
 		/// Converts keys string to <see cref="KKey"/> array.
 		/// </summary>
@@ -55,7 +53,7 @@ partial class keys
 			}
 			return a.ToArray();
 		}
-
+		
 		/// <summary>
 		/// Converts string to <see cref="KKey"/> and <see cref="KMod"/>.
 		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = KMod.Ctrl</c>, <c>key = KKey.Left</c>.
@@ -85,7 +83,7 @@ partial class keys
 			}
 			return key != 0 && key != KKey.Packet;
 		}
-
+		
 		/// <summary>
 		/// Converts string to winforms <see cref="System.Windows.Forms.Keys"/>.
 		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>hotkey = Keys.Control | Keys.Left</c>.
@@ -99,7 +97,7 @@ partial class keys
 			//return Enum.IsDefined(typeof(System.Windows.Forms.Keys), (System.Windows.Forms.Keys)k); //not too slow
 			//tested: enum Keys has all KKey values + some extinct.
 		}
-
+		
 		/// <summary>
 		/// Converts string to WPF <see cref="System.Windows.Input.ModifierKeys"/> and <see cref="System.Windows.Input.Key"/> or <see cref="System.Windows.Input.MouseAction"/>.
 		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = ModifierKeys.Control</c> and <c>key = Key.Left</c>.
@@ -126,7 +124,7 @@ partial class keys
 			return mouse != default || (key = KKeyToWpf(k)) != default;
 			//tested: enum Key has all KKey values except mouse buttons and packet.
 		}
-
+		
 		/// <summary>
 		/// Parses hotkey trigger string or mouse trigger modifiers string.
 		/// Like <see cref="parseHotkeyString"/>, but supports "any mod" (like <c>"Shift?+K"</c> or <c>"?+K"</c>) and <i>noKey</i>.
@@ -160,7 +158,7 @@ partial class keys
 			if (noKey) return (mod | modAny) != 0 && key == 0;
 			return key != 0;
 		}
-
+		
 		/// <summary>
 		/// Formats hotkey string like <c>"Ctrl+Shift+K"</c>.
 		/// </summary>
@@ -174,7 +172,7 @@ partial class keys
 			if (mod.Has(KMod.Win)) b.Append("Win+");
 			b.Append(keyToString(key)).ToString();
 		}
-
+		
 		/// <summary>
 		/// Formats hotkey string like <c>"Ctrl+Shift+K"</c>.
 		/// </summary>
@@ -185,12 +183,12 @@ partial class keys
 				return b.ToString();
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets key name that can be used in keys strings with <see cref="keys.send"/> etc.
 		/// </summary>
 		public static string keyToString(KKey key) => c_keyNames[(int)key] ?? ("VK" + (int)key);
-
+		
 		static readonly string[] c_keyNames = {
 	"",
 	"MouseLeft",
@@ -491,7 +489,7 @@ b.Append(',');
 b.Append("\r\n};");
 print.it(b.ToString());
 		*/
-
+		
 		/// <summary>
 		/// Converts modifier key flags from <b>KMod</b> to winforms <b>Keys</b>.
 		/// </summary>
@@ -499,7 +497,7 @@ print.it(b.ToString());
 		/// For <c>Win</c> returns flag <c>(Keys)0x80000</c>.
 		/// </remarks>
 		public static System.Windows.Forms.Keys KModToWinforms(KMod mod) => (System.Windows.Forms.Keys)((int)mod << 16);
-
+		
 		/// <summary>
 		/// Converts modifier key flags from winforms <b>Keys</b> to <b>KMod</b>.
 		/// </summary>
@@ -507,29 +505,29 @@ print.it(b.ToString());
 		/// For <c>Win</c> can be used flag <c>(Keys)0x80000</c>.
 		/// </remarks>
 		public static KMod KModFromWinforms(System.Windows.Forms.Keys mod) => (KMod)((int)mod >> 16);
-
+		
 		/// <summary>
 		/// Converts modifier key flags from <b>KMod</b> to WPF <b>ModifierKeys</b>.
 		/// </summary>
 		public static System.Windows.Input.ModifierKeys KModToWpf(KMod mod) => (System.Windows.Input.ModifierKeys)_SwapMod((int)mod);
-
+		
 		/// <summary>
 		/// Converts modifier key flags from WPF <b>ModifierKeys</b> to <b>KMod</b>.
 		/// </summary>
 		public static KMod KModFromWpf(System.Windows.Input.ModifierKeys mod) => (KMod)_SwapMod((int)mod);
-
+		
 		static int _SwapMod(int m) => (m & 0b1010) | (m << 2 & 4) | (m >> 2 & 1);
-
+		
 		/// <summary>
 		/// Converts key from <b>KKey</b> to WPF <b>Key</b>.
 		/// </summary>
 		public static System.Windows.Input.Key KKeyToWpf(KKey k) => System.Windows.Input.KeyInterop.KeyFromVirtualKey((int)k);
-
+		
 		/// <summary>
 		/// Converts key from WPF <b>Key</b> to <b>KKey</b>.
 		/// </summary>
 		public static KKey KKeyFromWpf(System.Windows.Input.Key k) => (KKey)System.Windows.Input.KeyInterop.VirtualKeyFromKey(k);
-
+		
 		/// <summary>
 		/// Sends single key.
 		/// </summary>
@@ -541,13 +539,15 @@ print.it(b.ToString());
 		/// If -1, uses keyboard layout of the focused or active window.
 		/// </param>
 		/// <param name="extra">An "extra info" value that can be used for example by keyboard hooks to recognize the key sender. If <c>null</c> (default), uses the same value as other functions of this library.</param>
+		/// <param name="dontThrow">Don't throw exception.</param>
 		/// <remarks>
 		/// This is a low-level function. Does nothing more (sleep, block input, etc). Does not use <b>opt</b> options. Just gets missing info (scan code etc) and calls API <msdn>SendInput</msdn>.
 		/// </remarks>
-		public static void sendKey(KKey k, bool? down = null, nint hkl = 0, int? extra = null)
-			=> Internal_.SendKey(k, down, hkl, extra);
-
+		/// <exception cref="InputDesktopException"></exception>
+		public static void sendKey(KKey k, bool? down = null, nint hkl = 0, int? extra = null, bool dontThrow = false)
+			=> Internal_.SendKey(k, down, hkl, extra, dontThrow);
+		
 		//FUTURE: RemapKeyboardKeys. See QM2.
-
+		
 	}
 }

@@ -544,27 +544,27 @@ static unsafe partial class Api {
 		//}
 	}
 	
-	//[DllImport("shell32.dll", PreserveSig = true)]
+	//[DllImport("shell32.dll")]
 	//internal static extern int SHGetDesktopFolder(out IShellFolder ppshf);
 	
 	[DllImport("shell32.dll")]
 	internal static extern int SHParseDisplayName(string pszName, IntPtr pbc, out IntPtr pidl, uint sfgaoIn, uint* psfgaoOut);
 	
-	[DllImport("shell32.dll", PreserveSig = true)]
+	[DllImport("shell32.dll")]
 	internal static extern int SHGetNameFromIDList(IntPtr pidl, SIGDN sigdnName, out string ppszName);
 	
-	[DllImport("shell32.dll", PreserveSig = true)]
+	[DllImport("shell32.dll")]
 	internal static extern int SHCreateShellItem(IntPtr pidlParent, IShellFolder psfParent, IntPtr pidl, out IShellItem ppsi);
 	//This classic API supports absolute PIDL and parent+relative PIDL.
 	//There are 2 newer API - SHCreateItemFromIDList (absoulte) and SHCreateItemWithParent (parent+relative). They can get IShellItem2 too, which is currently not useful here. Same speed.
 	
-	//[DllImport("shell32.dll", PreserveSig = true)]
+	//[DllImport("shell32.dll")]
 	//internal static extern int SHCreateItemFromIDList(IntPtr pidl, in Guid riid, out IShellItem ppv); //or IShellItem2
 	
-	[DllImport("shell32.dll", PreserveSig = true)]
+	[DllImport("shell32.dll")]
 	internal static extern int SHBindToParent(IntPtr pidl, in Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
 	
-	[DllImport("shell32.dll", PreserveSig = true)]
+	[DllImport("shell32.dll")]
 	internal static extern int SHGetPropertyStoreForWindow(wnd hwnd, in Guid riid, out IPropertyStore ppv);
 	
 	internal static PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY() { fmtid = new Guid(0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3), pid = 5 };
@@ -633,7 +633,7 @@ static unsafe partial class Api {
 	internal const int NIN_POPUPOPEN = 0x406;
 	internal const int NIN_POPUPCLOSE = 0x407;
 	
-	[DllImport("shell32.dll", PreserveSig = true)]
+	[DllImport("shell32.dll")]
 	internal static extern int Shell_NotifyIconGetRect(in NOTIFYICONIDENTIFIER identifier, out RECT iconLocation);
 	internal struct NOTIFYICONIDENTIFIER {
 		public int cbSize;
@@ -650,10 +650,10 @@ static unsafe partial class Api {
 		public fixed char szPath[260];
 	}
 	
-	[DllImport("shell32.dll", PreserveSig = true)]
+	[DllImport("shell32.dll")]
 	internal static extern int SHGetStockIconInfo(StockIcon siid, uint uFlags, ref SHSTOCKICONINFO psii);
 	
-	[DllImport("shell32.dll", EntryPoint = "#6", PreserveSig = true)]
+	[DllImport("shell32.dll", EntryPoint = "#6")]
 	internal static extern int SHDefExtractIcon(string pszIconFile, int iIndex, uint uFlags, IntPtr* phiconLarge, IntPtr* phiconSmall, int nIconSize);
 	
 	internal const int SHIL_LARGE = 0;
@@ -662,9 +662,9 @@ static unsafe partial class Api {
 	//internal const int SHIL_SYSSMALL = 3;
 	internal const int SHIL_JUMBO = 4;
 	
-	//[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
+	//[DllImport("shell32.dll", EntryPoint = "#727")]
 	//internal static extern int SHGetImageList(int iImageList, in Guid riid, out IImageList ppvObj);
-	[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
+	[DllImport("shell32.dll", EntryPoint = "#727")]
 	internal static extern int SHGetImageList(int iImageList, in Guid riid, out IntPtr ppvObj);
 	
 	internal const uint SHCNE_RENAMEITEM = 0x1;
@@ -737,7 +737,7 @@ static unsafe partial class Api {
 	[DllImport("shell32.dll", EntryPoint = "ShellExecuteExW", SetLastError = true)]
 	internal static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO pExecInfo);
 	
-	[DllImport("shell32.dll", PreserveSig = true)]
+	[DllImport("shell32.dll")]
 	internal static extern int SHOpenFolderAndSelectItems(HandleRef pidlFolder, uint cidl, IntPtr[] apidl, uint dwFlags);
 	
 	[DllImport("shell32.dll", EntryPoint = "#152")]
@@ -839,7 +839,7 @@ static unsafe partial class Api {
 	[DllImport("shell32.dll")]
 	internal static extern bool IsUserAnAdmin();
 	
-	[DllImport("shell32.dll", PreserveSig = true, EntryPoint = "SHEmptyRecycleBinW")]
+	[DllImport("shell32.dll", EntryPoint = "SHEmptyRecycleBinW")]
 	internal static extern int SHEmptyRecycleBin(wnd hwnd, string pszRootPath, int dwFlags);
 	
 	
@@ -847,7 +847,7 @@ static unsafe partial class Api {
 	
 	#region shlwapi
 	
-	[DllImport("shlwapi.dll", EntryPoint = "#176")]
+	[DllImport("shlwapi.dll")]
 	static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, in Guid guidService, in Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppvOut);
 	
 	public static bool QueryService<T>(object from, in Guid guidService, out T result) where T : class {
@@ -865,7 +865,7 @@ static unsafe partial class Api {
 	[DllImport("shlwapi.dll")]
 	internal static extern int ColorHLSToRGB(ushort wHue, ushort wLuminance, ushort wSaturation);
 	
-	[DllImport("shlwapi.dll", PreserveSig = true)]
+	[DllImport("shlwapi.dll")]
 	internal static extern int PathCreateFromUrlAlloc(string pszIn, out string ppszOut, uint dwFlags = 0);
 	
 	//internal enum ASSOCSTR
@@ -896,7 +896,7 @@ static unsafe partial class Api {
 	//	ASSOCSTR_MAX
 	//}
 	
-	//[DllImport("shlwapi.dll", PreserveSig = true, EntryPoint = "AssocQueryStringW")]
+	//[DllImport("shlwapi.dll", EntryPoint = "AssocQueryStringW")]
 	//internal static extern int AssocQueryString(uint flags, /*ASSOCSTR*/ int str, string pszAssoc, string pszExtra, char[] pszOut, ref int pcchOut);
 	
 	///// <summary>
@@ -953,7 +953,7 @@ static unsafe partial class Api {
 		return TrackMouseEvent(ref t);
 	}
 	
-	[DllImport("comctl32.dll", EntryPoint = "#380", PreserveSig = true)]
+	[DllImport("comctl32.dll", EntryPoint = "#380")]
 	internal static extern int LoadIconMetric(IntPtr hinst, nint pszName, int lims, out IntPtr phico);
 	
 	[DllImport("comctl32.dll", EntryPoint = "#410")]
@@ -986,13 +986,13 @@ static unsafe partial class Api {
 	[DllImport("oleaut32.dll", EntryPoint = "#2")]
 	internal static extern BSTR SysAllocString(char* psz);
 	
-	[DllImport("oleaut32.dll", EntryPoint = "#147", PreserveSig = true)]
+	[DllImport("oleaut32.dll", EntryPoint = "#147")]
 	internal static extern int VariantChangeTypeEx(ref VARIANT pvargDest, in VARIANT pvarSrc, uint lcid, ushort wFlags, VARENUM vt);
 	
-	[DllImport("oleaut32.dll", EntryPoint = "#9", PreserveSig = true)]
+	[DllImport("oleaut32.dll", EntryPoint = "#9")]
 	internal static extern int VariantClear(ref VARIANT pvarg);
 	
-	[DllImport("oleaut32.dll", EntryPoint = "#35", PreserveSig = true)]
+	[DllImport("oleaut32.dll", EntryPoint = "#35")]
 	internal static extern int GetActiveObject(in Guid rclsid, IntPtr pvReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppunk);
 	
 	
@@ -1002,7 +1002,10 @@ static unsafe partial class Api {
 	
 	#region ole32
 	
-	[DllImport("ole32.dll", PreserveSig = true)]
+	[DllImport("ole32.dll")]
+	internal static extern int CoCreateInstance(in Guid rclsid, nint pUnkOuter, uint dwClsContext, in Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
+	
+	[DllImport("ole32.dll")]
 	internal static extern int PropVariantClear(ref PROPVARIANT pvar);
 	
 	//internal enum APTTYPE
@@ -1014,10 +1017,10 @@ static unsafe partial class Api {
 	//	APTTYPE_MAINSTA
 	//}
 	
-	//[DllImport("ole32.dll", PreserveSig = true)]
+	//[DllImport("ole32.dll")]
 	//internal static extern int CoGetApartmentType(out APTTYPE pAptType, out int pAptQualifier);
 	
-	[DllImport("ole32.dll", PreserveSig = true)]
+	[DllImport("ole32.dll")]
 	internal static extern int OleInitialize(IntPtr pvReserved);
 	
 	[DllImport("ole32.dll")]
@@ -1031,32 +1034,32 @@ static unsafe partial class Api {
 		void Drop(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect);
 	}
 	
-	[DllImport("ole32.dll", PreserveSig = true)]
+	[DllImport("ole32.dll")]
 	internal static extern int RegisterDragDrop(wnd hwnd, IDropTarget pDropTarget);
 	
-	[DllImport("ole32.dll", PreserveSig = true)]
+	[DllImport("ole32.dll")]
 	internal static extern int RevokeDragDrop(wnd hwnd);
 	
 	[DllImport("ole32.dll")]
 	internal static extern void ReleaseStgMedium(ref System.Runtime.InteropServices.ComTypes.STGMEDIUM medium);
 	
-	[DllImport("ole32.dll", PreserveSig = true)]
+	[DllImport("ole32.dll")]
 	internal static extern int CLSIDFromProgID(string lpszProgID, out Guid lpclsid);
 	
 	#endregion
 	
 	#region oleacc
 	
-	[DllImport("oleacc.dll", PreserveSig = true)]
+	[DllImport("oleacc.dll")]
 	internal static extern int AccessibleObjectFromWindow(wnd hwnd, EObjid dwId, in Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object o);
 	
-	[DllImport("oleacc.dll", PreserveSig = true)]
+	[DllImport("oleacc.dll")]
 	internal static extern int AccessibleObjectFromEvent(wnd hwnd, EObjid dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
 	
 	[DllImport("oleacc.dll")]
 	internal static extern Handle_ GetProcessHandleFromHwnd(wnd hwnd);
 	
-	[DllImport("oleacc.dll", PreserveSig = true)]
+	[DllImport("oleacc.dll")]
 	internal static extern int CreateStdAccessibleObject(wnd hwnd, EObjid idObject, in Guid riid, out IAccessible ppvObject);
 	
 	[ComImport, Guid("618736e0-3c3d-11cf-810c-00aa00389b71"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
@@ -1271,19 +1274,19 @@ static unsafe partial class Api {
 	[DllImport("dwmapi.dll")]
 	internal static extern int DwmGetWindowAttribute(wnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
 	
-	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//[DllImport("dwmapi.dll")]
 	//internal static extern int DwmSetWindowAttribute(wnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
 	
-	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//[DllImport("dwmapi.dll")]
 	//internal static extern int DwmRegisterThumbnail(wnd hwndDestination, wnd hwndSource, out IntPtr phThumbnailId);
 	
-	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//[DllImport("dwmapi.dll")]
 	//internal static extern int DwmUnregisterThumbnail(IntPtr hThumbnailId);
 	
-	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//[DllImport("dwmapi.dll")]
 	//internal static extern int DwmQueryThumbnailSourceSize(IntPtr hThumbnail, out SIZE pSize);
 	
-	//[DllImport("dwmapi.dll", PreserveSig = true)]
+	//[DllImport("dwmapi.dll")]
 	//internal static extern int DwmUpdateThumbnailProperties(IntPtr hThumbnailId, in DWM_THUMBNAIL_PROPERTIES ptnProperties);
 	
 	//[StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -1319,10 +1322,10 @@ static unsafe partial class Api {
 		return OpenThemeData(hwnd, classList); //never mind: bad on Win8.1 non-primary screen with different DPI than primary if hwnd==0
 	}
 	
-	[DllImport("uxtheme.dll", PreserveSig = true)]
+	[DllImport("uxtheme.dll")]
 	internal static extern int CloseThemeData(IntPtr hTheme);
 	
-	[DllImport("uxtheme.dll", PreserveSig = true)]
+	[DllImport("uxtheme.dll")]
 	internal static extern int GetThemePartSize(IntPtr hTheme, IntPtr hdc, int iPartId, int iStateId, RECT* prc, THEMESIZE eSize, out SIZE psz);
 	internal enum THEMESIZE {
 		TS_MIN,
@@ -1330,10 +1333,10 @@ static unsafe partial class Api {
 		TS_DRAW
 	}
 	
-	[DllImport("uxtheme.dll", PreserveSig = true)]
+	[DllImport("uxtheme.dll")]
 	internal static extern int DrawThemeBackground(IntPtr hTheme, IntPtr hdc, int iPartId, int iStateId, in RECT pRect, RECT* pClipRect = null);
 	
-	//[DllImport("uxtheme.dll", PreserveSig = true)]
+	//[DllImport("uxtheme.dll")]
 	//internal static extern int SetWindowTheme(wnd hwnd, string pszSubAppName, string pszSubIdList);
 	
 	[DllImport("uxtheme.dll")]
@@ -1342,16 +1345,16 @@ static unsafe partial class Api {
 	[DllImport("uxtheme.dll")]
 	internal static extern IntPtr GetThemeSysColorBrush(IntPtr hTheme, int iColorId);
 	
-	[DllImport("uxtheme.dll", PreserveSig = true)]
+	[DllImport("uxtheme.dll")]
 	internal static extern int BufferedPaintInit();
 	
-	//[DllImport("uxtheme.dll", PreserveSig = true)]
+	//[DllImport("uxtheme.dll")]
 	//internal static extern int BufferedPaintUnInit();
 	
 	[DllImport("uxtheme.dll")]
 	internal static extern IntPtr BeginBufferedPaint(IntPtr hdcTarget, in RECT prcTarget, BP_BUFFERFORMAT dwFormat, ref BP_PAINTPARAMS pPaintParams, out IntPtr phdc);
 	
-	[DllImport("uxtheme.dll", PreserveSig = true)]
+	[DllImport("uxtheme.dll")]
 	internal static extern int EndBufferedPaint(IntPtr hBufferedPaint, bool fUpdateTarget);
 	
 	internal enum BP_BUFFERFORMAT {
@@ -1493,7 +1496,7 @@ static unsafe partial class Api {
 	[DllImport("powrprof.dll")]
 	internal static extern byte IsPwrSuspendAllowed();
 	
-	//[DllImport("urlmon.dll", PreserveSig = true)]
+	//[DllImport("urlmon.dll")]
 	//internal static extern int FindMimeFromData(IntPtr pBC, string pwzUrl, byte[] pBuffer, int cbSize, string pwzMimeProposed, uint dwMimeFlags, out string ppwzMimeOut, uint dwReserved);
 	
 	#endregion

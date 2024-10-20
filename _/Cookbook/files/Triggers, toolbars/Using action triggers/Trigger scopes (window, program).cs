@@ -1,4 +1,4 @@
-/// For keyboard, autotext and mouse triggers you can specify window(s) where they will work or not work. It is known as <i>trigger scope<>. A trigger scope is applied to triggers added afterwards, until another scope.
+/// For keyboard, autotext and mouse triggers you can specify window(s) where they will work or not work. It is known as <i>trigger scope<>. A trigger scope is applied to triggers added afterwards, until another scope (if any). To create scope code can be used the quick capturing hotkey (default <mono>Ctrl+Shift+Q<>).
 
 ///This is a full working script. To test it, create new script and paste all code. Or in file <.c>Keyboard triggers<> paste code from the <.c>#region<>. Then click the <b>Run<> button and press <mono>Alt+1<> etc in various windows.
 
@@ -37,16 +37,12 @@ Triggers.Of.Windows(
 hk["Alt+8"] = o => { print.it(o); };
 
 //this trigger works everywhere except in WordPad and Paint windows
-Triggers.Of.NotWindows(
+Triggers.Of.NotWindows([
 	new("*WordPad", "WordPadClass"),
 	new("*Paint", "MSPaintApp")
-	);
+	]);
 hk["Alt+9"] = o => { print.it(o); };
 
 #endregion
 
 Triggers.Run();
-
-/// Tips:
-/// - To quickly insert <.c>Triggers.Of.Window(...)<> code, use the quick capturing hotkey (default <mono>Ctrl+Shift+Q<>).
-/// - Also you can copy-paste window name etc from the <b>Find window<> tool. To get code like <.c>new("name", "class")<>, in the combo box select <b>finder<>, and let <b>Control<> be unchecked.

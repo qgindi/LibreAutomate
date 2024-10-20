@@ -80,18 +80,21 @@ public partial class KMenuCommands {
 		public string Keys { get; private set; }
 		
 		/// <summary>
-		/// Setter subscribes to <see cref="MenuItem.SubmenuOpened"/> event.
+		/// Subscribes to <see cref="MenuItem.SubmenuOpened"/> event.
 		/// Will propagate to copied submenus.
 		/// Call once.
 		/// </summary>
-		public RoutedEventHandler SubmenuOpened {
-			get => _submenuOpened;
-			set {
-				Debug.Assert(_submenuOpened == null);
-				_Mi.SubmenuOpened += _submenuOpened = value;
-			}
+		/// <param name="action">Called on <b>SubmenuOpened</b> event. Not called for events bubbled from descendant submenus.</param>
+		public void OnSubmenuOpened(Action<MenuItem> action) {
+			Debug.Assert(_submenuOpened == null);
+			_Mi.SubmenuOpened += _submenuOpened = (o, e) => {
+				if (o != e.Source) return; //bubbled
+				action((MenuItem)o);
+			};
 		}
 		RoutedEventHandler _submenuOpened;
+		
+		//static void _SetSubmenuOpenedEvent(MenuItem mi, Action<MenuItem> )
 		
 		/// <summary>
 		/// Something to attach to this object. Not used by this class.

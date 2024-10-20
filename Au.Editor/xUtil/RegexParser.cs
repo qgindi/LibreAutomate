@@ -1,3 +1,5 @@
+//TODO: after a regex string in code, unknown identifier text is brown
+
 using Au.Controls;
 using EStyle = CiStyling.EStyle;
 
@@ -194,31 +196,14 @@ static class RegexParser {
 		return i < 0 ? t.Length : i + 1;
 	}
 	
-	static byte[] _ToScintillaStylingBytes(RStr s, List<RXSpan> a) {
-		var styles8 = new byte[Encoding.UTF8.GetByteCount(s)];
-		_ToScintillaStylingBytes(s, a, styles8);
-		return styles8;
-	}
-	
-	static void _ToScintillaStylingBytes(RStr s, List<RXSpan> a, Span<byte> styles8) {
-		var map8 = s.IsAscii() ? null : Convert2.Utf8EncodeAndGetOffsets_(s).offsets;
-		styles8[..(map8?[^1] ?? s.Length)].Fill((byte)EStyle.RxText);
-		foreach (var v in a) {
-			//print.it(v, s[v.start..v.end].ToString());
-			var (i, end) = (v.start, v.end);
-			if (map8 != null) { i = map8[i]; end = map8[end]; }
-			while (i < end) styles8[i++] = (byte)v.token;
-		}
-	}
-	
 	/// <summary>
-	/// Parses a regular expression or wildcard expression and writes regular expression syntax highlighting styles to <i>styles8</i>.
+	/// Parses a regular expression or wildcard expression and writes regular expression syntax highlighting styles to <i>styles</i> (not UTF-8).
 	/// </summary>
 	/// <param name="s"></param>
 	/// <param name="format"><b>Regexp</b>, <b>NetRegex</b> or <b>Wildex</b>.</param>
-	/// <param name="styles8">Writes styles here. Must be of length greater or equal to <c>Encoding.UTF8.GetByteCount(s)</c>.</param>
-	public static void GetScintillaStylingBytes(RStr s, PSFormat format, Span<byte> styles8) {
-		Debug.Assert(styles8.Length >= Encoding.UTF8.GetByteCount(s));
+	/// <param name="styles">Writes styles here. Must be of length greater or equal to <c>s.Length</c>.</param>
+	public static void GetScintillaStylingBytes16(RStr s, PSFormat format, Span<byte> styles) {
+		Debug.Assert(styles.Length >= s.Length);
 		if (format is PSFormat.Wildex) {
 			if (s is not ['*', '*', _, _, _, ..]) return;
 			WXType type = 0;
@@ -226,7 +211,7 @@ static class RegexParser {
 			for (int i = 2, j; i < s.Length; i++) {
 				switch (s[i]) {
 				case ' ':
-					styles8 = styles8[(Encoding.UTF8.GetByteCount(s[..i]) + 1)..];
+					styles = styles[(i + 1)..];
 					s = s[(i + 1)..];
 					goto g1;
 				case 'r': type = WXType.RegexPcre; break;
@@ -246,16 +231,25 @@ static class RegexParser {
 			g1:
 			if (type is WXType.RegexPcre or WXType.RegexNet) {
 				var a = GetClassifiedSpans(s, type is WXType.RegexNet);
-				_ToScintillaStylingBytes(s, a, styles8);
+				_ToScintillaStylingBytes16(s, a, styles);
 			} else if (type is WXType.Multi) {
 				foreach (var v in s.Split(split ?? "||")) {
 					int i8 = Encoding.UTF8.GetByteCount(s[..v.start]);
-					GetScintillaStylingBytes(s[v.Range], PSFormat.Wildex, styles8[i8..]);
+					GetScintillaStylingBytes16(s[v.Range], PSFormat.Wildex, styles[i8..]);
 				}
 			}
 		} else {
 			var a = GetClassifiedSpans(s, format is PSFormat.NetRegex);
-			_ToScintillaStylingBytes(s, a, styles8);
+			_ToScintillaStylingBytes16(s, a, styles);
+		}
+	}
+	
+	static void _ToScintillaStylingBytes16(RStr s, List<RXSpan> a, Span<byte> styles) {
+		styles.Fill((byte)EStyle.RxText);
+		foreach (var v in a) {
+			//print.it(v, s[v.start..v.end].ToString());
+			var (i, end) = (v.start, v.end);
+			while (i < end) styles[i++] = (byte)v.token;
 		}
 	}
 }

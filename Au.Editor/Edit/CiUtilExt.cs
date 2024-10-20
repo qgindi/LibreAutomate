@@ -305,6 +305,23 @@ static class CiUtilExt {
 		return n;
 	}
 	
+	public static IEnumerable<SyntaxNode> PreviousSiblings(this SyntaxNode t, bool andThis = false) {
+		if (t.Parent is { } pa) {
+			if (pa is GlobalStatementSyntax) pa = (t = pa).Parent;
+			bool found = false;
+			foreach (var v in pa.ChildNodesAndTokens().Reverse()) {
+				if (v.AsNode(out var n)) {
+					if (!found) {
+						if (n != t) continue;
+						found = true;
+						if (!andThis) continue;
+					}
+					yield return n is GlobalStatementSyntax g ? g.Statement : n;
+				}
+			}
+		}
+	}
+	
 	public static bool Eq(this string t, TextSpan span, string s, bool ignoreCase = false)
 		=> t.Eq(span.Start..span.End, s, ignoreCase);
 	

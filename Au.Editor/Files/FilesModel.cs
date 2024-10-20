@@ -1490,11 +1490,12 @@ partial class FilesModel {
 	/// Adds templates to File > New.
 	/// </summary>
 	public static void FillMenuNew(MenuItem sub) {
+		//rejected: call once, or if Templates\files.xml modified. Fast, don't need caching.
+		
 		var xroot = FileNode.Templates.LoadXml();
-		if (xroot == sub.Tag) return; //else rebuild menu because Templates\files.xml modified
-		sub.Tag = xroot;
 		sub.RemoveAllCustom();
 		
+		var isContextMenu = sub.Parent is ContextMenu;
 		var templDir = FileNode.Templates.DefaultDirBS;
 		_CreateMenu(sub, xroot, null, 0);
 		
@@ -1514,7 +1515,7 @@ partial class FilesModel {
 					_CreateMenu(item, x, relPath + "\\", level + 1);
 				} else {
 					item.Click += (_, e) => {
-						s_inContextMenuCommand = true;
+						s_inContextMenuCommand = isContextMenu;
 						App.Model.NewItemX(x, beginRenaming: true);
 						s_inContextMenuCommand = false;
 					};
@@ -1555,26 +1556,21 @@ partial class FilesModel {
 	public WorkspaceSettings.User UserSettings => WSSett.CurrentUser;
 	
 	public void RunStartupScripts(bool startAsync) {
-		if (_GetStartupScripts() is { } x) {
-			foreach (var row in x.Rows) {
-				string file = row[0];
-				if (file.Starts("//")) continue;
-				var f = FindCodeFile(file);
-				if (f == null) { print.it("Startup script not found: " + file + ". Please edit Options > Workspace > Run scripts..."); continue; }
-				int delay = 0;
-				if (x.ColumnCount > 1) {
-					var sd = row[1];
-					delay = sd.ToInt(0, out int end);
-					if (end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
-				}
-				if (startAsync && delay < 10) delay = 10;
-				if (delay > 0) {
-					timer.after(delay, t => {
-						CompileRun.CompileAndRun(true, f);
-					});
-				} else {
+		foreach (var (row, f) in GetStartupScriptsExceptDisabled()) {
+			if (f == null) { print.it("Startup script not found: " + row[0] + ". Please edit Options > Workspace > Run scripts..."); continue; }
+			int delay = 0;
+			if (row.Length > 1) {
+				var sd = row[1];
+				delay = sd.ToInt(0, out int end);
+				if (end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
+			}
+			if (startAsync && delay < 10) delay = 10;
+			if (delay > 0) {
+				timer.after(delay, t => {
 					CompileRun.CompileAndRun(true, f);
-				}
+				});
+			} else {
+				CompileRun.CompileAndRun(true, f);
 			}
 		}
 		Git.AutoBackup(true);
@@ -1586,6 +1582,20 @@ partial class FilesModel {
 			catch (FormatException) { }
 		}
 		return null;
+	}
+	
+	/// <summary>
+	/// Gets startup scripts of this workspace, except commented out.
+	/// </summary>
+	/// <returns>CSV row and the <b>FileNode</b> (null if not found).</returns>
+	public IEnumerable<(string[] row, FileNode f)> GetStartupScriptsExceptDisabled() {
+		if (_GetStartupScripts() is { } x) {
+			foreach (var row in x.Rows) {
+				string file = row[0];
+				if (file.NE() || file.Starts("//")) continue;
+				yield return (row, FindCodeFile(file));
+			}
+		}
 	}
 	
 	//Used mostly by SciCode, but owned by workspace because can go to any file.

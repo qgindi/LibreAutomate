@@ -56,7 +56,7 @@ namespace Au.Triggers;
 /// 	keys.sendt("text");
 /// 	w1.Close();
 /// };
-/// hk["Win+Alt+K"] = o => script.run("other script.cs"); //run other script in new process
+/// hk["Win+Alt+K"] = o => script.run("Example.cs"); //run another script in new process
 /// 
 /// //triggers that work only with some windows
 /// 

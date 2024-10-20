@@ -940,24 +940,28 @@ static unsafe partial class Api {
 	internal const int AuExtraInfo = 0x71427fa5;
 	
 	[DllImport("user32.dll", SetLastError = true)]
-	internal static extern int SendInput(int cInputs, void* pInputs, int cbSize);
+	static extern int SendInput(int cInputs, void* pInputs, int cbSize);
 	//tested: Returns 0 when: invalid argument; other desktop active.
 	//	Does not return 0 when: UAC (documented); BlockInput; ClipCursor.
 	
 	/// <exception cref="InputDesktopException"></exception>
-	internal static void SendInput(INPUTK* ip, int n = 1) {
+	internal static void SendInput(INPUTK* ip, int n = 1, bool dontThrow = false) {
 		if (n != SendInput(n, ip, sizeof(INPUTK))) {
-			InputDesktopException.ThrowIfBadDesktop("*send keyboard input.");
-			throw new AuException("*send keyboard input.");
+			if (!dontThrow) InputDesktopException.ThrowIfBadDesktop("*send keyboard input.");
 			//tested: if bad input desktop, GetLastError returns 'access denied'.
+			
+			//throw new AuException("*send keyboard input."); //rejected. Anyway in most cases cannot detect when fails (because API returns not 0).
+			Debug_.Print($"SendInput(key) failed. {lastError.message}");
 		}
 	}
 	
 	/// <exception cref="InputDesktopException"></exception>
-	internal static void SendInput(INPUTM* ip, int n = 1) {
+	internal static void SendInput(INPUTM* ip, int n = 1, bool dontThrow = false) {
 		if (n != SendInput(n, ip, sizeof(INPUTM))) {
-			InputDesktopException.ThrowIfBadDesktop("*send mouse input.");
-			throw new AuException("*send mouse input.");
+			if (!dontThrow) InputDesktopException.ThrowIfBadDesktop("*send mouse input.");
+			
+			//throw new AuException("*send mouse input.");
+			Debug_.Print($"SendInput(mouse) failed. {lastError.message}");
 		}
 	}
 	
@@ -1513,10 +1517,10 @@ static unsafe partial class Api {
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern nint SetThreadDpiAwarenessContext(nint dpiContext);
 	
-	[DllImport("shcore.dll", PreserveSig = true)]
+	[DllImport("shcore.dll")]
 	internal static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out int dpiX, out int dpiY);
 	
-	[DllImport("shcore.dll", PreserveSig = true)]
+	[DllImport("shcore.dll")]
 	internal static extern int GetProcessDpiAwareness(IntPtr hprocess, out Dpi.Awareness value); //Dpi.Awareness is PROCESS_DPI_AWARENESS
 	
 	[DllImport("user32.dll")]

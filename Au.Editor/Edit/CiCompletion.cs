@@ -223,11 +223,19 @@ partial class CiCompletion {
 				if (r1 != null) {
 					canGroup = true;
 					//is it member access?
-					if (node is not InitializerExpressionSyntax && position <= tok.SpanStart && tok.GetPreviousToken() is var t1 && t1.Kind() is SyntaxKind.CommaToken or SyntaxKind.OpenBraceToken && t1.Parent is InitializerExpressionSyntax ies1) node = ies1;
-					if (node is InitializerExpressionSyntax) {
-						//if only properties and/or fields, group by inheritance. Else group by namespace; it's a collection initializer list and contains everything.
-						isDot = !r1.ItemsList.Any(o => o.Symbols?[0] is not (IPropertySymbol or IFieldSymbol));
-						if (!isDot && ch == '{') return null; //eg 'new int[] {'
+					bool propPatOrInit = node is PropertyPatternClauseSyntax or InitializerExpressionSyntax;
+					if (propPatOrInit) {
+						propPatOrInit = node.Span.ContainsInside(position);
+					} else {
+						if (position <= tok.SpanStart && tok.GetPreviousToken() is var t1 && t1.Kind() is SyntaxKind.CommaToken or SyntaxKind.OpenBraceToken)
+							if (t1.Parent is PropertyPatternClauseSyntax or InitializerExpressionSyntax) (node, propPatOrInit) = (t1.Parent, true);
+					}
+					if (propPatOrInit) {
+						if (node is InitializerExpressionSyntax) {
+							//if only properties and/or fields, group by inheritance. Else group by namespace; it's a collection initializer list and contains everything.
+							isDot = !r1.ItemsList.Any(o => o.Symbols?[0] is not (IPropertySymbol or IFieldSymbol));
+							if (!isDot && ch == '{') return null; //eg 'new int[] {'
+						} else isDot = true;
 					} else {
 						isDot = syncon.IsRightOfNameSeparator;
 						if (isDot) { //set canGroup = false if Namespace.X or alias::X
@@ -989,7 +997,7 @@ partial class CiCompletion {
 			len = currentTo - startPos;
 			//info: item.ci is null
 		} else {
-			var ci = item.GetCI(); 
+			var ci = item.GetCI();
 			displayTextSuffix = ci.DisplayTextSuffix;
 			var change = data.completionService.GetChangeAsync(data.document, ci).Result;
 			//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.

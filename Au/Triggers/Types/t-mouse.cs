@@ -332,7 +332,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger> {
 				if (mod != 0) {
 					_SetTempKeybHook();
 					if (thc.trigger != null) thc.muteMod = TriggerActionThreads.c_modRelease;
-					else ThreadPool.QueueUserWorkItem(_ => keys.Internal_.ReleaseModAndDisableModMenu());
+					else ThreadPool.QueueUserWorkItem(_ => keys.Internal_.ReleaseModAndDisableModMenu(dontThrow: true));
 				}
 				
 				//print.it(mEvent, pt, mod);

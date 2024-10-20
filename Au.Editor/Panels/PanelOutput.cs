@@ -82,18 +82,19 @@ class PanelOutput {
 			AaSetStyles();
 			_p._c_HandleCreated();
 			
-			AaTags.CodeStylesProvider = CiUtil.GetScintillaStylingBytes;
+			AaTags.CodeStylesProvider = CiUtil.GetScintillaStylingBytes8;
 			
 			SciTags.AddCommonLinkTag("open", _OpenLink);
 			SciTags.AddCommonLinkTag("script", _RunScript);
 			SciTags.AddCommonLinkTag("google", _Google);
+			SciTags.AddCommonLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
+			SciTags.AddCommonLinkTag("+nuget", DNuget.ShowSingle);
 			AaTags.AddLinkTag("+properties", fid => {
 				var f = App.Model.FindCodeFile(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
 			AaTags.AddLinkTag("+DCustomize", DCustomize.ShowSingle);
-			AaTags.AddLinkTag("+nuget", DNuget.ShowSingle);
 			
 			App.PrintServer.SetNotifications(AaWnd, Api.WM_APP);
 			

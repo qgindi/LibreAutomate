@@ -227,6 +227,14 @@ public class TriggerScopes {
 	
 	internal TriggerScope Current { get; private set; }
 	
+	//rejected. More confusing than useful.
+	///// <summary>
+	///// Sets the scope that was active before the last call to any "set scope" function.
+	///// </summary>
+	//public void PreviousScope() => Current = _previous;
+	//internal TriggerScope Current { get => _current; private set { _previous = _current; _current = value; } }
+	//TriggerScope _current, _previous;
+	
 	/// <summary>
 	/// Sets scope "all windows" again. Hotkey, autotext and mouse triggers added afterwards will work with all windows.
 	/// </summary>

@@ -156,7 +156,7 @@ class PanelRecipe {
 		//code styling
 		if (ac != null) {
 			code = string.Join("\r\n", ac.Select(o => o.code));
-			var styles8 = CiUtil.GetScintillaStylingBytes(code);
+			var styles8 = CiUtil.GetScintillaStylingBytes8(code);
 			unsafe {
 				fixed (byte* bp = styles8) {
 					int bOffset = 0;
@@ -204,13 +204,11 @@ class PanelRecipe {
 			AaSetStyles();
 			Call(SCI_SETZOOM, App.Settings.recipe_zoom);
 			
-			AaTags.AddLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
 			AaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _panel._usings); if (s != null) run.itSafe(s); });
 			//aaTags.AddLinkTag("+lang", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/" + s)); //unreliable, the URLs may change
 			AaTags.AddLinkTag("+lang", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
 			//aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
 			AaTags.AddLinkTag("+ms", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
-			AaTags.AddLinkTag("+nuget", s => DNuget.ShowSingle(s));
 			AaTags.AddStyleTag(".k", new() { textColor = 0x0000FF, bold = true }); //keyword
 			AaTags.AddStyleTag(".c", new() { backColor = 0xF0F0F0, monospace = true }); //inline code
 			

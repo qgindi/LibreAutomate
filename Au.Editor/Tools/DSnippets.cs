@@ -59,7 +59,7 @@ class DSnippets : KDialogWindow {
 		_panelSnippet = b.Panel;
 		b.R.Add("Name", out _tName).Tooltip("Snippet name. Single word.\nIf ends with \"Surround\", the snippet can be used only for surround.");
 		_tName.TextChanged += (_, _) => { if (!_ignoreEvents && _ti.Level == 1) _TvSetText(_tName.TextOrNull()); };
-		b.Skip().Add("Context", out AdornerDecorator _).Add(out _tContext, flags: WBAdd.ChildOfLast).Watermark("Auto-detect");
+		b.Skip().Add("Context", out AdornerDecorator _).Add(out _tContext, WBAdd.ChildOfLast).Watermark("Auto-detect");
 		_tContext.TextChanged += (_, _) => { if (!_ignoreEvents) _ti.context = _tContext.TextOrNull(); };
 		b.R.Add("Info", out _tInfo);
 		_tInfo.TextChanged += (_, _) => { if (!_ignoreEvents) { _ti.info = _tInfo.TextOrNull(); if (_ti.Level == 2) _TvSetText(_ti.info); } };

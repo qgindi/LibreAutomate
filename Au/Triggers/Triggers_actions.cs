@@ -494,10 +494,10 @@ class TriggerActionThreads {
 	static void _MuteMod(ref int muteMod) {
 		switch (Interlocked.Exchange(ref muteMod, 0)) {
 		case c_modRelease:
-			keys.Internal_.ReleaseModAndDisableModMenu();
+			keys.Internal_.ReleaseModAndDisableModMenu(dontThrow: true);
 			break;
 		case c_modCtrl:
-			keys.Internal_.SendKey(KKey.Ctrl); //disable Alt/Win menu
+			keys.Internal_.SendKey(KKey.Ctrl, dontThrow: true); //disable Alt/Win menu
 			break;
 		}
 	}

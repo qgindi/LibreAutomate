@@ -19,6 +19,8 @@ namespace Au.Types {
 		//	But use this class as base too, like now. Eg could add protected util functions. Could use this class as both (base and attribute), but Attribute has static members.
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+		
+#if NET8_0_OR_GREATER //no UnscopedRef in 6
 		/// <summary>
 		/// Can be used in structures as flexible array member (the last field, defined like <c>Type[1] name;</c> in C).
 		/// </summary>
@@ -30,13 +32,14 @@ namespace Au.Types {
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				get => ref Unsafe.Add(ref _0, index);
 			}
-
+			
 			[UnscopedRef]
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public Span<T> AsSpan(int length) {
 				return MemoryMarshal.CreateSpan(ref _0, length);
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Windows API <b>BOOL</b>, with implicit conversions to/from C# <c>bool</c>.

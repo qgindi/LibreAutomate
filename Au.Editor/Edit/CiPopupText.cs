@@ -66,6 +66,8 @@ class CiPopupText {
 					run.itSafe(s);
 				}
 			};
+			
+			if (ubInfo) _w.ClickInactiveActivateOwner = true;
 		}
 		return _w;
 	}

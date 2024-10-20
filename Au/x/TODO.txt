@@ -6,7 +6,7 @@ computer:
 	getCpuUsage, getDiskUsage.
 process:
 	getCpuUsage, getStartupTime (.NET Process has it?).
-outb, DetectStringEncoding.
+DetectStringEncoding.
 
 Review functions/classes in QM2 Archive. Now reviewed all in qm.exe and System.
 
