@@ -1,4 +1,4 @@
-#if DEBUG
+#if DEBUG || IDE_LA
 extern alias CAW;
 
 using Microsoft.CodeAnalysis;
@@ -15,18 +15,50 @@ using CAW::Microsoft.CodeAnalysis.FindSymbols;
 
 using Au.Triggers;
 using Au.Controls;
-using System.Windows.Forms;
+using System.Windows.Controls;
+//using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 
 using Au.Compiler;
+using static Au.Controls.Sci;
 
 static class Test {
 	
-	public static void FromMenubar() {
-		//print.clear();
+	public static  void FromMenubar() {
+		print.clear();
 		
-		var d = Panels.Editor.ActiveDoc;
+		//var d = Panels.Editor.ActiveDoc;
+		//print.it(d.aaaCurrentPos16);
+		
+		//if(TriggersAndToolbars.FindTriggersOf(Panels.Editor.ActiveDoc?.EFile) is not {  } a) return;
+		//if(TriggersAndToolbars.FindTriggersOf(App.Model.Find("Script example1.cs")) is not {  } a) return;
+		//foreach (var v in a) {
+		//	string color = v.type == null ? "gray" : v.type.Starts("Toolbar") ? "blue" : "red";
+		//	string s2 = v.arguments.ReplaceLineEndings("  ").Limit(300, middle: true);
+		//	print.it($"<><c {color}>{v}<>    <open {v.file.IdStringWithWorkspace}||{v.pos}>Trigger<>: {v.type ?? "<unknown>"} {s2}");
+		//}
+		
+		//bool alt = keys.isNumLock;
+		//string s1 = null;
+		//s1 = "Script example1.cs";
+		////s1 = "Delete shell icon cache.cs";
+		//s1 = "Backup code.cs";
+		
+		//var f = alt ? App.Model.CurrentFile : App.Model.Find(s1);
+		////perf.first();
+		////var s = TriggersAndToolbars.GetTriggersStringOf(f);
+		//var task = TriggersAndToolbars.GetTriggersStringAsync(f);
+		////perf.next();
+		////timer.after(1, _ => { perf.nw('T'); });
+		////App.Dispatcher.InvokeAsync(() => { perf.nw('T'); });
+		//var s = await task;
+		////perf.nw();
+		//print.it("<>" + s);
+		
+		//TriggersAndToolbars.QuickWindowTrigger(wnd.fromMouse(WXYFlags.NeedWindow), 3);
+		//TriggersAndToolbars.Test();
+		
 		//if (!CodeInfo.GetContextAndDocument(out var cd)) return;
 		
 #if !IDE_LA

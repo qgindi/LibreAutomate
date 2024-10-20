@@ -750,12 +750,13 @@ namespace Au {
 			/// Later this process usually (but not always) can activate easily (without key etc). It works even with higher IL windows.
 			/// Don't know why is this behavior. Tested on all OS.
 			/// Does not work if the foreground process has higher UAC IL.
+			/// Does not work if bad input desktop.
 			/// </summary>
 			static void _EnableActivate_SendKey(bool debugOut) {
 				//if (debugOut) Debug_.Print("EnableActivate: need key"); //FUTURE: temporarily enable to see maybe there are too many calls
 				
 				var x = new Api.INPUTK(0, 128, Api.KEYEVENTF_KEYUP);
-				Api.SendInput(&x);
+				Api.SendInput(&x, dontThrow: true);
 				//info: works without waiting.
 			}
 			

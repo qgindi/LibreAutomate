@@ -34,7 +34,7 @@ partial class Program {
 			
 			//examples of simple text replacements
 			
-			tr["#su"] = "Sunday (autotext example)"; //the same as tt["#su"] = o => o.Replace("Sunday");
+			tr["#su"] = "Sunday (autotext example)"; //the same as tt["#su"] = o => o.Replace("Sunday (autotext example)");
 			tr["#mo"] = "Monday (autotext example)";
 			
 			//these triggers will work only in Notepad window

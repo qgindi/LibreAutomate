@@ -308,7 +308,7 @@ public partial class keys {
 
 	/// <summary>
 	/// Sends key events added by <b>AddRaw_</b> (called by <b>inputBlocker</b>).
-	/// Simply calls <b>Api.SendInput</b>. No options, no sleep, etc.
+	/// Simply calls <b>Api.SendInput</b>. No options, no sleep, etc. No exceptions.
 	/// If new events added while sending, sends them too, until there are no new events added.
 	/// </summary>
 	/// <param name="onlyUp">Send only "up" events.</param>
@@ -323,14 +323,13 @@ public partial class keys {
 			}
 			_a.Clear();
 			if (n == 0) return;
-			fixed (Api.INPUTK* p = a) Api.SendInput(p, n);
+			fixed (Api.INPUTK* p = a) Api.SendInput(p, n, dontThrow: true);
 			//wait.doEvents(); //sometimes catches one more event, but not necessary
 
 			if (_a.Count == 0) break;
 			Debug_.PrintIf(ii == 4, "loop?");
 			//The hook proc is called while in SendInput. If we don't retry, new blocked keys are lost.
-			//	But don't retry forever, because in some cases OS injects keys and the hook recives them not marked as injected,
-			//		eg on Shift if it is set to turn off CapsLock.
+			//	But don't retry forever, because in some cases OS injects keys and the hook receives them not marked as injected, eg on Shift if it is set to turn off CapsLock.
 		}
 	}
 

@@ -631,7 +631,7 @@ class CiText {
 	//	return _Formatter.Format(xml, model, position, ISymbolExtensions2.CrefFormat); //error in new Roslyn
 	//}
 	
-	static IDocumentationCommentFormattingService _Formatter => s_formatter ??= CodeInfo.CurrentWorkspace.Services.GetLanguageServices("C#").GetService<IDocumentationCommentFormattingService>();
+	static IDocumentationCommentFormattingService _Formatter => s_formatter ??= CodeInfo.CurrentWorkspace.Workspace.Services.GetLanguageServices("C#").GetService<IDocumentationCommentFormattingService>();
 	static IDocumentationCommentFormattingService s_formatter;
 	
 	const SymbolDisplayMiscellaneousOptions s_miscDisplayOptions =

@@ -139,4 +139,33 @@ public unsafe partial class KScintilla {
 	public ColorInt aaaGetElementColor(int element) {
 		return ColorInt.FromBGR(Call(SCI_GETELEMENTCOLOUR, element), false);
 	}
+	
+	/// <summary>
+	/// SCI_STARTSTYLING and SCI_SETSTYLINGEX.
+	/// </summary>
+	/// <param name="utf16"><i>start</i> and <i>styles</i> are UTF-16. Convert to UTF-8.</param>
+	/// <param name="start"></param>
+	/// <param name="styles">Styles.</param>
+	/// <param name="text">Text of the <i>styles</i> range. Used to convert <i>styles</i> to UTF-8. Must be same length (asserts). Not used if <b>utf16</b> false.</param>
+	public void aaaSetStyling(bool utf16, int start, RByte styles, RStr text = default) {
+		if (utf16) {
+			Debug.Assert(styles.Length == text.Length);
+			start = aaaPos8(start);
+			if (!text.IsAscii()) {
+				var u = new byte[Encoding.UTF8.GetByteCount(text)];
+				int i = 0, j = 0;
+				foreach (var r in text.EnumerateRunes()) {
+					var v = styles[i++];
+					if (!r.IsBmp) i++;
+					for (int n8 = r.Utf8SequenceLength; n8-- > 0;) u[j++] = v;
+				}
+				styles = u;
+			}
+		} else {
+			Debug.Assert(text.IsEmpty);
+		}
+		
+		Call(SCI_STARTSTYLING, start);
+		unsafe { fixed (byte* bp = styles) Call(SCI_SETSTYLINGEX, styles.Length, bp); }
+	}
 }

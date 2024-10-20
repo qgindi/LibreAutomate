@@ -82,7 +82,7 @@ A script can use packages from multiple folders if they are compatible.");
 		
 		b.Row(-1).StartGrid<KGroupBox>("Installed").Columns(-1, 76);
 		
-		b.Row(-1).Add<Border>().Border().Add(out _tv, flags: WBAdd.ChildOfLast);
+		b.Row(-1).Add<Border>().Border().Add(out _tv, WBAdd.ChildOfLast);
 		
 		b.StartStack(vertical: true).Disabled();
 		b.AddButton("Add /*/", _ => _AddMeta()).Margin("B20").Tooltip(@"Use the package in current C# file. Adds /*/ nuget Package; /*/.");

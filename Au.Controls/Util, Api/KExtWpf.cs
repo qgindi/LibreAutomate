@@ -77,8 +77,10 @@ public static class KExtWpf {
 	public static KCheckComboBox xAddCheckCombo(this wpfBuilder b, string name, string items, int index = 0) {
 		xAddCheck(b, out KCheckBox c, name);
 		xAddOther(b, out ComboBox t);
-		b.Items(items);
-		if (index != 0) t.SelectedIndex = index;
+		if (!items.NE()) {
+			b.Items(items);
+			if (index != 0) t.SelectedIndex = index;
+		}
 		return new(c, t);
 	}
 	
@@ -129,7 +131,7 @@ public static class KExtWpf {
 	public static Border xAddInBorder<T>(this wpfBuilder b, out T var, string margin = null, Thickness? thickness = null) where T : FrameworkElement, new() {
 		b.Add(out Border c).Border(thickness2: thickness);
 		if (margin != null) b.Margin(margin);
-		b.Add(out var, flags: WBAdd.ChildOfLast);
+		b.Add(out var, WBAdd.ChildOfLast);
 		return c;
 	}
 	
@@ -139,7 +141,7 @@ public static class KExtWpf {
 	public static Border xAddInBorder(this wpfBuilder b, FrameworkElement e, string margin = null, Thickness? thickness = null) {
 		b.Add(out Border c).Border(thickness2: thickness);
 		if (margin != null) b.Margin(margin);
-		b.Add(e, flags: WBAdd.ChildOfLast);
+		b.Add(e, WBAdd.ChildOfLast);
 		return c;
 	}
 	
@@ -170,10 +172,16 @@ public static class KExtWpf {
 	/// Adds <b>Grid</b> with two horizontal separators and <b>TextBlock</b>.
 	/// Looks almost like <see cref="KGroupBoxSeparator"/>, but is not inside a GroupBox+Panel.
 	/// </summary>
-	public static wpfBuilder xAddGroupSeparator(this wpfBuilder b, string text, bool center = false) {
+	/// <param name="text">String (to add new <b>TextBlock</b>) or <b>FrameworkElement</b> (probably <b>TextBlock</b>).</param>
+	public static wpfBuilder xAddGroupSeparator(this wpfBuilder b, object text, bool center = false) {
 		b.StartGrid().Columns(center ? -1 : 10, 0, -1);
 		b.AddSeparator(vertical: false).Margin(right: 0);
-		b.Add<TextBlock>(text).Margin(left: 3, right: 4).Font(bold: true);
+		Debug.Assert(text is string or FrameworkElement);
+		if (text is string s) {
+			b.Add<TextBlock>(s).Margin(left: 3, right: 4).Font(bold: true);
+		} else if (text is FrameworkElement e) {
+			b.Add(e);
+		}
 		b.AddSeparator(vertical: false).Margin(left: 0);
 		b.End();
 		return b;
@@ -317,8 +325,14 @@ public static class KExtWpf {
 	/// <summary>
 	/// Adds <b>TextBlock</b> with green background, wrapping and some padding.
 	/// </summary>
-	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, string text) { //not overload. Somehow then it is used with $"string" too.
-		return t.Add(out TextBlock r, text).Wrap().Brush(WpfUtil_.IsHighContrastDark ? 0x2E4D00 : 0xf0f8e0).Padding(1, 2, 1, 4);
+	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, string text) //not overload. Somehow then it is used with $"string" too.
+		=> xAddInfoBlockT(t, out _, text);
+	
+	/// <summary>
+	/// Adds <b>TextBlock</b> with green background, wrapping and some padding.
+	/// </summary>
+	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, out TextBlock r, string text = null) {
+		return t.Add(out r, text).Wrap().Brush(WpfUtil_.IsHighContrastDark ? 0x2E4D00 : 0xf8fff0).Padding(1, 2, 1, 4);
 	}
 	
 	/// <summary>

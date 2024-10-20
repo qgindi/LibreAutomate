@@ -4,8 +4,8 @@ using System.Windows.Input;
 using Au.Controls;
 
 class DIcons : KDialogWindow {
-	public static void ShowSingle(string find = null) {
-		var d = ShowSingle(() => new DIcons(randomizeColors: find == null));
+	public static void ShowSingle(string find = null, bool expandFileIcon = false, bool expandMenuIcon = false) {
+		var d = ShowSingle(() => new DIcons(randomizeColors: find == null, expandFileIcon, expandMenuIcon));
 		if (find != null) d._tName.Text = find;
 	}
 	
@@ -27,7 +27,7 @@ class DIcons : KDialogWindow {
 	//bool _withCollection;
 	TextBox _tName;
 	
-	DIcons(bool randomizeColors) {
+	DIcons(bool randomizeColors, bool expandFileIcon, bool expandMenuIcon) {
 		InitWinProp("Icons", App.Wmain);
 		
 		var b = new wpfBuilder(this).WinSize(600, 600);
@@ -73,8 +73,7 @@ Can be Pack.Icon, like Modern.List.")
 		//b.AddButton("Random", null); //idea: set random icons for multiple selected files. Probably too crazy.
 		b.AddButton("Show current", _ => _ShowCurrent()).Margin("L20");
 		b.End();
-		//if (expandFileIcon) exp1.IsExpanded = true;
-		exp1.IsExpanded = true;
+		if (expandFileIcon) exp1.IsExpanded = true;
 		
 		b.StartGrid<Expander>(out var exp2, "Menu/toolbar/etc icon");
 		b.R.Add<Label>("Set icon of: ");
@@ -95,8 +94,7 @@ Can be Pack.Icon, like Modern.List.")
 		b.AddButton(out var bCodeXaml, "XAML", _ => _InsertCodeOrExport(tv, _Action.CopyXaml)).Width(70).Disabled();
 		b.End();
 		b.End();
-		//if (expandMenuIcon) exp2.IsExpanded = true;
-		exp2.IsExpanded = true;
+		if (expandMenuIcon) exp2.IsExpanded = true;
 		
 		b.StartStack<Expander>("Export to current workspace folder");
 		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(tv, _Action.ExportXaml)).Width(70).Disabled();

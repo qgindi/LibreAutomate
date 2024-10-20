@@ -515,7 +515,7 @@ ${SELECTED_TEXT}$0
 #endif]]>
 	</snippet>
 	<snippet name="#regionSnippet" info="Fold (hide) code lines.">
-		<![CDATA[#region ${1:name}
+		<![CDATA[#region ${1}
 				
 ${SELECTED_TEXT}$0
 

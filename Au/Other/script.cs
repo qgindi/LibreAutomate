@@ -375,15 +375,15 @@ public static class script {
 	/// Does nothing if role <b>editorExtension</b>.
 	/// </remarks>
 	/// <example>
-	/// Shows how to change icon and tooltip.
+	/// How to change icon and tooltip.
 	/// <code><![CDATA[
 	/// script.trayIcon(init: t => { t.Icon = icon.stock(StockIcon.HELP); t.Tooltip = "Example"; });
 	/// ]]></code>
-	/// Shows how to add menu items.
+	/// How to add menu items.
 	/// <code><![CDATA[
 	/// script.trayIcon(menu: (t, m) => {
 	/// 	m["Example"] = o => { dialog.show("Example"); };
-	/// 	m["Run other script"] = o => { script.run("Example"); };
+	/// 	m["Run another script"] = o => { script.run("Example.cs"); };
 	/// });
 	/// ]]></code>
 	/// </example>

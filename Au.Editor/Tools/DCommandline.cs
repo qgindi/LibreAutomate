@@ -6,7 +6,7 @@ namespace Au.Tools;
 
 class DCommandline : KDialogWindow {
 	wpfBuilder _b;
-	CheckBox _cEditorNoPath, _cScriptNoPath, _cWait;
+	CheckBox _cEditorNoPath, _cWait;
 	TextBox _tArgs;
 	
 	DCommandline() {
@@ -15,7 +15,6 @@ class DCommandline : KDialogWindow {
 		b.R.xAddInfoBlockT("This tool creates a command line string to run current script from other programs and scripts (cmd, PowerShell, Task Scheduler, shortcut, etc).\nMore info in Cookbook folder \"Script\".");
 		b.R.AddSeparator();
 		b.R.Add(out _cEditorNoPath, "Editor program name without path");
-		b.R.Add(out _cScriptNoPath, "Script name without path");
 		b.R.Add("Script arguments", out _tArgs);
 		b.R.Add(out _cWait, "Can wait and capture script.writeResult text");
 		b.R.AddSeparator();
@@ -43,7 +42,7 @@ class DCommandline : KDialogWindow {
 		} else {
 			wait = action == 3;
 		}
-		_AppendQ(_cScriptNoPath.IsChecked == true ? f.Name : f.ItemPath, wait);
+		_AppendQ(f.ItemPathOrName(), wait);
 		var args = _tArgs.Text; if (args.Length > 0) sb.Append(' ').Append(args);
 		
 		return sb.ToString();

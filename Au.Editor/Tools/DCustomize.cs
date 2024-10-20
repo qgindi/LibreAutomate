@@ -67,7 +67,7 @@ class DCustomize : KDialogWindow {
 		b.R.Add("Color", out _tColor).Tooltip("Text color.\nCan be a .NET color name or #RRGGBB or #RGB.")
 			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => KColorPicker.ColorTool(s => { _tColor.Text = s; }, b.Window, modal: true, add0xRgbButton: false, addBgrButton: false), "Colors"); b.Span(1);
 		b.R.Add("Image", out _tImage).Tooltip("Icon name etc.\nSee ImageUtil.LoadWpfImageElement.")
-			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.ShowSingle(); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
+			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.ShowSingle(expandMenuIcon: true); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'."); b.Span(1);
 		b.R.Add("Keys", out _tKeys).Tooltip("Keyboard or/and mouse shortcut(s), like Ctrl+E, Shift+M-click.\nSee keys.more.parseHotkeyString.")
 			.xAddButtonIcon("*Material.KeyboardOutline" + Menus.green, _ => _KeysTool(), "Keys tool");
 		b.xAddButtonIcon("*FeatherIcons.Eye" + Menus.blue, _ => _KeysList(), "Existing hotkeys");

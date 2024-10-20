@@ -49,14 +49,14 @@ public class wpfBuilder {
 	readonly Window _window; //= _container or null
 	_PanelBase _p; //current grid/stack/dock/canvas panel, either root or nested
 	
-	abstract class _PanelBase {
+	class _PanelBase {
 		protected readonly wpfBuilder _b;
 		public readonly _PanelBase parent;
 		public readonly Panel panel;
 		FrameworkElement _lastAdded, _lastAdded2;
 		public bool ended;
 		
-		protected _PanelBase(wpfBuilder b, Panel p) {
+		public _PanelBase(wpfBuilder b, Panel p) {
 			_b = b;
 			parent = b._p;
 			_lastAdded = panel = p;
@@ -99,7 +99,7 @@ public class wpfBuilder {
 	}
 	
 	class _Canvas : _PanelBase {
-		public _Canvas(wpfBuilder b) : base(b, new Canvas()) {
+		public _Canvas(wpfBuilder b, Canvas c = null) : base(b, c ?? new Canvas()) {
 			panel.HorizontalAlignment = HorizontalAlignment.Left;
 			panel.VerticalAlignment = VerticalAlignment.Top;
 		}
@@ -121,7 +121,7 @@ public class wpfBuilder {
 		bool _isSpan;
 		double? _andWidth;
 		
-		public _Grid(wpfBuilder b) : base(b, new Grid()) {
+		public _Grid(wpfBuilder b, Grid g = null) : base(b, g ?? new Grid()) {
 			_grid = panel as Grid;
 			if (gridLines) _grid.ShowGridLines = true;
 		}
@@ -333,20 +333,14 @@ public class wpfBuilder {
 	}
 	
 	void _AddRootPanel(FrameworkElement container, bool externalContainer, WBPanelType panelType, bool setProperties) {
-		switch (panelType) {
-		case WBPanelType.Grid:
-			_p = new _Grid(this);
-			break;
-		case WBPanelType.Canvas:
-			_p = new _Canvas(this);
-			break;
-		case WBPanelType.Dock:
-			_p = new _DockPanel(this);
-			break;
-		default:
-			_p = new _StackPanel(this, panelType == WBPanelType.VerticalStack);
-			break;
-		}
+		_p = panelType switch {
+			WBPanelType.Grid => new _Grid(this),
+			WBPanelType.Canvas => new _Canvas(this),
+			WBPanelType.Dock => new _DockPanel(this),
+			WBPanelType.HorizontalStack => new _StackPanel(this, false),
+			WBPanelType.VerticalStack => new _StackPanel(this, true),
+			_ => throw new InvalidEnumArgumentException()
+		};
 		if (_window != null) _p.panel.Margin = new Thickness(3);
 		switch (container) {
 		case ContentControl c: c.Content = _p.panel; break;
@@ -816,14 +810,13 @@ public class wpfBuilder {
 	/// <br/>• <see cref="PasswordBox"/> - sets <b>Password</b> property.
 	/// <br/>• <see cref="TextBlock"/> - sets <b>Text</b> property (see also <see cref="FormatText"/> and <see cref="formattedText"/>).
 	/// <br/>• <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property (see also <see cref="FormatText"/> and <see cref="formattedText"/>).
-	/// <br/>• <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc) (see also <see cref="FormatText"/> and <see cref="formattedText"/>).
+	/// <br/>• <see cref="ContentControl"/> - sets <b>Content</b> property (can be string, other element, etc) (see also <see cref="FormatText"/> and <see cref="formattedText"/>).
 	/// <br/>• <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
 	/// <br/>• Other element types that have <b>Text</b> property.
 	/// </param>
 	/// <param name="flags"></param>
-	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
+	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> or flag <b>ChildOfLast</b> for this element type.</exception>
 	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0) where T : FrameworkElement, new() {
-		if (text is WBAdd f1 && flags == 0) { flags = f1; text = null; } //it's easy to make a mistake - use WBAdd flags as the second argument. Roslyn shows WBAdd completions for the second parameter.
 		_p.BeforeAdd(flags);
 		variable = new T();
 		_Add(variable, text, flags, true);
@@ -831,12 +824,23 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
+	/// Creates and adds element of type <i>T</i> (control etc of any type).
+	/// This overload just calls <see cref="Add{T}(out T, object, WBAdd)"/> with parameter <i>text</i> = <c>null</c>.
+	/// </summary>
+	/// <exception cref="NotSupportedException">The function does not support flag <b>ChildOfLast</b> for this element type.</exception>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public wpfBuilder Add<T>(out T variable, WBAdd flags) where T : FrameworkElement, new()
+		=> Add(out variable, null, flags);
+	//Why this overload exists: with Add{T}(out T, object, WBAdd) it's easy to make a mistake - use WBAdd flags as the second argument. Roslyn shows WBAdd completions for the second parameter.
+	
+	/// <summary>
 	/// Creates and adds element of type <i>T</i> (any type). This overload can be used when don't need element's variable.
 	/// </summary>
 	/// <param name="text">Text, header or other content. More info - see other overload.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
+	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> or flag <b>ChildOfLast</b> for this element type.</exception>
+	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new()
+		=> Add(out T _, text, flags);
 	
 	/// <summary>
 	/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
@@ -1016,22 +1020,12 @@ public class wpfBuilder {
 	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <param name="label">If not <c>null</c>, adds a <b>GroupBox</b> or <b>Label</b> control with this label. If it's a <c>[Flags]</c> enum, adds <b>GroupBox</b> as parent of checkboxes, else adds <b>Label</b> before the <b>ComboBox</b> (uses 2 grid cells).</param>
 	/// <param name="vertical">Vertical stack. Default <c>true</c>.</param>
-	/// <example>
-	/// <code><![CDATA[
-	/// var b = new wpfBuilder("Window").WinSize(250);
-	/// b.R.AddEnum<KMod>(out var e1, KMod.Ctrl | KMod.Alt, label: "Modifiers", vertical: false);
-	/// b.R.AddEnum<DayOfWeek>(out var e2, DateTime.Today.DayOfWeek, label: "Day");
-	/// b.R.AddOkCancel();
-	/// if (!b.ShowDialog()) return;
-	/// print.it(e1.Result);
-	/// print.it(e2.Result);
-	/// ]]></code>
-	/// </example>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Not flexible enough (eg users may want Grid, not StackPanel), etc. Added EnumUI examples in cookbook.
 	public wpfBuilder AddEnum<TEnum>(out EnumUI<TEnum> e, TEnum init = default, (TEnum value, string text)[] items = null, string label = null, bool vertical = true) where TEnum : unmanaged, Enum {
 		if (typeof(TEnum).IsDefined(typeof(FlagsAttribute), false)) {
 			if (label != null) StartStack<GroupBox>(label, vertical: vertical);
 			else StartStack(vertical: vertical);
-			e = new EnumUI<TEnum>(Panel as StackPanel, init, items);
+			e = new EnumUI<TEnum>(Panel, init, items);
 			End();
 		} else {
 			ComboBox cb;
@@ -1738,7 +1732,7 @@ public class wpfBuilder {
 	/// <exception cref="InvalidOperationException">The control isn't in an <b>AdornerDecorator</b>.</exception>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.R.Add<AdornerDecorator>().Add(out TextBox text1, flags: WBAdd.ChildOfLast).Watermark("Water");
+	/// b.R.Add<AdornerDecorator>().Add(out TextBox text1, WBAdd.ChildOfLast).Watermark("Water");
 	/// ]]></code>
 	/// More examples in Cookbook.
 	/// </example>
@@ -1788,12 +1782,13 @@ public class wpfBuilder {
 	/// Sets <see cref="TextBoxBase.IsReadOnly"/> or <see cref="ComboBox.IsReadOnly"/> of the last added text box or editable combo box.
 	/// </summary>
 	/// <param name="readOnly"></param>
+	/// <param name="caretVisible">Sets <see cref="TextBoxBase.IsReadOnlyCaretVisible"/>. Not used with <b>ComboBox</b>.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>TextBoxBase</b> or <b>ComboBox</b>.</exception>
-	public wpfBuilder Readonly(bool readOnly = true) { //rejected: , bool caretVisible=false. Not useful.
+	public wpfBuilder Readonly(bool readOnly = true, bool caretVisible = false) { //rejected: , bool caretVisible=false. Not useful.
 		switch (Last) {
 		case TextBoxBase c:
 			c.IsReadOnly = readOnly;
-			//c.IsReadOnlyCaretVisible=caretVisible;
+			c.IsReadOnlyCaretVisible = caretVisible;
 			break;
 		case ComboBox c:
 			c.IsReadOnly = readOnly;
@@ -2012,6 +2007,7 @@ public class wpfBuilder {
 	/// <br/>• <c>b</c> or <c>Background</c> - background color.
 	/// <br/>• <c>FontFamily</c> - font name, like <c>'Consolas'</c>.
 	/// <br/>• <c>FontSize</c> - font size, like <c>'20'</c>.
+	/// <br/>• <c>ToolTip</c> - tooltip text.
 	/// </para>
 	/// <para>
 	/// WPF elements of these types can be inserted without tags:
@@ -2027,6 +2023,7 @@ public class wpfBuilder {
 	/// <para>
 	/// </para>
 	/// The <c>text</c> in above examples can contain nested tags and elements.
+	/// The <c>&lt;a></c> tag creates an image hyperlink if <c>text</c> is <c>{image}</c>, where image is a <b>UIElement</b> with image (see <see cref="ImageUtil.LoadWpfImageElement"/>) or <b>ImageSource</b> (see <see cref="ImageUtil.LoadWpfImage"/>, <see cref="icon.ToWpfImage"/>).
 	/// </param>
 	/// <exception cref="NotSupportedException">Unsupported type of the last added element. Or supported type but non-empty <b>Content</b> and <b>Header</b> (read Remarks).</exception>
 	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
@@ -2051,10 +2048,10 @@ public class wpfBuilder {
 	/// <s {new Span() { Foreground = Brushes.Red, Background = new LinearGradientBrush(Colors.GreenYellow, Colors.Transparent, 90) }}>Span object, <b>bold</b></s>
 	/// <a href='https://www.example.com'>example.com</a> <b><a href='notepad.exe'>Notepad</a></b>
 	/// <a {() => { print.it("click"); }}>click</a> <a {(Hyperlink h) => { print.it("click once"); h.IsEnabled = false; }}>click once</a>
+	/// <a {() => { print.it("click"); }} ToolTip='image hyperlink'>{ImageUtil.LoadWpfImageElement("*Entypo.HelpWithCircle #008EEE @14")}</a>
 	/// {new Run("Run object") { Foreground = Brushes.Blue, Background = Brushes.Goldenrod, FontSize = 20 }}
 	/// Image {ImageUtil.LoadWpfImageElement("*PixelartIcons.Notes #0060F0")}<!-- or ImageUtil.LoadWpfImage(@"C:\Test\image.png") -->
 	/// Controls {new TextBox() { MinWidth = 100, Height = 20, Margin = new(3) }} {new CheckBox() { Content = "Check" }}
-	/// &lt; &gt; &amp; &apos; &quot;
 	/// """);
 	/// ]]></code>
 	/// Build interpolated string at run time.
@@ -2068,7 +2065,7 @@ public class wpfBuilder {
 	/// </example>
 	public wpfBuilder FormatText(InterpolatedString text) {
 		var s = text.GetFormattedText();
-		_FormatText(Last, s, text.a);
+		_FormatText(Last, s, text.aObj);
 		return this;
 	}
 	
@@ -2086,7 +2083,7 @@ public class wpfBuilder {
 	/// <inheritdoc cref="FormatText(InterpolatedString)" path="/param"/>
 	public static void formatTextOf(object obj, InterpolatedString text) {
 		var s = text.GetFormattedText();
-		_FormatText(obj, s, text.a);
+		_FormatText(obj, s, text.aObj);
 	}
 	
 	/// <summary>
@@ -2112,11 +2109,12 @@ public class wpfBuilder {
 	public static TextBlock formattedText(InterpolatedString text) {
 		var e = new TextBlock();
 		var s = text.GetFormattedText();
-		_FormatText(e, s, text.a);
+		_FormatText(e, s, text.aObj);
 		return e;
 	}
 	
 	static void _FormatText(object obj, string text, List<object> a) {
+		//print.it(text, a);
 		InlineCollection ic;
 		g1:
 		switch (obj) {
@@ -2129,25 +2127,25 @@ public class wpfBuilder {
 		}
 		ic.Clear();
 		
-		const string c_mark = InterpolatedString.c_mark;
 		var xr = XElement.Parse("<x>" + text + "</x>", LoadOptions.PreserveWhitespace);
 		_Enum(ic, xr);
 		
 		void _Enum(InlineCollection ic, XElement xp) {
-			foreach (var n in xp.Nodes()) {
-				if (n is XElement xe) _Element(xe);
-				else if (n is XText xt) _Text(xt); //also XCData
+			for (var xn = xp.FirstNode; xn != null; xn = xn.NextNode) {
+				if (xn is XElement xe) _Element(xe);
+				else if (xn is XText xt) _Text(xt); //also XCData
 			}
 			
 			void _Element(XElement x) {
 				Span r = null;
+				Hyperlink h = null;
 				var tag = x.Name.LocalName;
 				switch (tag) {
 				case "b": r = new Bold(); break;
 				case "i": r = new Italic(); break;
 				case "u": r = new Underline(); break;
 				case "s":
-					if (_GetObj() is object o) { //<s {Span}>...</s>
+					if (_GetAttrObj() is object o) { //<s {Span}>...</s>
 						r = o as Span ?? throw new ArgumentException("Expected <s {Span}>");
 						if (r.Parent != null) throw new InvalidOperationException("Reused {Span} object");
 					} else { //<s attributes}>...</s>
@@ -2155,12 +2153,12 @@ public class wpfBuilder {
 					}
 					break;
 				case "a":
-					var h = new Hyperlink();
+					h = new Hyperlink();
 					r = h;
 					if (x.Attr("href") is string href) { //<a href='...'>
 						h.Click += (_, _) => run.itSafe(href);
 					} else { //<a {Action}>
-						switch (_GetObj()) {
+						switch (_GetAttrObj()) {
 						case Action g: h.Click += (_, _) => g(); break;
 						case Action<Hyperlink> g: h.Click += (_, _) => g(h); break;
 						default: throw new ArgumentException("Expected <a {Action}> or <a href='...'>");
@@ -2177,15 +2175,16 @@ public class wpfBuilder {
 					case "b" or "Background": r.Background = _Brush(v); break;
 					case "FontFamily": r.FontFamily = new(v); break;
 					case "FontSize": if (v.ToNumber(out double fsize)) r.FontSize = fsize; break;
+					case "ToolTip": r.ToolTip = v; break;
 					}
 				}
-				static Brush _Brush(string v) => new SolidColorBrush((Color)ColorConverter.ConvertFromString(v));
 				
 				ic.Add(r);
-				if (x.HasElements) _Enum(r.Inlines, x);
-				else r.Inlines.Add(x.Value);
+				if (h == null || !_HyperlinkImage(x, h))
+					_Enum(r.Inlines, x);
 				
-				object _GetObj() => a != null && x.Attr("_a") is string s && s.Starts(c_mark) && s.ToInt(out int i1, c_mark.Length) ? a[i1] : null;
+				object _GetAttrObj() => a != null && x.Attr("_a") is string s && s.Starts(c_mark2) && s.ToInt(out int i1, c_mark2.Length) ? a[i1] : null;
+				static Brush _Brush(string v) => new SolidColorBrush((Color)ColorConverter.ConvertFromString(v));
 			}
 			
 			void _Text(XText x) {
@@ -2221,15 +2220,37 @@ public class wpfBuilder {
 				} else ic.Add(s);
 			}
 		}
+		
+		bool _HyperlinkImage(XElement x, Hyperlink h) {
+			if (x.FirstNode is XText xt && xt.NextNode == null && xt.Value is string s && s.Starts(c_mark) && s.ToInt(out int i, c_mark.Length, out int end) && end == s.Length - 1) {
+				UIElement eImg = a[i] switch {
+					UIElement e => e,
+					ImageSource e => new Image { Source = e, Stretch = Stretch.None },
+					_ => null
+				};
+				if (eImg == null) return false;
+				
+				Border border = new() { //workaround for: image's transparent areas are not hittest-sensitive. InlineUIContainer.Background does not fix it.
+					Child = eImg,
+					Background = Brushes.Transparent,
+					Padding = new(0, 2, 0, 0)
+				};
+				InlineUIContainer uc = new(border) { BaselineAlignment = BaselineAlignment.Center };
+				h.Inlines.Add(uc);
+				h.TextDecorations = null;
+				return true;
+			}
+			return false;
+		}
 	}
+	
+	const string c_mark = "_a='≡∫∫≡", c_mark2 = "≡∫∫≡"; //start of mark. Full mark is like "_a='≡∫∫≡0'", where 0 is aObj index. With this format, can be used as an XML attribute, as well as in XML text.
 	
 #pragma warning disable 1591 //no XML doc
 	[InterpolatedStringHandler, NoDoc]
 	public ref struct InterpolatedString {
 		DefaultInterpolatedStringHandler _f;
-		internal List<object> a;
-		string _lit;
-		internal const string c_mark = "≡∫∫≡";
+		internal List<object> aObj;
 		
 		public InterpolatedString(int literalLength, int formattedCount) {
 			_f = new(literalLength, formattedCount);
@@ -2244,21 +2265,19 @@ public class wpfBuilder {
 		}
 		
 		public void AppendLiteral(string value)
-			 => _f.AppendLiteral(_lit = value);
+			 => _f.AppendLiteral(value);
 		
 		public void AppendFormatted(string value)
 			=> _f.AppendFormatted(value);
 		
 		public void AppendFormatted<T>(T value) {
 			if (value is Delegate or DependencyObject or IEnumerable<Inline>) {
-				bool q = _lit != null && _lit.AsSpan().TrimEnd() is [.., '<', 'a' or 's'];
-				if (q) _f.AppendLiteral(" _a='");
-				a ??= new();
-				_f.AppendLiteral(c_mark + a.Count.ToS() + " ");
-				a.Add(value);
-				if (q) _f.AppendLiteral("'");
+				aObj ??= new();
+				_f.AppendLiteral(c_mark);
+				_f.AppendLiteral(aObj.Count.ToS());
+				_f.AppendLiteral("'");
+				aObj.Add(value);
 			} else _f.AppendFormatted(value);
-			_lit = null;
 		}
 		
 		public void AppendFormatted<T>(T value, int alignment)
@@ -2446,6 +2465,7 @@ public class wpfBuilder {
 		return this;
 	}
 	
+	
 	/// <summary>
 	/// Adds <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
@@ -2453,7 +2473,8 @@ public class wpfBuilder {
 	/// <remarks>
 	/// How <see cref="Last"/> changes: after calling this function it is the grid (<see cref="Panel"/>); after adding an element it is the element; finally, after calling <b>End</b> it is the grid if <i>childOfLast</i> <c>false</c>, else its parent. The same with all <b>StartX</b> functions.
 	/// </remarks>
-	public wpfBuilder StartGrid(bool childOfLast = false) => _Start(new _Grid(this), childOfLast);
+	public wpfBuilder StartGrid(bool childOfLast = false)
+		=> _Start(new _Grid(this), childOfLast);
 	
 	/// <summary>
 	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
@@ -2467,16 +2488,20 @@ public class wpfBuilder {
 	/// b.StartGrid<GroupBox>("Group");
 	/// ]]></code>
 	/// </example>
-	public wpfBuilder StartGrid<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out T _, header);
+	public wpfBuilder StartGrid<T>(object header) where T : HeaderedContentControl, new()
+		=> _Start(new _Grid(this), out T _, header);
 	
-	/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
+	/// <param name="container">Receives the content control's variable. The function creates new control of the type.</param>
 	/// <example>
 	/// <code><![CDATA[
 	/// b.StartGrid(out Expander g, "Expander"); g.IsExpanded=true;
 	/// ]]></code>
 	/// </example>
 	/// <inheritdoc cref="StartGrid{T}(object)"/>
-	public wpfBuilder StartGrid<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out container, header);
+	public wpfBuilder StartGrid<T>(out T container, object header) where T : HeaderedContentControl, new()
+		=> _Start(new _Grid(this), out container, header);
+	
+	
 	
 	/// <summary>
 	/// Adds <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
@@ -2485,17 +2510,21 @@ public class wpfBuilder {
 	/// <remarks>
 	/// For each added control call <see cref="XY"/> or use indexer like <c>[x, y]</c> or <c>[x, y, width, height]</c>.
 	/// </remarks>
-	public wpfBuilder StartCanvas(bool childOfLast = false) => _Start(new _Canvas(this), childOfLast);
+	public wpfBuilder StartCanvas(bool childOfLast = false)
+		=> _Start(new _Canvas(this), childOfLast);
 	
 	/// <summary>
 	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="header">Header text/content.</param>
-	public wpfBuilder StartCanvas<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out T _, header);
+	public wpfBuilder StartCanvas<T>(object header) where T : HeaderedContentControl, new()
+		=> _Start(new _Canvas(this), out T _, header);
 	
-	/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
+	/// <param name="container">Receives the content control's variable. The function creates new control of the type.</param>
 	/// <inheritdoc cref="StartCanvas{T}(object)"/>
-	public wpfBuilder StartCanvas<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out container, header);
+	public wpfBuilder StartCanvas<T>(out T container, object header) where T : HeaderedContentControl, new()
+		=> _Start(new _Canvas(this), out container, header);
+	
 	
 	/// <summary>
 	/// Adds <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
@@ -2504,35 +2533,71 @@ public class wpfBuilder {
 	/// <remarks>
 	/// For added elements call <see cref="Dock"/>, maybe except for the last element that fills remaining space.
 	/// </remarks>
-	public wpfBuilder StartDock(bool childOfLast = false) => _Start(new _DockPanel(this), childOfLast);
+	public wpfBuilder StartDock(bool childOfLast = false)
+		=> _Start(new _DockPanel(this), childOfLast);
 	
 	/// <summary>
 	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="header">Header text/content.</param>
-	public wpfBuilder StartDock<T>(object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out T _, header);
+	public wpfBuilder StartDock<T>(object header) where T : HeaderedContentControl, new()
+		=> _Start(new _DockPanel(this), out T _, header);
 	
-	/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
+	/// <param name="container">Receives the content control's variable. The function creates new control of the type.</param>
 	/// <inheritdoc cref="StartDock{T}(object)"/>
-	public wpfBuilder StartDock<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out container, header);
+	public wpfBuilder StartDock<T>(out T container, object header) where T : HeaderedContentControl, new()
+		=> _Start(new _DockPanel(this), out container, header);
+	
 	
 	/// <summary>
 	/// Adds <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="vertical"></param>
 	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
-	public wpfBuilder StartStack(bool vertical = false, bool childOfLast = false) => _Start(new _StackPanel(this, vertical), childOfLast);
+	public wpfBuilder StartStack(bool vertical = false, bool childOfLast = false)
+		=> _Start(new _StackPanel(this, vertical), childOfLast);
 	
 	/// <summary>
 	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="header">Header text/content.</param>
 	/// <param name="vertical"></param>
-	public wpfBuilder StartStack<T>(object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out T _, header);
+	public wpfBuilder StartStack<T>(object header, bool vertical = false) where T : HeaderedContentControl, new()
+		=> _Start(new _StackPanel(this, vertical), out T _, header);
 	
-	/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
+	/// <param name="container">Receives the content control's variable. The function creates new control of the type.</param>
 	/// <inheritdoc cref="StartStack{T}(object, bool)"/>
-	public wpfBuilder StartStack<T>(out T container, object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out container, header);
+	public wpfBuilder StartStack<T>(out T container, object header, bool vertical = false) where T : HeaderedContentControl, new()
+		=> _Start(new _StackPanel(this, vertical), out container, header);
+	
+	
+	/// <summary>
+	/// Adds panel of any type. It will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
+	/// </summary>
+	/// <param name="panel">New panel of any type (<b>Grid</b>, <b>WrapPanel</b>, etc). For <b>Grid</b> and <b>Canvas</b> this function sets some panel properties to make everything work like with other <b>StartX</b> functions.</param>
+	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
+	public wpfBuilder StartPanel(Panel panel, bool childOfLast = false)
+		=> _Start(_StartPanel(panel), childOfLast);
+	
+	/// <summary>
+	/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child panel of any type. The panel will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
+	/// </summary>
+	/// <param name="panel">New panel of any type (<b>Grid</b>, <b>WrapPanel</b>, etc). For <b>Grid</b> and <b>Canvas</b> this function sets some panel properties to make everything work like with other <b>StartX</b> functions.</param>
+	/// <typeparam name="TContainer">Any <b>HeaderedContentControl</b>-based type.</typeparam>
+	/// <param name="header">Header text/content.</param>
+	public wpfBuilder StartPanel<TContainer>(Panel panel, object header)
+		where TContainer : HeaderedContentControl, new()
+		=> _Start(_StartPanel(panel), out TContainer _, header);
+	
+	_PanelBase _StartPanel(Panel panel) {
+		return panel switch {
+			null => throw new ArgumentNullException(),
+			Grid g => new _Grid(this, g),
+			Canvas c => new _Canvas(this, c),
+			_ => new _PanelBase(this, panel)
+		};
+	}
+	
 	
 	/// <summary>
 	/// Adds right-bottom-aligned horizontal stack panel (<see cref="StartStack"/>) for adding <b>OK</b>, <b>Cancel</b> and more buttons.

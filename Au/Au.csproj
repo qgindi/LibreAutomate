@@ -12,7 +12,7 @@
 		<AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<DocumentationFile>bin\Au.xml</DocumentationFile>
-		<NoWarn>419,CS8981</NoWarn>
+		<NoWarn>419;8981</NoWarn>
 		<LangVersion>preview</LangVersion>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<NoWin32Manifest>true</NoWin32Manifest>

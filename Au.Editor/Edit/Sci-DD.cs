@@ -88,32 +88,31 @@ partial class SciCode {
 				_sci.Call(SCI_DRAGDROP, 2, &z); //just hides the drag indicator and sets caret position
 				
 				if (_data.scripts) {
-					int what = 0;
-					if (isCodeFile) {
-						var sm = "1 string s = name;|2 string s = path;";
-						if (Panels.Files.TreeControl.DragDropFiles.All(o => o.IsCodeFile)) {
-							sm += "|3 script.run(path);|4 t[name] = o => script.run(path);";
-							if (Panels.Files.TreeControl.DragDropFiles.All(o => o.IsClass)) {
-								sm += Panels.Files.TreeControl.DragDropFiles.All(o => o.GetClassFileRole() == FNClassFileRole.Library) ? "|101 /* pr path; */" : "|100 /* c path; */";
+					if (Panels.Files.TreeControl.DragDropFiles is { } a) {
+						int what = 0;
+						if (isCodeFile) {
+							var sm = "1 string s = name;|2 string s = path;";
+							if (a.All(o => o.IsCodeFile)) {
+								sm += "|3 script.run(name);|4 t[name] = o => script.run(name);";
+								if (a.All(o => o.IsClass)) {
+									sm += a.All(o => o.GetClassFileRole() == FNClassFileRole.Library) ? "|101 /* pr name; */" : "|100 /* c name; */";
+								}
+							} else {
+								sm += "|102 /* resource path; */";
+								sm += "|103 /* file path; */";
 							}
-						} else {
-							sm += "|102 /* resource path; */";
-							sm += "|103 /* file path; */";
+							what = popupMenu.showSimple(sm);
+							if (what == 0) return;
 						}
-						what = popupMenu.showSimple(sm);
-						if (what == 0) return;
-					}
-					var a = Panels.Files.TreeControl.DragDropFiles;
-					if (a != null) {
 						if (what >= 100) { //meta comment
 							MetaCommentsParser m = new(_sci.EFile) { };
 							var list = what switch { 100 => m.c, 101 => m.pr, 102 => m.resource, _ => m.file };
-							foreach (var v in a) list.Add(v.ItemPath);
+							foreach (var v in a) list.Add(v.ItemPathOrName());
 							m.Apply();
 							return;
 						}
 						for (int i = 0; i < a.Length; i++)
-							_AppendScriptOrLink(what, a[i].ItemPath, a[i].Name, i + 1, a[i]);
+							_AppendScriptOrLink(what, what is 3 or 4 ? a[i].ItemPathOrName() : a[i].ItemPath, a[i].Name, i + 1, a[i]);
 					}
 				} else if (_data.files != null || _data.shell != null) {
 					string[] files = null, names = null;
@@ -164,7 +163,7 @@ partial class SciCode {
 					_sci._noModelEnsureCurrentSelected = false;
 				}
 			} else {
-				_sci.Call(SCI_DRAGDROP, 3);
+				if (_justText) _sci.Call(SCI_DRAGDROP, 3);
 			}
 			
 			void _AppendScriptOrLink(int what, string path, string name, int index = 0, FileNode fn = null) {

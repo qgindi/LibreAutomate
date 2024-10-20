@@ -4,8 +4,7 @@ using Au.Controls;
 
 namespace Au.Tools;
 
-class RegexWindow : InfoWindow //KPopup
-{
+class RegexWindow : InfoWindow { //KPopup
 	public RegexWindow() : base(250) {
 		Size = (800, 220);
 		WindowName = "Regex";

@@ -35,8 +35,7 @@ class DPortable : KDialogWindow {
 		
 		b.R.Add("Install in folder", out TextBox tDir).Focus().Validation(_ => _ValidateFolder());
 		
-		b.R.xAddInfoBlockT(null);
-		var tbInfoExists = b.Last as TextBlock;
+		b.R.xAddInfoBlockT(out var tbInfoExists);
 		
 		int iDir = 0;
 		b.R.StartGrid().Span(2).Columns(0, -1);
@@ -67,6 +66,7 @@ class DPortable : KDialogWindow {
 			b.Add(out d.tSkip, d.skip = App.Settings.portable_skip[i]).Multiline(wrap: TextWrapping.NoWrap).Size(..500, ..120)
 				.Tooltip("These folders will not be copied. Existing folders will not be deleted or updated.\r\nExamples:\r\nDescendantFolderName\r\n\\DirectChildFolderName\r\n\\Folder1\\Folder2\r\n//comment");
 			d.tSkip.TextChanged += (o, _) => { App.Settings.portable_skip[i] = d.skip = (o as TextBox).Text; };
+			if (label.Starts("Workspace")) b.Validation(o => d.tSkip.Text.Lines(noEmpty: true) is var a1 && (a1.Contains(@"\files", StringComparer.OrdinalIgnoreCase) || a1.Contains(@"files", StringComparer.OrdinalIgnoreCase)) ? "can't skip the files subfolder" : null);
 			
 			return d;
 		}

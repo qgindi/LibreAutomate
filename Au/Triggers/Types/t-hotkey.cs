@@ -248,7 +248,7 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 					if (thc.trigger == null) { //KeyModUp or action==null
 						if (mod is KMod.Alt or KMod.Win or (KMod.Alt | KMod.Win)) {
 							//print.it("need Ctrl");
-							ThreadPool.QueueUserWorkItem(o => keys.Internal_.SendKey(KKey.Ctrl)); //disable Alt/Win menu
+							ThreadPool.QueueUserWorkItem(o => keys.Internal_.SendKey(KKey.Ctrl, dontThrow: true)); //disable Alt/Win menu
 						}
 					} else if (mod != 0) {
 						if (0 == (x.flags & TKFlags.NoModOff)) thc.muteMod = TriggerActionThreads.c_modRelease;

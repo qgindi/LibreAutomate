@@ -7,16 +7,16 @@ partial class TriggersAndToolbars {
 		if (f == null) return false;
 		return App.Model.OpenAndGoTo(f);
 	}
-
+	
 	public static void GoToToolbars() {
 		var folder = GetProject(create: true);
 		folder = folder.Children().First(f => f.IsFolder && f.Name.Eqi("Toolbars"));
-
+		
 		folder.SelectSingle();
 		var tv = Panels.Files.TreeControl;
 		if (!folder.IsExpanded) tv.Expand(folder, true);
 		tv.EnsureVisible(folder, scrollTop: true);
-
+		
 		//var m = new popupMenu();
 		//foreach (var f in folder.Children()) {
 		//	if (!f.IsClass) continue;
@@ -24,7 +24,7 @@ partial class TriggersAndToolbars {
 		//}
 		//m.Show();
 	}
-
+	
 	/// <summary>
 	/// Finds or creates project @"\@Triggers and toolbars".
 	/// </summary>
@@ -53,7 +53,7 @@ partial class TriggersAndToolbars {
 					}
 				}
 			}
-
+			
 			//set run at startup
 			const string c_script = @"\@Triggers and toolbars\Triggers and toolbars.cs";
 			bool startupFound = false;
@@ -70,7 +70,7 @@ partial class TriggersAndToolbars {
 						ss = x.ToString();
 					}
 				}
-				catch (FormatException) { }
+				catch (FormatException) { startupFound = true; }
 			}
 			if (!startupFound) {
 				App.Model.UserSettings.startupScripts = ss;
@@ -80,17 +80,17 @@ partial class TriggersAndToolbars {
 		return fProject;
 	}
 	const string s_templPath = @"Default\@Triggers and toolbars";
-
+	
 	static FileNode _GetFile(string file, bool create, FNFind kind = FNFind.File) {
 		var f = GetProject(create: create);
 		return f?.FindRelative(file, kind);
 	}
-
+	
 	public static void Restart() {
 		var f = _GetFile(@"Triggers and toolbars.cs", create: false);
 		if (f != null) CompileRun.CompileAndRun(true, f, runFromEditor: true);
 	}
-
+	
 	/// <summary>
 	/// Disables, enables or toggles triggers in all processes. See <see cref="ActionTriggers.DisabledEverywhere"/>.
 	/// Also updates UI: changes tray icon and checks/unchecks the menu item.
@@ -101,14 +101,14 @@ partial class TriggersAndToolbars {
 		if (dis == ActionTriggers.DisabledEverywhere) return;
 		ActionTriggers.DisabledEverywhere = dis; //notifies us to update tray icon etc
 	}
-
+	
 	//from ActionTriggers.DisabledEverywhere through our message-only window
 	internal static void OnDisableTriggers() {
 		bool dis = ActionTriggers.DisabledEverywhere;
 		App.TrayIcon.Disabled = dis;
 		if (App.Commands is { } ac) ac[nameof(Menus.TT.Disable_triggers)].Checked = dis;
 	}
-
+	
 	public static void ShowActiveTriggers() {
 		for (wnd w = default; ;) {
 			w = wnd.findFast(null, "Au.Triggers.Hooks", messageOnly: true, w);
@@ -117,17 +117,17 @@ partial class TriggersAndToolbars {
 			w.Post(Api.WM_USER + 30);
 		}
 	}
-
+	
 	//public static void AddTrigger()
 	//{
-
+	
 	//}
-
+	
 	public static void NewToolbar() {
 		var tt = new TriggersAndToolbars();
 		tt._NewToolbar();
 	}
-
+	
 	public static void SetToolbarTrigger() {
 		var tt = new TriggersAndToolbars();
 		tt._SetToolbarTrigger();

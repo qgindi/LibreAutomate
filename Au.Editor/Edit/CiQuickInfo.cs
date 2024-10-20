@@ -23,11 +23,11 @@ class CiQuickInfo {
 			if (cd.code[tspan.Start] is (>= '0' and <= '9') or '\'' or '"' or '@' or '$' or '{') return null;
 			var tk = tok.Kind(); if (tk is SyntaxKind.InterpolatedStringTextToken or SyntaxKind.TrueKeyword or SyntaxKind.FalseKeyword) return null;
 			
-			Panels.Debug.SciMouseHover_(cd);
+			//make easier to get quick info for indexer
+			if (tk is SyntaxKind.IdentifierToken && tspan.Length > 1 && pos16 >= tspan.End - 1)
+				if (GetIndexerToken(cd, tok, out var tok2)) pos16 = tok2.SpanStart;
 			
-			//} else { //trivia. May show quickinfo for some trivia kinds, eg a cref in doccomment, #endx block start.
-			//var tri = cd.syntaxRoot.FindTrivia(pos16);
-			//print.it(tri, tri.IsDirective, tri.Kind());
+			Panels.Debug.SciMouseHover_(cd);
 		}
 		
 		var opt1 = QuickInfoOptions.Default with { IncludeNavigationHintsInQuickInfo = false };
@@ -100,5 +100,26 @@ class CiQuickInfo {
 		}
 		
 		return x.Result;
+	}
+	
+	internal static bool GetIndexerToken(CodeInfo.Context cd, in SyntaxToken tok, out SyntaxToken r) {
+		r = default;
+		Debug.Assert(tok.Kind() is SyntaxKind.IdentifierToken);
+		if (tok.GetNextToken() is var tok2 && tok2.IsKind(SyntaxKind.OpenBracketToken)) {
+			var si = cd.semanticModel.GetSymbolInfo(tok.Parent);
+			ITypeSymbol t = si.Symbol switch {
+				IPropertySymbol k => k.Type,
+				IFieldSymbol k => k.Type,
+				ILocalSymbol k => k.Type,
+				IParameterSymbol k => k.Type,
+				_ => null
+			};
+			if (t != null) {
+				if (t.TypeKind is TypeKind.Array || t.SpecialType is SpecialType.System_String or SpecialType.System_Array) return false; //indexer info not useful
+				r = tok2;
+				return true;
+			}
+		}
+		return false;
 	}
 }

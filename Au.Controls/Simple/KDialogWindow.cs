@@ -64,7 +64,7 @@ public class KDialogWindow : Window {
 	/// <param name="hideOwner">Temporarily hide owner.</param>
 	/// <param name="disableOwner">Temporarily disable owner.</param>
 	public bool ShowAndWait(Window owner = null, bool hideOwner = false, bool disableOwner = false) {
-		if (owner != null) Owner = owner;
+		if (owner != null) Owner = owner; else hideOwner = disableOwner = false;
 		wnd ow = hideOwner || disableOwner ? Owner.Hwnd() : default;
 		if (hideOwner) ow.ShowL(false); //not owner.Hide(), it closes owner if it is modal
 		if (disableOwner) {
@@ -84,6 +84,10 @@ public class KDialogWindow : Window {
 			eh = null;
 			foreach (var v in tw) if (!v.Is0) v.Enable(true);
 		};
+		
+		if (owner == null && ShowActivated && !wnd.active.IsOfThisProcess) {
+			Loaded += (_, _) => this.Hwnd().ActivateL();
+		}
 		
 		try { return ShowDialog() == true; }
 		finally {

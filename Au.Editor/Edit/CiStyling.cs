@@ -147,7 +147,6 @@ partial class CiStyling {
 		_PN('d');
 		try {
 			Sci_GetVisibleRange(doc.AaSciPtr, out var vr);
-			//print.it(vr);
 			
 			bool minimal = end8 >= 0;
 			bool needFolding = !minimal && !_folded;
@@ -169,13 +168,12 @@ partial class CiStyling {
 				if (needFolding) {
 					CiFolding.Fold(doc, af);
 					_folded = true;
+					Sci_GetVisibleRange(doc.AaSciPtr, out vr);
+					_PN('F');
 				}
-				Sci_GetVisibleRange(doc.AaSciPtr, out vr);
-				_PN('F');
 				start8 = vr.posFrom;
 				end8 = vr.posTo;
 			}
-			//if (end8 == vr.posTo) _modFromEnd = doc.aaaLen8 - end8; //old code, now don't know its purpose. If need, then maybe do the same for _modStart.
 			if (end8 <= start8) return;
 			
 #if PRINT
@@ -184,12 +182,10 @@ partial class CiStyling {
 			
 			var ar8 = _GetVisibleRanges();
 			List<StartEnd> _GetVisibleRanges() {
-				//print.it(vr);
 				List<StartEnd> a = new();
 				StartEnd r = new(start8, end8);
 				for (int dline = doc.aaaLineFromPos(false, start8), dlinePrev = dline - 1, vline = doc.Call(SCI_VISIBLEFROMDOCLINE, dline); ; dline = doc.Call(SCI_DOCLINEFROMVISIBLE, ++vline)) {
 					int i = doc.aaaLineStart(false, dline); if (i >= end8) break;
-					//print.it(dline + 1);
 					if (dline > dlinePrev + 1) {
 						a.Add(r);
 						r.start = i;
@@ -198,7 +194,6 @@ partial class CiStyling {
 					dlinePrev = dline;
 				}
 				a.Add(r);
-				//print.it("a", a);
 				return a;
 			}
 			
@@ -209,7 +204,7 @@ partial class CiStyling {
 			await Task.Run(async () => {
 				semo = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
 				_PN('m'); //BAD: slow when [re]opening a file in a large project
-				for (int i = 0; i < ar8.Count; i++) {
+				for (int i = 0; i < ar.Length; i++) {
 					var r = ar[i].r;
 					ar[i].a = CiUtil.GetClassifiedSpans(semo, document, r.start, r.end, cancelToken);
 				}
@@ -220,12 +215,13 @@ partial class CiStyling {
 			if (_Canceled()) return;
 			_PN('c');
 			
-			var b = new byte[end8 - start8];
+			int start16 = doc.aaaPos16(start8), end16 = doc.aaaPos16(end8); //from now don't use UTF-8
+			var b = new byte[end16 - start16];
 			
 			char prevPunctuation = default;
 			foreach (var (a, r) in ar) {
 				foreach (var v in a) {
-					EStyle style = StyleFromClassifiedSpan(v, semo);
+					EStyle style = StyleFromClassifiedSpan(v);
 					//print.it($"<><c green>{v.ClassificationType}<> '{code[v.TextSpan.Start..v.TextSpan.End]}' style={style}");
 					
 					if (style == EStyle.None) {
@@ -236,16 +232,10 @@ partial class CiStyling {
 						}
 #endif
 					} else {
-						//int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
-						int spanStart16 = Math.Max(v.TextSpan.Start, r.start), spanEnd16 = Math.Min(v.TextSpan.End, r.end);
-						int spanStart8 = doc.aaaPos8(spanStart16), spanEnd8 = doc.aaaPos8(spanEnd16);
-						_SetStyleRange((byte)style);
+						int spanStart = Math.Max(v.TextSpan.Start, r.start), spanEnd = Math.Min(v.TextSpan.End, r.end);
+						b.AsSpan(spanStart - start16, spanEnd - spanStart).Fill((byte)style);
 						if (style is EStyle.String && prevPunctuation is '(' or ',' or ':') _RegexString();
 						prevPunctuation = style is EStyle.Punctuation ? code[v.TextSpan.End - 1] : default;
-						
-						void _SetStyleRange(byte style) {
-							for (int i = spanStart8; i < spanEnd8; i++) b[i - start8] = style;
-						}
 						
 						void _RegexString() {
 							//we need only verbatim and raw strings, and not interpolated
@@ -268,18 +258,19 @@ partial class CiStyling {
 								while (from < to && code[from] is '"') { from++; if (code[to - 1] is '"') to--; }
 								from = CiUtil.SkipNewline(code, CiUtil.SkipSpace(code, from));
 								to = CiUtil.SkipNewlineBack(code, CiUtil.SkipSpaceBack(code, to));
-								if (to <= from) return;
 							}
+							from = Math.Max(from, start16);
+							to = Math.Min(to, end16);
+							if (to <= from) return;
 							
-							RegexParser.GetScintillaStylingBytes(code.AsSpan(from..to), format, b.AsSpan((spanStart8 - start8 + from - v.TextSpan.Start)..));
+							RegexParser.GetScintillaStylingBytes16(code.AsSpan(from..to), format, b.AsSpan((spanStart - start16 + from - v.TextSpan.Start)..));
 						}
 					}
 				}
 			}
 			doc.EHideImages_(start8, end8, b);
 			_PN();
-			doc.Call(SCI_STARTSTYLING, start8);
-			unsafe { fixed (byte* bp = b) doc.Call(SCI_SETSTYLINGEX, b.Length, bp); }
+			doc.aaaSetStyling(true, start16, b, code.AsSpan(start16..end16));
 			doc.aaaSetStyled(minimal ? int.MaxValue : end8);
 			
 			_modStart = _modFromEnd = int.MaxValue;
@@ -324,7 +315,7 @@ partial class CiStyling {
 	//static bool s_debugPerf;
 #endif
 	
-	public static EStyle StyleFromClassifiedSpan(ClassifiedSpan cs, SemanticModel semo) {
+	public static EStyle StyleFromClassifiedSpan(ClassifiedSpan cs) {
 		return cs.ClassificationType switch {
 			ClassificationTypeNames.ClassName => EStyle.Type,
 			ClassificationTypeNames.Comment => EStyle.Comment,

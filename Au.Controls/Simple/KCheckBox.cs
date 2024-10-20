@@ -123,6 +123,12 @@ public class KCheckTextBox {
 		_items = items;
 	}
 	
+	public void Clear(string text = null) {
+		c.IsChecked = false;
+		t.Text = text;
+		_items = null;
+	}
+	
 	/// <summary>
 	/// If checked and visible and text not empty, gets text and returns true. Else sets s=null and returns false.
 	/// </summary>

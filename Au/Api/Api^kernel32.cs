@@ -59,7 +59,7 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 	
-	[DllImport("kernel32.dll", PreserveSig = true, SetLastError = true)]
+	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern int GetThreadDescription(IntPtr hThread, out char* ppszThreadDescription);
 	
 	[DllImport("kernel32.dll", EntryPoint = "CreateEventW", SetLastError = true)]

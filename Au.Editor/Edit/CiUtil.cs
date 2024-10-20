@@ -1,10 +1,5 @@
 extern alias CAW;
 
-using System.Collections.Immutable;
-using Au.Controls;
-using Au.Compiler;
-using EStyle = CiStyling.EStyle;
-
 using Microsoft.CodeAnalysis;
 using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -17,6 +12,10 @@ using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 using CAW::Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Tags;
 using CAW::Microsoft.CodeAnalysis.FindSymbols;
+
+using System.Collections.Immutable;
+using Au.Compiler;
+using EStyle = CiStyling.EStyle;
 
 static class CiUtil {
 	#region simple string util
@@ -206,7 +205,7 @@ static class CiUtil {
 	static ISymbol _TryGetAltSymbolFromPos(CodeInfo.Context cd) {
 		if (cd.code.Eq(cd.pos, '[')) { //indexer?
 			var t = cd.syntaxRoot.FindToken(cd.pos, true);
-			if (t.IsKind(SyntaxKind.OpenBracketToken) && t.Parent is BracketedArgumentListSyntax b && b.Parent is ElementAccessExpressionSyntax es) {
+			if (t.IsKind(SyntaxKind.OpenBracketToken) && t.Parent is BracketedArgumentListSyntax { Parent: ElementAccessExpressionSyntax es }) {
 				return cd.semanticModel.GetSymbolInfo(es).GetAnySymbol();
 			}
 		}
@@ -231,6 +230,23 @@ static class CiUtil {
 			case "unmanaged": //tested cases
 				return (null, word, HelpKind.ContextualKeyword, token);
 			}
+			
+			if (GetSymbolFromPos(cd) is not { } sym) return (null, null, default, token);
+			
+			//if pressed F1 inside identifier in `identifier[...]`, it's very likely wants help for the indexer. Let's show menu.
+			if (forHelp && CiQuickInfo.GetIndexerToken(cd, token, out var tok2)) {
+				if (tok2.Parent is BracketedArgumentListSyntax { Parent: ElementAccessExpressionSyntax es }) {
+					if (cd.semanticModel.GetSymbolInfo(es).GetAnySymbol() is { } sym2) {
+						switch (popupMenu.showSimple([sym.Name, "[...]"], PMFlags.ByCaret)) {
+						case 1: break;
+						case 2: sym = sym2; break;
+						default: return (null, null, default, token);
+						}
+					}
+				}
+			}
+			
+			return (sym, null, default, token);
 		} else if (token.Parent is ImplicitObjectCreationExpressionSyntax && (!forHelp || cd.pos == token.Span.End)) {
 			//for 'new(' get the ctor or type
 		} else if (k == SyntaxKind.BaseKeyword) {
@@ -415,6 +431,24 @@ static class CiUtil {
 			}
 		}
 		return a;
+	}
+	
+	/// <summary>
+	/// Enumerates properties and fields of the enclosing class/struct.
+	/// Skips write-only properties, indexers and const fields. Enums both static and non-static.
+	/// </summary>
+	public static IEnumerable<ISymbol> EnumPropertiesAndFields(SemanticModel semo, int pos) {
+		if (semo.GetEnclosingNamedType(pos, default) is { TypeKind: TypeKind.Class or TypeKind.Struct } t) {
+			foreach (var v in t.GetMembers().Where(o => o is IFieldSymbol or IPropertySymbol)) {
+				if (v is IPropertySymbol ips) {
+					if (ips.IsIndexer || ips.IsWriteOnly) continue;
+				} else if (v is IFieldSymbol ifs) {
+					if (ifs.IsConst || ifs.AssociatedSymbol != null) continue;
+				} else continue;
+				
+				yield return v;
+			}
+		}
 	}
 	
 	/// <summary>
@@ -650,16 +684,16 @@ static class CiUtil {
 	/// <c>var styles = new CiStyling.TTheme { FontSize = 9 };
 	/// styles.ToScintilla(this);</c>
 	/// </summary>
-	public static byte[] GetScintillaStylingBytes(string code) {
+	public static byte[] GetScintillaStylingBytes8(string code) {
 		var styles8 = new byte[Encoding.UTF8.GetByteCount(code)];
 		var map8 = styles8.Length == code.Length ? null : Convert2.Utf8EncodeAndGetOffsets_(code).offsets;
 		using var ws = new AdhocWorkspace();
 		var document = CreateDocumentFromCode(ws, code, needSemantic: true);
-		var semo = document.GetSemanticModelAsync().Result;
+		//var semo = document.GetSemanticModelAsync().Result;
 		var a = GetClassifiedSpansAsync(document, 0, code.Length).Result;
 		foreach (var v in a) {
 			//print.it(v.TextSpan, v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
-			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
+			EStyle style = CiStyling.StyleFromClassifiedSpan(v);
 			if (style == EStyle.None) continue;
 			var (i, end) = v.TextSpan;
 			if (map8 != null) { i = map8[i]; end = map8[end]; }
@@ -667,6 +701,30 @@ static class CiUtil {
 		}
 		return styles8;
 	}
+	
+	//not used
+	///// <summary>
+	///// For C# code gets style bytes that can be used with <see cref="KScintilla.aaaSetStyling"/> (UTF-16).
+	///// Uses Classifier.GetClassifiedSpansAsync, like the code editor.
+	///// Controls that use this should set styles like this example, probably when handle created:
+	///// <c>var styles = new CiStyling.TTheme { FontSize = 9 };
+	///// styles.ToScintilla(this);</c>
+	///// </summary>
+	//public static byte[] GetScintillaStylingBytes16(string code) {
+	//	var styles8 = new byte[code.Length];
+	//	using var ws = new AdhocWorkspace();
+	//	var document = CreateDocumentFromCode(ws, code, needSemantic: true);
+	//	//var semo = document.GetSemanticModelAsync().Result;
+	//	var a = GetClassifiedSpansAsync(document, 0, code.Length).Result;
+	//	foreach (var v in a) {
+	//		//print.it(v.TextSpan, v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
+	//		EStyle style = CiStyling.StyleFromClassifiedSpan(v);
+	//		if (style == EStyle.None) continue;
+	//		var (i, end) = v.TextSpan;
+	//		while (i < end) styles8[i++] = (byte)style;
+	//	}
+	//	return styles8;
+	//}
 	
 	public static CiItemKind MemberDeclarationToKind(MemberDeclarationSyntax m) {
 		return m switch {
@@ -765,7 +823,7 @@ static class CiUtil {
 	
 	#endregion
 	
-	#region create a temp syntax tree, document, compilation, solution
+	#region create a syntax tree, document, etc
 	
 	/// <summary>
 	/// From C# code creates a Roslyn workspace+project+document for code analysis.
@@ -816,62 +874,6 @@ global using System.Windows;
 global using System.Windows.Controls;
 global using System.Windows.Media;
 """;
-	
-	/// <summary>
-	/// Creates Compilation from a file or project folder.
-	/// Supports meta etc, like the compiler. Does not support test script, meta testInternal, project references.
-	/// </summary>
-	/// <param name="f">A code file or a project folder. If in a project folder, creates from the project.</param>
-	/// <returns>null if can't create, for example if f isn't a code file or if meta contains errors.</returns>
-	public static Compilation CreateCompilationFromFileNode(FileNode f) { //not CSharpCompilation, it creates various small problems
-		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
-		if (!f.IsCodeFile) return null;
-		
-		var m = new MetaComments(MCFlags.ForCodeInfo);
-		if (!m.Parse(f, projFolder)) return null; //with this flag never returns false, but anyway
-		
-		var pOpt = m.CreateParseOptions();
-		var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
-		for (int i = 0; i < trees.Length; i++) {
-			var f1 = m.CodeFiles[i];
-			trees[i] = CSharpSyntaxTree.ParseText(f1.code, pOpt, f1.f.FilePath, Encoding.Default) as CSharpSyntaxTree;
-		}
-		
-		var cOpt = m.CreateCompilationOptions();
-		return CSharpCompilation.Create("Compilation", trees, m.References.Refs, cOpt);
-	} //FUTURE: remove if unused
-	
-	/// <summary>
-	/// Creates Solution from a file or project folder.
-	/// Supports meta etc, like the compiler. Does not support test script, meta testInternal, project references.
-	/// </summary>
-	/// <param name="ws"><c>using var ws = new AdhocWorkspace(); //need to dispose</c></param>
-	/// <param name="f">A code file or a project folder. If in a project folder, creates from the project.</param>
-	/// <returns>null if can't create, for example if f isn't a code file or if meta contains errors.</returns>
-	public static (Solution sln, MetaComments meta) CreateSolutionFromFileNode(AdhocWorkspace ws, FileNode f) {
-		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
-		if (!f.IsCodeFile) return default;
-		
-		var m = new MetaComments(MCFlags.ForCodeInfo);
-		if (!m.Parse(f, projFolder)) return default; //with this flag never returns false, but anyway
-		
-		var projectId = ProjectId.CreateNewId();
-		var adi = new List<DocumentInfo>();
-		foreach (var f1 in m.CodeFiles) {
-			var docId = DocumentId.CreateNewId(projectId);
-			var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
-			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
-		}
-		
-		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
-			m.CreateCompilationOptions(),
-			m.CreateParseOptions(),
-			adi,
-			null,
-			m.References.Refs);
-		
-		return (ws.CurrentSolution.AddProject(pi), m);
-	}
 	
 	/// <summary>
 	/// Calls <b>CSharpSyntaxTree.ParseText</b> and returns <b>CompilationUnitSyntax</b>.

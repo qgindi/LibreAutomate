@@ -294,18 +294,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <returns>Object for getting result later. See <see cref="EnumUI{TEnum}.Result"/>.</returns>
 	/// <param name="init">Initial value.</param>
 	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
-	/// <example>
-	/// <code><![CDATA[
-	/// var m = new popupMenu();
-	/// var e1 = m.AddEnum<KMod>(KMod.Ctrl|KMod.Alt); //a [Flags] enum
-	/// m.Separator();
-	/// var e2 = m.AddEnum<DayOfWeek>(DateTime.Today.DayOfWeek); //a non-[Flags] enum
-	/// m.Show();
-	/// print.it(e1.Result);
-	/// print.it(e2.Result);
-	/// ]]></code>
-	/// </example>
-	/// <seealso cref="EnumUI{TEnum}"/>
+	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Too simple. Added EnumUI examples in cookbook.
 	public EnumUI<TEnum> AddEnum<TEnum>(TEnum init = default, (TEnum value, string text)[] items = null) where TEnum : unmanaged, Enum {
 		return new EnumUI<TEnum>(this, init, items);
 	}

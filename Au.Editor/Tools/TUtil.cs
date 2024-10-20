@@ -76,6 +76,16 @@ static class TUtil {
 	}
 	
 	/// <summary>
+	/// Formats flags like "Enum.Flag1 | Enum.Flag2".
+	/// </summary>
+	/// <param name="flags"></param>
+	public static string FormatFlags<T>(T flags) where T : unmanaged, Enum {
+		var s = flags.ToString();
+		if (!char.IsAsciiDigit(s[0])) s = s.Replace(", ", " | ").RxReplace(@"\b(?=\w)", typeof(T).Name + ".");
+		return s;
+	}
+	
+	/// <summary>
 	/// Returns true if s is like '@"*"' or '$"*"' or '$@"*"' or '@$"*"'.
 	/// s can be null.
 	/// </summary>
@@ -440,25 +450,17 @@ static class TUtil {
 	
 	/// <summary>
 	/// Calls EventManager.RegisterClassHandler for CheckBox.CheckedEvent, CheckBox.UncheckedEvent, TextBox.TextChangedEvent and optionally ComboBox.SelectionChangedEvent.
-	/// Call from static ctor of KDialogWindow-based classes.
-	/// The specified event handler will be called on events of any of these controls in all dialogs of T type.
+	/// Call from static ctor of KDialogWindow-based or ContentControl-based classes.
+	/// The specified event handler will be called on events of any of these controls in all dialogs/containers of T type.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <param name="changed">Called on event.</param>
 	/// <param name="comboToo">Register for ComboBox too.</param>
-	public static void OnAnyCheckTextBoxValueChanged<T>(Action<T, object> changed, bool comboToo = false) where T : KDialogWindow {
+	public static void OnAnyCheckTextBoxValueChanged<T>(Action<T, object> changed, bool comboToo = false) where T : ContentControl {
 		var h = new RoutedEventHandler((sender, e) => {
 			//print.it(sender, e.Source, e.OriginalSource);
-			var source = e.Source;
-			if (source == e.OriginalSource) {
-				switch (source) {
-				case CheckBox:
-				case TextBox:
-				case ComboBox:
-					changed(sender as T, source);
-					break;
-				}
-			}
+			var source = e.OriginalSource; //e.Source can't be used; it == e.OriginalSource if T is KDialogWindow, but == sender if T is UserControl.
+			if (source is CheckBox or TextBox or ComboBox) changed(sender as T, source);
 		});
 		EventManager.RegisterClassHandler(typeof(T), ToggleButton.CheckedEvent, h);
 		EventManager.RegisterClassHandler(typeof(T), ToggleButton.UncheckedEvent, h);
@@ -825,8 +827,10 @@ static class TUtil {
 			get => _capturing;
 			set {
 				if (value == _capturing) return;
-				var wDialog = _captureCheckbox.Hwnd();
 				if (value) {
+					var wDialog = _captureCheckbox.Hwnd();
+					Debug.Assert(!wDialog.Is0);
+					
 					//let other dialogs stop capturing
 					//could instead use a static collection, but this code allows to have such tools in multiple processes, although currently it not used
 					wDialog.Prop.Set(c_propName, 1);
@@ -909,6 +913,8 @@ static class TUtil {
 				} else {
 					_capturing = false;
 					_hs.RemoveHook(_WndProc);
+					wnd wDialog = (wnd)_hs.Handle;
+					Debug.Assert(wDialog.IsAlive);
 					Api.UnregisterHotKey(wDialog, c_hotkeyCapture);
 					if (_dInsert.hotkey != null) Api.UnregisterHotKey(wDialog, c_hotkeyInsert);
 					if (_dSmaller.hotkey != null) Api.UnregisterHotKey(wDialog, c_hotkeySmaller);
@@ -976,7 +982,7 @@ static class TUtil {
 	/// If 'find all objects', will display rectangles of all found objects and return the first found object.
 	/// </param>
 	/// <param name="wndVar">Name of wnd variable of the window or control in which to search.</param>
-	/// <param name="w">Window or control in which to search.</param>
+	/// <param name="w">Window or control in which to search. For a wnd tool can be 0.</param>
 	/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
 	/// <param name="activateWindow">Between finding window and object in it, activate the found window and wait 200 ms.</param>
 	/// <param name="restoreOwner">If this func minimizes or deactivates the owner window, it sets a timer to restore it after eg ~2 seconds. If <i>restoreOwner</i> not null, the timer will delay restoring until restoreOwner[0] != 0, after restoreOwner[0] ms.</param>
@@ -1082,7 +1088,7 @@ static class TUtil {
 				}
 			}
 			
-			if (r.w != w && !r.w.Is0) {
+			if (r.w != w && !r.w.Is0 && !w.Is0) {
 				ShowOsdRect(r.w.Rect, error: true, limitToScreen: true, disp: rectDisp);
 				//FUTURE: show list of objects inside the wanted window, same as in the Dwnd 'contains' combo. Let user choose. Then update window code quickly.
 				//string wndCode = null;

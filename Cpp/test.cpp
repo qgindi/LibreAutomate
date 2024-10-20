@@ -3,6 +3,7 @@
 //#include "ISimpleDOMNode.h"
 
 //#include <sphelper.h>
+//#include <taskschd.h>
 
 #if _DEBUG
 

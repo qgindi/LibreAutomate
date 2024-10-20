@@ -6,6 +6,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 using System.Xml.Linq;
 
+//TODO: don't enable breakpoint when clicked in the pane. User expects just to go there, and does not understand this behavior. The same for bookmarks (maybe).
+
 class PanelBreakpoints {
 	KTreeView _tv;
 	_Item _root;
@@ -326,7 +328,7 @@ Not all kinds of expressions are supported.
 		
 		bool haveEnabled = _root.IsEnabledOrHasEnabledChildren;
 		m[haveEnabled ? "Disable all breakpoints" : "Enable all breakpoints"] = o => { foreach (var v in _root.Children()) _SetEnabled(v, !haveEnabled); };
-		m.Submenu("More", m => {
+		m.Submenu("Delete all", m => {
 			m["Delete all disabled breakpoints"] = o => {
 				foreach (var v in _root.Descendants().ToArray()) if (!v.IsFolder && !v.IsEnabled) _DeleteItem(v);
 			};

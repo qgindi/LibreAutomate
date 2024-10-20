@@ -181,10 +181,9 @@ class PanelFind {
 		if (!_cRegex.IsChecked) return;
 		var s = _tFind.aaaText;
 		if (s.NE()) return;
-		var b = new byte[Encoding.UTF8.GetByteCount(s)];
-		RegexParser.GetScintillaStylingBytes(s, PSFormat.Regexp, b);
-		_tFind.Call(Sci.SCI_STARTSTYLING, 0);
-		fixed (byte* bp = b) _tFind.Call(Sci.SCI_SETSTYLINGEX, b.Length, bp);
+		var b = new byte[s.Length];
+		RegexParser.GetScintillaStylingBytes16(s, PSFormat.Regexp, b);
+		_tFind.aaaSetStyling(true, 0, b, s);
 	}
 	
 	void _CheckedChanged(object sender, RoutedEventArgs e) {

@@ -391,6 +391,18 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 	
 	/// <summary>
+	/// Returns <b>ItemPath</b> if exist multiple items with <b>Name</b> or if <b>Name</b> is like "Script1.cs", "Class1.cs" etc. Else returns <b>Name</b>.
+	/// Can be used for inserting code, like <c>script.run</c>.
+	/// </summary>
+	public string ItemPathOrName() {
+		var s = _name;
+		if (!s.RxIsMatch(@"(?i)^(?:Script\d*\.cs|Class\d*\.cs|File\d*\..+|Folder\d*)$")) {
+			if (Model.Find(s, silent: true) == this) return s; //else found multiple
+		}
+		return ItemPath;
+	}
+	
+	/// <summary>
 	/// If is open (active or not), returns the <b>SciCode</b>, else null.
 	/// </summary>
 	public SciCode OpenDoc { get; internal set; }
@@ -824,7 +836,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// Gets class file role from metacomments.
 	/// Note: can be slow, because loads file text if this is a class file.
 	/// </summary>
-	public FNClassFileRole GetClassFileRole() {
+	/// <param name="preferApp">If it's a test-runnable class file, return <b>App</b> instead of <b>Class</b>.</param>
+	public FNClassFileRole GetClassFileRole(bool preferApp = false) {
 		if (_type != FNType.Class) return FNClassFileRole.None;
 		var r = FNClassFileRole.Class;
 		if (GetCurrentText(out var code, silent: null)) {
@@ -841,7 +854,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 						if (v.ValueIs("classLibrary")) return FNClassFileRole.Library;
 						if (v.ValueIs("classFile")) break;
 						r = FNClassFileRole.App;
-						if (findDefineTest = i == 0) continue; //maybe using feature "test-run without a test script", eg `/*/ role miniProgram; define TEST; /*/ ... #if TEST ...`
+						if (!preferApp) if (findDefineTest = i == 0) continue; //maybe using feature "test-run without a test script", eg `/*/ role miniProgram; define TEST; /*/ ... #if TEST ...`
 						break;
 					}
 				}

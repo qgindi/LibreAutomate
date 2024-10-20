@@ -18,12 +18,12 @@ static class CodeExporter {
 	public static EStyle[] GetStyles(string s) {
 		using var ws = new AdhocWorkspace();
 		var document = CiUtil.CreateDocumentFromCode(ws, s, needSemantic: true);
-		var semo = document.GetSemanticModelAsync().Result;
+		//var semo = document.GetSemanticModelAsync().Result;
 		
 		var a = new EStyle[s.Length];
 		int prevEnd = 0; EStyle prevStyle = 0;
 		foreach (var v in CiUtil.GetClassifiedSpansAsync(document, 0, s.Length).Result) {
-			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
+			EStyle style = CiStyling.StyleFromClassifiedSpan(v);
 			int start = v.TextSpan.Start, end = v.TextSpan.End;
 			//print.it(style, s[start..end]);
 			if (style == prevStyle && start > prevEnd && a[prevEnd] == 0) start = prevEnd; //join adjacent styles separated by whitespace

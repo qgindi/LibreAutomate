@@ -13,7 +13,6 @@ enum DwndFlags {
 	DontInsert = 1,
 	NoControl = 2,
 	CheckControl = 4,
-	ForTrigger = 8|1|2,
 }
 
 class Dwnd : KDialogWindow {
@@ -21,7 +20,7 @@ class Dwnd : KDialogWindow {
 		=> TUtil.ShowDialogInNonmainThread(() => new Dwnd(w));
 
 	wnd _wnd, _con;
-	bool _dontInsert, _noControl, _checkControl, _forTrigger;
+	bool _dontInsert, _noControl, _checkControl;
 	string _wndName;
 
 	KSciInfoBox _info, _winInfo;
@@ -34,14 +33,14 @@ class Dwnd : KDialogWindow {
 	KTreeView _tree;
 
 	Grid _gCon1, _gCon2;
-	KCheckTextBox nameW, classW, programW, containsW, idC, nameC, classC, alsoW, alsoC, waitW, skipC;
+	DPwnd.Controls _k;
+	KCheckTextBox idC, nameC, classC, alsoC, waitW, skipC;
 	KCheckBox cHiddenTooW, cCloakedTooW, cHiddenTooC;
 
 	public Dwnd(wnd w = default, DwndFlags flags = 0, string title = "Find window") {
 		_dontInsert = flags.Has(DwndFlags.DontInsert);
 		_noControl = flags.Has(DwndFlags.NoControl);
 		_checkControl = flags.Has(DwndFlags.CheckControl);
-		_forTrigger = flags.Has(DwndFlags.ForTrigger);
 
 		Title = title;
 
@@ -54,7 +53,7 @@ class Dwnd : KDialogWindow {
 		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind|finder").Tooltip("Function").Width(90);
 		_cbFunc.SelectionChanged += _cbFunc_SelectionChanged;
 		b.Add(out _cActivate, "Activate").Tooltip("Activate the found window");
-		b.Add(out _cException, "Fail if not found").Checked(!_forTrigger).Tooltip("Throw exception if not found");
+		b.Add(out _cException, "Fail if not found").Checked(true).Tooltip("Throw exception if not found");
 		//cActivate.CheckChanged += (_, _) => { cException.Visibility = cActivate.IsChecked ? Visibility.Hidden : Visibility.Visible; }; //no, need for control too
 		b.End();
 
@@ -66,18 +65,15 @@ class Dwnd : KDialogWindow {
 		b.Columns(-3, 0, -1.2);
 		//window
 		b.R.Add<TextBlock>("Window").Margin("T1 B3").xSetHeaderProp(); //rejected: vertical headers. Tested, looks not good, too small for vertical Control checkbox.
-		b.Row(0).StartGrid().Columns(70, -1);
-		nameW = b.xAddCheckText("name");
-		classW = b.xAddCheckText("class");
-		programW = b.xAddCheckTextDropdown("program");
-		containsW = b.xAddCheckTextDropdown("contains");
+		b.Row(0).StartGrid();
+		_k = new(b, false);
 		b.End();
 		b.xAddSplitterV(span: 4, thickness: 12);
 		b.StartGrid().Columns(44, -1);
 		b.xAddCheck(out cHiddenTooW, "Find hidden too");
 		b.xAddCheck(out cCloakedTooW, "Find cloaked too");
-		alsoW = b.xAddCheckText("also", "o=>true");
-		waitW = b.xAddCheckText("wait", "1", check: !_forTrigger);
+		_k.also = b.xAddCheckText("also", "o=>true");
+		waitW = b.xAddCheckText("wait", "1", check: true);
 		b.End();
 		//control
 		b.R.AddSeparator(false).Margin("T4 B0"); _sepControl = b.Last as Separator;
@@ -94,13 +90,6 @@ class Dwnd : KDialogWindow {
 		b.End();
 		b.xEndPropertyGrid();
 		b.R.AddSeparator(false);
-
-		if (_forTrigger) {
-			_cbFunc.Visibility = Visibility.Hidden;
-			_cActivate.Visibility = Visibility.Hidden;
-			_cException.Visibility = Visibility.Hidden;
-			waitW.Visible = false;
-		}
 
 		//code
 		b.Row(64).xAddInBorder(out _code, "B");
@@ -177,17 +166,8 @@ class Dwnd : KDialogWindow {
 		_noeventValueChanged = true;
 
 		var wndName = _wnd.NameTL_;
-		if (newWindow) {
-			nameW.Set(true, TUtil.EscapeWindowName(wndName, true));
-			classW.Set(true, TUtil.StripWndClassName(f.wClass, true));
-			f.wProg = _wnd.ProgramName;
-			var ap = new List<string> { f.wProg, "WOwner.Process(processId)", "WOwner.Thread(threadId)" }; if (!_wnd.Get.Owner.Is0) ap.Add("WOwner.Window(ow)");
-			programW.Set(wndName.NE(), f.wProg, ap);
-			containsW.Set(false, null, _ContainsCombo_DropDown);
-		} else if (wndName != _wndName) {
-			if (TUtil.ShouldChangeTextBoxWildex(nameW.t.Text, wndName))
-				nameW.Set(true, TUtil.EscapeWindowName(wndName, true));
-		}
+		if (newWindow) _k.Fill(_wnd, wndName, f.wClass, f.wProg = _wnd.ProgramName);
+		else if (wndName != _wndName) _k.FillChangedName(wndName);
 		f.wName = _wndName = wndName;
 
 		if (isCon) {
@@ -230,34 +210,6 @@ class Dwnd : KDialogWindow {
 		_scroller.Visibility = Visibility.Visible;
 		_FillWindowInfo(f);
 		return true;
-
-		List<string> _ContainsCombo_DropDown() {
-			try {
-				var a1 = new List<string>();
-				//child
-				foreach (var c in _wnd.Get.Children(onlyVisible: true)) {
-					var cn = c.Name; if (cn.NE()) continue;
-					cn = "c '" + TUtil.StripWndClassName(c.ClassName, true) + "' " + TUtil.EscapeWildex(cn);
-					if (!a1.Contains(cn)) a1.Add(cn);
-				}
-				//elm
-				var a2 = new List<string>();
-				var a3 = _wnd.Elm[name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: EFFlags.ClientArea].FindAll(); //all that have a name
-				string prevName = null;
-				for (int i = a3.Length; --i >= 0;) {
-					if (!a3[i].GetProperties("Rn", out var prop)) continue;
-					if (prop.Name == prevName && prop.Role == "WINDOW") continue; prevName = prop.Name; //skip parent WINDOW
-					string rn = "e '" + prop.Role + "' " + TUtil.EscapeWildex(prop.Name);
-					if (!a2.Contains(rn)) a2.Add(rn);
-				}
-				a2.Reverse();
-				a1.AddRange(a2);
-
-				return a1;
-				//rejected: sort
-			}
-			catch (Exception ex) { Debug_.Print(ex); return null; }
-		}
 	}
 
 	private void _cbFunc_SelectionChanged(object sender, SelectionChangedEventArgs e) {
@@ -335,11 +287,7 @@ class Dwnd : KDialogWindow {
 			}
 		}
 
-		nameW.GetText(out f.nameW, emptyToo: true);
-		classW.GetText(out f.classW);
-		programW.GetText(out f.programW);
-		alsoW.GetText(out f.alsoW);
-		containsW.GetText(out f.containsW);
+		_k.GetResults(f);
 		if (!forTest) waitW.GetText(out f.waitW, emptyToo: true);
 
 		if (f.NeedControl) {
@@ -418,8 +366,6 @@ class Dwnd : KDialogWindow {
 
 	private void _Insert(WBButtonClickArgs e) {
 		var s = _code.aaaText.NullIfEmpty_();
-
-		if (_forTrigger && s != null) s = TUtil.ArgsFromWndFindCode(s);
 
 		if (_dontInsert) {
 			AaResultCode = s;
@@ -705,12 +651,7 @@ class Dwnd : KDialogWindow {
 		_info.AaAddElem(this, _dialogInfo);
 		TUtil.RegisterLink_DialogHotkey(_info);
 
-		_info.InfoCT(nameW, "Window name.", true);
-		_info.InfoCT(classW, "Window class name.", true);
-		_info.InfoCT(programW, "Program.", true);
-		_info.InfoCT(containsW,
-@"A UI element in the window. Format: e 'role' name.
-Or a control in the window. Format: c 'class' text.", true, "name/class/text");
+		_k.InitInfo(_info);
 		_info.InfoCT(idC, "Control id.");
 		_info.InfoCT(nameC, "Control name.", true);
 		_info.InfoCT(classC, "Control class name.", true);
@@ -720,8 +661,6 @@ Or a control in the window. Format: c 'class' text.", true, "name/class/text");
 		_info.InfoCT(waitW,
 @"The wait timeout, seconds.
 The function waits for such window max this time interval. On timeout throws exception if <b>Fail...<> checked, else returns default(wnd). If empty, uses 8e88 (infinite).");
-		_info.InfoCT(alsoW,
-@"<help>wnd.find<> " + TUtil.CommonInfos.c_alsoParameter);
 		_info.InfoC(cHiddenTooC, "Flag <help>Au.Types.WCFlags<>.HiddenToo.");
 		_info.InfoCT(alsoC,
 @"<help>wnd.Child<> " + TUtil.CommonInfos.c_alsoParameter);

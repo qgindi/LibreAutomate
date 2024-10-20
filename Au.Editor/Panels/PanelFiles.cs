@@ -23,7 +23,7 @@ partial class PanelFiles {
 			.Add<Border>().Border(thickness2: new(0, 1, 0, 1));
 		
 		_tFind = new() { BorderThickness = default };
-		b.R.Add<AdornerDecorator>().Add(_tFind, flags: WBAdd.ChildOfLast).Name("Find_file", true)
+		b.R.Add<AdornerDecorator>().Add(_tFind, WBAdd.ChildOfLast).Name("Find_file", true)
 			.Watermark("Find file").Tooltip(@"Part of file name, or wildcard expression.
 Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		

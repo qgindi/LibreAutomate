@@ -286,6 +286,11 @@ public class KPopup {
 	/// Close when mouse clicked.
 	/// </summary>
 	public CC ClickClose { get; set; }
+
+	/// <summary>
+	/// Activate the owner window when clicked, if this and owner both are inactive. Only if has <b>WS_EX_NOACTIVATE</b> style.
+	/// </summary>
+	public bool ClickInactiveActivateOwner { get; set; }
 	
 	void _ClickCloseTimer(bool? start) {
 		if (start == null) {
@@ -370,6 +375,9 @@ public class KPopup {
 				return Api.MA_NOACTIVATEANDEAT;
 			}
 			if (_exStyle.Has(WSE.NOACTIVATE)) {
+				if (ClickInactiveActivateOwner && w.Get.Owner is var ow && ow.IsAlive && !ow.IsActive && !w.IsActive) {
+					ow.ActivateL();
+				}
 				return Api.MA_NOACTIVATE;
 			}
 			break;

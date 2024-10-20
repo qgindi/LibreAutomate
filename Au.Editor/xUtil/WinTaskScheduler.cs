@@ -1,4 +1,5 @@
 using System.Security.Principal;
+using System.Xml.Linq;
 
 static class WinTaskScheduler {
 	static string _SidCurrentUser => WindowsIdentity.GetCurrent().User.ToString();
@@ -86,7 +87,7 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 	public static (int processId, RResult result) RunTask(string taskFolder, string taskName, string pathMustBe, bool joinArgs, params string[] args) {
 		if (!_Connect(out var ts)) return (0, RResult.CantConnect);
 		if (0 != ts.GetFolder(taskFolder, out var tf) || 0 != tf.GetTask(taskName, out var t)) return (0, RResult.TaskNotFound);
-
+		
 		if (0 == t.get_Enabled(out var enabled) && enabled == 0) return (0, RResult.TaskDisabled);
 		
 		if (pathMustBe != null) {
@@ -101,7 +102,7 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 		rt.get_EnginePID(out int pid);
 		return (pid, RResult.Success);
 	}
-
+	
 	public enum RResult { None, Success, CantConnect, TaskNotFound, TaskDisabled, BadTask, BadPath, RunFailed, ArgN }
 	
 	/// <summary>
@@ -125,6 +126,220 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 		if (0 == ts.GetFolder(taskFolder, out var tf)) tf.DeleteTask(taskName, 0);
 	}
 	
+	/// <summary>
+	/// Returns trigger strings of all found scheduler tasks that are set to run script <i>fn</i>.
+	/// For a multi-trigger task returns multiple items.
+	/// </summary>
+	public static async Task<List<(string task, string trigger)>> GetScriptTriggersAsync(FileNode fn) {
+		string name = fn.Name, itemPath = fn.ItemPath;
+		List<(string task, string trigger)> ar = null;
+		await Task.Run(_Work);
+		return ar;
+		
+		void _Work() {
+			StringBuilder b = null;
+			if (_Connect(out var ts)) {
+				string user = Environment.UserName, thisExePath = process.thisExePath;
+				if (0 == ts.GetFolder(@"Au\" + user, out var tf) && 0 == tf.GetTasks(api.TASK_ENUM_HIDDEN, out var tasks) && 0 == tasks.get_Count(out int nTasks)) {
+					for (int i = 1; i <= nTasks; i++) {
+						if (0 == tasks.get_Item(i, out var task) && 0 == task.get_Definition(out var td)) {
+							if (0 == td.get_Actions(out var actions) && 0 == actions.get_Count(out int nActions)) {
+								for (int j = 1; j <= nActions; j++) {
+									if (0 == actions.get_Item(j, out var a1) && a1 is api.IExecAction action) {
+										if (0 == action.get_Arguments(out string s) && !s.NE()) {
+											int start = 0, end;
+											if (s[0] == '"') {
+												end = s.IndexOf('"', start = 1);
+											} else {
+												end = s.IndexOf(' '); if (end < 0) end = s.Length;
+											}
+											if (s.Eq(start, '*')) start++;
+											if (end > start) {
+												Range r = start..end;
+												if (s.Eq(r, name, true) || s.Eq(r, itemPath, true)) {
+													if (0 == action.get_Path(out var sp) && filesystem.more.isSameFile(thisExePath, sp)) {
+														if (0 == td.get_Triggers(out var triggers) && 0 == triggers.get_Count(out int nTriggers) && nTriggers > 0) {
+															task.get_Name(out string taskName);
+															for (int k = 1; k <= nTriggers; k++) {
+																if (0 == triggers.get_Item(k, out var t)) {
+																	(b ??= new()).Clear();
+																	_FormatTriggerString(t, b);
+																	(ar ??= new()).Add((taskName, b.ToString()));
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	static void _FormatTriggerString(api.ITrigger trigger, StringBuilder b) {
+		if (0 == trigger.get_Enabled(out short enabled) && enabled == 0) b.Append("(disabled) ");
+		trigger.get_Type(out var ttype);
+		if ((int)ttype is >= 1 and <= 5) {
+			trigger.get_StartBoundary(out string sStart);
+			var (sStartDate, sStartTime) = _SplitDateTime(sStart);
+			b.Append($"At {sStartTime} ");
+			
+			switch (ttype) {
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_TIME:
+				b.Append($"on {sStartDate}");
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_DAILY when trigger is api.IDailyTrigger t:
+				t.get_DaysInterval(out short daysInterval);
+				b.Append("every ").Append(daysInterval == 1 ? "day" : $"{daysInterval} day");
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_WEEKLY when trigger is api.IWeeklyTrigger t:
+				t.get_DaysOfWeek(out short daysOfWeek1);
+				t.get_WeeksInterval(out short weeksInterval);
+				if ((daysOfWeek1 & 0x7f) == 0x7f) b.Append("every day of the week,"); else { b.Append("on "); _DaysOfWeek(daysOfWeek1); }
+				if (weeksInterval == 1) b.Append(" every week"); else b.AppendFormat(" every {0} weeks", weeksInterval);
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_MONTHLY when trigger is api.IMonthlyTrigger t:
+				t.get_MonthsOfYear(out short monthsOfYear1);
+				t.get_DaysOfMonth(out int daysOfMonth);
+				t.get_RunOnLastDayOfMonth(out short lastDay);
+				b.Append("on day ");
+				_DaysOfMonth(daysOfMonth, 0 != lastDay);
+				b.Append(" of ");
+				if ((monthsOfYear1 & 0xfff) == 0xfff) b.Append("every month"); else _MonthsOfYear(monthsOfYear1);
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_MONTHLYDOW when trigger is api.IMonthlyDOWTrigger t:
+				t.get_MonthsOfYear(out short monthsOfYear2);
+				t.get_WeeksOfMonth(out short weeksOfMonth);
+				t.get_RunOnLastWeekOfMonth(out short lastWeek);
+				t.get_DaysOfWeek(out short daysOfWeek2);
+				if (0 != lastWeek) weeksOfMonth |= 0x10;
+				if ((weeksOfMonth & 0x1f) == 0x1f) b.Append("every"); else { b.Append("on "); _WeeksOfMonth(weeksOfMonth); }
+				b.Append(" ");
+				_DaysOfWeek(daysOfWeek2);
+				if ((monthsOfYear2 & 0xfff) == 0xfff) b.Append(" every month"); else { b.Append(" each "); _MonthsOfYear(monthsOfYear2); }
+				break;
+			}
+			if ((int)ttype >= 3) b.Append(", starting ").Append(sStartDate);
+		} else {
+			switch (ttype) {
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_BOOT:
+				b.Append("At system startup");
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_EVENT when trigger is api.IEventTrigger t:
+				t.get_Subscription(out string es);
+				if (es.Like("<QueryList>*</QueryList>")) es = es[11..^12];
+				b.Append("On event ").Append(es);
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_IDLE:
+				b.Append("When computer is idle");
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_LOGON when trigger is api.ILogonTrigger t:
+				t.get_UserId(out string userId1);
+				b.Append("At log on of ").Append(userId1 ?? "any user");
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_REGISTRATION:
+				b.Append("When the task is created or modified");
+				break;
+			case api.TASK_TRIGGER_TYPE2.TASK_TRIGGER_SESSION_STATE_CHANGE when trigger is api.ISessionStateChangeTrigger t:
+				t.get_StateChange(out var sscType);
+				t.get_UserId(out string userId2);
+				b.Append("On ");
+				b.AppendFormat(sscType switch {
+					api.TASK_SESSION_STATE_CHANGE_TYPE.TASK_CONSOLE_CONNECT => "local connection to {0} session",
+					api.TASK_SESSION_STATE_CHANGE_TYPE.TASK_CONSOLE_DISCONNECT => "local disconnect from {0} session",
+					api.TASK_SESSION_STATE_CHANGE_TYPE.TASK_REMOTE_CONNECT => "remote connection to {0} session",
+					api.TASK_SESSION_STATE_CHANGE_TYPE.TASK_REMOTE_DISCONNECT => "remote disconnect from {0} session",
+					api.TASK_SESSION_STATE_CHANGE_TYPE.TASK_SESSION_LOCK => "workstation lock of {0}",
+					api.TASK_SESSION_STATE_CHANGE_TYPE.TASK_SESSION_UNLOCK => "workstation unlock of {0}",
+					_ => ""
+				}, userId2 ?? "any user");
+				break;
+			default:
+				b.Append("Custom trigger");
+				break;
+			}
+		}
+		b.Append('.');
+		
+		if (0 == trigger.get_Repetition(out var rep) && 0 == rep.get_Interval(out var repInterval) && !repInterval.NE()) {
+			b.Append(" Then repeat every "); _Time(repInterval);
+			if (0 == rep.get_Duration(out string repDuration) && !repDuration.NE()) { b.Append(" for a duration of "); _Time(repDuration); }
+			b.Append('.');
+		}
+		
+		if (0 == trigger.get_EndBoundary(out string sEnd) && !sEnd.NE()) {
+			var (sd, st) = _SplitDateTime(sEnd);
+			b.Append($" Expires {sd} {st}.");
+		}
+		
+		static (string data, string time) _SplitDateTime(string s) {
+			if (s?.IndexOf('T') is int i && i > 0) {
+				var sd = s[..i++];
+				int j = s.FindAny("+-", i..); if (j < 0) j = s.Length;
+				return (sd, s[i..j]);
+			} else return default;
+		}
+		
+		void _Time(string s) {
+			if (s.RxMatch(@"^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?)?$", out var m)) {
+				for (int i = 1, n = 0; i <= 3; i++) {
+					if (m[i].Value is string k) {
+						if (n++ > 0) b.Append(' ');
+						b.Append(k).Append(' ');
+						b.Append(s[m[i].End] switch { 'D' => "day", 'H' => "hour", _ => "minute" });
+						if (k != "1") b.Append('s');
+					}
+				}
+			} else b.Append(s);
+		}
+		
+		void _DaysOfWeek(int days) {
+			string sep = null;
+			for (int i = 0; i < 7; i++) {
+				if ((days >> i & 1) != 0) {
+					b.Append(sep); sep ??= "|";
+					b.Append(i switch { 0 => "Sunday", 1 => "Monday", 2 => "Tuesday", 3 => "Wednesday", 4 => "Thursday", 5 => "Friday", 6 => "Saturday", _ => null });
+				}
+			}
+		}
+		
+		void _DaysOfMonth(int days, bool lastDay) {
+			string sep = null;
+			for (int i = 0; i < 31; i++) {
+				if ((days >> i & 1) != 0) {
+					b.Append(sep); sep ??= "|";
+					b.Append(i + 1);
+				}
+			}
+			if (lastDay) b.Append(sep).Append("last");
+		}
+		
+		void _MonthsOfYear(int months) {
+			string sep = null;
+			for (int i = 0; i < 12; i++) {
+				if ((months >> i & 1) != 0) {
+					b.Append(sep); sep ??= "|";
+					b.Append((i + 1) switch { 1 => "January", 2 => "February", 3 => "March", 4 => "April", 5 => "May", 6 => "June", 7 => "July", 8 => "August", 9 => "September", 10 => "October", 11 => "November", 12 => "December", _ => null });
+				}
+			}
+		}
+		
+		void _WeeksOfMonth(int weeks) {
+			string sep = null;
+			for (int i = 0; i < 5; i++) {
+				if ((weeks >> i & 1) != 0) {
+					b.Append(sep); sep ??= "|";
+					b.Append((i + 1) switch { 1 => "first", 2 => "second", 3 => "third", 4 => "fourth", 5 => "last", _ => null });
+				}
+			}
+		}
+	}
 	
 #pragma warning disable 649, 169 //field never assigned/used
 	unsafe class api : NativeApi {
@@ -339,16 +554,6 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 			[PreserveSig] int put_NetworkSettings(INetworkSettings pNetworkSettings);
 		}
 		
-		[ComImport, Guid("85df5081-1b24-4f32-878a-d9d14df4cb77")] //dual
-		internal interface ITriggerCollection {
-			[PreserveSig] int get_Count(out int pCount);
-			[PreserveSig] int get_Item(int index, out ITrigger ppTrigger);
-			[PreserveSig] int get__NewEnum([MarshalAs(UnmanagedType.IUnknown)] out object ppEnum);
-			[PreserveSig] int Create(TASK_TRIGGER_TYPE2 type, out ITrigger ppTrigger);
-			[PreserveSig] int Remove(object index);
-			[PreserveSig] int Clear();
-		}
-		
 		[ComImport, Guid("416D8B73-CB41-4ea1-805C-9BE9A5AC4A74")] //dual
 		internal interface IRegistrationInfo {
 			[PreserveSig] int get_Description(out string pDescription);
@@ -369,48 +574,6 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 			[PreserveSig] int put_SecurityDescriptor(object sddl);
 			[PreserveSig] int get_Source(out string pSource);
 			[PreserveSig] int put_Source(string source);
-		}
-		
-		[ComImport, Guid("09941815-ea89-4b5b-89e0-2a773801fac3")] //dual
-		internal interface ITrigger {
-			[PreserveSig] int get_Type(out TASK_TRIGGER_TYPE2 pType);
-			[PreserveSig] int get_Id(out string pId);
-			[PreserveSig] int put_Id(string id);
-			[PreserveSig] int get_Repetition(out IRepetitionPattern ppRepeat);
-			[PreserveSig] int put_Repetition(IRepetitionPattern pRepeat);
-			[PreserveSig] int get_ExecutionTimeLimit(out string pTimeLimit);
-			[PreserveSig] int put_ExecutionTimeLimit(string timelimit);
-			[PreserveSig] int get_StartBoundary(out string pStart);
-			[PreserveSig] int put_StartBoundary(string start);
-			[PreserveSig] int get_EndBoundary(out string pEnd);
-			[PreserveSig] int put_EndBoundary(string end);
-			[PreserveSig] int get_Enabled(out short pEnabled);
-			[PreserveSig] int put_Enabled(short enabled);
-		}
-		
-		[ComImport, Guid("7FB9ACF1-26BE-400e-85B5-294B9C75DFD6")] //dual
-		internal interface IRepetitionPattern {
-			[PreserveSig] int get_Interval(out string pInterval);
-			[PreserveSig] int put_Interval(string interval);
-			[PreserveSig] int get_Duration(out string pDuration);
-			[PreserveSig] int put_Duration(string duration);
-			[PreserveSig] int get_StopAtDurationEnd(out short pStop);
-			[PreserveSig] int put_StopAtDurationEnd(short stop);
-		}
-		
-		internal enum TASK_TRIGGER_TYPE2 {
-			TASK_TRIGGER_EVENT,
-			TASK_TRIGGER_TIME,
-			TASK_TRIGGER_DAILY,
-			TASK_TRIGGER_WEEKLY,
-			TASK_TRIGGER_MONTHLY,
-			TASK_TRIGGER_MONTHLYDOW,
-			TASK_TRIGGER_IDLE,
-			TASK_TRIGGER_REGISTRATION,
-			TASK_TRIGGER_BOOT,
-			TASK_TRIGGER_LOGON,
-			TASK_TRIGGER_SESSION_STATE_CHANGE = 11,
-			TASK_TRIGGER_CUSTOM_TRIGGER_01
 		}
 		
 		[ComImport, Guid("9F7DEA84-C30B-4245-80B6-00E9F646F1B4")] //dual
@@ -493,6 +656,216 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 			[PreserveSig] int get_WorkingDirectory(out string pWorkingDirectory);
 			[PreserveSig] int put_WorkingDirectory(string workingDirectory);
 		}
+		
+		internal const int TASK_ENUM_HIDDEN = 0x1;
+		
+		internal enum TASK_TRIGGER_TYPE2 {
+			TASK_TRIGGER_EVENT,
+			TASK_TRIGGER_TIME,
+			TASK_TRIGGER_DAILY,
+			TASK_TRIGGER_WEEKLY,
+			TASK_TRIGGER_MONTHLY,
+			TASK_TRIGGER_MONTHLYDOW,
+			TASK_TRIGGER_IDLE,
+			TASK_TRIGGER_REGISTRATION,
+			TASK_TRIGGER_BOOT,
+			TASK_TRIGGER_LOGON,
+			TASK_TRIGGER_SESSION_STATE_CHANGE = 11,
+			TASK_TRIGGER_CUSTOM_TRIGGER_01
+		}
+		
+		[ComImport, Guid("85df5081-1b24-4f32-878a-d9d14df4cb77")] //dual
+		internal interface ITriggerCollection {
+			[PreserveSig] int get_Count(out int pCount);
+			[PreserveSig] int get_Item(int index, out ITrigger ppTrigger);
+			[PreserveSig] int get__NewEnum([MarshalAs(UnmanagedType.IUnknown)] out object ppEnum);
+			[PreserveSig] int Create(TASK_TRIGGER_TYPE2 type, out ITrigger ppTrigger);
+			[PreserveSig] int Remove(object index);
+			[PreserveSig] int Clear();
+		}
+		
+		[ComImport, Guid("09941815-ea89-4b5b-89e0-2a773801fac3")] //dual
+		internal interface ITrigger {
+			[PreserveSig] int get_Type(out TASK_TRIGGER_TYPE2 pType);
+			[PreserveSig] int get_Id(out string pId);
+			[PreserveSig] int put_Id(string id);
+			[PreserveSig] int get_Repetition(out IRepetitionPattern ppRepeat);
+			[PreserveSig] int put_Repetition(IRepetitionPattern pRepeat);
+			[PreserveSig] int get_ExecutionTimeLimit(out string pTimeLimit);
+			[PreserveSig] int put_ExecutionTimeLimit(string timelimit);
+			[PreserveSig] int get_StartBoundary(out string pStart);
+			[PreserveSig] int put_StartBoundary(string start);
+			[PreserveSig] int get_EndBoundary(out string pEnd);
+			[PreserveSig] int put_EndBoundary(string end);
+			[PreserveSig] int get_Enabled(out short pEnabled);
+			[PreserveSig] int put_Enabled(short enabled);
+		}
+		
+		[ComImport, Guid("7FB9ACF1-26BE-400e-85B5-294B9C75DFD6")] //dual
+		internal interface IRepetitionPattern {
+			[PreserveSig] int get_Interval(out string pInterval);
+			[PreserveSig] int put_Interval(string interval);
+			[PreserveSig] int get_Duration(out string pDuration);
+			[PreserveSig] int put_Duration(string duration);
+			[PreserveSig] int get_StopAtDurationEnd(out short pStop);
+			[PreserveSig] int put_StopAtDurationEnd(short stop);
+		}
+		
+		//[ComImport, Guid("b45747e0-eba7-4276-9f29-85c5bb300006")]
+		//internal interface ITimeTrigger {
+		//	void _0();void _1();void _2();void _3();void _4();void _5();void _6();void _7();void _8();void _9();void _10();void _11();void _12();
+		//	[PreserveSig] int get_RandomDelay(out string pRandomDelay);
+		//	[PreserveSig] int put_RandomDelay(string randomDelay);
+		//}
+		
+		[ComImport, Guid("126c5cd8-b288-41d5-8dbf-e491446adc5c")]
+		internal interface IDailyTrigger {
+			void _0(); void _1(); void _2(); void _3(); void _4(); void _5(); void _6(); void _7(); void _8(); void _9(); void _10(); void _11(); void _12();
+			[PreserveSig] int get_DaysInterval(out short pDays);
+			[PreserveSig] int put_DaysInterval(short days);
+			[PreserveSig] int get_RandomDelay(out string pRandomDelay);
+			[PreserveSig] int put_RandomDelay(string randomDelay);
+		}
+		
+		[ComImport, Guid("5038fc98-82ff-436d-8728-a512a57c9dc1")]
+		internal interface IWeeklyTrigger {
+			void _0(); void _1(); void _2(); void _3(); void _4(); void _5(); void _6(); void _7(); void _8(); void _9(); void _10(); void _11(); void _12();
+			[PreserveSig] int get_DaysOfWeek(out short pDays);
+			[PreserveSig] int put_DaysOfWeek(short days);
+			[PreserveSig] int get_WeeksInterval(out short pWeeks);
+			[PreserveSig] int put_WeeksInterval(short weeks);
+			[PreserveSig] int get_RandomDelay(out string pRandomDelay);
+			[PreserveSig] int put_RandomDelay(string randomDelay);
+		}
+		
+		[ComImport, Guid("97c45ef1-6b02-4a1a-9c0e-1ebfba1500ac")]
+		internal interface IMonthlyTrigger {
+			void _0(); void _1(); void _2(); void _3(); void _4(); void _5(); void _6(); void _7(); void _8(); void _9(); void _10(); void _11(); void _12();
+			[PreserveSig] int get_DaysOfMonth(out int pDays);
+			[PreserveSig] int put_DaysOfMonth(int days);
+			[PreserveSig] int get_MonthsOfYear(out short pMonths);
+			[PreserveSig] int put_MonthsOfYear(short months);
+			[PreserveSig] int get_RunOnLastDayOfMonth(out short pLastDay);
+			[PreserveSig] int put_RunOnLastDayOfMonth(short lastDay);
+			[PreserveSig] int get_RandomDelay(out string pRandomDelay);
+			[PreserveSig] int put_RandomDelay(string randomDelay);
+		}
+		
+		[ComImport, Guid("77d025a3-90fa-43aa-b52e-cda5499b946a")]
+		internal interface IMonthlyDOWTrigger {
+			void _0(); void _1(); void _2(); void _3(); void _4(); void _5(); void _6(); void _7(); void _8(); void _9(); void _10(); void _11(); void _12();
+			[PreserveSig] int get_DaysOfWeek(out short pDays);
+			[PreserveSig] int put_DaysOfWeek(short days);
+			[PreserveSig] int get_WeeksOfMonth(out short pWeeks);
+			[PreserveSig] int put_WeeksOfMonth(short weeks);
+			[PreserveSig] int get_MonthsOfYear(out short pMonths);
+			[PreserveSig] int put_MonthsOfYear(short months);
+			[PreserveSig] int get_RunOnLastWeekOfMonth(out short pLastWeek);
+			[PreserveSig] int put_RunOnLastWeekOfMonth(short lastWeek);
+			[PreserveSig] int get_RandomDelay(out string pRandomDelay);
+			[PreserveSig] int put_RandomDelay(string randomDelay);
+		}
+		
+		//[ComImport, Guid("2a9c35da-d357-41f4-bbc1-207ac1b1f3cb")]
+		//internal interface IBootTrigger {
+		//	void _0();void _1();void _2();void _3();void _4();void _5();void _6();void _7();void _8();void _9();void _10();void _11();void _12();
+		//	[PreserveSig] int get_Delay(out string pDelay);
+		//	[PreserveSig] int put_Delay(string delay);
+		//}
+		
+		[ComImport, Guid("d45b0167-9653-4eef-b94f-0732ca7af251")]
+		internal interface IEventTrigger {
+			void _0(); void _1(); void _2(); void _3(); void _4(); void _5(); void _6(); void _7(); void _8(); void _9(); void _10(); void _11(); void _12();
+			[PreserveSig] int get_Subscription(out string pQuery);
+			[PreserveSig] int put_Subscription(string query);
+			[PreserveSig] int get_Delay(out string pDelay);
+			[PreserveSig] int put_Delay(string delay);
+			[PreserveSig] int get_ValueQueries(out ITaskNamedValueCollection ppNamedXPaths);
+			[PreserveSig] int put_ValueQueries(ITaskNamedValueCollection pNamedXPaths);
+		}
+		
+		[ComImport, Guid("b4ef826b-63c3-46e4-a504-ef69e4f7ea4d")]
+		internal interface ITaskNamedValueCollection {
+			[PreserveSig] int get_Count(out int pCount);
+			[PreserveSig] int get_Item(int index, out ITaskNamedValuePair ppPair);
+			[PreserveSig] int get__NewEnum([MarshalAs(UnmanagedType.IUnknown)] out object ppEnum);
+			[PreserveSig] int Create(string name, string value, out ITaskNamedValuePair ppPair);
+			[PreserveSig] int Remove(int index);
+			[PreserveSig] int Clear();
+		}
+		
+		[ComImport, Guid("39038068-2b46-4afd-8662-7bb6f868d221")]
+		internal interface ITaskNamedValuePair {
+			[PreserveSig] int get_Name(out string pName);
+			[PreserveSig] int put_Name(string name);
+			[PreserveSig] int get_Value(out string pValue);
+			[PreserveSig] int put_Value(string value);
+		}
+		
+		[ComImport, Guid("72dade38-fae4-4b3e-baf4-5d009af02b1c")]
+		internal interface ILogonTrigger {
+			void _0(); void _1(); void _2(); void _3(); void _4(); void _5(); void _6(); void _7(); void _8(); void _9(); void _10(); void _11(); void _12();
+			[PreserveSig] int get_Delay(out string pDelay);
+			[PreserveSig] int put_Delay(string delay);
+			[PreserveSig] int get_UserId(out string pUser);
+			[PreserveSig] int put_UserId(string user);
+		}
+		
+		//[ComImport, Guid("4c8fec3a-c218-4e0c-b23d-629024db91a2")]
+		//internal interface IRegistrationTrigger {
+		//	void _0();void _1();void _2();void _3();void _4();void _5();void _6();void _7();void _8();void _9();void _10();void _11();void _12();
+		//	[PreserveSig] int get_Delay(out string pDelay);
+		//	[PreserveSig] int put_Delay(string delay);
+		//}
+		
+		[ComImport, Guid("754da71b-4385-4475-9dd9-598294fa3641")]
+		internal interface ISessionStateChangeTrigger {
+			void _0(); void _1(); void _2(); void _3(); void _4(); void _5(); void _6(); void _7(); void _8(); void _9(); void _10(); void _11(); void _12();
+			[PreserveSig] int get_Delay(out string pDelay);
+			[PreserveSig] int put_Delay(string delay);
+			[PreserveSig] int get_UserId(out string pUser);
+			[PreserveSig] int put_UserId(string user);
+			[PreserveSig] int get_StateChange(out TASK_SESSION_STATE_CHANGE_TYPE pType);
+			[PreserveSig] int put_StateChange(TASK_SESSION_STATE_CHANGE_TYPE type);
+		}
+		
+		internal struct MONTHLYDOW {
+			public ushort wWhichWeek;
+			public ushort rgfDaysOfTheWeek;
+			public ushort rgfMonths;
+		}
+		
+		internal struct MONTHLYDATE {
+			public uint rgfDays;
+			public ushort rgfMonths;
+		}
+		
+		internal struct WEEKLY {
+			public ushort WeeksInterval;
+			public ushort rgfDaysOfTheWeek;
+		}
+		
+		internal struct DAILY {
+			public ushort DaysInterval;
+		}
+		
+		internal enum TASK_SESSION_STATE_CHANGE_TYPE {
+			TASK_CONSOLE_CONNECT = 1,
+			TASK_CONSOLE_DISCONNECT,
+			TASK_REMOTE_CONNECT,
+			TASK_REMOTE_DISCONNECT,
+			TASK_SESSION_LOCK = 7,
+			TASK_SESSION_UNLOCK
+		}
+		
+		internal const int TVM_GETNEXTITEM = 0x110A;
+		internal const int TVM_EXPAND = 0x1102;
+		
+		internal const int TVGN_CHILD = 0x4;
+		
+		internal const int TVE_EXPAND = 0x2;
+		
+		internal const int TCM_SETCURFOCUS = 0x1330;
 	}
 #pragma warning restore 649, 169 //field never assigned/used
 	
@@ -513,8 +886,8 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 			//expand folder "Task Scheduler Library"
 			var tv = w.Child(id: 12785);
 			tv.Focus();
-			var htvi = wait.until(5, () => tv.Send(TVM_GETNEXTITEM, TVGN_CHILD, tv.Send(TVM_GETNEXTITEM)));
-			wait.until(10, () => 0 != tv.Send(TVM_EXPAND, TVE_EXPAND, htvi)); //note: don't wait for TVM_GETITEMSTATE TVIS_EXPANDED
+			var htvi = wait.until(5, () => tv.Send(api.TVM_GETNEXTITEM, api.TVGN_CHILD, tv.Send(api.TVM_GETNEXTITEM)));
+			wait.until(10, () => 0 != tv.Send(api.TVM_EXPAND, api.TVE_EXPAND, htvi)); //note: don't wait for TVM_GETITEMSTATE TVIS_EXPANDED
 			
 			//open the specified folder
 			var e = elm.fromWindow(tv, EObjid.CLIENT);
@@ -531,20 +904,11 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 			var wp = wnd.find(10, taskName + "*", "*.Window.*", WOwner.Process(w.ProcessId));
 			wp.Activate();
 			var tc = wp.Child(5, cn: "*.SysTabControl32.*");
-			tc.Send(TCM_SETCURFOCUS, 1);
+			tc.Send(api.TCM_SETCURFOCUS, 1);
 			
 			//never mind: the script may fail at any step, although on my computers never failed.
 			//	Let it do as much as it can. It's better than nothing.
 			//	Task.Run silently handles exceptions.
 		});
 	}
-	
-	const int TVM_GETNEXTITEM = 0x110A;
-	const int TVM_EXPAND = 0x1102;
-	
-	const int TVGN_CHILD = 0x4;
-	
-	const int TVE_EXPAND = 0x2;
-	
-	const int TCM_SETCURFOCUS = 0x1330;
 }

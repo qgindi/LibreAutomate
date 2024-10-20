@@ -70,7 +70,7 @@ class KSciCodeBox : KScintilla {
 	protected int _LenUtf8 => Call(Sci.SCI_GETTEXTLENGTH);
 
 	unsafe void _Styling() {
-		var styles8 = CiUtil.GetScintillaStylingBytes(aaaText);
+		var styles8 = CiUtil.GetScintillaStylingBytes8(aaaText);
 		Call(Sci.SCI_STARTSTYLING);
 		fixed (byte* p = styles8) Call(Sci.SCI_SETSTYLINGEX, styles8.Length, p);
 	}
