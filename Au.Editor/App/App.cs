@@ -33,7 +33,7 @@ static partial class App {
 		//restart as admin if started as non-admin on admin user account
 		if (args.Length > 0 && args[0] is "/n" or "-n") {
 			args = args.RemoveAt(0);
-			_raaResult = WinTaskScheduler.RResult.ArgN;
+			_raaResult = WinScheduler.RResult.ArgN;
 		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
 			if (_RestartAsAdmin(args)) return 0;
 		}
@@ -300,8 +300,8 @@ static partial class App {
 				}
 			}
 			
-			if (_raaResult is not (WinTaskScheduler.RResult.None or WinTaskScheduler.RResult.ArgN)) {
-				var s1 = _raaResult == WinTaskScheduler.RResult.TaskNotFound ? null : $"\r\n\tFailed to run as administrator. Error: {_raaResult}.";
+			if (_raaResult is not (WinScheduler.RResult.None or WinScheduler.RResult.ArgN)) {
+				var s1 = _raaResult == WinScheduler.RResult.TaskNotFound ? null : $"\r\n\tFailed to run as administrator. Error: {_raaResult}.";
 				var s = $"""
 <>Info: running not as administrator. <fold>
 	Without admin rights this program cannot automate admin windows etc. See <help articles/UAC>UAC<>.{s1}
@@ -312,7 +312,7 @@ static partial class App {
 				Panels.Output.Scintilla.AaTags.AddLinkTag("+restartAdmin", k => Restart(k, admin: true));
 			} else if (CommandLine.Raa) { //restarted because clicked link "Restart as administrator: now and always"
 				var name = IsAuAtHome ? "_Au.Editor" : "Au.Editor";
-				bool ok = WinTaskScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppNameShort);
+				bool ok = 0 == WinScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppNameShort);
 				if (!ok) print.warning(@"Failed to create Windows Task Scheduler task \Au\Au.Editor.", -1);
 				
 				//note: don't create the task in the setup program. It requires a C++ dll, and it triggers AV false positives.
@@ -324,21 +324,21 @@ static partial class App {
 		s_timer.Stop();
 	}
 	
-	static WinTaskScheduler.RResult _raaResult;
+	static WinScheduler.RResult _raaResult;
 	
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		bool home = IsAuAtHome;
 		string sesId = process.thisProcessSessionId.ToS();
 		args = args.Length == 0 ? [sesId] : args.InsertAt(0, sesId);
-		(int pid, _raaResult) = WinTaskScheduler.RunTask("Au",
+		(int pid, _raaResult) = WinScheduler.RunTask("Au",
 			home ? "_Au.Editor" : "Au.Editor", //in C:\code\au\_ or <installed path>
 			process.thisExePath, true, args);
 		if (pid == 0) { //probably this program is not installed (no scheduled task)
 			if (home) print.qm2.write("failed to run as admin", _raaResult);
 			return false;
 		}
-		//Api.AllowSetForegroundWindow(pid); //fails and has no sense
+		//Api.AllowSetForegroundWindow(pid); //fails and makes no sense
 		return true;
 	}
 	

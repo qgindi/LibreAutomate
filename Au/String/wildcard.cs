@@ -55,13 +55,18 @@ namespace Au {
 				if (s is ['*', '*', _, ..]) {
 					for (int i = 2, j; i < s.Length; i++) {
 						switch (s[i]) {
-						case ' ': s = s[(i + 1)..]; goto g1;
-						case 't': _type = WXType.Text; break;
-						case 'r': _type = WXType.RegexPcre; break;
-						case 'R': _type = WXType.RegexNet; break;
-						case 'm': _type = WXType.Multi; break;
-						case 'c': _ignoreCase = false; break;
-						case 'n': _not = true; break;
+						case ' ':
+							s = s[(i + 1)..];
+							goto g1;
+						case 't' or 'r' or 'R' or 'm' when _type == WXType.Wildcard:
+							_type = s[i] switch { 't' => WXType.Text, 'r' => WXType.RegexPcre, 'R' => WXType.RegexNet, _ => WXType.Multi };
+							break;
+						case 'c':
+							_ignoreCase = false;
+							break;
+						case 'n':
+							_not = true;
+							break;
 						case '(':
 							if (s[i - 1] != 'm') goto ge;
 							for (j = ++i; j < s.Length; j++) if (s[j] == ')') break;
@@ -86,7 +91,7 @@ namespace Au {
 					case WXType.Multi:
 						var a = s.Split(split ?? "||");
 						var multi = new wildex[a.Length];
-						for (int i = 0; i < a.Length; i++) multi[i] = new wildex(a[i]);
+						for (int i = 0; i < a.Length; i++) multi[i] = new wildex(a[i], !_ignoreCase);
 						_o = multi;
 						return;
 					}

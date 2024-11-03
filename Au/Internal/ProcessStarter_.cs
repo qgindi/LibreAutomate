@@ -101,10 +101,10 @@ unsafe struct ProcessStarter_ {
 			//perf.first();
 #if false //works, but slow, eg 60 ms, even if we don't create task everytime
 			var s = $"\"{folders.ThisAppBS}{(osVersion.is32BitProcess ? "32" : "64")}\\AuCpp.dll\",Cpp_RunDll";
-			WinTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, folders.System + "rundll32.exe", s);
-			//WinTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, folders.System + "notepad.exe"); //slow too
+			Au.WinTaskScheduler.Scheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, folders.System + "rundll32.exe", s);
+			//Au.WinTaskScheduler.Scheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, folders.System + "notepad.exe"); //slow too
 			//perf.next();
-			int pid = WinTaskScheduler.RunTask("Au", "rundll32");
+			int pid = Au.WinTaskScheduler.Scheduler.RunTask("Au", "rundll32");
 			//perf.next();
 			//print.it(pid);
 			var hUserProcess = Handle_.OpenProcess(pid);

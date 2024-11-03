@@ -242,7 +242,7 @@ public enum IFFlags {
 	/// <br/>• Unreliable with DPI-scaled windows; the window image slightly changes when resizing etc.
 	/// </summary>
 	PrintWindow = 2,
-	//rejected, has no sense: /// <br/>• If used together with flag <b>WindowDC</b>, calls <b>PrintWindow</b> without flag <b>PW_RENDERFULLCONTENT</b>. Faster, less flickering, no bugs, but has the <b>WindowDC</b> problem: can't get pixels from some windows or window parts.
+	//rejected, makes no sense: /// <br/>• If used together with flag <b>WindowDC</b>, calls <b>PrintWindow</b> without flag <b>PW_RENDERFULLCONTENT</b>. Faster, less flickering, no bugs, but has the <b>WindowDC</b> problem: can't get pixels from some windows or window parts.
 
 	///// <summary>
 	///// Use DWM thumbnail API to get window pixels.

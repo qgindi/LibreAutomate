@@ -6,8 +6,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 using System.Xml.Linq;
 
-//TODO: don't enable breakpoint when clicked in the pane. User expects just to go there, and does not understand this behavior. The same for bookmarks (maybe).
-
 class PanelBreakpoints {
 	KTreeView _tv;
 	_Item _root;
@@ -67,7 +65,6 @@ class PanelBreakpoints {
 			_tv.ItemActivated += e => {
 				if (e.Mod != 0) return;
 				if (e.Item is _Item b && !b.IsFolder) {
-					_SetEnabled(b, true);
 					App.Model.OpenAndGoTo(b.Parent.file, b.line);
 				}
 			};

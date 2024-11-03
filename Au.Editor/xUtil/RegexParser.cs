@@ -1,6 +1,3 @@
-//TODO: after a regex string in code, unknown identifier text is brown
-
-using Au.Controls;
 using EStyle = CiStyling.EStyle;
 
 static class RegexParser {
@@ -234,8 +231,7 @@ static class RegexParser {
 				_ToScintillaStylingBytes16(s, a, styles);
 			} else if (type is WXType.Multi) {
 				foreach (var v in s.Split(split ?? "||")) {
-					int i8 = Encoding.UTF8.GetByteCount(s[..v.start]);
-					GetScintillaStylingBytes16(s[v.Range], PSFormat.Wildex, styles[i8..]);
+					GetScintillaStylingBytes16(s[v.Range], PSFormat.Wildex, styles[v.start..]);
 				}
 			}
 		} else {
@@ -245,7 +241,7 @@ static class RegexParser {
 	}
 	
 	static void _ToScintillaStylingBytes16(RStr s, List<RXSpan> a, Span<byte> styles) {
-		styles.Fill((byte)EStyle.RxText);
+		styles[..s.Length].Fill((byte)EStyle.RxText);
 		foreach (var v in a) {
 			//print.it(v, s[v.start..v.end].ToString());
 			var (i, end) = (v.start, v.end);

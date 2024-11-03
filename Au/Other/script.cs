@@ -645,34 +645,34 @@ public static class script {
 	}
 	
 	//Called from editor's CommandLine. Almost same as _Run. Does not throw.
-	internal static int RunCL_(wnd w, int mode, string script, string[] args, Action<string> resultA) {
+	internal static int RunCL_(wnd w, int mode, string script, string[] args, Action<string> resultA, int schedPid = 0) {
 		bool wait = 0 != (mode & 1), needResult = 0 != (mode & 2);
 		using var tr = new _TaskResults();
 		if (needResult && !tr.Init()) return (int)RunResult_.cannotGetResult;
 		
-		var data = Serializer_.Serialize(script, args, tr.pipeName);
-		int pid = (int)WndCopyData.Send<byte>(w, 101, data, mode);
-		if (pid == 0) pid--; //RunResult_.failed
+		var data = Serializer_.Serialize(script, args, tr.pipeName, schedPid);
+		int taskProcessId = (int)WndCopyData.Send<byte>(w, 101, data, mode);
+		if (taskProcessId == 0) taskProcessId--; //RunResult_.failed
 		
-		switch ((RunResult_)pid) {
+		switch ((RunResult_)taskProcessId) {
 		case RunResult_.failed:
 		case RunResult_.notFound:
-			return pid;
+			return taskProcessId;
 		case RunResult_.deferred: //possible only if !wait
 		case RunResult_.editorThread: //the script ran sync and already returned. Ignore needResult, as it it auto-detected, not explicitly specified.
 			return 0;
 		}
 		
 		if (wait) {
-			using var hProcess = WaitHandle_.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
+			using var hProcess = WaitHandle_.FromProcessId(taskProcessId, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
 			if (hProcess == null) return (int)RunResult_.cannotWait;
 			
 			if (!needResult) hProcess.WaitOne(-1);
 			else if (!tr.WaitAndRead(hProcess, resultA)) return (int)RunResult_.cannotWaitGetResult;
 			
-			if (!Api.GetExitCodeProcess(hProcess.SafeWaitHandle.DangerousGetHandle(), out pid)) pid = int.MinValue;
+			if (!Api.GetExitCodeProcess(hProcess.SafeWaitHandle.DangerousGetHandle(), out taskProcessId)) taskProcessId = int.MinValue;
 		}
-		return pid;
+		return taskProcessId;
 	}
 	
 	internal enum RunResult_ {

@@ -9,8 +9,7 @@ namespace Au.Types;
 /// <seealso cref="keys.more.KModFromWinforms"/>
 /// <seealso cref="KKey"/>
 [Flags]
-public enum KMod : byte
-{
+public enum KMod : byte {
 	Shift = 1,
 	Ctrl = 2,
 	Alt = 4,
@@ -25,8 +24,7 @@ public enum KMod : byte
 /// Rare and obsolete keys are not included. You can use <b>Keys</b> like <c>(KKey)Keys.Attn</c> or <b>VK_</b> constant values like <c>(KKey)200</c>.
 /// </remarks>
 /// <seealso cref="KMod"/>
-public enum KKey : byte
-{
+public enum KKey : byte {
 	MouseLeft = 0x01,
 	MouseRight = 0x02,
 	///<summary><c>Ctrl+Pause</c>.</summary>
@@ -244,8 +242,7 @@ public enum KKey : byte
 /// dialog.show("Hook");
 /// ]]></code>
 /// </example>
-public struct KKeyScan
-{
+public struct KKeyScan {
 	public KKey vk;
 	public bool extendedKey;
 	public ushort scanCode;
@@ -261,8 +258,7 @@ public struct KKeyScan
 /// Parameter type of <see cref="keys.send"/> and similar functions.
 /// Has implicit conversions from <b>string</b>, <b>clipboardData</b>, <b>KKey</b>, <b>KKeyScan</b>, <b>char</b>, <b>int</b> (sleep time) and <b>Action</b>.
 /// </summary>
-public struct KKeysEtc
-{
+public struct KKeysEtc {
 	readonly object _o;
 	KKeysEtc(object o) { _o = o; }
 
@@ -282,8 +278,7 @@ public struct KKeysEtc
 /// <summary>
 /// <see cref="keys.Pasting"/> event data.
 /// </summary>
-public class PastingEventArgs : EventArgs
-{
+public class PastingEventArgs : EventArgs {
 	///
 	public string Text { get; init; }
 	///
@@ -298,8 +293,7 @@ public class PastingEventArgs : EventArgs
 /// Defines a hotkey as <see cref="KMod"/> and <see cref="KKey"/>.
 /// Has implicit conversion operators from string like <c>"Ctrl+Shift+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>.
 /// </summary>
-public struct KHotkey
-{
+public struct KHotkey {
 	/// <summary>
 	/// Modifier keys (flags).
 	/// </summary>

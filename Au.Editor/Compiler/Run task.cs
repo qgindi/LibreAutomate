@@ -360,8 +360,7 @@ class RunningTasks {
 	///// For files that have multiple tasks is added 1 item in the list.
 	///// Each time creates new list; caller can modify it.
 	///// </summary>
-	//public List<FileNode> GetRunningFiles()
-	//{
+	//public List<FileNode> GetRunningFiles() {
 	//	var a = new List<FileNode>(_a.Count);
 	//	for(int i = 0; i < _a.Count; i++) {
 	//		var t = _a[i];
@@ -370,8 +369,8 @@ class RunningTasks {
 	//	return a;
 	//}
 	
-	public FileNode FileFromProcessId(int processId) {
-		foreach (var v in _a) if (v.processId == processId) return v.f;
+	public RunningTask TaskFromProcessId(int processId) {
+		foreach (var v in _a) if (v.processId == processId) return v;
 		return null;
 	}
 	

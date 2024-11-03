@@ -170,6 +170,20 @@ public static class ExtWpf {
 		}
 		return default;
 	}
+
+	/// <summary>
+	/// Sets <see cref="Visibility"/> = <b>Hidden</b> or <b>Visible</b>.
+	/// </summary>
+	internal static void Hide_(this UIElement t, bool hide) {
+		t.Visibility = hide ? Visibility.Hidden : Visibility.Visible;
+	}
+
+	/// <summary>
+	/// Sets <see cref="Visibility"/> = <b>Collapsed</b> or <b>Visible</b>.
+	/// </summary>
+	internal static void Collapse_(this UIElement t, bool collapse) {
+		t.Visibility = collapse ? Visibility.Collapsed : Visibility.Visible;
+	}
 	
 	/// <summary>
 	/// Sets UI Automation name.
@@ -592,10 +606,17 @@ public static class ExtWpf {
 	}
 	
 	/// <summary>
-	/// Clicks the button.
-	/// Uses <see cref="IInvokeProvider.Invoke"/>.
+	/// Calls <see cref="IInvokeProvider.Invoke"/>, which sends a request to click the button.
+	/// Note: it's async; more info in Remarks.
 	/// </summary>
 	/// <exception cref="ElementNotEnabledException"></exception>
+	/// <remarks>
+	/// It is async (does not wait until finished). The button click event is raised after this function returns.
+	/// 
+	/// Does not click if the button is disabled.
+	/// 
+	/// Another way: <c>button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));</c>. It is sync, ignores disabled state, and ignores <see cref="ButtonBase.Command"/>.
+	/// </remarks>
 	public static void UiaClick(this Button t) { //tested: does not work with CheckBox
 		if (UIElementAutomationPeer.CreatePeerForElement(t)?.GetPattern(PatternInterface.Invoke) is IInvokeProvider ip) ip.Invoke();
 	}

@@ -12,21 +12,20 @@ public class KDialogWindow : Window {
 	/// Shows window of type T (the caller's class) and ensures that there is single window of that type at a time. 
 	/// If a window of type T already exists (created with this function), activates it. Else calls <i>fNew</i> and <b>Show</b>. Will use <b>OnClose</b> to forget that window.
 	/// Not thread-safe.
-	/// Example: <c>ShowSingle(() => new ThisClass());</c>
+	/// Example: <c>ShowSingle(() => new DThisClass());</c>
 	/// </summary>
 	/// <param name="fNew">Called to create new T if there is no T window.</param>
 	protected static T ShowSingle<T>(Func<T> fNew) where T : KDialogWindow {
 		Debug_.PrintIf(Environment.CurrentManagedThreadId != 1);
-		var v = s_single.FirstOrDefault(static o => o is T);
-		if (v == null) {
-			s_single.Add(v = fNew());
-			v.Show();
+		if (s_single.Find(o => o is T) is {  } d) {
+			d.Hwnd().ActivateL(true);
 		} else {
-			v.Hwnd().ActivateL(true);
+			s_single.Add(d = fNew());
+			d.Show();
 		}
-		return v as T;
+		return d as T;
 	}
-	static HashSet<KDialogWindow> s_single = new();
+	static List<KDialogWindow> s_single = new();
 	
 	protected override void OnClosed(EventArgs e) {
 		s_single.Remove(this);

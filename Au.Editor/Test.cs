@@ -25,7 +25,7 @@ using static Au.Controls.Sci;
 
 static class Test {
 	
-	public static  void FromMenubar() {
+	public static void FromMenubar() {
 		print.clear();
 		
 		//var d = Panels.Editor.ActiveDoc;

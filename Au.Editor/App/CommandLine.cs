@@ -11,7 +11,8 @@ static class CommandLine {
 		int i = args.Length > 0 && args[0] is "/n" or "-n" ? 1 : 0;
 		if (args.Length > i) {
 			var s = args[i];
-			if (s.Starts('/')) {
+			if (s.NE()) return false;
+			if (s[0] == '/') {
 				switch (s) {
 				case "/s":
 					exitCode = _RunEditorAsAdmin();
@@ -225,6 +226,9 @@ static class CommandLine {
 		case 20: //Triggers.DisabledEverywhere
 			TriggersAndToolbars.OnDisableTriggers();
 			break;
+		//case 21: //end task by process id. Currently not used.
+		//	App.Tasks.TaskFromProcessId((int)lparam)?.End(false);
+		//	break;
 		case 30: //script.debug()
 			return _ScriptDebug((int)lparam);
 		}
@@ -294,11 +298,15 @@ static class CommandLine {
 		nint _RunScript() {
 			int mode = (int)wparam; //1 - wait, 3 - wait and get script.writeResult output, 4 restarting (set meta ifRunning run)
 			var d = Serializer_.Deserialize(b);
-			string file = d[0]; string[] args = d[1]; string pipeName = d[2];
+			string file = d[0];
+			string[] args = d[1];
+			string pipeName = d[2];
+			int schedPid = action == 101 ? d[3] : 0; //if scheduled task, it is the temp LA process, else 0
+			bool scheduled = schedPid != 0;
 			
 			var f = App.Model?.FindCodeFile(file);
 			if (f == null) {
-				if (action == 101) print.it($"Command line: script '{file}' not found."); //else the caller script will throw exception
+				if (action == 101) print.it($"{(scheduled ? "Scheduled task" : "Command line")}: script '{file}' not found."); //else the caller script will throw exception
 				return (int)script.RunResult_.notFound;
 			}
 			
@@ -320,7 +328,19 @@ static class CommandLine {
 			//	args = args.RemoveAt(0);
 			//}
 			
-			return CompileRun.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName, ifRunning: 0 != (mode & 4) ? MCIfRunning.run : null);
+			int r = CompileRun.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName, ifRunning: 0 != (mode & 4) ? MCIfRunning.run : null);
+			
+			if (scheduled && r > 0) { //enable Task Scheduler to end script process
+				run.thread(() => {
+					using var hp = Handle_.OpenProcess(schedPid, Api.SYNCHRONIZE);
+					if (0 == Api.WaitForSingleObject(hp, -1)) {
+						Thread.Sleep(10);
+						App.Tasks.TaskFromProcessId(r)?.End(false);
+					}
+				}, sta: false);
+			}
+			
+			return r;
 		}
 		
 		nint _ScriptAction(int action) {
@@ -440,7 +460,6 @@ static class CommandLine {
 	/// <summary>
 	/// Finds the message-only window. Starts editor if not running. In any case waits for the window max 15 s.
 	/// </summary>
-	/// <param name="wMsg"></param>
 	static bool _EnsureEditorRunningAndGetMsgWindow(out wnd wMsg, string args) {
 		wMsg = default;
 		for (int i = 0; i < 1000; i++) { //if we started editor process, wait until it fully loaded, then it creates the message-only window
@@ -467,8 +486,13 @@ static class CommandLine {
 		//	Also auto-detect whether need to write script.writeResult to stdout.
 		var file = args[iArg];
 		args = args.RemoveAt(0, iArg + 1);
+		
+		if (file[0] == '>') { //set by DSchedule
+			return script.RunCL_(w, 1, file[1..], args, null, process.thisProcessId);
+		}
+		
 		int mode = 0; //1 - wait, 3 - wait and get script.writeResult output
-		if (file.Starts('*')) {
+		if (file[0] == '*') {
 			file = file[1..];
 			mode |= 1;
 			if ((default != Api.GetStdHandle(Api.STD_OUTPUT_HANDLE)) //redirected stdout

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using Au.Controls;
 
 /// <summary>
 /// Misc extension methods.
@@ -79,4 +80,34 @@ static class EdExt {
 	public static void RemoveAllCustom(this MenuItem t) {
 		for (int j = t.Items.Count; --j >= 0;) if (t.Items[j] is FrameworkElement e && e.Tag == e) t.Items.RemoveAt(j);
 	}
+	
+	/// <summary>
+	/// Shows window of type T and ensures that there is single window of that type for this <b>FileNode</b> at a time. 
+	/// If a window of type T for this <b>FileNode</b> already exists (created with this function), activates it. Else calls <i>fNew</i> and <b>Show</b>. Auto-closes that window when unloading this workspace.
+	/// Example: <c>f.SingleDialog(() => new DThisClass());</c>
+	/// </summary>
+	/// <param name="f">Can be null.</param>
+	/// <param name="fNew">Called to create new T if there is no T window.</param>
+	/// <returns>The window (new or existing), or null if <i>f</i> null.</returns>
+	public static T SingleDialog<T>(this FileNode f, Func<T> fNew) where T : KDialogWindow {
+		if (f == null) return null;
+		var v = s_singleDialog.FirstOrDefault(o => o.f == f && o.d is T);
+		if (v.f != null) {
+			v.d.Hwnd().ActivateL(true);
+			return v.d as T;
+		} else {
+			var d = fNew();
+			s_singleDialog.Add((f, d));
+			
+			App.Model.UnloadingThisWorkspace += d.Close;
+			d.Closed += (_, _) => {
+				App.Model.UnloadingThisWorkspace -= d.Close;
+				s_singleDialog.Remove((f, d));
+			};
+			
+			d.Show();
+			return d;
+		}
+	}
+	static List<(FileNode f, KDialogWindow d)> s_singleDialog = new();
 }

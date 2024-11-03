@@ -9,14 +9,8 @@ using Au.Tools;
 
 class DProperties : KDialogWindow {
 	public static void ShowFor(FileNode f) {
-		if (s_d.TryGetValue(f, out var d)) {
-			d.Hwnd().ActivateL(true);
-		} else {
-			s_d[f] = d = new(f);
-			d.Show();
-		}
+		f.SingleDialog(() => new DProperties(f));
 	}
-	static Dictionary<FileNode, DProperties> s_d = new();
 	
 	readonly FileNode _f;
 	readonly MetaCommentsParser _meta;
@@ -209,14 +203,7 @@ class DProperties : KDialogWindow {
 	
 	protected override void OnSourceInitialized(EventArgs e) {
 		_InitInfo();
-		App.Model.UnloadingThisWorkspace += Close;
 		base.OnSourceInitialized(e);
-	}
-	
-	protected override void OnClosed(EventArgs e) {
-		s_d.Remove(_f);
-		App.Model.UnloadingThisWorkspace -= Close;
-		base.OnClosed(e);
 	}
 	
 	void _GetMeta() {

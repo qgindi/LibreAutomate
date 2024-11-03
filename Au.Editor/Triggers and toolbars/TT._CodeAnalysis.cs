@@ -169,7 +169,8 @@ partial class TriggersAndToolbars {
 		}
 		
 		public static bool IsNonStandardFileWithTriggers() {
-			if (_IsStdTriggersFile(Panels.Editor.ActiveDoc.EFile) != 0) return false;
+			if (App.Model.CurrentFile is not { } f) return false;
+			if (_IsStdTriggersFile(f) != 0) return false;
 			var v = _GetTriggersTypeOrVar(0);
 			return v.tType != 0 || v.onlyActionTriggers;
 		}
@@ -426,25 +427,20 @@ partial class TriggersAndToolbars {
 	}
 	
 	/// <summary>
-	/// Returns true if <i>f</i> is not null and is a code file that can be executed directly (not via project-main-file or test script).
+	/// Returns true if <i>f</i> is <c>@"\@Triggers and toolbars\Triggers and toolbars.cs"</c>.
 	/// </summary>
-	static bool _IsExecutableCodeFile(FileNode f) {
-		if (f == null || !f.IsCodeFile) return false;
-		if (f.IsClass) {
-			if (f.GetProjectMainOrThis() != f) return false;
-			if (f.GetClassFileRole(preferApp: true) != FNClassFileRole.App) return false;
-		}
-		return true;
+	public static bool IsTtScipt(FileNode f) {
+		return f != null && f.IsCodeFile && f.Name.Eqi("Triggers and toolbars.cs") && f.Parent.Name.Eqi("@Triggers and toolbars") && f.Parent.Parent.Parent == null;
 	}
 	
 	public static async Task<List<FoundTrigger>> FindAllTriggersAsync(FileNode thisFile) {
-		if (!_IsExecutableCodeFile(thisFile)) return null;
+		if (!thisFile.IsExecutableDirectly()) return null;
 		
 		//action triggers
 		var ar = await FindTriggersInCodeAsync(thisFile) ?? new();
 		
 		//scheduler
-		if (await WinTaskScheduler.GetScriptTriggersAsync(thisFile) is { } ast) {
+		if (await WinScheduler.GetScriptTriggersAsync(thisFile) is { } ast) {
 			foreach (var v in ast) {
 				ar.Add(new(null, -1, "Scheduled", v.trigger, v.task));
 			}
@@ -487,10 +483,11 @@ partial class TriggersAndToolbars {
 		}
 		
 		if (a == null) {
-			_Add("This file isn't executable");
+			_Add("This file isn't runnable as a script");
 		} else if (a.Count == 0) {
 			_Add("No triggers found");
 		} else {
+			int schedTrigger = 0;
 			foreach (var v in a) {
 				static string _Limit(string s) {
 					if (s != null) {
@@ -511,7 +508,8 @@ partial class TriggersAndToolbars {
 						_Add(s, () => App.Model.OpenAndGoTo(v.file, columnOrPos: v.pos));
 					}
 				} else if (v.type == "Scheduled") {
-					_Add(trigger, () => WinTaskScheduler.EditTask(@"Au\" + Environment.UserName, scope));
+					int i = ++schedTrigger;
+					_Add(trigger, () => DSchedule.ShowFor(thisFile, i));
 				} else if (v.type == "Startup") {
 					_Add(trigger, () => DOptions.AaShow(DOptions.EPage.Workspace));
 				}

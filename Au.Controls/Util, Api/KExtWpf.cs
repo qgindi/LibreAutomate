@@ -316,8 +316,8 @@ public static class KExtWpf {
 	/// Adds <b>TextBlock</b> with green background, wrapping and some padding, and calls <see cref="wpfBuilder.FormatText"/>.
 	/// </summary>
 	/// <inheritdoc cref="wpfBuilder.FormatText(wpfBuilder.InterpolatedString)" path="/param"/>
-	public static wpfBuilder xAddInfoBlockF(this wpfBuilder t, wpfBuilder.InterpolatedString text) {
-		var r = t.xAddInfoBlockT(null);
+	public static wpfBuilder xAddInfoBlockF(this wpfBuilder t, wpfBuilder.InterpolatedString text, bool scrollViewer = false) {
+		var r = t.xAddInfoBlockT(null, scrollViewer);
 		t.FormatText(text);
 		return r;
 	}
@@ -325,14 +325,19 @@ public static class KExtWpf {
 	/// <summary>
 	/// Adds <b>TextBlock</b> with green background, wrapping and some padding.
 	/// </summary>
-	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, string text) //not overload. Somehow then it is used with $"string" too.
-		=> xAddInfoBlockT(t, out _, text);
+	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, string text, bool scrollViewer = false) //not overload. Somehow then it is used with $"string" too.
+		=> xAddInfoBlockT(t, out _, text, scrollViewer);
 	
 	/// <summary>
 	/// Adds <b>TextBlock</b> with green background, wrapping and some padding.
 	/// </summary>
-	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, out TextBlock r, string text = null) {
-		return t.Add(out r, text).Wrap().Brush(WpfUtil_.IsHighContrastDark ? 0x2E4D00 : 0xf8fff0).Padding(1, 2, 1, 4);
+	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, out TextBlock r, string text = null, bool scrollViewer = false) {
+		WBAdd flags = 0;
+		if (scrollViewer) {
+			t.Add(new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+			flags = WBAdd.ChildOfLast;
+		}
+		return t.Add(out r, text, flags).Wrap().Brush(WpfUtil_.IsHighContrastDark ? 0x2E4D00 : 0xf8fff0).Padding(2, 1, 2, 2);
 	}
 	
 	/// <summary>
@@ -359,8 +364,12 @@ public static class KExtWpf {
 	/// <summary>
 	/// Sets binding to enable/disable the last added element when the specified <b>CheckBox</b> checked/unchecked.
 	/// </summary>
-	public static wpfBuilder xBindCheckedEnabled(this wpfBuilder t, CheckBox c) {
+	public static wpfBuilder xBindCheckedEnabled(this wpfBuilder t, CheckBox c, bool setLabeledBy = false) {
 		t.Bind(FrameworkElement.IsEnabledProperty, new Binding("IsChecked") { Source = c });
+		if (setLabeledBy) {
+			Debug.Assert(!(t.Last is ButtonBase or Label or TextBlock));
+			System.Windows.Automation.AutomationProperties.SetLabeledBy(t.Last, c);
+		}
 		return t;
 	}
 	

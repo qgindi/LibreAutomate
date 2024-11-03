@@ -18,7 +18,7 @@ enum TOFlags : byte {
 	NoWarning = 1,
 	Single = 2,
 	//MtaThread = 4,
-	//BackgroundThread=8, //rejected. Always background. Foreground has no sense here. If need, can easily set in code.
+	//BackgroundThread=8, //rejected. Always background. Foreground makes no sense here. If need, can easily set in code.
 }
 
 /// <summary>

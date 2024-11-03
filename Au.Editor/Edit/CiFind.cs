@@ -166,7 +166,7 @@ static class CiFind {
 							} else if (sui.ValueUsageInfoOpt != null) {
 								if (isCtor && sui.ValueUsageInfoOpt == ValueUsageInfo.Read) //for 'new()' of a ctor Roslyn gives ValueUsageInfo.Read
 									aUsage.Add((b.Length, 1, (ushort)TypeOrNamespaceUsageInfo.ObjectCreation));
-								else if (!(defSym is IMethodSymbol && sui.ValueUsageInfoOpt is ValueUsageInfo.Read)) //'read' for methods has no sense
+								else if (!(defSym is IMethodSymbol && sui.ValueUsageInfoOpt is ValueUsageInfo.Read)) //'read' for methods makes no sense
 									aUsage.Add((b.Length, 2, (ushort)sui.ValueUsageInfoOpt.Value));
 							}
 							

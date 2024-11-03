@@ -33,7 +33,7 @@ partial class TriggersAndToolbars {
 		
 		TriggersType tType = selectTriggersType != 0 ? selectTriggersType : _CodeAnalysis.GetTriggersType();
 		var fn = App.Model.CurrentFile;
-		bool canRunThisScript = _IsExecutableCodeFile(fn) && !fn.ItemPath.Eqi(@"\@Triggers and toolbars\Triggers and toolbars.cs");
+		bool canRunThisScript = fn.IsExecutableDirectly() && !IsTtScipt(fn);
 		
 		b.R.Add("Trigger", out ToolBar tb).Margin("LRT").Brush(SystemColors.ControlBrush);
 		tb.HideGripAndOverflow();
@@ -46,7 +46,8 @@ partial class TriggersAndToolbars {
 		var bMore = new Button { Content = "...", Width = 24, BorderBrush = SystemColors.ActiveBorderBrush };
 		bMore.Click += (_, _) => {
 			var m = new popupMenu();
-			m["Command line, shortcut, scheduler"] = o => { b.Window.Close(); Menus.TT.Script_triggers(); };
+			m["Schedule"] = o => { b.Window.Close(); Menus.TT.Schedule(); };
+			m["Command line, shortcut"] = o => { b.Window.Close(); Menus.TT.Command_line(); };
 			m["Open file \"Other triggers\""] = o => { b.Window.Close(); Menus.TT.Other_triggers(); };
 			m.Show(owner: b.Window);
 		};
@@ -203,7 +204,7 @@ To set trigger scope window can be used {App.Settings.hotkeys.tool_quick}.
 	}
 	
 	class _HotkeyTriggerPage : UserControl {
-		KHotkey _hk;
+		KHotkeyControl _hk;
 		EnumUI<TKFlags> _eFlags;
 		KCheckBox _cAlwaysEnabled;
 		
@@ -334,7 +335,7 @@ Also in code you can set PostfixKey, WordCharsPlus and MenuOptions.
 		EnumUI<TMKind> _eKind;
 		ComboBox[] _acb = new ComboBox[4];
 		KScreenComboBox _cbScreen;
-		KHotkey _hkMod;
+		KHotkeyControl _hkMod;
 		EnumUI<TMFlags> _eFlags;
 		KCheckBox _cAlwaysEnabled;
 		
