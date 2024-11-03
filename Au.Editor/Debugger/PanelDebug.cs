@@ -193,7 +193,7 @@ partial class PanelDebug {
 
 	public bool Attach(int processId) {
 		if (IsDebugging) return false;
-		var f = App.Tasks.FileFromProcessId(processId);
+		var f = App.Tasks.TaskFromProcessId(processId)?.f;
 		if (f == null) return false;
 		return _Attach(processId, true, f);
 	}

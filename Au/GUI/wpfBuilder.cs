@@ -664,7 +664,7 @@ public class wpfBuilder {
 	/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 	/// <param name="margin">Default margin of elements. If not set, default margin is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
 	/// <param name="showToolTipOnKeyboardFocus">Show tooltips when the tooltip owner element receives the keyboard focus when using keys to focus controls or open the window. If <c>true</c>, it can be set separately for each tooltip or owner element with <see cref="ToolTip.ShowsToolTipOnKeyboardFocus"/> or <see cref="ToolTipService.SetShowsToolTipOnKeyboardFocus(DependencyObject, bool?)"/>.</param>
-	/// <param name="bindLabelVisibility">Let <see cref="LabeledBy"/> and the <b>Add</b> overload that adds 2 elements (the first is <b>Label</b>) bind the <b>Visibility</b> property of the label to that of the last added element, to automatically hide/show the label together with the element.</param>
+	/// <param name="bindLabelVisibility">Let <see cref="LabeledBy"/> and the <b>Add</b> overload that adds 2 elements (the first is <b>Label</b>) bind the <b>Visibility</b> property of the label to that of the last added element, to automatically hide/show the label together with the element. Also binds <b>IsEnabled</b> if it is <b>Label</b> or <b>TextBlock</b>.</param>
 	public wpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null, bool? showToolTipOnKeyboardFocus = null, bool? bindLabelVisibility = null) {
 		if (modifyPadding != null) _opt_modifyPadding = modifyPadding.Value;
 		if (rightAlignLabels != null) _opt_rightAlignLabels = rightAlignLabels.Value;
@@ -851,15 +851,23 @@ public class wpfBuilder {
 	/// <param name="row2">If not <c>null</c>, after adding first element calls <see cref="Row"/> with this argument.</param>
 	/// <exception cref="NotSupportedException">If the function does not support non-<c>null</c> <i>text</i> for this element type.</exception>
 	/// <remarks>
-	/// Sets <see cref="Label.Target"/> if the first element is <b>Label</b>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).
+	/// Finally calls <see cref="LabeledBy"/>; it sets <see cref="Label.Target"/>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).
 	/// </remarks>
-	public wpfBuilder Add<T>(object label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new()
-		=> _Add2(out Label _, label, out variable, text, row2);
-	
-	wpfBuilder _Add2<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
-		Add(out var1, text1);
+	public wpfBuilder Add<T>(object label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new() {
+		Add(out Label var1, label);
 		if (row2 != null) Row(row2.Value);
-		Add(out var2, text2); //note: no flags
+		Add(out variable, text); //note: no flags
+		return this.LabeledBy(var1);
+	}
+	
+	/// <summary>
+	/// Adds 2 elements: <see cref="Label"/> and an existing element (control etc of any type).
+	/// </summary>
+	/// <inheritdoc cref="Add{T}(object, out T, object, WBGridLength?)"/>
+	public wpfBuilder Add(object label, FrameworkElement element, WBGridLength? row2 = null) {
+		Add(out Label var1, label);
+		if (row2 != null) Row(row2.Value);
+		Add(element); //note: no flags
 		return this.LabeledBy(var1);
 	}
 	
@@ -879,7 +887,10 @@ public class wpfBuilder {
 	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Too many overloads, confusing. Instead users can add label element separately and use <b>LabeledBy</b>.
 	[Obsolete]
 	public wpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
-		return _Add2(out var1, text1, out var2, text2, row2);
+		Add(out var1, text1);
+		if (row2 != null) Row(row2.Value);
+		Add(out var2, text2); //note: no flags
+		return this.LabeledBy(var1);
 	}
 #endif
 	
@@ -1591,6 +1602,7 @@ public class wpfBuilder {
 	/// Sets a validation callback function for the last added element.
 	/// </summary>
 	/// <param name="func">Function that returns an error string if element's value is invalid, else returns <c>null</c>.</param>
+	/// <param name="linkClick">If not null, called on error link click. For example can be used to make the element visible.</param>
 	/// <remarks>
 	/// The callback function will be called when clicked button <b>OK</b> or <b>Apply</b> or a button added with flag <see cref="WBBFlags.Validate"/>.
 	/// If it returns a non-<c>null</c> string, the window stays open and button's <i>click</i> callback not called. The string is displayed in a tooltip.
@@ -1608,10 +1620,10 @@ public class wpfBuilder {
 	/// print.it(tName.Text, tCount.Text.ToInt());
 	/// ]]></code>
 	/// </example>
-	public wpfBuilder Validation(Func<FrameworkElement, string> func/*, DependencyProperty property=null*/) {
+	public wpfBuilder Validation(Func<FrameworkElement, string> func, Action<FrameworkElement> linkClick = null/*, DependencyProperty property=null*/) {
 		var c = Last;
 		//validate on click of OK or some other button. Often eg text fields initially are empty and must be filled.
-		(_validations ??= new List<_Validation>()).Add(new _Validation { e = c, func = func });
+		(_validations ??= new List<_Validation>()).Add(new(c, func, linkClick));
 		
 		//rejected: also validate on lost focus or changed property value. Maybe in the future.
 		//		if(property==null) {
@@ -1623,38 +1635,40 @@ public class wpfBuilder {
 		return this;
 	}
 	
-	class _Validation {
-		public FrameworkElement e;
-		public Func<FrameworkElement, string> func;
-	}
+	record class _Validation(FrameworkElement e, Func<FrameworkElement, string> func, Action<FrameworkElement> linkClick);
 	
 	List<_Validation> _validations;
 	
 	bool _Validate(Window w, Button b) {
+		ToolTip tt = null;
 		TextBlock tb = null;
 		foreach (var gb in _GetAllWpfBuilders(w)) { //find all wpfBuilder used to build this window
 			if (gb._validations == null) continue;
-			foreach (var v in gb._validations) {
-				var e = v.e;
-				var s = v.func(e); if (s == null) continue;
+			foreach (var (e, func, linkClick) in gb._validations) {
+				var s = func(e); if (s == null) continue;
 				if (tb == null) tb = new TextBlock(); else tb.Inlines.Add(new LineBreak());
 				var h = new Hyperlink(new Run(s));
 				h.Click += (o, y) => {
-					if (_FindAncestorTabItem(e, out var ti)) ti.IsSelected = true; //TODO3: support other cases too, eg other tabcontrol-like control class or tabcontrol in tabcontrol.
-					timer.after(1, _ => { //else does not focus etc if was in hidden tab page
-						try {
-							e.BringIntoView();
-							e.Focus();
-						}
-						catch { }
-						//catch(Exception e1) { print.it(e1); }
-					});
+					if (!e.IsVisible && _FindAncestorTabItem(e, out var ti)) ti.IsSelected = true;
+					linkClick?.Invoke(e);
+					if (e.IsVisible) {
+						timer.after(1, _ => { //else does not focus etc if was in hidden tab page
+							try {
+								e.BringIntoView();
+								e.Focus();
+								_RedBorderAdorner.AddTo(e, true);
+								tt.Closed += (_, _) => { _RedBorderAdorner.AddTo(e, false); };
+							}
+							catch { }
+							//catch(Exception e1) { print.it(e1); }
+						});
+					}
 				};
 				tb.Inlines.Add(h);
 			}
 		}
 		if (tb == null) return true;
-		var tt = new ToolTip { Content = tb, StaysOpen = false, PlacementTarget = b, Placement = PlacementMode.Bottom };
+		tt = new ToolTip { Content = tb, StaysOpen = false, PlacementTarget = b, Placement = PlacementMode.Bottom };
 		//var tt=new Popup { Child=tb, StaysOpen=false, PlacementTarget=b, Placement= PlacementMode.Bottom }; //works, but black etc
 		tt.IsOpen = true;
 		//never mind: could add eg red rectangle, like WPF does on binding validation error. Not easy.
@@ -1685,6 +1699,26 @@ public class wpfBuilder {
 		}
 	}
 	
+	class _RedBorderAdorner : Adorner {
+		public _RedBorderAdorner(UIElement adornedElement) : base(adornedElement) { }
+		
+		protected override void OnRender(DrawingContext drawingContext) {
+			var adornedElementRect = new Rect(AdornedElement.RenderSize);
+			var pen = new Pen(Brushes.Red, 2);
+			drawingContext.DrawRectangle(null, pen, adornedElementRect);
+		}
+		
+		public static void AddTo(FrameworkElement e, bool add) {
+			if (AdornerLayer.GetAdornerLayer(e) is { } layer) {
+				if (add) {
+					layer.Add(new _RedBorderAdorner(e));
+				} else {
+					if (layer.GetAdorners(e)?.OfType<_RedBorderAdorner>().FirstOrDefault() is { } k) layer.Remove(k);
+				}
+			}
+		}
+	}
+	
 	/// <summary>
 	/// Sets <see cref="FrameworkElement.Name"/> of the last added element.
 	/// </summary>
@@ -1704,21 +1738,26 @@ public class wpfBuilder {
 	/// Makes an element behave as a label of the last added element (<see cref="Last"/>).
 	/// </summary>
 	/// <param name="label">The label element. Usually <b>Label</b> or <b>TextBlock</b>, but can be any element.</param>
+	/// <param name="bindVisibility">If <c>true</c>, binds <b>Visibility</b> of <i>label</i> to that of the labeled element. If <c>false</c>, does not bind. If <c>null</c> (default), binds if the <i>bindLabelVisibility</i> option is true (see <see cref="Options"/>). If binds <b>Visibility</b>, also binds <b>IsEnabled</b> if <i>label</i> is <b>Label</b> or <b>TextBlock</b>.</param>
 	/// <remarks>
-	/// Sets <i>label</i>'s <see cref="Label.Target"/> if it's <b>Label</b>. Calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>. Applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).
+	/// Sets <i>label</i>'s <see cref="Label.Target"/> if it's <b>Label</b>. Calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
 	/// </remarks>
-	public wpfBuilder LabeledBy(FrameworkElement label) {
+	public wpfBuilder LabeledBy(FrameworkElement label, bool? bindVisibility = null) {
 		var e = Last;
-		if (label is Label la) la.Target = e;
 		System.Windows.Automation.AutomationProperties.SetLabeledBy(e, label);
-		if (_opt_bindLabelVisibility) label?.SetBinding(UIElement.VisibilityProperty, new Binding("Visibility") { Source = e, Mode = BindingMode.OneWay });
+		if (label is Label la) la.Target = e;
+		if (bindVisibility ?? _opt_bindLabelVisibility) {
+			label?.SetBinding(UIElement.VisibilityProperty, new Binding("Visibility") { Source = e, Mode = BindingMode.OneWay });
+			if (label is Label or TextBlock) label.SetBinding(UIElement.IsEnabledProperty, new Binding("IsEnabled") { Source = e, Mode = BindingMode.OneWay });
+		}
 		return this;
 	}
 	
 	/// <summary>
 	/// Makes <see cref="Last2"/> behave as a label of <see cref="Last"/>.
 	/// </summary>
-	public wpfBuilder LabeledBy() => LabeledBy(Last2);
+	/// <inheritdoc cref="LabeledBy(FrameworkElement, bool?)"/>
+	public wpfBuilder LabeledBy(bool? bindVisibility = null) => LabeledBy(Last2, bindVisibility);
 	
 	/// <summary>
 	/// Sets watermark/hint/cue text of the last added <b>TextBox</b> or editable <b>ComboBox</b> control.

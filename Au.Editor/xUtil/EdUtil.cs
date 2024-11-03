@@ -271,7 +271,7 @@ class WildcardList {
 			List<string> a = new();
 			foreach (var s in list.Lines(noEmpty: true)) {
 				if (s.Starts("//")) continue;
-				if (s.FindNot(@"*/\") < 0) continue; //wildcard like "*" or "\*" or "\" etc has no sense. Either matches always or never. Prevent accidentally excluding all files etc.
+				if (s.FindNot(@"*/\") < 0) continue; //wildcard like "*" or "\*" or "\" etc makes no sense. Either matches always or never. Prevent accidentally excluding all files etc.
 				a.Add(replaceSlash ? s.Replace('/', '\\') : s);
 			}
 			_a = a.ToArray();

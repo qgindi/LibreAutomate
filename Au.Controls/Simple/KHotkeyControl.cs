@@ -2,7 +2,9 @@ using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Controls;
 
-public class KHotkey : UserControl {
+namespace Au.Controls;
+
+public class KHotkeyControl : UserControl {
 	TextBox _tHotkey;
 	CheckBox _cCtrl, _cShift, _cAlt, _cWin;
 	WindowsHook _hook;
@@ -10,7 +12,7 @@ public class KHotkey : UserControl {
 	bool _noEvents;
 	bool _forTrigger, _onlyMod;
 	
-	public KHotkey(bool forTrigger = false, bool onlyMod = false) {
+	public KHotkeyControl(bool forTrigger = false, bool onlyMod = false) {
 		_forTrigger = forTrigger;
 		_onlyMod = onlyMod;
 		

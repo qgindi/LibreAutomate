@@ -724,7 +724,7 @@ namespace Au.More {
 				if (osVersion.minWin8_1) pw |= Api.PW_RENDERFULLCONTENT;
 				//PW_RENDERFULLCONTENT is new in Win8.1. Undocumented in MSDN, but defined in h. Then works with windows like Chrome, winstore.
 				//	Bug: from some controls randomly gets partially painted image. Eg classic toolbar, treeview.
-				//	Rejected: if PrintClient|WindowDC, capture without PW_RENDERFULLCONTENT. Has no sense.
+				//	Rejected: if PrintClient|WindowDC, capture without PW_RENDERFULLCONTENT. Makes no sense.
 
 				if (!Api.PrintWindow(w, _mb.Hdc, pw)) w.ThrowNoNative("*get pixels");
 				if (r.left != 0 || r.top != 0 || _width != dibWidth) { //move pixels to the start of the bitmap memory

@@ -167,7 +167,7 @@ partial class WinApiConverter {
 				Debug.Assert(s0 == "PSTR");
 				return ("string", "LPStr", s);
 				
-				//note: with some (few) functions must be `char*`, not `string`. Eg FreeEnvironmentStringsW. Users will figure out it, because `string` has no sense there.
+				//note: with some (few) functions must be `char*`, not `string`. Eg FreeEnvironmentStringsW. Users will figure out it, because `string` makes no sense there.
 			}
 		} else {
 			var s1 = s;

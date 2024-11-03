@@ -362,7 +362,7 @@ class PanelFound {
 	
 	class _LbItem : KListBoxItemWithImage {
 		public readonly _KScintilla sci;
-		public _LbItem(_KScintilla sci, object image, string text) : base(image, text) { this.sci = sci; }
+		public _LbItem(_KScintilla sci, object image, string text) : base(image, text, 1) { this.sci = sci; }
 	}
 	
 	public enum Found {

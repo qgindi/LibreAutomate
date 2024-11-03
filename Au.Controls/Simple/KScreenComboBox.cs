@@ -1,5 +1,7 @@
 using System.Windows.Controls;
 
+namespace Au.Controls;
+
 /// <summary>
 /// <b>ComboBox</b> to select screen.
 /// Ctor adds items. Finally call <b>Result</b>.

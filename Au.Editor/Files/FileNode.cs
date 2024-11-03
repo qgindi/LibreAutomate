@@ -863,6 +863,18 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		return r;
 	}
 	
+	/// <summary>
+	/// Returns true if this is a code file that can be executed directly (not via project main or test script).
+	/// </summary>
+	public bool IsExecutableDirectly() {
+		if (!IsCodeFile) return false;
+		if (IsClass) {
+			if (GetProjectMainOrThis() != this) return false;
+			if (GetClassFileRole(preferApp: true) != FNClassFileRole.App) return false;
+		}
+		return true;
+	}
+	
 	#endregion
 	
 	#region new item

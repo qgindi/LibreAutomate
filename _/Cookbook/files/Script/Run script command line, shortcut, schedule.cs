@@ -5,11 +5,13 @@
 /// 	<.c>Au.Editor.exe Script5.cs<>
 /// 	<.c>Au.Editor.exe \Folder\Script5.cs<>
 /// 	<.c>Au.Editor.exe "Script name.cs" /argument1 "argument 2"<>
-/// 	<.c>Au.Editor.exe *\Folder\Script5.cs<>
+/// 	<.c>Au.Editor.exe *Script5.cs<>
 ///
 /// 	With * the program can wait until the script ends and capture text written with <see cref="script.writeResult"/>.
 ///
-/// 	To easily create a command line string to run current script, use menu <b>TT > Script triggers<>. The tool also can create shortcuts and Windows Task Scheduler tasks.
+/// 	To create a command line string to run current script, use menu <b>TT > Command line<>. The tool also can create shortcuts.
+/// 
+/// 	To create a Windows Task Scheduler task to run current script, use menu <b>TT > Schedule<>.
 /// 
 /// 2. Run the script without the editor. For it need to <help editor/Publish>create .exe program<> from the script. Then launch it like any other program. Example:
 ///

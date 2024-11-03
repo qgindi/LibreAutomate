@@ -1,18 +1,11 @@
 ## Version 1..0 (2024-)
 
 ### Editor
-New and improved tools:
-- **New trigger** - trigger property pages etc.
-- Menu **TT > Find triggers**. Finds triggers and scheduled tasks of current script.
+In **New trigger** tool added trigger property pages etc.
 
-New cookbook recipes:
-- .
+Menu **TT > Find triggers**. Finds triggers and scheduled tasks of current script.
 
-Improved:
-- .
-
-Fixed bugs:
-- .
+Menu **TT > Schedule**. Tool to edit a scheduled task for current script.
 
 Several bug fixes and improvements.
 
@@ -24,7 +17,8 @@ New members:
 - **wpfBuilder.StartPanel** (adds panel of any type).
 
 New parameters:
-- .
+- **wpfBuilder.LabeledBy**: *bindVisibility*.
+- **wpfBuilder.Validation**: *linkClick* callback.
 
 Improved:
 - **ExplorerFolder** supports multiple tabs. Added more functions and parameters.

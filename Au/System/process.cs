@@ -422,7 +422,7 @@ namespace Au {
 			if (osVersion.is32BitProcess) return null; //can't get PEB address of 64-bit processes. Never mind 32-bit OS.
 			using var pm = new ProcessMemory(processId, 0, noException: true);
 			if (pm.ProcessHandle == default) return null;
-			Api.PROCESS_BASIC_INFORMATION pbi;
+			Api.PROCESS_BASIC_INFORMATION pbi = default;
 			if (0 == Api.NtQueryInformationProcess(pm.ProcessHandle, 0, &pbi, sizeof(Api.PROCESS_BASIC_INFORMATION), out _)) {
 				long upp; Api.RTL_USER_PROCESS_PARAMETERS up;
 				if (pm.Read((IntPtr)pbi.PebBaseAddress + 32, &upp, 8) && pm.Read((IntPtr)upp, &up, sizeof(Api.RTL_USER_PROCESS_PARAMETERS))) {
@@ -437,6 +437,12 @@ namespace Au {
 			return null;
 			
 			//speed: ~25 mcs cold. WMI Win32_Process ~50 ms (2000 times slower).
+		}
+		
+		internal static unsafe int GetParentProcessId_() {
+			Api.PROCESS_BASIC_INFORMATION pbi = default;
+			if (0 != Api.NtQueryInformationProcess(thisProcessHandle, 0, &pbi, sizeof(Api.PROCESS_BASIC_INFORMATION), out _)) return 0;
+			return (int)pbi.ParentProcessId;
 		}
 		
 		/// <summary>
