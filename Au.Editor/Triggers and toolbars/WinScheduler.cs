@@ -172,11 +172,7 @@ static class WinScheduler {
 		if (0 == ts.GetFolder(taskFolder, out var tf)) tf.DeleteTask(taskName, 0);
 	}
 	
-#if DEBUG //enable testing from script
-	public static string EditorPath => script.role == SRole.EditorExtension ? process.thisExePath : folders.Editor + @"\Au.Editor.exe";
-#else
-	public static string EditorPath => process.thisExePath;
-#endif
+	public static string EditorPath { get; set; } = process.thisExePath;
 	
 	public record struct FSTResult(api.IRegisteredTask rt, api.ITaskDefinition td, api.IExecAction action, string scriptArgs);
 	

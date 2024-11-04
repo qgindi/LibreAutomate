@@ -61,12 +61,11 @@ partial class TriggersAndToolbars {
 		b.End(); //of firstPage
 		
 		b.R.StartOkCancel();
-		b.AddButton(out bBack, "", k => {
+		b.AddButton(out bBack, ImageUtil.LoadWpfImageElement("*EvaIcons.ArrowBack @12" + Menus.black), k => {
 			ccPages.Content = pages[(int)tType - 1][--iPage];
 			bBack.IsEnabled = iPage > 0;
 			bNext.Content = "Next";
-		}).Disabled();
-		bBack.FontFamily = new("Segoe UI Symbol");
+		}).Padding("L3R3").Disabled();
 		
 		b.AddButton(out bNext, "Next", k => { k.Cancel = _NextPage(); }, WBBFlags.OK);
 		

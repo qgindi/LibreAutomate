@@ -36,7 +36,7 @@ var body = driver.FindElement(By.TagName("body"));
 print.it(body.Text);
 
 //Find and click a link. It opens new page and waits util it is loaded.
-var e = driver.FindElement(By.LinkText("Resources"));
+var e = driver.FindElement(By.LinkText("Shared C# code"));
 e.Click();
 
 //Find a text input field and enter text. To find it use XPath copied from Chrome Developer Tools.

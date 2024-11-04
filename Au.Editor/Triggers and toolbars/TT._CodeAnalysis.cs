@@ -14,7 +14,6 @@ using Au.Compiler;
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 //using Au.Triggers;
 
@@ -471,7 +470,7 @@ partial class TriggersAndToolbars {
 		//if (thisFile.IsClass) thisFile = thisFile.GetProjectMainOrThis();
 		var a = await FindAllTriggersAsync(thisFile);
 		
-		var p = new KPopupListBox();
+		var p = new KPopupListBox { Placement = System.Windows.Controls.Primitives.PlacementMode.Mouse, PlacementTarget = App.Wmain };
 		p.OK += o => {
 			if (o is ListBoxItem { Tag: Action click }) click();
 		};
@@ -516,9 +515,6 @@ partial class TriggersAndToolbars {
 			}
 		}
 		
-		p.PlacementTarget = App.Wmain;
-		var xy = Mouse.GetPosition(App.Wmain); xy.Offset(-40, -10);
-		p.PlacementRectangle = new(xy, new Size());
 		p.IsOpen = true;
 	}
 }
