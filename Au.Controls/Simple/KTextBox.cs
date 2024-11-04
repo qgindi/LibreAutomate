@@ -38,9 +38,9 @@ public class KTextBox : TextBox {
 	protected override void OnMouseDown(MouseButtonEventArgs e) {
 		//Workaround for this nasty default behavior of TextBox: does not set the caret position when clicked the left padding area.
 		//	Then difficult to set the caret position eg at the start, because the width of the sensitive area is 0.5 of the width of the first character (eg 2 pixels if `i`).
-		//	Classic Edit controls etc don't have this problem. Users often clicks the padding area to move the caret at the start, but in WPF TextBox it does not work.
-		if (e.ChangedButton == MouseButton.Left && e.OriginalSource is Grid g && Mouse.GetPosition(g).X < Padding.Left + 3) {
-			var p = Mouse.GetPosition(this);
+		//	Classic Edit controls etc don't have this problem. Users often click the padding area to move the caret at the start, but in WPF TextBox it does not work.
+		if (e.ChangedButton == MouseButton.Left && e.OriginalSource is Grid g && e.GetPosition(g).X < Padding.Left + 3) {
+			var p = e.GetPosition(this);
 			int i = base.GetCharacterIndexFromPoint(p, true);
 			if (i >= 0) this.CaretIndex = i;
 			//never mind: cursor not I-beam.

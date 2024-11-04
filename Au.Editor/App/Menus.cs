@@ -477,10 +477,10 @@ static class Menus {
 		[Command]
 		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 		
-		[Command("...", separator = true)]
+		[Command("...", separator = true, image = "*Unicons.Schedule" + blue)]
 		public static void Schedule() { DSchedule.ShowFor(App.Model.CurrentFile); }
 		
-		[Command("...")]
+		[Command("...", image = "*RemixIcon.TerminalLine" + blue)]
 		public static void Command_line() { DCommandline.ShowForCurrentFile(); }
 		
 		[Command(separator = true, tooltip = "Finds triggers of current script.\nFinds its name in '@Triggers and toolbars' files in trigger actions, toolbar button actions and other code.\nAlso finds scheduled tasks, workspace startup scripts and class file test scripts.")]

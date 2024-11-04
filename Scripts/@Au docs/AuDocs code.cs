@@ -59,7 +59,7 @@ partial class AuDocs {
 		
 		using var ws = new AdhocWorkspace();
 		var document = CiUtil.CreateDocumentFromCode(ws, s, needSemantic: true);
-		var semo = document.GetSemanticModelAsync().Result;
+		//var semo = document.GetSemanticModelAsync().Result;
 		
 		//at first set byte[] styles.
 		//	Can't format text directly because GetClassifiedSpansAsync results may be overlapped, eg at first entire string and then its escape sequences.
@@ -69,7 +69,7 @@ partial class AuDocs {
 		foreach (var v in Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, s.Length)).Result) {
 			var ct = v.ClassificationType;
 			if (ct == ClassificationTypeNames.StaticSymbol) continue;
-			EStyle style = CiStyling.StyleFromClassifiedSpan(v, semo);
+			EStyle style = CiStyling.StyleFromClassifiedSpan(v);
 			int start = v.TextSpan.Start, end = v.TextSpan.End;
 			//print.it(style, s[start..end]);
 			if (style == prevStyle && start > prevEnd && a[prevEnd] == 0) start = prevEnd; //join adjacent styles separated by whitespace

@@ -12,7 +12,7 @@ class DSchedule : KDialogWindow {
 	public static void ShowFor(FileNode f, int triggerIndex1Based = 0) {
 		if (f == null) return;
 #if TEST
-		var d = new DSchedule(f);
+		var d = new DSchedule(f, triggerIndex1Based);
 		d.ShowDialog();
 		//d.ShowAndWait();
 		//d.Show();
@@ -40,7 +40,7 @@ class DSchedule : KDialogWindow {
 	DSchedule(FileNode f, int selectTrigger) {
 		_f = f;
 		
-		Title = "Schedule - " + f.Name;
+		Title = "Schedule - " + _f.Name;
 		
 		var b = _b = new wpfBuilder(this).WinSize(700, 420).Columns(-1.2, 8, -2);
 		b.Options(bindLabelVisibility: true);
@@ -68,8 +68,9 @@ class DSchedule : KDialogWindow {
 		
 		b.R.AddSeparator().Span(-1);
 		
-		b.R.StartOkCancel();
-		b.xAddInfoBlockT(out var tExistsInfo, "New scheduled task.");
+		b.StartGrid().Columns(-1, 0);
+		b.R.xAddInfoBlockT(out var tExistsInfo, "OK/Apply will create a new scheduled task.");
+		b.StartOkCancel();
 		b.AddOkCancel(out var bOK, out _, out _, apply: "_Apply");
 		b.AddButton("Task Scheduler ▾", _ => {
 			var m = new popupMenu();
@@ -79,8 +80,8 @@ class DSchedule : KDialogWindow {
 			};
 			bool disabled = !_TaskExists();
 			m["Cancel, open task in Task Scheduler", disable: disabled] = o => { Close(); _EditTask(); };
-			m.Submenu("Delete scheduled task", m => {
-				m["Delete"] = o => {
+			m.Submenu("Delete task", m => {
+				m["Delete the task and close this window"] = o => {
 					WinScheduler.DeleteTask(s_taskFolder, _taskName);
 					Close();
 				};
@@ -94,6 +95,7 @@ class DSchedule : KDialogWindow {
 			
 			bool _TaskExists() => WinScheduler.TaskExists(s_taskFolder, _taskName);
 		});
+		b.End();
 		b.End();
 		b.End();
 		
