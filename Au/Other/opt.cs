@@ -1,13 +1,11 @@
 namespace Au {
 	/// <summary>
-	/// Options for some functions of this library.
+	/// Ambient options for some functions of this library.
 	/// </summary>
 	/// <remarks>
-	/// Some frequently used static functions of this library have some options (settings). For example <see cref="keys.send"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
+	/// Some frequently used functions of this library have some options (settings). For example <see cref="keys.send"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead use this class. See examples.
 	/// 
-	/// There are two sets of identical or similar options - in class <b>opt</b> and in class <see cref="opt.init"/>:
-	/// - <b>opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>opt.init</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
-	/// - <b>opt.init</b> - static options. Contains initial property values for <b>opt</b>. Normally you change them when script starts. Don't change later, it's not thread-safe.
+	/// To store these options, internally is used <see cref="AsyncLocal{T}"/>. It means that a new task or thread inherits a copy of options of the caller. It can't modify options of the caller or other tasks/threads.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -20,12 +18,19 @@ namespace Au {
 	/// </example>
 	public static class opt {
 		/// <summary>
+		/// Options for mouse functions (class <see cref="Au.mouse"/> and functions that use it).
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.mouse.ClickSpeed = 100;
+		/// mouse.click();
+		/// ]]></code>
+		/// </example>
+		public static OMouse mouse => OMouse.Ambient_;
+		
+		/// <summary>
 		/// Options for keyboard and clipboard functions (classes <see cref="keys"/>, <see cref="clipboard"/> and functions that use them).
 		/// </summary>
-		/// <remarks>
-		/// Each thread has its own <b>opt.key</b> instance. It inherits options from <see cref="opt.init.key"/>.
-		/// Also can be used when creating <see cref="keys"/> instances. See the second example.
-		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// opt.key.KeySpeed = 100;
@@ -42,38 +47,11 @@ namespace Au {
 		/// Triggers.Options.BeforeAction = o => { opt.key.KeySpeed = 50; };
 		/// ]]></code>
 		/// </example>
-		public static OKey key => t_key ??= new OKey(init.key);
-		[ThreadStatic] static OKey t_key;
-		
-		/// <summary>
-		/// Options for mouse functions (class <see cref="Au.mouse"/> and functions that use it).
-		/// </summary>
-		/// <remarks>
-		/// Each thread has its own <b>opt.mouse</b> instance. It inherits options from <see cref="opt.init.mouse"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// opt.mouse.ClickSpeed = 100;
-		/// mouse.click();
-		/// ]]></code>
-		/// </example>
-		public static OMouse mouse => t_mouse ??= new OMouse(init.mouse);
-		[ThreadStatic] static OMouse t_mouse;
-		
-		/// <summary>
-		/// Obsolete. Use <see cref="Seconds"/> instead.
-		/// For backward compatibility, wait functions still use <c>opt.wait.DoEvents</c> if <b>Seconds.DoEvents</b> not specified.
-		/// </summary>
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public static OWait wait => t_wait ??= new OWait();
-		[ThreadStatic] static OWait t_wait;
+		public static OKey key => OKey.Ambient_;
 		
 		/// <summary>
 		/// Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
 		/// </summary>
-		/// <remarks>
-		/// Each thread has its own <b>opt.warnings</b> instance. It inherits options from <see cref="opt.init.warnings"/>.
-		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// opt.warnings.Verbose = false;
@@ -81,71 +59,34 @@ namespace Au {
 		/// print.warning("Example");
 		/// ]]></code>
 		/// </example>
-		public static OWarnings warnings => t_warnings ??= new OWarnings(init.warnings);
-		[ThreadStatic] static OWarnings t_warnings;
-		
-		//rejected. Use opt.scope.
-		///// <summary>
-		///// Resets all options. Copies from <see cref="opt.init"/>.
-		///// </summary>
-		//public static void reset()
-		//{
-		//	t_key?.Reset();
-		//	t_mouse?.Reset();
-		//	t_waitFor?.Reset();
-		//	t_warnings?.Reset();
-		//}
+		public static OWarnings warnings => OWarnings.Ambient_;
 		
 		/// <summary>
-		/// Default <see cref="opt"/> properties of a thread.
+		/// Obsolete. Use <see cref="Seconds"/> instead.
+		/// For backward compatibility, wait functions still use <c>opt.wait.DoEvents</c> if <b>Seconds.DoEvents</b> not specified.
 		/// </summary>
-		/// <remarks>
-		/// You can change these options at the start of your script/program. Don't change later.
-		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static OWait wait => OWait.Ambient_;
+		
+		/// <summary>
+		/// Obsolete.
+		/// </summary>
+		[Obsolete("Use opt instead. To set options for triggers can be used code like this: Triggers.Options.BeforeAction = o => { opt.key.TextSpeed = 5; opt.mouse.ClickSpeed = 30; };"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static class init {
 			/// <summary>
-			/// Default option values for <see cref="opt.key"/> of a thread.
+			/// Obsolete. Same as <see cref="opt.mouse"/>.
 			/// </summary>
-			/// <remarks>
-			/// Also can be used when creating <see cref="keys"/> instances. See the second example.
-			/// </remarks>
-			/// <example>
-			/// <code><![CDATA[
-			/// opt.init.key.KeySpeed = 10;
-			/// ...
-			/// keys.send("Tab Ctrl+V"); //uses opt.key, which is implicitly copied from opt.init.key
-			/// ]]></code>
-			/// Use a <b>keys</b> instance.
-			/// <code><![CDATA[
-			/// var k = new keys(opt.init.key); //create new keys instance and copy options from opt.init.key to it
-			/// k.Options.KeySpeed = 100; //changes option of k
-			/// k.Add("Tab Ctrl+V").SendNow(); //uses options of k
-			/// ]]></code>
-			/// </example>
-			public static OKey key { get; } = new OKey();
+			public static OMouse mouse => opt.mouse;
 			
 			/// <summary>
-			/// Default option values for <see cref="opt.mouse"/> of a thread.
+			/// Obsolete. Same as <see cref="opt.key"/>.
 			/// </summary>
-			/// <example>
-			/// <code><![CDATA[
-			/// opt.init.mouse.ClickSpeed = 10;
-			/// ...
-			/// mouse.click(); //uses opt.mouse, which is implicitly copied from opt.init.mouse
-			/// ]]></code>
-			/// </example>
-			public static OMouse mouse { get; } = new OMouse();
+			public static OKey key => opt.key;
 			
 			/// <summary>
-			/// Default option values for <see cref="opt.warnings"/> of a thread.
+			/// Obsolete. Same as <see cref="opt.warnings"/>.
 			/// </summary>
-			/// <example>
-			/// <code><![CDATA[
-			/// opt.init.warnings.Verbose = false;
-			/// ]]></code>
-			/// </example>
-			public static OWarnings warnings { get; } = new OWarnings();
-			
+			public static OWarnings warnings => opt.warnings;
 		}
 		
 		/// <summary>
@@ -156,7 +97,7 @@ namespace Au {
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.mouse"/> options. See example.
 			/// </summary>
-			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, inherit default options (<see cref="opt.init"/>).</param>
+			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, uses default options.</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.mouse.ClickSpeed);
@@ -168,21 +109,14 @@ namespace Au {
 			/// ]]></code>
 			/// </example>
 			public static UsingEndAction mouse(bool inherit = true) {
-				var old = _Mouse(inherit);
-				return new UsingEndAction(() => t_mouse = old);
-			}
-			
-			static OMouse _Mouse(bool inherit) {
-				var old = t_mouse;
-				//t_mouse = new OMouse((old != null && inherit) ? old : Static.Mouse);
-				t_mouse = (old != null && inherit) ? new OMouse(old) : null; //lazy
-				return old;
+				var old = OMouse.Scope_(inherit);
+				return new UsingEndAction(() => OMouse.Ambient_ = old);
 			}
 			
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.key"/> options. See example.
 			/// </summary>
-			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, inherit default options (<see cref="opt.init"/>).</param>
+			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, uses default options.</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.key.KeySpeed);
@@ -194,34 +128,14 @@ namespace Au {
 			/// ]]></code>
 			/// </example>
 			public static UsingEndAction key(bool inherit = true) {
-				var old = _Key(inherit);
-				return new UsingEndAction(() => t_key = old);
-			}
-			
-			static OKey _Key(bool inherit) {
-				var old = t_key;
-				//t_key = new OKey((old != null && inherit) ? old : Static.Key);
-				t_key = (old != null && inherit) ? new OKey(old) : null; //lazy
-				return old;
-			}
-			
-			///
-			[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
-			public static UsingEndAction wait(bool inherit = true) {
-				var old = _Wait(inherit);
-				return new UsingEndAction(() => t_wait = old);
-			}
-			
-			static OWait _Wait(bool inherit) {
-				var old = t_wait;
-				t_wait = (old != null && inherit) ? new OWait() { DoEvents = old.DoEvents, Period = old.Period } : null; //lazy
-				return old;
+				var old = OKey.Scope_(inherit);
+				return new UsingEndAction(() => OKey.Ambient_ = old);
 			}
 			
 			/// <summary>
 			/// Creates temporary scope for <see cref="opt.warnings"/> options. See example.
 			/// </summary>
-			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, inherit default options (<see cref="opt.init"/>).</param>
+			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, uses default options.</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// opt.warnings.Verbose = false;
@@ -235,21 +149,21 @@ namespace Au {
 			/// ]]></code>
 			/// </example>
 			public static UsingEndAction warnings(bool inherit = true) {
-				var old = _Warnings(inherit);
-				return new UsingEndAction(() => t_warnings = old);
+				var old = OWarnings.Scope_(inherit);
+				return new UsingEndAction(() => OWarnings.Ambient_ = old);
 			}
 			
-			static OWarnings _Warnings(bool inherit) {
-				var old = t_warnings;
-				//t_warnings = new OWarnings((old != null && inherit) ? old : Static.Warnings);
-				t_warnings = (old != null && inherit) ? new OWarnings(old) : null; //lazy
-				return old;
+			///
+			[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
+			public static UsingEndAction wait(bool inherit = true) {
+				var old = OWait.Scope_(inherit);
+				return new UsingEndAction(() => OWait.Ambient_ = old);
 			}
 			
 			/// <summary>
 			/// Creates temporary scope for all options. See example.
 			/// </summary>
-			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, inherit default options (<see cref="opt.init"/>).</param>
+			/// <param name="inherit">If <c>true</c> (default), inherit current options. If <c>false</c>, uses default options.</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// print.it(opt.key.KeySpeed, opt.mouse.ClickSpeed);
@@ -262,26 +176,15 @@ namespace Au {
 			/// ]]></code>
 			/// </example>
 			public static UsingEndAction all(bool inherit = true/*, int? speed = null*/) {
-				var o1 = _Mouse(inherit);
-				var o2 = _Key(inherit);
-				var o3 = _Wait(inherit);
-				var o4 = _Warnings(inherit);
-				//rejected
-				///// <param name="speed">If not <c>null</c>, sets <c>opt.mouse.MoveSpeed = speed; opt.key.KeySpeed = speed; opt.key.TextSpeed = speed;</c>. See <see cref="OMouse.MoveSpeed"/>, <see cref="OKey.KeySpeed"/>, <see cref="OKey.TextSpeed"/>.</param>
-				//if (speed != null) {
-				//	int i = speed.Value;
-				//	opt.mouse.MoveSpeed = i;
-				//	opt.key.KeySpeed = i;
-				//	opt.key.TextSpeed = i;
-				//	//if (i > 20) opt.mouse.ClickSpeed = i; //no, can be too big. Or neeed to clamp.
-				//	//if (i > 10) opt.mouse.ClickSleepFinally = i;
-				//	//if (i > 10) opt.key.SleepFinally = i;
-				//}
+				var o1 = OMouse.Scope_(inherit);
+				var o2 = OKey.Scope_(inherit);
+				var o3 = OWarnings.Scope_(inherit);
+				var o4 = OWait.Scope_(inherit);
 				return new UsingEndAction(() => {
-					t_mouse = o1;
-					t_key = o2;
-					t_wait = o3;
-					t_warnings = o4;
+					OMouse.Ambient_ = o1;
+					OKey.Ambient_ = o2;
+					OWarnings.Ambient_ = o3;
+					OWait.Ambient_ = o4;
 				});
 			}
 		}
@@ -290,152 +193,68 @@ namespace Au {
 
 namespace Au.Types {
 	/// <summary>
-	/// Options for run-time warnings (<see cref="print.warning"/>).
-	/// </summary>
-	/// <example>
-	/// <code><![CDATA[
-	/// opt.warnings.Verbose = false;
-	/// ]]></code>
-	/// </example>
-	public class OWarnings {
-		bool? _verbose;
-		List<string> _disabledWarnings;
-		
-		/// <summary>
-		/// Initializes this instance with default values or values copied from another instance.
-		/// </summary>
-		/// <param name="cloneOptions">If not <c>null</c>, copies its options into this variable.</param>
-		internal OWarnings(OWarnings cloneOptions = null) {
-			if (cloneOptions != null) {
-				_Copy(cloneOptions);
-			}
-		}
-		
-		void _Copy(OWarnings o) {
-			_verbose = o._verbose;
-			_disabledWarnings = o._disabledWarnings == null ? null : new List<string>(o._disabledWarnings);
-		}
-		
-		//rejected. Use opt.scope.
-		///// <summary>
-		///// Resets all options. Copies from <see cref="opt.init.warnings"/>.
-		///// </summary>
-		//public void Reset() => _Copy(opt.init.warnings);
-		
-		/// <summary>
-		/// If <c>true</c>, some library functions may display more warnings and other info.
-		/// If not explicitly set, the default value depends on the build configuration of the main assembly: <c>true</c> if Debug, <c>false</c> if Release (<c>optimize true</c>). See <see cref="AssemblyUtil_.IsDebug"/>.
-		/// </summary>
-		/// <example>
-		/// <code><![CDATA[
-		/// opt.warnings.Verbose = false;
-		/// ]]></code>
-		/// </example>
-		public bool Verbose {
-			get => (_verbose ??= script.isDebug) == true;
-			set => _verbose = value;
-		}
-		
-		/// <summary>
-		/// Disables one or more run-time warnings.
-		/// </summary>
-		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="ExtString.Like(string, string, bool)"/>.</param>
-		/// <remarks>
-		/// Adds the strings to an internal list. When <see cref="print.warning"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
-		/// It's easy to auto-restore warnings with <c>using</c>, like in the second example. Restoring is optional.
-		/// </remarks>
-		/// <example>
-		/// This code at the start of script disables two warnings in all threads.
-		/// <code><![CDATA[
-		/// opt.init.warnings.Disable("*part of warning 1 text*", "*part of warning 2 text*");
-		/// ]]></code>
-		/// Temporarily disable all warnings in this thread.
-		/// <code><![CDATA[
-		/// opt.warnings.Verbose = true;
-		/// print.warning("one");
-		/// using(opt.warnings.Disable("*")) {
-		/// 	print.warning("two");
-		/// }
-		/// print.warning("three");
-		/// ]]></code>
-		/// Don't use code <c>using(opt.init.warnings.Disable...</c>, it's not thread-safe.
-		/// </example>
-		public UsingEndAction Disable(params string[] warningsWild) {
-			_disabledWarnings ??= new List<string>();
-			int restoreCount = _disabledWarnings.Count;
-			_disabledWarnings.AddRange(warningsWild);
-			return new UsingEndAction(() => _disabledWarnings.RemoveRange(restoreCount, _disabledWarnings.Count - restoreCount));
-		}
-		
-		/// <summary>
-		/// Returns <c>true</c> if the specified warning text matches a wildcard string added with <see cref="Disable"/>.
-		/// </summary>
-		/// <param name="text">Warning text. Case-insensitive.</param>
-		public bool IsDisabled(string text) {
-			string s = text ?? "";
-			var a = _disabledWarnings;
-			if (a != null) foreach (var k in a) if (s.Like(k, true)) return true;
-			return false;
-		}
-	}
-	
-	/// <summary>
 	/// Options for functions of class <see cref="mouse"/>.
 	/// </summary>
 	/// <remarks>
-	/// Total <c>Click(x, y)</c> time is: mouse move + <see cref="MoveSleepFinally"/> + button down + <see cref="ClickSpeed"/> + button down + <see cref="ClickSpeed"/> + <see cref="ClickSleepFinally"/>.
+	/// Total <c>Click(x, y)</c> time is: mouse move + <see cref="MoveSleepFinally"/> + button down + <see cref="ClickSpeed"/> + button up + <see cref="ClickSpeed"/> + <see cref="ClickSleepFinally"/>.
 	/// </remarks>
 	/// <seealso cref="opt.mouse"/>
-	/// <seealso cref="opt.init.mouse"/>
 	/// <example>
 	/// <code><![CDATA[
 	/// opt.mouse.MoveSpeed = 30;
 	/// ]]></code>
 	/// </example>
 	public class OMouse {
-		struct _Options //makes easier to copy and reset fields
-		{
-			public int ClickSpeed, MoveSpeed, ClickSleepFinally, MoveSleepFinally;
+		int _threadId;
+		static AsyncLocal<OMouse> s_ambient = new();
+		
+		internal static OMouse Ambient_ {
+			get => s_ambient.Value ??= new() { _threadId = Environment.CurrentManagedThreadId };
+			set { Debug.Assert(value?._threadId != 0); s_ambient.Value = value; } //used only to restore scope
+		}
+		
+		internal static OMouse Scope_(bool inherit) {
+			var old = s_ambient.Value;
+			s_ambient.Value = (old != null && inherit) ? new(old) { _threadId = Environment.CurrentManagedThreadId } : null; //lazy
+			return old;
+		}
+		
+		OMouse _ThisOrClone() {
+			var r = this;
+			if (_threadId != 0 && Environment.CurrentManagedThreadId is var tid && tid != _threadId) s_ambient.Value = r = new(this) { _threadId = tid };
+			return r;
+		}
+		
+		OMouse _ThisOrClone(int value, int max) {
+			if ((uint)value > max) throw new ArgumentOutOfRangeException(null, "Max " + max);
+			return _ThisOrClone();
+		}
+		
+		struct _Fields { //makes easier to init, reset or copy fields
+			public _Fields() { }
+			public int ClickSpeed = 20, MoveSpeed, ClickSleepFinally = 10, MoveSleepFinally = 10;
 			public bool Relaxed;
 		}
-		_Options _o;
+		_Fields _f;
 		
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
-		/// <param name="cloneOptions">If not <c>null</c>, copies its options into this variable.</param>
-		internal OMouse(OMouse cloneOptions = null) //don't need public like OKey
+		/// <param name="other">If not <c>null</c>, copies its options into this variable.</param>
+		internal OMouse(OMouse other = null) //don't need public like OKey
 		{
-			if (cloneOptions != null) {
-				_o = cloneOptions._o;
+			if (other != null) {
+				_f = other._f;
 			} else {
-				_o.ClickSpeed = 20;
-				//_o.MoveSpeed = 0;
-				_o.ClickSleepFinally = 10;
-				_o.MoveSleepFinally = 10;
-				//_o.Relaxed = false;
+				_f = new();
 			}
-		}
-		
-		//rejected. Use opt.scope.
-		///// <summary>
-		///// Resets all options. Copies from <see cref="opt.init.mouse"/>.
-		///// </summary>
-		//public void Reset() => _o = opt.init.mouse._o;
-		
-		bool _IsStatic => this == opt.init.mouse;
-		
-		int _SetValue(int value, int max, int maxStatic) {
-			var m = _IsStatic ? maxStatic : max;
-			if ((uint)value > m) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
-			return value;
 		}
 		
 		/// <summary>
 		/// How long to wait (milliseconds) after sending each mouse button down or up event (2 events for click, 4 for double-click).
 		/// Default: 20.
 		/// </summary>
-		/// <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="opt.init.mouse"/>: 0 - 100 (1 s).</value>
+		/// <value>Valid values: 0 - 1000 (1 s).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -443,15 +262,15 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int ClickSpeed {
-			get => _o.ClickSpeed;
-			set => _o.ClickSpeed = _SetValue(value, 1000, 100);
+			get => _f.ClickSpeed;
+			set => _ThisOrClone(value, 1000)._f.ClickSpeed = value;
 		}
 		
 		/// <summary>
 		/// If not 0, makes mouse movements slower, not instant.
 		/// Default: 0.
 		/// </summary>
-		/// <value>Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="opt.init.mouse"/>: 0 - 100.</value>
+		/// <value>Valid values: 0 (instant) - 10000 (slowest).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Used by <see cref="mouse.move"/>, <see cref="mouse.click"/> and other functions that generate mouse movement events, except <see cref="mouse.moveBy(string, double)"/>.
@@ -464,15 +283,15 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int MoveSpeed {
-			get => _o.MoveSpeed;
-			set => _o.MoveSpeed = _SetValue(value, 10000, 100);
+			get => _f.MoveSpeed;
+			set => _ThisOrClone(value, 10000)._f.MoveSpeed = value;
 		}
 		
 		/// <summary>
 		/// How long to wait (milliseconds) before a "mouse click" or "mouse wheel" function returns.
 		/// Default: 10.
 		/// </summary>
-		/// <value>Valid values: 0 - 10000 (10 s). Valid values for <see cref="opt.init.mouse"/>: 0 - 100.</value>
+		/// <value>Valid values: 0 - 10000 (10 s).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// The "click" functions also sleep <see cref="ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
@@ -483,15 +302,15 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int ClickSleepFinally {
-			get => _o.ClickSleepFinally;
-			set => _o.ClickSleepFinally = _SetValue(value, 10000, 100);
+			get => _f.ClickSleepFinally;
+			set => _ThisOrClone(value, 10000)._f.ClickSleepFinally = value;
 		}
 		
 		/// <summary>
 		/// How long to wait (milliseconds) after moving the mouse cursor. Used in "move+click" functions too.
 		/// Default: 10.
 		/// </summary>
-		/// <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="opt.init.mouse"/>: 0 - 100.</value>
+		/// <value>Valid values: 0 - 1000 (1 s).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Used by <see cref="mouse.move"/> (finally), <see cref="mouse.click"/> (between moving and clicking) and other functions that generate mouse movement events.
@@ -502,8 +321,8 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int MoveSleepFinally {
-			get => _o.MoveSleepFinally;
-			set => _o.MoveSleepFinally = _SetValue(value, 1000, 100);
+			get => _f.MoveSleepFinally;
+			set => _ThisOrClone(value, 1000)._f.MoveSleepFinally = value;
 		}
 		
 		/// <summary>
@@ -527,7 +346,14 @@ namespace Au.Types {
 		/// opt.mouse.Relaxed = true;
 		/// ]]></code>
 		/// </example>
-		public bool Relaxed { get => _o.Relaxed; set => _o.Relaxed = value; }
+		public bool Relaxed {
+			get => _f.Relaxed;
+			set => _ThisOrClone()._f.Relaxed = value;
+		}
+		
+		///
+		public override string ToString() =>
+			$"{{{string.Join(", ", GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => $"{p.Name} = {p.GetValue(this)}"))}}}";
 	}
 	
 	/// <summary>
@@ -535,7 +361,6 @@ namespace Au.Types {
 	/// Some options also are used with <see cref="clipboard"/> functions that send keys (<c>Ctrl+V</c> etc).
 	/// </summary>
 	/// <seealso cref="opt.key"/>
-	/// <seealso cref="opt.init.key"/>
 	/// <example>
 	/// <code><![CDATA[
 	/// opt.key.KeySpeed = 50;
@@ -546,6 +371,31 @@ namespace Au.Types {
 	/// ]]></code>
 	/// </example>
 	public class OKey {
+		int _threadId;
+		static AsyncLocal<OKey> s_ambient = new();
+		
+		internal static OKey Ambient_ {
+			get => s_ambient.Value ??= new() { _threadId = Environment.CurrentManagedThreadId };
+			set { Debug.Assert(value?._threadId != 0); s_ambient.Value = value; } //used only to restore scope
+		}
+		
+		internal static OKey Scope_(bool inherit) {
+			var old = s_ambient.Value;
+			s_ambient.Value = (old != null && inherit) ? new(old) { _threadId = Environment.CurrentManagedThreadId } : null; //lazy
+			return old;
+		}
+		
+		OKey _ThisOrClone() {
+			var r = this;
+			if (_threadId != 0 && Environment.CurrentManagedThreadId is var tid && tid != _threadId) s_ambient.Value = r = new(this) { _threadId = tid };
+			return r;
+		}
+		
+		OKey _ThisOrClone(int value, int max) {
+			if ((uint)value > max) throw new ArgumentOutOfRangeException(null, "Max " + max);
+			return _ThisOrClone();
+		}
+		
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
@@ -557,52 +407,16 @@ namespace Au.Types {
 		/// <summary>
 		/// Copies options from <i>o</i>, or sets default if <c>o==null</c>. Like ctor does.
 		/// </summary>
-		internal void CopyOrDefault_(OKey o) {
-			if (o != null) {
-				_textSpeed = o._textSpeed;
-				_keySpeed = o._keySpeed;
-				_clipboardKeySpeed = o._clipboardKeySpeed;
-				_sleepFinally = o._sleepFinally;
-				_pasteLength = o._pasteLength;
-				TextHow = o.TextHow;
-				TextShiftEnter = o.TextShiftEnter;
-				PasteWorkaround = o.PasteWorkaround;
-				RestoreClipboard = o.RestoreClipboard;
-				NoModOff = o.NoModOff;
-				NoCapsOff = o.NoCapsOff;
-				NoBlockInput = o.NoBlockInput;
-				Hook = o.Hook;
-			} else {
-				_textSpeed = 0;
-				_keySpeed = 2;
-				_clipboardKeySpeed = 5;
-				_sleepFinally = 10;
-				_pasteLength = 200;
-				TextHow = OKeyText.Characters;
-				TextShiftEnter = false;
-				PasteWorkaround = false;
-				RestoreClipboard = true;
-				NoModOff = false;
-				NoCapsOff = false;
-				NoBlockInput = false;
-				Hook = null;
-			}
-			//#if DEBUG
-			//			if(o != null) {
-			//				Debug1 = o.Debug1;
-			//				Debug2 = o.Debug2;
-			//			} else {
-			//				Debug1 = default;
-			//				Debug2 = default;
-			//			}
-			//#endif
-		}
+		internal void CopyOrDefault_(OKey o) { _f = o?._f ?? new(); }
 		
-		//rejected. Use opt.scope.
-		///// <summary>
-		///// Resets all options. Copies from <see cref="opt.init.key"/>.
-		///// </summary>
-		//public void Reset() => CopyOrDefault_(opt.init.key);
+		struct _Fields { //makes easier to init, reset or copy fields
+			public _Fields() { }
+			public int TextSpeed, KeySpeed = 2, KeySpeedClipboard = 5, SleepFinally = 10, PasteLength = 200;
+			public OKeyText TextHow = OKeyText.Characters;
+			public bool TextShiftEnter, PasteWorkaround, RestoreClipboard = true, NoModOff, NoCapsOff, NoBlockInput;
+			public Action<OKeyHookData> Hook;
+		}
+		_Fields _f;
 		
 		/// <summary>
 		/// Returns this variable, or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
@@ -620,7 +434,7 @@ namespace Au.Types {
 		/// How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="keys.sendt"/>. Also by <see cref="keys.send"/> and similar functions for <c>"!text"</c> arguments.
 		/// Default: 0.
 		/// </summary>
-		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
+		/// <value>Valid values: 0 - 1000 (1 second).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Used only for "text" arguments, not for "keys" arguments. See <see cref="KeySpeed"/>.
@@ -631,16 +445,15 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int TextSpeed {
-			get => _textSpeed;
-			set => _textSpeed = _SetValue(value, 1000, 100);
+			get => _f.TextSpeed;
+			set => _ThisOrClone(value, 1000)._f.TextSpeed = value;
 		}
-		int _textSpeed;
 		
 		/// <summary>
 		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="keys.send"/> and similar functions, except for <c>"!text"</c> arguments.
 		/// Default: 2.
 		/// </summary>
-		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
+		/// <value>Valid values: 0 - 1000 (1 second).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Used only for "keys" arguments, not for "text" arguments. See <see cref="TextSpeed"/>.
@@ -651,16 +464,15 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int KeySpeed {
-			get => _keySpeed;
-			set => _keySpeed = _SetValue(value, 1000, 100);
+			get => _f.KeySpeed;
+			set => _ThisOrClone(value, 1000)._f.KeySpeed = value;
 		}
-		int _keySpeed;
 		
 		/// <summary>
 		/// How long to wait (milliseconds) between sending <c>Ctrl+V</c> and <c>Ctrl+C</c> keys of clipboard functions (paste, copy).
 		/// Default: 5.
 		/// </summary>
-		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
+		/// <value>Valid values: 0 - 1000 (1 second).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -668,16 +480,15 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int KeySpeedClipboard {
-			get => _clipboardKeySpeed;
-			set => _clipboardKeySpeed = _SetValue(value, 1000, 100);
+			get => _f.KeySpeedClipboard;
+			set => _ThisOrClone(value, 1000)._f.KeySpeedClipboard = value;
 		}
-		int _clipboardKeySpeed;
 		
 		/// <summary>
 		/// How long to wait (milliseconds) before a "send keys or text" function returns.
 		/// Default: 10.
 		/// </summary>
-		/// <value>Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="opt.init.key"/>: 0 - 100.</value>
+		/// <value>Valid values: 0 - 10000 (10 seconds).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Not used by <see cref="clipboard.copy"/>.
@@ -688,24 +499,9 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int SleepFinally {
-			get => _sleepFinally;
-			set => _sleepFinally = _SetValue(value, 10000, 100);
+			get => _f.SleepFinally;
+			set => _ThisOrClone(value, 10000)._f.SleepFinally = value;
 		}
-		int _sleepFinally;
-		
-		bool _IsStatic => this == opt.init.key;
-		
-		int _SetValue(int value, int max, int maxStatic) {
-			var m = _IsStatic ? maxStatic : max;
-			if ((uint)value > m) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
-			return value;
-		}
-		//T _SetValue<T>(T value, T max, T maxStatic) where T : IComparable<T>
-		//{
-		//	var m = _IsStatic ? maxStatic : max;
-		//	if(value.CompareTo(m) > 0 || value.CompareTo(default) < 0) throw new ArgumentOutOfRangeException(null, "Max " + m.ToString());
-		//	return value;
-		//}
 		
 		/// <summary>
 		/// How to send text to the active window (keys, characters or clipboard).
@@ -716,7 +512,10 @@ namespace Au.Types {
 		/// opt.key.TextHow = OKeyText.Paste;
 		/// ]]></code>
 		/// </example>
-		public OKeyText TextHow { get; set; }
+		public OKeyText TextHow {
+			get => _f.TextHow;
+			set => _ThisOrClone()._f.TextHow = value;
+		}
 		
 		/// <summary>
 		/// When sending text, instead of <c>Enter</c> send <c>Shift+Enter</c>.
@@ -725,7 +524,10 @@ namespace Au.Types {
 		/// <remarks>
 		/// This option is applied when sending text with <see cref="keys.sendt"/> (like <c>keys.sendt("A\nB")</c>) or with operator <c>!</c> (like <c>keys.send("!A\nB")</c>) or with <see cref="keys.AddText(string, string)"/>. Ignored when using operator <c>^</c>, <c>_</c>, <see cref="keys.AddText(string, OKeyText)"/>, <see cref="keys.AddChar(char)"/>.
 		/// </remarks>
-		public bool TextShiftEnter { get; set; }
+		public bool TextShiftEnter {
+			get => _f.TextShiftEnter;
+			set => _ThisOrClone()._f.TextShiftEnter = value;
+		}
 		
 		/// <summary>
 		/// To send text use clipboard (like with <see cref="OKeyText.Paste"/>) if text length is &gt;= this value.
@@ -738,10 +540,9 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public int PasteLength {
-			get => _pasteLength;
-			set => _pasteLength = _SetValue(value, int.MaxValue, int.MaxValue);
+			get => _f.PasteLength;
+			set => _ThisOrClone(value, int.MaxValue)._f.PasteLength = value;
 		}
-		int _pasteLength;
 		
 		/// <summary>
 		/// When pasting text that ends with space, tab or/and newline characters, remove them and after pasting send them as keys.
@@ -755,7 +556,10 @@ namespace Au.Types {
 		/// opt.key.PasteWorkaround = true;
 		/// ]]></code>
 		/// </example>
-		public bool PasteWorkaround { get; set; }
+		public bool PasteWorkaround {
+			get => _f.PasteWorkaround;
+			set => _ThisOrClone()._f.PasteWorkaround = value;
+		}
 		
 		//rejected: rarely used. Eg can be useful for Python programmers. Let call clipboard.paste() explicitly or set the Paste option eg in hook.
 		///// <summary>
@@ -781,7 +585,10 @@ namespace Au.Types {
 		/// opt.key.RestoreClipboard = false;
 		/// ]]></code>
 		/// </example>
-		public bool RestoreClipboard { get; set; }
+		public bool RestoreClipboard {
+			get => _f.RestoreClipboard;
+			set => _ThisOrClone()._f.RestoreClipboard = value;
+		}
 		
 		#region static RestoreClipboard options
 		
@@ -853,7 +660,10 @@ namespace Au.Types {
 		/// opt.key.NoModOff = true;
 		/// ]]></code>
 		/// </example>
-		public bool NoModOff { get; set; }
+		public bool NoModOff {
+			get => _f.NoModOff;
+			set => _ThisOrClone()._f.NoModOff = value;
+		}
 		
 		/// <summary>
 		/// When starting to send keys or text, don't turn off <c>CapsLock</c>.
@@ -864,7 +674,10 @@ namespace Au.Types {
 		/// opt.key.NoCapsOff = true;
 		/// ]]></code>
 		/// </example>
-		public bool NoCapsOff { get; set; }
+		public bool NoCapsOff {
+			get => _f.NoCapsOff;
+			set => _ThisOrClone()._f.NoCapsOff = value;
+		}
 		
 		/// <summary>
 		/// While sending or pasting keys or text, don't block user-pressed keys.
@@ -878,7 +691,10 @@ namespace Au.Types {
 		/// opt.key.NoBlockInput = true;
 		/// ]]></code>
 		/// </example>
-		public bool NoBlockInput { get; set; }
+		public bool NoBlockInput {
+			get => _f.NoBlockInput;
+			set => _ThisOrClone()._f.NoBlockInput = value;
+		}
 		
 		/// <summary>
 		/// Callback function that can modify options of "send keys or text" functions depending on active window etc.
@@ -906,7 +722,14 @@ namespace Au.Types {
 		/// }
 		/// ]]></code>
 		/// </example>
-		public Action<OKeyHookData> Hook { get; set; }
+		public Action<OKeyHookData> Hook {
+			get => _f.Hook;
+			set => _ThisOrClone()._f.Hook = value;
+		}
+		
+		///
+		public override string ToString() =>
+			$"{{{string.Join(", ", GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Select(p => $"{p.Name} = {p.GetValue(this)}"))}}}";
 	}
 	
 	/// <summary>
@@ -980,28 +803,157 @@ namespace Au.Types {
 	}
 	
 	/// <summary>
+	/// Options for run-time warnings (<see cref="print.warning"/>).
+	/// </summary>
+	/// <example>
+	/// <code><![CDATA[
+	/// opt.warnings.Verbose = false;
+	/// ]]></code>
+	/// </example>
+	public class OWarnings {
+		int _threadId;
+		static AsyncLocal<OWarnings> s_ambient = new();
+		
+		internal static OWarnings Ambient_ {
+			get => s_ambient.Value ??= new() { _threadId = Environment.CurrentManagedThreadId };
+			set { Debug.Assert(value?._threadId != 0); s_ambient.Value = value; } //used only to restore scope
+		}
+		
+		internal static OWarnings Scope_(bool inherit) {
+			var old = s_ambient.Value;
+			s_ambient.Value = (old != null && inherit) ? new(old) { _threadId = Environment.CurrentManagedThreadId } : null; //lazy
+			return old;
+		}
+		
+		OWarnings _ThisOrClone() {
+			var r = this;
+			if (_threadId != 0 && Environment.CurrentManagedThreadId is var tid && tid != _threadId) s_ambient.Value = r = new(this) { _threadId = tid };
+			return r;
+		}
+		
+		bool? _verbose;
+		List<string> _disabledWarnings;
+		
+		/// <summary>
+		/// Initializes this instance with default values or values copied from another instance.
+		/// </summary>
+		/// <param name="other">If not <c>null</c>, copies its options into this variable.</param>
+		internal OWarnings(OWarnings other = null) {
+			if (other != null) {
+				_verbose = other._verbose;
+				_disabledWarnings = other._disabledWarnings == null ? null : new(other._disabledWarnings);
+			}
+		}
+		
+		/// <summary>
+		/// If <c>true</c>, some library functions may display more warnings and other info.
+		/// If not explicitly set, the default value depends on the build configuration of the main assembly: <c>true</c> if Debug, <c>false</c> if Release (<c>optimize true</c>). See <see cref="AssemblyUtil_.IsDebug"/>.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.warnings.Verbose = false;
+		/// ]]></code>
+		/// </example>
+		public bool Verbose {
+			get => (_verbose ??= script.isDebug) == true;
+			set => _ThisOrClone()._verbose = value;
+		}
+		
+		/// <summary>
+		/// Disables one or more run-time warnings.
+		/// </summary>
+		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="ExtString.Like(string, string, bool)"/>.</param>
+		/// <remarks>
+		/// Adds the strings to an internal list. When <see cref="print.warning"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
+		/// It's easy to auto-restore warnings with <c>using</c>, like in the second example. Restoring is optional.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// opt.warnings.Disable("*part of warning 1 text*", "*part of warning 2 text*");
+		/// ]]></code>
+		/// Temporarily disable all warnings.
+		/// <code><![CDATA[
+		/// opt.warnings.Verbose = true;
+		/// print.warning("one");
+		/// using(opt.warnings.Disable("*")) {
+		/// 	print.warning("two");
+		/// }
+		/// print.warning("three");
+		/// ]]></code>
+		/// </example>
+		public UsingEndAction Disable(params string[] warningsWild) => _ThisOrClone()._Disable(warningsWild);
+		
+		UsingEndAction _Disable(params string[] warningsWild) {
+			_disabledWarnings ??= new List<string>();
+			int restoreCount = _disabledWarnings.Count;
+			_disabledWarnings.AddRange(warningsWild);
+			return new UsingEndAction(() => _disabledWarnings.RemoveRange(restoreCount, _disabledWarnings.Count - restoreCount));
+		}
+		
+		/// <summary>
+		/// Returns <c>true</c> if the specified warning text matches a wildcard string added with <see cref="Disable"/>.
+		/// </summary>
+		/// <param name="text">Warning text. Case-insensitive.</param>
+		public bool IsDisabled(string text) {
+			string s = text ?? "";
+			if (_disabledWarnings is { } a) foreach (var k in a) if (s.Like(k, true)) return true;
+			return false;
+		}
+	}
+	
+	/// <summary>
 	/// Obsolete. Use <see cref="Seconds"/> instead. Some wait functions may still use some <b>OWait</b> properties for backward compatibility.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class OWait {
-		/// <summary>
-		/// Obsolete. Use <see cref="Seconds"/> instead.
-		/// </summary>
-		public bool DoEvents { get; set; }
+		int _threadId;
+		static AsyncLocal<OWait> s_ambient = new();
 		
-		/// <summary>
-		/// Obsolete. Used only by obsolete/hidden wait functions. Use <see cref="Seconds"/> instead.
-		/// </summary>
-		public int Period { get; set; }
+		internal static OWait Ambient_ {
+			get => s_ambient.Value ??= new() { _threadId = Environment.CurrentManagedThreadId };
+			set { Debug.Assert(value?._threadId != 0); s_ambient.Value = value; } //used only to restore scope
+		}
 		
-		internal OWait() { Period = 10; }
+		internal static OWait Scope_(bool inherit) {
+			var old = s_ambient.Value;
+			s_ambient.Value = (old != null && inherit) ? new(old) { _threadId = Environment.CurrentManagedThreadId } : null; //lazy
+			return old;
+		}
+		
+		OWait _ThisOrClone() {
+			var r = this;
+			if (_threadId != 0 && Environment.CurrentManagedThreadId is var tid && tid != _threadId) s_ambient.Value = r = new(this) { _threadId = tid };
+			return r;
+		}
+		
+		internal OWait() { _period = 10; }
+		
+		internal OWait(OWait other) { _doEvents = other._doEvents; _period = other._period; }
 		
 		/// <summary>
 		/// Obsolete. Use <see cref="Seconds"/> instead.
 		/// </summary>
 		public OWait(int? period = null, bool? doEvents = null) {
-			DoEvents = doEvents ?? opt.wait.DoEvents;
-			Period = period ?? opt.wait.Period;
+			_doEvents = doEvents ?? opt.wait._doEvents;
+			_period = period ?? opt.wait._period;
 		}
+		
+		/// <summary>
+		/// Obsolete. Use <see cref="Seconds"/> instead.
+		/// </summary>
+		public bool DoEvents {
+			get => _doEvents;
+			set => _ThisOrClone()._doEvents = value;
+		}
+		bool _doEvents;
+		
+		/// <summary>
+		/// Obsolete. Used only by obsolete/hidden wait functions. Use <see cref="Seconds"/> instead.
+		/// </summary>
+		public int Period {
+			get => _period;
+			set => _ThisOrClone()._period = value;
+		}
+		int _period;
 	}
 }

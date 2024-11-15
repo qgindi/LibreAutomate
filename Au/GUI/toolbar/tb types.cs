@@ -7,26 +7,45 @@ namespace Au.Types;
 /// Most properties cannot be changed while the toolbar is open. Can be changed <b>Tag</b>, <b>Tooltip</b>.
 /// </remarks>
 public class TBItem : MTItem {
+	readonly toolbar _tb;
 	internal SIZE textSize;
 	internal readonly TBItemType type;
 	internal bool textAlways;
 	internal popupMenu menu;
-
-	internal TBItem(TBItemType type) {
+	
+	internal TBItem(toolbar tb, TBItemType type) {
+		_tb = tb;
 		this.type = type;
 		textAlways = type == TBItemType.Group;
 	}
-
+	
 	internal bool IsSeparator_ => type == TBItemType.Separator;
 	internal bool IsGroup_ => type == TBItemType.Group;
 	internal bool IsMenu_ => type == TBItemType.Menu;
 	internal bool IsSeparatorOrGroup_ => type is TBItemType.Separator or TBItemType.Group;
-
+	
 	///
 	public TBItemType ItemType => type;
-
+	
 	/// <summary>Gets button action.</summary>
 	public Action<TBItem> Clicked => base.clicked as Action<TBItem>;
+	
+	/// <summary>
+	/// Button text.
+	/// </summary>
+	/// <remarks>
+	/// Changing button text at run time resizes the button and toolbar.
+	/// </remarks>
+	public new string Text {
+		get => base.Text;
+		set {
+			_tb._ThreadTrap();
+			if (value != base.Text) {
+				base.Text = value;
+				_tb._AutoSizeNowIfIsOpen(measureText: true);
+			}
+		}
+	}
 }
 
 /// <summary>
@@ -50,12 +69,12 @@ public enum TBFlags {
 	/// Activate the owner window when the toolbar clicked. Default.
 	/// </summary>
 	ActivateOwnerWindow = 1,
-
+	
 	/// <summary>
 	/// Hide the toolbar when a full-screen window is active. Default.
 	/// </summary>
 	HideWhenFullScreen = 2,
-
+	
 	//rejected: use SHQueryUserNotificationState to detect also presentation mode etc. Too slow, eg 1300 mcs, which is 100-500 times slower than wnd.isFullScreen.
 	//	HideWhenFullScreenActive
 	//	HideWhenFullScreenRunning (QUNS_BUSY) (in primary screen only)
@@ -70,31 +89,31 @@ public enum TBFlags {
 /// </summary>
 public enum TBBorder {
 	//note: don't reorder.
-
+	
 	/// <summary>No border.</summary>
 	None,
-
+	
 	/// <summary>1 pixel border.</summary>
 	Width1,
-
+	
 	/// <summary>1 pixel border + 1 pixel padding.</summary>
 	Width2,
-
+	
 	/// <summary>1 pixel border + 2 pixels padding.</summary>
 	Width3,
-
+	
 	/// <summary>1 pixel border + 3 pixels padding.</summary>
 	Width4,
-
+	
 	/// <summary>3D border.</summary>
 	ThreeD,
-
+	
 	/// <summary>Standard window border.</summary>
 	Thick,
-
+	
 	/// <summary>Title bar and standard window border.</summary>
 	Caption,
-
+	
 	/// <summary>Title bar, <b>X</b> button and standard window border.</summary>
 	CaptionX,
 }
@@ -104,66 +123,66 @@ public enum TBBorder {
 /// </summary>
 public enum TBAnchor {
 	//top 1, bottom 2, left 4, right 8
-
+	
 	/// <summary>
 	/// Anchors are top and left edges. Default.
 	/// </summary>
 	TopLeft = 1 | 4,
-
+	
 	/// <summary>
 	/// Anchors are top and right edges.
 	/// </summary>
 	TopRight = 1 | 8,
-
+	
 	/// <summary>
 	/// Anchors are bottom and left edges.
 	/// </summary>
 	BottomLeft = 2 | 4,
-
+	
 	/// <summary>
 	/// Anchors are bottom and right edges.
 	/// </summary>
 	BottomRight = 2 | 8,
-
+	
 	/// <summary>
 	/// Anchors are top, left and right edges. The toolbar is resized horizontally when resizing its owner.
 	/// </summary>
 	TopLR = 1 | 4 | 8,
-
+	
 	/// <summary>
 	/// Anchors are bottom, left and right edges. The toolbar is resized horizontally when resizing its owner.
 	/// </summary>
 	BottomLR = 2 | 4 | 8,
-
+	
 	/// <summary>
 	/// Anchors are left, top and bottom edges. The toolbar is resized vertically when resizing its owner.
 	/// </summary>
 	LeftTB = 4 | 1 | 2,
-
+	
 	/// <summary>
 	/// Anchors are right, top and bottom edges. The toolbar is resized vertically when resizing its owner.
 	/// </summary>
 	RightTB = 8 | 1 | 2,
-
+	
 	/// <summary>
 	/// Anchors are all edges. The toolbar is resized when resizing its owner.
 	/// </summary>
 	All = 15,
-
+	
 	/// <summary>
 	/// Use owner's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
 	/// This flag is for toolbars that normally are outside of the owner rectangle (at the left or right).
 	/// This flag cannot be used with <b>TopLR</b>, <b>BottomLR</b>, <b>All</b>.
 	/// </summary>
 	OppositeEdgeX = 32,
-
+	
 	/// <summary>
 	/// Use owner's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
 	/// This flag is for toolbars that normally are outside of the owner rectangle (above or below).
 	/// This flag cannot be used with <b>LeftTB</b>, <b>RightTB</b>, <b>All</b>.
 	/// </summary>
 	OppositeEdgeY = 64,
-
+	
 	/// <summary>
 	/// Anchor is screen, not owner window. Don't move the toolbar together with its owner window.
 	/// </summary>
@@ -200,22 +219,22 @@ public record struct TBOffsets {
 	/// Horizontal distance from the owner's left edge (right if <see cref="TBAnchor.OppositeEdgeX"/>) to the toolbar's left edge.
 	/// </summary>
 	public double Left { get; set; }
-
+	
 	/// <summary>
 	/// Vertical distance from the owner's top edge (bottom if <see cref="TBAnchor.OppositeEdgeY"/>) to the toolbar's top edge.
 	/// </summary>
 	public double Top { get; set; }
-
+	
 	/// <summary>
 	/// Horizontal distance from the toolbar's right edge to the owner's right edge (left if <see cref="TBAnchor.OppositeEdgeX"/>).
 	/// </summary>
 	public double Right { get; set; }
-
+	
 	/// <summary>
 	/// Vertical distance from the toolbar's bottom edge to the owner's bottom edge (top if <see cref="TBAnchor.OppositeEdgeY"/>).
 	/// </summary>
 	public double Bottom { get; set; }
-
+	
 	/// <summary>
 	/// Sets all properties.
 	/// </summary>
@@ -231,12 +250,12 @@ public record struct TBOffsets {
 public enum TBHide {
 	/// <summary>Owner window is hidden, minimized, etc.</summary>
 	Owner = 1,
-
+	
 	/// <summary>A full-screen window is active. See flag <see cref="TBFlags.HideWhenFullScreen"/>.</summary>
 	FullScreen = 2,
-
+	
 	//Satellite = 128, //no, _SetVisible and this enum aren't used with satellites
-
+	
 	/// <summary>This and bigger flag values can be used by callers for any purpose. Value 0x10000.</summary>
 	User = 0x10000,
 }
@@ -247,10 +266,10 @@ public enum TBHide {
 public enum TBLayout {
 	/// <summary>Default layout. Buttons are in single row. Wrapped when exceeds maximal row width. More rows can be added with <see cref="toolbar.Group"/>.</summary>
 	HorizontalWrap,
-
+	
 	/// <summary>Buttons are in single column, like in a popup menu. Separators are horizontal.</summary>
 	Vertical, //TODO3: if some buttons don't fit, add overflow drop-down menu. Or scrollbar; or add VerticalScroll.
-
+	
 	//	/// <summary>Buttons are in single row. When it exceeds maximal row width, buttons are moved to a drop-down menu. More rows can be added with <see cref="toolbar.Group"/>.</summary>
 	//	Horizontal,//TODO3
 }
@@ -286,7 +305,7 @@ public enum TBCtor {
 	/// Don't load saved settings. Delete the settings file of the toolbar, if exists.
 	/// </summary>
 	ResetSettings = 1,
-
+	
 	/// <summary>
 	/// Don't load and save settings. No file will be created or opened.
 	/// </summary>
@@ -299,13 +318,13 @@ public enum TBCtor {
 public struct TBScaling {
 	///
 	public TBScaling(bool? size, bool? offsets) { this.size = size; this.offsets = offsets; }
-
+	
 	/// <summary>
 	/// Scale toolbar size and related properties.
 	/// If default (<c>null</c>), scales size, except of empty toolbars created by <see cref="toolbar.AutoHideScreenEdge"/>.
 	/// </summary>
 	public bool? size;
-
+	
 	/// <summary>
 	/// Scale toolbar offsets. See <see cref="toolbar.Offsets"/>.
 	/// If default (<c>null</c>), scales offsets, except when anchor is screen (not window etc).
@@ -340,7 +359,7 @@ public interface ITBOwnerObject {
 	/// The default implementation returns <c>true</c>.
 	/// </remarks>
 	bool IsAlive => true;
-
+	
 	/// <summary>
 	/// Returns <c>false</c> to hide the toolbar temporarily.
 	/// </summary>
@@ -349,7 +368,7 @@ public interface ITBOwnerObject {
 	/// The default implementation returns <c>true</c>.
 	/// </remarks>
 	bool IsVisible => true;
-
+	
 	/// <summary>
 	/// Gets object rectangle.
 	/// </summary>

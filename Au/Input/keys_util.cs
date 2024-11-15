@@ -473,7 +473,7 @@ public partial class keys {
 	}
 	
 	/// <summary>
-	/// Returns <b>OKey</b> of this variable or <b>OptKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
+	/// Returns <b>OKey</b> of this variable or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
 	/// </summary>
 	/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of <b>Hook</b>. If you don't have it, use <b>GetOptionsAndWndFocused_</b> instead.</param>
 	internal OKey GetOptions_(wnd wFocus) {

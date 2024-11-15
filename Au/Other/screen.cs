@@ -15,38 +15,38 @@ namespace Au {
 	public struct screen : IEquatable<screen> {
 		readonly IntPtr _h;
 		readonly Func<screen> _func;
-
+		
 		/// <summary>
 		/// Creates variable with screen handle, aka <b>HMONITOR</b>.
 		/// </summary>
 		public screen(IntPtr handle) { _h = handle; _func = null; }
-
+		
 		/// <summary>
 		/// Creates "lazy" variable that calls your function to get screen when need.
 		/// </summary>
 		public screen(Func<screen> f) { _h = default; _func = f; }
-
+		
 		/// <summary>
 		/// Gets the screen handle, aka <b>HMONITOR</b>. Returns <c>default(IntPtr)</c> if it wasn't set; see <see cref="Now"/>.
 		/// </summary>
 		public IntPtr Handle => _h;
-
+		
 		/// <summary>
 		/// Gets the callback function that returns <b>screen</b> when need. Returns <c>null</c> if it wasn't set.
 		/// </summary>
 		public Func<screen> LazyFunc => _func;
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if this variable has no screen handle and no callback function.
 		/// </summary>
 		public bool IsEmpty => _h == default && _func == null;
-
+		
 		IntPtr _Handle() {
 			if (_h != default) return _h;
 			if (_func != null) return _func()._Handle();
 			return primary._h;
 		}
-
+		
 		/// <summary>
 		/// Returns a copy of this variable with <see cref="Handle"/>.
 		/// </summary>
@@ -54,7 +54,7 @@ namespace Au {
 		/// If this variable has <see cref="Handle"/>, returns its clone. Else if has <see cref="LazyFunc"/>, calls it. Else gets the primary screen.
 		/// </remarks>
 		public screen Now => new(_Handle());
-
+		
 		/// <summary>
 		/// Gets the primary screen.
 		/// </summary>
@@ -62,7 +62,7 @@ namespace Au {
 		/// The returned variable has <see cref="Handle"/>. To create lazy variable (with <see cref="LazyFunc"/>), use <c>screen.index(0, lazy: true)</c>.
 		/// </remarks>
 		public static screen primary => new(Api.MonitorFromWindow(default, SODefault.Primary)); //fast
-
+		
 		/// <summary>
 		/// Returns a lazy <b>screen</b> variable that later will get the screen from the mouse cursor position at that time.
 		/// </summary>
@@ -70,7 +70,7 @@ namespace Au {
 		/// If need non-lazy: <c>screen.of(mouse.xy)</c> or <c>screen.ofMouse.Now</c>.
 		/// </remarks>
 		public static screen ofMouse => new(s_ofMouse);
-
+		
 		/// <summary>
 		/// Returns a lazy <b>screen</b> variable that later will get the screen of the active window at that time.
 		/// </summary>
@@ -78,13 +78,13 @@ namespace Au {
 		/// If need non-lazy: <c>screen.of(wnd.active)</c> or <c>screen.ofActiveWindow.Now</c>.
 		/// </remarks>
 		public static screen ofActiveWindow => new(s_ofActiveWindow);
-
+		
 		static readonly Func<screen> s_ofMouse = () => of(mouse.xy);
 		static readonly Func<screen> s_ofActiveWindow = () => of(wnd.active);
-
+		
 		internal bool IsOfMouse_ => ReferenceEquals(_func, s_ofMouse);
 		internal bool IsOfActiveWindow_ => ReferenceEquals(_func, s_ofActiveWindow);
-
+		
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified window or nearest to it.
 		/// </summary>
@@ -100,7 +100,7 @@ namespace Au {
 			=> lazy
 			? new screen(() => of(w, defaultScreen))
 			: new screen(Api.MonitorFromWindow(w, defaultScreen));
-
+		
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified window or nearest to it.
 		/// </summary>
@@ -111,7 +111,7 @@ namespace Au {
 			=> lazy
 			? new screen(() => of(f, defaultScreen, false))
 			: of(f.Find(), defaultScreen);
-
+		
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified winforms window or control or nearest to it.
 		/// </summary>
@@ -122,7 +122,7 @@ namespace Au {
 			=> lazy
 			? new screen(() => of(c, defaultScreen))
 			: of(c.Hwnd(), defaultScreen);
-
+		
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified WPF window or nearest to it.
 		/// </summary>
@@ -133,7 +133,7 @@ namespace Au {
 			=> lazy
 			? new screen(() => of(w, defaultScreen))
 			: of(w.Hwnd(), defaultScreen);
-
+		
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified WPF element (of its rectangle) or nearest to it.
 		/// </summary>
@@ -144,7 +144,7 @@ namespace Au {
 			=> lazy
 			? new screen(() => of(elem, defaultScreen))
 			: of(elem.RectInScreen(), defaultScreen);
-
+		
 		/// <summary>
 		/// Gets screen containing the specified point or nearest to it.
 		/// </summary>
@@ -155,7 +155,7 @@ namespace Au {
 			=> lazy
 			? new screen(() => of(p, defaultScreen))
 			: new screen(Api.MonitorFromPoint(p, defaultScreen));
-
+		
 		/// <summary>
 		/// Gets screen containing the specified point or nearest to it.
 		/// </summary>
@@ -167,7 +167,7 @@ namespace Au {
 			=> lazy
 			? new screen(() => of(x, y, defaultScreen))
 			: of((x, y), defaultScreen);
-
+		
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified rectangle or nearest to it.
 		/// </summary>
@@ -178,7 +178,7 @@ namespace Au {
 			=> lazy
 			? new screen(() => of(r, defaultScreen))
 			: new screen(Api.MonitorFromRect(r, defaultScreen));
-
+		
 		/// <summary>
 		/// Gets screens at various positions relative to the primary screen.
 		/// </summary>
@@ -186,36 +186,36 @@ namespace Au {
 			/// <summary>Gets a screen nearest to the top edge of the primary screen.</summary>
 			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen top(bool lazy = false) => _S(0, -700, lazy);
-
+			
 			/// <summary>Gets a screen nearest to the bottom edge of the primary screen.</summary>
 			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen bottom(bool lazy = false) => _S(0, 700, lazy);
-
+			
 			/// <summary>Gets a screen nearest to the left edge of the primary screen.</summary>
 			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen left(bool lazy = false) => _S(-1000, 0, lazy);
-
+			
 			/// <summary>Gets a screen nearest to the right edge of the primary screen.</summary>
 			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen right(bool lazy = false) => _S(1000, 0, lazy);
-
+			
 			/// <summary>Gets a screen nearest to the top-left corner of the primary screen.</summary>
 			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen topLeft(bool lazy = false) => _S(-1000, -700, lazy);
-
+			
 			/// <summary>Gets a screen nearest to the top-right corner of the primary screen.</summary>
 			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen topRight(bool lazy = false) => _S(1000, -700, lazy);
-
+			
 			/// <summary>Gets a screen nearest to the bottom-left corner of the primary screen.</summary>
 			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen bottomLeft(bool lazy = false) => _S(-1000, 700, lazy);
-
+			
 			/// <summary>Gets a screen nearest to the bottom-right corner of the primary screen.</summary>
 			/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
 			public static screen bottomRight(bool lazy = false) => _S(1000, 700, lazy);
 		}
-
+		
 		/// <summary>
 		/// Gets screen at (or nearest to) the specified offset from the primary screen (PS).
 		/// </summary>
@@ -227,7 +227,7 @@ namespace Au {
 			if (dy > 0) dy += r.bottom; else if (dy == 0) dy = r.CenterY;
 			return of(dx, dy, lazy: lazy);
 		}
-
+		
 		/// <summary>
 		/// Gets all screens.
 		/// </summary>
@@ -235,33 +235,36 @@ namespace Au {
 		/// The order of array elements may be different than in Windows Settings. The primary screen is always at index 0.
 		/// The array is not cached. Each time calls API <msdn>EnumDisplayMonitors</msdn>.
 		/// </remarks>
-		public static screen[] all => _All().ToArray();
-
-		internal static List<screen> _All() {
-			t_a ??= new();
-			t_a.Clear();
-			t_a.Add(primary); //fast
-
-			static bool _Enum(IntPtr hmon, IntPtr hdc, IntPtr r, GCHandle gch) { //70-1000 mcs cold
-				var a = gch.Target as List<screen>;
-				if (hmon != a[0].Handle) a.Add(new screen(hmon));
-				return true;
+		public static screen[] all => _All();
+		
+		[SkipLocalsInit]
+		internal static unsafe screen[] _All(bool failed = false) {
+			var a = stackalloc nint[256];
+			a[0] = 1; //array length
+			a[1] = Api.MonitorFromWindow(default, SODefault.Primary); //fast
+			
+			[UnmanagedCallersOnly]
+			static int _Enum(nint hmon, nint hdc, RECT* r, nint* a) {
+				if (hmon != a[1]) a[++a[0]] = hmon;
+				return 1;
 			};
-
-			var gch = GCHandle.Alloc(t_a);
-			if (!Api.EnumDisplayMonitors(default, default, _Enum, gch)) {
+			
+			if (!Api.EnumDisplayMonitors(default, default, &_Enum, a)) {
+				if (failed) throw new AuException("EnumDisplayMonitors failed");
+				Debug_.Print("EnumDisplayMonitors");
 				//in certain conditions EDM fails.
 				//	Where failed, it was used in incorrect code, maybe near stack overflow.
 				//	Anyway, then call it in other thread, then works.
 				//print.it(lastError.message); //0
-				run.thread(() => { bool ok = Api.EnumDisplayMonitors(default, default, _Enum, gch); Debug.Assert(ok); }).Join();
-				Debug_.Print(t_a.Count);
+				return Task.Run(() => _All(true)).GetAwaiter().GetResult();
 			}
-			gch.Free();
-			return t_a;
+			
+			nint n = a[0];
+			var r = new screen[n];
+			for (int i = 0; i < n;) r[i++] = new(a[i]);
+			return r;
 		}
-		[ThreadStatic] static List<screen> t_a;
-
+		
 		/// <summary>
 		/// Gets screen at the specified index of the <see cref="all"/> array.
 		/// </summary>
@@ -273,7 +276,7 @@ namespace Au {
 			if (lazy) return new screen(() => screen.index(index));
 			if (index > 0) {
 				var a = _All();
-				if (index < a.Count) return a[index];
+				if (index < a.Length) return a[index];
 				//print.warning("Invalid screen index.");
 			}
 			return primary;
@@ -281,9 +284,9 @@ namespace Au {
 		//We don't use a cached array that is updated like in Screen class code, eg on SystemEvents.DisplaySettingsChanging (wm_displaychanged).
 		//	Then index functions are faster, but less reliable when changing display settings, because the array is updated with a delay.
 		//	Now index functions are fast enough. Faster than EnumWindows which is used much more often.
-
+		
 		//At first there was an implicit conversion from int that called index()? I don't remember why removed, but probably for a good reason.
-
+		
 		/// <summary>
 		/// Gets index of this screen in the <see cref="all"/> array.
 		/// </summary>
@@ -295,11 +298,11 @@ namespace Au {
 				if (_h == default && _func == null) return 0;
 				var h = _Handle();
 				var a = _All();
-				for (int i = 0; i < a.Count; i++) if (a[i]._h == h) return i;
+				for (int i = 0; i < a.Length; i++) if (a[i]._h == h) return i;
 				return -1;
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets screen rectangle and other info.
 		/// </summary>
@@ -323,7 +326,7 @@ namespace Au {
 				return default;
 			}
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="Info"/> and returns rectangle of the screen or its work area.
 		/// </summary>
@@ -332,24 +335,24 @@ namespace Au {
 			var v = Info;
 			return workArea ? v.workArea : v.rect;
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="Info"/> and returns screen rectangle.
 		/// </summary>
 		public RECT Rect => Info.rect;
-
+		
 		/// <summary>
 		/// Calls <see cref="Info"/> and returns work area rectangle.
 		/// </summary>
 		public RECT WorkArea => Info.workArea;
-
+		
 		/// <summary>
 		/// Gets DPI of this screen.
 		/// Calls <see cref="Dpi.OfScreen"/>.
 		/// </summary>
 		public int Dpi => More.Dpi.OfScreen(_Handle());
 		//public int Dpi(bool supportWin81 = false) => More.Dpi.OfScreen(_Handle(), supportWin81); //no, rarely need, don't complicate everything. When need, can use Dpi.OfScreen.
-
+		
 		/// <summary>
 		/// True if the screen handle is valid.
 		/// </summary>
@@ -357,55 +360,55 @@ namespace Au {
 		/// Don't use with variables that hold a callback function. This function does not call it and returns <c>false</c>.
 		/// </remarks>
 		public unsafe bool IsAlive => _h != default && Api.GetMonitorInfo(_h, out _);
-
+		
 		///
 		public override string ToString() => _h.ToString() + " " + Rect.ToString();
-
+		
 		///
 		public override int GetHashCode() => (int)_Handle();
-
+		
 		///
 		public override bool Equals(object obj) => obj is screen && Equals((screen)obj);
-
+		
 		///
 		public bool Equals(screen other) => other._Handle() == _Handle();
-
+		
 		///
 		public static bool operator ==(screen a, screen b) => a.Equals(b);
 		///
 		public static bool operator !=(screen a, screen b) => !a.Equals(b);
-
+		
 		//rejected. GetHashCode gets hmonitor but is undocumented. Rarely used.
 		///// <summary>Converts from <see cref="Screen"/>.</summary>
 		//public static implicit operator screen(Screen scrn) => new screen((IntPtr)scrn.GetHashCode());
-
+		
 		///// <summary>Converts to <see cref="Screen"/>. Returns <c>null</c> if failed.</summary>
 		//public static implicit operator Screen(screen scrn) { int h=(int)scrn._Handle(); return Screen.AllScreens.FirstOrDefault(o => o.GetHashCode() == h);
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if point <i>p</i> is in some screen.
 		/// </summary>
 		public static bool isInAnyScreen(POINT p) => Api.MonitorFromPoint(p, SODefault.Zero) != default;
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if rectangle <i>r</i> intersects with some screen.
 		/// </summary>
 		public static bool isInAnyScreen(RECT r) => Api.MonitorFromRect(r, SODefault.Zero) != default;
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if rectangle of window <i>w</i> intersects with some screen.
 		/// </summary>
 		public static bool isInAnyScreen(wnd w) => Api.MonitorFromWindow(w, SODefault.Zero) != default;
-
+		
 		/// <summary>
 		/// Gets bounding rectangle of all screens.
 		/// </summary>
 		public static RECT virtualScreen
 			=> new(Api.GetSystemMetrics(Api.SM_XVIRTUALSCREEN), Api.GetSystemMetrics(Api.SM_YVIRTUALSCREEN), Api.GetSystemMetrics(Api.SM_CXVIRTUALSCREEN), Api.GetSystemMetrics(Api.SM_CYVIRTUALSCREEN));
-
+		
 		//20 times faster, but maybe less reliable
 		//public static RECT virtualScreen2 => wnd.getwnd.shellWindow.Rect;
-
+		
 		internal screen ThrowIfWithHandle_ => _h == default ? this : throw new ArgumentException("screen with Handle. Must be lazy or empty.");
 	}
 }
@@ -417,10 +420,10 @@ namespace Au.Types {
 	public enum SODefault {
 		/// <summary>Create empty variable.</summary>
 		Zero, //MONITOR_DEFAULTTONULL
-
+		
 		/// <summary>The primary screen.</summary>
 		Primary, //MONITOR_DEFAULTTOPRIMARY
-
+		
 		/// <summary>The nearest screen. If window handle is invalid - the primary screen.</summary>
 		Nearest, //MONITOR_DEFAULTTONEAREST
 	}

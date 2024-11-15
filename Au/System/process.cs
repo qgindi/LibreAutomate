@@ -95,7 +95,7 @@ namespace Au {
 			}
 			
 			[ThreadStatic] static _LastWndProps _ofThread;
-			internal static _LastWndProps OfThread => _ofThread ??= new _LastWndProps();
+			internal static _LastWndProps OfThread => _ofThread ??= new();
 		}
 		
 		[SkipLocalsInit]

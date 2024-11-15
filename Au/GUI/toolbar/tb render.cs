@@ -48,7 +48,7 @@ public partial class toolbar {
 			_ThreadTrap();
 			if (value != _sett.layout) {
 				_sett.layout = value;
-				_AutoSizeNow();
+				_AutoSizeNowIfIsOpen();
 			}
 		}
 	}
@@ -67,8 +67,7 @@ public partial class toolbar {
 			_ThreadTrap();
 			if (value != _sett.dispText) {
 				_sett.dispText = value;
-				_MeasureText();
-				_AutoSizeNow();
+				_AutoSizeNowIfIsOpen(measureText: true);
 			}
 		}
 	}

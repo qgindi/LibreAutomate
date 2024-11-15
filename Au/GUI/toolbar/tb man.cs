@@ -535,8 +535,7 @@ public partial class toolbar {
 		_followedOnce = true;
 		
 		if (dpiChanged) {
-			_MeasureText();
-			_AutoSizeNow();
+			_AutoSizeNowIfIsOpen(measureText: true);
 		}
 		
 		if (!followedOnce && _os != null) {
@@ -631,7 +630,7 @@ public partial class toolbar {
 			if (z != _sett.size) {
 				_sett.size = z;
 				_sett.wrapWidth = z.Width - _BorderPadding(unscaled: true) * 2 + 2;
-				if (AutoSize) _AutoSizeNow();
+				if (AutoSize) _AutoSizeNowIfIsOpen();
 			}
 		}
 	}
@@ -672,7 +671,7 @@ public partial class toolbar {
 				_w.MoveL(*(RECT*)lParam);
 			} else {
 				if (DpiScaling.offsets == true) _FollowRect(); //update offsets if script wants so
-				_AutoSizeNow();
+				_AutoSizeNowIfIsOpen();
 			}
 		}
 	}

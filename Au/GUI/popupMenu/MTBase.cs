@@ -110,7 +110,7 @@ public abstract partial class MTBase {
 
 	private protected bool _IsOtherThread => _threadId != Api.GetCurrentThreadId();
 
-	private protected void _ThreadTrap() {
+	internal void _ThreadTrap() {
 		if (_threadId != Api.GetCurrentThreadId()) throw new InvalidOperationException("Wrong thread.");
 	}
 

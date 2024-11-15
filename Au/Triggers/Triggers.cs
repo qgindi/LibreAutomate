@@ -28,7 +28,7 @@ namespace Au.Triggers;
 /// 
 /// Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="script.run"/> to run other scripts in new process; see example.
 /// 
-/// Trigger actions don't inherit <b>opt</b> options that are set before adding triggers. The example shows two ways how to set <b>opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>opt</b> options set by previous action.
+/// Trigger actions may not inherit <b>opt</b> options that are set before adding triggers. The example shows how to correctly set <b>opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>opt</b> options set by previous action.
 /// </remarks>
 /// <example>
 /// This is a single script with many action triggers.
@@ -112,17 +112,11 @@ namespace Au.Triggers;
 /// 
 /// //how to set opt options for trigger actions
 /// 
-/// //opt.key.TextHow = OKeyText.Paste; //no, it won't work. It sets opt for this thread, not for trigger actions.
+/// //opt.key.TextHow = OKeyText.Paste; //no, it will not work
 /// Triggers.Options.BeforeAction = o => { opt.key.TextHow = OKeyText.Paste; }; //the correct way. Sets opt before executing an action.
 /// ts["#p1"] = "text 1";
 /// ts["#p2"] = "text 2";
 /// Triggers.Options.BeforeAction = null;
-/// 
-/// //another way to set opt options - use opt.init. It sets options for all actions in the script, not just for triggers added afterwards.
-/// 
-/// opt.init.key.PasteLength = 50;
-/// opt.init.key.Hook = h => { var w1 = h.w.Window; print.it(w1); if(w1.Name.Like("* Word")) h.optk.PasteWorkaround = true; };
-/// ts["#p3"] = "/* " + new string('*', 60) + " */\r\n";
 /// 
 /// //how to stop and disable/enable triggers
 /// 

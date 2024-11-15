@@ -496,10 +496,8 @@ static unsafe partial class Api {
 		return _GetMonitorInfo(hMonitor, ref lpmi);
 	}
 	
-	internal delegate bool MONITORENUMPROC(IntPtr hmon, IntPtr hdc, IntPtr r, GCHandle dwData);
-	
 	[DllImport("user32.dll", SetLastError = true)]
-	internal static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MONITORENUMPROC lpfnEnum, GCHandle dwData);
+	internal static extern bool EnumDisplayMonitors(nint hdc, RECT* lprcClip, delegate* unmanaged<nint, nint, RECT*, nint*, int> lpfnEnum, nint* a);
 	
 	#region GetSystemMetrics, SystemParametersInfo
 	

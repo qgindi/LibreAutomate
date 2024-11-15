@@ -16,7 +16,7 @@ namespace Au.More {
 		int _start, _end;
 		ushort _sepLength;
 		SegFlags _flags;
-
+		
 		/// <summary>
 		/// Initializes this instance to split a string.
 		/// </summary>
@@ -33,20 +33,20 @@ namespace Au.More {
 			_start = 0;
 			_end = _sStart - 1;
 		}
-
+		
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		[NoDoc]
 		public SegParser GetEnumerator() => this;
-
+		
 		IEnumerator<StartEnd> IEnumerable<StartEnd>.GetEnumerator() => this;
-
+		
 		IEnumerator IEnumerable.GetEnumerator() => this;
-
+		
 		[NoDoc]
 		public StartEnd Current => new(_start, _end);
-
+		
 		object IEnumerator.Current => Current;
-
+		
 		[NoDoc]
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public bool MoveNext() {
@@ -94,31 +94,31 @@ namespace Au.More {
 			if (i == _start && 0 != (_flags & SegFlags.NoEmpty)) goto gStart;
 			return true;
 		}
-
+		
 		void IDisposable.Dispose() {
 			//rejected. Normally this variable is not reused because GetEnumerator returns a copy.
 			//_end = _sStart - 1;
 		}
-
+		
 		[NoDoc]
 		public void Reset() {
 			_end = _sStart - 1;
 		}
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
+		
 		/// <summary>
 		/// Returns segment values as <b>string[]</b>.
 		/// </summary>
 		/// <param name="maxCount">The maximal number of substrings to get. If negative (default), gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="String.Split"/>.</param>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public unsafe string[] ToStringArray(int maxCount = -1) {
 			//All this big code is just to make this function as fast as String.Split. Also less garbage.
 			//	Simple code is slower when substrings are very short.
 			//	With short substrings, the parsing code takes less than half of time. Creating strings and arrays is the slow part.
-			//	As an intermediate buffer we use a threadlocal array. It's the fastest known way.
-
-			string[] a1 = t_a1 ??= new string[c_a1Size]; //at first use the threadlocal array. When it is filled, use a2.
+			
+			string100 a1 = new(); //at first use array on stack. When it is filled, use a2. Note: no [SkipLocalsInit], because references are always inited.
 			List<string> a2 = null;
-
+			
 			int n = 0;
 			for (; MoveNext(); n++) { //slightly faster than foreach
 				if (maxCount >= 0 && n == maxCount) break;
@@ -131,7 +131,7 @@ namespace Au.More {
 				}
 			}
 			_end = _sStart - 1; //reset, because this variable can be reused later. never mind: try/finally; it makes slightly slower.
-
+			
 			var r = new string[n];
 			for (int i = 0, to = Math.Min(n, c_a1Size); i < to; i++) {
 				r[i] = a1[i];
@@ -142,11 +142,11 @@ namespace Au.More {
 			}
 			return r;
 		}
-
-		const int c_a1Size = 100;
-		[ThreadStatic] static string[] t_a1;
-		//tested, all slower: weakreference, native memory, System.Buffers.ArrayPool<string>.Shared.
-
+		
+		const int c_a1Size = 50;
+		[InlineArray(c_a1Size)]
+		struct string100 { string s; }
+		
 		//rejected. Not useful. Can use LINQ ToArray.
 		//public StartEnd[] ToSegmentArray(int maxCount = -1)
 	}
@@ -162,20 +162,20 @@ namespace Au.Types {
 		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns <c>true</c>.
 		/// </summary>
 		public const string Whitespace = "SSlkGrJUMUutrbSK3s6Crw";
-
+		
 		/// <summary>
 		/// Specifies that separators are all characters for which <see cref="char.IsLetterOrDigit(char)"/> returns <c>false</c>.
 		/// </summary>
 		public const string Word = "WWVL0EtrK0ShqYWb4n1CmA";
-
+		
 		/// <summary>
 		/// Specifies that separators are substrings <c>"\r\n"</c>, as well as single characters <c>'\r'</c> and <c>'\n'</c>.
 		/// </summary>
 		public const string Line = "LLeg5AWCNkGTZDkWuyEa2g";
-
+		
 		//note: all must be of length 22.
 	}
-
+	
 	/// <summary>
 	/// Flags for <see cref="ExtString.Segments"/> and some other functions.
 	/// </summary>

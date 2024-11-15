@@ -19,10 +19,10 @@ namespace Au;
 /// ]]></code>
 /// </example>
 public partial class keys {
-	/// <param name="cloneOptions">Options to be copied to <see cref="Options"/> of this variable. If <c>null</c>, uses default options.</param>
+	/// <param name="cloneOptions">Options to be copied to <see cref="Options"/> of this variable. Usually <c>opt.key</c> (current ambient options) or <c>null</c> (default options).</param>
 	/// <example>
 	/// <code><![CDATA[
-	/// var k = new keys(opt.init.key);
+	/// var k = new keys(null);
 	/// k.Options.KeySpeed = 50;
 	/// k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(KKey.Enter).AddSleep(500);
 	/// k.SendNow(); //sends and clears the variable

@@ -182,7 +182,7 @@ namespace Au
 				}
 
 				if (!no) {
-					_blockedKeys ??= new keys(opt.init.key);
+					_blockedKeys ??= new keys(null);
 					//print.it("blocked", x.vkCode, !x.IsUp, x.IsInjected);
 					_blockedKeys.AddRaw_(x.vkCode, (ushort)x.scanCode, x.SendInputFlags_);
 				}

@@ -48,8 +48,9 @@ public partial class toolbar {
 	/// <summary>
 	/// Measures, resizes and invalidates the toolbar now if need.
 	/// </summary>
-	void _AutoSizeNow() {
+	internal void _AutoSizeNowIfIsOpen(bool measureText = false) {
 		if (!IsOpen) return;
+		if (measureText) _MeasureText();
 		_Resize(_Measure());
 		Api.InvalidateRect(_w);
 	}

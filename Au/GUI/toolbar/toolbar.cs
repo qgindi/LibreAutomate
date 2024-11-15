@@ -154,7 +154,7 @@ public partial class toolbar : MTBase {
 	/// More properties can be specified later (set properties of the returned <see cref="TBItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
 	/// </remarks>
 	public TBItem Add(string text, Action<TBItem> click, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null) {
-		var item = new TBItem(TBItemType.Button);
+		var item = new TBItem(this, TBItemType.Button);
 		_Add(item, text, click, image, l_, f_);
 		return item;
 	}
@@ -205,7 +205,7 @@ public partial class toolbar : MTBase {
 	/// </example>
 	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int, string)"/>
 	public TBItem Menu(string text, Action<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null) {
-		var item = new TBItem(TBItemType.Menu);
+		var item = new TBItem(this, TBItemType.Menu);
 		_Add(item, text, menu, image, l_, f_);
 		return item;
 	}
@@ -226,7 +226,7 @@ public partial class toolbar : MTBase {
 	/// </example>
 	/// <inheritdoc cref="Add(string, Action{TBItem}, MTImage, int, string)"/>
 	public TBItem Menu(string text, Func<popupMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null) {
-		var item = new TBItem(TBItemType.Menu);
+		var item = new TBItem(this, TBItemType.Menu);
 		_Add(item, text, menu, image, l_, f_);
 		return item;
 	}
@@ -237,7 +237,7 @@ public partial class toolbar : MTBase {
 	public TBItem Separator() {
 		int i = _a.Count - 1;
 		if (i < 0 || _a[i].IsGroup_) throw new InvalidOperationException("first item is separator");
-		var item = new TBItem(TBItemType.Separator);
+		var item = new TBItem(this, TBItemType.Separator);
 		_Add(item, null, null, default, 0, null);
 		return item;
 	}
@@ -247,7 +247,7 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="text">Text. Or <c>"Text|Tooltip"</c>, or <c>"|Tooltip"</c>, or <c>"Text|"</c>. Separator can be <c>"|"</c> or <c>"\0 "</c> (then <c>"|"</c> isn't a separator).</param>
 	public TBItem Group(string text = null) {
-		var item = new TBItem(TBItemType.Group);
+		var item = new TBItem(this, TBItemType.Group);
 		_Add(item, text, null, default, 0, null);
 		return item;
 	}
@@ -470,19 +470,17 @@ public partial class toolbar : MTBase {
 	
 	unsafe nint _WndProc(wnd w, int msg, nint wParam, nint lParam) {
 		//WndUtil.PrintMsg(w, msg, wParam, lParam);
+		bool activatedOwner = false;
 		
 		switch (msg) {
-		case Api.WM_LBUTTONDOWN:
-		case Api.WM_RBUTTONDOWN:
-		case Api.WM_MBUTTONDOWN:
+		case Api.WM_LBUTTONDOWN or Api.WM_RBUTTONDOWN or Api.WM_MBUTTONDOWN:
 			var tb1 = _SatPlanetOrThis;
 			if (tb1.IsOwned && tb1.MiscFlags.Has(TBFlags.ActivateOwnerWindow)) {
-				tb1.OwnerWindow.ActivateL();
-				//never mind: sometimes flickers. Here tb1._Zorder() does not help. The OBJECT_REORDER hook zorders when need. This feature is rarely used.
+				var wo = tb1.OwnerWindow;
+				if (!wo.IsActive) activatedOwner = wo.ActivateL();
 			}
 			break;
-		case Api.WM_MOUSEMOVE:
-		case Api.WM_NCMOUSEMOVE:
+		case Api.WM_MOUSEMOVE or Api.WM_NCMOUSEMOVE:
 			_SatMouse();
 			break;
 		}
@@ -517,10 +515,9 @@ public partial class toolbar : MTBase {
 			_WmMouseleave();
 			return default;
 		case Api.WM_LBUTTONDOWN:
-			_WmMouselbuttondown(lParam);
+			_WmMouselbuttondown(lParam, activatedOwner);
 			return default;
-		case Api.WM_CONTEXTMENU:
-		case Api.WM_NCRBUTTONUP:
+		case Api.WM_CONTEXTMENU or Api.WM_NCRBUTTONUP:
 			_WmContextmenu();
 			break;
 		case Api.WM_NCHITTEST:
@@ -631,12 +628,19 @@ public partial class toolbar : MTBase {
 		if (_iHot >= 0) { _Invalidate(_iHot); _iHot = -1; }
 	}
 	
-	void _WmMouselbuttondown(nint lParam) {
-		var mod = keys.gui.getMod(); if (mod != 0 && mod != KMod.Shift) return;
+	void _WmMouselbuttondown(nint lParam, bool activatedOwner) {
+		var mod = keys.gui.getMod();
 		if (mod == 0) { //click button
 			var p = Math2.NintToPOINT(lParam);
 			int i = _HitTest(p);
-			if (i >= 0) _Click(i, true);
+			if (i < 0) return;
+			
+			if (activatedOwner && _a[i].IsMenu_) { //let manager process OBJECT_REORDER. And let owner process WM_ACTIVATE. Else the menu sometimes disappears.
+				timer.after(50, _ => { if (IsOpen) _Click(i, true); });
+			} else {
+				_Click(i, true);
+			}
+			
 			//} else if(mod==KMod.Shift) { //move toolbar
 			//	var p=mouse.xy;
 			//	DragDropUtil.SimpleDragDrop(_w, MButtons.Left, d => {
@@ -921,7 +925,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			_ThreadTrap();
 			if (value != _sett.autoSize) {
 				_sett.autoSize = value;
-				_AutoSizeNow();
+				_AutoSizeNowIfIsOpen();
 			}
 		}
 	}
@@ -943,7 +947,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 			value = value > 0 ? _Limit(value) : 0;
 			if (value != _sett.wrapWidth) {
 				_sett.wrapWidth = value;
-				_AutoSizeNow();
+				_AutoSizeNowIfIsOpen();
 			}
 		}
 	}
