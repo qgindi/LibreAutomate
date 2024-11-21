@@ -296,7 +296,7 @@ static class CiUtil {
 	public static bool GetFunctionSymbolInfoFromArgumentList(BaseArgumentListSyntax als, SemanticModel semo, out SymbolInfo si) {
 		si = default;
 		var pa = als.Parent;
-		if (als is ArgumentListSyntax && pa is InvocationExpressionSyntax or ObjectCreationExpressionSyntax) {
+		if (als is ArgumentListSyntax && pa is InvocationExpressionSyntax or BaseObjectCreationExpressionSyntax) {
 			si = semo.GetSymbolInfo(pa);
 		} else if (als is BracketedArgumentListSyntax && pa is ElementAccessExpressionSyntax eacc) {
 			si = semo.GetSymbolInfo(eacc);
@@ -347,16 +347,15 @@ static class CiUtil {
 	public static bool GetArgumentParameterFromPos(BaseArgumentListSyntax als, int pos, SemanticModel semo, out ArgumentSyntax arg, out IParameterSymbol[] ps, Func<IParameterSymbol, bool> filter = null) {
 		arg = null; ps = null;
 		var args = als.Arguments;
-		var index = args.Count == 0 ? 0 : als.Arguments.IndexOf(o => pos <= o.FullSpan.End); //print.it(index);
+		var index = args.Count == 0 ? 0 : args.IndexOf(o => pos <= o.FullSpan.End); //print.it(index);
 		if (index < 0) return default;
 		if (!CiUtil.GetFunctionSymbolInfoFromArgumentList(als, semo, out var si)) return default;
 		string name = null;
 		if (args.Count > 0) {
 			arg = args[index];
-			var nc = arg.NameColon;
-			if (nc != null) name = nc.Name.Identifier.Text;
+			if (arg.NameColon is { } nc) name = nc.Name.Identifier.Text;
 		}
-		ps = GetParameterSymbol(si, index, name, als.Arguments.Count, filter)
+		ps = GetParameterSymbol(si, index, name, args.Count, filter)
 			.DistinctBy(o => o.Type.ToString()) //tested with Task.Run. 8 overloads, 4 distinct parameter types.
 			.ToArray();
 		return ps.Length > 0;
@@ -372,8 +371,16 @@ static class CiUtil {
 	/// <param name="argCount">Count of arguments.</param>
 	/// <param name="filter"></param>
 	public static IEnumerable<IParameterSymbol> GetParameterSymbol(SymbolInfo siFunction, int index, string name, int argCount, Func<IParameterSymbol, bool> filter = null) {
-		foreach (var v in siFunction.GetAllSymbols()) {
-			if (_Get(v) is { } r) yield return r;
+		if (argCount == 0 && siFunction.Symbol is IMethodSymbol { ContainingType: var ct } ims && ims.Parameters.Length == 0) { //GetAllSymbols would contain just ims, but we need overloads with parameters
+			foreach (var v in ct.GetMembers(ims.Name)) {
+				if (v is IMethodSymbol m && m != ims) {
+					if (_Get(m) is { } r) yield return r;
+				}
+			}
+		} else {
+			foreach (var v in siFunction.GetAllSymbols()) {
+				if (_Get(v) is { } r) yield return r;
+			}
 		}
 		
 		IParameterSymbol _Get(ISymbol fsym) {

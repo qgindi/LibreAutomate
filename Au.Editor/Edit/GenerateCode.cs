@@ -93,9 +93,6 @@ static class GenerateCode {
 		//FUTURE: show tool to insert code, not just print.
 		//	With name edit field. Options to insert as method or local func. Option to use `#region events`. Option to add `print.it("EventName");`.
 		
-		//TODO: fails if `new(|)`. OK if `new type(|)`.
-		//TODO: fails: `static AsyncLocal<OTest> t_inst = new AsyncLocal<OTest>(|);`
-		
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 		int pos = cd.pos;
 		var semo = cd.semanticModel;

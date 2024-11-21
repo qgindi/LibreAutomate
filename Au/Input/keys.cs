@@ -708,22 +708,6 @@ public partial class keys {
 		//2. Sleep if the process uses CPU eg >50% of time. Tooo slow, even with Notepad. Tried GetProcessTimes and QueryProcessCycleTime (precise).
 		//Eg UWP input processing is so slow and chaotic, impossible to sync.
 		//rejected: option to sleep 1 ms every n-th char (eg use float 0...1 or negative value). Nothing good.
-
-		//using var ph = Handle_.OpenProcess(wFocus.ProcessId);
-		//static int _CpuPercent(IntPtr ph) {
-		//	Api.QueryProcessCycleTime(ph, out long ctime1);
-		//	long t1 = perf.mcs;
-		//	1.ms();
-		//	long time = perf.mcs - t1;
-		//	Api.QueryProcessCycleTime(ph, out long ctime2);
-		//	long speedCyclesMS = 2600; //to get this can be used QueryThreadCycleTime(thisThread)->_Spin(1000)->QueryThreadCycleTime(thisThread)->/1000
-		//	long cycles = ctime2 - ctime1;
-		//	return (int)(cycles * 100 / time / speedCyclesMS);
-		//}
-
-		//static void _Spin(long mcs) {
-		//	for (long t = perf.mcs; perf.mcs - t < mcs;) { }
-		//}
 	}
 
 	static (KKey vk, KMod mod) _CharToKey(char c, nint hkl) {

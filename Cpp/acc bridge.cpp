@@ -548,6 +548,7 @@ namespace outproc {
 
 		if (useWnd) {
 			if ((ap.flags2 & (eAF2::InWebPage | eAF2::InChromePage | eAF2::InFirefoxPage | eAF2::InIES)) == eAF2::InWebPage) {
+				//this is used only if could not detect browser type by w classname
 				bool chrome = false;
 				HWND c = wn::FindChildByClassName(w, c_IES, c_CRW, OUT chrome, true);
 				if (c) {

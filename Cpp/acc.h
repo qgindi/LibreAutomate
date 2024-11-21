@@ -202,6 +202,7 @@ namespace ao {
 	}
 
 	//Calls AccessibleObjectFromWindow. Uses TempSetScreenReader if screenReader is true (does not check classname).
+	//Currently not used.
 	static HRESULT AccFromWindow(HWND w, DWORD objid, out IAccessible** a, bool screenReader = false) {
 		TempSetScreenReader tsr; if (screenReader) tsr.Set(w);
 		return AccessibleObjectFromWindow(w, objid, IID_IAccessible, (void**)a);

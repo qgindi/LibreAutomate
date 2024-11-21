@@ -395,7 +395,7 @@ public partial class keys {
 				if (_hk.Mod.Has(KMod.Ctrl)) SendCtrl(true);
 				if (_hk.Mod.Has(KMod.Alt)) SendAlt(true);
 				if (_hk.Mod.Has(KMod.Shift)) SendShift(true);
-				Internal_.Sleep(optk.KeySpeedClipboard); //need 1 ms for IE address bar, 100 ms for BlueStacks
+				Internal_.Sleep(_opt.KeySpeedClipboard); //eg need 100 ms for BlueStacks
 				SendKeyEventRaw(_hk.Key, _scan, 0);
 			}
 			

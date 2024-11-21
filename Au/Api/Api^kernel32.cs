@@ -53,14 +53,31 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern bool GetProcessTimes(IntPtr hProcess, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 	
-	//[DllImport("kernel32.dll")]
-	//internal static extern bool QueryProcessCycleTime(IntPtr ProcessHandle, out long CycleTime);
-	
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 	
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern int GetThreadDescription(IntPtr hThread, out char* ppszThreadDescription);
+	
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern bool QueryProcessCycleTime(nint ProcessHandle, out long CycleTime);
+	
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern bool QueryThreadCycleTime(nint ThreadHandle, out long CycleTime);
+	
+	[DllImport("kernel32.dll")]
+	internal static extern bool QueryIdleProcessorCycleTimeEx(ushort Group, ref int BufferLength, long* ProcessorIdleCycleTime);
+	
+	[DllImport("kernel32.dll")]
+	internal static extern ushort GetActiveProcessorGroupCount();
+	
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern int GetThreadPriority(nint hThread);
+	
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern bool SetThreadPriority(nint hThread, int nPriority);
+	
+	internal const int THREAD_PRIORITY_TIME_CRITICAL = 15;
 	
 	[DllImport("kernel32.dll", EntryPoint = "CreateEventW", SetLastError = true)]
 	internal static extern IntPtr CreateEvent2(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);

@@ -16,7 +16,7 @@ mouse.move(w, ^10, .5f);
 
 mouse.moveBy(50, 0);
 
-/// Change speed and other options. To quickly insert code can be used <b>speedSnippet<>.
+/// Change speed and other options. To insert code can be used <b>speedOptSnippet<>.
 
 opt.mouse.ClickSpeed = 100;
 opt.mouse.ClickSleepFinally = 100;

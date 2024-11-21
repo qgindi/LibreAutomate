@@ -1,7 +1,3 @@
-//TODO: it seems in Edge does not enable MSAA. The tool enables, and then Find works. Else Find does not find. Tested only `w.Elm["web:DOCUMENT"].Find(1)`.
-//	Then I activated Edge again, and clicked in web page. Then started to work. Maybe need just to activate (can't enable if Edge inactive).
-//	Possibly Chrome too. Eg failed in script "YouTube play random". But Chrome was active.
-
 namespace Au;
 
 /// <summary>

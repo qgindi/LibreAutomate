@@ -26,12 +26,12 @@ namespace Au;
 /// <th>Problems</th>
 /// </tr>
 /// <tr>
-///  <td>Chrome web browser. Also Edge, Opera and other apps that use Chrome code. Window class name is like <c>"Chrome_WidgetWin_1"</c>.</td>
+///  <td>Chrome web browser. Also Edge, Opera and other apps that use Chromium. Window class name is like <c>"Chrome_WidgetWin_1"</c>.</td>
 ///  <td>
 ///   <ol>
 ///    <li>Web page UI elements initially are disabled (missing). Workarounds:
 ///     <ul>
-///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix <c>"web:"</c> or <c>"chrome:"</c>. Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with <c>"Chrome"</c>. However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabling may fail with future Chrome versions.</li>
+///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix <c>"web:"</c> or <c>"chrome:"</c>. Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with <c>"Chrome"</c>. However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabling may fail with future Chrome versions. May fail if the window is inactive.</li>
 ///      <li>Start Chrome with command line <c>--force-renderer-accessibility</c>.</li>
 ///     </ul>
 ///    </li>
@@ -135,7 +135,7 @@ public unsafe sealed partial class elm : IDisposable {
 	//FUTURE: elm.more.EnableElmInChromeWebPagesWhenItStarts
 	//FUTURE: elm.more.EnableElmInJavaWindows (see JavaEnableJAB in QM2)
 	//FUTURE: add functions to marshal to another thread.
-	
+
 	internal struct Misc_ {
 		public EMiscFlags flags;
 		public byte roleByte; //for optimization. 0 if not set or failed to get. 0xFF (ERole.Custom) if VT_BSTR or not 1-ROLE_MAX.

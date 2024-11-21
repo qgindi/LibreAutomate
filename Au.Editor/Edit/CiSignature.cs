@@ -5,8 +5,6 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 
-//TODO: format signatures with `?`, like in quick info. Now eg DateTime.TryParseExact parameters without `?`.
-
 //FUTURE: show for lambda parameters. Currently VS does not show too.
 
 class CiSignature {

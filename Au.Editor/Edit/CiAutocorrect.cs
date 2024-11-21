@@ -1,5 +1,3 @@
-//TODO: Enter/semicolon does not work in `typeof(int)`
-
 extern alias CAW;
 
 using System.Windows.Input;
@@ -540,6 +538,7 @@ class CiAutocorrect {
 			if (!(tk1 is SyntaxKind.CloseParenToken or SyntaxKind.CloseBracketToken)) return false;
 			if (!(node is BaseArgumentListSyntax or BaseParameterListSyntax or ArrayRankSpecifierSyntax
 				or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax
+				or TypeOfExpressionSyntax or SizeOfExpressionSyntax or DefaultExpressionSyntax or CheckedExpressionSyntax
 				or DoStatementSyntax)
 				) return false;
 			if (cd.pos != token.SpanStart) return false;
@@ -642,6 +641,7 @@ class CiAutocorrect {
 						is BaseArgumentListSyntax or BaseParameterListSyntax or ArrayRankSpecifierSyntax
 						or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax
 						or CatchDeclarationSyntax or CatchFilterClauseSyntax
+						or TypeOfExpressionSyntax or SizeOfExpressionSyntax or DefaultExpressionSyntax or CheckedExpressionSyntax
 						or (StatementSyntax and not BlockSyntax) || _IsSwitchCast(nodeFromPos);
 				}
 			} else if (tk1 is SyntaxKind.SemicolonToken && tok1.SpanStart == pos) {

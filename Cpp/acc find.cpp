@@ -853,37 +853,49 @@ HRESULT AccEnableChrome2(HWND w, int i, HWND c) {
 	}
 
 	return isEnabled ? 0 : (HRESULT)eError::WaitChromeDisabled;
+
+	//I know these ways to auto-enable Chrome web page AOs:
+	//1. Call get_accName of any AO, eg of main window or document.
+	//	Need to wait. Also need to call some other functions to enable HTML and all acc properties.
+	//	In current Chrome works alone. In Edge, WebView2 and old Chrome also need 2.
+	//2. Try to QS IAccessible2 from the client IAccessible of the main window.
+	//	It's undocumented. I found it in Chromium source code, and later on the internet.
+	//		One Chromium developer suggested to use it instead of the broken WM_GETOBJECT way.
+	//  Works inproc and outproc. If outproc, the QS fails, but enables anyway.
+	//	It may not enable by itself. Or very slowly. Then need to call get_accName. It's undocumented.
+	//	Need to wait. The time depends on how big is the webpage. May be even 1 s.
+	//	When used in certain way, used to kill Chrome process on Win7 (or it depends on Chrome settings etc). Current code works well.
+	//3. (tested loong time ago) Get a UIA element.
+	//	Chrome: of main window.
+	//	WebView2: of the legacy control. Then call its FindFirst with "true" condition. With Chrome it does not work.
+	//		Or from point.
+	//		It enables for entire process (or thread, not tested). Eg the window may have multiple WebView2 controls; need to enable just for one.
+	//	Bad: UIA at first is slow. And undocumented (or I don't know).
+	//	Need to wait like always.
+	//4. Edge enables if SPI_SETSCREENREADER. Not Chrome.
+	//5. (obsolete, now does not work) Send WM_GETOBJECT(0, 1) to the legacy control (child window classnamed "Chrome_RenderWidgetHostHWND").
+	//  Documented: Chrome calls NotifyWinEvent(ALERT) when starts, and enables if then receives WM_GETOBJECT with its arguments.
+	//	Does not work with current Chrome. Maybe works only if called soon after NotifyWinEvent; not tested.
+
+	//BAD: current Chrome/Edge (2024-11-16) does not enable if the window is not visible to the user, eg completely covered by other windows.
+	// Then the legacy child control is detached.
+	// I don't believe we can find a way other than activating the window.
+	// Never mind. Let users start browser with the command line, it's not so bad. Or let they activate the window.
 }
 
 namespace outproc {
+	//using Cpp_AccIsChromeAccessibilityEnabledViaCommandLineCallbackT = BOOL(__stdcall*)(HWND w);
+	//static Cpp_AccIsChromeAccessibilityEnabledViaCommandLineCallbackT s_accEnabledCallback;
+
+	//EXPORT void Cpp_AccSetIsChromeAccessibilityEnabledViaCommandLineCallback(Cpp_AccIsChromeAccessibilityEnabledViaCommandLineCallbackT callback) {
+	//	s_accEnabledCallback = callback;
+	//}
+
 	void AccEnableChrome(HWND w, HWND c = 0) {
 		if (!!(WinFlags::Get(w) & eWinFlags::AccEnabled)) return;
 
 		assert(!(wn::Style(w) & WS_CHILD));
 		HWND wTL = w;
-
-		//I know these ways to auto-enable Chrome web page AOs:
-		//1. Call get_accName of any AO, eg of main window or document.
-		//	Need to wait. Also need to call some other functions to enable HTML and all acc properties.
-		//	In current Chrome works alone. In Edge, WebView2 and old Chrome also need 2.
-		//2. Try to QS IAccessible2 from the client IAccessible of the main window.
-		//	It's undocumented. I found it in Chromium source code, and later on the internet.
-		//		One Chromium developer suggested to use it instead of the broken WM_GETOBJECT way.
-		//  Works inproc and outproc. If outproc, the QS fails, but enables anyway.
-		//	It may not enable by itself. Or very slowly. Then need to call get_accName. It's undocumented.
-		//	Need to wait. The time depends on how big is the webpage. May be even 1 s.
-		//	When used in certain way, used to kill Chrome process on Win7 (or it depends on Chrome settings etc). Current code works well.
-		//3. (tested loong time ago) Get a UIA element.
-		//	Chrome: of main window.
-		//	WebView2: of the legacy control. Then call its FindFirst with "true" condition. With Chrome it does not work.
-		//		Or from point.
-		//		It enables for entire process (or thread, not tested). Eg the window may have multiple WebView2 controls; need to enable just for one.
-		//	Bad: UIA at first is slow. And undocumented (or I don't know).
-		//	Need to wait like always.
-		//4. Edge enables if SPI_SETSCREENREADER. Not Chrome.
-		//5. (obsolete, now does not work) Send WM_GETOBJECT(0, 1) to the legacy control (child window classnamed "Chrome_RenderWidgetHostHWND").
-		//  Documented: Chrome calls NotifyWinEvent(ALERT) when starts, and enables if then receives WM_GETOBJECT with its arguments.
-		//	Does not work with current Chrome. Maybe works only if called soon after NotifyWinEvent; not tested.
 
 		if (c) {
 			w = GetParent(c); //eg WebView2
@@ -897,8 +909,10 @@ namespace outproc {
 			}
 
 			if (!c) {
-				//Don't need to enable, because there is no web content (and no DOCUMENT).
-				//	But try to enable anyway, because in the future Chrome may remove the legacy control. Unless it's a popup window.
+				//Ideally should not need to enable, because there is no web content (and no DOCUMENT).
+				//But need to enable anyway, because:
+				// 1. In the future Chrome may remove the legacy control.
+				// 2. Some Chrome/Edge versions detach the control when the browser window isn't visible, eg completely covered by other windows.
 
 				DWORD style = (DWORD)GetWindowLong(w, GWL_STYLE);
 				if (0 != (style & WS_POPUP) || style == 0) return; //a popup window, eg menu, tooltip, new bookmark. Or invalid window handle.
@@ -909,11 +923,18 @@ namespace outproc {
 			}
 		}
 
+		//rejected: return if browser command line contains --force-renderer-accessibility. It seems works, but I don't trust it, need much testing.
+		//if (s_accEnabledCallback(wTL)) { //let C# code detect command line --force-renderer-accessibility (here in C++ we don't have function "get process command line")
+		//	PRINTS(L"Has --force-renderer-accessibility");
+		//	WinFlags::Set(wTL, eWinFlags::AccEnabled);
+		//	return;
+		//}
+
 		//notinproc FindDocumentSimple_ is very slow
 		Cpp_Acc_Agent aAgent;
 		bool inProc = 0 == InjectDllAndGetAgent(w, out aAgent.acc);
 
-		for (int i = 0, nNoDoc = 0; i < (inProc ? 70 : 20); i++) { //max 3 s
+		for (int i = 0, iTo = inProc ? 70 : 20, nNoDoc = 0; i < iTo; i++) { //max 3 s
 			HRESULT hr;
 			//Perf.First();
 			if (inProc) {
@@ -927,16 +948,23 @@ namespace outproc {
 				hr = AccEnableChrome2(w, i, c);
 			}
 			//Perf.NW();
+
 			if (hr == (HRESULT)eError::NotFound) {
 				if (!IsWindow(w)) return;
 				if (!c) break;
 			}
+
+			if (hr == (HRESULT)eError::WaitChromeDisabled && i > iTo / 2 && !c && wTL != GetForegroundWindow())
+				return; //wait shorter, and allow to retry later. See comments above in `if (!c) { }`.
+
 			Sleep((inProc ? 10 : 100) + i);
+
 			if (hr == 0) break;
 			if (hr != (HRESULT)eError::NotFound) nNoDoc = 0; else if (++nNoDoc < 20) i = -1; else break;
 		}
-		WinFlags::Set(wTL, eWinFlags::AccEnabled);
 		//never mind: possible timeout with large pages or at Chrome startup. Can't wait so long here. Let scripts wait.
+
+		WinFlags::Set(wTL, eWinFlags::AccEnabled);
 	}
 
 	//Called by elmFinder before find or find-wait in window (not in elm).

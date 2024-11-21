@@ -1,6 +1,3 @@
-//TODO: in some apps in some cases pastes old clipboard text.
-//	Try: restore clipboard async, in new foreground thread.
-
 namespace Au;
 
 /// <summary>
@@ -21,11 +18,11 @@ public static class clipboard {
 	public static void clear() {
 		using (new OpenClipboard_(false)) EmptyClipboard_();
 	}
-
+	
 	internal static void EmptyClipboard_() {
 		if (!Api.EmptyClipboard()) Debug.Assert(false);
 	}
-
+	
 	/// <summary>
 	/// Gets or sets clipboard text.
 	/// </summary>
@@ -46,7 +43,7 @@ public static class clipboard {
 			}
 		}
 	}
-
+	
 	//Sets text (string) or multi-format data (Data). Clipboard must be open.
 	static void _SetClipboard(object data, bool renderLater) {
 		switch (data) {
@@ -59,7 +56,7 @@ public static class clipboard {
 			break;
 		}
 	}
-
+	
 	/// <summary>
 	/// Calls API <c>SetClipboardData("Clipboard Viewer Ignore")</c>. Clipboard must be open.
 	/// Then clipboard manager/viewer/etc programs that are aware of this convention don't try to get our clipboard data while we are pasting.
@@ -69,14 +66,14 @@ public static class clipboard {
 		Api.SetClipboardData(ClipFormats.ClipboardViewerIgnore, Api.GlobalAlloc(Api.GMEM_MOVEABLE | Api.GMEM_ZEROINIT, 1));
 		//tested: hMem cannot be default(IntPtr) or 0 bytes.
 	}
-
+	
 	/// <summary>
 	/// Gets the selected text from the focused app using the clipboard.
 	/// </summary>
 	/// <param name="cut">Use <c>Ctrl+X</c>.</param>
 	/// <param name="options">
 	/// Options. If <c>null</c> (default), uses <see cref="opt.key"/>.
-	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.KeySpeedClipboard"/>. Does not use <see cref="OKey.Hook"/>.
+	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.KeySpeedClipboard"/>, <see cref="OKey.NoBlockInput"/>. Does not use <see cref="OKey.Hook"/>.
 	/// </param>
 	/// <param name="hotkey">Keys to use instead of <c>Ctrl+C</c> or <c>Ctrl+X</c>. Example: <c>hotkey: "Ctrl+Shift+C"</c>. Overrides <i>cut</i>.</param>
 	/// <param name="timeoutMS">Max time to wait until the focused app sets clipboard data, in milliseconds. If 0 (default), the timeout is 3000 ms. The function waits up to 10 times longer if the window is hung.</param>
@@ -115,7 +112,7 @@ public static class clipboard {
 			return false;
 		}
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="copy"/> and handles exceptions.
 	/// </summary>
@@ -137,7 +134,7 @@ public static class clipboard {
 			return false;
 		}
 	}
-
+	
 	/// <summary>
 	/// Gets data of any formats from the focused app using the clipboard and a callback function.
 	/// </summary>
@@ -162,14 +159,14 @@ public static class clipboard {
 		_Copy(cut, hotkey, options, timeoutMS, () => { r = callback(); });
 		return r;
 	}
-
+	
 	///
 	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete
 	public static void copyData(Action callback, bool cut = false, OKey options = null, KHotkey hotkey = default) {
 		Not_.Null(callback);
 		_Copy(cut, hotkey, options, 0, callback);
 	}
-
+	
 	static string _Copy(bool cut, KHotkey hotkey, OKey options, int timeoutMS, Action callback = null) {
 		string R = null;
 		var optk = options ?? opt.key;
@@ -181,18 +178,18 @@ public static class clipboard {
 		try {
 			if (!optk.NoBlockInput) bi.Start(BIEvents.Keys);
 			keys.Internal_.ReleaseModAndDisableModMenu();
-
+			
 			disableCH.Disable(); //fast
-
+			
 			var save = new _SaveRestore();
 			if (restore) {
 				save.Save();
 				oc.Close(false); //close clipboard; don't destroy our clipboard owner window
 			}
-
+			
 			wnd wFocus = keys.Internal_.GetWndFocusedOrActive(requireFocus: true);
 			listener = new _ClipboardListener(false, null, oc.WndClipOwner, wFocus);
-
+			
 			if (!Api.AddClipboardFormatListener(oc.WndClipOwner)) throw new AuException();
 			var ctrlC = new keys.Internal_.SendCopyPaste();
 			try {
@@ -203,7 +200,7 @@ public static class clipboard {
 					if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, cut ? KKey.X : KKey.C);
 					ctrlC.Press(hotkey, optk, wFocus);
 				}
-
+				
 				//wait until the app sets clipboard text
 				listener.Wait(ref ctrlC, timeoutMS);
 			}
@@ -211,9 +208,9 @@ public static class clipboard {
 				ctrlC.Release();
 				Api.RemoveClipboardFormatListener(oc.WndClipOwner);
 			}
-
+			
 			wFocus.SendTimeout(500, out _, 0); //workaround: in SharpDevelop and ILSpy (both WPF), API GetClipboardData takes ~1 s. Need to sleep min 10 ms or send message.
-
+			
 			if (callback != null) {
 				callback();
 				if (restore) oc.Reopen();
@@ -221,7 +218,7 @@ public static class clipboard {
 				oc.Reopen();
 				R = clipboardData.GetText_(0);
 			}
-
+			
 			if (restore) save.Restore();
 		}
 		finally {
@@ -233,7 +230,7 @@ public static class clipboard {
 		if (R == null && callback == null) throw new AuException("*copy text"); //no text in the clipboard. Probably not a text control; if text control but empty selection, usually throws in Wait, not here, because the target app then does not use the clipboard.
 		return R;
 	}
-
+	
 	/// <summary>
 	/// Pastes text or HTML into the focused app using the clipboard.
 	/// </summary>
@@ -244,7 +241,7 @@ public static class clipboard {
 	/// </param>
 	/// <param name="options">
 	/// Options. If <c>null</c> (default), uses <see cref="opt.key"/>.
-	/// Uses <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.PasteWorkaround"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.SleepFinally"/>, <see cref="OKey.Hook"/>, <see cref="OKey.KeySpeedClipboard"/>.
+	/// Uses <see cref="OKey.PasteSleep"/>, <see cref="OKey.RestoreClipboard"/>, <see cref="OKey.PasteWorkaround"/>, <see cref="OKey.KeySpeedClipboard"/>, <see cref="OKey.NoBlockInput"/>, <see cref="OKey.Hook"/>.
 	/// </param>
 	/// <param name="hotkey">Keys to use instead of <c>Ctrl+V</c>. Example: <c>hotkey: "Ctrl+Shift+V"</c>.</param>
 	/// <param name="timeoutMS">Max time to wait until the focused app gets clipboard data, in milliseconds. If 0 (default), the timeout is 3000 ms. The function waits up to 10 times longer if the window is hung.</param>
@@ -271,7 +268,7 @@ public static class clipboard {
 		_Paste(data, options, hotkey, timeoutMS);
 	}
 	//problem: fails to paste in VMware player. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
-
+	
 	/// <summary>
 	/// Calls <see cref="paste"/> and handles exceptions.
 	/// </summary>
@@ -291,7 +288,7 @@ public static class clipboard {
 			return false;
 		}
 	}
-
+	
 	/// <summary>
 	/// Calls <see cref="paste"/> and handles exceptions.
 	/// </summary>
@@ -311,7 +308,7 @@ public static class clipboard {
 			return false;
 		}
 	}
-
+	
 	/// <summary>
 	/// Pastes data added to a <see cref="clipboardData"/> variable into the focused app using the clipboard.
 	/// </summary>
@@ -326,7 +323,7 @@ public static class clipboard {
 		Not_.Null(data);
 		_Paste(data, options, hotkey, timeoutMS);
 	}
-
+	
 	//rejected. Should use some UI-created/saved data containing all three formats.
 	//public static void pasteRichText(string text, string rtf, string html = null, OKey options = null)
 	//{
@@ -337,7 +334,7 @@ public static class clipboard {
 	//	if(a.Count == 0) return;
 	//	_Paste(a, options);
 	//}
-
+	
 	static void _Paste(object data, OKey options, KHotkey hotkey, int timeoutMS) {
 		var wFocus = keys.Internal_.GetWndFocusedOrActive(requireFocus: true);
 		var optk = options ?? opt.key;
@@ -347,11 +344,8 @@ public static class clipboard {
 			optk = optk.GetHookOptionsOrThis_(wFocus);
 			Paste_(data, optk, wFocus, hotkey, timeoutMS);
 		}
-
-		int sleepFinally = optk.SleepFinally;
-		if (sleepFinally > 0) keys.Internal_.Sleep(sleepFinally);
 	}
-
+	
 	/// <summary>
 	/// Used by <see cref="clipboard"/> and <see cref="keys"/>.
 	/// The caller should block user input (if need), release modifier keys, get <i>optk</i>/<i>wFocus</i>, sleep finally (if need).
@@ -360,7 +354,7 @@ public static class clipboard {
 	internal static void Paste_(object data, OKey optk, wnd wFocus, KHotkey hotkey = default, int timeoutMS = 0) {
 		bool isConsole = wFocus.IsConsole;
 		List<KKey> andKeys = null;
-
+		
 		if (optk.PasteWorkaround && data is string s && !isConsole) {
 			var s2 = s.TrimEnd("\r\n\t ");
 			if (s2 != s) {
@@ -381,18 +375,18 @@ public static class clipboard {
 				//	Also some apps may not fully support our RTF and add different text, eg '?' for non-ASCII chars.
 			}
 		}
-
-		bool sync = true; //FUTURE: option to turn off, depending on window.
+		
+		bool sync = true; //CONSIDER: option to turn off, depending on window.
 		_ClipboardListener listener = null;
 		_DisableClipboardHistory disableCH = default;
 		var oc = new OpenClipboard_(true);
+		bool restore = optk.RestoreClipboard;
+		_SaveRestore save = default;
 		try {
 			disableCH.Disable(); //fast
-
-			bool restore = optk.RestoreClipboard;
-			var save = new _SaveRestore();
+			
 			if (restore) save.Save();
-
+			
 			EmptyClipboard_();
 			_SetClipboardData_ClipboardViewerIgnore();
 			_SetClipboard(data, renderLater: sync);
@@ -401,7 +395,9 @@ public static class clipboard {
 			//info:
 			//	oc ctor creates a temporary message-only clipboard owner window. Its wndproc initially is DefWindowProc.
 			//	listener ctor subclasses it. Its wndproc receives WM_RENDERFORMAT which sets clipboard data etc.
-
+			
+			//PasteSync_?.Start(new(wFocus, optk, data));
+			
 			var ctrlV = new keys.Internal_.SendCopyPaste();
 			try {
 				if (isConsole) {
@@ -411,41 +407,46 @@ public static class clipboard {
 					if (hotkey.Key == 0) hotkey = new(KMod.Ctrl, KKey.V);
 					ctrlV.Press(hotkey, optk, wFocus, andKeys: andKeys);
 				}
-
+				
 				//wait until the app gets clipboard data
 				if (sync) {
 					listener.Wait(ref ctrlV, timeoutMS);
 					if (listener.FailedToSetData != null) throw new AuException(listener.FailedToSetData.Message);
 					if (listener.IsBadWindow) sync = false;
 				}
-				if (!sync) {
-					keys.Internal_.Sleep(keys.Internal_.LimitSleepTime(optk.KeySpeedClipboard)); //if too long, may autorepeat, eg BlueStacks after 500 ms
-				}
+				
+				keys.Internal_.Sleep(optk.KeySpeedClipboard);
+				//rejected: subtract the time already waited in listener.Wait.
+				//never mind: if too long, in some apps may autorepeat, eg BlueStacks after 500 ms. Rare.
 			}
 			finally {
 				ctrlV.Release();
 			}
-
-			if (restore && !save.IsSaved) restore = false;
-
-			//CONSIDER: optk.SleepClipboard. If 0, uses smart sync, else simply sleeps.
-			for (int i = 0, n = sync ? 3 : (restore ? 25 : 15); i < n; i++) {
-				wFocus.SendTimeout(1000, out _, 0, flags: 0);
-				keys.Internal_.Sleep(i + 3);
-
-				//info: repeats this min 3 times as a workaround for this Dreamweaver problem:
-				//	First time after starting DW, if several Paste called in loop, the first pasted text is of the second Paste.
-			}
-
-			if (restore && oc.Reopen(true)) save.Restore();
+			
+			wFocus.SendTimeout(1000, out _, 0, flags: 0); //can help with some apps, but many apps eg browsers are async
+			
+			int sleep = optk.PasteSleep; if (!sync && sleep < 500) sleep = (sleep + 500) / 2;
+			keys.Internal_.Sleep(sleep);
+			
+			//PasteSync_?.End();
 		}
 		finally {
+			if (restore && save.IsSaved) {
+				if (oc.Reopen(true)) save.Restore();
+			}
 			oc.Dispose();
 			disableCH.Restore();
 		}
 		GC.KeepAlive(listener);
 	}
-
+	
+	//internal static IPasteSync_ PasteSync_ { get; set; }
+	//internal interface IPasteSync_ {
+	//	void Start(PasteSyncArgs_ p);
+	//	void End();
+	//}
+	//internal record class PasteSyncArgs_(wnd wFocus, OKey optk, object data);
+	
 	/// <summary>
 	/// Waits until the target app gets (when pasting) or sets (when copying) clipboard text.
 	/// For it subclasses our clipboard owner window and uses clipboard messages. Does not unsubclass.
@@ -456,24 +457,24 @@ public static class clipboard {
 		WNDPROC _wndProc;
 		//wnd _wPrevClipViewer;
 		wnd _wFocus;
-
+		
 		/// <summary>
 		/// The clipboard message has been received. Probably the target window responded to the <c>Ctrl+C</c> or <c>Ctrl+V</c>.
 		/// When pasting, it is unreliable because of clipboard viewers/managers/etc. The caller also must check <b>IsBadWindow</b>.
 		/// </summary>
 		public bool Success => waitVar;
-
+		
 		/// <summary>
 		/// When pasting, <c>true</c> if probably not the target process retrieved clipboard data. Probably a clipboard viewer/manager/etc.
 		/// Not used when copying.
 		/// </summary>
 		public bool IsBadWindow;
-
+		
 		/// <summary>
 		/// Exception thrown/caught when failed to set clipboard data.
 		/// </summary>
 		public Exception FailedToSetData;
-
+		
 		/// <summary>
 		/// Subclasses <i>clipOwner</i>.
 		/// </summary>
@@ -487,7 +488,7 @@ public static class clipboard {
 			_wndProc = _WndProc;
 			_wFocus = wFocus;
 			WndUtil.SubclassUnsafe_(clipOwner, _wndProc);
-
+			
 			//rejected: use SetClipboardViewer to block clipboard managers/viewers/etc. This was used in QM2.
 			//	Nowadays most such programs don't use SetClipboardViewer. They use AddClipboardFormatListener+WM_CLIPBOARDUPDATE.
 			//	known apps that have clipboard viewer installed with SetClipboardViewer:
@@ -496,7 +497,7 @@ public static class clipboard {
 			//_wPrevClipViewer = Api.SetClipboardViewer(clipOwner);
 			//print.it(_wPrevClipViewer);
 		}
-
+		
 		/// <summary>
 		/// Waits until the target app gets (when pasting) or sets (when copying) clipboard text.
 		/// Throws <b>AuException</b> on timeout (default 3 s normally, 28 s if the target window is hung).
@@ -515,10 +516,10 @@ public static class clipboard {
 				_wFocus.SendTimeout(t * 10, out _, 0, flags: 0);
 			}
 		}
-
+		
 		nint _WndProc(wnd w, int message, nint wParam, nint lParam) {
 			//WndUtil.PrintMsg(w, message, wParam, lParam);
-
+			
 			switch (message) {
 			//case Api.WM_DESTROY:
 			//	Api.ChangeClipboardChain(w, _wPrevClipViewer);
@@ -526,14 +527,14 @@ public static class clipboard {
 			case Api.WM_RENDERFORMAT:
 				if (_paste && !Success) {
 					IsBadWindow = !_IsTargetWindow();
-
+					
 					//note: need to set clipboard data even if bad window.
 					//	Else the clipboard program may retry in loop. Eg Ditto. Then often pasting fails.
 					//	If IsBadWindow, we'll then sleep briefly.
 					//	Good clipboard programs get clipboard data with a delay. Therefore usually they don't interfere, unless the target app is very slow.
 					//		Eg Windows Clipboard History 200 ms. Eg Ditto default is 100 ms and can be changed.
 					//	Also, after setting clipboard data we cannot wait for good window, because we'll not receive second WM_RENDERFORMAT.
-
+					
 					try { _SetClipboard(_data, false); }
 					catch (Exception ex) { FailedToSetData = ex; } //cannot throw in wndproc, will throw later
 					waitVar = true;
@@ -544,16 +545,16 @@ public static class clipboard {
 				if (!_paste) waitVar = true;
 				return 0;
 			}
-
+			
 			return Api.DefWindowProc(w, message, wParam, lParam);
-
+			
 			//Returns false if probably not the target app reads from the clipboard. Probably a clipboard viewer/manager/etc.
 			bool _IsTargetWindow() {
 				wnd wOC = Api.GetOpenClipboardWindow();
-
+				
 				//int color = 0; if(wOC != _wFocus) color = wOC.ProcessId == _wFocus.ProcessId ? 0xFF0000 : 0xFF;
 				//print.it($"<><c {color}>{wOC}</c>");
-
+				
 				if (wOC == _wFocus) return true;
 				if (wOC.Is0) return true; //tested: none of tested apps calls OpenClipboard(0)
 				if (wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers too, eg Ditto.
@@ -564,12 +565,12 @@ public static class clipboard {
 					//tested: no problems on Win8.1
 				}
 				//tested: WinUI3 (cn "WinUIDesktopWin32WindowClass"): wOC != _wFocus, but same process.
-
+				
 				//CONSIDER: option to return true for user-known windows, eg using a callback. Print warning that includes wOC info.
-
+				
 				Debug_.Print(wOC.ToString());
 				return false;
-
+				
 				//BlueStacks problems:
 				//	Uses an aggressive viewer. Always debugprints while it is running, even when other apps are active.
 				//	Sometimes pastes old text, usually after starting BlueStacks or after some time of not using it.
@@ -579,7 +580,7 @@ public static class clipboard {
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Opens and closes clipboard using API <b>OpenClipboard</b> and <b>CloseClipboard</b>.
 	/// Constructor tries to open for 10 s, then throws <b>AuException</b>.
@@ -590,9 +591,9 @@ public static class clipboard {
 	internal struct OpenClipboard_ : IDisposable {
 		bool _isOpen;
 		wnd _w;
-
+		
 		public wnd WndClipOwner => _w;
-
+		
 		public OpenClipboard_(bool createOwner, bool noOpenNow = false) {
 			_isOpen = false;
 			_w = default;
@@ -602,7 +603,7 @@ public static class clipboard {
 			}
 			if (!noOpenNow) Reopen();
 		}
-
+		
 		/// <summary>
 		/// Opens again.
 		/// Must be closed.
@@ -624,7 +625,7 @@ public static class clipboard {
 			_isOpen = true;
 			return true;
 		}
-
+		
 		public void Close(bool destroyOwnerWindow) {
 			if (_isOpen) {
 				Api.CloseClipboard();
@@ -635,22 +636,22 @@ public static class clipboard {
 				_w = default;
 			}
 		}
-
+		
 		public void Dispose() => Close(true);
 	}
-
+	
 	/// <summary>
 	/// Saves and restores clipboard data.
 	/// Clipboard must be open. Don't need to call <b>EmptyClipboard</b> before <b>Restore</b>.
 	/// </summary>
 	struct _SaveRestore {
 		Dictionary<int, byte[]> _data;
-
+		
 		public void Save(bool debug = false) {
 			var p1 = new perf.Instance(); //will need if debug==true. Don't delete the perf statements, they are used by a public function.
 			bool allFormats = OKey.RestoreClipboardAllFormats || debug;
 			string[] exceptFormats = OKey.RestoreClipboardExceptFormats;
-
+			
 			for (int format = 0; 0 != (format = Api.EnumClipboardFormats(format));) {
 				bool skip = false; string name = null;
 				if (!allFormats) {
@@ -672,13 +673,13 @@ public static class clipboard {
 					} else if (format < 0xC000) { //CF_OWNERDISPLAY, DSP, GDI, private
 						skip = true; //never mind. Not auto-freed, etc. Rare.
 					} //else registered
-
+					
 					if (!skip && exceptFormats != null && exceptFormats.Length != 0) {
 						name = ClipFormats.GetName(format);
 						foreach (string s in exceptFormats) if (s.Eqi(name)) { skip = true; break; }
 					}
 				}
-
+				
 				if (debug) {
 					name ??= ClipFormats.GetName(format);
 					if (skip) print.it($"{name,-62}  restore=False");
@@ -686,21 +687,21 @@ public static class clipboard {
 					//note: we don't call GetClipboardData for formats in exceptFormats, because the conditions must be like when really saving. Time of GetClipboardData(format2) may depend on whether called GetClipboardData(format1).
 				}
 				if (skip) continue;
-
+				
 				var data = Api.GetClipboardData(format);
-
+				
 				int size = (data == default) ? 0 : (int)Api.GlobalSize(data);
 				if (size == 0 || size > 10 * 1024 * 1024) skip = true;
 				//If data == default, probably the target app did SetClipboardData(NULL) but did not render data on WM_RENDERFORMAT.
 				//	If we try to save/restore, we'll receive WM_RENDERFORMAT too. It can be dangerous.
-
+				
 				if (debug) {
 					p1.Next();
 					print.it($"{name,-32}  time={p1.TimeTotal,-8}  size={size,-8}  restore={!skip}");
 					continue;
 				}
 				if (skip) continue;
-
+				
 				var b = Api.GlobalLock(data);
 				Debug.Assert(b != default); if (b == default) continue;
 				try {
@@ -712,7 +713,7 @@ public static class clipboard {
 				finally { Api.GlobalUnlock(data); }
 			}
 		}
-
+		
 		public void Restore() {
 			if (_data == null) return;
 			EmptyClipboard_();
@@ -728,10 +729,10 @@ public static class clipboard {
 				if (b == default) Api.GlobalFree(h);
 			}
 		}
-
+		
 		public bool IsSaved => _data != null;
 	}
-
+	
 	/// <summary>
 	/// Temporarily disables Windows 10 Clipboard History.
 	/// Note: before disabling, we must open clipboard, else Clipboard History could be suspended while it has clipboard open.
@@ -772,11 +773,11 @@ public static class clipboard {
 		//Tested with Ditto too.
 		//	Without workaround sometimes fails because the target app cannot open clipboard.
 		//	With this workaround (hook) never fails.
-
+		
 #if true
 		IntPtr _hh;
 		//static int s_nhooks; //test how many hooks when eg pasting in loop with small sleep
-
+		
 		public void Disable() {
 			//if (!osVersion.minWin10_1809 || osVersion.Is32BitProcessAnd64BitOS) return; //no, let's block clipboard viewers on all OS
 			if (osVersion.is32BitProcessAnd64BitOS) return;
@@ -785,7 +786,7 @@ public static class clipboard {
 			Debug.Assert(_hh != default);
 			//print.it(++s_nhooks); //max 8 when all delays removed in script. Max 4-5 with default options. Max 3-4 with 10.ms() in loop.
 		}
-
+		
 		public void Restore() {
 			if (_hh == default) return;
 			var hh = _hh; _hh = default;
@@ -819,7 +820,7 @@ public static class clipboard {
 		}
 #endif
 	}
-
+	
 	internal static void PrintClipboard_() {
 		print.it("---- Clipboard ----");
 		using var oc = new OpenClipboard_(true);

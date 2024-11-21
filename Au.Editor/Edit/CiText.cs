@@ -637,7 +637,7 @@ class CiText {
 	const SymbolDisplayMiscellaneousOptions s_miscDisplayOptions =
 		SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral
 		| SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
-		//| SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier //?
+		| SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier //? //info: added 2024-11-21. Test more.
 		//| SymbolDisplayMiscellaneousOptions.IncludeNotNullableReferenceTypeModifier //!
 		| SymbolDisplayMiscellaneousOptions.RemoveAttributeSuffix
 		| SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName

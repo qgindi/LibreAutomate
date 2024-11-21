@@ -521,7 +521,7 @@ void {{name}}() {
 			IMethodSymbol mPrev = null;
 			foreach (var v in k) {
 				if (v is ILocalSymbol loc && loc.Type == ntToolbar) {
-					if (loc.DeclaringSyntaxReferences[0].GetSyntax() is VariableDeclaratorSyntax vd && vd.Initializer is EqualsValueClauseSyntax evc && evc.Value is ObjectCreationExpressionSyntax or InvocationExpressionSyntax) {
+					if (loc.DeclaringSyntaxReferences[0].GetSyntax() is VariableDeclaratorSyntax vd && vd.Initializer is EqualsValueClauseSyntax evc && evc.Value is BaseObjectCreationExpressionSyntax or InvocationExpressionSyntax) {
 						var m = loc.ContainingSymbol as IMethodSymbol;
 						if (m == mPrev) continue; mPrev = m; //get single toolbar in function
 						var t = new _Toolbar { method = m, location = m.Locations[0], Name = m.Name, fn = f, tree = tree, variable = loc, };

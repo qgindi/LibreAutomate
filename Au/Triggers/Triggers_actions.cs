@@ -217,7 +217,7 @@ class TriggerActionThreads {
 		//perf.first();
 		Action actionWrapper = () => {
 			var o = trigger.options;
-			var oldOpt = o.thread == TOThread.New ? default : opt.scope.all(inherit: false);
+			var oldOpt = o.thread is TOThread.New or TOThread.Pool ? default : opt.scope.all(inherit: true);
 			try {
 				_MuteMod(ref muteMod);
 				

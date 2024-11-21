@@ -13,7 +13,7 @@ keys.send("^Text."); //send text as hardware keys
 
 keys.send("Ctrl+A Del", "!Text", "Ctrl+S", "!filename.txt");
 
-/// Change speed and other options. To quickly insert code can be used <b>speedSnippet<>.
+/// Change speed and other options. To insert code can be used <b>speedOptSnippet<>.
 
 opt.key.KeySpeed = 50;
 opt.key.TextSpeed = 20;

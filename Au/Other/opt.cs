@@ -204,12 +204,20 @@ namespace Au.Types {
 	/// opt.mouse.MoveSpeed = 30;
 	/// ]]></code>
 	/// </example>
-	public class OMouse {
+	public sealed class OMouse {
 		int _threadId;
 		static AsyncLocal<OMouse> s_ambient = new();
 		
 		internal static OMouse Ambient_ {
-			get => s_ambient.Value ??= new() { _threadId = Environment.CurrentManagedThreadId };
+			get {
+				var threadId = Environment.CurrentManagedThreadId;
+				if (s_ambient.Value is { } v) {
+					if (v._threadId != threadId) s_ambient.Value = v = new(v) { _threadId = threadId };
+				} else {
+					s_ambient.Value = v = new() { _threadId = threadId };
+				}
+				return v;
+			}
 			set { Debug.Assert(value?._threadId != 0); s_ambient.Value = value; } //used only to restore scope
 		}
 		
@@ -217,17 +225,6 @@ namespace Au.Types {
 			var old = s_ambient.Value;
 			s_ambient.Value = (old != null && inherit) ? new(old) { _threadId = Environment.CurrentManagedThreadId } : null; //lazy
 			return old;
-		}
-		
-		OMouse _ThisOrClone() {
-			var r = this;
-			if (_threadId != 0 && Environment.CurrentManagedThreadId is var tid && tid != _threadId) s_ambient.Value = r = new(this) { _threadId = tid };
-			return r;
-		}
-		
-		OMouse _ThisOrClone(int value, int max) {
-			if ((uint)value > max) throw new ArgumentOutOfRangeException(null, "Max " + max);
-			return _ThisOrClone();
 		}
 		
 		struct _Fields { //makes easier to init, reset or copy fields
@@ -250,6 +247,11 @@ namespace Au.Types {
 			}
 		}
 		
+		int _Set(int value, int max) {
+			if ((uint)value > max) throw new ArgumentOutOfRangeException(null, "Max " + max);
+			return value;
+		}
+		
 		/// <summary>
 		/// How long to wait (milliseconds) after sending each mouse button down or up event (2 events for click, 4 for double-click).
 		/// Default: 20.
@@ -263,7 +265,7 @@ namespace Au.Types {
 		/// </example>
 		public int ClickSpeed {
 			get => _f.ClickSpeed;
-			set => _ThisOrClone(value, 1000)._f.ClickSpeed = value;
+			set => _f.ClickSpeed = _Set(value, 1000);
 		}
 		
 		/// <summary>
@@ -284,7 +286,7 @@ namespace Au.Types {
 		/// </example>
 		public int MoveSpeed {
 			get => _f.MoveSpeed;
-			set => _ThisOrClone(value, 10000)._f.MoveSpeed = value;
+			set => _f.MoveSpeed = _Set(value, 10000);
 		}
 		
 		/// <summary>
@@ -303,7 +305,7 @@ namespace Au.Types {
 		/// </example>
 		public int ClickSleepFinally {
 			get => _f.ClickSleepFinally;
-			set => _ThisOrClone(value, 10000)._f.ClickSleepFinally = value;
+			set => _f.ClickSleepFinally = _Set(value, 10000);
 		}
 		
 		/// <summary>
@@ -322,7 +324,7 @@ namespace Au.Types {
 		/// </example>
 		public int MoveSleepFinally {
 			get => _f.MoveSleepFinally;
-			set => _ThisOrClone(value, 1000)._f.MoveSleepFinally = value;
+			set => _f.MoveSleepFinally = _Set(value, 1000);
 		}
 		
 		/// <summary>
@@ -348,7 +350,7 @@ namespace Au.Types {
 		/// </example>
 		public bool Relaxed {
 			get => _f.Relaxed;
-			set => _ThisOrClone()._f.Relaxed = value;
+			set => _f.Relaxed = value;
 		}
 		
 		///
@@ -370,12 +372,20 @@ namespace Au.Types {
 	/// Triggers.Options.BeforeAction = o => { opt.key.KeySpeed = 50; };
 	/// ]]></code>
 	/// </example>
-	public class OKey {
+	public sealed class OKey {
 		int _threadId;
 		static AsyncLocal<OKey> s_ambient = new();
 		
 		internal static OKey Ambient_ {
-			get => s_ambient.Value ??= new() { _threadId = Environment.CurrentManagedThreadId };
+			get {
+				var threadId = Environment.CurrentManagedThreadId;
+				if (s_ambient.Value is { } v) {
+					if (v._threadId != threadId) s_ambient.Value = v = new(v) { _threadId = threadId };
+				} else {
+					s_ambient.Value = v = new() { _threadId = threadId };
+				}
+				return v;
+			}
 			set { Debug.Assert(value?._threadId != 0); s_ambient.Value = value; } //used only to restore scope
 		}
 		
@@ -383,17 +393,6 @@ namespace Au.Types {
 			var old = s_ambient.Value;
 			s_ambient.Value = (old != null && inherit) ? new(old) { _threadId = Environment.CurrentManagedThreadId } : null; //lazy
 			return old;
-		}
-		
-		OKey _ThisOrClone() {
-			var r = this;
-			if (_threadId != 0 && Environment.CurrentManagedThreadId is var tid && tid != _threadId) s_ambient.Value = r = new(this) { _threadId = tid };
-			return r;
-		}
-		
-		OKey _ThisOrClone(int value, int max) {
-			if ((uint)value > max) throw new ArgumentOutOfRangeException(null, "Max " + max);
-			return _ThisOrClone();
 		}
 		
 		/// <summary>
@@ -411,7 +410,7 @@ namespace Au.Types {
 		
 		struct _Fields { //makes easier to init, reset or copy fields
 			public _Fields() { }
-			public int TextSpeed, KeySpeed = 2, KeySpeedClipboard = 5, SleepFinally = 10, PasteLength = 200;
+			public int TextSpeed, KeySpeed = 2, KeySpeedClipboard = 5, SleepFinally = 10, PasteLength = 200, PasteSleep = 100/*, PasteRestoreAfter*/;
 			public OKeyText TextHow = OKeyText.Characters;
 			public bool TextShiftEnter, PasteWorkaround, RestoreClipboard = true, NoModOff, NoCapsOff, NoBlockInput;
 			public Action<OKeyHookData> Hook;
@@ -430,6 +429,11 @@ namespace Au.Types {
 			return R;
 		}
 		
+		int _Set(int value, int max) {
+			if ((uint)value > max) throw new ArgumentOutOfRangeException(null, "Max " + max);
+			return value;
+		}
+		
 		/// <summary>
 		/// How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="keys.sendt"/>. Also by <see cref="keys.send"/> and similar functions for <c>"!text"</c> arguments.
 		/// Default: 0.
@@ -446,7 +450,7 @@ namespace Au.Types {
 		/// </example>
 		public int TextSpeed {
 			get => _f.TextSpeed;
-			set => _ThisOrClone(value, 1000)._f.TextSpeed = value;
+			set => _f.TextSpeed = _Set(value, 1000);
 		}
 		
 		/// <summary>
@@ -465,15 +469,18 @@ namespace Au.Types {
 		/// </example>
 		public int KeySpeed {
 			get => _f.KeySpeed;
-			set => _ThisOrClone(value, 1000)._f.KeySpeed = value;
+			set => _f.KeySpeed = _Set(value, 1000);
 		}
 		
 		/// <summary>
-		/// How long to wait (milliseconds) between sending <c>Ctrl+V</c> and <c>Ctrl+C</c> keys of clipboard functions (paste, copy).
+		/// How long to wait (milliseconds) between sending clipboard copy/paste keys. For example, when sending <c>Ctrl+V</c>, waits after <c>Ctrl</c>-down and after <c>V</c>-down.
 		/// Default: 5.
 		/// </summary>
 		/// <value>Valid values: 0 - 1000 (1 second).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <remarks>
+		/// With most apps these delays are not necessary. But with some apps/controls <c>Ctrl+V</c> etc may not work without a delay after <c>Ctrl</c>-down or/and after <c>V</c>-down.
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// opt.key.KeySpeedClipboard = 50;
@@ -481,7 +488,7 @@ namespace Au.Types {
 		/// </example>
 		public int KeySpeedClipboard {
 			get => _f.KeySpeedClipboard;
-			set => _ThisOrClone(value, 1000)._f.KeySpeedClipboard = value;
+			set => _f.KeySpeedClipboard = _Set(value, 1000);
 		}
 		
 		/// <summary>
@@ -491,7 +498,7 @@ namespace Au.Types {
 		/// <value>Valid values: 0 - 10000 (10 seconds).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Not used by <see cref="clipboard.copy"/>.
+		/// Not used by <see cref="clipboard"/> class functions.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -500,7 +507,7 @@ namespace Au.Types {
 		/// </example>
 		public int SleepFinally {
 			get => _f.SleepFinally;
-			set => _ThisOrClone(value, 10000)._f.SleepFinally = value;
+			set => _f.SleepFinally = _Set(value, 10000);
 		}
 		
 		/// <summary>
@@ -514,7 +521,7 @@ namespace Au.Types {
 		/// </example>
 		public OKeyText TextHow {
 			get => _f.TextHow;
-			set => _ThisOrClone()._f.TextHow = value;
+			set => _f.TextHow = value;
 		}
 		
 		/// <summary>
@@ -526,7 +533,7 @@ namespace Au.Types {
 		/// </remarks>
 		public bool TextShiftEnter {
 			get => _f.TextShiftEnter;
-			set => _ThisOrClone()._f.TextShiftEnter = value;
+			set => _f.TextShiftEnter = value;
 		}
 		
 		/// <summary>
@@ -541,7 +548,7 @@ namespace Au.Types {
 		/// </example>
 		public int PasteLength {
 			get => _f.PasteLength;
-			set => _ThisOrClone(value, int.MaxValue)._f.PasteLength = value;
+			set => _f.PasteLength = _Set(value, int.MaxValue);
 		}
 		
 		/// <summary>
@@ -558,7 +565,7 @@ namespace Au.Types {
 		/// </example>
 		public bool PasteWorkaround {
 			get => _f.PasteWorkaround;
-			set => _ThisOrClone()._f.PasteWorkaround = value;
+			set => _f.PasteWorkaround = value;
 		}
 		
 		//rejected: rarely used. Eg can be useful for Python programmers. Let call clipboard.paste() explicitly or set the Paste option eg in hook.
@@ -587,8 +594,34 @@ namespace Au.Types {
 		/// </example>
 		public bool RestoreClipboard {
 			get => _f.RestoreClipboard;
-			set => _ThisOrClone()._f.RestoreClipboard = value;
+			set => _f.RestoreClipboard = value;
 		}
+		
+		/// <summary>
+		/// How long to wait (milliseconds) after pasting (before restoring clipboard data, if need).
+		/// Default: 100.
+		/// </summary>
+		/// <value>Valid values: 0 - 10000 (10 seconds).</value>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <remarks>
+		/// This is the minimal wait time. Actually may wait longer; it depends on how the active window responds.
+		/// </remarks>
+		public int PasteSleep {
+			get => _f.PasteSleep;
+			set => _f.PasteSleep = _Set(value, 10000);
+		}
+		
+		//CONSIDER
+		///// <summary>
+		///// After pasting (<see cref="clipboard.paste"/> etc), if <see cref="RestoreClipboard"/> <c>true</c>, restore clipboard data later (asynchronously) after this delay (milliseconds).
+		///// Default: 0.
+		///// </summary>
+		///// <value>Valid values: 0 - 10000 (10 seconds).</value>
+		///// <exception cref="ArgumentOutOfRangeException"></exception>
+		//public int PasteRestoreAfter {
+		//	get => _f.PasteRestoreAfter;
+		//	set => _f.PasteRestoreAfter = _Set(value, 10000);
+		//}
 		
 		#region static RestoreClipboard options
 		
@@ -662,7 +695,7 @@ namespace Au.Types {
 		/// </example>
 		public bool NoModOff {
 			get => _f.NoModOff;
-			set => _ThisOrClone()._f.NoModOff = value;
+			set => _f.NoModOff = value;
 		}
 		
 		/// <summary>
@@ -676,7 +709,7 @@ namespace Au.Types {
 		/// </example>
 		public bool NoCapsOff {
 			get => _f.NoCapsOff;
-			set => _ThisOrClone()._f.NoCapsOff = value;
+			set => _f.NoCapsOff = value;
 		}
 		
 		/// <summary>
@@ -693,7 +726,7 @@ namespace Au.Types {
 		/// </example>
 		public bool NoBlockInput {
 			get => _f.NoBlockInput;
-			set => _ThisOrClone()._f.NoBlockInput = value;
+			set => _f.NoBlockInput = value;
 		}
 		
 		/// <summary>
@@ -724,7 +757,7 @@ namespace Au.Types {
 		/// </example>
 		public Action<OKeyHookData> Hook {
 			get => _f.Hook;
-			set => _ThisOrClone()._f.Hook = value;
+			set => _f.Hook = value;
 		}
 		
 		///
@@ -810,12 +843,20 @@ namespace Au.Types {
 	/// opt.warnings.Verbose = false;
 	/// ]]></code>
 	/// </example>
-	public class OWarnings {
+	public sealed class OWarnings {
 		int _threadId;
 		static AsyncLocal<OWarnings> s_ambient = new();
 		
 		internal static OWarnings Ambient_ {
-			get => s_ambient.Value ??= new() { _threadId = Environment.CurrentManagedThreadId };
+			get {
+				var threadId = Environment.CurrentManagedThreadId;
+				if (s_ambient.Value is { } v) {
+					if (v._threadId != threadId) s_ambient.Value = v = new(v) { _threadId = threadId };
+				} else {
+					s_ambient.Value = v = new() { _threadId = threadId };
+				}
+				return v;
+			}
 			set { Debug.Assert(value?._threadId != 0); s_ambient.Value = value; } //used only to restore scope
 		}
 		
@@ -823,12 +864,6 @@ namespace Au.Types {
 			var old = s_ambient.Value;
 			s_ambient.Value = (old != null && inherit) ? new(old) { _threadId = Environment.CurrentManagedThreadId } : null; //lazy
 			return old;
-		}
-		
-		OWarnings _ThisOrClone() {
-			var r = this;
-			if (_threadId != 0 && Environment.CurrentManagedThreadId is var tid && tid != _threadId) s_ambient.Value = r = new(this) { _threadId = tid };
-			return r;
 		}
 		
 		bool? _verbose;
@@ -856,7 +891,7 @@ namespace Au.Types {
 		/// </example>
 		public bool Verbose {
 			get => (_verbose ??= script.isDebug) == true;
-			set => _ThisOrClone()._verbose = value;
+			set => _verbose = value;
 		}
 		
 		/// <summary>
@@ -881,9 +916,7 @@ namespace Au.Types {
 		/// print.warning("three");
 		/// ]]></code>
 		/// </example>
-		public UsingEndAction Disable(params string[] warningsWild) => _ThisOrClone()._Disable(warningsWild);
-		
-		UsingEndAction _Disable(params string[] warningsWild) {
+		public UsingEndAction Disable(params string[] warningsWild) {
 			_disabledWarnings ??= new List<string>();
 			int restoreCount = _disabledWarnings.Count;
 			_disabledWarnings.AddRange(warningsWild);
@@ -905,12 +938,20 @@ namespace Au.Types {
 	/// Obsolete. Use <see cref="Seconds"/> instead. Some wait functions may still use some <b>OWait</b> properties for backward compatibility.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	public class OWait {
+	public sealed class OWait {
 		int _threadId;
 		static AsyncLocal<OWait> s_ambient = new();
 		
 		internal static OWait Ambient_ {
-			get => s_ambient.Value ??= new() { _threadId = Environment.CurrentManagedThreadId };
+			get {
+				var threadId = Environment.CurrentManagedThreadId;
+				if (s_ambient.Value is { } v) {
+					if (v._threadId != threadId) s_ambient.Value = v = new(v) { _threadId = threadId };
+				} else {
+					s_ambient.Value = v = new() { _threadId = threadId };
+				}
+				return v;
+			}
 			set { Debug.Assert(value?._threadId != 0); s_ambient.Value = value; } //used only to restore scope
 		}
 		
@@ -918,12 +959,6 @@ namespace Au.Types {
 			var old = s_ambient.Value;
 			s_ambient.Value = (old != null && inherit) ? new(old) { _threadId = Environment.CurrentManagedThreadId } : null; //lazy
 			return old;
-		}
-		
-		OWait _ThisOrClone() {
-			var r = this;
-			if (_threadId != 0 && Environment.CurrentManagedThreadId is var tid && tid != _threadId) s_ambient.Value = r = new(this) { _threadId = tid };
-			return r;
 		}
 		
 		internal OWait() { _period = 10; }
@@ -943,7 +978,7 @@ namespace Au.Types {
 		/// </summary>
 		public bool DoEvents {
 			get => _doEvents;
-			set => _ThisOrClone()._doEvents = value;
+			set => _doEvents = value;
 		}
 		bool _doEvents;
 		
@@ -952,7 +987,7 @@ namespace Au.Types {
 		/// </summary>
 		public int Period {
 			get => _period;
-			set => _ThisOrClone()._period = value;
+			set => _period = value;
 		}
 		int _period;
 	}

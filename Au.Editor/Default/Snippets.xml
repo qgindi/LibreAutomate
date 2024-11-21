@@ -280,15 +280,42 @@ if ($1.IsMatch("${2:*Name}")) {
 			<![CDATA[if (keys.isScrollLock) { $0 }]]>
 		</list>
 	</snippet>
-	<snippet name="speedSnippet" info="Change sleep times used by keyboard and mouse functions." more="The snippet contains all speed opt, with default values; remove lines you don't need.">
-		<![CDATA[opt.key.KeySpeed = 1;
+	<snippet name="speedOptSnippet" info="Change sleep times used by mouse, keyboard and clipboard functions.">
+		<list item="All speed options">
+			<![CDATA[//all speed opt, with default values. Delete lines you don't need. Edit values.
+opt.key.KeySpeed = 1;
 opt.key.TextSpeed = 0;
 opt.key.SleepFinally = 10;
+opt.key.PasteSleep = 100;
 opt.key.KeySpeedClipboard = 5;
 opt.mouse.ClickSpeed = 20;
 opt.mouse.ClickSleepFinally = 10;
 opt.mouse.MoveSpeed = 0;
-opt.mouse.MoveSleepFinally = 10;]]>
+opt.mouse.MoveSleepFinally = 10;
+]]>
+		</list>
+		<list item="For windows">
+			<![CDATA[//different options depending on the active window
+opt.key.Hook = k => {
+	var w = k.w.Window;
+	//print.it(w);
+	string name = w.Name, cn = w.ClassName;
+	if (name.Like("*Word Online - Google Chrome")) { //example
+		k.optk.TextHow = OKeyText.Paste;
+		k.optk.PasteSleep = 400;
+	}
+	//else if (...) { ... }
+	//else if (...) { ... }
+};
+]]>
+		</list>
+		<list item="For triggers">
+			<![CDATA[//options for trigger actions of triggers added afterwards
+Triggers.Options.BeforeAction = o => {
+	//set opt options here
+};
+]]>
+		</list>
 	</snippet>
 	<snippet name="perfSnippet" info="Measure code speed.">
 		<list item="&amp;Static">

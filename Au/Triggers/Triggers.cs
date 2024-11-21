@@ -112,11 +112,15 @@ namespace Au.Triggers;
 /// 
 /// //how to set opt options for trigger actions
 /// 
-/// //opt.key.TextHow = OKeyText.Paste; //no, it will not work
-/// Triggers.Options.BeforeAction = o => { opt.key.TextHow = OKeyText.Paste; }; //the correct way. Sets opt before executing an action.
+/// Triggers.Options.BeforeAction = o => { opt.key.TextHow = OKeyText.Paste; }; //sets opt before executing an action
 /// ts["#p1"] = "text 1";
 /// ts["#p2"] = "text 2";
 /// Triggers.Options.BeforeAction = null;
+/// 
+/// //initial opt for ALL trigger actions also can be set ONCE when adding triggers. Use Triggers.Options.BeforeAction if want to override some options for some trigger actions.
+/// 
+/// opt.key.TextHow = OKeyText.Paste;
+/// //then add all triggers
 /// 
 /// //how to stop and disable/enable triggers
 /// 

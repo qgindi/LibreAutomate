@@ -76,11 +76,11 @@ partial class CiStyling {
 		public TStyle XmlDocText = 0x408000; //green
 		public TStyle XmlDocTag = 0x808080; //gray
 		public TStyle RxText = 0xA07040;
-		public TStyle RxMeta = new(0xBDD8FF, true); //TODO: blue color bad. Interferes with selection etc.
-		public TStyle RxChars = new(0xCBFF7D, true);
-		public TStyle RxOption = new(0xFFE47B, true);
+		public TStyle RxMeta = new(0x0060FF, bold: true);
+		public TStyle RxChars = new(0x60A000, bold: true);
+		public TStyle RxOption = new(0xFF4040, bold: true);
 		public TStyle RxEscape = 0xFF60FF;
-		public TStyle RxCallout = new(0xFF8060, true);
+		public TStyle RxCallout = new(0xFF8060, back: true);
 		public TStyle RxComment = 0x808080;
 		
 		public TStyle LineNumber = 0x808080;
