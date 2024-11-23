@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0-windows</TargetFrameworks>
-		<!--<TargetFrameworks>net8.0-windows;net6.0-windows</TargetFrameworks>-->
+		<TargetFramework>net9.0-windows</TargetFramework>
 		<UseWindowsForms>true</UseWindowsForms>
 		<UseWpf>true</UseWpf>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -17,6 +16,7 @@
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<NoWin32Manifest>true</NoWin32Manifest>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+		<NuGetAudit>False</NuGetAudit>
 	</PropertyGroup>
 
 	<!-- NuGet package. -->

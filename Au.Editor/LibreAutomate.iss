@@ -201,9 +201,9 @@ begin
     Log(GetExceptionMessage);
   end;
   
-  //If the above failed, use this hardcoded URL. This URL is updated for each new .NET 8.0.x version.
+  //If the above failed, use this hardcoded URL. This URL is updated for each new .NET 9.0.x version.
   //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates this string in this .iss file.
-  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/27bcdd70-ce64-4049-ba24-2b14f9267729/d4a435e55182ce5424a7204c2cf2b3ea/windowsdesktop-runtime-8.0.11-win-x64.exe';
+  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/685792b6-4827-4dca-a971-bce5d7905170/1bf61b02151bc56e763dc711e45f0e1e/windowsdesktop-runtime-9.0.0-win-x64.exe';
   
   //rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
   //url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';
@@ -213,7 +213,7 @@ begin
     
   Result := true;
   setupFile := ExtractFileName(url);
-  info1 := 'Installing .NET 8 Desktop Runtime x64';
+  info1 := 'Installing .NET 9 Desktop Runtime x64';
   info2 := 'If stopped or failed now, will need to download/install it later. Size ~55 MB.';
   
   DownloadPage := CreateDownloadPage(info1, info2, nil);

@@ -98,7 +98,7 @@ class CiSignature {
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
 					//print.it(p);
-					var r2 = await p.GetItemsAsync(cd.document, cd.pos, trigger, MemberDisplayOptions.Default, cancelToken).ConfigureAwait(false);
+					var r2 = await p.GetItemsAsync(cd.document, cd.pos, trigger, default, cancelToken).ConfigureAwait(false);
 					//never mind: GetItemsAsync may throw exception. Rare.
 					
 					if (cancelToken.IsCancellationRequested) { /*print.it("IsCancellationRequested");*/ return null; } //often
@@ -174,9 +174,9 @@ class CiSignature {
 		if (iSel < 0) iSel = iSel2;
 		if (iSel < 0) {
 			//r.SelectedItemIndex is null when cannot resolve overloads, eg when arglist is partially typed. Example: wnd.find(1, );
-			iSel = r.SelectedItemIndex ?? (r.ArgumentCount == 0 ? 0 : -1);
+			iSel = r.SelectedItemIndex ?? (r.SyntacticArgumentCount == 0 ? 0 : -1);
 			if (iSel < 0) {
-				for (int i = 0; i < r.Items.Count; i++) if (r.Items[i].Parameters.Length >= r.ArgumentCount) { iSel = i; break; }
+				for (int i = 0; i < r.Items.Count; i++) if (r.Items[i].Parameters.Length >= r.SyntacticArgumentCount) { iSel = i; break; }
 				if (iSel < 0) {
 					for (int i = 0; i < r.Items.Count; i++) if (r.Items[i].IsVariadic) { iSel = i; break; }
 					if (iSel < 0) iSel = 0;
@@ -271,7 +271,7 @@ class CiSignature {
 				}
 				x.Append(b1);
 #endif
-				int iArg = r.ArgumentIndex, lastParam = sh.Parameters.Length - 1;
+				int iArg = r.SemanticParameterIndex, lastParam = sh.Parameters.Length - 1;
 				int selParam = iArg <= lastParam ? iArg : (sh.IsVariadic ? lastParam : -1);
 				if (!r.ArgumentName.NE()) {
 					var pa = sh.Parameters;

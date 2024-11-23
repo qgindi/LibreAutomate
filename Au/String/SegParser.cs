@@ -146,9 +146,6 @@ namespace Au.More {
 		const int c_a1Size = 50;
 		[InlineArray(c_a1Size)]
 		struct string100 { string s; }
-		
-		//rejected. Not useful. Can use LINQ ToArray.
-		//public StartEnd[] ToSegmentArray(int maxCount = -1)
 	}
 }
 

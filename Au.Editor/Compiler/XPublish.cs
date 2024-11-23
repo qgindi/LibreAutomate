@@ -77,8 +77,8 @@ class XPublish {
 		var xpg = new XElement("PropertyGroup");
 		xroot.Add(xpg);
 		
-		_Add(xpg, "TargetFramework", "net8.0-windows");
-#if !NET8_0
+		_Add(xpg, "TargetFramework", "net9.0-windows");
+#if !NET9_0
 #error please update TargetFramework string
 #endif
 		_Add(xpg, "LangVersion", "preview");

@@ -56,7 +56,11 @@ public sealed class CpuUsage : IDisposable {
 			if (_aph == null) _ph.Dispose();
 			else for (int i = 0; i < _aph.Length; i++) _aph[i].Dispose();
 		}
+		GC.SuppressFinalize(this);
 	}
+	
+	///
+	~CpuUsage() { Dispose(); }
 	
 	/// <summary>
 	/// Starts measuring CPU usage.

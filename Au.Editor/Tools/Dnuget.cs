@@ -42,7 +42,7 @@ class DNuget : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize(550, 600).Columns(-1);
 		
 		b.R.StartGrid<KGroupBox>("Install").Columns(0, 76, 0, -1, 0);
-		b.R.Add(out TextBlock _).FormatText($"<a href='https://www.nuget.org'>NuGet</a> package name or PM text:");
+		b.R.Add(out TextBlock _).FormatText($"<a href='https://www.nuget.org'>NuGet</a> package name, or dotnet/PM string:");
 		b.R.Add(out _tPackage)
 			.Tooltip(@"Can be just name, or name with version, or PM string, or dotnet string.
 You can copy the string from the NuGet website.
@@ -111,7 +111,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 """);
 		b.End();
 		
-		b.R.xAddInfoBlockF($"<s c='red'>Please install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version 8.0 or later. Without it cannot install NuGet packages.</s>").Hidden(null).Margin("B12");
+		b.R.xAddInfoBlockF($"<s c='red'>Please install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version 9.0 or later. Without it cannot install NuGet packages.</s>").Hidden(null).Margin("B12");
 		var infoSDK = b.Last as TextBlock;
 		
 		Loaded += async (_, _) => {
@@ -163,7 +163,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		var proj = _ProjPath(folder);
 		
 		string writeProjText = null;
-		const string c_targetFramework = "<TargetFramework>net8.0-windows</TargetFramework>";
+		const string c_targetFramework = "<TargetFramework>net9.0-windows</TargetFramework>";
 		if (!File.Exists(proj)) {
 			writeProjText = $"""
 <Project Sdk="Microsoft.NET.Sdk">
@@ -219,7 +219,18 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		this.IsEnabled = false;
 		try {
 			if (installing) {
-				if (!await _RunDotnet(sAdd)) return false;
+				Action<string> watcher = s => {
+					//print.it($"<><c green>{s}<>");
+					if (s.Starts("error: '' is not a valid version string")) {
+//TODO: some packages fail if version not specified. Test with new SDK versions, maybe fixed. A workaround possible, but much work.
+//	Error: '' is not a valid version string.
+//	Then can't update, because the update code does not use version string.
+//	Only .NET 9 SDK. OK 8.
+//	From 51 tested packages, only these fail: Octokit, AngleSharp.
+						print.it($"<><c red>\tNeed version. Example: PackageName --version 1.2.3\r\n\t<link https://www.nuget.org/packages/{package}>Get the string<><>");
+					}
+				};
+				if (!await _RunDotnet(sAdd, watcher: watcher)) return false;
 			}
 			building = true;
 			
@@ -566,7 +577,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		m.Show();
 	}
 	
-	async Task<bool> _RunDotnet(string cl, Action<string> printer = null) {
+	async Task<bool> _RunDotnet(string cl, Action<string> printer = null, Action<string> watcher = null) {
 		Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 		try {
 			if (printer == null) {
@@ -575,9 +586,11 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 				printer = s => {
 					if (!skip) skip = s.Starts("Usage:");
 					if (skip) return;
+					var s0 = s;
 					if (s.Starts("error") || s.Contains(": error ")) s = $"<><c red>{s}<>";
 					else if (s.Starts("warn") || s.Contains(": warning ")) s = $"<><c DarkOrange>{s}<>";
 					print.it(s);
+					watcher?.Invoke(s0);
 				};
 			}
 			return await Task.Run(() => 0 == run.console(printer, "dotnet.exe", cl));

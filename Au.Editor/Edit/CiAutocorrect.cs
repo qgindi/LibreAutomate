@@ -1221,7 +1221,7 @@ struct CiIndent {
 		var parsedDocument = new ParsedDocument(d.Id, stext, root, d.Project.GetExtendedLanguageServices());
 		var indenter = parsedDocument.LanguageServices.GetRequiredService<IIndentationService>();
 		int line = parsedDocument.Text.Lines.GetLineFromPosition(pos).LineNumber;
-		var indOpt = useDefaultOptions ? IndentationOptions.GetDefault(parsedDocument.LanguageServices) : new IndentationOptions(ModifyCode.FormattingOptions);
+		var indOpt = useDefaultOptions ? IndentationOptionsProviders.GetDefault(parsedDocument.LanguageServices) : new IndentationOptions(ModifyCode.FormattingOptions);
 		IndentationResult ind = indenter.GetIndentation(parsedDocument, line, indOpt, default);
 		
 		//IndentationResult -> _ind

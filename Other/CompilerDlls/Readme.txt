@@ -11,7 +11,7 @@ To make VS not so slow, select all folders and unload projects. Then load Micros
     In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
     In folder Workspaces: Microsoft.CodeAnalysis.CSharp.Workspaces, Microsoft.CodeAnalysis.Workspaces.
     Several other.
-Optionally create new local git repo.Then later you can conveniently see modifications.
+Optionally create new local git repo. Then later you can conveniently see modifications.
 Edit as described below after _________.
 Build Microsoft.CodeAnalysis.CSharp.Features. It also builds all dependency projects. It runs this exe.
 
@@ -21,18 +21,25 @@ Once: In editor project add references to the main 6 dlls in _\Roslyn, with 'Cop
 Rejected: to make editor startup faster, publish Microsoft.CodeAnalysis.CSharp.Features with <PublishReadyToRun>.
   Tested, works, but: adds ~14 MB to the setup file; makes just ~350 ms faster, barely noticeable.
 
+TODO: bug in latest Roslyn (2024-11-22): error if `for` has >1 uninited vars, like `for (int i = 0, j, k; i < 9; i++) {}`.
+  No error in VS (it uses slightly older Roslyn).
+  Try to update Roslyn after some time, maybe fixed.
+  Or try to replace it with the latest stable version.
+
 _________________________________________________________________
 
 //Edit these manually. Often Roslyn source in new version is changed in some of these places.
 //Add only internal members (where possible). If public, need to declare it in PublicApi.Shipped.txt. Roslyn's internals are visible to the editor project.
 
-// - In all 6 projects + Scripting.csproj from <TargetFrameworks> remove netstandard2.0 etc. Will compile faster and produce less garbage.
+// - In all 6 projects + Scripting.csproj from <TargetFrameworks> remove netstandard2.0 etc (replace with eg net9.0). Later will compile faster.
+//  Don't modify CSharpSyntaxGenerator.csproj.
+//  If will fail to compile, do this AFTER the first compilation.
 
 // - Set Release config. Try to build Microsoft.CodeAnalysis.CSharp.Features (it builds all).
 //	If error "SDK not found", install the latest .NET SDK or edit .NET version in global.json.
 
-// - In all 6 projects add link to Au.InternalsVisible.cs. It is in this project.
-    <Compile Include="..\..\..\..\..\..\code\au\Other\CompilerDlls\Au.InternalsVisible.cs" Link="Au.InternalsVisible.cs" />
+// - In all 6 projects add:
+    <InternalsVisibleTo Include="Au.Editor" Key="0024000004800000940000000602000000240000525341310004000001000100095c6b7a0fe60fbe4a77e52dd10a09331ee3c3a7399aa9cc17db8a015647469a19784d5e33a2450a0a49c37bf17c0c3223674f64104eae649ba27c51a90c24989faec87d59217d7850efc8151109bbf9b027b7714fc01788317d2b991b2c2669836a7725e942f76607efde5cdacd8c497a45c5f9673fcf102fdbf92237a524a4" />
 
 // - In project Microsoft.CodeAnalysis add link to Au.TestInternal.cs. It is in this project.
     <Compile Include="..\..\..\..\..\..\code\au\Other\CompilerDlls\Au.TestInternal.cs" Link="Au.TestInternal.cs" />
@@ -67,7 +74,7 @@ _________________________________________________________________
     </ProjectReference>
   </ItemGroup>
 
-// -- Add prebuild and postbuild. The exe is built from script "RoslynBuildEvents.cs".
+// -- Add prebuild and postbuild. The exe is built from script "BuildEvents.cs".
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="C:\code\au\Other\CompilerDlls\bin\Release\CompilerDlls.exe preBuild" />
   </Target>
@@ -85,7 +92,7 @@ au/
 //3. In the { } add line:
             Symbols = Symbols, //au
 //4. Below the method add properties:
-    internal System.Collections.Generic.IReadOnlyList<ISymbol>? Symbols { get; set; } //au
+    internal IReadOnlyList<ISymbol>? Symbols { get; set; } //au
     internal object? Attach { get; set; } //au
 //5. Open Features\Core\Portable\Completion\Providers\SymbolCompletionItem.cs.
 //6. In method CreateWorker find statement that starts with: var item = CommonCompletionItem.Create(

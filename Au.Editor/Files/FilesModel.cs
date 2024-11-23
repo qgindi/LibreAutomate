@@ -1106,7 +1106,8 @@ partial class FilesModel {
 		try {
 			bool movedCurrentFile = false;
 			var a2 = new List<FileNode>(a.Length);
-			foreach (var f in (ipos.pos == FNInsert.After) ? a.Reverse() : a) {
+			//foreach (var f in (ipos.pos == FNInsert.After) ? a.Reverse() : a) { //broken in .NET 9
+			foreach (var f in (ipos.pos == FNInsert.After) ? Enumerable.Reverse(a) : a) {
 				if (!this.IsMyFileNode(f)) continue; //deleted?
 				if (a.Contains(f.Parent)) continue;
 				if (copy) {

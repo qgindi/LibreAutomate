@@ -353,7 +353,7 @@ class CiPopupList {
 			_tr.MoveTo(_cd.xText, _cd.yText);
 			if (ci.hilite != 0) {
 				ulong h = ci.hilite;
-				for (int normalFrom = 0, boldFrom, boldTo, to = black.End.Value; normalFrom < to; normalFrom = boldTo) {
+				for (int normalFrom = 0, boldFrom = 0, boldTo = 0, to = black.End.Value; normalFrom < to; normalFrom = boldTo) {
 					for (boldFrom = normalFrom; boldFrom < to && 0 == (h & 1); boldFrom++) h >>= 1;
 					_tr.DrawText(s, color, normalFrom..boldFrom);
 					if (boldFrom == to) break;

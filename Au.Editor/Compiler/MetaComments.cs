@@ -180,7 +180,7 @@ class MetaComments {
 	/// </summary>
 	public string[] Defines { get; private set; }
 	List<string> _defines;
-	static readonly string[] s_defaultDefines = ["NET8_0", "NET8_0_OR_GREATER", "NET7_0_OR_GREATER", "NET6_0_OR_GREATER", "NET5_0_OR_GREATER", "NETCOREAPP3_1_OR_GREATER", "NETCOREAPP3_0_OR_GREATER", "NETCOREAPP", "NET", "WINDOWS", "WINDOWS7_0_OR_GREATER"]; //and no WINDOWS10_0_17763_0_OR_GREATER etc (see VS intellisense at #if Ctrl+Space)
+	static readonly string[] s_defaultDefines = ["NET9_0", "NET9_0_OR_GREATER", "NET8_0", "NET8_0_OR_GREATER", "NET7_0_OR_GREATER", "NET6_0_OR_GREATER", "NET5_0_OR_GREATER", "NETCOREAPP3_1_OR_GREATER", "NETCOREAPP3_0_OR_GREATER", "NETCOREAPP", "NET", "WINDOWS", "WINDOWS7_0_OR_GREATER"]; //and no WINDOWS10_0_17763_0_OR_GREATER etc (see VS intellisense at #if Ctrl+Space)
 	
 	/// <summary>
 	/// Meta option 'warningLevel'.
