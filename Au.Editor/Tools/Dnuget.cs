@@ -111,7 +111,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 """);
 		b.End();
 		
-		b.R.xAddInfoBlockF($"<s c='red'>Please install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version 9.0 or later. Without it cannot install NuGet packages.</s>").Hidden(null).Margin("B12");
+		b.R.xAddInfoBlockF($"<s c='red'>Please install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version {Environment.Version.Major}.0 or later. Without it cannot install NuGet packages.</s>").Hidden(null).Margin("B12");
 		var infoSDK = b.Last as TextBlock;
 		
 		Loaded += async (_, _) => {
@@ -119,7 +119,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 			_FillTree();
 			
 			bool sdkOK = false;
-			await _RunDotnet("--list-sdks", s => { if (!sdkOK) sdkOK = s.ToInt() >= 6; }); //"6.0.2 [path]"
+			await _RunDotnet("--list-sdks", s => { if (!sdkOK) sdkOK = s.ToInt() >= Environment.Version.Major; }); //eg "6.0.2 [path]"
 			if (!sdkOK) infoSDK.Visibility = Visibility.Visible;
 		};
 	}
@@ -222,11 +222,11 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 				Action<string> watcher = s => {
 					//print.it($"<><c green>{s}<>");
 					if (s.Starts("error: '' is not a valid version string")) {
-//TODO: some packages fail if version not specified. Test with new SDK versions, maybe fixed. A workaround possible, but much work.
-//	Error: '' is not a valid version string.
-//	Then can't update, because the update code does not use version string.
-//	Only .NET 9 SDK. OK 8.
-//	From 51 tested packages, only these fail: Octokit, AngleSharp.
+						//TODO: some packages fail if version not specified. Test with new SDK versions, maybe fixed. A workaround possible, but much work.
+						//	Error: '' is not a valid version string.
+						//	Then can't update, because the update code does not use version string.
+						//	Only .NET 9 SDK. OK 8.
+						//	From 51 tested packages, only these fail: Octokit, AngleSharp.
 						print.it($"<><c red>\tNeed version. Example: PackageName --version 1.2.3\r\n\t<link https://www.nuget.org/packages/{package}>Get the string<><>");
 					}
 				};
@@ -309,7 +309,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 						if (s.Starts(@"\___.")) continue;
 					} else {
 						runtimes = s.Starts(@"\runtimes\win", true);
-						Debug_.PrintIf(!(runtimes || s.Ends(".resources.dll") || s.Starts(@"\ref\")), s); //ref is used by Microsoft.PowerShell.SDK as data files
+						Debug_.PrintIf(!(runtimes || s.Ends(".resources.dll") || 0 != s.Starts(false, @"\ref\", @"\.playwright\")), s); //ref is used by Microsoft.PowerShell.SDK as data files
 					}
 					if (s.Ends(".dll", true) && (f.Level == 0 || runtimes)) {
 						if (CompilerUtil.IsNetAssembly(f.FullPath, out bool refOnly)) {
@@ -572,7 +572,9 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 					if (s.RxMatch(@"(?m)^global-packages: (.+)$", 1, out s)) run.itSafe(s);
 					else print.it(s);
 			};
-			m["Clear all caches"] = async o => { await _RunDotnet("nuget locals all --clear"); };
+			m.Submenu("Clear all caches", m => {
+				m["Clear"] = async o => { await _RunDotnet("nuget locals all --clear"); };
+			});
 		});
 		m.Show();
 	}

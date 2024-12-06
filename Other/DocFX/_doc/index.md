@@ -15,7 +15,7 @@ Some features:
 - The scripting language is C#. The program is a good way to learn it.
 - C# code editor with intellisense. Script manager, cookbook, debugger.
 - Tools for recording keyboard/mouse and selecting UI objects such as buttons, links and images.
-- Also you can use .NET and zillions of other libraries. NuGet, Windows API, etc.
+- Also you can use .NET, libraries from NuGet, Windows API, etc.
 - Can create independent .exe programs and .dll libraries.
 - Free and open-source. The automation library can be used in other programs too.
 
@@ -39,7 +39,7 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.6.0, 2024-11-04, 33 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.7.0, 2024-12-05, 33 MB
 
 The setup program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed.
 

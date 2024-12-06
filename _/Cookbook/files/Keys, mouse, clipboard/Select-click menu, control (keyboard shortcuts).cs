@@ -12,9 +12,6 @@ keys.send("Alt+^ep"); //Alt+characters
 
 /// Ribbon items (controls) can be selected/clicked in the same way.
 
-wnd.find(0, "*- WordPad").Activate();
-keys.send("Alt+^hb");
-
 /// Often dialog controls can be selected/clicked in the same way too. Or use <mono>Tab<> or <mono>Shift+Tab<> to select, <mono>Space<> to click, <mono>Alt+Down<> to expand combobox, arrows/<mono>Home<>/<mono>End<> to select list items, <mono>Ctrl+Tab<> to select tab pages.
 
 wnd.find(1, "* Properties", "#32770").Activate();

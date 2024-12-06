@@ -6,7 +6,7 @@
 #pragma comment(lib, "oleacc.lib")
 
 bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count);
-void AccChromeEnableHtml(IAccessible* aDoc);
+bool AccChromeEnableHtml(IAccessible* aDoc);
 
 class AccFinder {
 	//these have ctors
@@ -831,6 +831,28 @@ HRESULT AccEnableChrome2(HWND w, int i, HWND c) {
 		hr = AccessibleObjectFromWindow(c, OBJID_CLIENT, IID_IAccessible, (void**)&aDoc);
 		if (hr != 0) return (HRESULT)eError::NotFound;
 	} else {
+		//workaround for: current Chrome (2024-11-16) does not enable if the window is not visible to the user, eg completely covered by other windows.
+		// Then the legacy child control is detached.
+		// But enabling takes 2-3 times longer than normally.
+		RECT r;
+		if (GetClientRect(w, &r)) { //note: aDoc.accLocation fails
+			MapWindowPoints(w, 0, (LPPOINT)&r, 2);
+			int x = (r.left + r.right) / 2, y = r.bottom - 10;
+			int j = i - 4;
+			if (j >= 0) { //try to find x y in web page. Does not work if in a side panel or devtools.
+				j %= 16;
+				r.top += 80; //never mind DPI
+				int wid = r.right - r.left, hei = r.bottom - r.top;
+				x = (j % 4) * (wid / 4) + wid / 8 + r.left;
+				y = (j / 4) * (hei / 4) + hei / 8 + r.top;
+			}
+			VARIANT v = {};
+			if (0 == aw->accHitTest(x, y, &v)) { //need to call at least 2 times
+				VariantClear(&v);
+			}
+			//never mind: does not work when the window is minimized.
+		}
+
 		AccRaw ar;
 		hr = AccFinder::FindDocumentSimple_(aw, out ar, eAF2::InChromePage);
 		if (hr != 0) return (HRESULT)eError::NotFound;
@@ -842,18 +864,31 @@ HRESULT AccEnableChrome2(HWND w, int i, HWND c) {
 	//Printf(L"isEnabled=%i, i=%i", isEnabled, i);
 
 	if (i == 0) {
-		Bstr name, action;
-		if (!isEnabled) aDoc->get_accName(ao::VE(), &name); //enables everything
+		Bstr name;
+		if (!isEnabled) aDoc->get_accName(ao::VE(), &name); //enables everything except HTML, get_accDefaultAction and maybe more
+	}
 
-		//enable HTML, get_accDefaultAction and maybe some other properties.
-		//	get_accName alone enables too, but later.
-		//	Any of these enables all. But call both anyway.
-		aDoc->get_accDefaultAction(ao::VE(), &action);
+	//Enable HTML, get_accDefaultAction and maybe some other properties.
+	//	Else they will be unavailable when queried first time or several times, until Chrome enables them lazily.
+	//Note: not before isEnabled true.
+	//	Then sometimes no aDoc->get_accValue and ISimpleDOMDocument.URL. Randomly, about every 5-th time, more often with large pages.
+	//	Value is very important. Without it fails with "web:" etc.
+	if (isEnabled) {
+		//Bstr action; aDoc->get_accDefaultAction(ao::VE(), &action);
 		AccChromeEnableHtml(aDoc);
+		//any of these enables both
+
+		//rejected: wait.
+		// Unreliable. Can make much slower. Can't rely on AccChromeEnableHtml returning correct result.
+		// If somebody needs HTML etc ASAP, let use --force-renderer-accessibility.
+		// The tool now works well with most pages.
+		//isEnabled = AccChromeEnableHtml(aDoc);
+		//if (!AccChromeEnableHtml(aDoc)) return (HRESULT)eError::WaitChromeEnabledPartially;
 	}
 
 	return isEnabled ? 0 : (HRESULT)eError::WaitChromeDisabled;
 
+	//note: probably some of these are obsolete.
 	//I know these ways to auto-enable Chrome web page AOs:
 	//1. Call get_accName of any AO, eg of main window or document.
 	//	Need to wait. Also need to call some other functions to enable HTML and all acc properties.
@@ -870,26 +905,21 @@ HRESULT AccEnableChrome2(HWND w, int i, HWND c) {
 	//	WebView2: of the legacy control. Then call its FindFirst with "true" condition. With Chrome it does not work.
 	//		Or from point.
 	//		It enables for entire process (or thread, not tested). Eg the window may have multiple WebView2 controls; need to enable just for one.
-	//	Bad: UIA at first is slow. And undocumented (or I don't know).
+	//	Bad: UIA at first is slow. And undocumented.
 	//	Need to wait like always.
 	//4. Edge enables if SPI_SETSCREENREADER. Not Chrome.
 	//5. (obsolete, now does not work) Send WM_GETOBJECT(0, 1) to the legacy control (child window classnamed "Chrome_RenderWidgetHostHWND").
 	//  Documented: Chrome calls NotifyWinEvent(ALERT) when starts, and enables if then receives WM_GETOBJECT with its arguments.
 	//	Does not work with current Chrome. Maybe works only if called soon after NotifyWinEvent; not tested.
-
-	//BAD: current Chrome/Edge (2024-11-16) does not enable if the window is not visible to the user, eg completely covered by other windows.
-	// Then the legacy child control is detached.
-	// I don't believe we can find a way other than activating the window.
-	// Never mind. Let users start browser with the command line, it's not so bad. Or let they activate the window.
 }
 
 namespace outproc {
-	//using Cpp_AccIsChromeAccessibilityEnabledViaCommandLineCallbackT = BOOL(__stdcall*)(HWND w);
-	//static Cpp_AccIsChromeAccessibilityEnabledViaCommandLineCallbackT s_accEnabledCallback;
+	using Cpp_HelperCallbackT = BOOL(__stdcall*)(int action, HWND w);
+	static Cpp_HelperCallbackT s_helperCallback;
 
-	//EXPORT void Cpp_AccSetIsChromeAccessibilityEnabledViaCommandLineCallback(Cpp_AccIsChromeAccessibilityEnabledViaCommandLineCallbackT callback) {
-	//	s_accEnabledCallback = callback;
-	//}
+	EXPORT void Cpp_SetHelperCallback(Cpp_HelperCallbackT callback) {
+		s_helperCallback = callback;
+	}
 
 	void AccEnableChrome(HWND w, HWND c = 0) {
 		if (!!(WinFlags::Get(w) & eWinFlags::AccEnabled)) return;
@@ -917,24 +947,26 @@ namespace outproc {
 				DWORD style = (DWORD)GetWindowLong(w, GWL_STYLE);
 				if (0 != (style & WS_POPUP) || style == 0) return; //a popup window, eg menu, tooltip, new bookmark. Or invalid window handle.
 #ifdef TRACE
-				PRINTS(L"no Chrome_RenderWidgetHostHWND in:");
-				wn::PrintWnd(w); //eg Task Manager
+				if (w == GetForegroundWindow()) {
+					PRINTS(L"no Chrome_RenderWidgetHostHWND in:");
+					wn::PrintWnd(w); //eg Task Manager
+				}
 #endif
 			}
 		}
 
-		//rejected: return if browser command line contains --force-renderer-accessibility. It seems works, but I don't trust it, need much testing.
-		//if (s_accEnabledCallback(wTL)) { //let C# code detect command line --force-renderer-accessibility (here in C++ we don't have function "get process command line")
-		//	PRINTS(L"Has --force-renderer-accessibility");
-		//	WinFlags::Set(wTL, eWinFlags::AccEnabled);
-		//	return;
-		//}
+		//return if Chrome started with --force-renderer-accessibility.
+		if (s_helperCallback(1, wTL)) { //here in C++ we don't have a function to get command line
+			WinFlags::Set(wTL, eWinFlags::AccEnabled);
+			return;
+		}
+		auto t1 = GetTickCount64();
 
 		//notinproc FindDocumentSimple_ is very slow
 		Cpp_Acc_Agent aAgent;
 		bool inProc = 0 == InjectDllAndGetAgent(w, out aAgent.acc);
 
-		for (int i = 0, iTo = inProc ? 70 : 20, nNoDoc = 0; i < iTo; i++) { //max 3 s
+		for (int i = 0, iTo = inProc ? 70 : 25, nNoDoc = 0, nPartially = 0; i < iTo; i++) { //max 3 s
 			HRESULT hr;
 			//Perf.First();
 			if (inProc) {
@@ -954,8 +986,10 @@ namespace outproc {
 				if (!c) break;
 			}
 
-			if (hr == (HRESULT)eError::WaitChromeDisabled && i > iTo / 2 && !c && wTL != GetForegroundWindow())
-				return; //wait shorter, and allow to retry later. See comments above in `if (!c) { }`.
+			if (hr == (HRESULT)eError::WaitChromeDisabled && i == iTo - 1 && !c && wTL != GetForegroundWindow())
+				return; //allow to retry later. See comments above about detached control.
+
+			//if (hr == (HRESULT)eError::WaitChromeEnabledPartially) if (!inProc || !c || nPartially++ >= (i - nPartially) / 2 + 5) hr = 0;
 
 			Sleep((inProc ? 10 : 100) + i);
 
@@ -965,6 +999,8 @@ namespace outproc {
 		//never mind: possible timeout with large pages or at Chrome startup. Can't wait so long here. Let scripts wait.
 
 		WinFlags::Set(wTL, eWinFlags::AccEnabled);
+
+		if (GetTickCount64() - t1 > 500) s_helperCallback(2, wTL); //print warning "start browser with --force-renderer-accessibility". Regardless whether enabled or not.
 	}
 
 	//Called by elmFinder before find or find-wait in window (not in elm).

@@ -369,10 +369,6 @@ public static class clipboard {
 					return;
 				}
 				data = s2;
-				//rejected: alternative workaround - convert to RTF.
-				//	It works in Word, WordPad, OO, LO.
-				//	But then eg Word for it uses default formatting instead of current formatting.
-				//	Also some apps may not fully support our RTF and add different text, eg '?' for non-ASCII chars.
 			}
 		}
 		

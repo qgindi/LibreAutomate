@@ -12,6 +12,8 @@ for (int i = 0; i < 10; i++) { 100.ms(); print.it(Environment.CurrentManagedThre
 
 /// Use thread pool threads.
 
+#pragma warning disable CS4014 //here we don't want to wait for the task to end, like `async Task.Run...`, therefore disable the warning
+
 Task.Run(() => {
 	for (int i = 0; i < 10; i++) { 300.ms(); print.it(Environment.CurrentManagedThreadId); }
 });

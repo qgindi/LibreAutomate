@@ -47,7 +47,7 @@ public static class EditorExtension {
 					var s = asmFile.Insert(^4, "'" + perf.mcs.ToString()); //info: compiler will delete all files with "'" on first run after editor restart
 #if true //copy file
 					unsafe {
-						if (!Api.CopyFileEx(asmFile, s, null, default, null, 0)) throw new AuException(0, "failed to copy assembly file");
+						if (!Api.CopyFileEx(asmFile, s, 0)) throw new AuException(0, "failed to copy assembly file");
 					}
 					//p1.Next('C');
 					//bad: WD makes much slower. Scans 2 times. Avast scans faster, and only when copying.

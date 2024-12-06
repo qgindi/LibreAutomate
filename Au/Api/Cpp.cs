@@ -5,14 +5,7 @@ internal static unsafe partial class Cpp {
 	static Cpp() {
 		filesystem.more.LoadDll64or32Bit_("AuCpp.dll");
 
-		//Cpp_AccSetIsChromeAccessibilityEnabledViaCommandLineCallback(&_ChromeAccEnabled); //note: not in elm ctor. Eg by the elm tool not via elm. Fast.
-		//[UnmanagedCallersOnly]
-		//static int _ChromeAccEnabled(wnd w) {
-		//	if (process.getCommandLine(w.ProcessId, removeProgram: true) is string s) {
-		//		if (s.Contains("--force-renderer-accessibility")) return 1;
-		//	}
-		//	return 0;
-		//}
+		Cpp_SetHelperCallback(&_HelperCallback); //note: not in elm ctor. Eg by the elm tool not via elm. Fast.
 	}
 
 	//speed:
@@ -67,9 +60,6 @@ internal static unsafe partial class Cpp {
 
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	static extern int Cpp_AccRolePrefix(string s, int len, wnd w);
-
-	//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	//static extern void Cpp_AccSetIsChromeAccessibilityEnabledViaCommandLineCallback(delegate* unmanaged<wnd, int> callback);
 
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern EError Cpp_AccFind(wnd w, Cpp_Acc* aParent, Cpp_AccFindParams ap, Cpp_AccFindCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult, bool getRects = false);
@@ -145,6 +135,22 @@ internal static unsafe partial class Cpp {
 	}
 #endif
 
+	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+	static extern void Cpp_SetHelperCallback(delegate* unmanaged<int, wnd, int> callback);
+
+	[UnmanagedCallersOnly]
+	static int _HelperCallback(int action, wnd w) {
+		if (action == 1) { //AccEnableChrome asks to detect whether the command line contains --force-renderer-accessibility. If yes, will not try to enable acc.
+			if (process.getCommandLine(w.ProcessId, removeProgram: true) is string s) {
+				if (s.Contains("--force-renderer-accessibility")) return 1;
+				//print.warning("To use UI elements in web pages, start browser with command line --force-renderer-accessibility. Without it the code may fail sometimes or stop working in the future.");
+			}
+		} else if (action == 2) { //AccEnableChrome failed
+			print.warning("To use UI elements in web pages, start browser with command line --force-renderer-accessibility.");
+		}
+		return 0;
+	}
+
 	// OTHER
 
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -177,27 +183,6 @@ internal static unsafe partial class Cpp {
 
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern void Cpp_Test();
-
-	//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr Cpp_Speak(string text, int flags, string voice, int rate, int volume);
-
-	///// <param name="what">
-	///// 0 - Release.
-	///// 1 - Pause.
-	///// 2 - Resume.
-	///// 3 - Skip value sentences.
-	///// 4 - Skip value ms.
-	///// 5 - Get SpeakCompleteEvent.
-	///// 6 - Get status.
-	///// </param>
-	//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern nint Cpp_SpeakControl(IntPtr voice, int what, int value);
-
-	//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int* EnumWindowsEx(out int len, bool onlyVisible, int api);
-
-	//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern nint Cpp_InputSync(int action, int tid, nint hh);
 
 	//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	//internal static extern void Cpp_TestWildex(string s, string w);

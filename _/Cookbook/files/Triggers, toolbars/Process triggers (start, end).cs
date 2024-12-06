@@ -32,18 +32,14 @@ print.it("ended");
 
 /// If the loop code is slow, move it to another thread or script process, as usually. Else it may miss some trigger events.
 
-foreach (var v in process.triggers(true, "**m winword.exe||*pad.exe")) {
-	if (v.Name.Eqi("notepad.exe")) {
-		Task.Run(() => {
-			dialog.show("Thread pool", v.Name);
-		});
-	} else if (v.Name.Eqi("wordpad.exe")) {
+foreach (var v in process.triggers(true, "**m notepad.exe||mspaint.exe")) {
+	if (v.Name.Eqi("mspaint.exe")) {
 		run.thread(() => {
 			lock ("example5390487563428729") { //use this if don't want to run multiple threads simultaneously
 				dialog.show("Thread " + Environment.CurrentManagedThreadId, v.Name);
 			}
 		});
-	} else if (v.Name.Eqi("winword.exe")) {
+	} else if (v.Name.Eqi("notepad.exe")) {
 		script.run("Script1002.cs", v.Name, v.Id.ToS());
 		//Script1002:
 		//string name = args[0];
@@ -54,4 +50,4 @@ foreach (var v in process.triggers(true, "**m winword.exe||*pad.exe")) {
 
 /// Wait for a <_>Notepad</_> process if not already running.
 
-wait.forCondition(0, () => process.exists("notepad.exe"));
+wait.until(0, () => process.exists("notepad.exe"));

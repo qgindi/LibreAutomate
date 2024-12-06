@@ -22,11 +22,11 @@ if (!process.exists("notepad.exe")) {
 
 /// Wait for a <_>Notepad</_> process. See also <+recipe>Process triggers<>.
 
-wait.forCondition(0, () => process.exists("notepad.exe"));
+wait.until(0, () => process.exists("notepad.exe"));
 
 /// Wait until there are no <_>Notepad</_> processes.
 
-wait.forCondition(0, () => !process.exists("notepad.exe"));
+wait.until(0, () => !process.exists("notepad.exe"));
 
 /// Get window process id and terminate its process.
 

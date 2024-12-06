@@ -27,7 +27,7 @@ partial class Program {
 			
 			//triggers that work only with some windows (when the window is active)
 			
-			Triggers.Of.Window("* WordPad", "WordPadClass");
+			Triggers.Of.Window("*Chrome", "Chrome_WidgetWin_1");
 			
 			hk["Ctrl+F5"] = o => print.it("trigger action example 5", o.Trigger, o.Window);
 			//hk[""] = o => {  };

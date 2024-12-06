@@ -11,7 +11,7 @@ namespace Au.More {
 	/// <code><![CDATA[
 	/// bool stop = false;
 	/// using var hook = new WinEventHook(EEvent.SYSTEM_FOREGROUND, 0, x => {
-	/// 	print.it(x.w);
+	/// 	print.it(x.event_, x.w);
 	/// 	var e = x.GetElm();
 	/// 	print.it(e);
 	/// 	if(x.w.ClassNameIs("Shell_TrayWnd")) stop = true;

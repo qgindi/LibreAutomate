@@ -11,6 +11,8 @@ using System.Xml.Linq;
 
 namespace Au;
 
+#pragma warning disable WPF0001 //enable ThemeMode
+
 /// <summary>
 /// With this class you can create windows with controls, for example for data input.
 /// </summary>
@@ -233,7 +235,7 @@ public class wpfBuilder {
 			if (_p.parent != null) {
 				_p = _p.parent;
 			} else {
-				
+				if (_unGray && _window is { } w && w.ThemeMode != ThemeMode.None && w.Background == SystemColors.ControlBrush) w.Background = null;
 			}
 		}
 		return this;
@@ -341,7 +343,7 @@ public class wpfBuilder {
 			WBPanelType.VerticalStack => new _StackPanel(this, true),
 			_ => throw new InvalidEnumArgumentException()
 		};
-		if (_window != null) _p.panel.Margin = new Thickness(3);
+		if (_window != null) _p.panel.Margin = new(3);
 		switch (container) {
 		case ContentControl c: c.Content = _p.panel; break;
 		case Popup c: c.Child = _p.panel; break;
@@ -365,13 +367,22 @@ public class wpfBuilder {
 				//_window.UseLayoutRounding=true; //not here. Makes many controls bigger by 1 pixel when resizing window with grid, etc. Maybe OK if in _Add (for each non-panel element).
 				if (_window.WindowStartupLocation == default) _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 				if (winTopmost) _window.Topmost = true;
-				if (!winWhite) _window.Background = SystemColors.ControlBrush;
+				if (!winWhite) {
+					_window.Background = SystemColors.ControlBrush;
+					_unGray = true;
+					
+					//rejected: remove this background brush when _window.ThemeMode property changed. Very slow. Instead remove in End(), if _unGray still true.
+					//DependencyPropertyDescriptor.FromProperty(Window.OverridesDefaultStyleProperty, typeof(Window)).AddValueChanged(_window, static (o, _) => {
+					//	if (o is Window w && w.ThemeMode != ThemeMode.None && w.Background == SystemColors.ControlBrush) w.Background = null;
+					//});
+				}
 			}
 		}
 		s_cwt.Add(_p.panel, this);
 		
 		if (script.role == SRole.MiniProgram && _window != null) Loaded += () => { }; //set custom icon if need
 	}
+	bool _unGray;
 	
 	/// <summary>
 	/// Shows the window and waits until closed.
@@ -517,7 +528,7 @@ public class wpfBuilder {
 	/// <param name="state">Sets <see cref="Window.WindowState"/>.</param>
 	/// <param name="style">Sets <see cref="Window.WindowStyle"/>.</param>
 	/// <param name="icon">Sets <see cref="Window.Icon"/>. Example: <c>.WinProperties(icon: BitmapFrame.Create(new Uri(@"d:\icons\file.ico")))</c>.</param>
-	/// <param name="whiteBackground">Set background color = <b>SystemColors.WindowBrush</b> (normally white) if <c>true</c> or <b>SystemColors.ControlBrush</b> (dialog color) if <c>false</c>. See also <see cref="winWhite"/>, <see cref="Brush"/>.</param>
+	/// <param name="whiteBackground">Set background color: <c>true</c> <b>SystemColors.WindowBrush</b> (white), <c>false</c> <b>SystemColors.ControlBrush</b> (gray). See also <see cref="winWhite"/>, <see cref="Brush"/>.</param>
 	/// <exception cref="InvalidOperationException">
 	/// - Container is not of type <b>Window</b>.
 	/// - <i>startLocation</i> or <i>state</i> used after <b>WinXY</b>, <b>WinRect</b> or <b>WinSaved</b>.
@@ -535,7 +546,7 @@ public class wpfBuilder {
 		if (topmost.HasValue) _window.Topmost = topmost.Value;
 		if (state.HasValue) { _ThrowIfWasWinRectXY("WinProperties(state)"); _window.WindowState = state.Value; }
 		if (style.HasValue) _window.WindowStyle = style.Value;
-		if (whiteBackground.HasValue) _window.Background = whiteBackground.Value ? SystemColors.WindowBrush : SystemColors.ControlBrush;
+		if (whiteBackground.HasValue) { _window.Background = whiteBackground.Value ? SystemColors.WindowBrush : SystemColors.ControlBrush; _unGray = false; }
 		if (icon != null) _window.Icon = icon;
 		return this;
 	}
@@ -640,12 +651,11 @@ public class wpfBuilder {
 	public static bool winTopmost { get; set; }
 	
 	/// <summary>
-	/// If <c>true</c>, constructor does not change color of windows created afterwards; then color normally is white.
-	/// If <c>false</c> constructor sets standard color of dialogs, usually light gray.
-	/// Default value depends on application's theme and usually is <c>true</c> if using custom theme.
+	/// If <c>true</c>, constructor does not change the background color of windows created afterwards; then the color depends on theme.
+	/// If <c>false</c> constructor sets standard color of dialog windows, usually light gray.
+	/// Default value depends on application's theme and usually is <c>true</c> if using a theme.
 	/// </summary>
-	//	public static bool winWhite { get; set; } = _IsCustomTheme(); //no, called too early
-	public static bool winWhite { get => s_winWhite ??= _IsCustomTheme(); set { s_winWhite = value; } }
+	public static bool winWhite { get => s_winWhite ?? (_GetThemed() != _Themed.None); set { s_winWhite = value; } }
 	static bool? s_winWhite;
 	
 	//	/// <summary>
@@ -673,13 +683,15 @@ public class wpfBuilder {
 		if (bindLabelVisibility != null) _opt_bindLabelVisibility = bindLabelVisibility.Value;
 		return this;
 	}
-	bool _opt_modifyPadding = !_IsCustomTheme();
+	bool? _opt_modifyPadding;
 	bool _opt_rightAlignLabels;
 	Thickness _opt_margin = new(3);
 	//string _opt_radioGroup; //rejected. Radio buttons have problems with high DPI and should not be used. Or can put groups in panels.
 	//	double _opt_checkMargin=3; //rejected
 	bool _opt_showToolTipOnKeyboardFocus;
 	bool _opt_bindLabelVisibility;
+	
+	bool? _ModifyPadding => _opt_modifyPadding == false ? false : _IsThemed switch { _Themed.Wpf => null, _Themed.Other => _opt_modifyPadding == true, _ => true };
 	
 	void _Add(FrameworkElement e, object text, WBAdd flags, bool add) {
 		bool childOfLast = flags.Has(WBAdd.ChildOfLast);
@@ -689,15 +701,18 @@ public class wpfBuilder {
 				//rejected: use _opt_modifyPadding only if font Segoe UI. Tested with several fonts.
 				switch (c) {
 				case Label:
-					if (_opt_modifyPadding) c.Padding = new Thickness(1, 2, 1, 1); //default 5
+					switch (_ModifyPadding) {
+					case true: c.Padding = new(1, 2, 1, 1); break; //default 5
+					case null: c.Padding = new(1); c.VerticalAlignment = VerticalAlignment.Center; break;
+					}
 					if (_opt_rightAlignLabels) c.HorizontalAlignment = HorizontalAlignment.Right;
 					break;
 				case TextBox:
 				case PasswordBox:
-					if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 1, 2); //default padding 0, height 18
+					if (_ModifyPadding == true) c.Padding = new(2, 1, 1, 2); //default padding 0, height 18
 					break;
 				case Button:
-					if (_opt_modifyPadding && text is string) c.Padding = new Thickness(5, 1, 5, 2); //default 1
+					if (text is string && _ModifyPadding == true) c.Padding = new(5, 1, 5, 2); //default 1
 					break;
 				case ToggleButton:
 					c.HorizontalAlignment = HorizontalAlignment.Left; //default stretch
@@ -715,9 +730,9 @@ public class wpfBuilder {
 					//Change padding because default Windows font Segoe UI is badly centered vertically. Too big space above text, and too big control height.
 					//Tested: changed padding isn't the reason of different control heights or/and arrows when high DPI.
 					if (cb.IsEditable) {
-						if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 2, 2); //default (2)
+						if (_ModifyPadding == true) c.Padding = new(2, 1, 2, 2); //default (2)
 					} else {
-						if (_opt_modifyPadding) c.Padding = new Thickness(5, 2, 4, 3); //default (6,3,5,3)
+						if (_ModifyPadding == true) c.Padding = new(5, 2, 4, 3); //default (6,3,5,3)
 					}
 					break;
 				}
@@ -1279,7 +1294,7 @@ public class wpfBuilder {
 		top ??= p.Top;
 		right ??= p.Right;
 		bottom ??= p.Bottom;
-		c.Margin = new Thickness(left.Value, top.Value, right.Value, bottom.Value);
+		c.Margin = new(left.Value, top.Value, right.Value, bottom.Value);
 		return this;
 	}
 	
@@ -1302,7 +1317,7 @@ public class wpfBuilder {
 	static void _ThicknessFromString(ref Thickness t, string s, [CallerMemberName] string m_ = null) {
 		if (s.NE()) return;
 		if (s.ToInt(out int v1, 0, out int e1) && e1 == s.Length) {
-			t = new Thickness(v1);
+			t = new(v1);
 			return;
 		}
 		
@@ -1339,7 +1354,7 @@ public class wpfBuilder {
 		top ??= p.Top;
 		right ??= p.Right;
 		bottom ??= p.Bottom;
-		c.Set(new Thickness(left.Value, top.Value, right.Value, bottom.Value));
+		c.Set(new(left.Value, top.Value, right.Value, bottom.Value));
 		return this;
 	}
 	
@@ -1470,12 +1485,12 @@ public class wpfBuilder {
 		case Control c:
 			if (cornerRadius != null) throw new NotSupportedException("Border(): Last added must be Border, or cornerRadius null");
 			c.BorderBrush = color;
-			c.BorderThickness = thickness2 ?? new Thickness(thickness);
+			c.BorderThickness = thickness2 ?? new(thickness);
 			if (padding != null) c.Padding = padding.Value;
 			break;
 		case Border c:
 			c.BorderBrush = color;
-			c.BorderThickness = thickness2 ?? new Thickness(thickness);
+			c.BorderThickness = thickness2 ?? new(thickness);
 			if (padding != null) c.Padding = padding.Value;
 			if (cornerRadius != null) c.CornerRadius = new CornerRadius(cornerRadius.Value);
 			break;
@@ -1860,7 +1875,7 @@ public class wpfBuilder {
 	public wpfBuilder Editable() {
 		var c = Last as ComboBox ?? throw new NotSupportedException("Editable(): Last added must be ComboBox");
 		c.IsEditable = true;
-		if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 2, 2); //default (2) or set by _Add() for non-editable
+		if (_ModifyPadding == true) c.Padding = new(2, 1, 2, 2); //default (2) or set by _Add() for non-editable
 		return this;
 	}
 	
@@ -2499,7 +2514,7 @@ public class wpfBuilder {
 	wpfBuilder _Start<T>(_PanelBase p, out T container, object header) where T : HeaderedContentControl, new() {
 		Add(out container, header);
 		container.Content = p.panel;
-		if (container is GroupBox) p.panel.Margin = new Thickness(0, 2, 0, 0);
+		if (container is GroupBox) p.panel.Margin = new(0, 2, 0, 0);
 		_p = p;
 		return this;
 	}
@@ -2653,7 +2668,7 @@ public class wpfBuilder {
 		if (pa is not _Canvas) {
 			_p.panel.HorizontalAlignment = HorizontalAlignment.Right;
 			_p.panel.VerticalAlignment = VerticalAlignment.Bottom;
-			_p.panel.Margin = new Thickness(0, 2, 0, 0);
+			_p.panel.Margin = new(0, 2, 0, 0);
 		}
 		return this;
 	}
@@ -2667,6 +2682,8 @@ public class wpfBuilder {
 	bool _IsWindowEnded => _p.ended && _p.parent == null;
 	
 	Window _FindWindow(DependencyObject c) => _window ?? Window.GetWindow(c); //CONSIDER: support top-level HwndSource window
+	
+	Window _GetOrFindWindow() => _window ?? Window.GetWindow(_p.panel);
 	
 	void _ThrowIfNotWindow([CallerMemberName] string m_ = null) {
 		if (_window == null) throw new InvalidOperationException(m_ + "(): Container is not Window");
@@ -2686,17 +2703,24 @@ public class wpfBuilder {
 	
 	static string _UriNormalize(string source) => pathname.normalize(source, flags: PNFlags.CanBeUrlOrShell);
 	
-	static Uri _Uri(string source) => new Uri(_UriNormalize(source));
+	//static Uri _Uri(string source) => new Uri(_UriNormalize(source));
 	
-	//Returns true if probably using a custom theme. I don't know what is the correct way, but this should work in most cases. Fast.
-	static bool _IsCustomTheme() {
-		if (s_isCustomTheme == null) {
-			var app = Application.Current;
-			s_isCustomTheme = app != null && app.Resources.MergedDictionaries.Count > 0;
-		}
-		return s_isCustomTheme == true;
+	/// <summary>
+	/// Detects whether the application or window is using a theme.
+	/// </summary>
+	static _Themed _GetThemed(wpfBuilder b = null) {
+		var a = Application.Current;
+#if NET9_0_OR_GREATER
+		if (a != null && a.ThemeMode != ThemeMode.None) return _Themed.Wpf;
+		if (b?._GetOrFindWindow() is { } w && w.ThemeMode != ThemeMode.None) return _Themed.Wpf;
+#endif
+		if (a != null && a.Resources.MergedDictionaries.Count > 0) return _Themed.Other;
+		return 0;
 	}
-	static bool? s_isCustomTheme;
+	enum _Themed : byte { None, Wpf, Other }
+	
+	_Themed _IsThemed => _isThemed ??= _GetThemed(this);
+	_Themed? _isThemed;
 	
 	/// <summary>
 	/// Gets or sets a property of an element of any type that has the property.

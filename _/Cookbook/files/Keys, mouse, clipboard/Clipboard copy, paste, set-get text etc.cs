@@ -28,5 +28,5 @@ clipboard.clear();
 /// Wait until the clipboard contains text, and get it.
 
 clipboard.clear();
-var text = wait.forCondition(0, () => clipboard.text);
+var text = wait.until(0, () => clipboard.text);
 print.it(text);

@@ -31,7 +31,7 @@ namespace Au;
 ///   <ol>
 ///    <li>Web page UI elements initially are disabled (missing). Workarounds:
 ///     <ul>
-///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix <c>"web:"</c> or <c>"chrome:"</c>. Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with <c>"Chrome"</c>. However Chrome does it lazily, therefore first time the functions often get wrong UI element. Note: this auto-enabling may fail with future Chrome versions. May fail if the window is inactive.</li>
+///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix <c>"web:"</c> or <c>"chrome:"</c>. Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with <c>"Chrome"</c>. However Chrome does it lazily, therefore shortly after enabling something still may not work. Note: this auto-enabling may fail with future Chrome versions.</li>
 ///      <li>Start Chrome with command line <c>--force-renderer-accessibility</c>.</li>
 ///     </ul>
 ///    </li>

@@ -60,7 +60,7 @@ namespace Au.Triggers;
 /// 
 /// //triggers that work only with some windows
 /// 
-/// Triggers.Of.Window("* WordPad", "WordPadClass"); //let the following triggers work only when a WordPad window is active
+/// Triggers.Of.Window("* Chrome", "Chrome_WidgetWin_1"); //let the following triggers work only when a Chrome window is active
 /// hk["Ctrl+F5"] = o => print.it(o, o.Window);
 /// hk["Ctrl+F6"] = o => print.it(o, o.Window);
 /// 

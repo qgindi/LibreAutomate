@@ -23,6 +23,7 @@ It creates a temporary .csproj file and executes [dotnet publish](https://www.go
 
 Options:
 - **Single file** - create single-file program. Adds all program files to single .exe file.
+- **Self extract** - read below.
 - **Add .NET Runtime** - add .NET Runtime files too. Then the program can run on computers without installed .NET. If unchecked, on computers without .NET the program just prompts to install .NET. Single-file .exe is compressed, ~70 MB.
 - **ReadyToRun** - compile to native code.
 
@@ -35,6 +36,15 @@ Role can be **exeProgram** or **miniProgram**.
 Unsupported features:
 - `/*/ icon folder /*/` (multiple native icons).
 - `/*/ testInternal, noRef /*/`.
+
+### Self-extract
+
+This 3-state checkbox is enabled when **Single file** is checked.
+- Checked - use `IncludeAllContentForSelfExtract`. Adds all files to exe. Will extract all (including .NET dlls) to a temporary directory. The program will start slower, but will not have issues like unavailable **Assembly.Location**.
+- Unchecked - adds only .NET dlls to exe. Native dlls and other files (if any) will live in the exe's directory. Will use .NET dlls without extracting.
+- Indeterminate - use `IncludeNativeLibrariesForSelfExtract`. Adds all dlls to exe. Will extract native dlls, and use .NET dlls without extracting. This is the best for most scripts, but can't be used with some scripts (the **Publish** tool will print a warning). 
+
+[More info](https://www.google.com/search?q=dotnet+publish+single-file+IncludeAllContentForSelfExtract+IncludeNativeLibrariesForSelfExtract)
 
 ## Common info
 

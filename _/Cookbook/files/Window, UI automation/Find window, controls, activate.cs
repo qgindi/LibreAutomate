@@ -43,8 +43,8 @@ foreach (var v in a2) {
 
 /// A window can contain child windows, also known as <i>controls<>. This code finds a child window. Exception if not found. When found, moves the mouse cursor to its center.
 
-var w6 = wnd.find(0, "*- WordPad", "WordPadClass");
-var c1 = w6.Child(0, cn: "msctls_trackbar32", id: 53254); // "Zoom Slider"
+var w6 = wnd.find(1, "*File Explorer", "CabinetWClass");
+var c1 = w6.Child(1, cn: "SysTreeView32", id: 100); // "Navigation Pane"
 mouse.move(c1);
 
 /// To create <see cref="wnd.Child"/> code can be used the same tools as for <b>wnd.find<>.

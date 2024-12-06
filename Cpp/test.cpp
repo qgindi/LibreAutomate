@@ -65,7 +65,7 @@ g1:
 	return CallNextHookEx(0, code, wParam, lParam);
 }
 
-EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh) {
+EXPORT HHOOK Cpp_KeyboardHook(int action, int tid, HHOOK hh) {
 	if (action == 1) {
 		auto hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, s_moduleHandle, tid);
 		if (hh == 0 && tid != 0) hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, s_moduleHandle, 0); //console. GetWindowThreadProcessId lies. To get real id probably need to enumerate threads and call EnumThreadWindows for each. Too slow.
@@ -643,97 +643,6 @@ public:
 
 void _TestIAccessibleImpl();
 
-//struct S1 { int i; int a[1]; };
-//struct S2 { int i; int a[0]; };
-//struct S3 { int i; int a[]; };
-//struct S4 { double d; int i; char a[]; };
-//struct S5 { char i; int a[]; };
-
-//void TestFileDialog() {
-//	IFileDialog* pfd;
-//
-//	// CoCreate the dialog object.
-//	HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog,
-//		NULL,
-//		CLSCTX_INPROC_SERVER,
-//		__uuidof(IFileDialog), (LPVOID*)&pfd);
-//
-//	if(SUCCEEDED(hr))     {
-//		// Show the dialog
-//		hr = pfd->Show(0);
-//
-//		if(SUCCEEDED(hr))         {
-//			// Obtain the result of the user's interaction with the dialog.
-//			IShellItem* psiResult;
-//			hr = pfd->GetResult(&psiResult);
-//
-//			if(SUCCEEDED(hr))             {
-//				// Do something with the result.
-//				psiResult->Release();
-//			}
-//		}
-//		pfd->Release();
-//	}
-//
-//}
-
-//EXPORT ISpVoice* Cpp_Speak(STR text, DWORD flags, STR voice, int rate, int volume) {
-//	//Beep(1000, 100);
-//
-//	CComPtr<ISpVoice> v;
-//	if(0 != v.CoCreateInstance(CLSID_SpVoice)) return nullptr;
-//
-//	CComPtr<ISpObjectToken> cpVoiceToken;
-//	if(voice != nullptr) {
-//		CComPtr<IEnumSpObjectTokens> cpEnum;
-//		if(0 == SpEnumTokens(SPCAT_VOICES, NULL, NULL, &cpEnum)) {
-//			while(0 == cpEnum->Next(1, &cpVoiceToken, null)) {
-//				PWSTR d = nullptr;
-//				if(0 == SpGetDescription(cpVoiceToken, &d)) {
-//					//Print(d);
-//					bool found = str::Like(d, str::Len(d), voice, str::Len(voice), true);
-//					CoTaskMemFree(d);
-//					if(found) {
-//						v->SetVoice(cpVoiceToken);
-//						break;
-//					}
-//				}
-//				cpVoiceToken.Release();
-//			}
-//		}
-//	}
-//
-//	if(rate != 0x80000000) v->SetRate(rate);
-//	if(volume != 0x80000000) v->SetVolume((USHORT)volume);
-//
-//	v->Speak(text, flags, nullptr);
-//
-//	if(0 == (1 & flags)) return nullptr;
-//	return v.Detach();
-//}
-//
-//EXPORT size_t Cpp_SpeakControl(ISpVoice* v, int what, int value) {
-//	switch(what) {
-//	case 0: v->Release(); break;
-//	case 1: v->Pause(); break;
-//	case 2: v->Resume(); break;
-//	case 3: v->Skip(L"sentence", value, nullptr); break;
-//	case 4: v->Skip(L"milliseconds", value, nullptr); break;
-//	case 5: return (size_t)v->SpeakCompleteEvent();
-//	case 6: {
-//		SPVOICESTATUS s = {};
-//		if(0 == v->GetStatus(&s, nullptr)) return s.dwRunningState;
-//	} break;
-//	//case 7: return v->GetNotifyEventHandle();
-//	case 100: v->Speak(L"a", (DWORD)value, nullptr); break;
-//	}
-//	return 0;
-//}
-
-//void _Wineventproc(HWINEVENTHOOK hWinEventHook, DWORD event, HWND hwnd, LONG idObject, LONG idChild, DWORD idEventThread, DWORD dwmsEventTime) {
-//	Printf(L"pid=%i idEventThread=%i %i %i", GetCurrentProcessId(), idEventThread, GetWindowThreadProcessId(hwnd, null), GetCurrentThreadId());
-//}
-
 EXPORT void Cpp_Test() {
 	//auto hh = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, 0, _Wineventproc, GetCurrentProcessId(), 0, 0);
 	//auto hh = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, (HMODULE)&__ImageBase, _Wineventproc, GetCurrentProcessId(), 0, WINEVENT_INCONTEXT);
@@ -1131,65 +1040,3 @@ void _TestIAccessibleImpl() {
 }
 
 #endif //#if _DEBUG
-
-//not tested
-//struct _EWData {
-//	int** aAll;
-//	int** aVisible;
-//	int nAll, nVisible, capAll, capVisible;
-//};
-//
-//void _EWAdd(int*& a, int& len, int& cap, int initCap, HWND w) {
-//	if(a == null) a = (int*)HeapAlloc(GetProcessHeap(), 0, (cap = initCap) * 4);
-//	else if(len == cap) a = (int*)HeapReAlloc(GetProcessHeap(), 0, a, (cap *= 2) * 4);
-//	a[len++] = (int)(LPARAM)w;
-//}
-//
-//BOOL _EWProc(HWND w, LPARAM param) {
-//	_EWData& d = *(_EWData*)param;
-//	if(d.aAll != null) _EWAdd(*d.aAll, d.nAll, d.capAll, 1000, w);
-//	if(d.aVisible != null && IsWindowVisible(w)) _EWAdd(*d.aVisible, d.nVisible, d.capVisible, 200, w);
-//	return 1;
-//}
-//
-//EXPORT void EnumWindowsEx(int api, int** aAll, int& nAll, int** aVisible, int& nVisible) {
-//	_EWData d;
-//	d.aAll = aAll;
-//	d.aVisible = aVisible;
-//	d.capAll = nAll;
-//	d.capVisible = nVisible;
-//	d.nAll = d.nVisible = 0;
-//
-//	EnumWindows(_EWProc, (LPARAM)&d);
-//
-//	if(aAll != null) nAll = d.nAll;
-//	if(aVisible != null) nVisible = d.nVisible;
-//}
-
-//struct _EWData {
-//	int* a;
-//	int cap, len;
-//	bool onlyVisible;
-//};
-//
-//BOOL _EWProc(HWND w, LPARAM param) {
-//	_EWData& d = *(_EWData*)param;
-//	if(d.onlyVisible && !IsWindowVisible(w)) return 1;
-//	if(d.len == d.cap) {
-//		HANDLE hh = GetProcessHeap();
-//		if(d.cap == 0) d.a = (int*)HeapAlloc(hh, 0, (d.cap = (d.onlyVisible ? 200 : 1000)) * 4);
-//		else d.a = (int*)HeapReAlloc(hh, 0, d.a, (d.cap *= 2) * 4);
-//	}
-//	d.a[d.len++] = (int)(LPARAM)w;
-//	return 1;
-//}
-//
-//EXPORT int* EnumWindowsEx(int& len, BOOL onlyVisible, int api) {
-//	_EWData d = {};
-//	d.onlyVisible = onlyVisible;
-//
-//	EnumWindows(_EWProc, (LPARAM)&d);
-//	len = d.len;
-//	return d.a;
-//}
-//Faster than C#. Eg 250 vs 310 mcs.

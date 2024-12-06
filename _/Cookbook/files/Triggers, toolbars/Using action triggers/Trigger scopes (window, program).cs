@@ -12,33 +12,33 @@ var hk = Triggers.Hotkey;
 hk["Alt+1"] = o => { print.it(o); };
 hk["Alt+2"] = o => { print.it(o); };
 
-//these triggers work only in WordPad windows (when a WordPad window is active)
-Triggers.Of.Window("*WordPad", "WordPadClass");
+//these triggers work only in Chrome windows (when a Chrome window is active)
+Triggers.Of.Window("*Chrome", "Chrome_WidgetWin_1");
 hk["Alt+3"] = o => { print.it(o); };
 hk["Alt+4"] = o => { print.it(o); };
 
-//this trigger works only in windows of wordpad.exe
-Triggers.Of.Window(of: "wordpad.exe");
+//this trigger works only in windows of chrome.exe
+Triggers.Of.Window(of: "chrome.exe");
 hk["Alt+5"] = o => { print.it(o); };
 
-//this trigger works everywhere except in windows of wordpad.exe
-Triggers.Of.NotWindow(of: "wordpad.exe");
+//this trigger works everywhere except in windows of chrome.exe
+Triggers.Of.NotWindow(of: "chrome.exe");
 hk["Alt+6"] = o => { print.it(o); };
 
 //this trigger works everywhere
 Triggers.Of.AllWindows();
 hk["Alt+7"] = o => { print.it(o); };
 
-//this trigger works only in WordPad and Paint windows
+//this trigger works only in Chrome and Paint windows
 Triggers.Of.Windows(
-	new("*WordPad", "WordPadClass"),
+	new("*Chrome", "Chrome_WidgetWin_1"),
 	new("*Paint", "MSPaintApp")
 	);
 hk["Alt+8"] = o => { print.it(o); };
 
-//this trigger works everywhere except in WordPad and Paint windows
+//this trigger works everywhere except in Chrome and Paint windows
 Triggers.Of.NotWindows([
-	new("*WordPad", "WordPadClass"),
+	new("*Chrome", "Chrome_WidgetWin_1"),
 	new("*Paint", "MSPaintApp")
 	]);
 hk["Alt+9"] = o => { print.it(o); };

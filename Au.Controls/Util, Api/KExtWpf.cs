@@ -355,8 +355,12 @@ public static class KExtWpf {
 	/// <summary>
 	/// Sets binding to show/hide the last added element when the specified <b>CheckBox</b> checked/unchecked.
 	/// </summary>
-	public static wpfBuilder xBindCheckedVisible(this wpfBuilder t, CheckBox c) {
+	public static wpfBuilder xBindCheckedVisible(this wpfBuilder t, CheckBox c, bool setLabeledBy = false) {
 		t.Bind(FrameworkElement.VisibilityProperty, new Binding("IsChecked") { Source = c, Converter = s_bvc ??= new() });
+		if (setLabeledBy) {
+			Debug.Assert(!(t.Last is ButtonBase or Label or TextBlock));
+			System.Windows.Automation.AutomationProperties.SetLabeledBy(t.Last, c);
+		}
 		return t;
 	}
 	static BooleanToVisibilityConverter s_bvc;

@@ -384,7 +384,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		wsprintfW(w, L"To run this application, need to install:\r\n\r\n"
 			L".NET %i Desktop Runtime x%i\r\n\r\n"
 			L"Would you like to download it now?", NETVERMAJOR, bits);
-		if (IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO | MB_TOPMOST)) {
+		if (IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO | MB_TOPMOST | MB_SETFOREGROUND)) {
 			AllowSetForegroundWindow(ASFW_ANY);
 			auto ShellExecuteW = (int(__stdcall*)(HWND, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, INT))GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
 			//wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
@@ -393,7 +393,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
 			Sleep(1000);
 			wsprintfW(w, L"In the dowload page please find and download this:\r\n\r\n.NET Desktop Runtime for Windows x%i", bits);
-			MessageBoxW(0, w, p.exeName.c_str(), MB_ICONINFORMATION | MB_TOPMOST);
+			MessageBoxW(0, w, p.exeName.c_str(), MB_ICONINFORMATION | MB_TOPMOST | MB_SETFOREGROUND);
 #else
 			//rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
 			//note: this URL is different for preview/rc (before the final version released).

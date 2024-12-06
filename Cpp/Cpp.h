@@ -134,6 +134,7 @@ enum class eError
 	WindowOfThisThread = 0x1101, //the specified window belongs to the caller thread
 	UseNotInProc = 0x1102, //window class name is Windows.UI.Core.CoreWindow etc
 	WaitChromeDisabled = 0x1103, //need to wait while enabling Chrome AOs
+	//WaitChromeEnabledPartially = 0x1104, //need to wait more while enabling Chrome AOs
 #endif
 };
 

@@ -11,10 +11,10 @@ print.it(i);
 var w1 = wnd.find("*- Notepad");
 print.it(w1);
 
-var w2 = wnd.find("**r (Notepad|Wordpad)$"); //regular expression
+var w2 = wnd.find("**r (Notepad|Chrome)$"); //regular expression
 print.it(w2);
 
-var w3 = wnd.find("**m *Notepad||*Wordpad"); //ends with Notepad or Wordpad
+var w3 = wnd.find("**m *Notepad||*Chrome"); //ends with Notepad or Chrome
 print.it(w3);
 
 /// To create such functions use class <help>wildex<>.

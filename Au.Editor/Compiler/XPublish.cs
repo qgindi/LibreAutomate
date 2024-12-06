@@ -4,10 +4,11 @@ using System.Xml.Linq;
 using System.Windows;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Windows.Controls;
 
 class XPublish {
 	MetaComments _meta;
-	string _csprojFile;
+	string _csprojDir, _csprojFile;
 	
 	public async void Publish() {
 		var cmd = App.Commands[nameof(Menus.Run.Publish)];
@@ -16,38 +17,32 @@ class XPublish {
 		try {
 			var b = new wpfBuilder("Publish").WinProperties(resizeMode: ResizeMode.NoResize, showInTaskbar: false);
 			b.R.Add(out KCheckBox cSingle, "Single file").Checked(0 == (1 & App.Settings.publish));
+			b.R.Add(out CheckBox cSelfExtract, "Self-extract").Margin(20)
+				.xBindCheckedEnabled(cSingle)
+				.Tooltip("""
+Checked - use <IncludeAllContentForSelfExtract>. Adds all files to exe. Will extract all (including .NET dlls) to a temporary directory.
+Unchecked - adds only .NET dlls to exe. Native dlls and other files (if any) will live in the exe's directory. Will use .NET dlls without extracting.
+Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe. Will extract native dlls, and use .NET dlls without extracting.
+""")
+				.Checked((App.Settings.publish >>> 8 & 3) switch { 1 => false, 2 => true, _ => null }, threeState: true);
 			b.R.Add(out KCheckBox cNet, "Add .NET Runtime").Checked(0 != (2 & App.Settings.publish));
 			b.R.Add(out KCheckBox cR2R, "ReadyToRun").Checked(0 != (4 & App.Settings.publish));
 			b.R.StartOkCancel().AddOkCancel().AddButton("Help", _ => HelpUtil.AuHelp("editor/Publish")).Width(70).End();
 			b.End();
 			if (!b.ShowDialog(App.Wmain)) return;
-			App.Settings.publish = (cSingle.IsChecked ? 0 : 1) | (cNet.IsChecked ? 2 : 0) | (cR2R.IsChecked ? 4 : 0);
+			App.Settings.publish = (cSingle.IsChecked ? 0 : 1) | (cNet.IsChecked ? 2 : 0) | (cR2R.IsChecked ? 4 : 0) | ((cSelfExtract.IsChecked switch { false => 1, true => 2, _ => 0 }) << 8);
 			//TODO3: maybe support publish profiles like in VS: <PublishProfileFullPath>
 			
-			if (!CreateCsproj(singleFile: cSingle.IsChecked, selfContained: cNet.IsChecked, readyToRun: cR2R.IsChecked)) return;
+			bool singleFile = cSingle.IsChecked; bool? selfExtract = cSelfExtract.IsChecked;
+			if (!_CreateCsproj(singleFile: singleFile, selfExtract, selfContained: cNet.IsChecked, readyToRun: cR2R.IsChecked)) return;
 			
-			var outFile = $@"{_meta.OutputPath}\csproj\bin\Release\win-x{(_meta.Bit32 ? "86" : "64")}\publish\{_meta.Name}.exe";
-			CompilerUtil.DeleteExeFile(outFile);
+			var outDir = $@"{_csprojDir}\release_{(_meta.Bit32 ? "32" : "64")}";
+			var outFile = $@"{outDir}\{_meta.Name}.exe";
+			_PrepareOutDir(outDir, outFile);
 			if (_meta.PreBuild.f != null && !CompilerUtil.RunPrePostBuildScript(_meta, false, outFile, true)) return;
-			bool ok = await Task.Run(() => {
-				static void _Print(string s) {
-					if (s.RxMatch(@"^(.+? -> )(.+)$", out var m) && filesystem.exists(m[2].Value).Directory) {
-						string dir = m[2].Value;
-						s = $"<>{m[1]}<link>{dir}<>";
-						
-						//delete empty subdirs like "en", "fr". Created when selfContained=true and singleFile=false, and not deleted when changed these options.
-						foreach (var v in filesystem.enumDirectories(dir)) Api.RemoveDirectory(v.FullPath);
-					}
-					print.it(s);
-				}
-				
-				var cl = $"publish \"{_csprojFile}\" -c Release";
-				print.it($"<><c blue>dotnet {cl}<>");
-				if (0 != run.console(_Print, "dotnet.exe", cl)) { print.it("Failed"); return false; }
-				return true;
-			});
-			if (!ok) return;
+			if (!await Task.Run(() => _DotnetPublish(outDir, singleFile, selfExtract))) return;
 			if (_meta.PostBuild.f != null && !CompilerUtil.RunPrePostBuildScript(_meta, true, outFile, true)) return;
+			
 			print.it("==== DONE ====");
 		}
 		catch (Exception e1) { print.it(e1); }
@@ -57,7 +52,45 @@ class XPublish {
 		}
 	}
 	
-	public bool CreateCsproj(bool singleFile = false, bool selfContained = false, bool readyToRun = false) {
+	static void _PrepareOutDir(string outDir, string outFile) {
+		if (filesystem.exists(outDir).Directory) {
+			CompilerUtil.DeleteExeFile(outFile);
+			foreach (var v in filesystem.enumerate(outDir)) filesystem.delete(v.FullPath, FDFlags.CanFail);
+		}
+	}
+	
+	bool _DotnetPublish(string outDir, bool singleFile, bool? selfExtract) {
+		bool dirExisted = filesystem.exists(outDir);
+		
+		var buildDir = _csprojDir + @"\.build";
+		var cl = $@"publish ""{_csprojFile}"" -c Release -o ""{outDir}"" --artifacts-path ""{buildDir}"" -v q";
+		print.it($"<><c blue>dotnet {cl}<>");
+		if (0 != run.console("dotnet.exe", cl)) { print.it("Failed"); return false; }
+		print.it($@"<>{_meta.Name} -> <explore>{outDir}\{_meta.Name}.exe<>");
+		
+		filesystem.delete(buildDir, FDFlags.CanFail);
+		
+		int nFiles = 0;
+		foreach (var v in filesystem.enumerate(outDir)) {
+			var path = v.FullPath;
+			if (!v.IsDirectory && path.Ends(".pdb", true)) filesystem.delete(path, FDFlags.CanFail); //probably Au.pdb (at home only)
+			else nFiles++;
+		}
+		
+		//warn if singleFile with IncludeNativeLibrariesForSelfExtract produced more than single exe file. See comments in _CreateCsproj.
+		if (singleFile && selfExtract != true) {
+			if (selfExtract == false) print.it("<>Note: <b>Self-extract<> is unchecked, therefore only .NET dlls have been added to exe. Other files are located in the exe's directory.");
+			else if (nFiles > 1) print.it("<>Warning: If <b>Self-extract<> is indeterminate, some files used by this script cannot be added to exe, and the program may be invalid. It should be either checked or unchecked.");
+			//BAD: may not add some files even with selfExtract true. Eg from nuget Selenium.WebDriver.ChromeDriver.
+		}
+		
+		//sometimes Explorer does not update the folder view
+		if (dirExisted) filesystem.ShellNotify_(Api.SHCNE_UPDATEDIR, outDir);
+		
+		return true;
+	}
+	
+	bool _CreateCsproj(bool singleFile, bool? selfExtract, bool selfContained, bool readyToRun) {
 		App.Model.Save.TextNowIfNeed(onlyText: true);
 		
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return false;
@@ -70,8 +103,8 @@ class XPublish {
 		if (_meta.Role is not (MCRole.miniProgram or MCRole.exeProgram)) return _Err("expected role exeProgram or miniProgram");
 		if (_meta.TestInternal != null) return _Err("testInternal not supported");
 		
-		var outDir = $@"{_meta.OutputPath ?? MetaComments.GetDefaultOutputPath(f, _meta.Role, withEnvVar: false)}\csproj";
-		filesystem.createDirectory(outDir);
+		_csprojDir = $@"{_meta.OutputPath ?? MetaComments.GetDefaultOutputPath(f, _meta.Role, withEnvVar: false)}\publish";
+		filesystem.createDirectory(_csprojDir);
 		
 		var xroot = new XElement("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"));
 		var xpg = new XElement("PropertyGroup");
@@ -88,7 +121,6 @@ class XPublish {
 		_Add(xpg, "EnableDefaultItems", "false"); //https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props-desktop#wpf-default-includes-and-excludes
 		_Add(xpg, "CopyLocalLockFileAssemblies", "true");
 		_Add(xpg, "ProduceReferenceAssembly", "false");
-		_Add(xpg, "GenerateAssemblyInfo", "false");
 		_Add(xpg, "PublishReferencesDocumentationFiles", "false");
 		_Add(xpg, "DebugType", "embedded");
 		_Add(xpg, "CopyDebugSymbolFilesFromPackages", "false");
@@ -102,7 +134,7 @@ class XPublish {
 		_Add(xpg, "DefineConstants", string.Join(';', _meta.Defines));
 		
 		_Add(xpg, "WarningLevel", _meta.WarningLevel);
-		_Add(xpg, "NoWarn", string.Join(';', _meta.NoWarnings) + ";WFAC010");
+		_Add(xpg, "NoWarn", string.Join(';', _meta.NoWarnings) + ";WFAC010;WFO0003");
 		if (_meta.Nullable != 0) _Add(xpg, "Nullable", _meta.Nullable);
 		
 		if (_meta.Bit32) _Add(xpg, "PlatformTarget", "x86");
@@ -119,8 +151,17 @@ class XPublish {
 		_Add(xpg, "RuntimeIdentifier", _meta.Bit32 ? "win-x86" : "win-x64");
 		if (singleFile) {
 			_Add(xpg, "PublishSingleFile", "true");
-			if (selfContained) _Add(xpg, "EnableCompressionInSingleFile", "true"); //else compression not supported
-			_Add(xpg, "IncludeNativeLibrariesForSelfExtract", "true");
+			if (selfContained) _Add(xpg, "EnableCompressionInSingleFile", "true"); //else compression not supported (with IncludeAllContentForSelfExtract too)
+			if (selfExtract == null) _Add(xpg, "IncludeNativeLibrariesForSelfExtract", "true"); else if (selfExtract == true) _Add(xpg, "IncludeAllContentForSelfExtract", "true");
+			//About selfExtract:
+			//IncludeNativeLibrariesForSelfExtract (selfExtract null) has problems:
+			//	1. Does not add data files (of most types).
+			//	2. Adds not only native dlls, but also exe etc. With this mess the program usually crashes. To repro, add nuget Microsoft.Playwright.
+			//IncludeAllContentForSelfExtract (selfExtract true) solves both. Also solves the "no assembly location etc" problem. But has own issues.
+			//selfExtract false solves #2.
+			//rejected: instead use normal checkbox that adds IncludeAllContentForSelfExtract when checked.
+			//	If unchecked, use IncludeNativeLibrariesForSelfExtract only it produces single file (else there is no sense to add dlls etc).
+			//	To implement it probably would need to run dotnet publish twice. I don't know other ways.
 		}
 		_Add(xpg, "SelfContained", selfContained ? "true" : "false");
 		if (readyToRun) _Add(xpg, "PublishReadyToRun", "true");
@@ -135,7 +176,7 @@ class XPublish {
 		
 		_AddAuNativeDll("AuCpp.dll", both64and32: true);
 		if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll");
-		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, outDir, (from, to) => _AddContentFile(from, to));
+		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, _csprojDir, (from, to) => _AddContentFile(from, to));
 		
 		if (_meta.References.DefaultRefCount != MetaReferences.DefaultReferences.Count) return _Err("noRef not supported"); //TODO3: try <DisableImplicitFrameworkReferences>
 		_AddAttr(xig, "Reference", "Include", _meta.References.Refs[_meta.References.DefaultRefCount - 1].FilePath); //Au
@@ -146,7 +187,7 @@ class XPublish {
 		if (!_ManagedResources()) return false;
 		
 		//print.it(xroot);
-		xroot.SaveElem(_csprojFile = $@"{outDir}\{_meta.Name}.csproj");
+		xroot.SaveElem(_csprojFile = $@"{_csprojDir}\{_meta.Name}.csproj");
 		return true;
 		
 		static bool _Err(string s) { print.it("Error: " + s); return false; }
@@ -168,7 +209,7 @@ class XPublish {
 		void _AddContentFile(string path, string to) {
 			var x = _AddAttr(xig, "Content", "Include", path);
 			_Add(x, "CopyToOutputDirectory", "PreserveNewest");
-			if (to.PathStarts(outDir)) to = to[(outDir.Length + 1)..];
+			if (to.PathStarts(_csprojDir)) to = to[(_csprojDir.Length + 1)..];
 			_Add(x, "Link", to); //note: TargetPath should be the same, but somehow ignores files in subfolders (meta file x /sub) if single-file, unless the folder exists.
 		}
 		
@@ -183,7 +224,7 @@ class XPublish {
 		}
 		
 		string _ModuleInit() {
-			var path = outDir + @"\ModuleInit__.cs";
+			var path = _csprojDir + @"\ModuleInit__.cs";
 			filesystem.saveText(path, @"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.script.AppModuleInit_(auCompiler: false); }}"); //like in Compiler._AddAttributesEtc but with `auCompiler: false`
 			return path;
 		}
@@ -193,7 +234,7 @@ class XPublish {
 				if (fIco.IsFolder) return _Err("icons folder not supported");
 				_Add(xpg, "ApplicationIcon", _Path(fIco));
 			} else if (DIcons.TryGetIconFromBigDB(f.CustomIconName, out string xaml)) {
-				var file = outDir + @"\icon.ico";
+				var file = _csprojDir + @"\icon.ico";
 				try {
 					Au.Controls.KImageUtil.XamlImageToIconFile(file, xaml, 16, 24, 32, 48, 64);
 					_Add(xpg, "ApplicationIcon", file);
@@ -204,7 +245,7 @@ class XPublish {
 		}
 		
 		bool _ManagedResources() {
-			var resourcesFile = outDir + @"\g.resources";
+			var resourcesFile = _csprojDir + @"\g.resources";
 			return CompilerUtil.CreateManagedResources(_meta, _meta.Name, trees, _ResourceException, o => {
 				var x = _AddAttr(xig, "EmbeddedResource", "Include", o.file);
 				_Add(x, "LogicalName", o.name);

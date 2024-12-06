@@ -79,7 +79,7 @@ public static partial class filesystem {
 		case Api.ERROR_ACCESS_DENIED: //probably in a protected directory. Then FindFirstFile fails, but try anyway.
 			var d = new Api.WIN32_FIND_DATA();
 			var hfind = Api.FindFirstFile(path, out d);
-			if (hfind != (IntPtr)(-1)) {
+			if (hfind != -1) {
 				Api.FindClose(hfind);
 				attr = d.dwFileAttributes;
 				if (p != null) {
@@ -156,7 +156,7 @@ public static partial class filesystem {
 	/// <returns>-1 failed, 0 no, 1 symlink, 2 mount, 3 other.</returns>
 	internal static int IsNtfsLink_(string path) {
 		var hfind = Api.FindFirstFile(path, out var fd);
-		if (hfind == (IntPtr)(-1)) return -1;
+		if (hfind == -1) return -1;
 		int R = fd.IsNtfsLink;
 		Api.FindClose(hfind);
 		return R;
@@ -349,7 +349,7 @@ public static partial class filesystem {
 #else
 					hfind = Api.FindFirstFile(path2, out d);
 #endif
-					if (hfind == (IntPtr)(-1)) {
+					if (hfind == -1) {
 						hfind = default;
 						var ec = lastError.code;
 						//print.it(ec, lastError.messageFor(ec), path);
@@ -539,7 +539,7 @@ public static partial class filesystem {
 			if (ifExists == FIfExists.MergeDirectory && type1 != FileIs_.Directory) ifExists = FIfExists.Fail;
 			
 			if (ifExists == FIfExists.Fail) {
-				//API will fail if exists. We don't use use API flags 'replace existing'.
+				//API will fail if exists. We don't use API flags 'replace existing'.
 			} else {
 				//Delete, RenameExisting, MergeDirectory
 				//bool deleted = false;
@@ -601,7 +601,7 @@ public static partial class filesystem {
 					if (type1 == FileIs_.NtfsLinkDirectory)
 						ok = Api.CreateDirectoryEx(path1, path2, default);
 					else
-						ok = Api.CopyFileEx(path1, path2, null, default, null, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
+						ok = Api.CopyFileEx(path1, path2, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
 				}
 			}
 			
@@ -686,7 +686,7 @@ public static partial class filesystem {
 				}
 				
 				uint fl = Api.COPY_FILE_COPY_SYMLINK; if (!merge) fl |= Api.COPY_FILE_FAIL_IF_EXISTS;
-				ok = Api.CopyFileEx(s1, s2, null, default, null, fl);
+				ok = Api.CopyFileEx(s1, s2, fl);
 			}
 			if (!ok) {
 				if (f.IsNtfsLink) {

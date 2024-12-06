@@ -717,9 +717,26 @@ static unsafe partial class Api {
 	internal const uint COPY_FILE_NO_BUFFERING = 0x1000;
 	
 	[DllImport("kernel32.dll", EntryPoint = "CopyFileExW", SetLastError = true)]
-	internal static extern bool CopyFileEx(string lpExistingFileName, string lpNewFileName, LPPROGRESS_ROUTINE lpProgressRoutine, IntPtr lpData, int* pbCancel, uint dwCopyFlags);
+	static extern bool CopyFileEx(string lpExistingFileName, string lpNewFileName, nint lpProgressRoutine, IntPtr lpData, int* pbCancel, uint dwCopyFlags);
 	
-	internal delegate uint LPPROGRESS_ROUTINE(long TotalFileSize, long TotalBytesTransferred, long StreamSize, long StreamBytesTransferred, uint dwStreamNumber, uint dwCallbackReason, IntPtr hSourceFile, IntPtr hDestinationFile, IntPtr lpData);
+	internal static bool CopyFileEx(string lpExistingFileName, string lpNewFileName, uint dwCopyFlags) {
+		if (!CopyFileEx(lpExistingFileName, lpNewFileName, 0, 0, null, dwCopyFlags)) return false;
+		
+		//Workaround for: when copying in Vmware virtual PC from host path like @"\\vmware-host\Shared Folders\...", adds Readonly attribute.
+		//	Also GetFileAttributes[Ex] for the source adds Readonly. But FindFirstFile[Ex] doesn't.
+		if (GetFileAttributes(lpNewFileName) is var a1 && a1.Has(FileAttributes.ReadOnly) && a1 != (FileAttributes)(-1)) {
+			var h = FindFirstFile(lpExistingFileName, out var d);
+			if (h != -1) {
+				FindClose(h);
+				if (!d.dwFileAttributes.Has(FileAttributes.ReadOnly)) {
+					Debug_.Print("Readonly attribute");
+					SetFileAttributes(lpNewFileName, d.dwFileAttributes);
+				}
+			}
+		}
+		
+		return true;
+	}
 	
 	[DllImport("kernel32.dll", EntryPoint = "DeleteFileW", SetLastError = true)]
 	internal static extern bool DeleteFile(string lpFileName);

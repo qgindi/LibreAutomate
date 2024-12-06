@@ -104,8 +104,6 @@ In project DatabasesEtc, in file Program.cs:
 
 Update .NET version in the AppHost project (the #define). Build.
 
-Update .NET version in DNuget.cs where need.
-
 Update MetaComments.Defines.
 
 Build solution.
