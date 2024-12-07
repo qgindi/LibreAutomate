@@ -50,6 +50,7 @@
     <s n="UI elements (find, click, check, focus, select, expand, check menu item, wait for state, etc).cs" i="83" />
     <s n="Web automation, navigate, HTML attributes.cs" i="89" />
     <s n="Extract table data using UI elements.cs" i="373" />
+    <s n="Web browser automation with Playwright.cs" i="386" />
     <s n="Web browser automation with Selenium.cs" i="141" />
     <s n="Find UI image or color.cs" i="90" />
     <s n="Take screenshot.cs" i="101" />

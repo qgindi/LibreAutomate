@@ -56,4 +56,4 @@ var e1 = w1.Elm["web:LINK", "Search"].Find(10); //find a link; wait max 10 s
 e1.WebInvoke(); //click the link and wait until window name changes
 var e2 = w.Elm["web:TEXT", prop: "@name=keywords"].Find(10); //wait max 10 s for an element in the new web page
 
-/// See also <+recipe>Selenium<>.
+/// See also <+recipe>Web browser automation with Playwright<>.

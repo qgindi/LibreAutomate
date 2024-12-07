@@ -67,4 +67,4 @@ foreach (var link in body.Descendants("a")) {
 	print.it(link.InnerText, link.GetAttributeValue("href", null));
 }
 
-/// See also recipe <+recipe>Web browser automation with Selenium<>.
+/// See also recipe <+recipe>Web browser automation with Playwright<>.
