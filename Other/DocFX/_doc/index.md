@@ -39,13 +39,13 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.7.0, 2024-12-07, 33 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.7.1, 2024-12-21, 33 MB
 
 The setup program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed.
 
 ### Links
 - [Forum](https://www.libreautomate.com/forum/)
-- [Email](mailto:support@quickmacros.com)
+- [Email](mailto:gintaras@libreautomate.com)
 - [Source code](https://github.com/qgindi/LibreAutomate)
 - [Changes](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/)
 - [Donate](https://github.com/sponsors/qgindi)

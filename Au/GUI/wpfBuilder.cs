@@ -235,7 +235,9 @@ public class wpfBuilder {
 			if (_p.parent != null) {
 				_p = _p.parent;
 			} else {
+#if NET9_0_OR_GREATER
 				if (_unGray && _window is { } w && w.ThemeMode != ThemeMode.None && w.Background == SystemColors.ControlBrush) w.Background = null;
+#endif
 			}
 		}
 		return this;
@@ -371,10 +373,12 @@ public class wpfBuilder {
 					_window.Background = SystemColors.ControlBrush;
 					_unGray = true;
 					
-					//rejected: remove this background brush when _window.ThemeMode property changed. Very slow. Instead remove in End(), if _unGray still true.
-					//DependencyPropertyDescriptor.FromProperty(Window.OverridesDefaultStyleProperty, typeof(Window)).AddValueChanged(_window, static (o, _) => {
-					//	if (o is Window w && w.ThemeMode != ThemeMode.None && w.Background == SystemColors.ControlBrush) w.Background = null;
-					//});
+					//rejected: remove this background brush when _window.ThemeMode property changed. Slow. Instead remove in End(), if _unGray still true.
+					//#if NET9_0_OR_GREATER
+					//					DependencyPropertyDescriptor.FromProperty(Window.OverridesDefaultStyleProperty, typeof(Window)).AddValueChanged(_window, static (o, _) => {
+					//						if (o is Window w && w.ThemeMode != ThemeMode.None && w.Background == SystemColors.ControlBrush) w.Background = null;
+					//					});
+					//#endif
 				}
 			}
 		}

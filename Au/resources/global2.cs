@@ -29,7 +29,7 @@ global using IEnumerator = System.Collections.IEnumerator;
 
 [assembly: AssemblyCompany("Gintaras Didžgalvis")]
 [assembly: AssemblyProduct("LibreAutomate C#")]
-[assembly: AssemblyCopyright("Copyright 2020-2024 Gintaras Didžgalvis")]
+[assembly: AssemblyCopyright("Copyright 2020-2025 Gintaras Didžgalvis")]
 [assembly: AssemblyCulture("")]
 
 [assembly: AssemblyVersion(Au_.Version)]
@@ -41,6 +41,6 @@ namespace Au.More;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class Au_ {
 	///
-	public const string Version = "1.7.0";
+	public const string Version = "1.7.1";
 }
 #endif

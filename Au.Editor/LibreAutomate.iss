@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.7.0"
+#define MyAppVersion "1.7.1"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -178,7 +178,7 @@ begin
   args := '/C dotnet --list-runtimes > "' + fileName + '" 2>&1';
   if Exec(ExpandConstant('{cmd}'), args, '', SW_HIDE, ewWaitUntilTerminated, resultCode) and (resultCode = 0) then
   begin
-    if LoadStringFromFile(fileName, output) then Result := Pos('Microsoft.WindowsDesktop.App 8.', output) > 0;
+    if LoadStringFromFile(fileName, output) then Result := Pos('Microsoft.WindowsDesktop.App 9.', output) > 0;
   end;
   DeleteFile(fileName);
 end;
@@ -192,9 +192,9 @@ var
   a1: TArrayOfString;
 begin
   //Get the download URL of the latest .NET Desktop Runtime.
-  //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates https://www.libreautomate.com/download/net-url.txt.
+  //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates https://www.libreautomate.com/download/net-x-url.txt.
   try
-    DownloadTemporaryFile('https://www.libreautomate.com/download/net-url.txt', 'net-url.txt', '', nil);
+    DownloadTemporaryFile('https://www.libreautomate.com/download/net-9-url.txt', 'net-url.txt', '', nil);
     if LoadStringsFromFile(ExpandConstant('{tmp}\net-url.txt'), a1) then url := a1[0];
     //Log(url);
   except

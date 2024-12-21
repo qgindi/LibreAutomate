@@ -1,5 +1,4 @@
 /*/
-define SCRIPT;
 noWarnings CS8632;
 testInternal Au.Editor,Au,Microsoft.CodeAnalysis,Microsoft.CodeAnalysis.CSharp,Microsoft.CodeAnalysis.Features,Microsoft.CodeAnalysis.CSharp.Features,Microsoft.CodeAnalysis.Workspaces,Microsoft.CodeAnalysis.CSharp.Workspaces;
 r Au.Editor.dll;

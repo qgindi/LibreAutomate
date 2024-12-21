@@ -1,4 +1,4 @@
-/*/ nuget -\SSH.NET; c Sftp.cs; /*/
+/*/ nuget -\SSH.NET; c Sftp.cs; c Passwords.cs; /*/
 using Renci.SshNet;
 using System.Text.Json;
 
@@ -8,6 +8,7 @@ partial class AuDocs {
 		var tarDir = pathname.getDirectory(siteDir);
 		_Compress(siteDir, tarDir);
 		_Upload(tarDir);
+		_CloudflarePurgeCache();
 	}
 	
 	static void _Compress(string siteDir, string tarDir) {
@@ -56,5 +57,14 @@ partial class AuDocs {
 		filesystem.delete(localFile);
 		
 		print.it("<>Extracted to <link>https://www.libreautomate.com/</link>");
+	}
+	
+	//file: path to a file in https://www.libreautomate.com/. If null, purges all.
+	static void _CloudflarePurgeCache(string file = null) {
+		var token = Passwords.Get("Cloudflare API");
+		var content = internet.jsonContent(file != null ? $$"""{"files":["https://www.libreautomate.com/{{file}}"]}""" : $$"""{"purge_everything": true}""");
+		var j = internet.http.Post("https://api.cloudflare.com/client/v4/zones/238431a81c22e29834a04ce68574988c/purge_cache", content, [$"Authorization: Bearer {token}"]).Json();
+		var ok = (bool)j["success"];
+		if (!ok) print.warning("Failed to purge Cloudflare cache.\r\nTo purge manually: Cloudflare -> Caching -> Configuration -> Purge Everything.\r\nResult:\r\n" + j);
 	}
 }

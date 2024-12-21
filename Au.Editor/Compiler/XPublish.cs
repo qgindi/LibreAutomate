@@ -134,13 +134,15 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		_Add(xpg, "DefineConstants", string.Join(';', _meta.Defines));
 		
 		_Add(xpg, "WarningLevel", _meta.WarningLevel);
-		_Add(xpg, "NoWarn", string.Join(';', _meta.NoWarnings) + ";WFAC010;WFO0003");
+		_Add(xpg, "NoWarn", string.Join(';', _meta.NoWarnings) + ";WFAC010;WFO0003;CA1416");
 		if (_meta.Nullable != 0) _Add(xpg, "Nullable", _meta.Nullable);
 		
 		if (_meta.Bit32) _Add(xpg, "PlatformTarget", "x86");
 		if (!_Icon()) return false;
 		_Add(xpg, "ApplicationManifest", _Path(_meta.ManifestFile) ?? folders.ThisAppBS + "default.exe.manifest");
-		if (_meta.CodeFiles.Any(o => o.f.Name.Eqi("AssemblyInfo.cs"))) _Add(xpg, "GenerateAssemblyInfo", "false");
+		
+		//if (_meta.CodeFiles.Any(o => o.f.Name.Eqi("AssemblyInfo.cs"))) _Add(xpg, "GenerateAssemblyInfo", "false"); //no, users don't know it. See https://www.libreautomate.com/forum/showthread.php?tid=7591
+		_Add(xpg, "GenerateAssemblyInfo", "false");
 		
 		if (_meta.SignFile != null) {
 			_Add(xpg, "SignAssembly", "true");

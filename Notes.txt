@@ -59,7 +59,7 @@ Upload the setup file. For example with FileZilla.
 
 Run script "Au docs". Click the upload link.
 
-Review "future.md". RENAME!
+Review the md file of current version. If it's still "future.md", rename to "v1.x.md".
 
 Github commit all and push. The message could be like v1.2.3.
 	Note: don't delay to do it. It uploads the "changes" doc.
@@ -78,9 +78,9 @@ Release NuGet package:
 
 Run script "Update version.txt.cs". It updates _\version.txt and uploads to public_html.
 
-Announce in forum.
-
-If not beta, occasionally review/update in some download websites. Edit and upload the PAD file.
+No more:
+	Announce in forum.
+	If not beta, occasionally review/update in some download websites. Edit and upload the PAD file.
 
 
 ---------------------------------------------------------
@@ -110,9 +110,14 @@ Build solution.
 
 Run editor.
 
-Find-replace "NET 8" and "net8" everywhere, including:
+In LibreAutomate.iss (Inno Setup) replace the .NET Desktop Runtime download URL. Also .NET major version in several places.
+
+Find-replace "NET 8", "net8" and "8" everywhere, including:
 - LibreAutomate.iss (Inno Setup).
 - README.md (GitHub).
+
+Create-upload https://www.libreautomate.com/download/net-X-url.txt. Here X is .NET major version, eg 9.
+	The file must contain the .NET Desktop Runtime download URL (the same as in LibreAutomate.iss).
 
 Test DNuget with the new and the old SDK.
 	Test package Microsoft.PowerShell.SDK. Test how it works in miniProgram and exeProgram.
