@@ -139,7 +139,7 @@ class PanelOutput {
 			//create links in compilation errors/warnings or run-time stack trace
 			var s = m.Text; int i;
 			if (s.Length >= 22) {
-				if (s.Starts("<><lc #") && s.Eq(13, ">Compilation: ")) { //compilation
+				if (s.Starts("<><lc #") && (s.Eq(13, ">Compilation: ") || s.Eq(13, ">Can't export "))) { //compilation. Or error in meta while exporting.
 					s_rx1 ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ((?:error|warning) \w+)");
 					m.Text = s_rx1.Replace(s, x => {
 						var f = App.Model?.FindByFilePath(x[1].Value);

@@ -87,7 +87,7 @@ class PanelCookbook {
 	void _Load() {
 		try {
 #if DEBUG
-			s_cookbookPath = folders.ThisAppBS + "Cookbook\\files";
+			s_cookbookPath = folders.ThisAppBS + @"..\Cookbook\files";
 			var xr = XmlUtil.LoadElem(s_cookbookPath + ".xml");
 #else
 			s_sqlite = new(folders.ThisAppBS + "cookbook.db", SLFlags.SQLITE_OPEN_READONLY);

@@ -29,6 +29,7 @@ namespace other {
 	EXPORT HHOOK Cpp_Clipboard(HHOOK hh) {
 		if (hh == NULL) {
 			auto hh = SetWindowsHookExW(WH_GETMESSAGE, ClipboardHook, s_moduleHandle, 0);
+			//TODO: test on ARM64
 			return hh;
 		} else {
 			UnhookWindowsHookEx(hh);
@@ -245,7 +246,7 @@ namespace other {
 		Sleep(500 / less);
 	}
 
-	//for rundll32.exe
+	//for rundll32.exe //TODO: the signature is invalid for rundll32. Maybe this func not used by LA with rundll32, but documented in v1.2.md.
 	EXPORT void WINAPI UnloadAuCppDll(DWORD flags = 0) {
 		Cpp_Unload(flags);
 	}

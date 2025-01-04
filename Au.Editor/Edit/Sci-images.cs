@@ -18,6 +18,8 @@ using Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Classification;
 using CT = CAW::Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
 
+//TODO: bug: visible `/` or `/*` if 1 or 2 non-ASCII chars exist in line before. Exception if more.
+
 partial class SciCode {
 	struct _Image {
 		public Bitmap image;

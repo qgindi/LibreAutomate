@@ -449,7 +449,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <inheritdoc cref="CollectionsMarshal.AsSpan"/>
-	public static Span<T> AsSpan<T>(this List<T> t) where T : struct
+	public static Span<T> AsSpan<T>(this List<T> t)
 		=> CollectionsMarshal.AsSpan(t);
 	
 	/// <summary>
@@ -458,7 +458,7 @@ public static unsafe partial class ExtMisc {
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <param name="i">Item index.</param>
-	public static ref T Ref<T>(this List<T> t, int i) where T : struct
+	public static ref T Ref<T>(this List<T> t, int i)
 		=> ref CollectionsMarshal.AsSpan(t)[i];
 	
 	/// <summary>

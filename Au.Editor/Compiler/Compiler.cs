@@ -780,11 +780,15 @@ partial class Compiler {
 	void _CopyDlls(Stream asmStream, bool need64, bool need32) {
 		asmStream.Position = 0;
 		
-		//note: need Au.dll and AuCpp.dll even if not used in code. It contains script.AppModuleInit_.
+		//note: need Au.dll and AuCpp.dll even if not used in code. Au.dll contains script.AppModuleInit_.
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", _meta.OutputPath + @"\Au.dll");
-		//note: always need both 64-bit and 32-bit AuCpp.dll, because maybe elm will have to load them into other processes.
-		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", _meta.OutputPath + @"\64\AuCpp.dll");
+		//note: always need all AuCpp.dll and Au.Arch.exe, because maybe elm will have to load AuCpp.dll into other processes.
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", _meta.OutputPath + @"\32\AuCpp.dll");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", _meta.OutputPath + @"\64\AuCpp.dll");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\AuCpp.dll", _meta.OutputPath + @"\64\ARM\AuCpp.dll");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\Au.Arch.exe", _meta.OutputPath + @"\32\Au.Arch.exe");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\Au.Arch.exe", _meta.OutputPath + @"\64\Au.Arch.exe");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\Au.Arch.exe", _meta.OutputPath + @"\64\ARM\Au.Arch.exe");
 		
 		bool usesSqlite = CompilerUtil.UsesSqlite(asmStream);
 		

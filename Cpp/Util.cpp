@@ -21,14 +21,12 @@ void Print(STR s) {
 #endif
 }
 
-void Printf(STR frm, ...) {
-#if true //more options but makes big dll. Don't use in Release.
+void Printf(const wchar_t* frm, ...) {
 	wchar_t b[10000];
-	_vsnwprintf(b, 9990, frm, (va_list)(&frm + 1));
-#else //does not support floating-point, %.*s, etc. Too small max buffer size.
-	wchar_t b[1032];
-	wvsprintf(b, frm, (va_list)(&frm + 1));
-#endif
+	va_list args;
+	va_start(args, frm);
+	_vsnwprintf(b, 9990, frm, args);
+	va_end(args);
 	Print(b);
 }
 
@@ -99,30 +97,30 @@ __declspec(allocate(".shared")) Perf_Inst Perf;
 
 #endif
 
+OSVersion osVer;
 DelayLoadedApi dlapi;
 
-bool IsOS64Bit() {
-#ifdef _WIN64
-	return true;
-#else
-	static int r;
-	if (!r) {
-		if (IsWow64Process(GetCurrentProcess(), &r)) r = r ? 1 : -1;
-	}
-	return r > 0;
-#endif
-}
+//returns: 0 failed, 1 32, 2 x64, 3 arm64
+int GetProcessArchitecture(DWORD pid) {
+	if (osVer.is32BitOS()) return 1;
 
-bool IsProcess64Bit(DWORD pid, out bool& is) {
-	is = false;
-	if (!IsOS64Bit()) return true;
 	HANDLE hp = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
-	if (!hp) return false;
-	BOOL is32, ok = IsWow64Process(hp, &is32);
-	CloseHandle(hp);
-	if (!ok) return false;
-	is = !is32;
-	return true;
+	if (!hp) return 0;
+
+	if (osVer.minWin11()) {
+		PROCESS_MACHINE_INFORMATION m = {}; //Win11+
+		bool ok = GetProcessInformation(hp, ProcessMachineTypeInfo, &m, sizeof(m));
+		CloseHandle(hp);
+		if (!ok) return 0;
+		//Printf(L"m.ProcessMachine=0x%X", m.ProcessMachine);
+		auto k = m.ProcessMachine;
+		return k == IMAGE_FILE_MACHINE_I386 ? 1 : k == IMAGE_FILE_MACHINE_AMD64 ? 2 : k == IMAGE_FILE_MACHINE_ARM64 ? 3 : 0;
+	} else {
+		BOOL is32, ok = IsWow64Process(hp, &is32);
+		CloseHandle(hp);
+		if (!ok) return 0;
+		return is32 ? 1 : 2;
+	}
 }
 
 namespace wn {

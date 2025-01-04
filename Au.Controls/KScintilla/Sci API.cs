@@ -13,13 +13,15 @@ public static unsafe class Sci {
 	public const int SCI_ISXINMARGIN = 9506;
 	public const int SCI_DRAGDROP = 9507;
 
-	[DllImport("Scintilla", EntryPoint = "Scintilla_DirectFunction")]
+	public const string SCINTILLA_DLL = "Scintilla.dll";
+
+	[DllImport(SCINTILLA_DLL, EntryPoint = "Scintilla_DirectFunction")]
 	public static extern nint Sci_Call(nint sci, int message, nint wParam = 0, nint lParam = 0);
 
-	[DllImport("Scintilla")]
+	[DllImport(SCINTILLA_DLL)]
 	public static extern int Sci_Range(nint sci, int start8, int end8, out byte* p1, out byte* p2, int* length = null);
 
-	[DllImport("Scintilla")]
+	[DllImport(SCINTILLA_DLL)]
 	public static extern void Sci_SetFoldLevels(nint sci, int line, int lastLine, int len, int* a);
 
 	public record struct Sci_VisibleRange {
@@ -29,10 +31,10 @@ public static unsafe class Sci {
 	/// <summary>
 	/// flags: 1 need pos
 	/// </summary>
-	[DllImport("Scintilla")]
+	[DllImport(SCINTILLA_DLL)]
 	public static extern void Sci_GetVisibleRange(nint sci, out Sci_VisibleRange r);
 
-	//[DllImport("Lexilla", EntryPoint = "CreateLexer")]
+	//[DllImport("Lexilla.dll", EntryPoint = "CreateLexer")]
 	//public static extern nint Sci_CreateLexer(byte[] lexer);
 
 #pragma warning disable 649
@@ -56,13 +58,13 @@ public static unsafe class Sci {
 	}
 #pragma warning restore 649
 
-	//[DllImport("Scintilla")]
+	//[DllImport(SCINTILLA_DLL)]
 	//public static extern bool Sci_CanUndoRedoContainer(nint sci, bool redo, int token);
 
-	[DllImport("Scintilla")]
+	[DllImport(SCINTILLA_DLL)]
 	public static extern void Sci_SetUndoMark(nint sci, int mark);
 
-	[DllImport("Scintilla")]
+	[DllImport(SCINTILLA_DLL)]
 	public static extern int Sci_GetUndoMark(nint sci, bool redo);
 
 	public const int STYLE_HIDDEN = 31; //DEFAULT-1

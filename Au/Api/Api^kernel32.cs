@@ -765,13 +765,13 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern bool WriteProcessMemory(HandleRef hProcess, IntPtr lpBaseAddress, void* lpBuffer, nint nSize, nint* lpNumberOfBytesWritten);
 	
-	[DllImport("kernel32", SetLastError = true)]
+	[DllImport("kernel32.dll", SetLastError = true)]
 	internal extern static IntPtr CreateActCtx(in ACTCTX actctx);
 	
-	[DllImport("kernel32", SetLastError = true)]
+	[DllImport("kernel32.dll", SetLastError = true)]
 	internal extern static bool ActivateActCtx(IntPtr hActCtx, out IntPtr lpCookie);
 	
-	[DllImport("kernel32", SetLastError = true)]
+	[DllImport("kernel32.dll", SetLastError = true)]
 	internal extern static bool DeactivateActCtx(int dwFlags, IntPtr lpCookie);
 	
 	[DllImport("kernel32.dll")]

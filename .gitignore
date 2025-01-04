@@ -221,7 +221,6 @@ ModelManifest.xml
 /Libraries/PCRE/excluded/
 
 /_/*
-!/_/Cookbook/
 !/_/Default/
 !/_/Templates/
 !/_/Roslyn/
@@ -247,9 +246,9 @@ ModelManifest.xml
 !/_/Templates/files/
 !/_/Templates/files.xml
 
-/_/Cookbook/*
-!/_/Cookbook/files/
-!/_/Cookbook/files.xml
+/Cookbook/*
+!/Cookbook/files/
+!/Cookbook/files.xml
 
 *.bak
 /Au/global.json

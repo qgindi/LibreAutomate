@@ -422,11 +422,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		std::wstring nd16; nd16.reserve(1000);
 		nd16 += p.appDir;
 #if _WIN64
-		nd16 += L"\\64\\;";
+		nd16 += L"\\64\\;"; //and not ARM64
 #else
 		nd16 += L"\\32\\;";
 #endif
-		//rejected: For it we use the resolving event. May need L"\\runtimes\\win10-x64\\native\\;" etc.
+		//rejected: For it we use the resolving event. May need L"\\runtimes\\win10-x64\\native\\;" etc. //TODO: review the resolving event code.
 //		nd16 += p.appDir;
 //#if _WIN64
 //		nd16 += L"\\runtimes\\win-x64\\native\\;";

@@ -10,13 +10,11 @@
 //#if 1
 
 __interface __declspec(uuid("3AB5235E-2768-47A2-909A-B5852A9D1868"))
-	IInterface : IUnknown
-{
+	IInterface : IUnknown {
 	int __stdcall Add(int a, int b);
 };
 
-class Inter :public IInterface
-{
+class Inter :public IInterface {
 public:
 	int __stdcall Add(int a, int b) {
 		return a + b;
@@ -158,43 +156,43 @@ EXPORT HHOOK Cpp_KeyboardHook(int action, int tid, HHOOK hh) {
 
 extern HMODULE s_moduleHandle;
 
-void TestStringBuilder() {
-	Perf.First();
-	str::StringBuilder b;
-	//b.Append(L"one ");
-	//b.Append(50);
-	//b.Append(L" four", 2);
-	//b.Append(L" 0x");
-	//b.Append(10, 16);
-	//b.AppendChar(' ');
-	//b.AppendChar('A');
-	//b.AppendChar(' ', 4);
-	//b.AppendChar('A');
-
-	HWND ww = 0;
-
-	static const STR rundll = L"\\SysWOW64\\rundll32.exe \"";
-	static const STR bits = L"32";
-
-	b << L"kkk" << L' ' << 5 << ',';
-	b.AppendChar(' ');
-	b.AppendChar(L' ');
-
-	LPWSTR t; int n;
-	t = b.GetBufferToAppend(out n); b.FixBuffer(GetWindowsDirectoryW(t, n));
-	b << rundll;
-	t = b.GetBufferToAppend(out n); b.FixBuffer(GetModuleFileNameW(s_moduleHandle, t, n));
-	auto u = wcsrchr(t, '\\') - 5; u[0] = bits[0]; u[1] = bits[1]; //"32" to "64" or vice versa
-	if (GetFileAttributes(t) == INVALID_FILE_ATTRIBUTES) return; //avoid messagebox when our antimatter dll does not exist
-	b << L"\",Cpp_RunDll " << (__int64)ww; //note: without W
-
-	b << 'A';
-	b.AppendChar('.', 4);
-
-	Perf.Next();
-	Print(b);
-	Perf.NW();
-}
+//void TestStringBuilder() {
+//	Perf.First();
+//	str::StringBuilder b;
+//	//b.Append(L"one ");
+//	//b.Append(50);
+//	//b.Append(L" four", 2);
+//	//b.Append(L" 0x");
+//	//b.Append(10, 16);
+//	//b.AppendChar(' ');
+//	//b.AppendChar('A');
+//	//b.AppendChar(' ', 4);
+//	//b.AppendChar('A');
+//
+//	HWND ww = 0;
+//
+//	static const STR rundll = L"\\SysWOW64\\rundll32.exe \"";
+//	static const STR bits = L"32";
+//
+//	b << L"kkk" << L' ' << 5 << ',';
+//	b.AppendChar(' ');
+//	b.AppendChar(L' ');
+//
+//	LPWSTR t; int n;
+//	t = b.GetBufferToAppend(out n); b.FixBuffer(GetWindowsDirectoryW(t, n));
+//	b << rundll;
+//	t = b.GetBufferToAppend(out n); b.FixBuffer(GetModuleFileNameW(s_moduleHandle, t, n));
+//	auto u = wcsrchr(t, '\\') - 5; u[0] = bits[0]; u[1] = bits[1]; //"32" to "64" or vice versa
+//	if (GetFileAttributes(t) == INVALID_FILE_ATTRIBUTES) return; //avoid messagebox when our antimatter dll does not exist
+//	b << L"\",Cpp_RunDll " << (__int64)ww; //note: without W
+//
+//	b << 'A';
+//	b.AppendChar('.', 4);
+//
+//	Perf.Next();
+//	Print(b);
+//	Perf.NW();
+//}
 
 EXPORT void Cpp_TestWildex(STR s, STR w) {
 	auto lenS = wcslen(s);
@@ -342,15 +340,13 @@ int Cpp_TestString(STR a) {
 
 #define IID_ICppTest __uuidof(ICppTest)
 __interface  __declspec(uuid("3426CF3C-F7C2-4322-A292-463DB8729B54"))
-	ICppTest :IUnknown
-{
+	ICppTest :IUnknown {
 	STDMETHODIMP TestInt(int a, int b, int c);
 	STDMETHODIMP TestString(STR a, int b, int c);
 	STDMETHODIMP TestBSTR(BSTR a, int b, int c);
 };
 
-class CppTest :public ICppTest
-{
+class CppTest :public ICppTest {
 	STD_IUNKNOWN_METHODS_SIMPLE(ICppTest)
 public:
 	STDMETHODIMP TestInt(int a, int b, int c) {
@@ -557,8 +553,7 @@ ICppTest* Cpp_Interface() {
 //	}
 //}
 
-class One
-{
+class One {
 public:
 	int m;
 	One() {
@@ -569,8 +564,7 @@ public:
 	}
 };
 
-class Two : public One
-{
+class Two : public One {
 public:
 	~Two() {
 		Print(L"~Two");
@@ -578,8 +572,7 @@ public:
 	}
 };
 
-class Move
-{
+class Move {
 public:
 	int m;
 
@@ -612,8 +605,7 @@ public:
 	}
 };
 
-class Move2 :public Move
-{
+class Move2 :public Move {
 public:
 	Move2() : Move() {}
 
@@ -643,7 +635,29 @@ public:
 
 void _TestIAccessibleImpl();
 
+void _test1(HWND w) {
+	DWORD pid = 0;
+	GetWindowThreadProcessId(w, &pid);
+	Print(GetProcessArchitecture(pid));
+}
+
 EXPORT void Cpp_Test() {
+	//_test1(FindWindow(L"QM_Editor", null));
+	//_test1(FindWindow(null, L"LibreAutomate"));
+	//_test1(FindWindow(L"Shell_TrayWnd", null));
+	//_test1(FindWindow(L"#32770", L"test"));
+
+#if _M_ARM64EC
+		STR arch = L"ARM64EC";
+#elif _M_ARM64
+		STR arch = L"ARM64";
+#elif _M_X64
+		STR arch = L"x64";
+#else
+		STR arch = L"x32";
+#endif
+	Printf(L"major=%i minor=%i min10=%i min11=%i is32=%i arch=%s", osVer.major(), osVer.minor(), osVer.minWin10(), osVer.minWin11(), osVer.is32BitOS(), arch);
+
 	//auto hh = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, 0, _Wineventproc, GetCurrentProcessId(), 0, 0);
 	//auto hh = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, (HMODULE)&__ImageBase, _Wineventproc, GetCurrentProcessId(), 0, WINEVENT_INCONTEXT);
 
@@ -871,8 +885,7 @@ EXPORT void Cpp_Test() {
 //	//Print(n);
 //}
 
-class MyAcc :IAccessible
-{
+class MyAcc :IAccessible {
 	HWND _w;
 	int _ref;
 

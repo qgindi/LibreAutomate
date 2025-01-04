@@ -68,10 +68,23 @@ namespace str::pcre {
 	void thread_detach();
 }
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved) {
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
 	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
-		//Printf(L"P+  %i %s    tid=%i", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId());
+	{
+#if _M_ARM64EC
+		STR arch = L"ARM64EC";
+#elif _M_ARM64
+		STR arch = L"ARM64";
+#elif _M_X64
+		STR arch = L"x64";
+#else
+		STR arch = L"x32";
+#endif
+		wchar_t b[500];
+		GetModuleFileNameW(hModule, b, 500);
+		Printf(L"P+  %i %s    tid=%i   arch=%s  dll=%s", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId(), arch, b);
+	}
 		s_moduleHandle = hModule;
 		break;
 		//case DLL_PROCESS_DETACH:
@@ -312,15 +325,14 @@ namespace outproc {
 	//Injects this dll into the target process/thread.
 	//Uses the SetWindowsHookEx/SendMessage method.
 	//w - a window in the target thread.
-	//wAgent - receives agent window handle.
 	//tid, pid - target thread/process id. This func could call GetWindowThreadProcessId, but the caller already did it.
-	bool InjectDll(HWND w, out HWND& wAgent, DWORD tid, DWORD pid) {
+	//Returns: agent window.
+	HWND InjectDll(HWND w, DWORD tid, DWORD pid) {
 		auto hh = SetWindowsHookExW(WH_CALLWNDPROC, inproc::HookCallWndProc, s_moduleHandle, tid);
-		if (hh == 0) PRINTHEX(GetLastError());
-		if (hh == 0) return false;
-		wAgent = (HWND)SendMessageW(w, 0, c_magic, 0);
+		if (hh == 0) return 0;
+		HWND wAgent = (HWND)SendMessageW(w, 0, c_magic, 0);
 		UnhookWindowsHookEx(hh);
-		if (wAgent) return true;
+		return wAgent;
 
 		//problem: does not work with windows of class "Windows.UI.Core.CoreWindow", ie Windows Store app processes.
 		//	SetWindowsHookEx succeeds, but the hook proc is never called, and the dll is not injected.
@@ -332,77 +344,81 @@ namespace outproc {
 		//Also does not work with console windows. Not a problem, because there are no useful AO.
 		//	SetWindowsHookEx sets error 0x57, "The parameter is incorrect".
 		//	The console window actually belongs to the conhost process, and GetWindowThreadProcessId lies.
-
-		return false;
 	}
 
-#pragma region 64/32 bit transition
+#pragma region transition 64/32 bit or 64/arm64
 
-	//Rundll32.exe calls this.
+	//Called by Au.Arch.exe.
 	//Calls InjectDll.
-	EXPORT void WINAPI Cpp_RunDllW(HWND hwnd, HINSTANCE hinst, STR lpszCmdLine, int nCmdShow) //note: with W
-	{
-		//if(!*lpszCmdLine) { //was used by LibStartUserIL when testing the Task Scheduler way
-		//	Sleep(1000);
-		//	return;
-		//}
-
-		//Printf(L"Cpp_RunDllW, %i, %s", IsThisProcess64Bit(), lpszCmdLine);
-		LPWSTR s2;
-		HWND w = (HWND)(LPARAM)strtoi(lpszCmdLine, &s2), wAgent;
+	EXPORT void Cpp_Arch(STR a0, STR a1) {
+		HWND w = (HWND)(LPARAM)strtoi(a0);
+		HANDLE ev = (HANDLE)(LPARAM)strtoi(a1);
 		DWORD pid, tid = GetWindowThreadProcessId(w, &pid); if (tid == 0) return;
-		if (!InjectDll(w, out wAgent, tid, pid)) return;
-		HANDLE ev = (HANDLE)(LPARAM)strtoi(s2);
-		SetEvent(ev);
+		HWND wa = InjectDll(w, tid, pid);
+		if (wa) SetEvent(ev);
 	}
 
-	//Executes rundll32.exe of different bitness.
-	//It calls Cpp_RunDllW which calls InjectDll.
-	bool RunDll(HWND w) {
-#ifdef _WIN64
-		//tested on Win10 and 7: rundll32 supports dll path enclosed in ".
-		static const STR rundll = L"\\SysWOW64\\rundll32.exe \"";
-		static const STR bits = L"32", bits2 = L"64", nuget1 = L"x64\\native", nuget2 = L"86";
-#else
-		static const STR rundll = L"\\SysNative\\rundll32.exe \"";
-		static const STR bits = L"64", bits2 = L"32", nuget1 = L"x86\\native", nuget2 = L"64";
+	//Finds and executes Au.Arch.exe for arch architecture (1 32-bit, 2 x64, 3 ARM64), which calls InjectDll.
+	bool SwitchArchAndInjectDll(HWND w, int arch) {
+		str::StringBuilder b;
+		b << L"\"";
+		auto m = b.GetBufferToAppend();
+		b.FixBuffer(GetModuleFileNameW(s_moduleHandle, m.p, m.n) - 10); //eg "program\64"
+		int len = b.Length();
+		LPWSTR s = b, end = s + len;
+
+#if _M_ARM64EC //this dll is ARM64EC on ARM64 OS. Find dir of ARM64 (arch 3) or 32-bit (arch 1).
+		if (!(arch == 1 || arch == 3)) { PRINTS(L"bad arch"); return false; }
+		if (arch != 3) {
+			if (b.EndsI(LR"(\64\ARM)")) {
+				b.ReplaceTail(6, L"32");
+			} else if (b.EndsI(LR"(\runtimes\win-arm64\native)")) { //using Au nuget package
+				b.ReplaceTail(12, LR"(x86\native)");
+			} else return false;
+		}
+#elif _M_ARM64
+		return 0; //this func not used in ARM64
+#elif _M_X64 //this dll is x64 on x64 OS. Find dir of 32-bit (arch 1).
+		if (arch != 1) { PRINTS(L"bad arch"); return false; }
+		if (s[len - 3] == '\\' && s[len - 2] == '6' && s[len - 1] == '4') {
+			s[len - 2] = '3'; s[len - 1] = '2';
+		} else if (b.EndsI(LR"(\runtimes\win-x64\native)")) { //using Au nuget package
+			s[len - 9] = '8'; s[len - 8] = '6';
+		} else { //probably in temp dir when published single-file
+			b << L"\\32";
+		}
+#else //this dll is 32-bit on x64 or ARM64 OS. Find dir of 64-bit (arch 2) or ARM64 (arch 3).
+		if (!(arch == 2 || arch == 3)) { PRINTS(L"bad arch"); return false; }
+		if (s[len - 3] == '\\' && s[len - 2] == '3' && s[len - 1] == '2') {
+			s[len - 2] = '6'; s[len - 1] = '4';
+			if (arch == 3) b << LR"(\ARM)";
+		} else if (b.EndsI(LR"(\runtimes\win-x86\native)")) { //using Au nuget package
+			b.ReplaceTail(10, arch == 3 ? LR"(arm64\native)" : LR"(x64\native)");
+		} else { //probably in temp dir when published single-file
+			b << L"\\64";
+			if (arch == 3) b << LR"(\ARM)";
+		}
 #endif
 
-		SECURITY_ATTRIBUTES sa = { }; sa.bInheritHandle = true;
-		CHandle ev(CreateEventW(&sa, false, false, null)); //not necessary. Makes faster by 5 ms.
+		b << L"\\Au.Arch.exe";
+		//Printf(L"run: %s", (wchar_t*)b);
+		if (GetFileAttributes(b + 1) == INVALID_FILE_ATTRIBUTES) return 0;
+		b << L"\" ";
 
-		str::StringBuilder b; LPWSTR t; int n;
-		t = b.GetBufferToAppend(out n); b.FixBuffer(GetWindowsDirectoryW(t, n));
-		b << rundll;
-		t = b.GetBufferToAppend(out n); b.FixBuffer(GetModuleFileNameW(s_moduleHandle, t, n - 3));
-		auto u = b + b.Length() - 12; //"??\AuCpp.dll"
-		if (u[0] == bits2[0] && u[1] == bits2[1] && u[-1] == '\\') { // folders \64 and \32. Change "64" <-> "32".
-			u[0] = bits[0];
-			u[1] = bits[1];
-		} else if (0 == wcsncmp(u - 8, nuget1, 10)) { // folders \runtimes\win-x64\native and \runtimes\win-x86\native. Change "64" <-> "86".
-			u -= 7;
-			u[0] = nuget2[0];
-			u[1] = nuget2[1];
-		} else { // folders \ and \32 or \64. Insert "32\" or "64\". Eg in temp dir when published single-file.
-			b.FixBuffer(3);
-			u += 3;
-			memmove(u + 3, u, 10 * 2);
-			u[0] = bits[0];
-			u[1] = bits[1];
-			u[2] = '\\';
-		}
-		if (GetFileAttributes(t) == INVALID_FILE_ATTRIBUTES) return false; //avoid messagebox when our antimatter dll does not exist
-		b << L"\",Cpp_RunDll "; //note: without W
+		SECURITY_ATTRIBUTES sa = { }; sa.bInheritHandle = true;
+		CHandle ev(CreateEventW(&sa, false, false, null)); //not necessary, but makes faster
+
 		b << (__int64)w << ' ' << (__int64)ev.m_h;
 
 		STARTUPINFOW si = { }; si.cb = sizeof(si); si.dwFlags = STARTF_FORCEOFFFEEDBACK;
 		PROCESS_INFORMATION pi;
 		bool ok = CreateProcessW(null, b, null, null, true, 0, null, null, &si, &pi);
-		if (!ok) return false;
-		CloseHandle(pi.hThread);
-		HANDLE ha[] = { ev, pi.hProcess };
-		ok = WAIT_OBJECT_0 == WaitForMultipleObjects(2, ha, false, INFINITE);
-		CloseHandle(pi.hProcess);
+		if (ok) {
+			CloseHandle(pi.hThread);
+			HANDLE ha[] = { ev, pi.hProcess };
+			ok = WAIT_OBJECT_0 == WaitForMultipleObjects(2, ha, false, INFINITE);
+			CloseHandle(pi.hProcess);
+		}
 		return ok;
 	}
 
@@ -473,7 +489,7 @@ namespace outproc {
 			if (_iaccAgent) _iaccAgent->Release(); //problem: hangs if agent's thread now is in a blocked wait function or busy.
 			_iaccAgent = iaccAgent;
 			_time = GetTickCount64();
-}
+		}
 #else
 
 		bool Get(DWORD tid, out HWND& w) {
@@ -545,12 +561,16 @@ namespace outproc {
 		wa = wn::FindWndEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
 		//Perf.Next();
 		if (!wa) {
-			bool ok = false, is64bit, differentBits = IsProcess64Bit(pid, out is64bit) && is64bit != IsThisProcess64Bit();
+			int arch = GetProcessArchitecture(pid);
+			//Printf(L"arch=%i", arch);
 			//Perf.Next();
-			if (!differentBits) {
-				ok = InjectDll(w, out wa, tid, pid);
-			} else if (RunDll(w)) { //speed: 40-60 ms
-				wa = wn::FindWndEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
+			bool ok = arch > 0;
+			if (ok) {
+				if (arch <= 2 && (arch == 2) == IsThisProcess64Bit()) {
+					wa = InjectDll(w, tid, pid);
+				} else if (SwitchArchAndInjectDll(w, arch)) {
+					wa = wn::FindWndEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
+				}
 				ok = !!wa;
 			}
 			//Perf.Next();
@@ -583,4 +603,4 @@ namespace outproc {
 	}
 #endif
 
-		} //namespace outproc
+} //namespace outproc

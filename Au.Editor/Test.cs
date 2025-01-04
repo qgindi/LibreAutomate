@@ -28,6 +28,18 @@ static class Test {
 	public static void FromMenubar() {
 		print.clear();
 		
+		Cpp.Cpp_Test();
+		
+		//var f1 = App.Model.CurrentFile;
+		////var f2 = f1.FindRelative(true, "coko.cs");
+		////var f2 = f1.FindRelative(true, "LibTT.cs", FNFind.File);
+		////var f2 = f1.FindRelative(true, "mmnn", FNFind.Folder);
+		////var f2 = f1.FindRelative(true, "near.txt", FNFind.File);
+		////var f2 = f1.FindRelative(true, FilesModel.TreeControl.SelectedItems[0].Name);
+		////var f2 = App.Model.Find(FilesModel.TreeControl.SelectedItems[0].Name, FNFind.Class);
+		//var f2 = App.Model.Find(FilesModel.TreeControl.SelectedItems[0].ItemPath, FNFind.Class);
+		//print.it(f2?.ItemPath);
+		
 		//var d = Panels.Editor.ActiveDoc;
 		//print.it(d.aaaCurrentPos16);
 		

@@ -107,7 +107,7 @@ partial class SciCode {
 						if (what >= 100) { //meta comment
 							MetaCommentsParser m = new(_sci.EFile) { };
 							var list = what switch { 100 => m.c, 101 => m.pr, 102 => m.resource, _ => m.file };
-							foreach (var v in a) list.Add(v.ItemPathOrName());
+							foreach (var v in a) list.Add(v.ItemPathOrName(relativeTo: _sci.EFile));
 							m.Apply();
 							return;
 						}

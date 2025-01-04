@@ -83,7 +83,7 @@ partial class TriggersAndToolbars {
 	
 	static FileNode _GetFile(string file, bool create, FNFind kind = FNFind.File) {
 		var f = GetProject(create: create);
-		return f?.FindRelative(file, kind);
+		return f?.FindRelative(false, file, kind);
 	}
 	
 	public static void Restart() {

@@ -1,14 +1,73 @@
+using static Au.Types.GWL;
+
 namespace Au.Types;
 
 [DebuggerStepThrough]
-internal static unsafe partial class Cpp {
+static unsafe partial class Cpp {
+	static List<(string dll, nint h)> _dlls = [];
+
 	static Cpp() {
-		filesystem.more.LoadDll64or32Bit_("AuCpp.dll");
+		//_LoadAuNativeDll("AuCpp.dll", hasArm64X: true); //no. If loads the ARM64X version, later [DllImport] ignores it and uses the x64 version. Use resolver instead.
+		LoadAuNativeDll("AuCpp.dll", hasArm64X: true);
 
 		Cpp_SetHelperCallback(&_HelperCallback); //note: not in elm ctor. Eg by the elm tool not via elm. Fast.
 	}
 
-	//speed:
+	/// <summary>
+	/// Loads correct 64/32/ARM64 version of a private native dll. Then <c>[DllImport]</c> will use it.
+	/// Used for Au dlls (AuCpp, sqlite3) and LA dlls (Scintilla).
+	/// </summary>
+	/// <param name="fileName">Dll file name like <c>"name.dll"</c>.</param>
+	/// <param name="hasArm64X">The dll has ARM64X version. Use it on ARM64 OS (Win11+).</param>
+	/// <exception cref="DllNotFoundException"></exception>
+	/// <remarks>
+	/// Searches in:
+	/// - subfolder <c>64</c> or <c>32</c> of the <c>Au.dll</c> folder. Or <c>64\ARM</c>, if <i>hasArm64X</i> true and ARM64 OS.
+	/// - calls <b>NativeLibrary.TryLoad</b>, which works like simple <c>[DllImport]</c>, eg may use info from <c>deps.json</c>.
+	/// - subfolder <c>64</c> etc of folder specified in environment variable <c>Au.Path</c>. For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then <b>folders.ThisApp</b> is <c>"C:\Program Files (x86)\Microsoft Visual Studio\..."</c>). Workaround: set environment variable <c>Au.Path</c> = the main Au directory and restart Windows.
+	/// </remarks>
+	public static void LoadAuNativeDll(string fileName, bool hasArm64X = false) {
+		Debug.Assert(fileName.Ends(".dll"));
+		lock (_dlls) {
+			if (_dlls.Count == 0) {
+				NativeLibrary.SetDllImportResolver(Assembly.GetExecutingAssembly(), static (dll, asm, searchPath) => {
+					foreach (var v in _dlls) {
+						if (dll.Eqi(v.dll)) return v.h;
+					}
+					return 0;
+				});
+			}
+			var h = _LoadAuNativeDll(fileName, hasArm64X); //note: load now, not lazily. Eg may need to load dll to register control classes (eg Scintilla).
+			_dlls.Add((fileName, h));
+		}
+	}
+
+	unsafe static nint _LoadAuNativeDll(string fileName, bool hasArm64X = false) {
+		//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
+
+		nint h = 0;
+		string rel = (sizeof(nint) == 4 ? @"32\" : hasArm64X && RuntimeInformation.OSArchitecture == Architecture.Arm64 ? @"64\ARM\" : @"64\") + fileName;
+		//TODO: test 32-bit process on ARM64 OS.
+
+		//Au.dll dir + 64/32
+		var asm = typeof(Cpp).Assembly;
+		if (asm.Location is [_, ..] s1) {
+			s1 = s1[..(s1.LastIndexOf('\\') + 1)] + rel;
+			if (NativeLibrary.TryLoad(s1, out h)) return h;
+		}
+
+		//like [DllImport]. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which probably was built at startup from deps.json.
+		//	Also finds in temp dir when <PublishSingleFile>+<IncludeNativeLibrariesForSelfExtract>.
+		if (NativeLibrary.TryLoad(fileName, asm, null, out h)) return h;
+
+		//environment variable + 64/32
+		if (Environment.GetEnvironmentVariable("Au.Path") is string s2)
+			if (NativeLibrary.TryLoad(pathname.combine(s2, rel), out h)) return h;
+
+		throw new DllNotFoundException(fileName + " not found");
+	}
+
+	//speed (measured many years ago):
 	//	Calling DllImport functions is 4-5 times slower than C# functions. (tested with the old .NET Framework, now should be faster)
 	//	Calling COM functions is 2-10 times slower than DllImport functions.
 	//	Tested with int and string parameters, with default marshaling and with 'fixed'.

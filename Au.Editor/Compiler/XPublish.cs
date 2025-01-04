@@ -219,9 +219,10 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			var s = (_meta.Bit32 ? @"32\" : @"64\") + filename;
 			//_AddContentFile(folders.ThisAppBS + s, s); //no, NativeLibrary.TryLoad fails if single-file
 			_AddContentFile(folders.ThisAppBS + s, filename);
-			if (both64and32) { //also need AuCpp.dll of different bitness. For elm to load into processes of different bitness. See func RunDll in in-proc.cpp.
+			if (both64and32) { //also need AuCpp.dll of different bitness. For elm to load into processes of different bitness. See func SwitchArchAndInjectDll in in-proc.cpp.
 				s = (!_meta.Bit32 ? @"32\" : @"64\") + filename;
 				_AddContentFile(folders.ThisAppBS + s, s);
+				//TODO: ARM64
 			}
 		}
 		

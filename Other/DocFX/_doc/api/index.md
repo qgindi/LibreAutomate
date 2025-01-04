@@ -10,15 +10,12 @@
 #### .NET assembly files
 - `Au.dll` - contains code of the above namespaces.
 
-#### Native code dll files
-- `64\AuCpp.dll` - used by `Au.dll` in 64-bit processes.
-- `32\AuCpp.dll` - used by `Au.dll` in 32-bit processes.
-- `64\sqlite3.dll` - used by the **sqlite** class in 64-bit processes.
-- `32\sqlite3.dll` - used by the **sqlite** class in 32-bit processes.
+#### Native code files
+- `AuCpp.dll`, `sqlite3.dll`, `Au.Arch.exe` - used by `Au.dll`.
 
-These files are in the editor folder. The .exe compiler copies them to the .exe folder if need.
+These files are in LibreAutomate subfolders `64` and `32`. The .exe compiler copies them to the .exe folder. When using the library via NuGet, they are in subfolder `runtimes`.
 
-Other dll files in the editor folder are not part of the library. They are undocumented.
+Other dll files in the LibreAutomate folder are not part of the library. They are undocumented.
 
 ### Using the library without LibreAutomate
 To get the dlls use NuGet package [LibreAutomate](https://www.nuget.org/packages/LibreAutomate). Or copy from the LibreAutomate folder. Or build from source code.

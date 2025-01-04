@@ -67,12 +67,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\_\64\AuCpp.dll" Link="AuCpp.dll">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\_\64\sqlite3.dll" Link="sqlite3.dll">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Include="x\Icon-128.png" Pack="true" PackagePath="\" />
 		<None Include="x\NuGet.md" Pack="true" PackagePath="\" />
 	</ItemGroup>

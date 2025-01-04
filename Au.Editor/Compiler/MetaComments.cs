@@ -267,6 +267,11 @@ class MetaComments {
 	public List<MCFileAndString> OtherFiles { get; private set; }
 	
 	/// <summary>
+	/// Meta c files and folders for exporting.
+	/// </summary>
+	internal List<FileNode> ExportC_ { get; private set; }
+	
+	/// <summary>
 	/// Meta option 'preBuild'.
 	/// </summary>
 	public MCFileAndString PreBuild { get; private set; }
@@ -440,7 +445,7 @@ class MetaComments {
 	/// <summary>
 	/// Gets meta comments from a C# file and its meta c descendants.
 	/// </summary>
-	bool _ParseFile(FileNode f, bool isMain, bool isC, bool isGlobalSc = false) {
+	bool _ParseFile(FileNode f, bool isMain, bool isC, bool isGlobal = false) {
 		if (!isMain && _CodeFilesContains(f)) return false;
 		
 		string code = null;
@@ -474,15 +479,20 @@ class MetaComments {
 		//add global.cs
 		if (isMain) {
 			var model = f.Model;
-			var glob = model.Find("global.cs", FNFind.Class); //fast, uses dictionary
-			if (glob != null) {
-				if (glob == f) isGlobalSc = true;
-				else _ParseFile(glob, false, true, isGlobalSc: true);
-			} else if (!model.NoGlobalCs_) {
-				model.NoGlobalCs_ = true;
-				Panels.Output.Scintilla.AaTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
-				if (model.FoundMultiple == null) print.warning("Missing class file \"global.cs\". <+restoreGlobal>Restore<>.", -1, "<>");
-				else print.warning("Cannot use class file 'global.cs', because multiple exist.", -1);
+			if (!_flags.Has(MCFlags.ExportNoGlobal)) {
+				var glob = model.Find("global.cs", FNFind.Class); //fast, uses dictionary
+				if (glob != null) {
+					if (glob == f) isGlobal = true;
+					else {
+						if (_flags.Has(MCFlags.Export)) (ExportC_ ??= new()).Add(glob);
+						_ParseFile(glob, false, true, isGlobal: true);
+					}
+				} else if (!model.NoGlobalCs_) {
+					model.NoGlobalCs_ = true;
+					Panels.Output.Scintilla.AaTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
+					if (model.FoundMultiple == null) print.warning("Missing class file \"global.cs\". <+restoreGlobal>Restore<>.", -1, "<>");
+					else print.warning("Cannot use class file 'global.cs', because multiple exist.", -1);
+				}
 			}
 		}
 		
@@ -518,7 +528,7 @@ class MetaComments {
 		//let at first compile "global.cs" and meta c files. Why:
 		//	1. If they have same classes etc or assembly/module attributes, it's better to show error in current file.
 		//	2. If they have module initializers, it's better to call them first.
-		if (isGlobalSc) {
+		if (isGlobal) {
 			GlobalCount = CodeFiles.Count - (isMain ? 0 : 1);
 		} else if (CodeFiles.Count > nc) {
 			CodeFiles.RemoveAt(nc - 1);
@@ -541,13 +551,12 @@ class MetaComments {
 		
 		if (value.Length == 0) { _ErrorV("value cannot be empty"); return; }
 		bool forCodeInfo = _flags.Has(MCFlags.ForCodeInfo),
-			forFindRef = _flags.Has(MCFlags.ForFindReferences);
+			forFindRef = _flags.Has(MCFlags.ForFindReferences),
+			forExport = _flags.Has(MCFlags.Export);
 		
 		switch (name) {
-		case "r":
-		case "com":
-		case "pr":
-		case "nuget":
+		case "r" or "com" or "pr" or "nuget":
+			if (forExport) if (name[0] != 'p' || !_flags.Has(MCFlags.ExportPR)) return;
 			if (!MetaReferences.ParseAlias_(value, out var s1, out var alias, supportOldSyntax: true)) {
 				_ErrorV("invalid string");
 			} else if (name[0] == 'n') {
@@ -556,7 +565,7 @@ class MetaComments {
 				if (name[0] == 'p') {
 					if (alias != null) { _ErrorV("pr alias not supported"); return; } //could support, but who will use it
 					//Specified |= EMSpecified.pr;
-					if (!_PR(ref s1) || forCodeInfo) return;
+					if (!_PR(ref s1) || forCodeInfo || forExport) return;
 				}
 				
 				try {
@@ -573,6 +582,7 @@ class MetaComments {
 			return;
 		case "c":
 			if (_GetFile(value, FNFind.Any) is FileNode ff) {
+				if (forExport) (ExportC_ ??= new()).Add(ff);
 				if (ff.IsFolder) {
 					foreach (var v in ff.Descendants()) if (v.IsClass) _ParseFile(v, false, true);
 				} else {
@@ -791,21 +801,25 @@ class MetaComments {
 	static readonly Dictionary<Type, (string name, int value)[]> s_enumCache = new();
 	
 	FileNode _GetFile(string s, FNFind kind) {
-		var f = _f.f.FindRelative(s, kind, orAnywhere: true);
+		string s0 = s;
+		var f = _f.f.FindRelative(true, s, kind);
 		if (f == null) {
 			if (App.Model.FoundMultiple != null) _ErrorV($"multiple '{s}' exist in this workspace. Use path, or rename a file.");
 			else if (kind == FNFind.Folder) _ErrorV($"folder '{s}' does not exist in this workspace");
-			else if (kind != FNFind.Any && null != _f.f.FindRelative(s, FNFind.File)) _ErrorV($"expected a {(kind == FNFind.Class ? "class" : "C#")} file");
+			else if (kind != FNFind.Any && null != _f.f.FindRelative(false, s, FNFind.File)) _ErrorV($"expected a {(kind == FNFind.Class ? "class" : "C#")} file");
 			else _ErrorV($"file '{s}' does not exist in this workspace");
 			return null;
 		}
 		int v = filesystem.exists(s = f.FilePath, true);
 		if (v != (f.IsFolder ? 2 : 1)) { _ErrorV("file does not exist: " + s); return null; }
+		
+		if (_flags.Has(MCFlags.Export) && s0.Contains('\\')) { _ErrorV($"must be <c green>{pathname.getName(s0)}<>. Path would be invalid when imported elsewhere."); return null; }
+		
 		return f;
 	}
 	
 	public static FileNode FindFile(FileNode fRelativeTo, string metaValue, FNFind kind) {
-		var f = fRelativeTo.FindRelative(metaValue, kind, orAnywhere: true);
+		var f = fRelativeTo.FindRelative(true, metaValue, kind);
 		if (f != null) {
 			int v = filesystem.exists(f.FilePath, true);
 			if (v != (f.IsFolder ? 2 : 1)) return null;
@@ -860,7 +874,11 @@ class MetaComments {
 		if (f == MainFile.f) return _ErrorV("circular reference");
 		if (ProjectReferences is { } pr) foreach (var v in pr) if (v.f == f) return false;
 		MetaComments m = null;
-		if (!_flags.Has(MCFlags.ForCodeInfo)) {
+		if (_flags.Has(MCFlags.Export)) {
+			//don't need MetaComments and recursion. The export function will do it.
+			//m = new MetaComments(_flags | MCFlags.IsPR);
+			//if (!m.Parse(f, projFolder)) return false;
+		} else if (!_flags.Has(MCFlags.ForCodeInfo)) {
 			if (!Compiler.Compile(CCReason.CompileIfNeed, out var r, f, projFolder, needMeta: true, addMetaFlags: (_flags & MCFlags.Publish) | MCFlags.IsPR))
 				return _ErrorV("failed to compile library");
 			//print.it(r.role, r.file);
@@ -1142,6 +1160,22 @@ enum MCFlags {
 	/// Used for Publish.
 	/// </summary>
 	Publish = 128,
+	
+	/// <summary>
+	/// When exporting.
+	/// Note: does not include <b>ForCodeInfo</b>.
+	/// </summary>
+	Export = 0x10000000,
+	
+	/// <summary>
+	/// Export pr too. Use with <b>ForExport</b>.
+	/// </summary>
+	ExportPR = 0x20000000,
+	
+	/// <summary>
+	/// Don't export global.cs. Use with <b>ForExport</b>.
+	/// </summary>
+	ExportNoGlobal = 0x40000000,
 }
 
 [Flags]

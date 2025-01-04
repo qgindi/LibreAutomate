@@ -1,6 +1,5 @@
 EXPORTS
 
-Cpp_RunDllW ;__stdcall
 UnloadAuCppDll ;__stdcall
 
 pcre2_pattern_info=pcre2_pattern_info_16

@@ -23,7 +23,7 @@ public static unsafe class osVersion {
 		//this is to remind to add new members for new Windows 10/11 versions
 		//Debug_.PrintIf(_win10build > 19044, $"{_win10build} {Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "DisplayVersion", "failed")}");
 
-		_is32BitOS = sizeof(nint) == 4 && !(Api.IsWow64Process(Api.GetCurrentProcess(), out _isWow64) && _isWow64);
+		_is32BitOS = sizeof(nint) == 4 && !(Api.IsWow64Process(Api.GetCurrentProcess(), out _isWow64) && _isWow64); //TODO: RuntimeInformation.OSArchitecture
 	}
 
 	static readonly int _winmajor, _winminor, _winver, _winbuild, _win10build;
@@ -170,6 +170,8 @@ public static unsafe class osVersion {
 	/// <c>true</c> if Windows is 32-bit, <c>false</c> if 64-bit.
 	/// </summary>
 	public static bool is32BitOS => _is32BitOS;
+	
+	//TODO: isARM64OS
 
 	/// <summary>
 	/// Returns <c>true</c> if this process is a 32-bit process running on 64-bit Windows. Also known as WOW64 process.

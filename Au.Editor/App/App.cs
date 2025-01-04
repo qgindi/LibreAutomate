@@ -52,7 +52,7 @@ static partial class App {
 		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
-		DebugTraceListener.Setup(usePrint: true);
+		//DebugTraceListener.Setup(usePrint: true);//TODO: disabled temporarily
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 		Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
@@ -71,7 +71,7 @@ static partial class App {
 #if DEBUG
 		print.qm2.use = !true;
 		//timer.after(1, _ => perf.nw());
-		_RemindToBuild32bit();
+		_RemindToBuildAllPlatforms();
 #endif
 		_envVarUpdater = new();
 		
@@ -264,12 +264,11 @@ static partial class App {
 	}
 	
 #if DEBUG
-	static void _RemindToBuild32bit() {
+	static void _RemindToBuildAllPlatforms() {
 		if (IsAuAtHome)
-			if (filesystem.getProperties(folders.ThisAppBS + @"..\Cpp", out var p64)
-				&& filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32)) {
-				var v = p64.LastWriteTimeUtc - p32.LastWriteTimeUtc;
-				if (v > default(TimeSpan)) print.it("Note: may need to build 32-bit AuCpp.dll.");
+			if (filesystem.getProperties(folders.ThisAppBS + @"..\Cpp", out var p64)) {
+				if (!filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32) || p64.LastWriteTimeUtc > p32.LastWriteTimeUtc) print.it("Note: may need to build Cpp project x86.");
+				if (!filesystem.getProperties(folders.ThisAppBS + @"64\ARM\AuCpp.dll", out var pARM) || p64.LastWriteTimeUtc > pARM.LastWriteTimeUtc) print.it("Note: may need to build Cpp project ARM64EC.");
 			}
 	}
 #endif

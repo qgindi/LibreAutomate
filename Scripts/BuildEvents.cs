@@ -19,15 +19,17 @@ return args[0] switch {
 /// Exits editor. Copies AuCpp.dll and unloads the old dll from processes.
 int CppPostBuild() {
 	_ExitEditor();
-	if (!_CopyAuCppDllIfNeed(args[2] != "x64", false)) return 1;
+	if (args[2] == "ARM64") return 0; //TODO
+	if (!_CopyAuCppDllIfNeed(args[2], false)) return 1;
 	return 0;
 }
 
 /// Exits editor. If need, copies AuCpp.dll and unloads the old dll from processes.
 int EditorPreBuild() {
 	_ExitEditor();
-	_CopyAuCppDllIfNeed(false, true);
-	_CopyAuCppDllIfNeed(true, true);
+	_CopyAuCppDllIfNeed("Win32", true);
+	_CopyAuCppDllIfNeed("x64", true);
+	_CopyAuCppDllIfNeed("ARM64EC", true);
 	return 0;
 }
 
@@ -41,10 +43,10 @@ void _ExitEditor() {
 	}
 }
 
-bool _CopyAuCppDllIfNeed(bool bit32, bool editor) {
+bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 	var cd = Environment.CurrentDirectory;
-	string src = pathname.normalize($@"{cd}\..\Cpp\bin\{args[1]}\{(bit32 ? "Win32" : "x64")}\AuCpp.dll");
-	string dest = pathname.normalize($@"{cd}\..\_\{(bit32 ? "32" : "64")}\AuCpp.dll");
+	string src = pathname.normalize($@"{cd}\..\Cpp\bin\{args[1]}\{platform}\AuCpp.dll");
+	string dest = pathname.normalize($@"{cd}\..\_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64EC" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll");
 	if (!filesystem.getProperties(src, out var p1)) { if (!editor) print.it("Failed `filesystem.getProperties(src)`"); return false; }
 	filesystem.getProperties(dest, out var p2);
 	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {

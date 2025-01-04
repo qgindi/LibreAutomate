@@ -116,11 +116,8 @@ static class Menus {
 		
 		[Command("Export, import", separator = true)]
 		public static class ExportImport {
-			[Command("Export as .zip...")]
-			public static void Export_as_zip() { App.Model.ExportSelected(zip: true); }
-			
 			[Command("...")]
-			public static void Export_as_workspace() { App.Model.ExportSelected(zip: false); }
+			public static void Export() { App.Model.ExportSelected(); }
 			
 			[Command("Import .zip...", separator = true)]
 			public static void Import_zip() {

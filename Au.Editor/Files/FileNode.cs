@@ -33,7 +33,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	string _icon;
 	uint _testScriptId;
 	
-	//this ctor is used when creating new item of known type
+	/// <summary>
+	/// This ctor is used when creating new item of known type in current workspace. Not when exporting.
+	/// </summary>
 	public FileNode(FilesModel model, string name, FNType type) {
 		_model = model;
 		_type = type;
@@ -41,9 +43,14 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_id = _model.AddGetId(this);
 	}
 	
-	//this ctor is used when importing items from files etc.
-	//name is filename with extension.
-	//filePath is used: 1. To detect type (when !isDir). 2. If isLink, to set link target.
+	/// <summary>
+	/// This ctor is used when importing items from files etc.
+	/// </summary>
+	/// <param name="model"></param>
+	/// <param name="name"></param>
+	/// <param name="filePath">Used to detect type (when !isDir). If isLink, sets link target.</param>
+	/// <param name="isDir"></param>
+	/// <param name="isLink"></param>
 	public FileNode(FilesModel model, string name, string filePath, bool isDir, bool isLink = false) {
 		_model = model;
 		_type = isDir ? FNType.Folder : _DetectFileType(filePath);
@@ -52,8 +59,10 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		if (isLink) _linkTarget = filePath;
 	}
 	
-	//this ctor is used when copying an item or importing a workspace.
-	//Deep-copies fields from f, except _model, _name, _id (generates new) and _testScriptId.
+	/// <summary>
+	/// This ctor is used when copying an item or importing a workspace.
+	/// Deep-copies fields from f, except _model, _name, _id (generates new) and _testScriptId.
+	/// </summary>
 	FileNode(FilesModel model, FileNode f, string name) {
 		_model = model;
 		_SetName(name);
@@ -65,7 +74,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		_id = _model.AddGetId(this);
 	}
 	
-	//this ctor is used when loading workspace (reading files.xml)
+	/// <summary>
+	/// This ctor is used when loading workspace (reading files.xml).
+	/// </summary>
 	FileNode(XmlReader x, FileNode parent, FilesModel model) {
 		_model = model;
 		if (parent == null) { //the root node
@@ -107,25 +118,59 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		return root;
 	}
 	
-	public void SaveWorkspace(string file) => XmlSave(file, (x, n) => n._XmlWrite(x, false));
+	public void SaveWorkspace(string file) => XmlSave(file, (x, n) => n._XmlWrite(x));
 	
-	void _XmlWrite(XmlWriter x, bool exporting) {
-		if (Parent == null) {
+	void _XmlWrite(XmlWriter x) {
+		if (x.WriteState is WriteState.Prolog or WriteState.Start) {
 			x.WriteStartElement("files");
 		} else {
 			x.WriteStartElement(_type switch { FNType.Folder => "d", FNType.Script => "s", FNType.Class => "c", _ => "n" });
 			x.WriteAttributeString("n", _name);
-			if (!exporting) x.WriteAttributeString("i", _id.ToString());
+			if (_id != 0) x.WriteAttributeString("i", _id.ToString());
 			if (_flags != 0) x.WriteAttributeString("f", ((int)_flags).ToString());
-			if (IsLink) x.WriteAttributeString("path", _linkTarget.PathStarts(_model.WorkspaceDirectory) ? @"." + _linkTarget[_model.WorkspaceDirectory.Length..] : _linkTarget);
-			var ico = CustomIconName; if (ico != null) x.WriteAttributeString("icon", ico);
-			if (!exporting && _testScriptId != 0) x.WriteAttributeString("run", _testScriptId.ToString());
+			if (IsLink) x.WriteAttributeString("path", _model != null && _linkTarget.PathStarts(_model.WorkspaceDirectory) ? @"." + _linkTarget[_model.WorkspaceDirectory.Length..] : _linkTarget);
+			if (CustomIconName is { } ico) x.WriteAttributeString("icon", ico);
+			if (_testScriptId != 0) x.WriteAttributeString("run", _testScriptId.ToString());
+			
+			//These are not set when exporting: _id, _model, _testScriptId.
 		}
 	}
 	
-	public static void Export(FileNode[] a, string file) => new FileNode().XmlSave(file, (x, n) => n._XmlWrite(x, true), children: a);
+	public static void Export(FileNode fRoot, string file) {
+		fRoot.XmlSave(file, (x, n) => n._XmlWrite(x));
+	}
 	
-	FileNode() { } //used by Export
+	FileNode() { }
+	
+	/// <summary>
+	/// Creates the root folder for exporting.
+	/// </summary>
+	public static FileNode CreateForExport() {
+		return new() { _type = FNType.Folder };
+	}
+	
+	/// <summary>
+	/// Creates a folder for exporting, eg folder "Classes" for meta c files.
+	/// </summary>
+	/// <param name="folderName"></param>
+	public static FileNode CreateForExport(string folderName) {
+		return new() { _type = FNType.Folder, _name = folderName };
+	}
+	
+	/// <summary>
+	/// Creates a clone of an item for exporting.
+	/// </summary>
+	/// <param name="f">The original item to get properties from.</param>
+	/// <param name="exportLinkTarget">Don't set <b>_linkTarget</b>.</param>
+	public static FileNode CreateForExport(FileNode f, bool exportLinkTarget) {
+		return new() {
+			_type = f._type,
+			_name = f._name,
+			_flags = f._flags,
+			_linkTarget = exportLinkTarget ? null : f._linkTarget,
+			_icon = f._icon,
+		};
+	}
 	
 	#endregion
 	
@@ -229,11 +274,14 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// Formats SciTags &lt;open&gt; link tag to open this file.
 	/// </summary>
 	/// <param name="path">In link name use <see cref="ItemPath"/> instead of name.</param>
-	/// <param name="line">If not null, appends |line. It is 1-based.</param>
-	public string SciLink(bool path = false, int? line = null)
-		=> line == null
-		? $"<open {IdStringWithWorkspace}>{(path ? ItemPath : _name)}<>"
-		: $"<open {IdStringWithWorkspace}|{line.Value}>{(path ? ItemPath : _name)}<>";
+	/// <param name="lineOrPos">If not null: if >0, appends |lineOrPos (1-based line index); else appends ||-lineOrPos (0-based position).</param>
+	public string SciLink(bool path = false, int? lineOrPos = null) {
+		string text = path ? ItemPath : _name;
+		if (lineOrPos == null) return $"<open {IdStringWithWorkspace}>{text}<>";
+		int i = lineOrPos.Value;
+		if (i > 0) return $"<open {IdStringWithWorkspace}|{i}>{text}<>";
+		return $"<open {IdStringWithWorkspace}||{-i}>{text}<>";
+	}
 	
 	/// <summary>
 	/// true if is a link to an external file or folder.
@@ -391,14 +439,23 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 	
 	/// <summary>
-	/// Returns <b>ItemPath</b> if exist multiple items with <b>Name</b> or if <b>Name</b> is like "Script1.cs", "Class1.cs" etc. Else returns <b>Name</b>.
+	/// Returns <b>ItemPath</b> if exist multiple items with <b>Name</b>. Else returns <b>Name</b>.
 	/// Can be used for inserting code, like <c>script.run</c>.
 	/// </summary>
 	public string ItemPathOrName() {
-		var s = _name;
-		if (!s.RxIsMatch(@"(?i)^(?:Script\d*\.cs|Class\d*\.cs|File\d*\..+|Folder\d*)$")) {
-			if (Model.Find(s, silent: true) == this) return s; //else found multiple
-		}
+		//if (!_name.RxIsMatch(@"(?i)^(?:Script\d*\.cs|Class\d*\.cs|File\d*\..+|Folder\d*)$")) { //rejected
+		if (Model.Find(_name, silent: true) == this) return _name; //else found multiple
+		//}
+		return ItemPath;
+	}
+	
+	/// <summary>
+	/// Returns <b>ItemPath</b> if exist multiple items with <b>Name</b>, unless single exists in <i>relativeTo</i>'s subfolders or in an ancestor folder. Else returns <b>Name</b>.
+	/// Uses <see cref="FindRelative"/>.
+	/// </summary>
+	/// <param name="relativeTo">Search relative to this folder or to the parent folder of this file.</param>
+	public string ItemPathOrName(FileNode relativeTo, FNFind kind = FNFind.Any) {
+		if (relativeTo.FindRelative(true, _name, kind) == this) return _name;
 		return ItemPath;
 	}
 	
@@ -662,7 +719,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		FileNode folder = null;
 		foreach (var f in e) {
 			if (!name.Eqi(f._name)) continue;
-			if (null == FilesModel.KindFilter_(f, kind)) continue;
+			if (!FilesModel.KindFilter_(f, kind)) continue;
 			if (preferFile && f.IsFolder) { folder ??= f; continue; }
 			return f;
 		}
@@ -672,16 +729,22 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	FileNode _FindRelative(string name, FNFind kind, bool orAnywhere = false) {
 		Model.FoundMultiple = null;
 		bool retry = false; gRetry:
-#if true //fast, but allocates
 		int i = name.LastIndexOf('\\');
 		var lastName = i < 0 ? name : name[(i + 1)..]; //never mind: allocation. To avoid allocation would need to enumerate without dictionary, and in big workspace it can be 100 times slower.
-		if (_model._nameMap.MultiGet_(lastName, out FileNode v, out var a)) {
-			if (a != null) {
-				foreach (var f in a) if (_Cmp(f)) return f;
-				if (orAnywhere && i < 0) Model.FoundMultiple = a;
-			} else {
-				if (_Cmp(v)) return v;
-				if (orAnywhere && i < 0) return v;
+		if (_model._nameMap.MultiGet_(lastName, out FileNode single, out var multiple)) {
+			if (multiple != null) {
+				foreach (var f in multiple) if (_KindOk(f) && _PathOk(f)) return f;
+				if (orAnywhere && i < 0) { //try to find single descendant in this folder or in an ancestor folder
+					for (var p = this; p.HasParent; p = p.Parent) {
+						FileNode found = null;
+						foreach (var f in multiple) if (_KindOk(f) && p.IsAncestorOf(f)) { if (found == null) found = f; else goto gMulti; }
+						if (found != null) return found;
+					}
+					gMulti:
+					Model.FoundMultiple = multiple;
+				}
+			} else if (_KindOk(single)) {
+				if ((orAnywhere && i < 0) || _PathOk(single)) return single;
 			}
 		}
 		if (!retry) {
@@ -690,8 +753,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		return null;
 		
-		bool _Cmp(FileNode f) {
-			if (null == FilesModel.KindFilter_(f, kind)) return false;
+		bool _KindOk(FileNode f) => FilesModel.KindFilter_(f, kind);
+		
+		bool _PathOk(FileNode f) {
 			f = f.Parent;
 			for (int j = i; j > 0 && f != null; f = f.Parent) {
 				int k = name.LastIndexOf('\\', j - 1);
@@ -700,25 +764,6 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			}
 			return f == this;
 		}
-#else //allocation-free, without dictionary
-		if (name.Starts(@"\\")) return null;
-		var f = this; int lastSegEnd = -1;
-		foreach (var v in name.Segments(@"\", SegFlags.NoEmpty)) {
-			var s = name.AsSpan(v.start, v.Length);
-			bool last = (lastSegEnd = v.end) == name.Length;
-			for (f = f.FirstChild; f != null; f = f.Next) {
-				if (last) {
-					if (null != FilesModel.KindFilter_(f, kind) && s.Eqi(f._name)) break;
-					//if (s.Eqi(f._name) && null != FilesModel.KindFilter_(f, kind)) break;
-				} else {
-					if (f.IsFolder && s.Eqi(f._name)) break;
-				}
-			}
-			if (f == null) return null;
-		}
-		if (lastSegEnd != name.Length) return null; //prevents finding when name is "" or @"\" or @"xxx\".
-		return f;
-#endif
 	}
 	
 	/// <summary>
@@ -727,9 +772,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	/// <param name="relativePath">Examples: "name.cs", @"subfolder\name.cs", @".\subfolder\name.cs", @"..\parent\name.cs", @"\root path\name.cs".</param>
 	/// <param name="kind"></param>
-	/// <param name="orAnywhere">If <i>relativePath</i> is filename and does not exist in this folder, if single such file exists anywhere, return that file.</param>
-	public FileNode FindRelative(string relativePath, FNFind kind = FNFind.Any, bool orAnywhere = false) {
-		if (!IsFolder) return Parent.FindRelative(relativePath, kind, orAnywhere);
+	/// <param name="orAnywhere">If <i>relativePath</i> is filename and does not exist in this folder: if single such file exists anywhere or in subfolders or in an ancestor folder, return that file.</param>
+	public FileNode FindRelative(bool orAnywhere, string relativePath, FNFind kind = FNFind.Any) {
+		if (!IsFolder) return Parent.FindRelative(orAnywhere, relativePath, kind);
 		var s = relativePath;
 		if (s.NE()) return null;
 		FileNode p = this;
@@ -756,12 +801,12 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		if (!name.NE()) {
 			if (name[0] == '\\') {
 				var f1 = _FindRelative(name, FNFind.File);
-				if (f1 != null) return new FileNode[] { f1 };
+				if (f1 != null) return [f1];
 			} else {
 				return Descendants().Where(k => !k.IsFolder && k._name.Eqi(name)).ToArray();
 			}
 		}
-		return Array.Empty<FileNode>();
+		return [];
 	}
 	
 	/// <summary>

@@ -4,6 +4,10 @@ using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
 using static Menus.File;
+using Au.Compiler;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
+using Au.Controls;
 
 partial class FilesModel {
 	public readonly FileNode Root;
@@ -254,10 +258,10 @@ partial class FilesModel {
 		
 		FileNode _FindByName(string name, FNFind kind) {
 			if (_nameMap.MultiGet_(name, out FileNode v, out var a)) {
-				if (v != null) return KindFilter_(v, kind);
+				if (v != null) return KindFilter_(v, kind) ? v : null;
 				FileNode first = null;
 				foreach (var f in a) {
-					if (KindFilter_(f, kind) == null) continue;
+					if (!KindFilter_(f, kind)) continue;
 					if (first == null) first = f; else (FoundMultiple ??= new() { first }).Add(f);
 				}
 				if (FoundMultiple == null) return first; //note: don't return the first if found multiple. Unsafe.
@@ -277,13 +281,13 @@ partial class FilesModel {
 	/// </summary>
 	public List<FileNode> FoundMultiple;
 	
-	internal static FileNode KindFilter_(FileNode f, FNFind kind) => kind switch {
-		FNFind.File => !f.IsFolder ? f : null,
-		FNFind.Folder => f.IsFolder ? f : null,
-		FNFind.CodeFile => f.IsCodeFile ? f : null,
-		FNFind.Class => f.IsClass ? f : null,
-		//FNFind.Script => f.IsScript ? f : null,
-		_ => f,
+	internal static bool KindFilter_(FileNode f, FNFind kind) => kind switch {
+		FNFind.File => !f.IsFolder,
+		FNFind.Folder => f.IsFolder,
+		FNFind.CodeFile => f.IsCodeFile,
+		FNFind.Class => f.IsClass,
+		//FNFind.Script => f.IsScript,
+		_ => true, //FNFind.Any
 	};
 	
 	/// <summary>
@@ -303,7 +307,7 @@ partial class FilesModel {
 		
 		foreach (var f in Root.Descendants()) {
 			if (f.IsLink) {
-				if (path.Eqi(f.LinkTarget)) return KindFilter_(f, kind);
+				if (path.Eqi(f.LinkTarget)) return KindFilter_(f, kind) ? f : null;
 				if (f.IsFolder) {
 					d = f.LinkTarget;
 					if (path.PathStarts(d)) return f.FindDescendant(path[d.Length..], kind);
@@ -1418,12 +1422,60 @@ partial class FilesModel {
 		return d.ResultPath;
 	}
 	
-	public bool ExportSelected(string location = null, bool zip = false) {
-		var a = TreeControl.SelectedItems; if (a.Length < 1) return false;
+	public bool ExportSelected(string location = null) {
+		var aSel = TreeControl.SelectedItems; if (aSel.Length < 1) return false;
 		
-		string name = a[0].Name; if (!a[0].IsFolder) name = pathname.getNameNoExt(name);
+		//if selected a file in a project, export the project folder instead
+		for (int i = 0; i < aSel.Length; i++) if (aSel[i].FindProject(out var folder, out _)) aSel[i] = folder;
+		aSel = aSel.Distinct().ToArray();
 		
-		if (a.Length == 1 && a[0].IsFolder && a[0].HasChildren) a = a[0].Children().ToArray();
+		var b = new wpfBuilder("Export selected files").WinSize(550);
+		b.WinProperties(showInTaskbar: false);
+		b.R.StartGrid<KGroupBox>("Files");
+		b.R.xAddInfoBlockF($"Selected: {string.Join(", ", aSel)}");
+		b.R.Add(out KCheckBox cDeps, "And files used via /*/ c, resource, file, preBuild, postBuild, icon, manifest, sign /*/")
+			.Checked(0 != (App.Settings.export & 4));
+		b.R.Add(out KCheckBox cGlobal, "And global.cs")
+			.Margin(20).xBindCheckedEnabled(cDeps)
+			.Checked(0 != (App.Settings.export & 8))
+			.Tooltip("File global.cs and its /*/ c etc /*/ files.\nNote: when importing, this global.cs probably will be renamed to global2.cs because global.cs already exists. Users can rename, edit and include it where need like /*/ c renamed.cs /*/.");
+		b.R.Add(out KCheckBox cPR, "And library projects used via /*/ pr /*/")
+			.Margin(20).xBindCheckedEnabled(cDeps)
+			.Checked(0 != (App.Settings.export & 16));
+		b.End();
+		b.R.StartGrid<KGroupBox>("Options");
+		b.R.Add(out KCheckBox cZip, "Zip file")
+			.Checked(0 != (App.Settings.export & 1))
+			.Tooltip("Export as .zip file.\nIf unchecked, exports as folder. In any case it's a LibreAutomate workspace.");
+		b.R.Add(out KCheckBox cLinks, "Add link target")
+			.Checked(0 != (App.Settings.export & 2))
+			.Tooltip("How to export links:\nChecked - export the link target instead.\nUnchecked - export the link; on other computers it probably will be invalid.");
+		b.End();
+		b.R.AddOkCancel();
+		b.End();
+		if (!b.ShowDialog(App.Wmain)) return false;
+		bool zip = cZip.IsChecked, exportLinkTarget = cLinks.IsChecked, exportDeps = cDeps.IsChecked, exportGlobal = cGlobal.IsChecked, exportPR = cPR.IsChecked;
+		App.Settings.export = (zip ? 1 : 0) | (exportLinkTarget ? 2 : 0) | (exportDeps ? 4 : 0) | (exportGlobal ? 8 : 0) | (exportPR ? 16 : 0);
+		
+		Save.AllNowIfNeed();
+		
+		string name = aSel[0].Name; if (!aSel[0].IsFolder) name = pathname.getNameNoExt(name);
+		
+		//if selected single folder, export its children without the folder
+		if (aSel.Length == 1 && aSel[0].IsFolder && aSel[0].HasChildren) aSel = aSel[0].Children().ToArray();
+		
+		List<FileNode> aDeps = new();
+		if (exportDeps && !_Deps()) return false;
+		
+		var fRoot = FileNode.CreateForExport();
+		_Enum1(fRoot, aSel);
+		void _Enum1(FileNode parent, IEnumerable<FileNode> e) {
+			foreach (var f in e) {
+				var fe = FileNode.CreateForExport(f, exportLinkTarget);
+				parent.AddChild(fe);
+				if (f.IsFolder) _Enum1(fe, f.Children());
+			}
+		}
 		
 		string wsDir;
 		if (zip) {
@@ -1444,10 +1496,35 @@ partial class FilesModel {
 		string filesDir = wsDir + @"\files";
 		try {
 			filesystem.createDirectory(filesDir);
-			foreach (var f in a) {
-				if (!f.IsLink) filesystem.copyTo(f.FilePath, filesDir);
+			foreach (var f in aSel) {
+				if (!(f.IsLink && !exportLinkTarget)) filesystem.copyTo(f.FilePath, filesDir);
 			}
-			FileNode.Export(a, wsDir + @"\files.xml");
+			
+			if (exportLinkTarget) {
+				foreach (var f in aSel) {
+					if (f.IsFolder && !f.IsLink) {
+						foreach (var v in f.Descendants()) {
+							if (v.IsLink) filesystem.copy(v.FilePath, filesDir + "\\" + f.Name + "\\" + v.ItemPathIn(f));
+						}
+					}
+				}
+			}
+			
+			if (aDeps.Count > 0) {
+				var depsDirName = _GetUniqueNameForDepsFolder();
+				var depsDir = filesDir + @"\" + depsDirName;
+				filesystem.createDirectory(depsDir);
+				FileNode fDeps = FileNode.CreateForExport(depsDirName);
+				foreach (var f in aDeps) {
+					if (!(f.IsLink && !exportLinkTarget)) filesystem.copyTo(f.FilePath, depsDir);
+					var fe = FileNode.CreateForExport(f, exportLinkTarget);
+					fDeps.AddChild(fe);
+					if (f.IsFolder) _Enum1(fe, f.Children());
+				}
+				fRoot.AddChild(fDeps);
+			}
+			
+			FileNode.Export(fRoot, wsDir + @"\files.xml");
 		}
 		catch (Exception ex) {
 			print.it(ex);
@@ -1462,7 +1539,82 @@ partial class FilesModel {
 		}
 		
 		print.it($"<>Exported to <explore>{wsDir}<>");
+		if (aDeps.Count > 0) print.it($"<>\tAdditional files: {string.Join(", ", aDeps.Select(o => o.SciLink()))}");
 		return true;
+		
+		//adds meta c etc files
+		bool _Deps() {
+			HashSet<FileNode> hsAll = aSel.SelectMany(o => o.Descendants(andSelf: true)).ToHashSet(), hsParsed = new();
+			HashSet<string> hsAllNames = new(hsAll.Select(o => o.Name), StringComparer.OrdinalIgnoreCase);
+			bool failed = false;
+			try { _Enum2(aSel); }
+			catch (Exception ex) { failed = true; print.it("Can't export. Error: " + ex.Message); }
+			return !failed;
+			
+			void _Enum2(IEnumerable<FileNode> e) {
+				foreach (var f in e) {
+					if (f.FindProject(out var fFolder, out var fMain)) {
+						_ParseMeta(fMain, fFolder);
+					} else if (f.IsCodeFile) {
+						_ParseMeta(f);
+					} else if (f.IsFolder) {
+						_Enum2(f.Children());
+					}
+				}
+				
+				void _ParseMeta(FileNode f, FileNode projFolder = null) {
+					if (hsParsed.Contains(f)) return;
+					var m = new MetaComments(MCFlags.Export | (exportGlobal ? 0 : MCFlags.ExportNoGlobal) | (exportPR ? MCFlags.ExportPR : 0));
+					exportGlobal = false;
+					if (!m.Parse(f, projFolder)) {
+						print.it($"<><lc #F0E080>Can't export additional files. Errors:<>\r\n{m.Errors}");
+						failed = true;
+						hsParsed.Add(f);
+						return;
+					}
+					
+					foreach (var c in m.CodeFiles) hsParsed.Add(c.f);
+					if (m.ExportC_ is {  } ac) { //meta `c fileOrFolder` (m.CodeFiles - only files)
+						foreach (var c in ac) _Add(c);
+					}
+					if (m.Resources != null) foreach (var c in m.Resources) _Add(c.f); //meta `resource fileOrFolder`
+					if (m.OtherFiles != null) foreach (var c in m.OtherFiles) _Add(c.f); //meta `file fileOrFolder`
+					_Add(m.IconFile);
+					_Add(m.ManifestFile);
+					_Add(m.SignFile);
+					_Add(m.PreBuild.f, true);
+					_Add(m.PostBuild.f, true);
+					if (m.ProjectReferences is { } pr) {
+						foreach (var v in pr) _AddPR(v.f);
+					}
+					
+					void _Add(FileNode f, bool parseMeta = false) {
+						if (f != null && hsAll.Add(f)) {
+							if (!hsAllNames.Add(f.Name)) throw new InvalidOperationException("Not unique name of additional file: " + f.Name); //don't allow duplicate names. Users would fail to compile.
+							aDeps.Add(f);
+							if (parseMeta) _ParseMeta(f);
+						}
+					}
+					
+					void _AddPR(FileNode f) {
+						var folder = f.Parent.Name is ['@', ..] ? f.Parent : null;
+						var ff = folder ?? f;
+						if (hsAll.Add(ff)) {
+							if (!hsAllNames.Add(ff.Name)) throw new InvalidOperationException("Not unique name of additional file: " + ff.Name);
+							aDeps.Add(ff);
+							_ParseMeta(f, folder);
+						}
+					}
+				}
+			}
+		}
+		
+		string _GetUniqueNameForDepsFolder() {
+			for (int i = 1; ; i++) {
+				var s = i == 1 ? "Classes" : "Classes" + i;
+				if (!aSel.Any(o => o.Name.Eqi(s))) return s;
+			}
+		}
 	}
 	
 	#endregion

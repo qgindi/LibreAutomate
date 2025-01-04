@@ -96,9 +96,43 @@ public:
 #include "str.h"
 
 
+class OSVersion {
+	DWORD _major, _minor, _winver, _win10build;
+public:
+	OSVersion() noexcept {
+		typedef int(WINAPI* tRtlGetVersion)(RTL_OSVERSIONINFOW*);
+		auto RtlGetVersion = (tRtlGetVersion)GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
+
+		RTL_OSVERSIONINFOW x = { sizeof(RTL_OSVERSIONINFOW) };
+		RtlGetVersion(&x);
+		_winver = MAKEWORD(_minor = x.dwMinorVersion,  _major = x.dwMajorVersion);
+		if (_major >= 10) _win10build = x.dwBuildNumber;
+	}
+
+	int major() { return _major; }
+
+	int minor() { return _minor; }
+
+	bool minWin10() { return _major >= 10; }
+
+	bool minWin11() { return _win10build >= 22000; }
+
+	bool is32BitOS() {
+#ifdef _WIN64
+		return false;
+#else
+		static int r;
+		if (!r) {
+			if (IsWow64Process(GetCurrentProcess(), &r)) r = r ? 1 : -1;
+		}
+		return r < 0;
+#endif
+	}
+};
+extern OSVersion osVer;
+
 extern HMODULE s_moduleHandle;
-bool IsOS64Bit();
-bool IsProcess64Bit(DWORD pid, out bool& is);
+int GetProcessArchitecture(DWORD pid);
 
 inline bool IsThisProcess64Bit() {
 #ifdef _WIN64

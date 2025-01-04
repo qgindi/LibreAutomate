@@ -14,7 +14,7 @@ partial class AuDocs {
 		var dirTo = docDir + @"\cookbook\";
 		if (filesystem.exists(dirTo)) filesystem.delete(Directory.GetFiles(dirTo));
 		
-		var dirFrom = folders.ThisAppBS + "Cookbook\\files";
+		var dirFrom = folders.ThisAppBS + "..\\Cookbook\\files";
 		var xr = XmlUtil.LoadElem(dirFrom + ".xml");
 		
 		_AddItems(xr, 1, dirFrom);

@@ -4,15 +4,15 @@ namespace Au.Compiler {
 	/// <summary>Code errors text builder.</summary>
 	class ErrBuilder {
 		StringBuilder _b;
-
+		
 		public int ErrorCount { get; private set; }
 		public int WarningCount { get; private set; }
-
+		
 		public void Clear() {
 			ErrorCount = 0; WarningCount = 0;
 			_b = null;
 		}
-
+		
 		/// <summary>
 		/// Adds compiler error or warning message with a link that opens the C# file and goes to that position.
 		/// </summary>
@@ -31,12 +31,12 @@ namespace Au.Compiler {
 			} else {
 				_b.AppendFormat("[{0}]: {1}", fMain.FilePath, s);
 			}
-
+			
 			//if empty script, error "no Main". Users would not understand why.
 			//	rejected: auto-add {} (empty block, to make the script not empty). Difficult to detect when need it. Eg would give an incorrect/unclear error if Main exists but is unsuitable.
 			if (d.Severity == DiagnosticSeverity.Error && d.Id == "CS5001") _b.Append(". Or the script is empty.");
 		}
-
+		
 		/// <summary>
 		/// Adds error message with a link that opens the C# file but does not go to a position.
 		/// </summary>
@@ -44,7 +44,7 @@ namespace Au.Compiler {
 			_StartAdd();
 			_b.AppendFormat("[{0}]: {1}", f.FilePath, message);
 		}
-
+		
 		/// <summary>
 		/// Adds error message with a link that opens the C# file and goes to the specified position.
 		/// Used for meta errors.
@@ -59,7 +59,7 @@ namespace Au.Compiler {
 			StringUtil.LineAndColumn(code, pos, out int line, out int col);
 			_Append(f, line, col, message, formatArgs);
 		}
-
+		
 		/// <summary>
 		/// Adds error message with a link that opens the C# file and goes to the specified position.
 		/// </summary>
@@ -70,25 +70,25 @@ namespace Au.Compiler {
 			_StartAdd();
 			_Append(f, pos.Line, pos.Character, message, formatArgs);
 		}
-
+		
 		void _StartAdd(bool isWarning = false) {
 			if (_b == null) _b = new();
 			else _b.AppendLine();
-
+			
 			if (isWarning) WarningCount++; else ErrorCount++;
 		}
-
+		
 		void _Append(FileNode f, int line, int col, string message, params object[] formatArgs) {
 			_Append(f.FilePath, line, col, message, formatArgs);
 		}
-
+		
 		void _Append(string file, int line, int col, string message, params object[] formatArgs) {
 			_b.AppendFormat("[{0}({1},{2})]: ", file, ++line, ++col);
 			if ((formatArgs?.Length ?? 0) != 0) _b.AppendFormat(message, formatArgs); else _b.Append(message);
 		}
-
+		
 		public override string ToString() => _b?.ToString();
-
+		
 		/// <summary>
 		/// Prints all errors and warnings.
 		/// Calls <see cref="Clear"/>.
@@ -96,23 +96,23 @@ namespace Au.Compiler {
 		/// </summary>
 		public void PrintAll() {
 			if (_b == null) return;
-
+			
 			var s = ToString();
 			_b.Clear();
-
+			
 			//header line
 			_b.AppendFormat("<><lc #{0}>Compilation: ", ErrorCount != 0 ? "F0E080" : "A0E0A0");
 			if (ErrorCount != 0) _b.Append(ErrorCount).Append(" errors").Append(WarningCount != 0 ? ", " : "");
 			if (WarningCount != 0) _b.Append(WarningCount).Append(" warnings <fold>	Warnings can be disabled with <google>C# #pragma warning<> or in <b>Properties<>.</fold>");
 			_b.AppendLine("<>");
-
+			
 			//errors and warnings
 			_b.Append(s);
-
+			
 			print.it(_b.ToString());
 			Clear();
 		}
-
+		
 		//currently not used.
 		///// <summary>
 		///// If the SyntaxTree contains errors, prints them (<see cref="PrintAll"/>) and returns true.

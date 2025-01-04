@@ -97,10 +97,10 @@ namespace Au;
 ///  </td>
 /// </tr>
 /// <tr>
-///  <td>Processes of a different 32/64 bitness than this process.</td>
+///  <td>Processes of a different 32/64 bitness than this process. Also ARM64 processes.</td>
 ///  <td>
 ///   <ol>
-///    <li>To load the dll is used <c>rundll32.exe</c>, which makes slower by about 50 ms first time.</li>
+///    <li>To load the dll is used <c>Au.Arch.exe</c>, which makes slower by about 50 ms first time.</li>
 ///   </ol>
 ///  </td>
 /// </tr>

@@ -202,7 +202,7 @@ System.Threading.Tasks.TaskCanceledException
 	public bool ci_findgoDclick;
 	
 	//misc
-	public int publish;
+	public int publish, export;
 	
 	//panel Find
 	public string find_skip;

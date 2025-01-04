@@ -20,8 +20,8 @@ OutputDir=.
 OutputBaseFilename=LibreAutomateSetup
 Compression=lzma/normal
 SolidCompression=yes
-ArchitecturesInstallIn64BitMode=x64
-ArchitecturesAllowed=x64
+ArchitecturesAllowed=x64 arm64
+ArchitecturesInstallIn64BitMode=x64 arm64
 MinVersion=0,6.1sp1
 DisableProgramGroupPage=yes
 AppMutex=Au.Editor.Mutex.m3gVxcTJN02pDrHiQ00aSQ
@@ -43,7 +43,6 @@ Source: "Au.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Net4.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Au.Net4.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
 Source: "Roslyn\*.exe"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
@@ -51,6 +50,8 @@ Source: "64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\ARM\AuCpp.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
+Source: "64\ARM\Au.Arm.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 Source: "32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion

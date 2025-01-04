@@ -11,7 +11,7 @@ CookbookDb.Create(true);
 class CookbookDb {
 	public static void Create(bool createAlways = false) {
 		if (createAlways) print.clear();
-		var dir = folders.Editor + "Cookbook";
+		var dir = folders.Editor + @"..\Cookbook";
 		var file = folders.Editor + "cookbook.db";
 		if (!createAlways && filesystem.getProperties(dir, out var pd) && filesystem.getProperties(file, out var pf) && pf.LastWriteTimeUtc >= pd.LastWriteTimeUtc) return;
 		

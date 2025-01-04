@@ -69,7 +69,7 @@ class DProperties : KDialogWindow {
 		b.R.Add("uac", out uac);
 		b.End();
 		b.R.Add("testScript", out testScript)
-			.Validation(_ => testScript.IsVisible && testScript.IsEnabled && testScript.Text is string s1 && s1.Length > 0 && null == _f.FindRelative(s1, FNFind.CodeFile, orAnywhere: true) ? "testScript not found" : null);
+			.Validation(_ => testScript.IsVisible && testScript.IsEnabled && testScript.Text is string s1 && s1.Length > 0 && null == _f.FindRelative(true, s1, FNFind.CodeFile) ? "testScript not found" : null);
 		b.End();
 		
 		b.R.StartGrid(out gAssembly, "Assembly");
@@ -209,7 +209,7 @@ class DProperties : KDialogWindow {
 	void _GetMeta() {
 		//info: _Get returns null if hidden
 		
-		_f.TestScript = _Get(testScript) is string sts && testScript.IsEnabled ? _f.FindRelative(sts, FNFind.CodeFile, orAnywhere: true) : null; //validated
+		_f.TestScript = _Get(testScript) is string sts && testScript.IsEnabled ? _f.FindRelative(true, sts, FNFind.CodeFile) : null; //validated
 		
 		_meta.ifRunning = _Get(ifRunning, defaultIndex: 0);
 		_meta.uac = _Get(uac, defaultIndex: 0);
@@ -364,7 +364,7 @@ class Class1 {
 	
 	void _AddFromWorkspace(Func<FileNode, FileNode> filter, List<string> metaList, bool withIcons, UIElement clicked, FileNode folder = null, popupMenu pm = null, bool sortByType = false, bool noInfo = false) {
 		var sFind = findInLists.Text;
-		List<(FileNode f, string s)> a = new();
+		List<(FileNode f, string s, bool near)> a = new();
 		folder ??= App.Model.Root;
 		foreach (var f in folder.DescendantsExceptGarbage()) {
 			if (filter(f) is not FileNode f2) continue;
@@ -372,9 +372,12 @@ class Class1 {
 			var path = f2.ItemPath;
 			if (sFind.Length > 0 && path.Find(sFind, true) < 0) continue;
 			
-			if (_f.Parent.Parent != null && f.IsDescendantOf(_f.Parent)) path = @".\" + f.ItemPathIn(_f.Parent);
+			//if (_f.Parent.Parent != null && f.IsDescendantOf(_f.Parent)) path = @".\" + f.ItemPathIn(_f.Parent); //rejected. Bad with export-import.
 			
-			if (!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) a.Add((f2, path));
+			if (!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) {
+				bool near = _f.Parent.Parent != null && f.IsDescendantOf(_f.Parent);
+				a.Add((f2, path, near));
+			}
 		}
 		if (a.Count == 0) {
 			if (pm == null) _ShowInfo_ListEmpty(clicked, sFind);
@@ -382,24 +385,26 @@ class Class1 {
 		}
 		
 		if (sortByType) {
-			a = a.OrderBy(o => o.f.FileExt).ThenBy(o => o.s).ToList();
+			a = a.OrderBy(o => o.f.FileExt).ThenBy(o => !o.near).ThenBy(o => o.s).ToList();
 		} else {
-			a = a.OrderBy(o => o.s).ToList();
+			a = a.OrderBy(o => !o.near).ThenBy(o => o.s).ToList();
 		}
 		
 		var m = pm ?? new popupMenu();
 		string prevExt = null;
-		foreach (var (f, s) in a) {
+		foreach (var (f, s, near) in a) {
 			if (sortByType) {
 				var ext = f.FileExt;
 				if (prevExt != null && !ext.Eqi(prevExt)) m.Separator();
 				prevExt = ext;
 			}
 			var v = m.Add(s.Limit(80, middle: true), o => {
-				metaList.Add(s);
+				//metaList.Add(s[0] == '.' ? s : f.ItemPathOrName());
+				metaList.Add(f.ItemPathOrName(relativeTo: _f));
 				if (!noInfo) _ShowInfo_Added(clicked, metaList);
 			}, withIcons ? f.FilePath : null);
-			if (s[0] == '.') v.TextColor = 0x0080ff;
+			//if (s[0] == '.') v.TextColor = 0x0080ff;
+			if (near) v.TextColor = 0x0080ff;
 		}
 		if (pm == null) m.Show(owner: this);
 	}
@@ -588,7 +593,7 @@ Usually it is used to test this class file or class library. It can contain meta
 Can be:
  • Path in the workspace. Examples: \Script5.cs, \Folder\Script5.cs.
  • Path relative to this file. Examples: Folder\Script5.cs, .\Script5.cs, ..\Folder\Script5.cs.
- • Filename. The file can be anywhere; will be used the one in the same folder if exists.
+ • Filename. Error if multiple exist, unless single exists in the same folder.
 
 This option is saved not in meta comments.
 """);
@@ -628,33 +633,33 @@ If role classLibrary, the dll file is named like the class file. It can be used 
 
 The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add all .ico and .xaml icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with icon.ofThisApp etc and dialog functions.
 
-The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
+The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
 Can be:
  • Path in the workspace. Examples: \App.ico, \Folder\App.ico.
  • Path relative to this file. Examples: Folder\App.ico, .\App.ico, ..\Folder\App.ico.
- • Filename. The file can be anywhere; will be used the one in the same folder if exists.
+ • Filename. Error if multiple exist, unless single exists in the same folder.
 
 If not specified, uses custom icon of the main C# file. See menu Tools > Icons.
 """);
 		info.AaAddElem(manifest, """
 <b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe file.
 
-The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
+The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
 Can be:
  • Path in the workspace. Examples: \App.manifest, \Folder\App.manifest.
  • Path relative to this file. Examples: Folder\App.manifest, .\App.manifest, ..\Folder\App.manifest.
- • Filename. The file can be anywhere; will be used the one in the same folder if exists.
+ • Filename. Error if multiple exist, unless single exists in the same folder.
 
 The manifest will be added as a native resource.
 """);
 		info.AaAddElem(sign, """
 <b>sign</b> - strong-name signing key file, to sign the output assembly.
 
-The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
+The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
 Can be:
  • Path in the workspace. Examples: \App.snk, \Folder\App.snk.
  • Path relative to this file. Examples: Folder\App.snk, .\App.snk, ..\Folder\App.snk.
- • Filename. The file can be anywhere; will be used the one in the same folder if exists.
+ • Filename. Error if multiple exist, unless single exists in the same folder.
 """);
 		info.AaAddElem(console, """
 <b>console</b> - let the program run with console.
@@ -732,7 +737,7 @@ To create new preBuild/postBuild script: menu File > New > More.
 Can be:
  • Path in the workspace. Examples: \Script5.cs, \Folder\Script5.cs.
  • Path relative to this file. Examples: Folder\Script5.cs, .\Script5.cs, ..\Folder\Script5.cs.
- • Filename. The file can be anywhere; will be used the one in the same folder if exists.
+ • Filename. Error if multiple exist, unless single exists in the same folder.
 """);
 		info.AaAddElem(postBuild, """
 <b>postBuild</b> - a script to run after compiling this code file successfully.
@@ -777,11 +782,12 @@ To remove this meta comment, edit the code. Optionally delete unused dll files.
 <b>Class file<> - add a C# code file that contains some classes/functions used by this file.
 Adds meta comment <c green>c File.cs<>. The compiler will compile all code files and create single assembly.
 
-The file must be in this workspace. Import files if need, for example drag-drop. Can be a link. If folder, adds all its descendant class files.
+The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
+If folder, will compile all its descendant class files.
 Can be:
  • Path in the workspace. Examples: \Class5.cs, \Folder\Class5.cs.
  • Path relative to this file. Examples: Folder\Class5.cs, .\Class5.cs, ..\Folder\Class5.cs.
- • Filename. The file can be anywhere; will be used the one in the same folder if exists.
+ • Filename. Error if multiple exist, unless single exists in the same folder.
 
 If this file is in a project, don't add class files that are in the project folder.
 To remove this meta comment, edit the code.
@@ -793,11 +799,12 @@ Adds meta comment <c green>resource File<>.
 
 Default resource type is Stream. You can append <c green>/byte[]<> or <c green>/string<>, like <c green>resource file.txt /string<>. Or <c green>/strings<>, to add multiple strings from 2-column CSV file (name, value). Or <c green>/embedded<>, to add as a separate top-level stream that can be loaded with <google>Assembly.GetManifestResourceStream<> (others are in top-level stream "AssemblyName.g.resources").
 
-The file must be in this workspace. Import files if need, for example drag-drop. Can be a link. If folder, will add all its descendant files.
+The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
+If folder, will add all its descendant files.
 Can be:
  • Path in the workspace. Examples: \File.png, \Folder\File.png.
  • Path relative to this file. Examples: Folder\File.png, .\File.png, ..\Folder\File.png.
- • Filename. The file can be anywhere; will be used the one in the same folder if exists.
+ • Filename. Error if multiple exist, unless single exists in the same folder.
 
 To remove this meta comment, edit the code.
 
@@ -816,13 +823,13 @@ If role is miniProgram or editorExtension, will store the dll path in order to f
 If role of this file is classFile, the above actions will be used when compiling scripts that use it.
 If role of this file is classLibrary, the above actions will be used when compiling scripts that use it as a project reference. The compiler never copies these files to the output folder of the library.
 
-The file must be in this workspace. Import files if need, for example drag-drop. Can be a link.
+The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
 Can be:
  • Path in the workspace. Examples: \File.png, \Folder\File.png.
  • Path relative to this file. Examples: Folder\File.png, .\File.png, ..\Folder\File.png.
- • Filename. The file can be anywhere; will be used the one in the same folder if exists.
+ • Filename. Error if multiple exist, unless single exists in the same folder.
 
-If folder, will include all its descendant files. Will copy them into folders like in the workspace. If a folder name ends with -, will copy its contents only.
+If folder, will include all its descendant files. Will copy them into folders like in the workspace. If a folder name ends with -, will copy its contents only (will not create the folder).
 
 If an exeProgram script uses unmanaged 64-bit and 32-bit dll files, consider placing them in subfolders named "64" and "32". Then at run time will be loaded correct dll version.
 
