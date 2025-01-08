@@ -40,12 +40,13 @@ if (!filesystem.exists(path)) throw null;
 
 using var za = ZipFile.Open(path, ZipArchiveMode.Update);
 za.CreateEntryFromFile(@"C:\code\au\_\64\AuCpp.dll", @"runtimes\win-x64\native\AuCpp.dll");
-za.CreateEntryFromFile(@"C:\code\au\_\64\Au.Arch.exe", @"runtimes\win-x64\native\Au.Arch.exe");
 za.CreateEntryFromFile(@"C:\code\au\_\64\ARM\AuCpp.dll", @"runtimes\win-arm64\native\AuCpp.dll");
-za.CreateEntryFromFile(@"C:\code\au\_\64\ARM\Au.Arch.exe", @"runtimes\win-arm64\native\Au.Arch.exe");
 za.CreateEntryFromFile(@"C:\code\au\_\32\AuCpp.dll", @"runtimes\win-x86\native\AuCpp.dll");
+za.CreateEntryFromFile(@"C:\code\au\_\64\Au.Arch.exe", @"runtimes\win-x64\native\Au.Arch.exe");
+za.CreateEntryFromFile(@"C:\code\au\_\64\ARM\Au.Arch.exe", @"runtimes\win-arm64\native\Au.Arch.exe");
 za.CreateEntryFromFile(@"C:\code\au\_\32\Au.Arch.exe", @"runtimes\win-x86\native\Au.Arch.exe");
 za.CreateEntryFromFile(@"C:\code\au\_\64\sqlite3.dll", @"runtimes\win-x64\native\sqlite3.dll");
+za.CreateEntryFromFile(@"C:\code\au\_\64\ARM\sqlite3.dll", @"runtimes\win-arm64\native\sqlite3.dll");
 za.CreateEntryFromFile(@"C:\code\au\_\32\sqlite3.dll", @"runtimes\win-x86\native\sqlite3.dll");
 //TODO: test ARM, Arch
 

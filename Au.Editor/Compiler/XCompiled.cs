@@ -75,7 +75,7 @@ partial class Compiler {
 						r.uac = (MCUac)value.ToInt(offs);
 						break;
 					case 'b':
-						r.bit32 = true;
+						r.platform = (MCPlatform)value.ToInt(offs);
 						break;
 					case 'f':
 						r.flags = (MiniProgram_.MPFlags)value.ToInt(offs);
@@ -155,13 +155,13 @@ partial class Compiler {
 			if (_data == null && !_Open()) _data = new();
 			
 			/*
-IDmain|=path.exe|tN|nN|uN|fN|b|pMD5project|cIDcode|lIDlibrary|xIDresource|yIDfile|kIDicon|mIDmanifest|sIDsign|*ref
+IDmain|=path.exe|tN|nN|uN|bN|fN|pMD5project|cIDcode|lIDlibrary|xIDresource|yIDfile|kIDicon|mIDmanifest|sIDsign|*ref
 = - outFile
 t - role
 n - ifRunning
 u - uac
+b - platform
 f - miniFlags
-b - bit32
 p - MD5 of Id of all project files except main
 c - c
 l - pr
@@ -179,8 +179,8 @@ s - sign
 				if (m.Role != MetaComments.DefaultRole(m.MainFile.f.IsScript)) b.Append("|t").Append((int)m.Role);
 				if (m.IfRunning != default) b.Append("|n").Append((int)m.IfRunning);
 				if (m.Uac != default) b.Append("|u").Append((int)m.Uac);
+				b.Append("|b").Append((int)m.Platform);
 				if (miniFlags != default) b.Append("|f").Append((int)miniFlags);
-				if (m.Bit32) b.Append("|b");
 				
 				Hash.MD5Context md = default;
 				foreach (var v in m.CodeFiles) {

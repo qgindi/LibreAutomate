@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 #include <windows.h>
-//#include <shlwapi.h>
-//#pragma comment(lib, "shlwapi.lib")
 #include "coreclrhost.h"
 
 //min supported .NET version. Installed major must be ==, minor >=, patch any (we'll use highest found), preview any (we'll use release or highest preview).
@@ -99,9 +97,37 @@ bool _DirExists(LPCWSTR path) {
 	return att != 0xffffffff && 0 != (att & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-bool _IsWow64() {
+bool _IsProcessWow64() {
+#if _WIN64
+	return false;
+#else
 	BOOL isWow = 0;
 	return IsWow64Process(GetCurrentProcess(), &isWow) && isWow;
+#endif
+}
+
+bool _IsProcessArm64() {
+#if _M_ARM64
+	return true;
+#else
+	return false;
+#endif
+}
+
+bool _IsProcessX64andOsArm64() {
+#if _M_X64
+	static bool have, is;
+	if (!have) {
+		have = true;
+		USHORT processMachine = 0, nativeMachine = 0;
+		auto IsWow64Process2 = (BOOL(WINAPI*)(HANDLE, USHORT*, USHORT*))GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "IsWow64Process2");
+		if (IsWow64Process2)
+			is = IsWow64Process2(GetCurrentProcess(), &processMachine, &nativeMachine) && nativeMachine == IMAGE_FILE_MACHINE_ARM64;
+	}
+	return is;
+#else
+	return false;
+#endif
 }
 
 struct PATHS {
@@ -225,16 +251,16 @@ bool GetPaths(PATHS& p) {
 		_ToUtf8(w, lenAppDir + 1, p.asmDll);
 		p.asmDll += s_asmName;
 	} else {
-		int replace = (is32bit && w[lenApp - 6] == '3' && w[lenApp - 5] == '2') ? 6 : 4; //if exe is "name32.exe", dll is "name.dll"
-		_ToUtf8(w, lenApp - replace, p.asmDll);
+		_ToUtf8(w, lenApp - 4, p.asmDll);
 		p.asmDll += ".dll";
 	}
 
-	auto coreclr2 =
-#if _WIN64
-		L"\\dotnet\\coreclr.dll";
+#if _M_ARM64
+	auto coreclr2 = L"\\dotnetARM\\coreclr.dll"; //TODO: add to portable LA
+#elif _WIN64
+	auto coreclr2 = L"\\dotnet\\coreclr.dll";
 #else
-		L"\\dotnet32\\coreclr.dll";
+	auto coreclr2 = L"\\dotnet32\\coreclr.dll";
 #endif
 
 	p.isPrivateNetRuntime = false;
@@ -245,7 +271,7 @@ bool GetPaths(PATHS& p) {
 	wcscpy(w + lenAppDir, coreclr2);
 	if (_FileExists(w)) goto gPrivate;
 
-	//is this an exeProgram launched from editor and editor's dir contains coreclr.dll?
+	//is this an exeProgram launched from portable LA? Then LA dir contains coreclr.dll.
 	if (p.isEditorOrTaskExe == 0) {
 		auto n = GetCurrentDirectory(lenof(w), w);
 		auto s1 = L"\\Roslyn\\.exeProgram"; const int len1 = 19;
@@ -262,19 +288,29 @@ bool GetPaths(PATHS& p) {
 	for (int i = 0; i <= 2; i++) {
 		DWORD lenDotnet;
 		if (i == 0) { //env var DOTNET_ROOT
-			lenDotnet = GetEnvironmentVariableW(_IsWow64() ? L"DOTNET_ROOT(x86)" : L"DOTNET_ROOT", w, lenof(w));
+			auto varName = _IsProcessWow64() ? L"DOTNET_ROOT(x86)" : _IsProcessX64andOsArm64() ? L"DOTNET_ROOT_X64" : L"DOTNET_ROOT";
+			lenDotnet = GetEnvironmentVariableW(varName, w, lenof(w));
+
+			if (lenDotnet > 0) Print("%S=%S", varName, w);
 		} else if (i == 1) { //registry InstallLocation
-			wchar_t key[] = LR"(SOFTWARE\dotnet\Setup\InstalledVersions\x64)"; if (is32bit) { key[41] = '8'; key[42] = '6'; }
+			wchar_t key[50] = LR"(SOFTWARE\dotnet\Setup\InstalledVersions\)";
+			wcscat(key, is32bit ? L"x86" : _IsProcessArm64() ? L"arm64" : L"x64");
 			HKEY hk1;
 			if (0 != RegOpenKeyExW(HKEY_LOCAL_MACHINE, key, 0, KEY_READ | KEY_WOW64_32KEY, &hk1)) lenDotnet = 0;
 			else {
 				if (0 != RegQueryValueExW(hk1, L"InstallLocation", nullptr, nullptr, (LPBYTE)w, &(lenDotnet = lenof(w)))) lenDotnet = 0; else lenDotnet /= 2;
 				RegCloseKey(hk1);
 			}
-		} else { //default location. Eg .NET Core 3.0.1 did not set InstallLocation.
-			lenDotnet = ExpandEnvironmentStringsW(L"%ProgramFiles%\\dotnet", w, lenof(w));
+
+			//if (lenDotnet > 0) Print("registry=%S", w);
+		} else { //default location
+			lenDotnet = ExpandEnvironmentStringsW(L"%ProgramFiles%\\dotnet", w, lenof(w) - 100);
 			if (w[0] == '%') lenDotnet = 0;
-			//SHGetSpecialFolderPathW //no, better don't use shell apis, it's not so important. Current .NET versions set the registry value. Dotnet apphost even uses literal "Program Files" etc string.
+			else if (_IsProcessX64andOsArm64()) { wcscat(w, L"\\x64"); lenDotnet += 4; }
+
+			//SHGetSpecialFolderPathW //no, don't use shell apis, it's not so important. Current dotnet versions set the registry value. Dotnet apphost even uses literal "Program Files" etc string.
+
+			if (lenDotnet > 0) Print("default=%S", w);
 		}
 		if (i > 0 && lenDotnet != 0) lenDotnet--;
 		if (lenDotnet > 1 && w[lenDotnet - 1] == '\\') lenDotnet--;
@@ -370,6 +406,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 
 	PATHS p;
 	bool pathsOK = GetPaths(p);
+	//Print("pathsOK=%i", pathsOK);
 	//Print("asmDll=%S", p.exeName.c_str());
 	//Print("exePath=%s", p.exePath.c_str());
 	//Print("asmDll=%s", p.asmDll.c_str());
@@ -379,20 +416,20 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	//Print("coreclrDll=%S", p.coreclrDll.c_str());
 
 	if (!pathsOK) {
-		int bits = is32bit ? 86 : 64;
+		auto platform = is32bit ? L"x86" : _IsProcessArm64() ? L"arm64" : L"x64";
 		wchar_t w[200];
 		wsprintfW(w, L"To run this application, need to install:\r\n\r\n"
-			L".NET %i Desktop Runtime x%i\r\n\r\n"
-			L"Would you like to download it now?", NETVERMAJOR, bits);
+			L".NET %i Desktop Runtime %s\r\n\r\n"
+			L"Would you like to download it now?", NETVERMAJOR, platform);
 		if (IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO | MB_TOPMOST | MB_SETFOREGROUND)) {
 			AllowSetForegroundWindow(ASFW_ANY);
-			auto ShellExecuteW = (int(__stdcall*)(HWND, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, INT))GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
+			auto ShellExecuteW = (int(WINAPI*)(HWND, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, INT))GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
 			//wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i/runtime", NETVERMAJOR, NETVERMINOR);
 #if true
 			wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i", NETVERMAJOR, NETVERMINOR);
 			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
 			Sleep(1000);
-			wsprintfW(w, L"In the dowload page please find and download this:\r\n\r\n.NET Desktop Runtime for Windows x%i", bits);
+			wsprintfW(w, L"In the dowload page please find and download this:\r\n\r\n.NET Desktop Runtime for Windows %s", platform);
 			MessageBoxW(0, w, p.exeName.c_str(), MB_ICONINFORMATION | MB_TOPMOST | MB_SETFOREGROUND);
 #else
 			//rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
@@ -421,14 +458,18 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		//NATIVE_DLL_SEARCH_DIRECTORIES
 		std::wstring nd16; nd16.reserve(1000);
 		nd16 += p.appDir;
-#if _WIN64
-		nd16 += L"\\64\\;"; //and not ARM64
+#if _M_ARM64 //these are mostly fbc, if somebody uses it. For Au/LA dlls we use a resolver in C#.
+		nd16 += L"\\64\\ARM\\;";
+#elif _WIN64
+		nd16 += L"\\64\\;";
 #else
 		nd16 += L"\\32\\;";
 #endif
 		//rejected: For it we use the resolving event. May need L"\\runtimes\\win10-x64\\native\\;" etc. //TODO: review the resolving event code.
 //		nd16 += p.appDir;
-//#if _WIN64
+//#if _M_ARM64
+//		nd16 += L"\\runtimes\\win-arm64\\native\\;";
+//#elif _WIN64
 //		nd16 += L"\\runtimes\\win-x64\\native\\;";
 //#else
 //		nd16 += L"\\runtimes\\win-x86\\native\\;";

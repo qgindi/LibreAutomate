@@ -145,7 +145,7 @@ namespace Au.More {
 	/// <param name="source">Path of this C# code file in the workspace.</param>
 	/// <param name="role">Meta comment <b>role</b>.</param>
 	/// <param name="optimize">Meta comment <b>optimize</b>.</param>
-	/// <param name="bit32">Meta comment <b>bit32</b>.</param>
+	/// <param name="platform">Meta comment <b>platform</b>.</param>
 	/// <param name="preBuild"><c>true</c> if the script used with meta <b>preBuild</b>, <c>false</c> if with <b>postBuild</b>.</param>
 	/// <param name="publish"><c>true</c> when publishing.</param>
 	/// <example>
@@ -156,10 +156,13 @@ namespace Au.More {
 	/// print.it(c.outputFile);
 	/// ]]></code>
 	/// </example>
-	public record class PrePostBuild(string outputFile, string outputPath, string source, string role, bool optimize, bool bit32, bool preBuild, bool publish) {
+	public record class PrePostBuild(string outputFile, string outputPath, string source, string role, bool optimize, string platform, bool preBuild, bool publish) {
 		/// <summary>
 		/// Gets compilation info passed to current <b>preBuild</b>/<b>postBuild</b> script.
 		/// </summary>
 		public static PrePostBuild Info { get; internal set; }
+		
+		[Obsolete("Use platform."), EditorBrowsable(EditorBrowsableState.Never)]
+		public bool bit32 => platform == "bit32";
 	}
 }

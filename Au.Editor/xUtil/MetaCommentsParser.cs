@@ -4,7 +4,7 @@ using Au.Compiler;
 /// <seealso cref="MetaComments.EnumOptions"/>
 class MetaCommentsParser {
 	FileNode _fn;
-	public string role, ifRunning, uac, bit32,
+	public string role, ifRunning, uac, platform,
 		optimize, warningLevel, noWarnings, nullable, testInternal, define, preBuild, postBuild,
 		outputPath, console, icon, manifest, sign, xmlDoc, miscFlags, noRef, startFaster;
 	List<string> _pr, _r, _com, _nuget, _c, _resource, _file, _disabled;
@@ -35,7 +35,8 @@ class MetaCommentsParser {
 		case "outputPath": outputPath = value; break;
 		case "ifRunning": ifRunning = value; break;
 		case "uac": uac = value; break;
-		case "bit32": bit32 = value; break;
+		case "platform": platform = value; break;
+		case "bit32": platform = value is "true" or "!false" ? "bit32" : "x64"; break; //fbc
 		case "optimize": optimize = value; break;
 		case "warningLevel": warningLevel = value; break;
 		case "noWarnings": noWarnings = value; break;
@@ -98,7 +99,7 @@ class MetaCommentsParser {
 		_Append("manifest", manifest, true);
 		_Append("sign", sign, true);
 		_Append("console", console);
-		_Append("bit32", bit32);
+		_Append("platform", platform);
 		_Append("xmlDoc", xmlDoc);
 		
 		_Append("miscFlags", miscFlags);
@@ -183,7 +184,7 @@ class MetaCommentsParser {
 		_CommaList(ref noWarnings, m.noWarnings);
 		_CommaList(ref testInternal, m.testInternal);
 		
-		_Single(ref bit32, m.bit32);
+		_Single(ref platform, m.platform);
 		_Single(ref console, m.console);
 		_Single(ref icon, m.icon);
 		_Single(ref ifRunning, m.ifRunning);

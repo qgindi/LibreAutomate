@@ -111,7 +111,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 """);
 		b.End();
 		
-		b.R.xAddInfoBlockF($"<s c='red'>Please install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK x64</a> version {Environment.Version.Major}.0 or later. Without it cannot install NuGet packages.</s>").Hidden(null).Margin("B12");
+		b.R.xAddInfoBlockF($"<s c='red'>Please install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK</a> version {Environment.Version.Major}.0 or later. Without it cannot install NuGet packages.</s>").Hidden(null).Margin("B12");
 		var infoSDK = b.Last as TextBlock;
 		
 		Loaded += async (_, _) => {
@@ -278,7 +278,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 					if (filesystem.exists(dir)) {
 						foreach (var v in filesystem.enumDirectories(dir)) {
 							var n = v.Name;
-							if (!n.Starts("win", true) || (n.Contains('-') && 0 == n.Ends(true, "-x64", "-x86"/*, "-arm", "-arm64"*/))) {
+							if (!n.Starts("win", true) || (n.Contains('-') && 0 == n.Ends(true, "-x64", "-x86", "-arm64"))) {
 								filesystem.delete(v.FullPath);
 							}
 						}

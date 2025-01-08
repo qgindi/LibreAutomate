@@ -97,7 +97,7 @@ namespace Au.Compiler;
 /// <code><![CDATA[
 /// ifRunning warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart|end|end_restart //what to do if this script is already running. Default: warn_restart. More info below.
 /// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
-/// bit32 false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
+/// platform default|x64|arm64|bit32
 /// ]]></code>
 /// Here word "task" is used for "script that is running or should start".
 /// Options 'ifRunning' and 'uac' are applied only when the task is started from editor process, not when it runs as independent exe program.
@@ -303,7 +303,15 @@ class MetaComments {
 	/// Meta option 'bit32'.
 	/// Default: false.
 	/// </summary>
-	public bool Bit32 { get; private set; }
+	public bool Bit32 { get; private set; }//TODO: remove
+	
+	/// <summary>
+	/// Meta option 'platform'.
+	/// Default: x64 or arm64, depending on OS and installed dotnet version.
+	/// </summary>
+	public MCPlatform Platform { get; private set; }
+	
+	public static MCPlatform DefaultPlatform => RuntimeInformation.OSArchitecture == Architecture.Arm64 ? MCPlatform.arm64 : MCPlatform.x64; //TODO
 	
 	/// <summary>
 	/// Meta option 'console'.
@@ -428,6 +436,8 @@ class MetaComments {
 			_f = MainFile;
 			_metaRange = MetaRange;
 			_FinalCheckOptions();
+			
+			if (Role == MCRole.exeProgram && Platform == default) Platform = DefaultPlatform;
 		}
 		
 		if (Errors?.ErrorCount > 0) {
@@ -514,7 +524,7 @@ class MetaComments {
 				_defines.Add("WPF_PREVIEW");
 				this.Uac = default;
 				//this.StartFaster = true;
-				this.Bit32 = false;
+				this.Platform = default;
 				this.Console = false;
 				this.Optimize = false;
 				this.OutputPath = null;
@@ -632,7 +642,7 @@ class MetaComments {
 				if (name is "role") {
 					if (_f.allowAnyMeta_ = _Enum(out MCRole ro1, value) && ro1 != MCRole.classFile) return;
 				} else if (_f.allowAnyMeta_) {
-					if (name is "optimize" or "define" or "warningLevel" or "noWarnings" or "testInternal" or "preBuild" or "postBuild" or "outputPath" or "ifRunning" or "uac" or "bit32" or "console" or "manifest" or "icon" or "sign" or "xmlDoc") return;
+					if (name is "optimize" or "define" or "warningLevel" or "noWarnings" or "testInternal" or "preBuild" or "postBuild" or "outputPath" or "ifRunning" or "uac" or "platform" or "bit32" or "console" or "manifest" or "icon" or "sign" or "xmlDoc") return;
 					_ErrorN("unknown meta comment option");
 				}
 				
@@ -703,9 +713,13 @@ class MetaComments {
 			_Specified(MCSpecified.startFaster);
 			if (_TrueFalse(out bool startFaster, value)) StartFaster = startFaster;
 			break;
-		case "bit32":
-			_Specified(MCSpecified.bit32);
-			if (_TrueFalse(out bool is32, value)) Bit32 = is32;
+		case "platform":
+			_Specified(MCSpecified.platform);
+			if (_Enum(out MCPlatform platform, value)) Platform = platform;
+			break;
+		case "bit32": //fbc. Now use platform instead.
+			_Specified(MCSpecified.platform);
+			if (_TrueFalse(out bool is32, value) && is32) Platform = MCPlatform.bit32;
 			break;
 		case "console":
 			_Specified(MCSpecified.console);
@@ -938,17 +952,17 @@ class MetaComments {
 	}
 	
 	bool _FinalCheckOptions() {
-		//const MCSpecified c_spec1 = MCSpecified.ifRunning | MCSpecified.uac | MCSpecified.bit32 | MCSpecified.manifest | MCSpecified.icon | MCSpecified.console | MCSpecified.startFaster;
-		//const string c_spec1S = "cannot use: ifRunning, uac, manifest, icon, console, bit32, startFaster";
-		const MCSpecified c_spec1 = MCSpecified.ifRunning | MCSpecified.uac | MCSpecified.bit32 | MCSpecified.manifest | MCSpecified.icon | MCSpecified.console;
-		const string c_spec1S = "cannot use: ifRunning, uac, manifest, icon, console, bit32";
+		//const MCSpecified c_spec1 = MCSpecified.ifRunning | MCSpecified.uac | MCSpecified.platform | MCSpecified.manifest | MCSpecified.icon | MCSpecified.console | MCSpecified.startFaster;
+		//const string c_spec1S = "cannot use: ifRunning, uac, manifest, icon, console, platform, startFaster";
+		const MCSpecified c_spec1 = MCSpecified.ifRunning | MCSpecified.uac | MCSpecified.platform | MCSpecified.manifest | MCSpecified.icon | MCSpecified.console;
+		const string c_spec1S = "cannot use: ifRunning, uac, manifest, icon, console, platform";
 		
 		bool needOP = false;
 		var role = UnchangedRole;
 		switch (role) {
 		case MCRole.miniProgram:
-			if (Specified.HasAny(MCSpecified.outputPath | MCSpecified.manifest | MCSpecified.bit32 | MCSpecified.xmlDoc))
-				return _ErrorM("with role miniProgram cannot use: outputPath, manifest, bit32, xmlDoc");
+			if (Specified.HasAny(MCSpecified.outputPath | MCSpecified.manifest | MCSpecified.platform | MCSpecified.xmlDoc))
+				return _ErrorM("with role miniProgram cannot use: outputPath, manifest, platform, xmlDoc");
 			break;
 		case MCRole.exeProgram:
 			//if (Specified.Has(MCSpecified.startFaster)) return _ErrorM("with role exeProgram cannot use: startFaster");
@@ -995,7 +1009,6 @@ class MetaComments {
 			oKind,
 			optimizationLevel: Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
 			allowUnsafe: true,
-			platform: Bit32 ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
 			warningLevel: WarningLevel,
 			specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(wa[0].IsAsciiDigit() ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
 			cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
@@ -1109,6 +1122,8 @@ enum MCRole { miniProgram, exeProgram, editorExtension, classLibrary, classFile 
 enum MCUac { inherit, user, admin }
 
 enum MCIfRunning { warn_restart, warn, cancel_restart, cancel, wait_restart, wait, run_restart, run, restart, end, end_restart, _norestartFlag = 1 }
+	
+enum MCPlatform { Default, x64, arm64, bit32 }
 
 /// <summary>
 /// Flags for <see cref="MetaComments"/>
@@ -1182,7 +1197,7 @@ enum MCFlags {
 enum MCSpecified {
 	ifRunning = 1,
 	uac = 1 << 1,
-	bit32 = 1 << 2,
+	platform = 1 << 2,
 	optimize = 1 << 3,
 	define = 1 << 4,
 	warningLevel = 1 << 5,

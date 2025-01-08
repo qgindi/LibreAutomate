@@ -463,8 +463,7 @@ This tool modifies only the .git folder, not workspace files.
 					
 					//get URL of the latest mingit zip
 					var r = _GithubGet($"repos/git-for-windows/git/releases/latest");
-					var e1 = r["assets"].AsArray().Where(o => ((string)o["name"]).Like("MinGit-*-64-bit.zip", true));
-					r = e1.FirstOrDefault(o => ((string)o["name"]).Contains("-busybox-")) ?? e1.First(); //get the smallest, which is busybox, or any if busybox removed
+					r = r["assets"].AsArray().First(o => ((string)o["name"]).RxIsMatch(@"(?i)MinGit-[\d\.]+-64-bit.zip")); //note: not busybox; it's smaller and worked, but now fails.
 					var url = (string)r["browser_download_url"];
 					
 					//download and unzip

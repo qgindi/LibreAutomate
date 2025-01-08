@@ -2661,6 +2661,7 @@ std::unique_ptr<Surface> Surface::Allocate(Technology technology) {
 	else
 		return std::make_unique<SurfaceD2D>();
 #else
+	(void)technology; //Au: disable warning
 	return std::make_unique<SurfaceGDI>();
 #endif
 }

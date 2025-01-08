@@ -316,7 +316,7 @@ static partial class CompilerUtil {
 						"source" => f.ItemPath,
 						"role" => m.Role.ToString(),
 						"optimize" => m.Optimize ? "true" : "false",
-						"bit32" => m.Bit32 ? "true" : "false",
+						"bit32" => m.Platform == MCPlatform.bit32 ? "true" : "false",
 						_ => throw new ArgumentException("error in meta: unknown variable " + k.Value)
 					});
 				}
@@ -326,7 +326,7 @@ static partial class CompilerUtil {
 		if (r.role != MCRole.editorExtension) throw new ArgumentException($"'{x.f.Name}' role must be editorExtension");
 		if (!ok) return false;
 		
-		PrePostBuild.Info = new(outFile, outPath, f.ItemPath, m.Role.ToString(), m.Optimize, m.Bit32, !post, publish);
+		PrePostBuild.Info = new(outFile, outPath, f.ItemPath, m.Role.ToString(), m.Optimize, m.Platform.ToString(), !post, publish);
 		try { EditorExtension.Run_(r.file, args, handleExceptions: false); }
 		finally { PrePostBuild.Info = null; }
 		return true;

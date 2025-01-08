@@ -47,7 +47,7 @@ static unsafe partial class Cpp {
 
 		nint h = 0;
 		string rel = (sizeof(nint) == 4 ? @"32\" : hasArm64X && RuntimeInformation.OSArchitecture == Architecture.Arm64 ? @"64\ARM\" : @"64\") + fileName;
-		//TODO: test 32-bit process on ARM64 OS.
+		//TODO: try to use standard "runtimes" folder instead.
 
 		//Au.dll dir + 64/32
 		var asm = typeof(Cpp).Assembly;

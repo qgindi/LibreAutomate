@@ -12,7 +12,7 @@ Improved:
 - If in `/*/ c /*/` etc used filename without path, and multiple files with the given filename exist in the workspace, can use the one from subfolders or ancestor folders (if single exists there). Previously would be error, unless one is in the same folder.
 
 Fixed bugs:
-- .
+- Git does not work with the newest version of private Git.
 
 ### Library
 New classes:

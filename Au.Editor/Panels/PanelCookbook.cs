@@ -87,6 +87,7 @@ class PanelCookbook {
 	void _Load() {
 		try {
 #if DEBUG
+			//TODO: exception when runs not from the home _
 			s_cookbookPath = folders.ThisAppBS + @"..\Cookbook\files";
 			var xr = XmlUtil.LoadElem(s_cookbookPath + ".xml");
 #else

@@ -101,7 +101,7 @@ partial class Compiler {
 			return Encoding.UTF8.GetString(new RByte(data, size));
 		}
 
-		public void WriteAll(string exeFile, byte[] exeData, bool bit32, bool console) {
+		public void WriteAll(string exeFile, byte[] exeData, MCPlatform platform, bool console) {
 			fixed (byte* pBase = exeData) {
 				IMAGE_NT_HEADERS64* nth = ImageNtHeader(pBase); if (nth == null) _Throw();
 				var oh = &nth->OptionalHeader;
@@ -135,7 +135,15 @@ partial class Compiler {
 				ish->Characteristics = 0x40000040;
 
 				uint resSize2 = Math2.AlignUp(resSize, oh->SectionAlignment);
-				if (!bit32) {
+				if (platform == MCPlatform.bit32) {
+					var oh32 = (IMAGE_OPTIONAL_HEADER32*)oh;
+					oh32->DataDirectory_Resource.VirtualAddress = resRva;
+					oh32->DataDirectory_Resource.Size = resSize;
+					oh32->SizeOfInitializedData += resSizeAligned;
+					oh32->SizeOfImage += resSize2;
+					if (console) oh32->Subsystem = 3;
+					oh32->CheckSum = 0;
+				} else {
 					//in IMAGE_OPTIONAL_HEADER write RVA/size of .rsrc section
 					oh->DataDirectory_Resource.VirtualAddress = resRva;
 					oh->DataDirectory_Resource.Size = resSize;
@@ -145,14 +153,6 @@ partial class Compiler {
 					oh->SizeOfImage += resSize2;
 					if (console) oh->Subsystem = 3; //IMAGE_SUBSYSTEM_WINDOWS_CUI
 					oh->CheckSum = 0;
-				} else {
-					var oh32 = (IMAGE_OPTIONAL_HEADER32*)oh;
-					oh32->DataDirectory_Resource.VirtualAddress = resRva;
-					oh32->DataDirectory_Resource.Size = resSize;
-					oh32->SizeOfInitializedData += resSizeAligned;
-					oh32->SizeOfImage += resSize2;
-					if (console) oh32->Subsystem = 3;
-					oh32->CheckSum = 0;
 				}
 				nth->FileHeader.NumberOfSections++;
 				nth->FileHeader.TimeDateStamp = 0;

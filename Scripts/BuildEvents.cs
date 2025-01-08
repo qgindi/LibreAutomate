@@ -19,7 +19,6 @@ return args[0] switch {
 /// Exits editor. Copies AuCpp.dll and unloads the old dll from processes.
 int CppPostBuild() {
 	_ExitEditor();
-	if (args[2] == "ARM64") return 0; //TODO
 	if (!_CopyAuCppDllIfNeed(args[2], false)) return 1;
 	return 0;
 }
@@ -84,9 +83,12 @@ int EditorPostBuild() {
 	
 	//TODO3: test https://github.com/resourcelib/resourcelib
 	
-	var s = $"""
+	for (int i = 0; i < 2; i++) {
+		string armDir = i == 1 ? @"\ARM" : "";
+		if (i == 1) { exe1 = exe1.Insert(^4, "-arm"); exe2 = exe2.Insert(^4, "-arm"); }
+		var s = $"""
 [FILENAMES]
-Exe=64\Au.AppHost.exe
+Exe=64{armDir}\Au.AppHost.exe
 SaveAs={exe1}
 [COMMANDS]
 -add ..\Au.Editor\Resources\ico\app.ico, ICONGROUP,32512,0
@@ -96,14 +98,14 @@ SaveAs={exe1}
 -add "{verResFile1}", VERSIONINFO,1,0
 
 """;
-	if (!_RunRhScript(s, exe1)) return 3;
-	
-	filesystem.getProperties(dirOut + @"64\Au.AppHost.exe", out var p1);
-	if (verChanged || !filesystem.getProperties(dirOut + exe2, out var p2) || p1.LastWriteTimeUtc > p2.LastWriteTimeUtc) {
-		print.it($"Creating {exe2}");
-		s = $"""
+		if (!_RunRhScript(s, exe1)) return 3;
+		
+		filesystem.getProperties(dirOut + @"64\Au.AppHost.exe", out var p1);
+		if (verChanged || !filesystem.getProperties(dirOut + exe2, out var p2) || p1.LastWriteTimeUtc > p2.LastWriteTimeUtc) {
+			print.it($"Creating {exe2}");
+			s = $"""
 [FILENAMES]
-Exe=64\Au.AppHost.exe
+Exe=64{armDir}\Au.AppHost.exe
 SaveAs={exe2}
 [COMMANDS]
 -add ..\Au.Editor\Resources\ico\Script.ico, ICONGROUP,32512,0
@@ -112,7 +114,8 @@ SaveAs={exe2}
 -add "{verResFile2}", VERSIONINFO,1,0
 
 """;
-		if (!_RunRhScript(s, exe2)) return 4;
+			if (!_RunRhScript(s, exe2)) return 4;
+		}
 	}
 	
 	if (verChanged) {

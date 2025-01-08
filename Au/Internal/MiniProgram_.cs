@@ -244,7 +244,7 @@ static unsafe class MiniProgram_ {
 				if (verDll > verPC) continue;
 			}
 			
-			if (s.Eq(i, osVersion.is32BitProcess ? @"-x64\" : @"-x86\", true)) continue;
+			if (s.Eq(i, osVersion.is32BitProcess ? @"-x64\" : @"-x86\", true)) continue; //TODO
 			
 			var a = s.Eq(i + 5, @"native\", true) ? aNative : aNet;
 			a.Add((f, verDll));

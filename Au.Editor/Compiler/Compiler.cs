@@ -81,7 +81,7 @@ partial class Compiler {
 		public MCIfRunning ifRunning;
 		public MCUac uac;
 		public MiniProgram_.MPFlags flags;
-		public bool bit32;
+		public MCPlatform platform;
 		
 		/// <summary>The assembly is normal .exe or .dll file, not in cache. If exe, its dependencies were copied to its directory.</summary>
 		public bool notInCache;
@@ -182,10 +182,10 @@ partial class Compiler {
 			//Create debug info always. It is used for run-time error links.
 			//Embed it in assembly. It adds < 1 KB. Almost the same compiling speed. Same loading speed.
 			//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error with .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
-//#if DEBUG //temp test debugger with non-user-code dll
-//			if (!(_meta.Role == MCRole.classLibrary && (_meta.Optimize || _meta.Name == "Au")))
-//#endif
-				eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
+			//#if DEBUG //temp test debugger with non-user-code dll
+			//			if (!(_meta.Role == MCRole.classLibrary && (_meta.Optimize || _meta.Name == "Au")))
+			//#endif
+			eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 			
 			if (_meta.XmlDoc) //allowed if role is classLibrary or exeProgram, but in Properties hidden if exeProgram (why could need it?)
 				xdStream = filesystem.waitIfLocked(() => File.Create(xdFile = outPath + "\\" + _meta.Name + ".xml"));
@@ -255,16 +255,21 @@ partial class Compiler {
 			if (_meta.Role == MCRole.exeProgram) {
 				_GetDllPaths();
 				
-				bool need64 = !_meta.Bit32 /*|| _meta.Optimize*/;
-				bool need32 = _meta.Bit32 || _meta.Optimize;
+				bool need64 = false, needArm = false, need32 = false;
+				if (_meta.Platform == MCPlatform.bit32) need32 = true;
+				else if (_meta.Optimize) need64 = needArm = true;
+				else if (_meta.Platform == MCPlatform.arm64) needArm = true;
+				else need64 = true;
+				//TODO: doc
 				
 				//copy app host template exe, add native resources, set assembly name, set console flag if need
-				if (need64) _AppHost(outFile, fileName, bit32: false);
-				if (need32) _AppHost(outFile, fileName, bit32: true);
+				if (need64) _AppHost(outFile, fileName, MCPlatform.x64);
+				if (needArm) _AppHost(outFile, fileName, MCPlatform.arm64);
+				if (need32) _AppHost(outFile, fileName, MCPlatform.bit32);
 				//p1.Next('h'); //very slow with AV. Eg with WD this part makes whole compilation several times slower.
 				
 				//copy dlls to the output directory
-				_CopyDlls(asmStream, need64: need64, need32: need32);
+				_CopyDlls(asmStream, need64: need64, needArm: needArm, need32: need32);
 				//p1.Next('d');
 				
 				//copy config file to the output directory
@@ -318,13 +323,13 @@ partial class Compiler {
 		r.role = _meta.Role;
 		r.ifRunning = _meta.IfRunning;
 		r.uac = _meta.Uac;
-		r.bit32 = _meta.Bit32;
+		r.platform = _meta.Platform;
 		r.notInCache = notInCache;
 		
 		//#if DEBUG
 		//p1.NW('C');
 		//#endif
-		//print.it($"<><c red>compiled<> {f}");
+		//print.it($"<><c red>compiled<> {f}"); //TODO: test finally
 		return true;
 		
 		//TODO3: rebuild if missing apphost. Now rebuilds only if missing dll.
@@ -494,8 +499,8 @@ partial class Compiler {
 								
 								string skip = null;
 								if (_meta.Role != MCRole.exeProgram) skip = @"-x86\";
-								else if (_meta.Bit32) skip = @"-x64\";
-								else if (!_meta.Optimize) skip = @"-x86\";
+								else if (_meta.Platform == MCPlatform.bit32) skip = @"-x64\"; //TODO
+								else if (!_meta.Optimize) skip = @"-x86\"; //TODO
 								
 								string sBest = null;
 								foreach (var f in x.Elements(native ? "native" : "rt")) {
@@ -536,8 +541,8 @@ partial class Compiler {
 									if (s.Ends(".dll", true)) {
 										string skip = null;
 										if (_meta.Role != MCRole.exeProgram) skip = @"\32";
-										else if (_meta.Bit32) skip = @"\64";
-										else if (!_meta.Optimize) skip = @"\32";
+										else if (_meta.Platform == MCPlatform.bit32) skip = @"\64"; //TODO
+										else if (!_meta.Optimize) skip = @"\32"; //TODO
 										if (skip != null && s.Starts(skip)) continue;
 									} else if (_meta.Role != MCRole.exeProgram) continue;
 									_Add2(ref dn, s);
@@ -696,21 +701,24 @@ partial class Compiler {
 #endif
 	}
 	
-	string _AppHost(string outFile, string fileName, bool bit32) {
+	string _AppHost(string outFile, string fileName, MCPlatform platform) {
 		//A .NET Core+ exe actually is a managed dll hosted by a native exe file known as apphost.
 		//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\sdk\version\AppHostTemplate\apphost.exe"
 		//	and modifies it, eg copies native resources from the dll.
 		//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
 		
 		//var p1 = perf.local();
-		string exeFile = DllNameToAppHostExeName(outFile, bit32);
+		string exeFile = DllNameToExeName(outFile, platform != _meta.Platform ? platform : default);
 		
 		if (filesystem.exists(exeFile) && !Api.DeleteFile(exeFile)) {
 			var ec = lastError.code;
 			if (!(ec == Api.ERROR_ACCESS_DENIED && _RenameLockedFile(exeFile, notInCache: true))) throw new AuException(ec);
 		}
 		
-		var appHost = folders.ThisAppBS + (bit32 ? "32" : "64") + @"\Au.AppHost.exe";
+		//delete old "program-64.exe" if now x64, or "program-arm.exe" if now arm64. It may exist if user switched meta platform x64/arm64.
+		if (platform is MCPlatform.x64 or MCPlatform.arm64) Api.DeleteFile(exeFile.Insert(^4, platform is MCPlatform.x64 ? "-64" : "-arm"));
+		
+		var appHost = folders.ThisAppBS + platform switch { MCPlatform.bit32 => "32", MCPlatform.arm64 => @"64\ARM", _ => "64" } + @"\Au.AppHost.exe";
 		bool done = false;
 		try {
 			var b = File.ReadAllBytes(appHost);
@@ -748,7 +756,7 @@ partial class Compiler {
 			else if (_meta.Role == MCRole.exeProgram) manifest = folders.ThisAppBS + "default.exe.manifest"; //don't: uac
 			if (manifest != null) res.AddManifest(manifest);
 			
-			res.WriteAll(exeFile, b, bit32, _meta.Console);
+			res.WriteAll(exeFile, b, platform, _meta.Console);
 			
 			//speed: AV makes this slooow.
 			//p1.NW();
@@ -777,17 +785,17 @@ partial class Compiler {
 		ms.Position = 0;
 	}
 	
-	void _CopyDlls(Stream asmStream, bool need64, bool need32) {
+	void _CopyDlls(Stream asmStream, bool need64, bool needArm, bool need32) {
 		asmStream.Position = 0;
 		
 		//note: need Au.dll and AuCpp.dll even if not used in code. Au.dll contains script.AppModuleInit_.
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", _meta.OutputPath + @"\Au.dll");
 		//note: always need all AuCpp.dll and Au.Arch.exe, because maybe elm will have to load AuCpp.dll into other processes.
-		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", _meta.OutputPath + @"\32\AuCpp.dll");
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", _meta.OutputPath + @"\64\AuCpp.dll");
-		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\AuCpp.dll", _meta.OutputPath + @"\64\ARM\AuCpp.dll");
-		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\Au.Arch.exe", _meta.OutputPath + @"\32\Au.Arch.exe");
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\Au.Arch.exe", _meta.OutputPath + @"\64\Au.Arch.exe");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", _meta.OutputPath + @"\32\AuCpp.dll");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\Au.Arch.exe", _meta.OutputPath + @"\32\Au.Arch.exe");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\AuCpp.dll", _meta.OutputPath + @"\64\ARM\AuCpp.dll");
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\Au.Arch.exe", _meta.OutputPath + @"\64\ARM\Au.Arch.exe");
 		
 		bool usesSqlite = CompilerUtil.UsesSqlite(asmStream);
@@ -811,6 +819,7 @@ partial class Compiler {
 		//print.it(usesSqlite);
 		if (usesSqlite) {
 			if (need64) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", _meta.OutputPath + @"\64\sqlite3.dll");
+			if (needArm) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\sqlite3.dll", _meta.OutputPath + @"\64\ARM\sqlite3.dll");
 			if (need32) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", _meta.OutputPath + @"\32\sqlite3.dll");
 		}
 		
@@ -819,15 +828,15 @@ partial class Compiler {
 	}
 	
 	bool _RunPrePostBuildScript(bool post, string outFile) {
-		if (_meta.Role == MCRole.exeProgram) outFile = DllNameToAppHostExeName(outFile, _meta.Bit32);
+		if (_meta.Role == MCRole.exeProgram) outFile = DllNameToExeName(outFile, default);
 		return CompilerUtil.RunPrePostBuildScript(_meta, post, outFile, false);
 	}
 	
 	/// <summary>
-	/// Replaces ".dll" with "-32.exe" if bit32, else with ".exe".
+	/// Replaces ".dll" with ".exe" (if Default) or "-32.exe" or "-64.exe" or "-arm.exe".
 	/// </summary>
-	public static string DllNameToAppHostExeName(string dll, bool bit32)
-		=> dll.ReplaceAt(^4.., bit32 ? "-32.exe" : ".exe");
+	public static string DllNameToExeName(string dll, MCPlatform platform)
+		=> dll.ReplaceAt(^4.., platform switch { MCPlatform.x64 => "-64.exe", MCPlatform.arm64 => "-arm.exe", MCPlatform.bit32 => "-32.exe", _ => ".exe" });
 	
 	static bool _RenameLockedFile(string file, bool notInCache) {
 		//If the assembly file is currently loaded, we get ERROR_SHARING_VIOLATION. But we can rename the file.

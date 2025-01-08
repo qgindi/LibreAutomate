@@ -144,6 +144,7 @@ namespace Au {
 				if (!ok) {
 					if (injectError != 0) {
 						print.warning("Failed to run as non-admin.");
+						//TODO: warning on WinARM (no UAC).
 						//once in TT process started to always fail. More info in UnmarshalAgentIAccessible().
 						asUser = false;
 					} else errorCode = execError;

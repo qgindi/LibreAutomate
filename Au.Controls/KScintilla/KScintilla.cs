@@ -30,8 +30,8 @@ public unsafe partial class KScintilla : HwndHost {
 #endif
 	
 	static KScintilla() {
-		Cpp.LoadAuNativeDll(SCINTILLA_DLL);
-		//Cpp.AddAuNativeDllToResolve("Lexilla.dll");
+		Cpp.LoadAuNativeDll(SCINTILLA_DLL, hasArm64X: true);
+		//Cpp.AddAuNativeDllToResolve("Lexilla.dll", hasArm64X: true);
 	}
 	
 	public KScintilla() {

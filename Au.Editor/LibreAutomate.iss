@@ -35,9 +35,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Editor-arm.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Task-arm.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -46,15 +48,26 @@ Source: "Au.Net4.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
 Source: "Roslyn\*.exe"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
+
 Source: "64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "64\ARM\AuCpp.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
-Source: "64\ARM\Au.Arm.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
+Source: "64\ARM\Au.AppHost.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 Source: "32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
+
+Source: "64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\ARM\AuCpp.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 Source: "32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
+
+Source: "64\Au.Arch.exe"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\ARM\Au.Arch.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
+Source: "32\Au.Arch.exe"; DestDir: "{app}\32"; Flags: ignoreversion
+
+Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\ARM\sqlite3.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 Source: "32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
+
+Source: "64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\ARM\Scintilla.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
+
 Source: "32\7za.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 
 Source: "Default\*"; DestDir: "{app}\Default"; Flags: ignoreversion
@@ -64,12 +77,13 @@ Source: "Default\Themes\*"; DestDir: "{app}\Default\Themes"; Flags: ignoreversio
 Source: "Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
 Source: "Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
 
-Source: "default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
 Source: "doc.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "ref.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "winapi.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "icons.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "cookbook.db"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: "default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
 Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 
 ;CONSIDER: don't include big not frequently updated files. Auto-download on demand.
@@ -237,6 +251,26 @@ begin
   end;
 end;
 
+procedure InstallExeForCurrentArch(BaseFileName: String);
+var
+  TargetFile, ArmFile: String;
+begin
+  TargetFile := ExpandConstant('{app}\') + BaseFileName + '.exe';
+  ArmFile := ExpandConstant('{app}\') + BaseFileName + '-arm.exe';
+
+  if IsArm64 then
+  begin
+    DeleteFile(TargetFile);
+    if FileExists(ArmFile) then
+      RenameFile(ArmFile, TargetFile);
+  end
+  else
+  begin
+    DeleteFile(ArmFile);
+  end;
+end;
+
+
 function InitializeSetup(): Boolean;
 begin
   //Cpp_Install(0, '');
@@ -257,6 +291,8 @@ begin
     ssInstall:
     begin
       //Cpp_Install(1, ExpandConstant('{app}\'));
+      InstallExeForCurrentArch('Au.Editor');
+      InstallExeForCurrentArch('Au.Task');
     end;
      ssPostInstall:
      begin

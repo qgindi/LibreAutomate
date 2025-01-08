@@ -23,6 +23,11 @@ using System.Diagnostics.CodeAnalysis;
 using Au.Compiler;
 using static Au.Controls.Sci;
 
+//TODO: test how many NuGet libs have arm64 and arm32.
+//TODO: update code and doc to use native ARM64.
+//TODO: Test, maybe can run on Windows 10 ARM64.
+//TODO: test debugger on ARM.
+
 static class Test {
 	
 	public static void FromMenubar() {

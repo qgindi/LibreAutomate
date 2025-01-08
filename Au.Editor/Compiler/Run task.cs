@@ -491,23 +491,19 @@ class RunningTasks {
 		string exeFile, argsString;
 		
 		//rejected: 32-bit miniProgram. The task exe has been removed because of AV false positives. And rarely used. Can use exeProgram instead.
-		//	osVersion.is32BitOS - editor does not run on 32-bit OS. And never will.
-		//bool bit32 = r.bit32 || osVersion.is32BitOS;
 		
 		if (exeProgram) { //meta role exeProgram
-			exeFile = Compiler.DllNameToAppHostExeName(r.file, r.bit32);
+			exeFile = Compiler.DllNameToExeName(r.file, default);
 			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		} else {
 			if (debugger) {
 				if (uac == _SpUac.elevate) { print.it("Cannot debug this script. Remove /*/ uac admin; /*/, or run LA as admin."); return 0; }
 				//Don't use preloaded. It would load some assemblies before 'attach debugger' and then debugger cannot disable JIT optimizations.
 			} else if (usePreloaded = r.flags.Has(MiniProgram_.MPFlags.Preloaded) && uac != _SpUac.elevate) {
-				//if (bit32 && !osVersion.is32BitOS) preIndex += 3;
 				pre = s_preloaded[preIndex] ??= new _Preloaded(preIndex);
 			}
 			pre ??= new _Preloaded(100); //temporary, just to create pipe with unique name and reuse preloaded launch code
 			
-			//exeFile = folders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 			exeFile = folders.ThisAppBS + "Au.Task.exe";
 			argsString = pre.pipeName;
 		}

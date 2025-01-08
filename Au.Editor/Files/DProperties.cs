@@ -20,10 +20,10 @@ class DProperties : KDialogWindow {
 	
 	//controls
 	readonly KSciInfoBox info;
-	readonly ComboBox role, ifRunning, uac, warningLevel, nullable;
+	readonly ComboBox role, ifRunning, uac, warningLevel, nullable, platform;
 	readonly TextBox testScript, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
 	readonly ComboBox outputPath, icon, manifest, sign;
-	readonly KCheckBox bit32, xmlDoc, console, optimize, cMultiline;
+	readonly KCheckBox xmlDoc, console, optimize, cMultiline;
 	readonly KGroupBoxSeparator gAssembly, gCompile;
 	readonly Panel pRun;
 	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, addFile, bVersion;
@@ -84,7 +84,7 @@ class DProperties : KDialogWindow {
 		b.R.Add(out console, "console")
 			.And(0).Add(out xmlDoc, "xmlDoc");
 		b.AddButton(out bVersion, "Version", _ => _VersionInfo()).SpanRows(2).Align("R", "C");
-		b.R.Add(out bit32, "bit32");
+		b.R.Add("platform", out platform).Width(100, "L");
 		b.End();
 		
 		b.End();
@@ -159,11 +159,11 @@ class DProperties : KDialogWindow {
 		icon.Text = _meta.icon;
 		manifest.Text = _meta.manifest;
 		sign.Text = _meta.sign;
-		if (_meta.console == "true") console.IsChecked = true;
-		if (_meta.bit32 == "true") bit32.IsChecked = true;
+		if (_meta.console is "true" or "!false") console.IsChecked = true;
+		_InitCombo(platform, "Default|x64|arm64|bit32", _meta.platform);
 		if (_meta.xmlDoc == "true") xmlDoc.IsChecked = true;
 		//Compile
-		if (_meta.optimize == "true") optimize.IsChecked = true;
+		if (_meta.optimize is "true" or "!false") optimize.IsChecked = true;
 		define.Text = _meta.define;
 		_InitCombo(warningLevel, "8|7|6|5|4|3|2|1|0", _meta.warningLevel, 0);
 		noWarnings.Text = _meta.noWarnings;
@@ -190,7 +190,7 @@ class DProperties : KDialogWindow {
 			if (ts == null) { testScript.IsEnabled = false; testScript.Text = "<the first C# file of this project>"; }
 			_ShowCollapse(_role is MCRole.miniProgram or MCRole.exeProgram, pRun, console, icon);
 			_ShowCollapse(_role is MCRole.exeProgram or MCRole.classLibrary, outputPath, bVersion);
-			_ShowCollapse(_role is MCRole.exeProgram, manifest, bit32);
+			_ShowCollapse(_role is MCRole.exeProgram, manifest, platform);
 			_ShowCollapse(_role == MCRole.classLibrary, xmlDoc);
 			_ShowCollapse(_role != MCRole.classFile, gAssembly, gCompile);
 		}
@@ -213,7 +213,7 @@ class DProperties : KDialogWindow {
 		
 		_meta.ifRunning = _Get(ifRunning, defaultIndex: 0);
 		_meta.uac = _Get(uac, defaultIndex: 0);
-		_meta.bit32 = _Get(bit32);
+		_meta.platform = _Get(platform, defaultIndex: 0);
 		
 		_meta.console = _Get(console);
 		_meta.icon = _Get(icon);
@@ -625,9 +625,10 @@ Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be 
 
 Default if role exeProgram: <link>%folders.Workspace%\exe<>\filename. Default if role classLibrary: <link>%folders.Workspace%\dll<>. The compiler creates the folder if does not exist.
 
-If role exeProgram, the exe file is named like the script. The 32-bit version has suffix "-32". If optimize true (checked), creates both 64-bit and 32-bit versions. Else creates only 32-bit if bit32 true (checked) or 32-bit OS, else only 64-bit.
-If role classLibrary, the dll file is named like the class file. It can be used by 64-bit and 32-bit processes.
+If role exeProgram, the exe file is named like the script. If optimize true (checked) and platform not bit32, creates both x64 and ARM64 versions; the version of the alternative platform is named like "program-arm.exe" or "program-x64.exe".
+If role classLibrary, the dll file is named like the class file. It can be used by 64-bit, 32-bit and ARM64 processes.
 """);
+		//TODO: update docs
 		info.AaAddElem(icon, """
 <b>icon</b> - icon of the output exe file.
 
@@ -664,10 +665,16 @@ Can be:
 		info.AaAddElem(console, """
 <b>console</b> - let the program run with console.
 """);
-		info.AaAddElem(bit32, """
-<b>bit32</b> - whether the exe process must be 32-bit everywhere.
- • <i>false</i> (default) - the process is 64-bit or 32-bit, the same as Windows on that computer.
- • <i>true</i> (checked) - the process is 32-bit on all computers.
+		info.AaAddElem(platform, """
+<b>platform</b> - supported/used CPU architecture.
+ • <i>x64</i> - can run on Windows x64 and Windows11+ ARM64. The process is 64-bit (x64). Can't run on Windows 32-bit and Windows10 ARM64 (both are rare or extinct).
+ • <i>arm64</i> - can run only on Windows ARM64. The process is ARM64.
+ • <i>bit32</i> - can run on all Windows computers. The process is 32-bit.
+ • <i>Default</i> - arm64 if current Windows is Windows11+ ARM64 and is installed .NET Runtime ARM64. Else x64.
+ 
+Creates program files for this platform. If optimize true and platform not bit32, creates for both x64 and arm64. In any case, the process uses this platform when launched from editor.
+
+If x64 or bit32, on ARM64 Windows the process runs under emulation and therefore is slower.
 """);
 		info.AaAddElem(xmlDoc, """
 <b>xmlDoc</b> - create XML documentation file from /// comments. And print errors in /// comments.
