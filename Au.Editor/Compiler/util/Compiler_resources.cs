@@ -135,7 +135,7 @@ partial class Compiler {
 				ish->Characteristics = 0x40000040;
 
 				uint resSize2 = Math2.AlignUp(resSize, oh->SectionAlignment);
-				if (platform == MCPlatform.bit32) {
+				if (platform == MCPlatform.x86) {
 					var oh32 = (IMAGE_OPTIONAL_HEADER32*)oh;
 					oh32->DataDirectory_Resource.VirtualAddress = resRva;
 					oh32->DataDirectory_Resource.Size = resSize;

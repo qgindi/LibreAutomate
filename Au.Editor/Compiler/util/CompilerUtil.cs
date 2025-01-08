@@ -316,7 +316,7 @@ static partial class CompilerUtil {
 						"source" => f.ItemPath,
 						"role" => m.Role.ToString(),
 						"optimize" => m.Optimize ? "true" : "false",
-						"bit32" => m.Platform == MCPlatform.bit32 ? "true" : "false",
+						"bit32" => m.Platform == MCPlatform.x86 ? "true" : "false",
 						_ => throw new ArgumentException("error in meta: unknown variable " + k.Value)
 					});
 				}

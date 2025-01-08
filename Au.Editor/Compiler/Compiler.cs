@@ -255,21 +255,17 @@ partial class Compiler {
 			if (_meta.Role == MCRole.exeProgram) {
 				_GetDllPaths();
 				
-				bool need64 = false, needArm = false, need32 = false;
-				if (_meta.Platform == MCPlatform.bit32) need32 = true;
-				else if (_meta.Optimize) need64 = needArm = true;
-				else if (_meta.Platform == MCPlatform.arm64) needArm = true;
-				else need64 = true;
+				var need = _NeedNativeExeAndDllFilesOfPlatforms();
 				//TODO: doc
 				
 				//copy app host template exe, add native resources, set assembly name, set console flag if need
-				if (need64) _AppHost(outFile, fileName, MCPlatform.x64);
-				if (needArm) _AppHost(outFile, fileName, MCPlatform.arm64);
-				if (need32) _AppHost(outFile, fileName, MCPlatform.bit32);
+				if (need.x64) _AppHost(outFile, fileName, MCPlatform.x64);
+				if (need.arm64) _AppHost(outFile, fileName, MCPlatform.arm64);
+				if (need.x86) _AppHost(outFile, fileName, MCPlatform.x86);
 				//p1.Next('h'); //very slow with AV. Eg with WD this part makes whole compilation several times slower.
 				
 				//copy dlls to the output directory
-				_CopyDlls(asmStream, need64: need64, needArm: needArm, need32: need32);
+				_CopyDlls(asmStream, need64: need.x64, needArm: need.arm64, need32: need.x86);
 				//p1.Next('d');
 				
 				//copy config file to the output directory
@@ -469,7 +465,6 @@ partial class Compiler {
 					if (xp != null) {
 						var dir = App.Model.NugetDirectoryBS + pathname.getDirectory(package);
 						if (xp.Attr(out int format, "format")) {
-							
 							foreach (var f in xp.Elements()) {
 								switch (f.Name.LocalName) { //see DNuget._Build
 								case "r" or "rt":
@@ -497,10 +492,7 @@ partial class Compiler {
 								int verPC = osVersion.minWin10 ? 100 : osVersion.minWin8_1 ? 81 : osVersion.minWin8 ? 80 : 70; //don't need Win11
 								int verBest = -1;
 								
-								string skip = null;
-								if (_meta.Role != MCRole.exeProgram) skip = @"-x86\";
-								else if (_meta.Platform == MCPlatform.bit32) skip = @"-x64\"; //TODO
-								else if (!_meta.Optimize) skip = @"-x86\"; //TODO
+								var need = _NeedNativeExeAndDllFilesOfPlatforms();
 								
 								string sBest = null;
 								foreach (var f in x.Elements(native ? "native" : "rt")) {
@@ -508,7 +500,11 @@ partial class Compiler {
 									int i = 13, verDll = 0;
 									if (s[i] != '-') verDll = s.ToInt(i, out i);
 									
-									if (skip != null && s.Eq(i, skip, true)) continue;
+									if (i > 0 && s[i] == '-') {
+										if (!need.x64 && s.Eq(i, @"-x64\", true)) continue;
+										if (!need.arm64 && s.Eq(i, @"-arm64\", true)) continue;
+										if (!need.x86 && s.Eq(i, @"-x86\", true)) continue;
+									}
 									
 									if (_meta.Role == MCRole.exeProgram) {
 										_Add2(ref d, s); //will select at run time
@@ -528,26 +524,7 @@ partial class Compiler {
 							}
 						} else {
 							//old format (the very first)
-							//tags:
-							//	"r" - .NET dll (including ref-only)
-							//	"f" - all other (including unmanaged dll)
-							//native dlls are in \64 and \32.
-							
-							foreach (var f in xp.Elements()) {
-								string s = f.Value, tag = f.Name.LocalName;
-								if (tag == "r") {
-									_Add2(ref dr, s);
-								} else if (tag == "f") {
-									if (s.Ends(".dll", true)) {
-										string skip = null;
-										if (_meta.Role != MCRole.exeProgram) skip = @"\32";
-										else if (_meta.Platform == MCPlatform.bit32) skip = @"\64"; //TODO
-										else if (!_meta.Optimize) skip = @"\32"; //TODO
-										if (skip != null && s.Starts(skip)) continue;
-									} else if (_meta.Role != MCRole.exeProgram) continue;
-									_Add2(ref dn, s);
-								}
-							}
+							throw new FileFormatException($"Please reinstall NuGet package '{package}'.");
 						}
 						
 						void _Add2(ref Dictionary<string, string> d, string s, bool isDll = true)
@@ -718,7 +695,7 @@ partial class Compiler {
 		//delete old "program-64.exe" if now x64, or "program-arm.exe" if now arm64. It may exist if user switched meta platform x64/arm64.
 		if (platform is MCPlatform.x64 or MCPlatform.arm64) Api.DeleteFile(exeFile.Insert(^4, platform is MCPlatform.x64 ? "-64" : "-arm"));
 		
-		var appHost = folders.ThisAppBS + platform switch { MCPlatform.bit32 => "32", MCPlatform.arm64 => @"64\ARM", _ => "64" } + @"\Au.AppHost.exe";
+		var appHost = folders.ThisAppBS + platform switch { MCPlatform.x86 => "32", MCPlatform.arm64 => @"64\ARM", _ => "64" } + @"\Au.AppHost.exe";
 		bool done = false;
 		try {
 			var b = File.ReadAllBytes(appHost);
@@ -836,7 +813,16 @@ partial class Compiler {
 	/// Replaces ".dll" with ".exe" (if Default) or "-32.exe" or "-64.exe" or "-arm.exe".
 	/// </summary>
 	public static string DllNameToExeName(string dll, MCPlatform platform)
-		=> dll.ReplaceAt(^4.., platform switch { MCPlatform.x64 => "-64.exe", MCPlatform.arm64 => "-arm.exe", MCPlatform.bit32 => "-32.exe", _ => ".exe" });
+		=> dll.ReplaceAt(^4.., platform switch { MCPlatform.x64 => "-64.exe", MCPlatform.arm64 => "-arm.exe", MCPlatform.x86 => "-32.exe", _ => ".exe" });
+	
+	(bool x64, bool arm64, bool x86) _NeedNativeExeAndDllFilesOfPlatforms() {
+		if (_meta.Role == MCRole.exeProgram) {
+			if (_meta.Platform == MCPlatform.x86) return (false, false, true);
+			if (_meta.Optimize) return (true, true, false);
+		}
+		if (_meta.Platform == MCPlatform.arm64) return (false, true, false);
+		return (true, false, false);
+	}
 	
 	static bool _RenameLockedFile(string file, bool notInCache) {
 		//If the assembly file is currently loaded, we get ERROR_SHARING_VIOLATION. But we can rename the file.

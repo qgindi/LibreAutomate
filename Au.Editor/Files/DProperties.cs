@@ -160,7 +160,7 @@ class DProperties : KDialogWindow {
 		manifest.Text = _meta.manifest;
 		sign.Text = _meta.sign;
 		if (_meta.console is "true" or "!false") console.IsChecked = true;
-		_InitCombo(platform, "Default|x64|arm64|bit32", _meta.platform);
+		_InitCombo(platform, "Default|x64|arm64|x86", _meta.platform);
 		if (_meta.xmlDoc == "true") xmlDoc.IsChecked = true;
 		//Compile
 		if (_meta.optimize is "true" or "!false") optimize.IsChecked = true;
@@ -624,11 +624,7 @@ This option is ignored when the task runs as .exe program started not from edito
 Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be path relative to this file or workspace, like with other options.
 
 Default if role exeProgram: <link>%folders.Workspace%\exe<>\filename. Default if role classLibrary: <link>%folders.Workspace%\dll<>. The compiler creates the folder if does not exist.
-
-If role exeProgram, the exe file is named like the script. If optimize true (checked) and platform not bit32, creates both x64 and ARM64 versions; the version of the alternative platform is named like "program-arm.exe" or "program-x64.exe".
-If role classLibrary, the dll file is named like the class file. It can be used by 64-bit, 32-bit and ARM64 processes.
 """);
-		//TODO: update docs
 		info.AaAddElem(icon, """
 <b>icon</b> - icon of the output exe file.
 
@@ -667,15 +663,19 @@ Can be:
 """);
 		info.AaAddElem(platform, """
 <b>platform</b> - supported/used CPU architecture.
- • <i>x64</i> - can run on Windows x64 and Windows11+ ARM64. The process is 64-bit (x64). Can't run on Windows 32-bit and Windows10 ARM64 (both are rare or extinct).
+ • <i>x64</i> - can run on almost all Windows computers (x64 and Windows11+ ARM64). The process is 64-bit (x64).
  • <i>arm64</i> - can run only on Windows ARM64. The process is ARM64.
- • <i>bit32</i> - can run on all Windows computers. The process is 32-bit.
- • <i>Default</i> - arm64 if current Windows is Windows11+ ARM64 and is installed .NET Runtime ARM64. Else x64.
+ • <i>x86</i> - can run on almost all Windows computers (x64, ARM64, x86). The process is 32-bit (x86).
+ • <i>Default</i> - same as LibreAutomate (x64 or arm64).
  
-Creates program files for this platform. If optimize true and platform not bit32, creates for both x64 and arm64. In any case, the process uses this platform when launched from editor.
+Creates program files for this platform. If optimize true and platform not x86, creates for both x64 and arm64. In any case, the process uses this platform when launched from editor.
 
-If x64 or bit32, on ARM64 Windows the process runs under emulation and therefore is slower.
+If x64 or x86, on Windows ARM64 the process runs under emulation and therefore is slower.
+
+Most .NET dlls can be used by programs of any platform. But native dlls can be used only in programs of the same platform as of the dll. Usually libraries that use native dlls have dll files for multiple platforms. If a dll for some platform is missing, you can't use that platform for your script/program that will use that library. Workaround: use role exeProgram and platform of an available dll.
 """);
+		//TODO: update docs
+		
 		info.AaAddElem(xmlDoc, """
 <b>xmlDoc</b> - create XML documentation file from /// comments. And print errors in /// comments.
 
@@ -772,7 +772,7 @@ To use 'extern alias Abc;', edit the code: <c green>nuget folder\package /alias=
  COM component's type library to an <i>interop assembly<>, and use it.
 Adds meta comment <c green>com FileName.dll<>. Saves the assembly file in <link>%folders.Workspace%\.interop<>.
 
-An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered unmanaged dll or exe file). If 64-bit dll unavailable, can be used only in a 32-bit program (role exeProgram, bit32 checked).
+An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered unmanaged dll or exe file). If a COM dll for current platform unavailable, try to set role exeProgram and change platform.
 
 To remove this meta comment, edit the code. Optionally delete unused interop assemblies.
 To use 'extern alias Abc;', edit the code: <c green>com FileName.dll /alias=Abc<>

@@ -206,7 +206,6 @@ static unsafe class MiniProgram_ {
 	
 	//for assemblies used in miniProgram and editorExtension scripts
 	internal static IntPtr ResolveUnmanagedDllFromNativePathsAttribute_(string name, Assembly scriptAssembly) {
-		//print.it("native", name);
 		var attr = scriptAssembly.GetCustomAttribute<NativePathsAttribute>();
 		if (attr != null) {
 			if (!name.Ends(".dll", true)) name += ".dll";
@@ -244,9 +243,10 @@ static unsafe class MiniProgram_ {
 				if (verDll > verPC) continue;
 			}
 			
-			if (s.Eq(i, osVersion.is32BitProcess ? @"-x64\" : @"-x86\", true)) continue; //TODO
+			string arch = RuntimeInformation.ProcessArchitecture switch { Architecture.X86 => @"-x86\", Architecture.Arm64 => @"-arm64\", _ => @"-x64\" };
+			if (!s.Eq(i, arch, true)) continue;
 			
-			var a = s.Eq(i + 5, @"native\", true) ? aNative : aNet;
+			var a = s.Eq(i + arch.Length, @"native\", true) ? aNative : aNet;
 			a.Add((f, verDll));
 		}
 		
@@ -279,12 +279,10 @@ static unsafe class MiniProgram_ {
 		}
 		
 		if (dr != null) AssemblyLoadContext.Default.Resolving += (alc, an) => {
-			//print.it("lib", an.Name);
 			if (!dr.TryGetValue(an.Name, out var path)) return null;
 			return alc.LoadFromAssemblyPath_(path);
 		};
 		if (dn != null) AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, name) => {
-			//print.it("native", name);
 			if (name.Ends(".dll", true)) name = name[..^4];
 			if (!dn.TryGetValue(name, out var path)) return default;
 			if (!NativeLibrary.TryLoad(path, out var r)) return default;

@@ -419,6 +419,7 @@ namespace Au {
 		/// Fails if the specified process is admin and this process isn't. May fail with some system processes. Fails if this is a 32-bit process.
 		/// </remarks>
 		public static unsafe string getCommandLine(int processId, bool removeProgram = false) {
+			//TODO: test ARM
 			if (osVersion.is32BitProcess) return null; //can't get PEB address of 64-bit processes. Never mind 32-bit OS.
 			using var pm = new ProcessMemory(processId, 0, noException: true);
 			if (pm.ProcessHandle == default) return null;

@@ -163,6 +163,6 @@ namespace Au.More {
 		public static PrePostBuild Info { get; internal set; }
 		
 		[Obsolete("Use platform."), EditorBrowsable(EditorBrowsableState.Never)]
-		public bool bit32 => platform == "bit32";
+		public bool bit32 => platform == "x86";
 	}
 }

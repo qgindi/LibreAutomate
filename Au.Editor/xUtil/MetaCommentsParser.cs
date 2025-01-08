@@ -36,7 +36,7 @@ class MetaCommentsParser {
 		case "ifRunning": ifRunning = value; break;
 		case "uac": uac = value; break;
 		case "platform": platform = value; break;
-		case "bit32": platform = value is "true" or "!false" ? "bit32" : "x64"; break; //fbc
+		case "bit32": platform = value is "true" or "!false" ? "x86" : "x64"; break; //fbc
 		case "optimize": optimize = value; break;
 		case "warningLevel": warningLevel = value; break;
 		case "noWarnings": noWarnings = value; break;

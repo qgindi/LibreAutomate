@@ -97,7 +97,7 @@ namespace Au.Compiler;
 /// <code><![CDATA[
 /// ifRunning warn_restart|warn|cancel_restart|cancel|wait_restart|wait|run_restart|run|restart|end|end_restart //what to do if this script is already running. Default: warn_restart. More info below.
 /// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
-/// platform default|x64|arm64|bit32
+/// platform default|x64|arm64|x86
 /// ]]></code>
 /// Here word "task" is used for "script that is running or should start".
 /// Options 'ifRunning' and 'uac' are applied only when the task is started from editor process, not when it runs as independent exe program.
@@ -307,11 +307,15 @@ class MetaComments {
 	
 	/// <summary>
 	/// Meta option 'platform'.
-	/// Default: x64 or arm64, depending on OS and installed dotnet version.
+	/// If meta not specified, this property is = <see cref="DefaultPlatform"/> if executable role, else <b>Default</b>.
 	/// </summary>
 	public MCPlatform Platform { get; private set; }
 	
-	public static MCPlatform DefaultPlatform => RuntimeInformation.OSArchitecture == Architecture.Arm64 ? MCPlatform.arm64 : MCPlatform.x64; //TODO
+	/// <summary>
+	/// Default <see cref="Platform"/> when meta 'platform' not specified for an executable role.
+	/// Same as LA (x64 or arm64).
+	/// </summary>
+	public static MCPlatform DefaultPlatform => RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? MCPlatform.arm64 : MCPlatform.x64;
 	
 	/// <summary>
 	/// Meta option 'console'.
@@ -437,7 +441,7 @@ class MetaComments {
 			_metaRange = MetaRange;
 			_FinalCheckOptions();
 			
-			if (Role == MCRole.exeProgram && Platform == default) Platform = DefaultPlatform;
+			if (Platform == default && Role <= MCRole.editorExtension) Platform = DefaultPlatform;
 		}
 		
 		if (Errors?.ErrorCount > 0) {
@@ -719,7 +723,7 @@ class MetaComments {
 			break;
 		case "bit32": //fbc. Now use platform instead.
 			_Specified(MCSpecified.platform);
-			if (_TrueFalse(out bool is32, value) && is32) Platform = MCPlatform.bit32;
+			if (_TrueFalse(out bool is32, value) && is32) Platform = MCPlatform.x86;
 			break;
 		case "console":
 			_Specified(MCSpecified.console);
@@ -1122,8 +1126,8 @@ enum MCRole { miniProgram, exeProgram, editorExtension, classLibrary, classFile 
 enum MCUac { inherit, user, admin }
 
 enum MCIfRunning { warn_restart, warn, cancel_restart, cancel, wait_restart, wait, run_restart, run, restart, end, end_restart, _norestartFlag = 1 }
-	
-enum MCPlatform { Default, x64, arm64, bit32 }
+
+enum MCPlatform { Default, x64, arm64, x86 }
 
 /// <summary>
 /// Flags for <see cref="MetaComments"/>
