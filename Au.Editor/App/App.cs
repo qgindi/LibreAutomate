@@ -241,7 +241,7 @@ static partial class App {
 			//	Probably should delete folders.ThisAppTemp (\data\temp).
 			
 			//on ARM64, if Au.Editor.exe is x64, run Au.Editor-arm.exe instead
-			if (RuntimeInformation.ProcessArchitecture == Architecture.X64 && RuntimeInformation.OSArchitecture == Architecture.Arm64) _RestartArm64(args);
+			if (!osVersion.isArm64Process && osVersion.isArm64OS) _RestartArm64(args);
 		}
 	}
 	

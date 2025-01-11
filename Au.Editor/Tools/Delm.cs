@@ -1791,7 +1791,7 @@ public static class Java {
 	/// Returns: ok = false if failed or canceled. results = null if canceled.
 	/// </summary>
 	public static (bool ok, string results) EnableDisableJab(bool enable) {
-		if (!GetJavaPath(out var path)) return (false, $"Cannot find Java {RuntimeInformation.ProcessArchitecture} (JRE or JDK). Make sure it is installed and in PATH. Need the {RuntimeInformation.ProcessArchitecture} version, not 32-bit or {(RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "x64" : "ARM64")}. If you have other Java versions (32-bit etc), keep them too.");
+		if (!GetJavaPath(out var path)) return (false, $"Cannot find Java {RuntimeInformation.ProcessArchitecture} (JRE or JDK). Make sure it is installed and in PATH. Need the {RuntimeInformation.ProcessArchitecture} version, not 32-bit or {(osVersion.isArm64Process ? "x64" : "ARM64")}. If you have other Java versions (32-bit etc), keep them too.");
 		
 		string sout = null;
 			string jabswitch = path + @"\jabswitch.exe";
@@ -1828,7 +1828,7 @@ public static class Java {
 				//print.it($"<><lc yellow>{javaExe}<>");
 				//print.it(s);
 				
-				var arch = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "aarch64" : "amd64";
+				var arch = osVersion.isArm64Process ? "aarch64" : "amd64";
 				if (s.RxIsMatch($@"(?m)^\h*os.arch *= *{arch}\b") && s.RxMatch(@"(?m)^\h*java.home *= *(.+)", 1, out s)) {
 					path = s + "\\bin";
 					return true;

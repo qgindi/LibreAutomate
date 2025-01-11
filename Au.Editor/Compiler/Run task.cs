@@ -470,7 +470,9 @@ class RunningTasks {
 					if (r.uac == MCUac.admin) uac = _SpUac.elevate;
 					break;
 				case UacIL.High:
-					if (r.uac == MCUac.user) uac = _SpUac.userFromAdmin;
+					if (r.uac == MCUac.user
+						&& uacInfo.ofThisProcess.Elevation == UacElevation.Full //eg on Azure VM there are no Medium IL processes (all normal processes are High), and Elevation returns Default, although UAC not turned off
+						) uac = _SpUac.userFromAdmin;
 					break;
 				case UacIL.Low:
 				case UacIL.Untrusted:
@@ -504,7 +506,7 @@ class RunningTasks {
 			}
 			pre ??= new _Preloaded(100); //temporary, just to create pipe with unique name and reuse preloaded launch code
 			
-			exeFile = folders.ThisAppBS + "Au.Task.exe";
+			exeFile = folders.ThisAppBS + $"Au.Task-{(osVersion.isArm64Process ? "arm" : "x64")}.exe";
 			argsString = pre.pipeName;
 		}
 		

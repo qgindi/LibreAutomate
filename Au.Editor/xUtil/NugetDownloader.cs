@@ -80,7 +80,7 @@ static class NugetDownloader {
 	/// <exception cref="OperationCanceledException">User-canceled.</exception>
 	/// <exception cref="Exception">Failed.</exception>
 	public static void DownloadNetRuntimesForOtherArch(string dir, bool portable) {
-		bool forArm = RuntimeInformation.ProcessArchitecture != Architecture.Arm64;
+		bool forArm = !osVersion.isArm64Process;
 		
 		if (portable) {
 			dir = dir + "\\dotnet" + (forArm ? "ARM" : null);

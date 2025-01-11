@@ -464,14 +464,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		//NATIVE_DLL_SEARCH_DIRECTORIES
 		std::wstring nd16; nd16.reserve(1000);
 		nd16 += p.appDir;
-#if _M_ARM64 //these are mostly fbc, if somebody uses it. For Au/LA dlls we use a resolver in C#.
+#if _M_ARM64 //these are mostly fbc, if somebody uses it. See Cpp.LoadAuNativeDll.
 		nd16 += L"\\64\\ARM\\;";
 #elif _WIN64
 		nd16 += L"\\64\\;";
 #else
 		nd16 += L"\\32\\;";
 #endif
-		//rejected: For it we use the resolving event. May need L"\\runtimes\\win10-x64\\native\\;" etc.
+		//rejected. For NuGet packages we use another way. This would not work, because sometimes need L"\\runtimes\\win10-x64\\native\\;" etc.
 //		nd16 += p.appDir;
 //#if _M_ARM64
 //		nd16 += L"\\runtimes\\win-arm64\\native\\;";

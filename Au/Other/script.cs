@@ -38,7 +38,7 @@ public static class script {
 	/// Gets path of the main source code file of this program or of a library.
 	/// </summary>
 	/// <param name="inWorkspace">Get path in the workspace, like <c>@"\Script1.cs"</c> or <c>@"\Folder1\Script1.cs"</c>.</param>
-	/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
+	/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>.</param>
 	/// <returns><c>null</c> if failed.</returns>
 	/// <remarks>
 	/// When compiling, LibreAutomate adds <see cref="PathInWorkspaceAttribute"/> to the assembly. Then at run time this function gets its value. Returns <c>null</c> if compiled by some other compiler.

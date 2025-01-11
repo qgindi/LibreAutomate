@@ -12,7 +12,7 @@ namespace Au.Types {
 		ExeProgram,
 		
 		/// <summary>
-		/// The task runs in <c>Au.Task.exe</c> process, started from editor.
+		/// The task runs in <c>Au.Task-x64.exe</c> or <c>Au.Task-arm.exe</c> process, started from editor.
 		/// </summary>
 		MiniProgram,
 		
@@ -162,6 +162,7 @@ namespace Au.More {
 		/// </summary>
 		public static PrePostBuild Info { get; internal set; }
 		
+		///
 		[Obsolete("Use platform."), EditorBrowsable(EditorBrowsableState.Never)]
 		public bool bit32 => platform == "x86";
 	}

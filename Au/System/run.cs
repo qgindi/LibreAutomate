@@ -138,13 +138,12 @@ namespace Au {
 			bool needHandle = flags.Has(RFlags.NeedProcessHandle);
 			
 			bool ok = false; int pid = 0, errorCode = 0;
-			bool asUser = !flags.HasAny(RFlags.Admin | RFlags.InheritAdmin) && uacInfo.isAdmin; //info: new process does not inherit uiAccess
+			bool asUser = !flags.HasAny(RFlags.Admin | RFlags.InheritAdmin) && uacInfo.ofThisProcess.Elevation == UacElevation.Full; //info: new process does not inherit uiAccess
 			if (asUser) {
 				ok = Cpp.Cpp_ShellExec(x, out pid, out int injectError, out int execError);
 				if (!ok) {
 					if (injectError != 0) {
 						print.warning("Failed to run as non-admin.");
-						//TODO: warning on WinARM (no UAC).
 						//once in TT process started to always fail. More info in UnmarshalAgentIAccessible().
 						asUser = false;
 					} else errorCode = execError;

@@ -315,7 +315,7 @@ class MetaComments {
 	/// Default <see cref="Platform"/> when meta 'platform' not specified for an executable role.
 	/// Same as LA (x64 or arm64).
 	/// </summary>
-	public static MCPlatform DefaultPlatform => RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? MCPlatform.arm64 : MCPlatform.x64;
+	public static MCPlatform DefaultPlatform => osVersion.isArm64Process ? MCPlatform.arm64 : MCPlatform.x64;
 	
 	/// <summary>
 	/// Meta option 'console'.

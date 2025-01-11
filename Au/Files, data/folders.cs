@@ -502,7 +502,7 @@ namespace Au {
 		/// <summary>
 		/// Gets folder path of the main source code file of this program or of a library.
 		/// </summary>
-		/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>. See also <see cref="Assembly.GetExecutingAssembly"/>.</param>
+		/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>.</param>
 		/// <seealso cref="script.sourcePath(bool, Assembly)"/>
 		public static FolderPath sourceCodeMain(Assembly asm = null) => new(pathname.getDirectory(script.sourcePath(false, asm)));
 		

@@ -23,7 +23,7 @@ public static unsafe class osVersion {
 		//this is to remind to add new members for new Windows 10/11 versions
 		//Debug_.PrintIf(_win10build > 19044, $"{_win10build} {Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "DisplayVersion", "failed")}");
 
-		_is32BitOS = sizeof(nint) == 4 && !(Api.IsWow64Process(Api.GetCurrentProcess(), out _isWow64) && _isWow64); //TODO: RuntimeInformation.OSArchitecture
+		_is32BitOS = sizeof(nint) == 4 && !(Api.IsWow64Process(Api.GetCurrentProcess(), out _isWow64) && _isWow64);
 	}
 
 	static readonly int _winmajor, _winminor, _winver, _winbuild, _win10build;
@@ -161,17 +161,27 @@ public static unsafe class osVersion {
 	public static bool minWin11_24H2 => _win10build >= 26100;
 
 	/// <summary>
-	/// <c>true</c> if this process is 32-bit, <c>false</c> if 64-bit.
+	/// <c>true</c> if this process is ARM64.
+	/// </summary>
+	/// <value><c>RuntimeInformation.ProcessArchitecture == Architecture.Arm64</c></value>
+	public static bool isArm64Process => RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+
+	/// <summary>
+	/// <c>true</c> if Windows ARM64.
+	/// </summary>
+	/// <value><c>RuntimeInformation.OSArchitecture == Architecture.Arm64</c></value>
+	public static bool isArm64OS => RuntimeInformation.OSArchitecture == Architecture.Arm64;
+
+	/// <summary>
+	/// <c>true</c> if this process is 32-bit, <c>false</c> if 64-bit (x64 or ARM64).
 	/// The same as <c>sizeof(nint) == 4</c>.
 	/// </summary>
 	public static bool is32BitProcess => sizeof(nint) == 4;
 
 	/// <summary>
-	/// <c>true</c> if Windows is 32-bit, <c>false</c> if 64-bit.
+	/// <c>true</c> if Windows 32-bit, <c>false</c> if 64-bit (x64 or ARM64).
 	/// </summary>
 	public static bool is32BitOS => _is32BitOS;
-	
-	//TODO: isARM64OS
 
 	/// <summary>
 	/// Returns <c>true</c> if this process is a 32-bit process running on 64-bit Windows. Also known as WOW64 process.

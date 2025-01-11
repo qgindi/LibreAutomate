@@ -45,7 +45,7 @@ void _ExitEditor() {
 bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 	var cd = Environment.CurrentDirectory;
 	string src = pathname.normalize($@"{cd}\..\Cpp\bin\{args[1]}\{platform}\AuCpp.dll");
-	string dest = pathname.normalize($@"{cd}\..\_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll");
+	string dest = pathname.normalize($@"{cd}\..\_\runtimes\win-{platform switch { "Win32" => "x86", "x64" => "x64", "ARM64" => "arm64", _ => throw new ArgumentException("platform") }}\native\AuCpp.dll");
 	if (!filesystem.getProperties(src, out var p1)) { if (!editor) print.it("Failed `filesystem.getProperties(src)`"); return false; }
 	filesystem.getProperties(dest, out var p2);
 	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {
@@ -84,12 +84,12 @@ int EditorPostBuild() {
 	//TODO3: test https://github.com/resourcelib/resourcelib
 	
 	for (int i = 0; i < 2; i++) {
-		string armDir = i == 1 ? @"\ARM" : "";
-		if (i == 1) { exe1 = exe1.Insert(^4, "-arm"); exe2 = exe2.Insert(^4, "-arm"); }
+		string appHost = $@"64\{(i == 1 ? "ARM" : "")}\Au.AppHost.exe" ;
+		string exe1Arch = exe1.Insert(^4, i == 0 ? "" : "-arm"), exe2Arch = exe2.Insert(^4, i == 0 ? "-x64" : "-arm");
 		var s = $"""
 [FILENAMES]
-Exe=64{armDir}\Au.AppHost.exe
-SaveAs={exe1}
+Exe={appHost}
+SaveAs={exe1Arch}
 [COMMANDS]
 -add ..\Au.Editor\Resources\ico\app.ico, ICONGROUP,32512,0
 -add ..\Au.Editor\Resources\ico\app_disabled.ico, ICONGROUP,32513,0
@@ -98,15 +98,15 @@ SaveAs={exe1}
 -add "{verResFile1}", VERSIONINFO,1,0
 
 """;
-		if (!_RunRhScript(s, exe1)) return 3;
+		if (!_RunRhScript(s, exe1Arch)) return 3;
 		
 		filesystem.getProperties(dirOut + @"64\Au.AppHost.exe", out var p1);
-		if (verChanged || !filesystem.getProperties(dirOut + exe2, out var p2) || p1.LastWriteTimeUtc > p2.LastWriteTimeUtc) {
-			print.it($"Creating {exe2}");
+		if (verChanged || !filesystem.getProperties(dirOut + exe2Arch, out var p2) || p1.LastWriteTimeUtc > p2.LastWriteTimeUtc) {
+			print.it($"Creating {exe2Arch}");
 			s = $"""
 [FILENAMES]
-Exe=64{armDir}\Au.AppHost.exe
-SaveAs={exe2}
+Exe={appHost}
+SaveAs={exe2Arch}
 [COMMANDS]
 -add ..\Au.Editor\Resources\ico\Script.ico, ICONGROUP,32512,0
 -addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
@@ -114,10 +114,10 @@ SaveAs={exe2}
 -add "{verResFile2}", VERSIONINFO,1,0
 
 """;
-			if (!_RunRhScript(s, exe2)) return 4;
+			if (!_RunRhScript(s, exe2Arch)) return 4;
 		}
 		
-		_WriteEditorAssemblyName();
+		_WriteEditorAssemblyName(dirOut + exe1Arch);
 	}
 	
 	if (verChanged) {
@@ -148,8 +148,7 @@ SaveAs={exe2}
 		return false;
 	}
 	
-	void _WriteEditorAssemblyName() {
-		string path = dirOut + exe1;
+	static void _WriteEditorAssemblyName(string path) {
 		var b = File.ReadAllBytes(path);
 		int i = b.AsSpan().IndexOf("hi7yl8kJNk+gqwTDFi7ekQ"u8);
 		b[i - 1] = 1; //1 for Au.Editor.exe, 0 for Au.Task.exe (and no assembly filename), else first char of exeProgram assembly filename

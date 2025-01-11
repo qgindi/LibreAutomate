@@ -705,7 +705,7 @@ public static class ExtWpf {
 			} else {
 				//print.it("bad");
 				//if previous task failed before calling this func, this wasn't called and therefore an even older task may be running. Close its window.
-				foreach (var w in wnd.findAll("WPF preview", "HwndWrapper[*", "Au.Task.exe")) {
+				foreach (var w in wnd.findAll("WPF preview", "HwndWrapper[*", "Au.Task-*.exe")) {
 					if (!w.IsOfThisProcess) w.Close(noWait: true);
 				}
 			}

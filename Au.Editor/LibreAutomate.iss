@@ -38,7 +38,7 @@ Source: "Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor-arm.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Task-x64.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Task-arm.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.xml"; DestDir: "{app}"; Flags: ignoreversion
@@ -299,7 +299,6 @@ begin
     begin
       //Cpp_Install(2, ExpandConstant('{app}\'));
       InstallExeForCurrentArch('Au.Editor');
-      InstallExeForCurrentArch('Au.Task');
       if not IsDotNetInstalled() then InstallDotNet();
     end;
   end;

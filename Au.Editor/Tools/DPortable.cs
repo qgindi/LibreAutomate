@@ -105,7 +105,7 @@ class DPortable : KDialogWindow {
 		if (_dApp.copy || !_exists) {
 			_Copy(_dApp, "/mir /xf unins* /xd dotnet data");
 			
-			bool isArm = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+			bool isArm = osVersion.isArm64Process;
 			if (isArm) _RenameArm64();
 			
 			if (_dirNet != null) {
@@ -185,7 +185,6 @@ class DPortable : KDialogWindow {
 		void _RenameArm64() {
 			var dir = _dApp.portable;
 			_Rename("Au.Editor.exe");
-			_Rename("Au.Task.exe");
 			
 			void _Rename(string fileName) {
 				string s1 = dir + "\\" + fileName, s2 = s1.Insert(^4, "-x64");
@@ -249,7 +248,7 @@ class DPortable : KDialogWindow {
 		long sizeScript = await _GetDirSize(_dScript);
 		long sizeDoc = await _GetDirSize(_dDoc, $"""/mir /xd "{_dWs.local}" "{_dSett.local}" "{_dScript.local}" """);
 		long sizeRoaming = await _GetDirSize(_dRoaming);
-		bool isArm = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+		bool isArm = osVersion.isArm64Process;
 		
 		var b = new StringBuilder();
 		b.AppendLine($"""
