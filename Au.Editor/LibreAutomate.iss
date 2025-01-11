@@ -196,29 +196,37 @@ begin
     if LoadStringFromFile(fileName, output) then Result := Pos('Microsoft.WindowsDesktop.App 9.', output) > 0;
   end;
   DeleteFile(fileName);
+	
+	//tested: If installed dotnet for multiple platforms (eg ARM64, x64, x86), only the runtime of the OS platform adds its path to PATH. It is what we need.
 end;
 
 function InstallDotNet(): Boolean;
-//function InstallDotNet(sdk: Boolean): Boolean; //rejected. Downloads 200MB, installs ~800 MB (and slow). Probably most users uninstall the app or never use NuGet, and the SDK would stay there unused.
+//function InstallDotNet(sdk: Boolean): Boolean; //rejected. Downloads 200MB, installs ~800 MB (and slow). Probably most users uninstall the app or never use NuGet or Publish, and the SDK would stay there unused.
 var
   ResultCode: Integer;
   DownloadPage: TDownloadWizardPage;
   url, setupFile, info1, info2: string;
-  a1: TArrayOfString;
+  urls: TArrayOfString;
 begin
   //Get the download URL of the latest .NET Desktop Runtime.
-  //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates https://www.libreautomate.com/download/net-x-url.txt.
+  //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates the URL here and in https://www.libreautomate.com/download/net-x-url.txt.
   try
     DownloadTemporaryFile('https://www.libreautomate.com/download/net-9-url.txt', 'net-url.txt', '', nil);
-    if LoadStringsFromFile(ExpandConstant('{tmp}\net-url.txt'), a1) then url := a1[0];
-    //Log(url);
+    LoadStringsFromFile(ExpandConstant('{tmp}\net-url.txt'), urls);
   except
     Log(GetExceptionMessage);
   end;
   
   //If the above failed, use this hardcoded URL. This URL is updated for each new .NET 9.0.x version.
   //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates this string in this .iss file.
-  if Length(url) = 0 then url := 'https://download.visualstudio.microsoft.com/download/pr/685792b6-4827-4dca-a971-bce5d7905170/1bf61b02151bc56e763dc711e45f0e1e/windowsdesktop-runtime-9.0.0-win-x64.exe';
+  if (Length(urls) < 2) then
+  begin
+    SetLength(urls, 2);
+    urls[0] := 'https://download.visualstudio.microsoft.com/download/pr/685792b6-4827-4dca-a971-bce5d7905170/1bf61b02151bc56e763dc711e45f0e1e/windowsdesktop-runtime-9.0.0-win-x64.exe';
+    urls[1] := 'https://download.visualstudio.microsoft.com/download/pr/b3a8a99d-5c1c-475a-ba68-4849de9ea6e9/c17f07553d7723165f98f27128fec048/windowsdesktop-runtime-9.0.0-win-arm64.exe';
+  end;
+	
+	if IsArm64 then url := urls[1] else url := urls[0];
   
   //rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
   //url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';
@@ -228,7 +236,7 @@ begin
     
   Result := true;
   setupFile := ExtractFileName(url);
-  info1 := 'Installing .NET 9 Desktop Runtime x64';
+  info1 := 'Installing .NET 9 Desktop Runtime';
   info2 := 'If stopped or failed now, will need to download/install it later. Size ~55 MB.';
   
   DownloadPage := CreateDownloadPage(info1, info2, nil);
@@ -240,7 +248,6 @@ begin
       DownloadPage.Download;
       setupFile := ExpandConstant('{tmp}\' + setupFile);
       Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
-      //Result := Exec(setupFile, '/install /passive /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0); //bad for /VERYSILENT
       DeleteFile(setupFile);
     except
       if DownloadPage.AbortedByUser then Log('Aborted by user.') else Log(GetExceptionMessage);
@@ -251,22 +258,18 @@ begin
   end;
 end;
 
-procedure InstallExeForCurrentArch(BaseFileName: String);
+procedure InstallExeForCurrentArch(fileName: String);
 var
-  TargetFile, ArmFile: String;
+  s, s64: String;
 begin
-  TargetFile := ExpandConstant('{app}\') + BaseFileName + '.exe';
-  ArmFile := ExpandConstant('{app}\') + BaseFileName + '-arm.exe';
-
   if IsArm64 then
   begin
-    DeleteFile(TargetFile);
-    if FileExists(ArmFile) then
-      RenameFile(ArmFile, TargetFile);
-  end
-  else
-  begin
-    DeleteFile(ArmFile);
+		s := ExpandConstant('{app}\') + fileName + '.exe';
+		s64 := ExpandConstant('{app}\') + fileName + '-x64.exe';
+		DeleteFile(s64);
+    RenameFile(s, s64);
+    RenameFile(ExpandConstant('{app}\') + fileName + '-arm.exe', s);
+		//info: rename both, not rename+delete. Need both x64 and ARM64 files for portable LA.
   end;
 end;
 
@@ -291,14 +294,14 @@ begin
     ssInstall:
     begin
       //Cpp_Install(1, ExpandConstant('{app}\'));
+    end;
+    ssPostInstall:
+    begin
+      //Cpp_Install(2, ExpandConstant('{app}\'));
       InstallExeForCurrentArch('Au.Editor');
       InstallExeForCurrentArch('Au.Task');
+      if not IsDotNetInstalled() then InstallDotNet();
     end;
-     ssPostInstall:
-     begin
-//       Cpp_Install(2, ExpandConstant('{app}\'));
-       if not IsDotNetInstalled() then InstallDotNet();
-     end;
   end;
 end;
 

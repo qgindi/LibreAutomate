@@ -27,7 +27,6 @@ static partial class App {
 		//print.clear(); 
 		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
 #endif
-		
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 		
 		//restart as admin if started as non-admin on admin user account
@@ -37,6 +36,8 @@ static partial class App {
 		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
 			if (_RestartAsAdmin(args)) return 0;
 		}
+		
+		_SetPortable(args);
 		
 		//Debug_.PrintLoadedAssemblies(true, !true);
 		
@@ -52,13 +53,11 @@ static partial class App {
 		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
-		//DebugTraceListener.Setup(usePrint: true);//TODO: disabled temporarily
+		if (!Debugger.IsAttached) DebugTraceListener.Setup(usePrint: true);
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 		Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		_SetThisAppFoldersEtc();
-		script.name = AppNameShort;
-		dialog.options.defaultTitle = AppNameShort + " message";
 		
 		if (CommandLine.ProgramStarted2(args)) return;
 		
@@ -231,18 +230,26 @@ static partial class App {
 		return false;
 	}
 	
-	static void _SetThisAppFoldersEtc() {
+	static void _SetPortable(string[] args) {
 		if (filesystem.exists(folders.ThisAppBS + "data")) {
 			IsPortable = true;
 			ScriptEditor.IsPortable = true;
 			
-			//CONSIDER: when changed user (SID), delete folders.ThisAppDataLocal (\data\appLocal).
+			//CONSIDER: when changed portable user (SID), delete folders.ThisAppDataLocal (\data\appLocal).
 			//	LA/Au currently uses it only for the icon cache.
 			//	But some scripts may not want it.
 			//	Probably should delete folders.ThisAppTemp (\data\temp).
+			
+			//on ARM64, if Au.Editor.exe is x64, run Au.Editor-arm.exe instead
+			if (RuntimeInformation.ProcessArchitecture == Architecture.X64 && RuntimeInformation.OSArchitecture == Architecture.Arm64) _RestartArm64(args);
 		}
-		
+	}
+	
+	static void _SetThisAppFoldersEtc() {
 		script.role = SRole.EditorExtension;
+		script.name = AppNameShort;
+		dialog.options.defaultTitle = AppNameShort + " message";
+		
 		folders.Editor = folders.ThisApp;
 		
 		try {
@@ -268,7 +275,7 @@ static partial class App {
 		if (IsAuAtHome)
 			if (filesystem.getProperties(folders.ThisAppBS + @"..\Cpp", out var p64)) {
 				if (!filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32) || p64.LastWriteTimeUtc > p32.LastWriteTimeUtc) print.it("Note: may need to build Cpp project x86.");
-				if (!filesystem.getProperties(folders.ThisAppBS + @"64\ARM\AuCpp.dll", out var pARM) || p64.LastWriteTimeUtc > pARM.LastWriteTimeUtc) print.it("Note: may need to build Cpp project ARM64EC.");
+				if (!filesystem.getProperties(folders.ThisAppBS + @"64\ARM\AuCpp.dll", out var pARM) || p64.LastWriteTimeUtc > pARM.LastWriteTimeUtc) print.it("Note: may need to build Cpp project ARM64.");
 			}
 	}
 #endif
@@ -348,10 +355,25 @@ static partial class App {
 	/// <param name="admin">UAC-elevate (verb runas).</param>
 	public static void Restart(string commandLine = null, bool admin = false) {
 		Debug.Assert(Loaded == AppState.LoadedUI);
-		var cl = Hmain.IsVisible ? "/n /v /restart " : "/n /restart";
+		var cl = Hmain.IsVisible ? "/n /v /restart" : "/n /restart";
 		if (!commandLine.NE()) cl = cl + " " + commandLine;
 		process.thisProcessExit += _ => { run.it(process.thisExePath, cl, admin ? RFlags.Admin : RFlags.InheritAdmin); };
 		_app.Shutdown(); //closes window async, with no possibility to cancel
+	}
+	
+	static unsafe void _RestartArm64(string[] args) {
+		var s = process.thisExePath;
+		if (!s.Ends(@"\Au.Editor.exe", true)) return;
+		s = s.Insert(^4, "-arm");
+		if (!filesystem.exists(s).File) return;
+		
+		var sa = StringUtil.CommandLineFromArray(args.Where(o => !(o is "/n" or "-n" or "/restart")).Prepend("/restart").Prepend("/n").ToArray());
+		
+		var ps = new ProcessStarter_(s, sa);
+		try { ps.Start(inheritUiaccess: true); }
+		catch { return; }
+		
+		Environment.Exit(0);
 	}
 	
 	/// <summary>

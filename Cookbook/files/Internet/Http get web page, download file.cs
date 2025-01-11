@@ -31,11 +31,19 @@ if (r.IsSuccessStatusCode) {
 if (!internet.http.TryGet(out var r2, "https://httpbin.org/anything", printError: true)) return;
 print.it(r2.Text());
 
-/// Download file.
+/// Download to file.
 
-string url = "http://speedtest.ftp.otenet.gr/files/test10Mb.db";
+string url = "https://www.libreautomate.com/index.html";
 string file = folders.Temp + pathname.getName(url);
 try { internet.http.Get(url, file); }
+catch (Exception e1) { print.warning($"Failed to download. {e1.ToStringWithoutStack()}"); return; }
+print.it("downloaded");
+
+/// Download file with progress UI.
+
+string url2 = "https://www.libreautomate.com/LibreAutomateSetup.exe";
+string file2 = folders.Temp + pathname.getName(url2);
+try { if(!internet.http.Get(url2, true).Download(file2)) { print.it("canceled"); return; } }
 catch (Exception e1) { print.warning($"Failed to download. {e1.ToStringWithoutStack()}"); return; }
 print.it("downloaded");
 

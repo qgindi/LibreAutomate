@@ -1345,6 +1345,7 @@ public static partial class filesystem {
 		Not_.Null(bytes);
 		_Save(file, bytes, backup, tempDirectory, lockedWaitMS);
 	}
+	//TODO: ReadOnlySpan.
 	
 	static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null) {
 		file = _PreparePath(file);

@@ -105,7 +105,7 @@ public:
 
 		RTL_OSVERSIONINFOW x = { sizeof(RTL_OSVERSIONINFOW) };
 		RtlGetVersion(&x);
-		_winver = MAKEWORD(_minor = x.dwMinorVersion,  _major = x.dwMajorVersion);
+		_winver = MAKEWORD(_minor = x.dwMinorVersion, _major = x.dwMajorVersion);
 		if (_major >= 10) _win10build = x.dwBuildNumber;
 	}
 
@@ -132,15 +132,19 @@ public:
 extern OSVersion osVer;
 
 extern HMODULE s_moduleHandle;
-int GetProcessArchitecture(DWORD pid);
 
-inline bool IsThisProcess64Bit() {
-#ifdef _WIN64
-	return true;
+//returns: 1 32, 2 x64, 3 arm64
+inline int GetProcessArchitecture() {
+#if _M_ARM64
+	return 3;
+#elif _WIN64
+	return 2;
 #else
-	return false;
+	return 1;
 #endif
 }
+
+int GetProcessArchitecture(DWORD pid);
 
 
 //Standard IUnknown implementation with thread-unsafe refcounting.
@@ -201,38 +205,45 @@ struct DelayLoadedApi {
 	bool minWin81, minWin10;
 
 	//user32
-	BOOL(__stdcall* PhysicalToLogicalPoint)(HWND hWnd, LPPOINT lpPoint);
-	BOOL(__stdcall* LogicalToPhysicalPoint)(HWND hWnd, LPPOINT lpPoint);
-	DPI_AWARENESS_CONTEXT(__stdcall* GetWindowDpiAwarenessContext)(HWND hwnd);
-	DPI_AWARENESS(__stdcall* GetAwarenessFromDpiAwarenessContext)(DPI_AWARENESS_CONTEXT value);
-	DPI_AWARENESS_CONTEXT(__stdcall* SetThreadDpiAwarenessContext)(DPI_AWARENESS_CONTEXT dpiContext);
+	BOOL(WINAPI* PhysicalToLogicalPoint)(HWND hWnd, LPPOINT lpPoint);
+	BOOL(WINAPI* LogicalToPhysicalPoint)(HWND hWnd, LPPOINT lpPoint);
+	DPI_AWARENESS_CONTEXT(WINAPI* GetWindowDpiAwarenessContext)(HWND hwnd);
+	DPI_AWARENESS(WINAPI* GetAwarenessFromDpiAwarenessContext)(DPI_AWARENESS_CONTEXT value);
+	DPI_AWARENESS_CONTEXT(WINAPI* SetThreadDpiAwarenessContext)(DPI_AWARENESS_CONTEXT dpiContext);
 
 	//shcore
 	HRESULT(__stdcall* GetProcessDpiAwareness)(HANDLE hprocess, PROCESS_DPI_AWARENESS* value);
+
+	//kernel32
+	BOOL(WINAPI* IsWow64Process2)(HANDLE hProcess, USHORT* pProcessMachine, USHORT* pNativeMachine);
+	BOOL(WINAPI* GetProcessInformation)(HANDLE hProcess, PROCESS_INFORMATION_CLASS ProcessInformationClass, LPVOID ProcessInformation, DWORD ProcessInformationSize);
 
 #define GPA(hm, f) *(FARPROC*)&f=GetProcAddress(hm, #f)
 #define GPA2(hm, f, name) *(FARPROC*)&f=GetProcAddress(hm, name)
 	DelayLoadedApi() noexcept {
 		minWin81 = minWin10 = false;
-		auto hm = GetModuleHandle(L"user32.dll");
-		GPA2(hm, PhysicalToLogicalPoint, "PhysicalToLogicalPointForPerMonitorDPI");
+		auto hKernel = GetModuleHandle(L"kernel32.dll");
+		auto hUser = GetModuleHandle(L"user32.dll");
+		GPA2(hUser, PhysicalToLogicalPoint, "PhysicalToLogicalPointForPerMonitorDPI");
 		if (minWin81 = PhysicalToLogicalPoint) { //Win8.1+
-			GPA2(hm, LogicalToPhysicalPoint, "LogicalToPhysicalPointForPerMonitorDPI");
+			GPA2(hUser, LogicalToPhysicalPoint, "LogicalToPhysicalPointForPerMonitorDPI");
 
-			GPA(hm, GetWindowDpiAwarenessContext);
+			GPA(hUser, GetWindowDpiAwarenessContext);
 			if (minWin10 = GetWindowDpiAwarenessContext) { //Win10 1607+
-				GPA(hm, GetAwarenessFromDpiAwarenessContext);
-				GPA(hm, SetThreadDpiAwarenessContext);
+				GPA(hUser, GetAwarenessFromDpiAwarenessContext);
+				GPA(hUser, SetThreadDpiAwarenessContext);
 
+				GPA(hKernel, IsWow64Process2); //Win10 1709+
+				GPA(hKernel, GetProcessInformation); //Win8, but only on Win11 supports what we need
 			} else {
-				auto hm2 = GetModuleHandle(L"shcore.dll");
-				GPA(hm2, GetProcessDpiAwareness);
+				auto hShcore = GetModuleHandle(L"shcore.dll");
+				GPA(hShcore, GetProcessDpiAwareness);
 			}
 
 
 		} else { //Win7/8
-			GPA(hm, PhysicalToLogicalPoint);
-			//GPA(hm, LogicalToPhysicalPoint);
+			GPA(hUser, PhysicalToLogicalPoint);
+			//GPA(hUser, LogicalToPhysicalPoint);
 
 		}
 	}

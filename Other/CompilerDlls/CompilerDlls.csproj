@@ -10,6 +10,8 @@
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<Platforms>AnyCPU</Platforms>
+		<Configurations>Release</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

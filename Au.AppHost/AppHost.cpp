@@ -106,11 +106,21 @@ bool _IsProcessWow64() {
 #endif
 }
 
-bool _IsProcessArm64() {
+//bool _IsProcessArm64() {
+//#if _M_ARM64
+//	return true;
+//#else
+//	return false;
+//#endif
+//}
+
+LPCWSTR _ProcessPlatformString() {
 #if _M_ARM64
-	return true;
+	return L"arm64";
+#elif _WIN64
+	return L"x64";
 #else
-	return false;
+	return L"x86";
 #endif
 }
 
@@ -243,20 +253,17 @@ bool GetPaths(PATHS& p) {
 	for (lenAppDir = lenApp; w[--lenAppDir] != '\\'; ) {}
 	p.appDir.assign(w, lenAppDir);
 	p.exeName = w + lenAppDir + 1;
-	p.isEditorOrTaskExe = _StrEqualI(p.exeName, L"Au.Editor.exe") ? 1 : _StrEqualI(p.exeName, L"Au.Task.exe") ? 2 : 0;
-	//TODO3: to detect isEditorOrTaskExe don't use filename. Use eg a resource.
 
 	//get asmDll
-	if (s_asmName[0] != 0) { //exe created from script. See code in Compiler.cs, function _AppHost.
+	if (s_asmName[0] == 0) p.isEditorOrTaskExe = 2; //Au.Task.exe. Don't need p.asmDll.
+	else {
+		if (s_asmName[0] == 1) p.isEditorOrTaskExe = 1; //Au.Editor.exe (see script "BuildEvents.cs"); else exe created from script (see Compiler.cs > _AppHost).
 		_ToUtf8(w, lenAppDir + 1, p.asmDll);
-		p.asmDll += s_asmName;
-	} else {
-		_ToUtf8(w, lenApp - 4, p.asmDll);
-		p.asmDll += ".dll";
+		p.asmDll += s_asmName + p.isEditorOrTaskExe;
 	}
 
 #if _M_ARM64
-	auto coreclr2 = L"\\dotnetARM\\coreclr.dll"; //TODO: add to portable LA
+	auto coreclr2 = L"\\dotnetARM\\coreclr.dll";
 #elif _WIN64
 	auto coreclr2 = L"\\dotnet\\coreclr.dll";
 #else
@@ -294,7 +301,7 @@ bool GetPaths(PATHS& p) {
 			if (lenDotnet > 0) Print("%S=%S", varName, w);
 		} else if (i == 1) { //registry InstallLocation
 			wchar_t key[50] = LR"(SOFTWARE\dotnet\Setup\InstalledVersions\)";
-			wcscat(key, is32bit ? L"x86" : _IsProcessArm64() ? L"arm64" : L"x64");
+			wcscat(key, _ProcessPlatformString());
 			HKEY hk1;
 			if (0 != RegOpenKeyExW(HKEY_LOCAL_MACHINE, key, 0, KEY_READ | KEY_WOW64_32KEY, &hk1)) lenDotnet = 0;
 			else {
@@ -407,7 +414,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	PATHS p;
 	bool pathsOK = GetPaths(p);
 	//Print("pathsOK=%i", pathsOK);
-	//Print("asmDll=%S", p.exeName.c_str());
+	//Print("exeName=%S", p.exeName.c_str());
 	//Print("exePath=%s", p.exePath.c_str());
 	//Print("asmDll=%s", p.asmDll.c_str());
 	//Print("appDir=%S", p.appDir.c_str());
@@ -416,11 +423,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	//Print("coreclrDll=%S", p.coreclrDll.c_str());
 
 	if (!pathsOK) {
-		auto platform = is32bit ? L"x86" : _IsProcessArm64() ? L"arm64" : L"x64";
 		wchar_t w[200];
 		wsprintfW(w, L"To run this application, need to install:\r\n\r\n"
 			L".NET %i Desktop Runtime %s\r\n\r\n"
-			L"Would you like to download it now?", NETVERMAJOR, platform);
+			L"Would you like to download it now?", NETVERMAJOR, _ProcessPlatformString());
 		if (IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO | MB_TOPMOST | MB_SETFOREGROUND)) {
 			AllowSetForegroundWindow(ASFW_ANY);
 			auto ShellExecuteW = (int(WINAPI*)(HWND, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, INT))GetProcAddress(LoadLibraryExW(L"shell32", 0, 0), "ShellExecuteW");
@@ -429,7 +435,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 			wsprintfW(w, L"https://dotnet.microsoft.com/en-us/download/dotnet/%i.%i", NETVERMAJOR, NETVERMINOR);
 			ShellExecuteW(NULL, nullptr, w, nullptr, nullptr, SW_SHOWNORMAL);
 			Sleep(1000);
-			wsprintfW(w, L"In the dowload page please find and download this:\r\n\r\n.NET Desktop Runtime for Windows %s", platform);
+			wsprintfW(w, L"In the dowload page please find and download this:\r\n\r\n.NET Desktop Runtime for Windows %s", _ProcessPlatformString());
 			MessageBoxW(0, w, p.exeName.c_str(), MB_ICONINFORMATION | MB_TOPMOST | MB_SETFOREGROUND);
 #else
 			//rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
@@ -465,7 +471,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 #else
 		nd16 += L"\\32\\;";
 #endif
-		//rejected: For it we use the resolving event. May need L"\\runtimes\\win10-x64\\native\\;" etc. //TODO: review the resolving event code.
+		//rejected: For it we use the resolving event. May need L"\\runtimes\\win10-x64\\native\\;" etc.
 //		nd16 += p.appDir;
 //#if _M_ARM64
 //		nd16 += L"\\runtimes\\win-arm64\\native\\;";
@@ -524,7 +530,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 	}
 
 	unsigned int ec = 0;
-	if (0 == wcsncmp(pCmdLine, LR"(\\.\pipe\Au.Task-)", 17)) { //preloaded task process for a script with role miniProgram
+	if (p.isEditorOrTaskExe == 2) { //Au.Task.exe (task process for a script with role miniProgram)
 		auto coreclr_create_delegate = (coreclr_create_delegate_ptr)GetProcAddress(hm, "coreclr_create_delegate");
 		void (STDMETHODCALLTYPE * Init)(LPWSTR, _TaskInit&) = nullptr;
 		coreclr_create_delegate(hostHandle, domainId, "Au", "Au.More.MiniProgram_", "Init", (void**)&Init); //waits until editor asks to execute a task; it sends task info through pipe

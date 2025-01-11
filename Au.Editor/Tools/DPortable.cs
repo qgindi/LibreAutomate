@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
+using System.IO.Compression;
 
 class DPortable : KDialogWindow {
 	public static void ShowSingle() {
@@ -104,10 +105,21 @@ class DPortable : KDialogWindow {
 		if (_dApp.copy || !_exists) {
 			_Copy(_dApp, "/mir /xf unins* /xd dotnet data");
 			
+			bool isArm = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
+			if (isArm) _RenameArm64();
+			
 			if (_dirNet != null) {
-				var dotnet = App.Settings.portable_dir + @"\dotnet";
+				var dotnet = App.Settings.portable_dir + (isArm ? @"\dotnetARM" : @"\dotnet"); //TODO: how to get both
 				_Copy2(_dirNet, dotnet, "/e");
 				_Copy2(_dirNetDesktop, dotnet, "/e");
+			}
+			
+			try {
+				NugetDownloader.DownloadNetRuntimesForOtherArch(_dApp.portable, true);
+			}
+			catch (Exception ex) {
+				string arch = isArm ? "x64" : "Arm64";
+				print.warning($"Failed to download .NET Runtime {arch}. Only .NET Runtime {(isArm ? "Arm64" : "x64")} has been copied to the portable folder. On Windows {arch} the portable app will run only if .NET Runtime {arch} is installed there. Exception:\r\n{ex}");
 			}
 		}
 		
@@ -169,6 +181,20 @@ class DPortable : KDialogWindow {
 				filesystem.saveText(file, j.ToJsonString());
 			};
 		}
+		
+		void _RenameArm64() {
+			var dir = _dApp.portable;
+			_Rename("Au.Editor.exe");
+			_Rename("Au.Task.exe");
+			
+			void _Rename(string fileName) {
+				string s1 = dir + "\\" + fileName, s2 = s1.Insert(^4, "-x64");
+				if (filesystem.exists(s2)) {
+					filesystem.rename(s1, fileName.Insert(^4, "-arm"));
+					filesystem.rename(s2, fileName);
+				}
+			}
+		}
 	}
 	
 	static string _RobocopyArgs(bool log, string dir, string dirTo, string how, string skipDirs) {
@@ -223,19 +249,21 @@ class DPortable : KDialogWindow {
 		long sizeScript = await _GetDirSize(_dScript);
 		long sizeDoc = await _GetDirSize(_dDoc, $"""/mir /xd "{_dWs.local}" "{_dSett.local}" "{_dScript.local}" """);
 		long sizeRoaming = await _GetDirSize(_dRoaming);
+		bool isArm = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
 		
 		var b = new StringBuilder();
 		b.AppendLine($"""
 <><lc YellowGreen>Portable LibreAutomate setup details. The 'Skip subfolders' setting is applied.<>
 Total size: {_MB(sizeApp + sizeNet + sizeWs + sizeSett + sizeScript + sizeDoc + sizeRoaming)} MB.
 Folder sizes (MB):
-	{"Program",-15} {_MB(sizeApp)}
-	{".NET Runtime",-15} {_MB(sizeNet)}
-	{"Workspace",-15} {_MB(sizeWs)}
-	{"Settings",-15} {_MB(sizeSett)}
-	{"Script data",-15} {_MB(sizeScript)}
-	{"Documents",-15} {_MB(sizeDoc)} (except the above 3 subfolders)
-	{"AppData",-15} {_MB(sizeRoaming)}
+	{"Program",-20} {_MB(sizeApp)}
+	{$".NET Runtime {(isArm ? "Arm64" : "x64")}",-20} {_MB(sizeNet)}
+	{$".NET Runtime {(isArm ? "x64" : "Arm64")}",-20} ~{_MB(sizeNet)} (download)
+	{"Workspace",-20} {_MB(sizeWs)}
+	{"Settings",-20} {_MB(sizeSett)}
+	{"Script data",-20} {_MB(sizeScript)}
+	{"Documents",-20} {_MB(sizeDoc)} (except the above 3 subfolders)
+	{"AppData",-20} {_MB(sizeRoaming)}
 """);
 		
 		_Links(b);

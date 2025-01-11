@@ -17,6 +17,7 @@
 		<NoWin32Manifest>true</NoWin32Manifest>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<NuGetAudit>False</NuGetAudit>
+		<Platforms>AnyCPU</Platforms>
 	</PropertyGroup>
 
 	<!-- NuGet package. -->

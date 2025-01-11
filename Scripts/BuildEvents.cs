@@ -28,7 +28,7 @@ int EditorPreBuild() {
 	_ExitEditor();
 	_CopyAuCppDllIfNeed("Win32", true);
 	_CopyAuCppDllIfNeed("x64", true);
-	_CopyAuCppDllIfNeed("ARM64EC", true);
+	_CopyAuCppDllIfNeed("ARM64", true);
 	return 0;
 }
 
@@ -45,7 +45,7 @@ void _ExitEditor() {
 bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 	var cd = Environment.CurrentDirectory;
 	string src = pathname.normalize($@"{cd}\..\Cpp\bin\{args[1]}\{platform}\AuCpp.dll");
-	string dest = pathname.normalize($@"{cd}\..\_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64EC" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll");
+	string dest = pathname.normalize($@"{cd}\..\_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll");
 	if (!filesystem.getProperties(src, out var p1)) { if (!editor) print.it("Failed `filesystem.getProperties(src)`"); return false; }
 	filesystem.getProperties(dest, out var p2);
 	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {
@@ -59,8 +59,8 @@ bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 	return true;
 }
 
-/// Creates Au.Editor.exe and Au.Task.exe.
-/// Uses 64\Au.AppHost.exe as template. Adds resources.
+/// Creates Au.Editor.exe and Au.Task.exe for x64 and ARM64.
+/// Uses our Au.AppHost.exe as template. Adds resources.
 /// Deletes Au.Editor.*.json files.
 int EditorPostBuild() {
 	//perf.first();
@@ -116,6 +116,8 @@ SaveAs={exe2}
 """;
 			if (!_RunRhScript(s, exe2)) return 4;
 		}
+		
+		_WriteEditorAssemblyName();
 	}
 	
 	if (verChanged) {
@@ -144,6 +146,17 @@ SaveAs={exe2}
 		if (r == 0) return true;
 		print.it(File.ReadAllText(folders.ThisApp + "ResourceHacker.log", Encoding.Unicode)); //RH is not a console program and we cannot capture its console output.
 		return false;
+	}
+	
+	void _WriteEditorAssemblyName() {
+		string path = dirOut + exe1;
+		var b = File.ReadAllBytes(path);
+		int i = b.AsSpan().IndexOf("hi7yl8kJNk+gqwTDFi7ekQ"u8);
+		b[i - 1] = 1; //1 for Au.Editor.exe, 0 for Au.Task.exe (and no assembly filename), else first char of exeProgram assembly filename
+		string asmName = "Au.Editor.dll";
+		i += Encoding.UTF8.GetBytes(asmName, 0, asmName.Length, b, i);
+		b[i] = 0;
+		filesystem.saveBytes(path, b);
 	}
 	
 	bool _VersionInfo(string resFile, string fileName, string fileDesc) {

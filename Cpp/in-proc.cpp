@@ -71,28 +71,28 @@ namespace str::pcre {
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
 	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
-	{
-#if _M_ARM64EC
-		STR arch = L"ARM64EC";
-#elif _M_ARM64
-		STR arch = L"ARM64";
-#elif _M_X64
-		STR arch = L"x64";
-#else
-		STR arch = L"x32";
-#endif
-		wchar_t b[500];
-		GetModuleFileNameW(hModule, b, 500);
-		Printf(L"P+  %i %s    tid=%i   arch=%s  dll=%s", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId(), arch, b);
-	}
-		s_moduleHandle = hModule;
-		break;
-		//case DLL_PROCESS_DETACH:
-		//	Printf(L"P-  %i %s    tid=%i", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId());
-		//	break;
-		//case DLL_THREAD_ATTACH:
-		//	Printf(L"T+  %i %i", GetCurrentProcessId(), GetCurrentThreadId());
-		//	break;
+//	{
+//#if _M_ARM64EC //currently not used
+//		STR arch = L"ARM64EC";
+//#elif _M_ARM64
+//		STR arch = L"ARM64";
+//#elif _M_X64
+//		STR arch = L"x64";
+//#else
+//		STR arch = L"x86";
+//#endif
+//		wchar_t b[500];
+//		GetModuleFileNameW(hModule, b, 500);
+//		Printf(L"P+  %i %s    tid=%i   arch=%s  dll=%s", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId(), arch, b);
+//	}
+	s_moduleHandle = hModule;
+	break;
+	//case DLL_PROCESS_DETACH:
+	//	Printf(L"P-  %i %s    tid=%i", GetCurrentProcessId(), GetCommandLineW(), GetCurrentThreadId());
+	//	break;
+	//case DLL_THREAD_ATTACH:
+	//	Printf(L"T+  %i %i", GetCurrentProcessId(), GetCurrentThreadId());
+	//	break;
 	case DLL_THREAD_DETACH:
 		//Printf(L"T-  %i %i", GetCurrentProcessId(), GetCurrentThreadId());
 		HWND wAgent = inproc::t_agentWnd;
@@ -367,36 +367,29 @@ namespace outproc {
 		int len = b.Length();
 		LPWSTR s = b, end = s + len;
 
-#if _M_ARM64EC //this dll is ARM64EC on ARM64 OS. Find dir of ARM64 (arch 3) or 32-bit (arch 1).
-		if (!(arch == 1 || arch == 3)) { PRINTS(L"bad arch"); return false; }
-		if (arch != 3) {
-			if (b.EndsI(LR"(\64\ARM)")) {
-				b.ReplaceTail(6, L"32");
-			} else if (b.EndsI(LR"(\runtimes\win-arm64\native)")) { //using Au nuget package
-				b.ReplaceTail(12, LR"(x86\native)");
-			} else return false;
+#if _M_ARM64 //this dll is ARM64 on ARM64 OS. Find dir of x86 (arch 1) or x64 (arch 2).
+		if (b.EndsI(LR"(\64\ARM)")) {
+			b.ReplaceTail(6, arch == 1 ? L"32" : L"64");
+		} else if (b.EndsI(LR"(\runtimes\win-arm64\native)")) { //using Au nuget
+			b.ReplaceTail(12, arch == 1 ? L"x86\\native" : L"x64\\native");
+		} else { //probably in app dir, eg in temp dir when published single-file
+			b << (arch == 1 ? L"\\32" : L"\\64");
 		}
-#elif _M_ARM64
-		return 0; //this func not used in ARM64
-#elif _M_X64 //this dll is x64 on x64 OS. Find dir of 32-bit (arch 1).
-		if (arch != 1) { PRINTS(L"bad arch"); return false; }
+#elif _WIN64 //this dll is x64 on any OS. Find dir of x86 (arch 1) or ARM64 (arch 3).
 		if (s[len - 3] == '\\' && s[len - 2] == '6' && s[len - 1] == '4') {
-			s[len - 2] = '3'; s[len - 1] = '2';
-		} else if (b.EndsI(LR"(\runtimes\win-x64\native)")) { //using Au nuget package
-			s[len - 9] = '8'; s[len - 8] = '6';
-		} else { //probably in temp dir when published single-file
-			b << L"\\32";
+			b.ReplaceTail(2, arch == 1 ? L"32" : L"64\\ARM");
+		} else if (b.EndsI(LR"(\runtimes\win-x64\native)")) { //using Au nuget
+			b.ReplaceTail(10, arch == 1 ? L"x86\\native" : L"arm64\\native");
+		} else { //probably in app dir, eg in temp dir when published single-file
+			b << (arch == 1 ? L"\\32" : L"\\64\\ARM");
 		}
-#else //this dll is 32-bit on x64 or ARM64 OS. Find dir of 64-bit (arch 2) or ARM64 (arch 3).
-		if (!(arch == 2 || arch == 3)) { PRINTS(L"bad arch"); return false; }
+#else //this dll is x86 on any OS. Find dir of x64 (arch 2) or ARM64 (arch 3).
 		if (s[len - 3] == '\\' && s[len - 2] == '3' && s[len - 1] == '2') {
-			s[len - 2] = '6'; s[len - 1] = '4';
-			if (arch == 3) b << LR"(\ARM)";
-		} else if (b.EndsI(LR"(\runtimes\win-x86\native)")) { //using Au nuget package
-			b.ReplaceTail(10, arch == 3 ? LR"(arm64\native)" : LR"(x64\native)");
-		} else { //probably in temp dir when published single-file
-			b << L"\\64";
-			if (arch == 3) b << LR"(\ARM)";
+			b.ReplaceTail(2, arch == 2 ? L"64" : L"64\\ARM");
+		} else if (b.EndsI(LR"(\runtimes\win-x86\native)")) { //using Au nuget
+			b.ReplaceTail(10, arch == 2 ? L"x64\\native" : L"arm64\\native");
+		} else { //probably in app dir, eg in temp dir when published single-file
+			b << (arch == 2 ? L"\\64" : L"\\64\\ARM");
 		}
 #endif
 
@@ -566,7 +559,7 @@ namespace outproc {
 			//Perf.Next();
 			bool ok = arch > 0;
 			if (ok) {
-				if (arch <= 2 && (arch == 2) == IsThisProcess64Bit()) {
+				if (arch == GetProcessArchitecture()) {
 					wa = InjectDll(w, tid, pid);
 				} else if (SwitchArchAndInjectDll(w, arch)) {
 					wa = wn::FindWndEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);

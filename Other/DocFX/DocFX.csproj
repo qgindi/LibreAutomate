@@ -12,6 +12,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <OutDir>bin</OutDir>
 	  <LangVersion>preview</LangVersion>
+	  <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

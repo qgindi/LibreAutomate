@@ -109,12 +109,19 @@ int GetProcessArchitecture(DWORD pid) {
 
 	if (osVer.minWin11()) {
 		PROCESS_MACHINE_INFORMATION m = {}; //Win11+
-		bool ok = GetProcessInformation(hp, ProcessMachineTypeInfo, &m, sizeof(m));
+		bool ok = dlapi.GetProcessInformation(hp, ProcessMachineTypeInfo, &m, sizeof(m));
 		CloseHandle(hp);
 		if (!ok) return 0;
 		//Printf(L"m.ProcessMachine=0x%X", m.ProcessMachine);
 		auto k = m.ProcessMachine;
 		return k == IMAGE_FILE_MACHINE_I386 ? 1 : k == IMAGE_FILE_MACHINE_AMD64 ? 2 : k == IMAGE_FILE_MACHINE_ARM64 ? 3 : 0;
+	} else if(dlapi.IsWow64Process2) {
+		//TODO: test on Win10 ARM64
+		USHORT processArch = 0, osArch = 0;
+		BOOL ok = dlapi.IsWow64Process2(hp, &processArch, &osArch);
+		CloseHandle(hp);
+		if (!ok) return 0;
+		return processArch != 0 ? 1 : osArch == IMAGE_FILE_MACHINE_ARM64 ? 3 : 2; //3 on ARM64 OS because Windows 10 ARM64 does not support x64 processes
 	} else {
 		BOOL is32, ok = IsWow64Process(hp, &is32);
 		CloseHandle(hp);

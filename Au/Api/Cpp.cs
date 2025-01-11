@@ -7,8 +7,7 @@ static unsafe partial class Cpp {
 	static List<(string dll, nint h)> _dlls = [];
 
 	static Cpp() {
-		//_LoadAuNativeDll("AuCpp.dll", hasArm64X: true); //no. If loads the ARM64X version, later [DllImport] ignores it and uses the x64 version. Use resolver instead.
-		LoadAuNativeDll("AuCpp.dll", hasArm64X: true);
+		LoadAuNativeDll("AuCpp.dll");
 
 		Cpp_SetHelperCallback(&_HelperCallback); //note: not in elm ctor. Eg by the elm tool not via elm. Fast.
 	}
@@ -18,15 +17,14 @@ static unsafe partial class Cpp {
 	/// Used for Au dlls (AuCpp, sqlite3) and LA dlls (Scintilla).
 	/// </summary>
 	/// <param name="fileName">Dll file name like <c>"name.dll"</c>.</param>
-	/// <param name="hasArm64X">The dll has ARM64X version. Use it on ARM64 OS (Win11+).</param>
 	/// <exception cref="DllNotFoundException"></exception>
 	/// <remarks>
 	/// Searches in:
-	/// - subfolder <c>64</c> or <c>32</c> of the <c>Au.dll</c> folder. Or <c>64\ARM</c>, if <i>hasArm64X</i> true and ARM64 OS.
+	/// - subfolder <c>64</c> or <c>32</c> or <c>64\ARM</c> of the <c>Au.dll</c> folder, depending on process architecture.
 	/// - calls <b>NativeLibrary.TryLoad</b>, which works like simple <c>[DllImport]</c>, eg may use info from <c>deps.json</c>.
 	/// - subfolder <c>64</c> etc of folder specified in environment variable <c>Au.Path</c>. For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then <b>folders.ThisApp</b> is <c>"C:\Program Files (x86)\Microsoft Visual Studio\..."</c>). Workaround: set environment variable <c>Au.Path</c> = the main Au directory and restart Windows.
 	/// </remarks>
-	public static void LoadAuNativeDll(string fileName, bool hasArm64X = false) {
+	public static void LoadAuNativeDll(string fileName) {
 		Debug.Assert(fileName.Ends(".dll"));
 		lock (_dlls) {
 			if (_dlls.Count == 0) {
@@ -36,17 +34,18 @@ static unsafe partial class Cpp {
 					}
 					return 0;
 				});
+				//Why resolver: without it can't use ARM64X dlls. Now not used, but maybe in the future. If this x64 process on Windows ARM64 loads the ARM64X version, later [DllImport] ignores it and uses the x64 version.
 			}
-			var h = _LoadAuNativeDll(fileName, hasArm64X); //note: load now, not lazily. Eg may need to load dll to register control classes (eg Scintilla).
+			var h = _LoadAuNativeDll(fileName); //note: load now, not lazily. Eg may need to load dll to register control classes (Scintilla).
 			_dlls.Add((fileName, h));
 		}
 	}
 
-	unsafe static nint _LoadAuNativeDll(string fileName, bool hasArm64X = false) {
+	unsafe static nint _LoadAuNativeDll(string fileName) {
 		//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
 
 		nint h = 0;
-		string rel = (sizeof(nint) == 4 ? @"32\" : hasArm64X && RuntimeInformation.OSArchitecture == Architecture.Arm64 ? @"64\ARM\" : @"64\") + fileName;
+		string rel = (RuntimeInformation.ProcessArchitecture switch { Architecture.X86 => @"32\", Architecture.Arm64 => @"64\ARM\", _ => @"64\" }) + fileName;
 		//TODO: try to use standard "runtimes" folder instead.
 
 		//Au.dll dir + 64/32

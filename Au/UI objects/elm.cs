@@ -61,9 +61,9 @@ namespace Au;
 ///  <td>Java applications that use AWT/Swing. Window class name starts with <c>"SunAwt"</c>.</td>
 ///  <td>
 ///   <ol>
-///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is missing/disabled/broken, the <b>Find UI element</b> tool shows an "enable" link when you try to capture something in a Java window. Or you can enable JAB in <b>Options > OS</b> or in <b>Control Panel > Ease of Access Center > Use the computer without a display</b>. Or use <c>jabswitch.exe</c>. Then restart Java apps. Also may need to restart apps that tried to use Java UI elements.</li>
-///    <li>JAB is part of Java. Install Java 64-bit.</li>
-///    <li>If your process is 32-bit (unlikely), install Java 32-bit.</li>
+///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is missing/disabled/broken, the <b>Find UI element</b> tool shows an "enable" link when you try to capture something in a Java window. Or you can enable JAB in <b>Options > OS</b> or in <b>Control Panel > Ease of Access Center</b>. Or use <c>jabswitch.exe</c>. Then restart Java apps. Also may need to restart apps that tried to use Java UI elements.</li>
+///    <li>JAB is part of Java. Install Java 64-bit x64 or ARM64 (as your OS).</li>
+///    <li>If you'll use JAB in 32-bit script processes (unlikely), also install Java 32-bit. If you'll use JAB in x64 script processes on Windows ARM64 (unlikely), also install Java x64.</li>
 ///    <li>Not supported on 32-bit OS.</li>
 ///    <li>JAB bug: briefly shows a console window at PC startup, after every sleep, etc. Or opens an invalid Windows Terminal window; workaround: in Terminal settings set Default Terminal Application = Windows Console Host.</li>
 ///   </ol>

@@ -654,7 +654,7 @@ EXPORT void Cpp_Test() {
 #elif _M_X64
 		STR arch = L"x64";
 #else
-		STR arch = L"x32";
+		STR arch = L"x86";
 #endif
 	Printf(L"major=%i minor=%i min10=%i min11=%i is32=%i arch=%s", osVer.major(), osVer.minor(), osVer.minWin10(), osVer.minWin11(), osVer.is32BitOS(), arch);
 

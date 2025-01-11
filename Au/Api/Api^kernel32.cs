@@ -1038,6 +1038,9 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", EntryPoint = "GetVolumeNameForVolumeMountPointW", SetLastError = true)]
 	internal static extern bool GetVolumeNameForVolumeMountPoint(string lpszVolumeMountPoint, char* lpszVolumeName, int cchBufferLength);
 	
+	[DllImport("kernel32.dll", EntryPoint = "GetCommandLineW")]
+	internal static extern char* GetCommandLine();
+	
 	
 	#region undocumented
 	

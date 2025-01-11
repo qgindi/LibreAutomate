@@ -2,17 +2,18 @@ using Au.Compiler;
 
 static class CommandLine {
 	/// <summary>
-	/// Processes command line of this program. Called before any initialization.
+	/// Processes the command line of this program. Called before any initialization.
 	/// Returns true if this instance must exit.
 	/// </summary>
 	public static bool ProgramStarted1(string[] args, out int exitCode) {
-		//print.it(args);
+		//print.it(process.thisExeName, args);
+		
 		exitCode = 0; //note: Environment.ExitCode bug: the setter's set value is ignored and the process returns 0.
 		int i = args.Length > 0 && args[0] is "/n" or "-n" ? 1 : 0;
 		if (args.Length > i) {
 			var s = args[i];
 			if (s.NE()) return false;
-			if (s[0] == '/') {
+			if (s[0] is '/' or '-') {
 				switch (s) {
 				case "/s":
 					exitCode = _RunEditorAsAdmin();
@@ -30,7 +31,7 @@ static class CommandLine {
 	}
 	
 	/// <summary>
-	/// Processes command line of this program. Called after partial initialization.
+	/// Processes the command line of this program. Called after partial initialization.
 	/// Returns true if this instance must exit:
 	/// 	1. If finds previous program instance; then sends the command line to it if need.
 	/// 	2. If incorrect command line.
@@ -381,7 +382,7 @@ static class CommandLine {
 	//This process is started by the Task Scheduler task installed by the setup program. The task started by App._RestartAsAdmin.
 	[MethodImpl(MethodImplOptions.NoOptimization)]
 	static unsafe int _RunEditorAsAdmin() {
-		var s1 = _Api.GetCommandLine();
+		var s1 = Api.GetCommandLine();
 		//_MBox(new string(s1));
 		//Normally it is like "C:\...\Au.Editor.exe /s sessionId" or "C:\...\Au.Editor.exe /s sessionId arguments",
 		//	but if started from Task Scheduler it is "C:\...\Au.Editor.exe /s $(Arg0)".
@@ -530,9 +531,6 @@ static class CommandLine {
 		
 		[DllImport("advapi32.dll", EntryPoint = "CreateProcessAsUserW", SetLastError = true)]
 		internal static extern bool CreateProcessAsUser(IntPtr hToken, string lpApplicationName, char[] lpCommandLine, void* lpProcessAttributes, void* lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, in Api.STARTUPINFO lpStartupInfo, out Api.PROCESS_INFORMATION lpProcessInformation);
-		
-		[DllImport("kernel32.dll", EntryPoint = "GetCommandLineW")]
-		internal static extern char* GetCommandLine();
 		
 #if DEBUG
 		[DllImport("wtsapi32.dll", EntryPoint = "WTSSendMessageW")]

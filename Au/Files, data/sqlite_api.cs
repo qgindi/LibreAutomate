@@ -567,7 +567,7 @@ internal static unsafe class SLApi {
 	const string SQLITE_DLL = "sqlite3.dll";
 	
 	static SLApi() {
-		Cpp.LoadAuNativeDll(SQLITE_DLL, hasArm64X: true);
+		Cpp.LoadAuNativeDll(SQLITE_DLL);
 	}
 	
 	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]

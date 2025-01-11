@@ -15,6 +15,7 @@
 		<LangVersion>preview</LangVersion>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+		<Platforms>AnyCPU</Platforms>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

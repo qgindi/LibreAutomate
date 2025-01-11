@@ -8,6 +8,7 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>preview</LangVersion>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<Platforms>AnyCPU</Platforms>
 	</PropertyGroup>
 
 	<ItemGroup>
