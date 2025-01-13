@@ -18,8 +18,6 @@ using Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Classification;
 using CT = CAW::Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
 
-//TODO: bug: visible `/` or `/*` if 1 or 2 non-ASCII chars exist in line before. Exception if more.
-
 partial class SciCode {
 	struct _Image {
 		public Bitmap image;
@@ -338,8 +336,8 @@ partial class SciCode {
 	/// <remarks>
 	/// Called on SCN_STYLENEEDED (to avoid bad things like briefly visible and added horizontal scrollbar) and then by CiStyling._Work (async).
 	/// </remarks>
-	internal unsafe void EHideImages_(int from8, int to8, byte[] styles = null, [CallerMemberName] string caller = null) {
-		if (styles == null) from8 = aaaLineStartFromPos(false, from8);
+	internal unsafe void EHideImages_(int from8, int to8, Span<byte> styles = default, [CallerMemberName] string caller = null) {
+		if (styles.IsNull()) from8 = aaaLineStartFromPos(false, from8);
 		if (to8 - from8 < 49) return;
 		
 		var r = new Au.Controls.SciDirectRange(this, from8, to8);
@@ -362,8 +360,8 @@ partial class SciCode {
 			if (r[j] != c1 || (c1 == '*' && '/' != r[j + 1])) continue;
 			if (c1 == '"') i += 6; else { i -= 2; j += 2; }
 			
-			if (styles != null) {
-				styles.AsSpan(i - from8, j - i).Fill(STYLE_HIDDEN);
+			if (!styles.IsNull()) {
+				styles.Slice(i - from8, j - i).Fill(STYLE_HIDDEN);
 			} else {
 				Call(SCI_STARTSTYLING, i);
 				Call(SCI_SETSTYLING, j - i, STYLE_HIDDEN);

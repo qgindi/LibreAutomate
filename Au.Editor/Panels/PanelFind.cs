@@ -183,7 +183,7 @@ class PanelFind {
 		if (s.NE()) return;
 		var b = new byte[s.Length];
 		RegexParser.GetScintillaStylingBytes16(s, PSFormat.Regexp, b);
-		_tFind.aaaSetStyling(true, 0, b, s);
+		_tFind.aaaSetStyling(0, KScintilla.aaaConvertStylingBytesToUtf8(b, s));
 	}
 	
 	void _CheckedChanged(object sender, RoutedEventArgs e) {

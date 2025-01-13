@@ -45,7 +45,7 @@ void _ExitEditor() {
 bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 	var cd = Environment.CurrentDirectory;
 	string src = pathname.normalize($@"{cd}\..\Cpp\bin\{args[1]}\{platform}\AuCpp.dll");
-	string dest = pathname.normalize($@"{cd}\..\_\runtimes\win-{platform switch { "Win32" => "x86", "x64" => "x64", "ARM64" => "arm64", _ => throw new ArgumentException("platform") }}\native\AuCpp.dll");
+	string dest = pathname.normalize($@"{cd}\..\_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll");
 	if (!filesystem.getProperties(src, out var p1)) { if (!editor) print.it("Failed `filesystem.getProperties(src)`"); return false; }
 	filesystem.getProperties(dest, out var p2);
 	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {

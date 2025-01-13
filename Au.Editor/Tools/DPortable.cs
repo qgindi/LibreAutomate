@@ -109,7 +109,7 @@ class DPortable : KDialogWindow {
 			if (isArm) _RenameArm64();
 			
 			if (_dirNet != null) {
-				var dotnet = App.Settings.portable_dir + (isArm ? @"\dotnetARM" : @"\dotnet"); //TODO: how to get both
+				var dotnet = App.Settings.portable_dir + (isArm ? @"\dotnetARM" : @"\dotnet");
 				_Copy2(_dirNet, dotnet, "/e");
 				_Copy2(_dirNetDesktop, dotnet, "/e");
 			}

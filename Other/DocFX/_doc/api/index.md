@@ -11,7 +11,7 @@
 - `Au.dll` - contains code of the above namespaces.
 
 #### Native code files
-- `AuCpp.dll`, `sqlite3.dll`, `Au.Arch.exe` - used by `Au.dll`.
+- `AuCpp.dll`, `sqlite3.dll`, `Au.DllHost.exe` - used by `Au.dll`.
 
 These files are in LibreAutomate subfolders `64` and `32`. The .exe compiler copies them to the .exe folder. When using the library via NuGet, they are in subfolder `runtimes`.
 

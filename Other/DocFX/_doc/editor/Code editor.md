@@ -232,7 +232,7 @@ To activate this feature for current document, check toolbar button **WPF previe
 How it works: If **WPF preview** is checked and current script contains `#if WPF_PREVIEW`, the program launches/restarts the script whenever you make changes in its code, unless there are errors. The script runs like when clicked the **Run** button, with these changes:
 - Defined **WPF_PREVIEW**. In script you use `#if WPF_PREVIEW` to include preview-specific code. Or use **script.isWpfPreview**.
 - Function **Preview** shows the window without activating. Also changes some its properties. Ends the process when the window closed.
-- Some `/\*/ properties /\*/` are ignored: `role`, `ifRunning`, `uac`, `bit32`, `console`, `optimize`, `outputPath`, `preBuild`, `postBuild`, `xmlDoc`.
+- Some `/\*/ properties /\*/` are ignored: `role`, `ifRunning`, `uac`, `platform`, `console`, `optimize`, `outputPath`, `preBuild`, `postBuild`, `xmlDoc`.
 - If current file (or its main project file) is a class file, runs it as a script; ignores the test script. Therefore need `#if WPF_PREVIEW` code that runs at startup and calls the function that contains the window code.
 - Function **script.setup** does nothing.
 

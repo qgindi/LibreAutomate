@@ -7,6 +7,7 @@ namespace Au;
 /// The Windows version properties return true Windows version. If you need version that depends on manifest and debugger, use <see cref="Environment.OSVersion"/>.
 /// </remarks>
 /// <seealso cref="OperatingSystem"/>
+/// <seealso cref="RuntimeInformation"/>
 public static unsafe class osVersion {
 	static osVersion() {
 		Api.RTL_OSVERSIONINFOW x = default; x.dwOSVersionInfoSize = sizeof(Api.RTL_OSVERSIONINFOW);

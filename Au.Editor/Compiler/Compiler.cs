@@ -256,7 +256,6 @@ partial class Compiler {
 				_GetDllPaths();
 				
 				var need = _NeedNativeExeAndDllFilesOfPlatforms();
-				//TODO: doc
 				
 				//copy app host template exe, add native resources, set assembly name, set console flag if need
 				if (need.x64) _AppHost(outFile, fileName, MCPlatform.x64);
@@ -267,15 +266,6 @@ partial class Compiler {
 				//copy dlls to the output directory
 				_CopyDlls(asmStream, need64: need.x64, needArm: need.arm64, need32: need.x86);
 				//p1.Next('d');
-				
-				//copy config file to the output directory
-				//var configFile = exeFile + ".config";
-				//if(_meta.ConfigFile != null) {
-				//	r.hasConfig = true;
-				//	_CopyFileIfNeed(_meta.ConfigFile.FilePath, configFile);
-				//} else if(filesystem.exists(configFile, true).File) {
-				//	filesystem.delete(configFile);
-				//}
 			}
 			
 			if (!_meta.Console && _meta.Role is MCRole.miniProgram or MCRole.exeProgram && !addMetaFlags.Has(MCFlags.Publish)) {
@@ -325,7 +315,7 @@ partial class Compiler {
 		//#if DEBUG
 		//p1.NW('C');
 		//#endif
-		//print.it($"<><c red>compiled<> {f}"); //TODO: test finally
+		//print.it($"<><c red>compiled<> {f}");
 		return true;
 		
 		//TODO3: rebuild if missing apphost. Now rebuilds only if missing dll.
@@ -767,13 +757,13 @@ partial class Compiler {
 		
 		//note: need Au.dll and AuCpp.dll even if not used in code. Au.dll contains script.AppModuleInit_.
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"Au.dll", _meta.OutputPath + @"\Au.dll");
-		//note: always need all AuCpp.dll and Au.Arch.exe, because maybe elm will have to load AuCpp.dll into other processes.
+		//note: always need all AuCpp.dll and Au.DllHost.exe, because maybe elm will have to load AuCpp.dll into other processes.
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\AuCpp.dll", _meta.OutputPath + @"\64\AuCpp.dll");
-		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\Au.Arch.exe", _meta.OutputPath + @"\64\Au.Arch.exe");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\Au.DllHost.exe", _meta.OutputPath + @"\64\Au.DllHost.exe");
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\AuCpp.dll", _meta.OutputPath + @"\32\AuCpp.dll");
-		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\Au.Arch.exe", _meta.OutputPath + @"\32\Au.Arch.exe");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\Au.DllHost.exe", _meta.OutputPath + @"\32\Au.DllHost.exe");
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\AuCpp.dll", _meta.OutputPath + @"\64\ARM\AuCpp.dll");
-		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\Au.Arch.exe", _meta.OutputPath + @"\64\ARM\Au.Arch.exe");
+		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\Au.DllHost.exe", _meta.OutputPath + @"\64\ARM\Au.DllHost.exe");
 		
 		bool usesSqlite = CompilerUtil.UsesSqlite(asmStream);
 		

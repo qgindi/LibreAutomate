@@ -13,6 +13,7 @@ Improved:
 
 Fixed bugs:
 - Git does not work with the newest version of private Git.
+- Image text incorrectly hidden in non-ASCII code.
 
 ### Library
 New classes:

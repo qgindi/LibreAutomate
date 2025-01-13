@@ -18,10 +18,9 @@ partial class PanelDebug {
 			_readEvents = _ReadEvents;
 		}
 		
-		public bool Init() {
+		public bool Init(bool arm64) {
 			//var log = @"C:\Test\debugger-log.txt"; filesystem.delete(log); Environment.SetEnvironmentVariable("LOG_OUTPUT", log);
-			_p = new(folders.ThisAppBS + @"Roslyn\netcoredbg.exe", $"--interpreter=mi");
-			//_p = new(@"C:\Test\netcoredbg\netcoredbg.exe", $"--interpreter=mi"); //test unmodified netcoredbg
+			_p = new($@"{folders.ThisAppBS}Debugger\{(arm64 ? "arm64" : "x64")}\netcoredbg.exe", $"--interpreter=mi");
 			
 			if (SendSync(0, $"-handshake") != "^done") { //waits until the debugger is ready to process commands. Then we can measure the speed of other sync commands at startup.
 				_Print("Failed to start debugger.");

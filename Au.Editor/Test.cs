@@ -24,7 +24,6 @@ using Au.Compiler;
 using static Au.Controls.Sci;
 
 //TODO: Test, maybe can run on Windows 10 ARM64.
-//TODO: test debugger on ARM.
 
 static class Test {
 	

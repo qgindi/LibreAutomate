@@ -661,20 +661,17 @@ Can be:
 		info.AaAddElem(console, """
 <b>console</b> - let the program run with console.
 """);
-		info.AaAddElem(platform, """
-<b>platform</b> - supported/used CPU architecture.
- • <i>x64</i> - can run on almost all Windows computers (x64 and Windows11+ ARM64). The process is 64-bit (x64).
- • <i>arm64</i> - can run only on Windows ARM64. The process is ARM64.
- • <i>x86</i> - can run on almost all Windows computers (x64, ARM64, x86). The process is 32-bit (x86).
- • <i>Default</i> - same as LibreAutomate (x64 or arm64).
+		info.AaAddElem(platform, $"""
+<b>platform</b> - CPU instruction set.
+ • <i>x64</i> - runs on all modern Windows computers (x64, Windows11+ ARM64).
+ • <i>arm64</i> - runs only on Windows ARM64. Used because x64 and x86 programs are slow there.
+ • <i>x86</i> - runs on almost all Windows computers (x64, x86, all ARM64), as 32-bit process.
+ • <i>Default</i> - as LibreAutomate (x64 or arm64). On this computer {(osVersion.isArm64Process ? "arm64" : "x64")}.
  
 Creates program files for this platform. If optimize true and platform not x86, creates for both x64 and arm64. In any case, the process uses this platform when launched from editor.
 
-If x64 or x86, on Windows ARM64 the process runs under emulation and therefore is slower.
-
 Most .NET dlls can be used by programs of any platform. But native dlls can be used only in programs of the same platform as of the dll. Usually libraries that use native dlls have dll files for multiple platforms. If a dll for some platform is missing, you can't use that platform for your script/program that will use that library. Workaround: use role exeProgram and platform of an available dll.
 """);
-		//TODO: update docs
 		
 		info.AaAddElem(xmlDoc, """
 <b>xmlDoc</b> - create XML documentation file from /// comments. And print errors in /// comments.

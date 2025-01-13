@@ -207,11 +207,6 @@ class MetaComments {
 	/// </summary>
 	public string[] TestInternal { get; private set; }
 	
-	///// <summary>
-	///// Meta option 'config'.
-	///// </summary>
-	//public FileNode ConfigFile { get; private set; }
-	
 	/// <summary>
 	/// All meta errors of all files. Includes meta syntax errors, file 'not found' errors, exceptions.
 	/// null if flag <b>ForCodeInfo</b> or <b>ForFindReferences</b>.
@@ -229,19 +224,6 @@ class MetaComments {
 	/// null if none.
 	/// </summary>
 	public List<(FileNode f, MetaComments m)> ProjectReferences { get; private set; }
-	
-	///// <summary>
-	///// Gets all unique project references of this and pr descendants.
-	///// </summary>
-	///// <returns></returns>
-	//public List<(FileNode f, MetaComments m)> ProjectReferencesOfCompilation() {
-	//	if (ProjectReferences == null || !ProjectReferences.Any(o => o.m.ProjectReferences != null)) return ProjectReferences;
-	//	var a = new List<(FileNode f, MetaComments m)>(ProjectReferences);
-	//	foreach (var v in ProjectReferences) {
-	//		//undone
-	//	}
-	//	return a;
-	//}
 	
 	/// <summary>
 	/// Meta nuget, like @"-\PackageName".
@@ -298,12 +280,6 @@ class MetaComments {
 	/// Default: false.
 	/// </summary>
 	public bool StartFaster { get; private set; }
-	
-	/// <summary>
-	/// Meta option 'bit32'.
-	/// Default: false.
-	/// </summary>
-	public bool Bit32 { get; private set; }//TODO: remove
 	
 	/// <summary>
 	/// Meta option 'platform'.

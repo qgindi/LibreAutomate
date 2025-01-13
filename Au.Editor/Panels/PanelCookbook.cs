@@ -136,8 +136,8 @@ class PanelCookbook {
 	}
 	
 #if !DEBUG
-	//In Release config loads files from database "cookbook.db" created by script "Create cookbook.db".
-	//In Debug config loads files directly. It allows to edit them and see results without creating database.
+	//In Release loads files from database "cookbook.db" created by script "Create cookbook.db".
+	//In Debug loads files directly. It allows to edit them and see results without creating database.
 	//Previously always loaded from files. But it triggered 7 false positives in virustotal.com. The "bad" recipe was PowerShell.
 	//The same recipes don't trigger FP when in database. Additionally the script mangles text to avoid FP in the future.
 

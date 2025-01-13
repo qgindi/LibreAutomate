@@ -638,7 +638,7 @@ void _TestIAccessibleImpl();
 void _test1(HWND w) {
 	DWORD pid = 0;
 	GetWindowThreadProcessId(w, &pid);
-	Print(GetProcessArchitecture(pid));
+	Print(Cpp_GetProcessArchitecture(pid));
 }
 
 EXPORT void Cpp_Test() {

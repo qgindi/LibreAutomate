@@ -46,9 +46,6 @@ Source: "Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Net4.exe"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
-Source: "Roslyn\*.exe"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
-
 Source: "64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\ARM\Au.AppHost.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 Source: "32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
@@ -57,9 +54,9 @@ Source: "64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\ARM\AuCpp.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 Source: "32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 
-Source: "64\Au.Arch.exe"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "64\ARM\Au.Arch.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
-Source: "32\Au.Arch.exe"; DestDir: "{app}\32"; Flags: ignoreversion
+Source: "64\Au.DllHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\ARM\Au.DllHost.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
+Source: "32\Au.DllHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 
 Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\ARM\sqlite3.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
@@ -69,6 +66,12 @@ Source: "64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\ARM\Scintilla.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 
 Source: "32\7za.exe"; DestDir: "{app}\32"; Flags: ignoreversion
+
+Source: "Debugger\*.dll"; DestDir: "{app}\Debugger"; Flags: ignoreversion recursesubdirs
+Source: "Debugger\*.exe"; DestDir: "{app}\Debugger"; Flags: ignoreversion recursesubdirs
+
+Source: "Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
+Source: "Roslyn\*.exe"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
 
 Source: "Default\*"; DestDir: "{app}\Default"; Flags: ignoreversion
 Source: "Default\Workspace\files\*"; DestDir: "{app}\Default\Workspace\files"; Flags: ignoreversion recursesubdirs

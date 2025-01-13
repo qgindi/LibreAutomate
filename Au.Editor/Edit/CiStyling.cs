@@ -268,9 +268,10 @@ partial class CiStyling {
 					}
 				}
 			}
-			doc.EHideImages_(start8, end8, b);
+			Span<byte> b8 = KScintilla.aaaConvertStylingBytesToUtf8(b, code.AsSpan(start16..end16));
+			doc.EHideImages_(start8, end8, b8);
 			_PN();
-			doc.aaaSetStyling(true, start16, b, code.AsSpan(start16..end16));
+			doc.aaaSetStyling(start8, b8);
 			doc.aaaSetStyled(minimal ? int.MaxValue : end8);
 			
 			_modStart = _modFromEnd = int.MaxValue;

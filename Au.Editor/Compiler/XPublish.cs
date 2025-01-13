@@ -27,21 +27,33 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 				.Checked((App.Settings.publish >>> 8 & 3) switch { 1 => false, 2 => true, _ => null }, threeState: true);
 			b.R.Add(out KCheckBox cNet, "Add .NET Runtime").Checked(0 != (2 & App.Settings.publish));
 			b.R.Add(out KCheckBox cR2R, "ReadyToRun").Checked(0 != (4 & App.Settings.publish));
+			b.R.Add("Platform", out ComboBox cbPlatform).Width(100, "L").Items("x64|arm64|x86").Select(Math.Clamp(App.Settings.publish >>> 4 & 3, 0, 2));
 			b.R.StartOkCancel().AddOkCancel().AddButton("Help", _ => HelpUtil.AuHelp("editor/Publish")).Width(70).End();
 			b.End();
 			if (!b.ShowDialog(App.Wmain)) return;
-			App.Settings.publish = (cSingle.IsChecked ? 0 : 1) | (cNet.IsChecked ? 2 : 0) | (cR2R.IsChecked ? 4 : 0) | ((cSelfExtract.IsChecked switch { false => 1, true => 2, _ => 0 }) << 8);
+			
+			int platform = cbPlatform.SelectedIndex;
+			App.Settings.publish = (cSingle.IsChecked ? 0 : 1) | (cNet.IsChecked ? 2 : 0) | (cR2R.IsChecked ? 4 : 0) | ((cSelfExtract.IsChecked switch { false => 1, true => 2, _ => 0 }) << 8) | (platform << 4);
 			//TODO3: maybe support publish profiles like in VS: <PublishProfileFullPath>
 			
-			bool singleFile = cSingle.IsChecked; bool? selfExtract = cSelfExtract.IsChecked;
-			if (!_CreateCsproj(singleFile: singleFile, selfExtract, selfContained: cNet.IsChecked, readyToRun: cR2R.IsChecked)) return;
+			print.it($"<><lc YellowGreen>Building program files for publishing. Please wait until DONE.<>");
 			
-			var outDir = $@"{_csprojDir}\release_{(_meta.Bit32 ? "32" : "64")}";
+			bool singleFile = cSingle.IsChecked; bool? selfExtract = cSelfExtract.IsChecked;
+			if (!_CreateCsproj(singleFile: singleFile, selfExtract, selfContained: cNet.IsChecked, readyToRun: cR2R.IsChecked, platform)) return;
+			
+			var outDir = $@"{_csprojDir}\release_{platform switch { 0 => "x64", 1 => "arm64", _ => "x86" }}";
 			var outFile = $@"{outDir}\{_meta.Name}.exe";
 			_PrepareOutDir(outDir, outFile);
 			if (_meta.PreBuild.f != null && !CompilerUtil.RunPrePostBuildScript(_meta, false, outFile, true)) return;
 			if (!await Task.Run(() => _DotnetPublish(outDir, singleFile, selfExtract))) return;
 			if (_meta.PostBuild.f != null && !CompilerUtil.RunPrePostBuildScript(_meta, true, outFile, true)) return;
+			
+			_DeleteOldOutputDir("64");
+			_DeleteOldOutputDir("32");
+			void _DeleteOldOutputDir(string bit) {
+				var s = $@"{_csprojDir}\release_{bit}";
+				if (filesystem.exists(s)) print.it($"<>This LibreAutomate version uses different names for publish output folders. You may want to delete this old unused folder: <explore>{s}<>");
+			}
 			
 			print.it("==== DONE ====");
 		}
@@ -90,7 +102,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		return true;
 	}
 	
-	bool _CreateCsproj(bool singleFile, bool? selfExtract, bool selfContained, bool readyToRun) {
+	bool _CreateCsproj(bool singleFile, bool? selfExtract, bool selfContained, bool readyToRun, int platform) {
 		App.Model.Save.TextNowIfNeed(onlyText: true);
 		
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return false;
@@ -137,7 +149,10 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		_Add(xpg, "NoWarn", string.Join(';', _meta.NoWarnings) + ";WFAC010;WFO0003;CA1416");
 		if (_meta.Nullable != 0) _Add(xpg, "Nullable", _meta.Nullable);
 		
-		if (_meta.Bit32) _Add(xpg, "PlatformTarget", "x86");
+		var sPlatform = platform switch { 0 => "x64", 1 => "arm64", _ => "x86" };
+		_Add(xpg, "PlatformTarget", sPlatform);
+		_Add(xpg, "RuntimeIdentifier", "win-" + sPlatform);
+		
 		if (!_Icon()) return false;
 		_Add(xpg, "ApplicationManifest", _Path(_meta.ManifestFile) ?? folders.ThisAppBS + "default.exe.manifest");
 		
@@ -149,8 +164,6 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			_Add(xpg, "AssemblyOriginatorKeyFile", _Path(_meta.SignFile));
 		}
 		
-		//if (singleFile || readyToRun) //no, we always add only 64 or 32 bit dlls
-		_Add(xpg, "RuntimeIdentifier", _meta.Bit32 ? "win-x86" : "win-x64");
 		if (singleFile) {
 			_Add(xpg, "PublishSingleFile", "true");
 			if (selfContained) _Add(xpg, "EnableCompressionInSingleFile", "true"); //else compression not supported (with IncludeAllContentForSelfExtract too)
@@ -176,7 +189,8 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		
 		var trees = CompilerUtil.CreateSyntaxTrees(_meta);
 		
-		_AddAuNativeDll("AuCpp.dll", both64and32: true);
+		_AddAuNativeDll("AuCpp.dll", allPlatforms: true);
+		_AddAuNativeDll("Au.DllHost.exe", allPlatforms: true);
 		if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll");
 		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, _csprojDir, (from, to) => _AddContentFile(from, to));
 		
@@ -215,15 +229,15 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			_Add(x, "Link", to); //note: TargetPath should be the same, but somehow ignores files in subfolders (meta file x /sub) if single-file, unless the folder exists.
 		}
 		
-		void _AddAuNativeDll(string filename, bool both64and32 = false) {
-			var s = (_meta.Bit32 ? @"32\" : @"64\") + filename;
-			//_AddContentFile(folders.ThisAppBS + s, s); //no, NativeLibrary.TryLoad fails if single-file
-			_AddContentFile(folders.ThisAppBS + s, filename);
-			if (both64and32) { //also need AuCpp.dll of different bitness. For elm to load into processes of different bitness. See func SwitchArchAndInjectDll in in-proc.cpp.
-				s = (!_meta.Bit32 ? @"32\" : @"64\") + filename;
-				_AddContentFile(folders.ThisAppBS + s, s);
-				//TODO: ARM64
+		void _AddAuNativeDll(string filename, bool allPlatforms = false) {
+			for (int i = 0; i < 3; i++) {
+				if (allPlatforms || i == platform) {
+					var s = i switch { 0 => @"64\", 1 => @"64\ARM\", _ => @"32\" } + filename;
+					//_AddContentFile(folders.ThisAppBS + s, s); //no, NativeLibrary.TryLoad fails if single-file
+					_AddContentFile(folders.ThisAppBS + s, i == platform ? filename : s);
+				}
 			}
+			//allPlatforms is used for AuCpp.dll and Au.DllHost.exe. Need all for elm etc to load into processes of different platform. See func SwitchArchAndInjectDll in in-proc.cpp.
 		}
 		
 		string _ModuleInit() {

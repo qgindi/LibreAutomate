@@ -211,6 +211,10 @@ static unsafe partial class Cpp {
 
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern void Cpp_InactiveWindowWorkaround(bool on);
+	
+	/// <returns>0 failed, 1 x86, 2 x64, 3 arm64</returns>
+	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+	internal static extern int Cpp_GetProcessArchitecture(int pid);
 
 	// TEST
 

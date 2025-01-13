@@ -100,8 +100,8 @@ __declspec(allocate(".shared")) Perf_Inst Perf;
 OSVersion osVer;
 DelayLoadedApi dlapi;
 
-//returns: 0 failed, 1 32, 2 x64, 3 arm64
-int GetProcessArchitecture(DWORD pid) {
+//returns: 0 failed, 1 x86, 2 x64, 3 arm64
+EXPORT int Cpp_GetProcessArchitecture(DWORD pid) {
 	if (osVer.is32BitOS()) return 1;
 
 	HANDLE hp = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);

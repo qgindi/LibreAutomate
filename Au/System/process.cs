@@ -383,6 +383,7 @@ namespace Au {
 		/// <remarks>
 		/// <note>If you know it is current process, instead use <see cref="osVersion"/> functions or <c>IntPtr.Size==4</c>. This function is much slower.</note>
 		/// </remarks>
+		/// <seealso cref="RuntimeInformation"/>
 		public static bool is32Bit(int processId) {
 			bool is32bit = osVersion.is32BitOS;
 			if (!is32bit) {

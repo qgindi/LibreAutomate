@@ -144,7 +144,7 @@ inline int GetProcessArchitecture() {
 #endif
 }
 
-int GetProcessArchitecture(DWORD pid);
+EXPORT int Cpp_GetProcessArchitecture(DWORD pid);
 
 
 //Standard IUnknown implementation with thread-unsafe refcounting.

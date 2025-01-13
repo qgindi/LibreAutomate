@@ -15,8 +15,6 @@
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
-x64/
-x86/
 build/
 bld/
 [Bb]in/
@@ -226,6 +224,7 @@ ModelManifest.xml
 /_/*
 !/_/Default/
 !/_/Templates/
+!/_/Debugger/
 !/_/Roslyn/
 /_/Roslyn/*.xml
 !/_/*.db

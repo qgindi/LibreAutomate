@@ -348,7 +348,7 @@ namespace outproc {
 
 #pragma region transition 64/32 bit or 64/arm64
 
-	//Called by Au.Arch.exe.
+	//Called by Au.DllHost.exe.
 	//Calls InjectDll.
 	EXPORT void Cpp_Arch(STR a0, STR a1) {
 		HWND w = (HWND)(LPARAM)strtoi(a0);
@@ -358,7 +358,7 @@ namespace outproc {
 		if (wa) SetEvent(ev);
 	}
 
-	//Finds and executes Au.Arch.exe for arch architecture (1 32-bit, 2 x64, 3 ARM64), which calls InjectDll.
+	//Finds and executes Au.DllHost.exe for arch architecture (1 32-bit, 2 x64, 3 ARM64), which calls InjectDll.
 	bool SwitchArchAndInjectDll(HWND w, int arch) {
 		str::StringBuilder b;
 		b << L"\"";
@@ -393,7 +393,7 @@ namespace outproc {
 		}
 #endif
 
-		b << L"\\Au.Arch.exe";
+		b << L"\\Au.DllHost.exe";
 		//Printf(L"run: %s", (wchar_t*)b);
 		if (GetFileAttributes(b + 1) == INVALID_FILE_ATTRIBUTES) return 0;
 		b << L"\" ";
@@ -554,7 +554,7 @@ namespace outproc {
 		wa = wn::FindWndEx(HWND_MESSAGE, 0, c_agentWindowClassName, name);
 		//Perf.Next();
 		if (!wa) {
-			int arch = GetProcessArchitecture(pid);
+			int arch = Cpp_GetProcessArchitecture(pid);
 			//Printf(L"arch=%i", arch);
 			//Perf.Next();
 			bool ok = arch > 0;
