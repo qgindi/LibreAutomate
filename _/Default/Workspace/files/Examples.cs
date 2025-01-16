@@ -6,10 +6,10 @@
 print.it("Example");
 
 //show message box. Exit if Cancel.
-if (!dialog.showOkCancel("Run WordPad?")) return;
+if (!dialog.showOkCancel("Run Notepad?")) return;
 
-//run WordPad
-run.it(folders.ProgramFiles + @"Windows NT\Accessories\wordpad.exe");
+//run Notepad
+run.it(@"notepad.exe");
 
 //wait 1 s
 1.s();
@@ -28,8 +28,3 @@ for (int i = 0; i < 5; i++) {
 	//send keys
 	keys.send("Ctrl+Z"); //Undo
 }
-
-//find and click UI element "View" in WordPad
-var w = wnd.find(1, "*- WordPad", "WordPadClass");
-var e = w.Elm["PAGETAB", "View"].Find(1);
-e.Invoke();

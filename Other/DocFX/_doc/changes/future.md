@@ -1,11 +1,7 @@
-## Version 1.8.0 (2025-)
+## Version 1.8.0 (2025-01-16)
 
 ### Editor
-New tools:
-- .
-
-New cookbook recipes:
-- .
+Can run on Windows ARM64.
 
 Improved:
 - Menu **File > Export, import > Export**: can include files specified in `/*/ c /*/` etc.
@@ -16,19 +12,4 @@ Fixed bugs:
 - Image text incorrectly hidden in non-ASCII code.
 
 ### Library
-New classes:
-- .
-
-New members:
-- .
-
-New parameters:
-- .
-
-Improved:
-- .
-
-Fixed bugs:
-- .
-
-### Breaking changes
+Can be used on Windows ARM64.

@@ -116,7 +116,8 @@ EXPORT int Cpp_GetProcessArchitecture(DWORD pid) {
 		auto k = m.ProcessMachine;
 		return k == IMAGE_FILE_MACHINE_I386 ? 1 : k == IMAGE_FILE_MACHINE_AMD64 ? 2 : k == IMAGE_FILE_MACHINE_ARM64 ? 3 : 0;
 	} else if(dlapi.IsWow64Process2) {
-		//TODO: test on Win10 ARM64
+		//never mind: not tested on Win10 ARM64.
+
 		USHORT processArch = 0, osArch = 0;
 		BOOL ok = dlapi.IsWow64Process2(hp, &processArch, &osArch);
 		CloseHandle(hp);

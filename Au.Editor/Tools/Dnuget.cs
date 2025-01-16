@@ -222,12 +222,10 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 				Action<string> watcher = s => {
 					//print.it($"<><c green>{s}<>");
 					if (s.Starts("error: '' is not a valid version string")) {
-						//TODO: some packages fail if version not specified. Test with new SDK versions, maybe fixed. A workaround possible, but much work.
-						//	Error: '' is not a valid version string.
-						//	Then can't update, because the update code does not use version string.
-						//	Only .NET 9 SDK. OK 8.
+						//With .NET SDK 9.0.100 some packages fail if version not specified.
 						//	From 51 tested packages, only these fail: Octokit, AngleSharp.
-						print.it($"<><c red>\tNeed version. Example: PackageName --version 1.2.3\r\n\t<link https://www.nuget.org/packages/{package}>Get the string<><>");
+						//	Fixed in SDK 9.0.102.
+						print.it($"<><c red>\tNeed version. Example: PackageName --version 1.2.3\r\n\t<link https://www.nuget.org/packages/{package}>Get the string<>\r\n\tIf using .NET SDK 9.0.100, install new version to avoid this error.<>");
 					}
 				};
 				if (!await _RunDotnet(sAdd, watcher: watcher)) return false;

@@ -22,14 +22,13 @@ namespace other {
 		return CallNextHookEx(0, code, wParam, lParam);
 
 		//After unhooking, this dll remains loaded until hooked threads receive messages.
-		//	To unload when [un]installing, installer calls Cpp_Unload which broadcasts messages to all top-level and message-only windows.
+		//	To unload when [un]installing, installer uses code like in Cpp_Unload (broadcasts messages).
 		//	To unload when building, Cpp project's pre-link event runs "BuildEvents.exe" (created from C# script) which calls Cpp_Unload.
 	}
 
 	EXPORT HHOOK Cpp_Clipboard(HHOOK hh) {
 		if (hh == NULL) {
 			auto hh = SetWindowsHookExW(WH_GETMESSAGE, ClipboardHook, s_moduleHandle, 0);
-			//TODO: test on ARM64
 			return hh;
 		} else {
 			UnhookWindowsHookEx(hh);
@@ -246,8 +245,9 @@ namespace other {
 		Sleep(500 / less);
 	}
 
-	//for rundll32.exe //TODO: the signature is invalid for rundll32. Maybe this func not used by LA with rundll32, but documented in v1.2.md.
-	EXPORT void WINAPI UnloadAuCppDll(DWORD flags = 0) {
+	//for rundll32.exe
+	EXPORT void WINAPI UnloadAuCppDll(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nCmdShow) {
+		DWORD flags = (DWORD)atoi(lpszCmdLine);
 		Cpp_Unload(flags);
 	}
 

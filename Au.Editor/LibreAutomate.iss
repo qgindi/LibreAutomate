@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.7.1"
+#define MyAppVersion "1.8.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -71,7 +71,6 @@ Source: "Debugger\*.dll"; DestDir: "{app}\Debugger"; Flags: ignoreversion recurs
 Source: "Debugger\*.exe"; DestDir: "{app}\Debugger"; Flags: ignoreversion recursesubdirs
 
 Source: "Roslyn\*.dll"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
-Source: "Roslyn\*.exe"; DestDir: "{app}\Roslyn"; Flags: ignoreversion
 
 Source: "Default\*"; DestDir: "{app}\Default"; Flags: ignoreversion
 Source: "Default\Workspace\files\*"; DestDir: "{app}\Default\Workspace\files"; Flags: ignoreversion recursesubdirs
@@ -105,6 +104,7 @@ Type: filesandordirs; Name: "{app}\64"
 Type: filesandordirs; Name: "{app}\32"
 Type: filesandordirs; Name: "{app}\Default"
 Type: filesandordirs; Name: "{app}\Templates"
+Type: files; Name: "{app}\Au.Task.exe"
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

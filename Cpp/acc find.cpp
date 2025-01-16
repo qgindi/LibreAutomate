@@ -1,4 +1,4 @@
-//TODO: in some windows not-in-proc finds much slower than QM. Eg 5 times slower in Resource Monitor -> Memory. UIA much slower.
+//TODO2: in some windows not-in-proc finds much slower than QM. Eg 5 times slower in Resource Monitor -> Memory. UIA much slower.
 //	I guess: maybe looks in hidden child windows, and QM doesn't.
 //	In other windows not-in-proc LA similar speed, sometimes 2 times faster.
 
