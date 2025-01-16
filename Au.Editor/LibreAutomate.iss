@@ -225,8 +225,8 @@ begin
   if (Length(urls) < 2) then
   begin
     SetLength(urls, 2);
-    urls[0] := 'https://download.visualstudio.microsoft.com/download/pr/685792b6-4827-4dca-a971-bce5d7905170/1bf61b02151bc56e763dc711e45f0e1e/windowsdesktop-runtime-9.0.0-win-x64.exe';
-    urls[1] := 'https://download.visualstudio.microsoft.com/download/pr/b3a8a99d-5c1c-475a-ba68-4849de9ea6e9/c17f07553d7723165f98f27128fec048/windowsdesktop-runtime-9.0.0-win-arm64.exe';
+    urls[0] := 'https://download.visualstudio.microsoft.com/download/pr/ae0291d4-bcdc-4e56-a952-4f7d84bf2673/1bc4a93f466aab309776931e5a5c4eb4/windowsdesktop-runtime-9.0.1-win-x64.exe';
+    urls[1] := 'https://download.visualstudio.microsoft.com/download/pr/4f816906-ea17-4076-b207-a66b4e06cb90/3bbcd6b97900356387435220ebf631e8/windowsdesktop-runtime-9.0.1-win-arm64.exe';
   end;
 	
 	if IsArm64 then url := urls[1] else url := urls[0];

@@ -1,9 +1,10 @@
 //From netcoredbg we need only netcoredbg.exe, dbgshim.dll, ManagedPart.dll, Microsoft.CodeAnalysis.dll and Microsoft.CodeAnalysis.CSharp.dll.
 //	The default netcoredbg also contains 2 unused Roslyn scripting dlls.
 //	Also these Roslyn dlls are very old.
-//	Now debugger files are in the Roslyn folder. Need just netcoredbg.exe, dbgshim.dll and ManagedPart.dll. They use the new Roslyn dlls.
+//	Now debugger files are in the Debugger folder. Need just netcoredbg.exe, dbgshim.dll and ManagedPart.dll. They use the new Roslyn dlls.
 //	Using modified netcoredbg and ManagedPart.
-//	Using newer dbgshim.dll: https://www.nuget.org/packages/Microsoft.Diagnostics.DbgShim.win-x64
+//	Using newer dbgshim.dll: https://www.nuget.org/packages/Microsoft.Diagnostics.DbgShim.win-x64 and Microsoft.Diagnostics.DbgShim.win-arm64
+//	More info in netcoredbg solution > readme.md.
 
 partial class PanelDebug {
 	class _Debugger {

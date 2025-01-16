@@ -24,6 +24,7 @@ using Au.Compiler;
 using static Au.Controls.Sci;
 
 //TODO: Test, maybe can run on Windows 10 ARM64.
+//TODO: in default workspace script Examples replace wordpad.
 
 static class Test {
 	

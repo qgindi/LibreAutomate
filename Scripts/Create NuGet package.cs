@@ -48,7 +48,7 @@ za.CreateEntryFromFile(@"C:\code\au\_\32\Au.DllHost.exe", @"runtimes\win-x86\nat
 za.CreateEntryFromFile(@"C:\code\au\_\64\sqlite3.dll", @"runtimes\win-x64\native\sqlite3.dll");
 za.CreateEntryFromFile(@"C:\code\au\_\64\ARM\sqlite3.dll", @"runtimes\win-arm64\native\sqlite3.dll");
 za.CreateEntryFromFile(@"C:\code\au\_\32\sqlite3.dll", @"runtimes\win-x86\native\sqlite3.dll");
-//TODO: test ARM, Arch
+//TODO: test ARM
 
 print.it($"<><explore>{path}<>");
 print.it($"<><link>https://www.nuget.org/packages/manage/upload<>");

@@ -401,7 +401,7 @@ System.Threading.Tasks.TaskCanceledException
 	void _Step(string s) {
 		if (!IsStopped) return;
 		bool step = s[0] != 'c';
-		if (step && _s.stoppedOnException) s = "finish"; //workaround for: if was stopped on user-unhandled exception, 'step' and 'next' behave like 'continue'. Even VS and VSCode have this bug.
+		if (step && _s.stoppedOnException) s = "finish"; //workaround for: if was stopped on user-unhandled exception, 'step' and 'next' behave like 'continue'.
 		_s.stoppedOnException = false;
 		if (_ExecStepL(step && _s.threadId != 0 ? $"-exec-{s} --thread {_s.threadId}" : $"-exec-{s}")) {
 			IsStopped = false;

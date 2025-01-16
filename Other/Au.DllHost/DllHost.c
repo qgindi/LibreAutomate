@@ -1,3 +1,6 @@
+//TODO: test on ARM64, maybe process hangs when calling Cpp_Arch too.
+// Because, when calling Cpp_Unload, hangs for up to 1 minute (x64) and creates 2-3 processes.
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 

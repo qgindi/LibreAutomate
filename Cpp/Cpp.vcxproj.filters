@@ -22,9 +22,6 @@
     <Filter Include="Source Files\inactive">
       <UniqueIdentifier>{99af6249-7074-418b-8e33-94bba38046d9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\inactive">
-      <UniqueIdentifier>{062f0cb8-52f1-4605-83c6-de88a08c42ae}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Acc">
       <UniqueIdentifier>{2173271c-7256-4ff0-8dd2-a9016fd326db}</UniqueIdentifier>
     </Filter>
@@ -50,9 +47,6 @@
     </ClCompile>
     <ClCompile Include="util.cpp">
       <Filter>Source Files\util</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Header Files\inactive</Filter>
     </ClCompile>
     <ClCompile Include="str.cpp">
       <Filter>Source Files\util</Filter>
@@ -86,6 +80,9 @@
     </ClCompile>
     <ClCompile Include="MemoryPool.cpp">
       <Filter>Source Files\util</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
