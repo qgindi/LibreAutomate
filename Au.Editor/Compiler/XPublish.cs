@@ -189,9 +189,9 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		
 		var trees = CompilerUtil.CreateSyntaxTrees(_meta);
 		
-		_AddAuNativeDll("AuCpp.dll", allPlatforms: true);
-		_AddAuNativeDll("Au.DllHost.exe", allPlatforms: true);
-		if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll");
+		_AddAuNativeDll("AuCpp.dll", 0);
+		_AddAuNativeDll("Au.DllHost.exe", -1);
+		if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll", 1);
 		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, _csprojDir, (from, to) => _AddContentFile(from, to));
 		
 		if (_meta.References.DefaultRefCount != MetaReferences.DefaultReferences.Count) return _Err("noRef not supported"); //TODO3: try <DisableImplicitFrameworkReferences>
@@ -229,15 +229,16 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			_Add(x, "Link", to); //note: TargetPath should be the same, but somehow ignores files in subfolders (meta file x /sub) if single-file, unless the folder exists.
 		}
 		
-		void _AddAuNativeDll(string filename, bool allPlatforms = false) {
+		//platforms: 0 all, 1 only this, -1 only other
+		void _AddAuNativeDll(string filename, int platforms) {
 			for (int i = 0; i < 3; i++) {
-				if (allPlatforms || i == platform) {
+				if (platforms == 0 || (platforms > 0 ? i == platform : i != platform)) {
 					var s = i switch { 0 => @"64\", 1 => @"64\ARM\", _ => @"32\" } + filename;
 					//_AddContentFile(folders.ThisAppBS + s, s); //no, NativeLibrary.TryLoad fails if single-file
 					_AddContentFile(folders.ThisAppBS + s, i == platform ? filename : s);
 				}
 			}
-			//allPlatforms is used for AuCpp.dll and Au.DllHost.exe. Need all for elm etc to load into processes of different platform. See func SwitchArchAndInjectDll in in-proc.cpp.
+			//why need AuCpp.dll and Au.DllHost.exe for other platforms: for elm functions to load AuCpp.dll into processes of different platform. See func SwitchArchAndInjectDll in in-proc.cpp.
 		}
 		
 		string _ModuleInit() {

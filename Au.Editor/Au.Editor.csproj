@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
@@ -14,7 +14,6 @@
 		<LangVersion>preview</LangVersion>
 		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-		<IsPublishable>True</IsPublishable>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<NoWarn>1701;1702;8002;419;8981</NoWarn>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
@@ -167,11 +166,11 @@
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="$(SolutionDir)Other\Programs\BuildEvents.exe preBuild $(Configuration)" />
+		<Exec Command="$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)" />
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="$(SolutionDir)Other\Programs\BuildEvents.exe postBuild $(Configuration)" />
+		<Exec Command="$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)" />
 	</Target>
 
 </Project>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -29,5 +29,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\Au\Au.csproj" />
 	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="robocopy.exe $(SolutionDir)_\64 $(OutDir)\64 AuCpp.dll /mir >nul || exit 0" />
+	</Target>
 
 </Project>

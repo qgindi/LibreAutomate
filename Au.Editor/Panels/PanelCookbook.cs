@@ -23,12 +23,8 @@ class PanelCookbook {
 	bool _openingRecipe;
 	List<string> _history = new();
 	
-#if DEBUG
-	static string s_cookbookPath;
-#else
 	static sqlite s_sqlite;
 	static sqliteStatement s_sqliteGetText;
-#endif
 	
 	public PanelCookbook() {
 		P = new _Base(this);
@@ -50,6 +46,7 @@ class PanelCookbook {
 		
 #if DEBUG
 		_tv.ItemClick += e => {
+			if (s_sqlite != null) return;
 			if (e.Button == MouseButton.Right) {
 				var m = new popupMenu();
 				m.Add("DEBUG", disable: true);
@@ -86,15 +83,17 @@ class PanelCookbook {
 	
 	void _Load() {
 		try {
+			static XElement _OpenDb() {
+				s_sqlite = new(folders.ThisAppBS + "cookbook.db", SLFlags.SQLITE_OPEN_READONLY);
+				s_sqliteGetText = s_sqlite.Statement("SELECT data FROM files WHERE name=?");
+				var xml = _GetFileTextFromDb("files.xml");
+				return XElement.Parse(xml);
+			}
 #if DEBUG
-			//TODO: exception when runs not from the home _
-			s_cookbookPath = folders.ThisAppBS + @"..\Cookbook\files";
-			var xr = XmlUtil.LoadElem(s_cookbookPath + ".xml");
+			var path = folders.ThisAppBS + @"..\Cookbook\files";
+			var xr = filesystem.exists(path) ? XmlUtil.LoadElem(path + ".xml") : _OpenDb();
 #else
-			s_sqlite = new(folders.ThisAppBS + "cookbook.db", SLFlags.SQLITE_OPEN_READONLY);
-			s_sqliteGetText = s_sqlite.Statement("SELECT data FROM files WHERE name=?");
-			var xml = _GetText("files.xml"); if (xml == null) return;
-			var xr = XElement.Parse(xml);
+			var xr = _OpenDb();
 #endif
 			
 			_root = new _Item(null, FNType.Folder);
@@ -124,10 +123,10 @@ class PanelCookbook {
 		if (load) {
 			_Load();
 		} else {
-#if !DEBUG
-			s_sqliteGetText.Dispose(); s_sqliteGetText = null;
-			s_sqlite.Dispose(); s_sqlite = null;
-#endif
+			if (s_sqlite != null) {
+				s_sqliteGetText.Dispose(); s_sqliteGetText = null;
+				s_sqlite.Dispose(); s_sqlite = null;
+			}
 			_root = null;
 			_loaded = false;
 			_tv.SetItems(null);
@@ -135,16 +134,10 @@ class PanelCookbook {
 		return true;
 	}
 	
-#if !DEBUG
-	//In Release loads files from database "cookbook.db" created by script "Create cookbook.db".
-	//In Debug loads files directly. It allows to edit them and see results without creating database.
-	//Previously always loaded from files. But it triggered 7 false positives in virustotal.com. The "bad" recipe was PowerShell.
-	//The same recipes don't trigger FP when in database. Additionally the script mangles text to avoid FP in the future.
-
 	static string _Unmangle(string s) => s_unmangle.Replace(s, "$1");
 	static readonly regexp s_unmangle = new(@"A([A-Z][a-z]+)");
-
-	static string _GetText(string name) {
+	
+	static string _GetFileTextFromDb(string name) {
 		if (!s_sqliteGetText.Reset().Bind(1, name).Step()) {
 			print.warning($"{name} not found in cookbook.db. Reinstall this program.");
 			return null;
@@ -152,7 +145,11 @@ class PanelCookbook {
 		var s = s_sqliteGetText.GetText(0);
 		return _Unmangle(s);
 	}
-#endif
+	//In Release loads files from database "cookbook.db" created by script "Create cookbook.db".
+	//In Debug loads files directly. It allows to edit them and see results without creating database.
+	//Previously always loaded from files. But it triggered 7 false positives in virustotal.com. The "bad" recipe was PowerShell.
+	//The same recipes don't trigger FP when in database. Additionally the script mangles text to avoid FP in the future.
+	//In Debug loads from database if the Cookbook folder does not exist, ie running not in the home _ dir. Then s_cookbookPath is null.
 	
 	void _OpenRecipe(_Item recipe, bool select) {
 		if (recipe == null || recipe.dir) return;
@@ -378,32 +375,18 @@ class PanelCookbook {
 		
 		#endregion
 		
+		public string GetBodyText() {
 #if DEBUG
-		public string FullPath {
-			get {
-				if (_path == null && name != null) {
-					var stack = s_stack1;
-					stack.Clear();
-					stack.Push(name + ".cs");
-					for (var p = Parent; p != null && p.HasParent; p = p.Parent) stack.Push(p.name);
-					stack.Push(s_cookbookPath);
-					_path = string.Join("\\", stack);
-					//print.it(_path, filesystem.exists(_path).File);
+			if (s_sqlite == null) {
+				try {
+					var path = folders.ThisAppBS + @"..\Cookbook\files\" + string.Join("\\", AncestorsFromRoot(andSelf: true, noRoot: true).Select(o => o.name)) + ".cs";
+					return filesystem.loadText(path);
 				}
-				return _path;
+				catch { return null; }
 			}
-		}
-		string _path;
-		static Stack<string> s_stack1 = new();
-		
-		public string GetBodyText() {
-			try { return filesystem.loadText(FullPath); } catch { return null; }
-		}
-#else
-		public string GetBodyText() {
-			return _GetText(name);
-		}
 #endif
+			return _GetFileTextFromDb(name);
+		}
 		
 		public string GetBodyTextWithoutLinksEtc() {
 			var t = GetBodyText(); if (t == null) return null;

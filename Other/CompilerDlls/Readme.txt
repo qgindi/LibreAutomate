@@ -21,10 +21,8 @@ Once: In editor project add references to the main 6 dlls in _\Roslyn, with 'Cop
 Rejected: to make editor startup faster, publish Microsoft.CodeAnalysis.CSharp.Features with <PublishReadyToRun>.
   Tested, works, but: adds ~14 MB to the setup file; makes just ~350 ms faster, barely noticeable.
 
-TODO: bug in latest Roslyn (2024-11-22): error if `for` has >1 uninited vars, like `for (int i = 0, j, k; i < 9; i++) {}`.
-  No error in VS (it uses slightly older Roslyn).
-  Try to update Roslyn after some time, maybe fixed.
-  Or try to replace it with the latest stable version.
+FUTURE: bug in latest Roslyn (2024-11-22): error if `for` has >1 uninited vars, like `for (int i = 0, j, k; i < 9; i++) {}`.
+  Now in VS too. In VS was no error when I first found this; it used an older Roslyn.
 
 _________________________________________________________________
 
@@ -74,7 +72,7 @@ _________________________________________________________________
     </ProjectReference>
   </ItemGroup>
 
-// -- Add prebuild and postbuild. The exe is built from script "BuildEvents.cs".
+// -- Add prebuild and postbuild:
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="C:\code\au\Other\CompilerDlls\bin\Release\CompilerDlls.exe preBuild" />
   </Target>

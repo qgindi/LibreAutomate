@@ -1,7 +1,6 @@
-/// Build event script for Au.Editor and Cpp projects.
+// Build event script for Au.Editor and Cpp projects.
 
-/*/ role exeProgram; testInternal Au; outputPath C:\code\au\Other\Programs; console true; /*/
-/*/ role exeProgram; testInternal Au; outputPath %folders.ThisApp%\..\Other\Programs; console true; /*/
+using Microsoft.Win32;
 
 script.setup(exception: UExcept.Dialog | UExcept.Print);
 
@@ -9,10 +8,12 @@ script.setup(exception: UExcept.Dialog | UExcept.Print);
 //print.qm2.use = true;
 //print.it(args);
 
+string solutionDirBS = pathname.normalize(Environment.CurrentDirectory + @"\..") + "\\";
+
 return args[0] switch {
-	"cppPostBuild" => CppPostBuild(), //$(SolutionDir)Other\Programs\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
-	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\Programs\BuildEvents.exe preBuild $(Configuration)
-	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\Programs\BuildEvents.exe postBuild $(Configuration)
+	"cppPostBuild" => CppPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
+	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
+	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	_ => 1
 };
 
@@ -43,15 +44,14 @@ void _ExitEditor() {
 }
 
 bool _CopyAuCppDllIfNeed(string platform, bool editor) {
-	var cd = Environment.CurrentDirectory;
-	string src = pathname.normalize($@"{cd}\..\Cpp\bin\{args[1]}\{platform}\AuCpp.dll");
-	string dest = pathname.normalize($@"{cd}\..\_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll");
+	string src = solutionDirBS + $@"Cpp\bin\{args[1]}\{platform}\AuCpp.dll";
+	string dest = solutionDirBS + $@"_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll";
 	if (!filesystem.getProperties(src, out var p1)) { if (!editor) print.it("Failed `filesystem.getProperties(src)`"); return false; }
 	filesystem.getProperties(dest, out var p2);
 	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {
 		print.it($"Updating {dest}");
-		if (p2.Size != 0 && !Api.DeleteFile(dest)) {
-			Cpp.Cpp_Unload(1);
+		if (p2.Size != 0 && !_Api.DeleteFile(dest)) {
+			_Api.Cpp_Unload(1);
 			wait.until(-3, () => filesystem.delete(dest, FDFlags.CanFail) != false);
 		}
 		filesystem.copy(src, dest);
@@ -68,23 +68,36 @@ int EditorPostBuild() {
 	if (script.testing) {
 		exe1 = "Au.Editor2.exe"; exe2 = "Au.Task2.exe";
 		print.ignoreConsole = true;
+		//todo: Environment.CurrentDirector = 
 	}
-	var dirOut = pathname.normalize(@"..\..\_", folders.ThisApp) + "\\";
-	
+	var dirOut = solutionDirBS + @"\_\";
+
+#if !true //copy output files from `$(ProjectDir)$(OutDir)` to dirOut. Bad: can't start LA from VS (no program path setting in UI; VS ignores executablePath in launchsettings.json).
+	var dirBin = args[2][..^1];
+	int rce = run.console(out string rco, "robocopy.exe", $"{dirBin} {dirOut} /s /xd runtimes /xf *.json *.exe");
+	if (rce >= 8) { print.it(rco); return 10; }
+	foreach (var rtd in new string[] { @"\runtimes\win-x64", @"\runtimes\win-arm64" }) {
+		var sd1 = dirBin + rtd;
+		if (filesystem.exists(sd1)) run.console("robocopy.exe", $"{sd1} {dirOut + rtd} /s /xf *.json *.exe");
+	}
+#else //use `<OutDir>`. Bad: VS adds unwanted files to dirOut. Eg from NuGet packages may add native dlls for many unused OS/platforms.
+	filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));
+#endif
+
 	using var rk = Registry.CurrentUser.CreateSubKey(@"Software\Au\BuildEvents");
 	var verResFile1 = folders.ThisApp + $"{exe1}.res";
 	var verResFile2 = folders.ThisApp + $"{exe2}.res";
-	
+
 	var v = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor.dll");
 	bool verChanged = !(rk.GetValue("version") is string s1 && s1 == v.FileVersion);
 	//verChanged = true;
 	if (verChanged || !filesystem.exists(verResFile1)) if (!_VersionInfo(verResFile1, exe1, "LibreAutomate C#")) return 1;
 	if (verChanged || !filesystem.exists(verResFile2)) if (!_VersionInfo(verResFile2, exe2, "LibreAutomate miniProgram")) return 2;
-	
+
 	//TODO3: test https://github.com/resourcelib/resourcelib
-	
+
 	for (int i = 0; i < 2; i++) {
-		string appHost = $@"64\{(i == 1 ? "ARM" : "")}\Au.AppHost.exe" ;
+		string appHost = $@"64\{(i == 1 ? "ARM" : "")}\Au.AppHost.exe";
 		string exe1Arch = exe1.Insert(^4, i == 0 ? "" : "-arm"), exe2Arch = exe2.Insert(^4, i == 0 ? "-x64" : "-arm");
 		var s = $"""
 [FILENAMES]
@@ -99,7 +112,7 @@ SaveAs={exe1Arch}
 
 """;
 		if (!_RunRhScript(s, exe1Arch)) return 3;
-		
+
 		filesystem.getProperties(dirOut + @"64\Au.AppHost.exe", out var p1);
 		if (verChanged || !filesystem.getProperties(dirOut + exe2Arch, out var p2) || p1.LastWriteTimeUtc > p2.LastWriteTimeUtc) {
 			print.it($"Creating {exe2Arch}");
@@ -116,19 +129,17 @@ SaveAs={exe2Arch}
 """;
 			if (!_RunRhScript(s, exe2Arch)) return 4;
 		}
-		
+
 		_WriteEditorAssemblyName(dirOut + exe1Arch);
 	}
-	
+
 	if (verChanged) {
 		rk.SetValue("version", v.FileVersion);
 	}
-	
-	filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));
-	
+
 	//perf.nw();
 	return 0;
-	
+
 	bool _RunRhScript(string s, string fileName) {
 		var exePath = dirOut + fileName;
 		filesystem.delete(exePath);
@@ -140,14 +151,15 @@ SaveAs={exe2Arch}
 		File.SetLastWriteTimeUtc(exePath, dt);
 		return true;
 	}
-	
+
 	bool _RunCL(string cl) {
-		int r = run.console(folders.ThisApp + "ResourceHacker.exe", cl, dirOut);
+		var rh = solutionDirBS + @"Other\Programs\ResourceHacker";
+		int r = run.console(rh + ".exe", cl, dirOut);
 		if (r == 0) return true;
-		print.it(File.ReadAllText(folders.ThisApp + "ResourceHacker.log", Encoding.Unicode)); //RH is not a console program and we cannot capture its console output.
+		print.it(File.ReadAllText(rh + ".log", Encoding.Unicode)); //RH is not a console program and we cannot capture its console output.
 		return false;
 	}
-	
+
 	static void _WriteEditorAssemblyName(string path) {
 		var b = File.ReadAllBytes(path);
 		int i = b.AsSpan().IndexOf("hi7yl8kJNk+gqwTDFi7ekQ"u8);
@@ -157,7 +169,7 @@ SaveAs={exe2Arch}
 		b[i] = 0;
 		filesystem.saveBytes(path, b);
 	}
-	
+
 	bool _VersionInfo(string resFile, string fileName, string fileDesc) {
 		print.it($"Creating version resource for {fileName}");
 		var rc = $$"""
@@ -194,4 +206,13 @@ BLOCK "VarFileInfo"
 		filesystem.saveText(rcFile, rc, encoding: Encoding.UTF8);
 		return _RunCL($"""-open "{rcFile}" -save "{resFile}" -action compile""");
 	}
+}
+
+unsafe class _Api : NativeApi {
+	[DllImport("kernel32.dll", EntryPoint = "DeleteFileW", SetLastError = true)]
+	internal static extern bool DeleteFile(string lpFileName);
+
+	/// <param name="flags">1 - wait less.</param>
+	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+	internal static extern void Cpp_Unload(uint flags);
 }

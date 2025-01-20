@@ -257,7 +257,7 @@ bool GetPaths(PATHS& p) {
 	//get asmDll
 	if (s_asmName[0] == 0) p.isEditorOrTaskExe = 2; //Au.Task.exe. Don't need p.asmDll.
 	else {
-		if (s_asmName[0] == 1) p.isEditorOrTaskExe = 1; //Au.Editor.exe (see script "BuildEvents.cs"); else exe created from script (see Compiler.cs > _AppHost).
+		if (s_asmName[0] == 1) p.isEditorOrTaskExe = 1; //Au.Editor.exe (see project BuildEvents); else exe created from a script (see Compiler.cs > _AppHost).
 		_ToUtf8(w, lenAppDir + 1, p.asmDll);
 		p.asmDll += s_asmName + p.isEditorOrTaskExe;
 	}
@@ -348,8 +348,7 @@ gPrivate:
 //	The script also adds Au, and in the future maybe other omnipresent assemblies.
 //		For Au.Editor also adds Au.Controls, and in the future maybe more.
 //		Need to edit/run it when these dependencies change.
-//For Au.Editor.exe and Au.Task.exe the resource is added by script "BuildEvents" (it uses ResourceHacker).
-//	The script is compiled to BuildEvents.exe which is executed as a postbuild task of Au.Editor project.
+//For Au.Editor.exe and Au.Task.exe the resource is added by BuildEvents.exe (executed as a postbuild task of Au.Editor project).
 //For exeProgram the resource is added by Compiler._Resources.AddTpa.
 void BuildTpaList(const PATHS& p, std::string& tpaList) {
 	std::string dir;

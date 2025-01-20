@@ -14,7 +14,7 @@ static unsafe partial class Cpp {
 
 	/// <summary>
 	/// Loads correct 64/32/ARM64 version of a private native dll. Then <c>[DllImport]</c> will use it.
-	/// Used for Au dlls (AuCpp, sqlite3) and LA dlls (Scintilla).
+	/// Used for Au dlls (AuCpp) and LA dlls (Scintilla).
 	/// </summary>
 	/// <param name="fileName">Dll file name like <c>"name.dll"</c>.</param>
 	/// <returns>Handle.</returns>

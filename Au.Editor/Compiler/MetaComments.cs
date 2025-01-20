@@ -943,6 +943,7 @@ class MetaComments {
 		case MCRole.miniProgram:
 			if (Specified.HasAny(MCSpecified.outputPath | MCSpecified.manifest | MCSpecified.platform | MCSpecified.xmlDoc))
 				return _ErrorM("with role miniProgram cannot use: outputPath, manifest, platform, xmlDoc");
+			//rejected: allow platform x64 on ARM64 OS. It's easy to implement (we have the ARM task exe), but rarely used etc. Let use role exeProgram.
 			break;
 		case MCRole.exeProgram:
 			//if (Specified.Has(MCSpecified.startFaster)) return _ErrorM("with role exeProgram cannot use: startFaster");

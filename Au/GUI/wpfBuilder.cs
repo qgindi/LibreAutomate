@@ -386,7 +386,9 @@ public class wpfBuilder {
 		
 		if (script.role == SRole.MiniProgram && _window != null) Loaded += () => { }; //set custom icon if need
 	}
+#pragma warning disable CS0414 //when compiling for nuget .NET 8
 	bool _unGray;
+#pragma warning restore CS0414
 	
 	/// <summary>
 	/// Shows the window and waits until closed.

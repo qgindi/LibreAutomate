@@ -59,7 +59,8 @@ Upload the setup file. For example with FileZilla.
 
 Run script "Au docs". Click the upload link.
 
-Review the md file of current version. If it's still "future.md", rename to "v1.x.md".
+Review the md file of current version.
+	If it's still "future.md", rename ( RENAME!!! ) to "v1.x.md".
 
 Github commit all and push. The message could be like v1.2.3.
 	Note: don't delay to do it. It uploads the "changes" doc.
