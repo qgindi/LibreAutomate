@@ -191,7 +191,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		
 		_AddAuNativeDll("AuCpp.dll", 0);
 		_AddAuNativeDll("Au.DllHost.exe", -1);
-		if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll", 1);
+		//if (_NeedSqlite()) _AddAuNativeDll("sqlite3.dll", 1);
 		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, _csprojDir, (from, to) => _AddContentFile(from, to));
 		
 		if (_meta.References.DefaultRefCount != MetaReferences.DefaultReferences.Count) return _Err("noRef not supported"); //TODO3: try <DisableImplicitFrameworkReferences>
@@ -312,20 +312,20 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			}
 		}
 		
-		bool _NeedSqlite() {
-			var cOpt = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true, warningLevel: 0);
-			var compilation = CSharpCompilation.Create(_meta.Name, trees, _meta.References.Refs, cOpt);
-			var asmStream = new MemoryStream(16000);
-			var emitResult = compilation.Emit(asmStream);
-			asmStream.Position = 0;
-			if (emitResult.Success && CompilerUtil.UsesSqlite(asmStream)) return true;
+		//bool _NeedSqlite() {
+		//	var cOpt = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true, warningLevel: 0);
+		//	var compilation = CSharpCompilation.Create(_meta.Name, trees, _meta.References.Refs, cOpt);
+		//	var asmStream = new MemoryStream(16000);
+		//	var emitResult = compilation.Emit(asmStream);
+		//	asmStream.Position = 0;
+		//	if (emitResult.Success && CompilerUtil.UsesSqlite(asmStream)) return true;
 			
-			foreach (var v in _meta.References.Refs.Skip(_meta.References.DefaultRefCount)) {
-				if (v.Properties.EmbedInteropTypes) continue; //com; and no nuget refs when publishing
-				if (CompilerUtil.UsesSqlite(v.FilePath, recursive: true)) return true;
-			}
+		//	foreach (var v in _meta.References.Refs.Skip(_meta.References.DefaultRefCount)) {
+		//		if (v.Properties.EmbedInteropTypes) continue; //com; and no nuget refs when publishing
+		//		if (CompilerUtil.UsesSqlite(v.FilePath, recursive: true)) return true;
+		//	}
 			
-			return false;
-		}
+		//	return false;
+		//}
 	}
 }

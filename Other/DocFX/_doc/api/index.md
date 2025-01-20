@@ -11,7 +11,7 @@
 - `Au.dll` - contains code of the above namespaces.
 
 #### Native code files
-- `AuCpp.dll`, `sqlite3.dll`, `Au.DllHost.exe` - used by `Au.dll`.
+- `AuCpp.dll`, `Au.DllHost.exe` - used by `Au.dll`.
 
 These files are in LibreAutomate subfolders `64` and `32`. The .exe compiler copies them to the .exe folder. When using the library via NuGet, they are in subfolder `runtimes`.
 
@@ -20,11 +20,12 @@ Other dll files in the LibreAutomate folder are not part of the library. They ar
 ### Using the library without LibreAutomate
 To get the dlls use NuGet package [LibreAutomate](https://www.nuget.org/packages/LibreAutomate). Or copy from the LibreAutomate folder. Or build from source code.
 
-The program should use a manifest like [this](https://github.com/qgindi/LibreAutomate/blob/master/_/default.exe.manifest). It enables common controls 6, all OS versions, full DPI awareness, `disableWindowFiltering`.
+Your project settings:
+- Target OS = Windows.
+- Supported OS version >= 7.0.
+- Use a manifest like [this](https://github.com/qgindi/LibreAutomate/blob/master/_/default.exe.manifest). It enables common controls 6, all OS versions, full DPI awareness, `disableWindowFiltering`.
 
-In project **Properties** enable WPF and Windows Forms.
-
-If not using NuGet, add the native code dlls to the project. Add them as links, and in dll **Properties** set **Content** and **Copy if newer**. The sqlite dlls are optional if your app does not use the **sqlite** class.
+If not using NuGet, add the native code files to the project. Add them as links, and in dll **Properties** set **Content** and **Copy if newer**.
 
 If some library functions throw **DllNotFoundException** (missing `AuCpp.dll` etc), add environment variable `Au.Path` with value = `Au.dll` folder path. May need this when the host program copies `Au.dll` somewhere without the native dll folders, for example in some scripting environments and GUI designers.
 

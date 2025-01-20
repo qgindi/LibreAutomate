@@ -14,6 +14,8 @@ return args[0] switch {
 	"cppPostBuild" => CppPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
 	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
 	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
+	"roslynPreBuild" => RoslynPreBuild(),
+	"roslynPostBuild" => RoslynPostBuild(),
 	_ => 1
 };
 
@@ -206,6 +208,28 @@ BLOCK "VarFileInfo"
 		filesystem.saveText(rcFile, rc, encoding: Encoding.UTF8);
 		return _RunCL($"""-open "{rcFile}" -save "{resFile}" -action compile""");
 	}
+}
+
+//Exits editor.
+int RoslynPreBuild() {
+	_ExitEditor();
+	return 0;
+}
+
+//Copies dlls etc.
+int RoslynPostBuild() {
+	var from = args[1].Trim();
+	var to = @"C:\code\au\_\Roslyn";
+	
+	foreach (var f in filesystem.enumerate(to)) {
+		if (f.Name[0] != '.') filesystem.delete(f.FullPath, FDFlags.CanFail);
+	}
+	foreach (var f in filesystem.enumFiles(from)) {
+		if (0 == f.Name.Ends(true, ".dll", ".xml")) continue;
+		if (0 != f.Name.Starts(true, "System.Configuration.", "System.Security.")) continue;
+		filesystem.copyTo(f.FullPath, to);
+	}
+	return 0;
 }
 
 unsafe class _Api : NativeApi {

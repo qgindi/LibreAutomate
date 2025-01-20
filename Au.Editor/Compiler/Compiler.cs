@@ -765,14 +765,14 @@ partial class Compiler {
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\AuCpp.dll", _meta.OutputPath + @"\64\ARM\AuCpp.dll");
 		CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\Au.DllHost.exe", _meta.OutputPath + @"\64\ARM\Au.DllHost.exe");
 		
-		bool usesSqlite = CompilerUtil.UsesSqlite(asmStream);
+		//bool usesSqlite = CompilerUtil.UsesSqlite(asmStream);
 		
 		//copy managed dlls, including from nuget
 		if (_dr != null) {
 			foreach (var v in _dr) {
 				CompilerUtil.CopyFileIfNeed(v.Value, _meta.OutputPath + "\\" + v.Key);
 				
-				if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) usesSqlite = CompilerUtil.UsesSqlite(v.Value);
+				//if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) usesSqlite = CompilerUtil.UsesSqlite(v.Value);
 			}
 		}
 		
@@ -783,12 +783,12 @@ partial class Compiler {
 			}
 		}
 		
-		//print.it(usesSqlite);
-		if (usesSqlite) {
-			if (need64) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", _meta.OutputPath + @"\64\sqlite3.dll");
-			if (needArm) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\sqlite3.dll", _meta.OutputPath + @"\64\ARM\sqlite3.dll");
-			if (need32) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", _meta.OutputPath + @"\32\sqlite3.dll");
-		}
+		////print.it(usesSqlite);
+		//if (usesSqlite) {
+		//	if (need64) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\sqlite3.dll", _meta.OutputPath + @"\64\sqlite3.dll");
+		//	if (needArm) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"64\ARM\sqlite3.dll", _meta.OutputPath + @"\64\ARM\sqlite3.dll");
+		//	if (need32) CompilerUtil.CopyFileIfNeed(folders.ThisAppBS + @"32\sqlite3.dll", _meta.OutputPath + @"\32\sqlite3.dll");
+		//}
 		
 		//copy meta 'file' files
 		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, _meta.OutputPath);

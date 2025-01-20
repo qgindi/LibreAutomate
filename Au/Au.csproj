@@ -76,8 +76,4 @@
 		<Compile Remove="Au.cs" />
 	</ItemGroup>
 
-	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Au.Editor.TrayNotify" />
-	</Target>
-
 </Project>

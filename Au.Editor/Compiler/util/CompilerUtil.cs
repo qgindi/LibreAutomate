@@ -252,7 +252,8 @@ static partial class CompilerUtil {
 				foreach (var v in pr) _OtherFilesOfProject(v.m);
 		}
 	}
-	
+
+#if false //in the past this was used for sqlite. Maybe in the future this code can be useful for something.
 	public static bool UsesSqlite(Stream asmStream, bool recursive = false) {
 		using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
 		var mr = pr.GetMetadataReader();
@@ -295,6 +296,7 @@ static partial class CompilerUtil {
 		using var fs = filesystem.loadStream(dll);
 		return UsesSqlite(fs, recursive);
 	}
+#endif
 	
 	public static bool RunPrePostBuildScript(MetaComments m, bool post, string outFile, bool publish) {
 		var x = post ? m.PostBuild : m.PreBuild;

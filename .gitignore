@@ -213,7 +213,6 @@ ModelManifest.xml
 # Au
 /Other/Api/
 /Other/Programs/*
-!/Other/Programs/nircmd.exe
 !/Other/Programs/ResourceHacker.exe
 
 /Libraries/PCRE/excluded/

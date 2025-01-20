@@ -1,8 +1,10 @@
-//Most of these declarations are from System.Data.SQLite library. Modified.
+using System.IO.Compression;
 
 namespace Au.Types;
 
 #region enum
+
+//Most of these declarations are from System.Data.SQLite library. Modified.
 
 /// <summary>
 /// Flags for <see cref="sqlite"/> constructor.
@@ -564,10 +566,49 @@ internal enum TypeAffinity
 #region functions
 
 internal static unsafe class SLApi {
-	const string SQLITE_DLL = "sqlite3.dll";
+	const string SQLITE_DLL = "winsqlite3.dll";
 	
 	static SLApi() {
-		Cpp.LoadAuNativeDll(SQLITE_DLL);
+		//Windows 10 and 11 have winsqlite3.dll. On other OS download from www.sqlite.org.
+		if (!NativeLibrary.TryLoad(SQLITE_DLL, out _)) _LoadDownloaded();
+		
+		static void _LoadDownloaded() {
+			string path = folders.ThisAppDataLocal; if (path.Ends(@"\_script", true)) path = path[..^8];
+			path += $@"\download\{SQLITE_DLL}";
+			//print.it(path, filesystem.exists(path));
+			if (!filesystem.exists(path)) {
+				gRetry:
+				try {
+					_Download(path);
+				}
+				catch (Exception ex) {
+					int r = dialog.showError("Failed to download missing files", $"Your OS does not have this file: {SQLITE_DLL}.\r\nThis program tried to download it from www.sqlite.org, but failed.", "1 Retry|0 Cancel", expandedText: ex.ToString());
+					if (r == 1) goto gRetry;
+					Environment.Exit(0);
+				}
+			}
+			NativeLibrary.Load(path);
+			
+			static void _Download(string path) {
+				//Get the download URL of the last sqlite version for this OS. This way is documented in https://www.sqlite.org/download.html.
+				var html = internet.http.Get("https://www.sqlite.org/download.html").Text();
+				//print.it(html);
+				if (!html.RxMatch(@"(?s)<!-- Download product data for scripts to read\s+(.+)\s+-->", 1, out string csv)) throw new AuException();
+				//print.it(csv);
+				var x = csvTable.parse(csv);
+				string s = $"sqlite-dll-win-{RuntimeInformation.ProcessArchitecture.ToString().Lower()}";
+				string url = x.Rows.First(o => o[2].Contains(s, StringComparison.OrdinalIgnoreCase))[2];
+				url = "https://www.sqlite.org/" + url;
+				//print.it(url);
+				
+				//Download and extract.
+				var bytes = internet.http.Get(url).Bytes();
+				using var za = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
+				var e = za.GetEntry("sqlite3.dll");
+				filesystem.createDirectoryFor(path);
+				e.ExtractToFile(path, true);
+			}
+		}
 	}
 	
 	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]

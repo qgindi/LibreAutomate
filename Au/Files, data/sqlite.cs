@@ -5,7 +5,6 @@ namespace Au {
 	/// </summary>
 	/// <remarks>
 	/// This class wraps a SQLite API object <b>sqlite3*</b> and related <b>sqlite3_x</b> functions. They are documented in the SQLite website.
-	/// Uses this unmanaged dll: <c>folders.ThisApp + @"64\sqlite3.dll"</c>. In 32-bit process - <c>32</c> instead of <c>64</c>.
 	/// 
 	/// To correctly close the database file, at first need to dispose all child objects, such as <see cref="sqliteStatement"/>, then dispose the <b>sqlite</b> object. To dispose a static <b>sqlite</b> variable, you may want to use <see cref="process.thisProcessExit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
 	/// </remarks>
@@ -75,7 +74,7 @@ namespace Au {
 		/// <note>If a variable of this class is used by multiple threads, use <c>lock(variable) {  }</c> where need.</note>
 		/// </remarks>
 		public sqlite(string file, SLFlags flags = SLFlags.ReadWriteCreate, string sql = null) {
-			Debug.Assert(Assembly.GetCallingAssembly() != typeof(sqlite).Assembly); //don't use sqlite in Au. Then all programs that use Au also would need sqlite3.dll.
+			Debug.Assert(Assembly.GetCallingAssembly() != typeof(sqlite).Assembly); //don't use sqlite in Au
 			
 			bool isSpec = file != null && (file.Length == 0 || file == ":memory:" || file.Starts("file:"));
 			if (!isSpec) {

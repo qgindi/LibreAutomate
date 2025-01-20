@@ -58,10 +58,6 @@ Source: "64\Au.DllHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\ARM\Au.DllHost.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 Source: "32\Au.DllHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 
-Source: "64\sqlite3.dll"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "64\ARM\sqlite3.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
-Source: "32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
-
 Source: "64\Scintilla.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\ARM\Scintilla.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
 
