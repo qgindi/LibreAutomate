@@ -90,10 +90,12 @@ class PanelCookbook {
 				return XElement.Parse(xml);
 			}
 #if DEBUG
-			var path = folders.ThisAppBS + @"..\Cookbook\files";
-			var xr = filesystem.exists(path) ? XmlUtil.LoadElem(path + ".xml") : _OpenDb();
+			var dirPath = folders.ThisAppBS + @"..\Cookbook\files";
+			var xr = filesystem.exists(dirPath) ? XmlUtil.LoadElem(dirPath + ".xml") : _OpenDb();
 #else
-			var xr = _OpenDb();
+			var dbPath = folders.ThisAppBS + "cookbook.db";
+			var xr = filesystem.exists(dbPath) ? _OpenDb() : XmlUtil.LoadElem(folders.ThisAppBS + @"..\Cookbook\files.xml");
+			//cookbook.db does not exist if LA compiled not at home (source from from github). See project BuildEvents > GitBinaryFiles.PrePushHook.
 #endif
 			
 			_root = new _Item(null, FNType.Folder);
