@@ -212,21 +212,16 @@ ModelManifest.xml
 
 # Au
 /Other/Api/
-/Other/Programs/*
-!/Other/Programs/ResourceHacker.exe
 
 /Libraries/PCRE/excluded/
 
 /_/*
 !/_/Default/
 !/_/Templates/
-!/_/Debugger/
-!/_/Roslyn/
-/_/Roslyn/*.xml
-!/_/*.db
 !/_/*.yml
 !/_/*.manifest
-!/_/*.txt
+!/_/dotnet_ref_*.txt
+!/_/gitBinaryRestore.csv
 
 !/_/32/
 /_/32/*
@@ -250,3 +245,4 @@ ModelManifest.xml
 
 *.bak
 /Au/global.json
+.tools/

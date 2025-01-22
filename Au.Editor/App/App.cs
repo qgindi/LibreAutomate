@@ -272,7 +272,7 @@ static partial class App {
 	
 #if DEBUG
 	static void _RemindToBuildAllPlatforms() {
-		if (IsAuAtHome)
+		if (IsAtHome)
 			if (filesystem.getProperties(folders.ThisAppBS + @"..\Cpp", out var p64)) {
 				if (!filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32) || p64.LastWriteTimeUtc > p32.LastWriteTimeUtc) print.it("Note: may need to build Cpp project x86.");
 				if (!filesystem.getProperties(folders.ThisAppBS + @"64\ARM\AuCpp.dll", out var pARM) || p64.LastWriteTimeUtc > pARM.LastWriteTimeUtc) print.it("Note: may need to build Cpp project ARM64.");
@@ -317,7 +317,7 @@ static partial class App {
 				print.it(s);
 				Panels.Output.Scintilla.AaTags.AddLinkTag("+restartAdmin", k => Restart(k, admin: true));
 			} else if (CommandLine.Raa) { //restarted because clicked link "Restart as administrator: now and always"
-				var name = IsAuAtHome ? "_Au.Editor" : "Au.Editor";
+				var name = IsAtHome ? "_Au.Editor" : "Au.Editor";
 				bool ok = 0 == WinScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppNameShort);
 				if (!ok) print.warning(@"Failed to create Windows Task Scheduler task \Au\Au.Editor.", -1);
 				
@@ -334,7 +334,7 @@ static partial class App {
 	
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
-		bool home = IsAuAtHome;
+		bool home = IsAtHome;
 		string sesId = process.thisProcessSessionId.ToS();
 		args = args.Length == 0 ? [sesId] : args.InsertAt(0, sesId);
 		(int pid, _raaResult) = WinScheduler.RunTask("Au",
@@ -431,7 +431,7 @@ static partial class App {
 		}
 	}
 	
-	public static bool IsAuAtHome { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
+	public static bool IsAtHome { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
 	
 	public static bool IsPortable { get; private set; }
 	

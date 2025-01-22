@@ -8,7 +8,13 @@ script.setup(exception: UExcept.Dialog | UExcept.Print);
 //print.qm2.use = true;
 //print.it(args);
 
-string solutionDirBS = pathname.normalize(Environment.CurrentDirectory + @"\..") + "\\";
+if (args.Length == 0) { //dev
+	Environment.CurrentDirectory = @"C:\code\au";
+	//return GitBinaryFiles.PrePushHook();
+	return GitBinaryFiles.Restore(Environment.CurrentDirectory + "\\", true);
+}
+
+string solutionDirBS = pathname.normalize(Environment.CurrentDirectory + @"\..") + "\\"; //when called by VS, not when by git
 
 return args[0] switch {
 	"cppPostBuild" => CppPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
@@ -16,6 +22,7 @@ return args[0] switch {
 	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	"roslynPreBuild" => RoslynPreBuild(),
 	"roslynPostBuild" => RoslynPostBuild(),
+	"gitPrePushHook" => GitBinaryFiles.PrePushHook(),
 	_ => 1
 };
 
@@ -32,7 +39,7 @@ int EditorPreBuild() {
 	_CopyAuCppDllIfNeed("Win32", true);
 	_CopyAuCppDllIfNeed("x64", true);
 	_CopyAuCppDllIfNeed("ARM64", true);
-	return 0;
+	return GitBinaryFiles.Restore(solutionDirBS);
 }
 
 void _ExitEditor() {
@@ -155,7 +162,7 @@ SaveAs={exe2Arch}
 	}
 
 	bool _RunCL(string cl) {
-		var rh = solutionDirBS + @"Other\Programs\ResourceHacker";
+		var rh = solutionDirBS + @"Other\BuildEvents\.tools\ResourceHacker";
 		int r = run.console(rh + ".exe", cl, dirOut);
 		if (r == 0) return true;
 		print.it(File.ReadAllText(rh + ".log", Encoding.Unicode)); //RH is not a console program and we cannot capture its console output.
