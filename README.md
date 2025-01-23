@@ -26,10 +26,11 @@ Editor window
 ![window](https://www.libreautomate.com/images/window.png#1 "Editor window")
 
 ## How to build
-Need Visual Studio 2022 with C#, C++, .NET 9 SDK and Windows 11 SDK. Need 64-bit Windows 10 or 11.
+You need Visual Studio Community 2022. When installing, select these workloads: .NET desktop development; Desktop development with C++. It also installs .NET 9 SDK and Windows 11 SDK; or install them separately.
 
-1. Download and extract. Or git clone.
+1. Clone or download/extract the source code.
 2. Open `Au.sln` in Visual Studio.
-3. Build solution (not just the startup project).
-4. Switch to platform x86, build solution. Switch to platform ARM64, build solution. Switch back to AnyCPU.
-5. Run `Au.Editor` project. It should open the editor window.
+3. Switch to platform x86. Build solution.
+4. Switch to platform ARM64. Build solution.
+5. Switch to platform AnyCPU. Build solution.
+6. Run `Au.Editor` project. It should open the editor window.

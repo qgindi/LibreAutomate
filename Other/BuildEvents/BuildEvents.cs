@@ -8,11 +8,11 @@ script.setup(exception: UExcept.Dialog | UExcept.Print);
 //print.qm2.use = true;
 //print.it(args);
 
-if (args.Length == 0) { //dev
-	Environment.CurrentDirectory = @"C:\code\au";
-	//return GitBinaryFiles.PrePushHook();
-	return GitBinaryFiles.Restore(Environment.CurrentDirectory + "\\", true);
-}
+//if (args.Length == 0) { //dev
+//	Environment.CurrentDirectory = @"C:\code\au";
+//	//return GitBinaryFiles.PrePushHook();
+//	return GitBinaryFiles.Restore(Environment.CurrentDirectory + "\\", true);
+//}
 
 string solutionDirBS = pathname.normalize(Environment.CurrentDirectory + @"\..") + "\\"; //when called by VS, not when by git
 

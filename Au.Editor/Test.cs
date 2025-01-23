@@ -28,7 +28,7 @@ static class Test {
 	public static void FromMenubar() {
 		print.clear();
 		
-		Cpp.Cpp_Test();
+		//Cpp.Cpp_Test();
 		
 		//var f1 = App.Model.CurrentFile;
 		////var f2 = f1.FindRelative(true, "coko.cs");

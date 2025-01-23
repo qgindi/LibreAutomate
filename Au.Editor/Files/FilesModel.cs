@@ -1432,7 +1432,7 @@ partial class FilesModel {
 		var b = new wpfBuilder("Export selected files").WinSize(550);
 		b.WinProperties(showInTaskbar: false);
 		b.R.StartGrid<KGroupBox>("Files");
-		b.R.xAddInfoBlockF($"Selected: {string.Join(", ", aSel)}");
+		b.R.xAddInfoBlockF($"Selected: {string.Join(", ", aSel.AsEnumerable())}");
 		b.R.Add(out KCheckBox cDeps, "And files used via /*/ c, resource, file, preBuild, postBuild, icon, manifest, sign /*/")
 			.Checked(0 != (App.Settings.export & 4));
 		b.R.Add(out KCheckBox cGlobal, "And global.cs")

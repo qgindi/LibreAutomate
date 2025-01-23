@@ -162,6 +162,12 @@ public static unsafe partial class ExtMisc {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsNull<T>(this ReadOnlySpan<T> t) => t == ReadOnlySpan<T>.Empty;
 	
+	/// <summary>
+	/// Returns <c>true</c> if null pointer.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsNull<T>(this Span<T> t) => t == Span<T>.Empty;
+	
 	//currently not used. Creates shorter string than ToString.
 	///// <summary>
 	///// Converts this <b>Guid</b> to Base64 string.
