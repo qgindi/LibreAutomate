@@ -129,7 +129,8 @@
       <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>"$(SolutionDir)Other\Programs\nircmd.exe" win close class Au.Editor.TrayNotify</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -148,7 +149,8 @@
       <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ARM\ /Y</Command>
     </PostBuildEvent>
     <PreLinkEvent>
-      <Command>"$(SolutionDir)Other\Programs\nircmd.exe" win close class Au.Editor.TrayNotify</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
