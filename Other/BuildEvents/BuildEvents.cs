@@ -14,13 +14,13 @@ script.setup(exception: UExcept.Dialog | UExcept.Print);
 //	return GitBinaryFiles.Restore(Environment.CurrentDirectory + "\\", true);
 //}
 
-string solutionDirBS = pathname.normalize(Environment.CurrentDirectory + @"\..") + "\\"; //when called by VS, not when by git
+string solutionDirBS = folders.ThisAppBS[..^28];
 
 return args[0] switch {
 	"cppPostBuild" => CppPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
 	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
 	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
-	"roslynPreBuild" => RoslynPreBuild(),
+	"dllPostBuild" => DllPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
 	"roslynPostBuild" => RoslynPostBuild(),
 	"gitPrePushHook" => GitBinaryFiles.PrePushHook(),
 	_ => 1
@@ -42,6 +42,14 @@ int EditorPreBuild() {
 	return GitBinaryFiles.Restore(solutionDirBS);
 }
 
+/// Exits editor. Copies the dll (eg Scintilla).
+int DllPostBuild() {
+	_ExitEditor();
+	var toDir = $@"{solutionDirBS}_\{args[2] switch { "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}";
+	filesystem.copyTo(args[1], toDir, FIfExists.Delete);
+	return 0;
+}
+
 void _ExitEditor() {
 	for (int i = 2; --i >= 0;) {
 		var w = wnd.findFast(cn: "Au.Editor.TrayNotify");
@@ -53,8 +61,8 @@ void _ExitEditor() {
 }
 
 bool _CopyAuCppDllIfNeed(string platform, bool editor) {
-	string src = solutionDirBS + $@"Cpp\bin\{args[1]}\{platform}\AuCpp.dll";
-	string dest = solutionDirBS + $@"_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll";
+	string src = $@"{solutionDirBS}Cpp\bin\{args[1]}\{platform}\AuCpp.dll";
+	string dest = $@"{solutionDirBS}_\{platform switch { "Win32" => "32", "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}\AuCpp.dll";
 	if (!filesystem.getProperties(src, out var p1)) { if (!editor) print.it("Failed `filesystem.getProperties(src)`"); return false; }
 	filesystem.getProperties(dest, out var p2);
 	if (p1.LastWriteTimeUtc != p2.LastWriteTimeUtc || p1.Size != p2.Size) {
@@ -79,7 +87,7 @@ int EditorPostBuild() {
 		print.ignoreConsole = true;
 		//todo: Environment.CurrentDirector = 
 	}
-	var dirOut = solutionDirBS + @"\_\";
+	var dirOut = solutionDirBS + @"_\";
 
 #if !true //copy output files from `$(ProjectDir)$(OutDir)` to dirOut. Bad: can't start LA from VS (no program path setting in UI; VS ignores executablePath in launchsettings.json).
 	var dirBin = args[2][..^1];
@@ -217,19 +225,15 @@ BLOCK "VarFileInfo"
 	}
 }
 
-//Exits editor.
-int RoslynPreBuild() {
-	_ExitEditor();
-	return 0;
-}
-
-//Copies dlls etc.
+//Exits editor. Copies dlls etc.
 int RoslynPostBuild() {
+	_ExitEditor();
+
 	var from = args[1].Trim();
-	var to = @"C:\code\au\_\Roslyn";
+	var to = $@"{solutionDirBS}_\Roslyn";
 	
-	foreach (var f in filesystem.enumerate(to)) {
-		if (f.Name[0] != '.') filesystem.delete(f.FullPath, FDFlags.CanFail);
+	foreach (var f in filesystem.enumFiles(to)) {
+		filesystem.delete(f.FullPath, FDFlags.CanFail);
 	}
 	foreach (var f in filesystem.enumFiles(from)) {
 		if (0 == f.Name.Ends(true, ".dll", ".xml")) continue;

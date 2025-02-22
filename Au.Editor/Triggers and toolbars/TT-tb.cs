@@ -517,7 +517,7 @@ void {{name}}() {
 			
 			var semo = _compilation.GetSemanticModel(tree);
 			var cu = semo.SyntaxTree.GetCompilationUnitRoot();
-			var k = semo.GetExistingSymbols(cu, default);
+			var k = semo.GetAllDeclaredSymbols(cu, default);
 			IMethodSymbol mPrev = null;
 			foreach (var v in k) {
 				if (v is ILocalSymbol loc && loc.Type == ntToolbar) {

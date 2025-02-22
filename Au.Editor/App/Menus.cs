@@ -23,8 +23,7 @@ static class Menus {
 		iconIcons = "*FontAwesome.IconsSolid" + green,
 		iconUndo = "*Ionicons.UndoiOS" + brown,
 		iconPaste = "*Material.ContentPaste" + brown,
-		//iconReferences = "*Codicons.References"
-		iconReferences = "*Material.MapMarkerMultiple" + blue, //or MapMarkerMultipleOutline
+		iconReferences = "*Material.MapMarkerMultiple" + blue,
 		iconRegex = "*FileIcons.Regex @14" + blue
 		;
 	

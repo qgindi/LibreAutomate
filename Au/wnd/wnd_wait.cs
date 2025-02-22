@@ -52,7 +52,7 @@ public partial struct wnd {
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// var (i, w) = wnd.waitAny(10, true, "* Notepad", new wndFinder("* Word"));
+	/// var (i, w) = wnd.waitAny(10, true, new("* Notepad"), new("* Word"));
 	/// print.it(i, w);
 	/// ]]></code>
 	/// </example>

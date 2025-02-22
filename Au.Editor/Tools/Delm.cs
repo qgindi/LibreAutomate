@@ -1771,29 +1771,29 @@ new elmFinder || 5
 		_page.navigA.Set(navig.Length > 0, navig);
 	}
 	
-public static class Java {
-	/// <summary>
-	/// Calls <see cref="EnableDisableJab"/>. Before it shows dialog "enable/disable". After it shows dialog with results.
-	/// </summary>
-	public static void EnableDisableJabUI(AnyWnd owner) {
-		bool enable;
-		switch (dialog.show("Enable or disable Java Access Bridge", $"If enabled, scripts and programs can find UI elements in Java apps.", "1 Enable|2 Disable|Cancel", owner: owner, flags: DFlags.CenterOwner)) {
-		case 1: enable = true; break;
-		case 2: enable = false; break;
-		default: return;
+	public static class Java {
+		/// <summary>
+		/// Calls <see cref="EnableDisableJab"/>. Before it shows dialog "enable/disable". After it shows dialog with results.
+		/// </summary>
+		public static void EnableDisableJabUI(AnyWnd owner) {
+			bool enable;
+			switch (dialog.show("Enable or disable Java Access Bridge", $"If enabled, scripts and programs can find UI elements in Java apps.", "1 Enable|2 Disable|Cancel", owner: owner, flags: DFlags.CenterOwner)) {
+			case 1: enable = true; break;
+			case 2: enable = false; break;
+			default: return;
+			}
+			var (ok, results) = EnableDisableJab(enable);
+			dialog.show(null, results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.CenterOwner);
 		}
-		var (ok, results) = EnableDisableJab(enable);
-		dialog.show(null, results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.CenterOwner);
-	}
-	
-	/// <summary>
-	/// Enables or disables Java Access Bridge for current user.
-	/// Returns: ok = false if failed or canceled. results = null if canceled.
-	/// </summary>
-	public static (bool ok, string results) EnableDisableJab(bool enable) {
-		if (!GetJavaPath(out var path)) return (false, $"Cannot find Java {RuntimeInformation.ProcessArchitecture} (JRE or JDK). Make sure it is installed and in PATH. Need the {RuntimeInformation.ProcessArchitecture} version, not 32-bit or {(osVersion.isArm64Process ? "x64" : "ARM64")}. If you have other Java versions (32-bit etc), keep them too.");
 		
-		string sout = null;
+		/// <summary>
+		/// Enables or disables Java Access Bridge for current user.
+		/// Returns: ok = false if failed or canceled. results = null if canceled.
+		/// </summary>
+		public static (bool ok, string results) EnableDisableJab(bool enable) {
+			if (!GetJavaPath(out var path)) return (false, $"Cannot find Java {RuntimeInformation.ProcessArchitecture} (JRE or JDK). Make sure it is installed and in PATH. Need the {RuntimeInformation.ProcessArchitecture} version, not 32-bit or {(osVersion.isArm64Process ? "x64" : "ARM64")}. If you have other Java versions (32-bit etc), keep them too.");
+			
+			string sout = null;
 			string jabswitch = path + @"\jabswitch.exe";
 			if (!filesystem.exists(jabswitch).File) return (false, "Cannot find jabswitch.exe.");
 			try {
@@ -1803,42 +1803,44 @@ public static class Java {
 			catch (Exception ex) {
 				return (false, ex.ToStringWithoutStack());
 			}
+			
+			sout += "\r\nAlso may need to restart Java apps and this app.";
+			
+			return (true, sout);
+			
+			//tested: the checkbox in CP does not disable JAB. Works only enabling.
+			//	Tested on Win 10 (installed Java 64 and 32) and 7 (installed Java 64).
+			//	Tested 64-bit and 32-bit processes.
+			//	\lib\accessibility.properties is not modified, ie not enabled for all users.
+			//	This function works.
+		}
 		
-		sout += "\r\nAlso may need to restart Java apps and this app.";
-		
-		return (true, sout);
-		
-		//tested: the checkbox in CP does not disable JAB. Works only enabling.
-		//	Tested on Win 10 (installed Java 64 and 32) and 7 (installed Java 64).
-		//	Tested 64-bit and 32-bit processes.
-		//	\lib\accessibility.properties is not modified, ie not enabled for all users.
-		//	This function works.
-	}
-	
-	/// <summary>
-	/// Gets path of the bin folder of installed Java JRE or JDK. Only of same x64/AMD64 architecture as of this process.
-	/// </summary>
-	public static bool GetJavaPath(out string path) {
-		path = null;
-		try {
-			run.console(out string where, "where", "java");
-			foreach (var javaExe in where.Lines()) {
-				run.console(out string s, javaExe, "-XshowSettings:properties");
-				
-				//print.it($"<><lc yellow>{javaExe}<>");
-				//print.it(s);
-				
-				var arch = osVersion.isArm64Process ? "aarch64" : "amd64";
-				if (s.RxIsMatch($@"(?m)^\h*os.arch *= *{arch}\b") && s.RxMatch(@"(?m)^\h*java.home *= *(.+)", 1, out s)) {
-					path = s + "\\bin";
-					return true;
+		/// <summary>
+		/// Gets path of the bin folder of installed Java JRE or JDK. Only of same x64/AMD64 architecture as of this process.
+		/// </summary>
+		public static bool GetJavaPath(out string path) {
+			path = null;
+			try {
+				if (0 == run.console(out string where, "where", "java")) {
+					foreach (var javaExe in where.Lines()) {
+						if (!javaExe.Ends(".exe", true)) continue;
+						run.console(out string s, javaExe, "-XshowSettings:properties");
+						
+						//print.it($"<><lc yellow>{javaExe}<>");
+						//print.it(s);
+						
+						var arch = osVersion.isArm64Process ? "aarch64" : "amd64";
+						if (s.RxIsMatch($@"(?m)^\h*os.arch *= *{arch}\b") && s.RxMatch(@"(?m)^\h*java.home *= *(.+)", 1, out s)) {
+							path = s + "\\bin";
+							return true;
+						}
+					}
 				}
 			}
+			catch { }
+			return false;
 		}
-		catch { }
-		return false;
 	}
-}
 	
 	#endregion
 	

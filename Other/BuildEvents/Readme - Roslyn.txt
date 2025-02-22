@@ -3,7 +3,7 @@ How to install, update and modify:
 
 Once: Build this project. Don't run; it will run automatically when building Roslyn project Microsoft.CodeAnalysis.CSharp.Features.
 
-Download https://github.com/dotnet/roslyn and unzip to C:\code-lib\roslyn. Or git clone, if you need extra 2 GB.
+Download https://github.com/dotnet/roslyn and unzip to C:\code-lib\roslyn. Or git clone (do shallow clone if don't want extra 2 GB or more).
 Open Roslyn.sln.
 To make VS not so slow, select all folders and unload projects. Then load Microsoft.CodeAnalysis.CSharp.Features with entire dependency tree.
   It loads projects we need:
@@ -11,7 +11,7 @@ To make VS not so slow, select all folders and unload projects. Then load Micros
     In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
     In folder Workspaces: Microsoft.CodeAnalysis.CSharp.Workspaces, Microsoft.CodeAnalysis.Workspaces.
     Several other.
-Optionally create new local git repo. Then later you can conveniently see modifications.
+Optionally create new local git repo (if not git-cloned). Then later you can conveniently see modifications.
 Edit as described below after _________.
 Build Microsoft.CodeAnalysis.CSharp.Features. It also builds all dependency projects. It runs this exe.
 
@@ -21,7 +21,7 @@ Once: In editor project add references to the main 6 dlls in _\Roslyn, with 'Cop
 Rejected: to make editor startup faster, publish Microsoft.CodeAnalysis.CSharp.Features with <PublishReadyToRun>.
   Tested, works, but: adds ~14 MB to the setup file; makes just ~350 ms faster, barely noticeable.
 
-FUTURE: bug in latest Roslyn (2024-11-22): error if `for` has >1 uninited vars, like `for (int i = 0, j, k; i < 9; i++) {}`.
+FUTURE: bug in latest Roslyn (2024-11-22, 2025-01-26): error if `for` has >1 uninited vars, like `for (int i = 0, j, k; i < 9; i++) {}`. OK if `for (int i = 0, j; i < 9; i++) {}`.
   Now in VS too. In VS was no error when I first found this; it used an older Roslyn.
 
 _________________________________________________________________
@@ -29,9 +29,7 @@ _________________________________________________________________
 //Edit these manually. Often Roslyn source in new version is changed in some of these places.
 //Add only internal members (where possible). If public, need to declare it in PublicApi.Shipped.txt. Roslyn's internals are visible to the editor project.
 
-// - In all 6 projects + Scripting.csproj from <TargetFrameworks> remove netstandard2.0 etc (replace with eg net9.0). Later will compile faster.
-//  Don't modify CSharpSyntaxGenerator.csproj.
-//  If will fail to compile, do this AFTER the first compilation.
+// - In all 6 projects + Scripting.csproj (but not CSharpSyntaxGenerator.csproj): from <TargetFrameworks> remove netstandard2.0 etc (replace with eg net9.0). Later will compile faster.
 
 // - Set Release config. Try to build Microsoft.CodeAnalysis.CSharp.Features (it builds all).
 //	If error "SDK not found", install the latest .NET SDK or edit .NET version in global.json.
@@ -72,10 +70,7 @@ _________________________________________________________________
     </ProjectReference>
   </ItemGroup>
 
-// -- Add prebuild and postbuild:
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="C:\code\au\Other\BuildEvents\bin\Debug\BuildEvents.exe roslynPreBuild" />
-  </Target>
+// -- Add postbuild:
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="C:\code\au\Other\BuildEvents\bin\Debug\BuildEvents.exe roslynPostBuild $(OutDir)" />
   </Target>
@@ -101,7 +96,7 @@ au/
 //2. Add property: internal ISymbol? Symbol { get; } = symbol; //au
 
 // - Let it don't try to load VB assemblies, because then exception when debugging:
-//In MefHostServices.cs, in s_defaultAssemblyNames init list, remove the 2 VB assemblies.
+//In MefHostServices.cs, in s_defaultAssemblyNames init list, remove the 2 VisualBasic assemblies.
 
 // - In project Microsoft.CodeAnalysis, in file PublicAPI.Shipped.txt, append:
 RoslynMod.TestInternal

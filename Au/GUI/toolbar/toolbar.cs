@@ -505,18 +505,18 @@ public partial class toolbar : MTBase {
 				g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 				_WmPaint(dc, g, bp.Rect, bp.UpdateRect);
 			}
-			return default;
+			return 0;
 		case Api.WM_MOUSEACTIVATE:
 			return Api.MA_NOACTIVATE;
 		case Api.WM_MOUSEMOVE:
 			_WmMousemove(lParam);
-			return default;
+			return 0;
 		case Api.WM_MOUSELEAVE:
 			_WmMouseleave();
-			return default;
+			return 0;
 		case Api.WM_LBUTTONDOWN:
 			_WmMouselbuttondown(lParam, activatedOwner);
-			return default;
+			return 0;
 		case Api.WM_CONTEXTMENU or Api.WM_NCRBUTTONUP:
 			_WmContextmenu();
 			break;
@@ -541,7 +541,7 @@ public partial class toolbar : MTBase {
 					
 					Api.DefWindowProc(w, msg, wParam, lParam);
 				}
-				return default;
+				return 0;
 			}
 			break;
 		case Api.WM_ENTERSIZEMOVE:
@@ -558,7 +558,7 @@ public partial class toolbar : MTBase {
 			if (hkid >= 0 && hkid <= 3) {
 				POINT p = mouse.xy;
 				Api.SetCursorPos(p.x + hkid switch { 0 => -1, 1 => 1, _ => 0 }, p.y + hkid switch { 2 => -1, 3 => 1, _ => 0 });
-				return default;
+				return 0;
 			}
 			break;
 		case Api.WM_GETOBJECT:
@@ -569,7 +569,10 @@ public partial class toolbar : MTBase {
 				int i = (int)wParam;
 				if ((uint)i < _a.Count) _Click(i, false);
 			}
-			return default;
+			return 0;
+		case Api.WM_USER + 51:
+			toolbarsDialog();
+			return 0;
 		}
 		
 		var R = Api.DefWindowProc(w, msg, wParam, lParam);

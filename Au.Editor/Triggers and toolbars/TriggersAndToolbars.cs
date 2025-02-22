@@ -110,18 +110,11 @@ partial class TriggersAndToolbars {
 	}
 	
 	public static void ShowActiveTriggers() {
-		for (wnd w = default; ;) {
-			w = wnd.findFast(null, "Au.Triggers.Hooks", messageOnly: true, w);
-			if (w.Is0) break;
+		foreach (var w in wnd.getwnd.allWindows().Where(o => o.ClassNameIs("Au.toolbar")).DistinctBy(o => o.ThreadId)) {
 			Api.AllowSetForegroundWindow(w.ProcessId);
-			w.Post(Api.WM_USER + 30);
+			w.Post(Api.WM_USER + 51);
 		}
 	}
-	
-	//public static void AddTrigger()
-	//{
-	
-	//}
 	
 	public static void NewToolbar() {
 		var tt = new TriggersAndToolbars();

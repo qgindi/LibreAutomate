@@ -47,7 +47,7 @@ Run script "Au docs" just to catch XML documentation errors and test how it work
 Build solution if needed to edit in above steps.
 
 May need to update some info in README.md for github. Eg the screenshot and "how to build".
-	When an image updated, github still shows the old cached. Workaround: in the image link append #x and change x for each image version.
+	When an image updated, github still shows the old cached. Workaround: in the image link append #x and change x for each image version. Before run script "Purge Cloudflare CDN cache".
 
 Open the .iss file in Inno Script Studio. Change MyAppVersion. Review. Compile.
 	Run the setup file to test. Test on other OS too. Occasionally uninstall/install, not just upgrade.

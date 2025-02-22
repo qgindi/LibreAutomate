@@ -146,7 +146,7 @@ namespace Au.Triggers;
 public class ActionTriggers {
 	readonly ITriggers[] _t;
 	ITriggers this[TriggerType e] => _t[(int)e];
-
+	
 	/// <summary>
 	/// Initializes a new instance of this class.
 	/// </summary>
@@ -156,49 +156,49 @@ public class ActionTriggers {
 		funcs_ = new TriggerFuncs();
 		options_ = new TriggerOptions();
 	}
-
+	
 	//public TriggerScopes Of {
 	//	get {
 	//		if(_test == false){
 	//			Debug_.MemorySetAnchor_();
 	//			timer.after(500, _ => Debug_.MemoryPrint_());
 	//		}
-
+	
 	//		var k=new StackFrame(1, true);
 	//		//new StackTrace(1, true);
 	//		var s = k.GetFileName();
-
+	
 	//		//if(_test == false) _s1 = s; else print.it(ReferenceEquals(s, _s1));
-
+	
 	//			 _test = true;
-
+	
 	//		return scopes;
 	//	}
 	//}
 	//static bool _test;
 	//static string _s1;
-
+	
 	/// <summary>
 	/// Allows to set window scopes (working windows) for triggers.
 	/// </summary>
 	/// <remarks>Examples: <see cref="TriggerScopes"/>, <see cref="ActionTriggers"/>.</remarks>
 	public TriggerScopes Of => scopes_;
 	internal readonly TriggerScopes scopes_;
-
+	
 	/// <summary>
 	/// Allows to set custom scopes/contexts/conditions for triggers.
 	/// </summary>
 	/// <remarks>More info and examples: <see cref="TriggerFuncs"/>, <see cref="ActionTriggers"/>.</remarks>
 	public TriggerFuncs FuncOf => funcs_;
 	internal readonly TriggerFuncs funcs_;
-
+	
 	/// <summary>
 	/// Allows to set some options for multiple triggers and their actions.
 	/// </summary>
 	/// <remarks>More info and examples: <see cref="TriggerOptions"/>, <see cref="ActionTriggers"/>.</remarks>
 	public TriggerOptions Options => options_;
 	internal readonly TriggerOptions options_;
-
+	
 	/// <summary>
 	/// Clears all options (of <see cref="Options"/>, <see cref="Of"/>, <see cref="FuncOf"/>, <see cref="Autotext"/>).
 	/// </summary>
@@ -208,7 +208,7 @@ public class ActionTriggers {
 		Options.Reset();
 		Autotext.ResetOptions();
 	}
-
+	
 	ITriggers _Get(TriggerType e) {
 		int i = (int)e;
 		var t = _t[i];
@@ -224,31 +224,31 @@ public class ActionTriggers {
 		}
 		return t;
 	}
-
+	
 	/// <summary>
 	/// Hotkey triggers.
 	/// </summary>
 	/// <example>See <see cref="ActionTriggers"/>.</example>
 	public HotkeyTriggers Hotkey => _Get(TriggerType.Hotkey) as HotkeyTriggers;
-
+	
 	/// <summary>
 	/// Autotext triggers.
 	/// </summary>
 	/// <example>See <see cref="ActionTriggers"/>.</example>
 	public AutotextTriggers Autotext => _Get(TriggerType.Autotext) as AutotextTriggers;
-
+	
 	/// <summary>
 	/// Mouse triggers.
 	/// </summary>
 	/// <example>See <see cref="ActionTriggers"/>.</example>
 	public MouseTriggers Mouse => _Get(TriggerType.Mouse) as MouseTriggers;
-
+	
 	/// <summary>
 	/// Window triggers.
 	/// </summary>
 	/// <example>See <see cref="ActionTriggers"/>.</example>
 	public WindowTriggers Window => _Get(TriggerType.Window) as WindowTriggers;
-
+	
 	/// <summary>
 	/// Makes triggers alive.
 	/// </summary>
@@ -261,9 +261,9 @@ public class ActionTriggers {
 	/// <exception cref="AuException">Something failed.</exception>
 	public unsafe void Run() {
 		//Debug_.PrintLoadedAssemblies(true, true, true);
-
+		
 		ThrowIfRunning_();
-
+		
 		//bool haveTriggers = false;
 		HooksThread.UsedEvents hookEvents = 0;
 		_windowTriggers = null;
@@ -280,7 +280,7 @@ public class ActionTriggers {
 		}
 		//print.it(haveTriggers, (uint)llHooks);
 		//if(!haveTriggers) return; //no. The message loop may be used for toolbars etc.
-
+		
 		if (!s_wasRun) {
 			s_wasRun = true;
 			WndUtil.RegisterWindowClass(c_cn);
@@ -289,7 +289,7 @@ public class ActionTriggers {
 		_mainThreadId = Api.GetCurrentThreadId();
 		_winTimerPeriod = 0;
 		_winTimerLastTime = 0;
-
+		
 		if (hookEvents != 0) {
 			//prevent big delay (JIT) later on first LL hook event while hook proc waits
 			if (!s_wasKM) {
@@ -309,12 +309,12 @@ public class ActionTriggers {
 					catch (Exception ex) { Debug_.Print(ex); }
 				});
 			}
-
+			
 			_thc = new TriggerHookContext(this);
-
+			
 			_ht = new HooksThread(hookEvents, _wMsg);
 		}
-
+		
 		try {
 			_evStop = Api.CreateEvent(false);
 			_StartStopAll(true);
@@ -332,14 +332,14 @@ public class ActionTriggers {
 			_mainThreadId = 0;
 			_threads?.Dispose(); _threads = null;
 		}
-
+		
 		void _StartStopAll(bool start) {
 			foreach (var t in _t) {
 				if (t?.HasTriggers == true) t.StartStop(start);
 			}
 		}
 	}
-
+	
 	/// <summary>
 	/// Executes <see cref="Run"/> in new thread and waits like <see cref="wait.doEvents(int)"/>.
 	/// </summary>
@@ -347,14 +347,14 @@ public class ActionTriggers {
 		using var th = run.thread(out _, out _, Run);
 		wait.forHandle(0, WHFlags.DoEvents, th.DangerousGetHandle());
 	}
-
+	
 	int _mainThreadId;
 	wnd _wMsg;
 	HooksThread _ht;
 	TriggerHookContext _thc;
 	static bool s_wasRun, s_wasKM;
 	const string c_cn = "Au.Triggers.Hooks";
-
+	
 	nint _WndProc(wnd w, int message, nint wParam, nint lParam) {
 		try {
 			switch (message) {
@@ -365,21 +365,13 @@ public class ActionTriggers {
 			case Api.WM_USER + 20:
 				_windowTriggers.SimulateNew_(wParam, lParam);
 				return 0;
-			case Api.WM_USER + 30:
-				_ShowToolbarsDialog();
-				return 0;
 			}
 		}
 		catch (Exception ex) { Debug_.Print(ex); return default; }
-
+		
 		return Api.DefWindowProc(w, message, wParam, lParam);
 	}
-
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	void _ShowToolbarsDialog() {
-		toolbar.toolbarsDialog();
-	}
-
+	
 	unsafe void _KeyMouseEvent(int messageId, HooksThread.UsedEvents eventType) {
 		//perf.first();
 		//perf.next();
@@ -414,18 +406,18 @@ public class ActionTriggers {
 		//perf.next();
 		_thc.PerfWarn();
 		//perf.next();
-
+		
 		//var mem = GC.GetTotalMemory(false);
 		//if(mem != _debugMem && _debugMem != 0) print.it(mem - _debugMem);
 		//_debugMem = mem;
-
+		
 		if (!_ht.Return(messageId, eat)) return;
 		//perf.nw();
 		if (_thc.trigger != null) RunAction_(_thc.trigger, _thc.args, _thc.muteMod);
 	}
-
+	
 	//long _debugMem;
-
+	
 	internal void RunAction_(ActionTrigger trigger, TriggerArgs args, int muteMod = 0) {
 		if (trigger.action != null) {
 			_threads ??= new TriggerActionThreads();
@@ -433,7 +425,7 @@ public class ActionTriggers {
 		} else Debug.Assert(muteMod == 0);
 	}
 	TriggerActionThreads _threads;
-
+	
 	/// <summary>
 	/// Stops trigger engines and causes <see cref="Run"/> to return.
 	/// </summary>
@@ -454,38 +446,38 @@ public class ActionTriggers {
 		Api.SetEvent(_evStop);
 	}
 	Handle_ _evStop;
-
+	
 	/// <summary>
 	/// Occurs before <see cref="Run"/> stops trigger engines and returns.
 	/// </summary>
 	public event EventHandler Stopping;
-
+	
 	/// <summary>
 	/// True if executing <see cref="Run"/>.
 	/// </summary>
 	internal bool Running_ => !_evStop.Is0;
-
+	
 	/// <summary>
 	/// Throws <b>InvalidOperationException</b> if executing <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfRunning_() {
 		if (Running_) throw new InvalidOperationException("Must be before or after Run.");
 	}
-
+	
 	/// <summary>
 	/// Throws <b>InvalidOperationException</b> if not executing <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfNotRunning_() {
 		if (!Running_) throw new InvalidOperationException("Cannot be before or after Run.");
 	}
-
+	
 	/// <summary>
 	/// Throws <b>InvalidOperationException</b> if not thread of <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfNotMainThread_() {
 		if (Api.GetCurrentThreadId() != _mainThreadId) throw new InvalidOperationException("Must be in thread of Run, for example in a FuncOf function.");
 	}
-
+	
 	/// <summary>
 	/// Gets or sets whether triggers of this <see cref="ActionTriggers"/> instance are disabled.
 	/// </summary>
@@ -505,7 +497,7 @@ public class ActionTriggers {
 	/// ]]></code>
 	/// </example>
 	public bool Disabled { get; set; }
-
+	
 	/// <summary>
 	/// Gets or sets whether triggers are disabled in all processes that use this library in this user session.
 	/// </summary>
@@ -521,17 +513,17 @@ public class ActionTriggers {
 			if (!w.Is0) w.SendNotify(Api.WM_USER, 20); //update tray icon etc
 		}
 	}
-
+	
 	[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
 	internal struct SharedMemoryData_ {
 		public bool disabled;
 		public bool resetAutotext;
 	}
-
+	
 	internal void Notify_(int message, nint wParam = 0, nint lParam = 0) {
 		_wMsg.SendNotify(message, wParam, lParam);
 	}
-
+	
 	unsafe int _Wait(IntPtr* ha, int nh) {
 		for (; ; ) {
 			int slice = -1;
@@ -545,9 +537,9 @@ public class ActionTriggers {
 					_windowTriggers?.Timer_();
 					slice = _Period();
 				} else slice = period - td;
-
+				
 				int _Period() => _winTimerPeriod / 15 * 15 + 10;
-
+				
 				//This code is a variable-frequency timer that uses less CPU than Windows timer.
 				//	Never mind: the timer does not work if user code creates a nested message loop in this thread. They should avoid it. It is documented, such functions must return ASAP.
 			}
@@ -559,7 +551,7 @@ public class ActionTriggers {
 	}
 	long _winTimerLastTime;
 	WindowTriggers _windowTriggers;
-
+	
 	internal int WinTimerPeriod_ {
 		get => _winTimerPeriod;
 		set {
@@ -577,9 +569,9 @@ enum TriggerType {
 	Autotext,
 	Mouse,
 	Window,
-
+	
 	Count,
-
+	
 	//TimerAfter,
 	//TimerEvery,
 	//TimerAt,
@@ -590,7 +582,7 @@ interface ITriggers {
 	/// Return <c>true</c> if added triggers of this type.
 	/// </summary>
 	bool HasTriggers { get; }
-
+	
 	/// <summary>
 	/// Optionally start/stop the trigger engine (hooks etc).
 	/// </summary>
@@ -602,13 +594,13 @@ class TriggerHookContext : WFCache {
 	//internal readonly ActionTriggers triggers;
 	wnd _w;
 	bool _haveWnd, _mouseWnd; POINT _p;
-
+	
 	public TriggerHookContext(ActionTriggers triggers) {
 		//this.triggers = triggers;
 		_perfList = new _ScopeTime[32];
 		base.CacheName = true; //we'll call Clear(onlyName: true) at the start of each event
 	}
-
+	
 	public wnd Window {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get {
@@ -619,28 +611,28 @@ class TriggerHookContext : WFCache {
 			return _w;
 		}
 	}
-
+	
 	/// <summary>
 	/// Trigger/action to run. Set by a hook proc of a trigger engine.
 	/// </summary>
 	public ActionTrigger trigger;
-
+	
 	/// <summary>
 	/// Used with <see cref="trigger"/>.
 	/// </summary>
 	public TriggerArgs args;
-
+	
 	/// <summary>
 	/// Used with <see cref="trigger"/>.
 	/// Can be 0 or one of <b>TriggerActionThreads.c_</b> constants.
 	/// </summary>
 	public int muteMod;
-
+	
 	///// <summary>
 	///// This event was processed (not ignored). Set by a hook proc of a trigger engine.
 	///// </summary>
 	//public bool processed;
-
+	
 	/// <summary>
 	/// Called before processing each hook event. Clears most properties and fields.
 	/// </summary>
@@ -650,40 +642,40 @@ class TriggerHookContext : WFCache {
 		trigger = null; args = null; muteMod = 0;
 		_perfLen = 0;
 	}
-
+	
 	/// <summary>
 	/// Tells to get window (for scope) from the specified point. If not called, will use the active window. In any case, gets window on demand.
 	/// </summary>
 	public void UseWndFromPoint(POINT p) {
 		_mouseWnd = true; _p = p;
 	}
-
+	
 	struct _ScopeTime {
 		public int time_, avgTime;
 	}
-
+	
 	long _perfTime;
 	_ScopeTime[] _perfList; //don't use List<> because its JIT is too slow in time-critical code
 	int _perfLen;
-
+	
 	public void PerfStart() {
 		_perfTime = perf.mcs;
 	}
-
+	
 	public void PerfEnd(bool isFunc, ref int perfTime) {
 		long tLong = perf.mcs - _perfTime;
 		int t = (int)Math.Min(tLong, 1_000_000_000);
-
+		
 		//calc average time of this scope. Assume the first time is 0.
 		if (perfTime != 0) perfTime = Math.Max(1, (int)(((long)perfTime * 7 + t) / 8));
 		//print.it($"time={time}, avg={perfTime}");
-
+		
 		if (isFunc) t |= unchecked((int)0x80000000);
 		if (_perfLen == _perfList.Length) Array.Resize(ref _perfList, _perfList.Length * 2);
 		_perfList[_perfLen++] = new _ScopeTime { time_ = t, avgTime = perfTime };
 		if (perfTime == 0) perfTime = 1;
 	}
-
+	
 	public void PerfWarn() {
 		if (_perfLen == 0) return;
 		long ttTrue = 0, ttCompare = 0;
@@ -710,30 +702,30 @@ class TriggerHookContext : WFCache {
 		b.Append("* W - Triggers.Of (window); F - Triggers.FuncOf.</fold>");
 		ThreadPool.QueueUserWorkItem(print.it, b.ToString()); //4 ms first time. Async because JIT slow.
 	}
-
+	
 	/// <summary>
 	/// Currently pressed modifier keys. Valid only in hotkey and autotext triggers.
 	/// </summary>
 	public KMod Mod => _mod;
-
+	
 	/// <summary>
 	/// Currently pressed left-side modifier keys. Valid only in hotkey and autotext triggers.
 	/// </summary>
 	public KMod ModL => _modL;
-
+	
 	/// <summary>
 	/// Currently pressed right-side modifier keys. Valid only in hotkey and autotext triggers.
 	/// </summary>
 	public KMod ModR => _modR;
-
+	
 	/// <summary>
 	/// Not 0 if this key event is a modifier key. Valid only in hotkey and autotext triggers.
 	/// </summary>
 	public KMod ModThis => _modThis;
-
+	
 	KMod _mod, _modL, _modR, _modThis;
 	long _lastKeyTime;
-
+	
 	/// <summary>
 	/// Called before processing each keyboard hook event.
 	/// Updates <b>Mod</b>, <b>ModL</b>, <b>ModR</b>, <b>IsThisKeyMod</b>. They are used by hotkey and autotext triggers.
@@ -750,7 +742,7 @@ class TriggerHookContext : WFCache {
 		case KKey.RAlt: modR = KMod.Alt; break;
 		case KKey.RWin: modR = KMod.Win; break;
 		}
-
+		
 		if ((_modThis = (modL | modR)) != 0) {
 			if (k.IsUp) {
 				_modL &= ~modL; _modR &= ~modR;

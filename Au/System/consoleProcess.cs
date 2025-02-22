@@ -76,7 +76,10 @@ public sealed unsafe class consoleProcess : IDisposable {
 			ps.si.hStdError = hOutWrite;
 			ps.flags |= Api.CREATE_NEW_CONSOLE;
 			
-			if (!ps.StartL(out pi, inheritHandles: true)) throw new AuException(0);
+			if (!ps.StartL(out pi, inheritHandles: true)) {
+				Dispose();
+				throw new AuException(0);
+			}
 			
 			_hProcess = pi.hProcess;
 			TerminateFinally = true;
@@ -100,6 +103,7 @@ public sealed unsafe class consoleProcess : IDisposable {
 	}
 	
 	void _Dispose() {
+		if (_hInWrite.Is0) return;
 		process.thisProcessExit -= _OnExit;
 		if (TerminateFinally && !Ended) TerminateNow();
 		_hProcess.Dispose();
