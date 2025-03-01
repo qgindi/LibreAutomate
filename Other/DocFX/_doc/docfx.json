@@ -3,7 +3,7 @@
     {
       "src": [
         {
-          "src": "C:/Temp/Au/DocFX/source/",
+          "src": "../../../Other/DocPreProcessed/",
           "files": [
             "Au.csproj"
           ]
@@ -48,7 +48,7 @@
       "_disableAffix": true,
       "_disableContribution": true
     },
-    "dest": "C:/Temp/Au/DocFX/site-temp",
+    "dest": "../../../Other/DocFxProcessed",
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
     "template": [
@@ -69,4 +69,4 @@
   }
 }
 
-//https://dotnet.github.io/docfx/tutorial/docfx.exe_user_manual.html
+//http://hellosnow.github.io/docfx/tutorial/docfx.exe_user_manual.html

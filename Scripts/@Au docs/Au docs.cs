@@ -13,13 +13,15 @@ nuget -\WeCantSpell.Hunspell;
 /*/
 
 //args = new[] { "/upload" };
-var siteDir = @"C:\Temp\Au\DocFX\site";
+var repoDir = @"C:\Users\dks\Source\repos\LibreAutomate";
+var buildDir = repoDir + @"\_";
+var apiDocDir = repoDir + @"\_\Docs";
 
 try {
 	if (args.Length == 0) {
 		_Build();
 	} else if (args[0] == "/upload") {
-		AuDocs.CompressAndUpload(siteDir);
+		AuDocs.CompressAndUpload(apiDocDir);
 	}
 }
 catch (Exception e1) {
@@ -27,71 +29,99 @@ catch (Exception e1) {
 	_KillDocfxProcesses();
 }
 
+/// Change the following file locations to reflect your local configuration
+/// 	repoDir
+/// 	docfxExeDir
+/// 
+/// Control the operations performed using the booleans cookbook, preprocess, docFxBuild, postprocess, serve.
+/// For the final docFxBuild they should all be true except serve depending upon whether upload to a website is wanted.
+/// 
+/// Order of operations and source/destination of processed files
+/// 	cookbook 	?	process cookbook from cookbookFilesDir --> processedCookbookDir
+/// 	preprocess 	? 	preprocess docs from sourceDir --> preprocessedDir
+/// 	docFxBuild 	? 	docFx run from preprocessedDir (and docFxDir?) --> docFxProcessedDir
+/// 	postprocess ? 	postprocess docs from docFxProcessedDir --> apiDocDir
+/// 	serve 		? 	run local docFx webserver on apiDocDir
+/// 
 void _Build() {
 	print.clear();
 	var time0 = perf.ms;
 	
 	bool testSmall = !true;
-	bool preprocess = false, postprocess = false, build = false, serve = false, cookbook = false;
+	bool onlyMetadata = !true;
+	bool cookbook = false, preprocess = false, docFxBuild = false, postprocess = false, serve = false; 
+	//cookbook = preprocess = docFxBuild = postprocess = serve = true;
 	//cookbook = true;
 	//preprocess = true;
-	//postprocess = true;
-	//postprocess = serve = true;
-	preprocess = postprocess = build = serve = cookbook = true;
-	bool onlyMetadata = !true;
-	//preprocess = true; build = true; onlyMetadata = true;
+	docFxBuild = true;
+	postprocess = true;
+	//serve = true;
+	//preprocess = true; docFxBuild = true; onlyMetadata = true;
 	
-	var sourceDir = testSmall ? @"C:\code\au\Test Projects\TestDocFX" : @"C:\code\au\Au";
-	var sourceDirPreprocessed = @"C:\Temp\Au\DocFX\source";
-	var docDir = testSmall ? @"C:\code\au\Test Projects\TestDocFX\docfx_project" : @"C:\code\au\Other\DocFX\_doc";
-	var siteDirTemp = siteDir + "-temp";
+	var sourceDir = testSmall ? repoDir + @"\Test Projects\TestDocFX" : repoDir + @"\Au";
+	// if change this, must also change in docfx.json file
+	var preprocessedDir = repoDir + @"\Other\DocPreProcessed";
+	var docfxExeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.dotnet\tools"; 
+	var docFxDir = testSmall ? repoDir + @"\Test Projects\TestDocFX\docfx_project" : repoDir + @"\Other\DocFX\_doc";
+	// if change this, must also change in docfx.json file
+	var docFxProcessedDir = repoDir + @"\Other\DocFxProcessed";
+	
+	var cookbookFilesDir = repoDir + @"\Cookbook\files";
+	var processedCookbookDir = 	docFxDir + @"\cookbook\";
+	
+	bool cleanupFiles = !true;
 	
 	if (cookbook) {
-		AuDocs.Cookbook(docDir);
-		print.it("DONE cookbook");
+		AuDocs.Cookbook(cookbookFilesDir, processedCookbookDir);
+		print.it($"DONE cookbook {(perf.ms - time0) / 1000d}s");
 	}
 	
 	var d = new AuDocs();
 	if (preprocess) {
-		d.Preprocess(sourceDir, sourceDirPreprocessed, testSmall);
-		print.it("DONE preprocessing");
+		d.Preprocess(sourceDir, preprocessedDir, testSmall);
+		print.it($"DONE preprocessing {(perf.ms - time0) / 1000d}s");
+
 	}
 	
-	var docfx = folders.Downloads + @"docfx\docfx.exe";
+	var docFxExe = docfxExeDir + @"\docfx.exe";
 	int r;
-	if (build || serve) {
+	if (docFxBuild || serve) {
 		_KillDocfxProcesses();
-		Environment.CurrentDirectory = docDir;
+		Environment.CurrentDirectory = docFxDir;
 	}
 	
-	if (build) {
-		filesystem.delete(siteDirTemp);
-		r = run.console(o => { print.it(o); }, docfx, "metadata");
+	if (docFxBuild) {
+		filesystem.delete(docFxProcessedDir);
+		r = run.console(o => { print.it(o); }, docFxExe, "metadata");
 		if (r != 0) { print.it("docfx metadata", r); return; }
 		if (onlyMetadata) { print.it("metadata ok"); return; }
-		r = run.console(o => { print.it(o); }, docfx, $@"build");
+		r = run.console(o => { print.it(o); }, docFxExe, $@"build");
 		if (r != 0) { print.it("docfx build", r); return; }
-		//print.it("build ok");
+		print.it($"DONE docFx build {(perf.ms - time0) / 1000d}s");
 		postprocess |= serve;
-		filesystem.delete(Directory.EnumerateFiles(docDir + @"\api", "*.yml")); //garbage for VS search
-	}
+		filesystem.delete(Directory.EnumerateFiles(docFxDir + @"\api", "*.yml")); //garbage for VS search
+}
 	
 	if (postprocess) {
-		d.Postprocess(siteDirTemp, siteDir);
-		print.it("DONE postprocessing");
+		d.Postprocess(docFxProcessedDir, apiDocDir, buildDir);
+		print.it($"DONE postprocessing {(perf.ms - time0) / 1000d}s");
 		if (!testSmall) print.it($"<><script Au docs.cs|/upload>Upload Au docs...<>");
 	}
 	
-	if (cookbook) {
-		AuDocs.CookbookClear(docDir);
+	if (cleanupFiles) {
+		if (docFxBuild) {
+			filesystem.delete(Directory.GetFiles(processedCookbookDir));
+			filesystem.delete(Directory.GetFiles(preprocessedDir));
+		}
+		if (postprocess) filesystem.delete(Directory.GetFiles(docFxProcessedDir));
+		print.it("$DONE cleanup {(perf.ms - time0) / 1000d}s");
 	}
 	
-	print.it((perf.ms - time0) / 1000d);
-	
 	if (serve) {
-		//r = run.console(o => { print.it(o); }, docfx, $"serve ""{siteDir}""");
+		//r = run.console(o => { print.it(o); }, docfx, $"serve ""{apiDocDir}""");
 		//if (r != 0) { print.it("docfx serve", r); return; } //no, it prints -1 when process killed
-		run.it(docfx, $@"serve ""{siteDir}""", flags: RFlags.InheritAdmin, dirEtc: new() { WindowState = ProcessWindowStyle.Hidden });
+		run.it(docFxExe, $@"serve ""{apiDocDir}""", flags: RFlags.InheritAdmin, dirEtc: new() { WindowState = ProcessWindowStyle.Hidden });
+		print.it($"DocFx Server started at default http://localhost:8080 {(perf.ms - time0) / 1000d}s");
 	}
 }
 

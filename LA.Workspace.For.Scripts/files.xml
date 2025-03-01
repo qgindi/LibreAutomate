@@ -1,0 +1,54 @@
+﻿<files>
+  <c n="global.cs" i="50" />
+  <c n="passwords.cs" i="94" />
+  <c n="Sftp.cs" i="93" />
+  <d n="Scripts" i="51" path="C:\Users\dks\Source\repos\LibreAutomate\Scripts">
+    <d n="@Au docs" i="52">
+      <s n="Au docs.cs" i="53" />
+      <c n="AuDocs analyze.cs" i="54" />
+      <c n="AuDocs code.cs" i="55" />
+      <c n="AuDocs cookbook.cs" i="56" />
+      <c n="AuDocs other tasks.cs" i="57" />
+      <c n="AuDocs text.cs" i="58" />
+      <c n="AuDocs.cs" i="59" />
+      <n n="Readme.txt" i="60" />
+      <s n="VS goto.cs" i="61" />
+    </d>
+    <d n="@WinAPI converter" i="62">
+      <s n="WinAPI converter.cs" i="63" />
+      <c n="WinApiConverter+.cs" i="64" />
+      <c n="WinApiConverter.cs" i="65" />
+    </d>
+    <c n="Create cookbook.db.cs" i="66" />
+    <s n="Create NuGet package.cs" i="67" />
+    <d n="old" i="68">
+      <d n="Windows SDK to C#" i="69">
+        <d n="@SDK converter" i="70">
+          <c n="Classes.cs" i="71" />
+          <c n="Constants.cs" i="72" />
+          <c n="Converter.cs" i="73" />
+          <c n="Expr.cs" i="74" />
+          <c n="Functions.cs" i="75" />
+          <c n="Parameters.cs" i="76" />
+          <s n="SDK converter.cs" i="77" />
+          <c n="Tokenize.cs" i="78" />
+          <c n="Types.cs" i="79" />
+          <c n="Util.cs" i="80" />
+        </d>
+        <n n="Readme.txt" i="81" />
+        <d n="Scripts" i="82">
+          <d n="once" i="83">
+            <s n="SDK get dll names.cs" i="84" />
+            <s n="SDK get GUID.cs" i="85" />
+          </d>
+          <s n="SDK append 32-bit diff.cs" i="86" />
+          <s n="SDK create database.cs" i="87" />
+          <n n="SDK headers.h" i="88" />
+          <s n="SDK preprocessor.cs" i="89" />
+          <c n="SdkUtil.cs" i="90" />
+        </d>
+      </d>
+    </d>
+    <s n="Update version.txt.cs" i="91" />
+  </d>
+</files>

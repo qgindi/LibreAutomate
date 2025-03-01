@@ -2,7 +2,7 @@ using System.Xml.Linq;
 
 partial class AuDocs {
 	
-	public static void Cookbook(string docDir) {
+	public static void Cookbook(string cookbookFilesDir, string processedCookbookDir) {
 		App.Settings ??= new(); //need internetSearchUrl
 		
 		var sbToc = new StringBuilder();
@@ -11,13 +11,11 @@ partial class AuDocs {
 		regexp rxEscape = new(@"[\!\#\$\%\&\'\(\)\*\+\-\/\:\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~]");
 		const string website = "https://www.libreautomate.com";
 		
-		var dirTo = docDir + @"\cookbook\";
-		if (filesystem.exists(dirTo)) filesystem.delete(Directory.GetFiles(dirTo));
+		if (filesystem.exists(processedCookbookDir)) filesystem.delete(Directory.GetFiles(processedCookbookDir));
 		
-		var dirFrom = folders.ThisAppBS + "..\\Cookbook\\files";
-		var xr = XmlUtil.LoadElem(dirFrom + ".xml");
+		var xr = XmlUtil.LoadElem(cookbookFilesDir + ".xml");
 		
-		_AddItems(xr, 1, dirFrom);
+		_AddItems(xr, 1, cookbookFilesDir);
 		
 		void _AddItems(XElement xp, int level, string path) {
 			//see PanelCookbook._Load().
@@ -41,8 +39,8 @@ partial class AuDocs {
 		}
 		
 		//print.it(sbToc.ToString());
-		filesystem.saveText(dirTo + @"\toc.md", sbToc.ToString());
-		filesystem.saveText(dirTo + @"\index.md", """
+		filesystem.saveText(processedCookbookDir + @"\toc.md", sbToc.ToString());
+		filesystem.saveText(processedCookbookDir + @"\index.md", """
 # Cookbook
 This is an online copy of the LibreAutomate C# Cookbook.
 """);
@@ -80,7 +78,7 @@ This is an online copy of the LibreAutomate C# Cookbook.
 			}
 			
 			if (test) print.it(b.ToString());
-			filesystem.saveText(dirTo + nameMd, b.ToString());
+			filesystem.saveText(processedCookbookDir + nameMd, b.ToString());
 			
 			string _Repl(RXMatch m) {
 				if (test) print.it(m);
@@ -170,7 +168,7 @@ This is an online copy of the LibreAutomate C# Cookbook.
 	}
 	
 	public static void CookbookClear(string docDir) {
-		var dirTo = docDir + @"\cookbook\";
-		filesystem.delete(Directory.GetFiles(dirTo));
+		var cookbookDocDir = docDir + @"\cookbook\";
+		filesystem.delete(Directory.GetFiles(cookbookDocDir));
 	}
 }
