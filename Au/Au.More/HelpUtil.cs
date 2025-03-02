@@ -41,22 +41,22 @@ namespace Au.More
 		/// Otherwise docfx.exe is called using the path <see cref="Au.More.HelpUtil.docFxExecutable"/> with the <c>serve</c> command and the <c>--port</c> parameter and help is obtained from the url <b>http://localhost:port"/</b> where <b>port</b> is <see cref="Au.More.HelpUtil.docFxPort"/>.
         /// </summary>
         /// <param name="topic">Topic file name, like <c>"Au.wnd.find"</c> or <c>"wnd.find"</c> or <c>"articles/Wildcard expression"</c>.</param>
-        public static void AuHelp(string topic) {
-            run.itSafe(AuHelpUrl(topic));
+        public static void AuHelp(string topic, bool forceNonLocalDocumentation = false) {
+            run.itSafe(AuHelpUrl(topic, forceNonLocalDocumentation));
 		}
 
 		/// <summary>
 		/// Gets URL of an Au library help topic.
 		/// </summary>
 		/// <param name="topic">Topic file name, like <c>"Au.wnd.find"</c> or <c>"wnd.find"</c> or <c>"articles/Wildcard expression"</c>.</param>
-		public static string AuHelpUrl(string topic) {
+		public static string AuHelpUrl(string topic, bool forceNonLocalDocumentation = false) {
 			string url;
 			if (topic.Ends(".this[]")) topic = topic.ReplaceAt(^7.., ".Item");
 			else if (topic.Ends(".this")) topic = topic.ReplaceAt(^5.., ".Item");
 			else if (topic.Ends("[]")) topic = topic.ReplaceAt(^2.., ".Item");
 
-            if (enableLocalDocumentation)
-			{
+            if (enableLocalDocumentation && !forceNonLocalDocumentation)
+            {
                 LaunchLocalDocFxServer();
                 url = @"http://localhost:" + docFxPort + @"/";
 			}

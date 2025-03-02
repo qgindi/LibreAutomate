@@ -565,7 +565,7 @@ static class Menus {
 	[Command(target = "")]
 	public static class Help {
 		[Command(image = "*Modern.Home" + blue)]
-		public static void Website() { HelpUtil.AuHelp(""); }
+		public static void Website() { HelpUtil.AuHelp("", true); }
 		
 		[Command(image = "*BoxIcons.RegularLibrary" + darkYellow)]
 		public static void Library_help() { HelpUtil.AuHelp("api/"); }
