@@ -36,6 +36,7 @@ class DOptions : KDialogWindow {
 		_Hotkeys();
 		_Other();
 		_OS();
+		_Docs();
 		
 		//_tc.SelectedIndex = 2;
 		
@@ -669,8 +670,70 @@ Example:
 				Api.SystemParametersInfo(Api.SPI_SETKEYBOARDCUES, 0, (void*)(underlineAK ? 0 : 1), save: true, notify: true);
 		};
 	}
-	
-	protected override void OnPreviewKeyDown(KeyEventArgs e) {
+    void _Docs()
+
+    {
+        var b = _Page("Docs");
+
+        b.R.Add(out KCheckBox enableLocalDocumentation, "Enable Access to Local Documentation").Checked(App.Settings.enableLocalDocumentation);
+		b.R.Add(out KCheckBox nonDefaultDocumentationDir, "Use a directory for documentation other than the default").Checked(0 != string.Compare(HelpUtil.stdDocumentationDir, App.Settings.documentationDir, StringComparison.OrdinalIgnoreCase));
+		b.R.Add<TextBlock>("Local documentation directory").Margin(44)
+			.Add(out TextBox documentationDir, App.Settings.documentationDir);
+        b.R.Add(out KCheckBox nonDefaultDocFxExecutable, "Use DocFx Executable other than the default").Checked(0 != string.Compare(HelpUtil.stdDocFxExecutable, App.Settings.docFxExecutable, StringComparison.OrdinalIgnoreCase));
+        b.R.Add<TextBlock>("DocFx executable full path").Margin(44)
+			.Add(out TextBox docFxExecutable, App.Settings.docFxExecutable);
+        b.R.Add(out KCheckBox nonDefaultPort, "Use a Port other than the default").Checked(0 != string.Compare(HelpUtil.stdDocFxPort, App.Settings.docFxPort));
+        b.R.Add<TextBlock>("Port").Margin(44)
+			.Add(out TextBox docFxPort, App.Settings.docFxPort).Margin(22, 0, 0, 0)
+				.Validation(o => ((o as TextBox).Text.ToInt() is >= 0 and <= 65535) ? null : "0-65535");
+        b.End();
+
+        b.Loaded += () => _updateEnabledStates();
+        enableLocalDocumentation.CheckChanged += (sender, e) => _updateEnabledStates();
+        nonDefaultDocumentationDir.CheckChanged += (sender, e) => _updateEnabledStates();
+        nonDefaultDocFxExecutable.CheckChanged += (sender, e) => _updateEnabledStates();
+		nonDefaultPort.CheckChanged += (sender, e) => _updateEnabledStates();
+
+        void _updateEnabledStates ()
+		{
+            nonDefaultDocumentationDir.IsEnabled = enableLocalDocumentation.IsChecked;
+            documentationDir.IsEnabled = (enableLocalDocumentation.IsChecked && nonDefaultDocumentationDir.IsChecked);
+            nonDefaultDocFxExecutable.IsEnabled = enableLocalDocumentation.IsChecked;
+            docFxExecutable.IsEnabled = (enableLocalDocumentation.IsChecked && nonDefaultDocFxExecutable.IsChecked);
+            nonDefaultPort.IsEnabled = enableLocalDocumentation.IsChecked;
+            docFxPort.IsEnabled = (enableLocalDocumentation.IsChecked && nonDefaultPort.IsChecked);
+        }
+
+
+        nonDefaultDocumentationDir.CheckChanged += (sender, e) =>
+        {
+            if (!nonDefaultDocumentationDir.IsChecked) // If unchecked, set default path
+                documentationDir.Text = HelpUtil.stdDocumentationDir;
+        };
+
+        nonDefaultDocFxExecutable.CheckChanged += (sender, e) =>
+        {
+            if (!nonDefaultDocFxExecutable.IsChecked) // If unchecked, set default path for executable
+                docFxExecutable.Text = HelpUtil.stdDocFxExecutable; 
+        };
+
+        nonDefaultPort.CheckChanged += (sender, e) =>
+        {
+            if (!nonDefaultPort.IsChecked) // If unchecked, set default port
+                docFxPort.Text = HelpUtil.stdDocFxPort;
+        };
+
+        _b.OkApply += e => {
+			App.Settings.enableLocalDocumentation = enableLocalDocumentation.IsChecked;
+            App.Settings.documentationDir = nonDefaultDocumentationDir.IsChecked ? (documentationDir.TextOrNull() ?? HelpUtil.stdDocumentationDir) : HelpUtil.stdDocumentationDir;
+            App.Settings.docFxExecutable = nonDefaultDocFxExecutable.IsChecked ? (docFxExecutable.TextOrNull() ?? HelpUtil.stdDocFxExecutable) : HelpUtil.stdDocFxExecutable;
+            int p = docFxPort.Text.ToInt();
+            App.Settings.docFxPort = nonDefaultPort.IsChecked ? (docFxPort.TextOrNull() ?? HelpUtil.stdDocFxPort) : HelpUtil.stdDocFxPort;
+			PushLocalDocOptionsToHelpUtils(App.Settings);
+        };
+    }
+
+    protected override void OnPreviewKeyDown(KeyEventArgs e) {
 		if (e.Key == Key.F1 && Keyboard.Modifiers == 0) {
 			HelpUtil.AuHelp("editor/Program settings");
 			e.Handled = true;
@@ -685,4 +748,13 @@ Example:
 		internal unsafe delegate int FONTENUMPROC(Api.LOGFONT* lf, IntPtr tm, uint fontType, nint lParam);
 		
 	}
+
+	public static void PushLocalDocOptionsToHelpUtils(AppSettings appSettings)
+	{
+		HelpUtil.enableLocalDocumentation = appSettings.enableLocalDocumentation;
+		HelpUtil.documentationDir = appSettings.documentationDir;
+		HelpUtil.docFxExecutable = appSettings.docFxExecutable;
+		HelpUtil.docFxPort = appSettings.docFxPort;
+
+}
 }

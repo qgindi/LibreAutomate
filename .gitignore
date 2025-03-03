@@ -246,3 +246,15 @@ ModelManifest.xml
 *.bak
 /Au/global.json
 .tools/
+
+# LibreAutomate compiliation of docs
+/LA.Workspace.For.Scripts/*
+!/LA.Workspace.For.Scripts/readme.txt
+!/LA.Workspace.For.Scripts/files.xml
+!/LA.Workspace.For.Scripts/state.db
+!/LA.Workspace.For.Scripts/files/
+
+# Documentation generation
+/Other/DocFx/_doc/cookbook/*
+/Other/DocPreProcessed/*
+/Other/DocFxProcessed/*

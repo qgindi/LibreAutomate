@@ -18,6 +18,7 @@ record AppSettings : JSettings {
 		(font_recipeText ??= new()).Normalize("Calibri", 10.5);
 		(font_recipeCode ??= new()).Normalize("Consolas", 9);
 		(font_find ??= new()).Normalize("Consolas", 9);
+		DOptions.PushLocalDocOptionsToHelpUtils(this);
 		debug ??= new();
 		delm ??= new();
 		recorder ??= new();
@@ -98,9 +99,15 @@ record AppSettings : JSettings {
 	//Options > Other
 	public bool? comp_printCompiled = false;
 	public string internetSearchUrl = "https://www.google.com/search?q=";
-	
-	//code editor
-	public bool edit_wrap, edit_noImages;
+
+	//Options > Docs
+	public bool enableLocalDocumentation;
+    public string documentationDir = HelpUtil.stdDocumentationDir;
+	public string docFxExecutable = HelpUtil.stdDocFxExecutable;
+    public string docFxPort = HelpUtil.stdDocFxPort;
+
+    //code editor
+    public bool edit_wrap, edit_noImages;
 	public string edit_theme;
 	
 	//code info, autocorrection, formatting

@@ -73,7 +73,7 @@ partial class AuDocs {
 		return s;
 	}
 	
-	public void Postprocess(string siteDirTemp, string siteDir) {
+	public void Postprocess(string siteDirTemp, string siteDir, string buildDir) {
 		filesystem.delete(siteDir);
 		filesystem.createDirectory(siteDir);
 		var files = filesystem.enumFiles(siteDirTemp, flags: FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath).ToArray();
@@ -86,7 +86,7 @@ partial class AuDocs {
 				_ProcessJs(f.FullPath, file2);
 			} else {
 				filesystem.copy(f.FullPath, file2);
-				if (name.Eqi(@"\xrefmap.yml")) _XrefMap(f.FullPath);
+				if (name.Eqi(@"\xrefmap.yml")) _XrefMap(f.FullPath, buildDir);
 			}
 		});
 		_CreateCodeCss(siteDir);
@@ -283,7 +283,7 @@ partial class AuDocs {
 	//From xrefmap.yml extracts conceptual topics and writes to _\xrefmap.yml.
 	//Could simply copy the file, but it is ~2 MB, and we don't need api topics.
 	//Editor uses it to resolve links in code info.
-	static void _XrefMap(string file) {
+	static void _XrefMap(string file, string buildDir) {
 		var b = new StringBuilder();
 		var s = filesystem.loadText(file);
 		foreach (var m in s.RxFindAll(@"(?m)^- uid:.+\R.+\R  href: (?!api/).+\R", (RXFlags)0)) {
@@ -291,6 +291,6 @@ partial class AuDocs {
 			b.Append(m);
 		}
 		
-		filesystem.saveText(folders.ThisAppBS + "xrefmap.yml", b.ToString());
+		filesystem.saveText(buildDir + @"\xrefmap.yml", b.ToString());
 	}
 }
