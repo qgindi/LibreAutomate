@@ -287,7 +287,7 @@ To set trigger scope window can be used {App.Settings.hotkeys.tool_quick}.
 			b.R.Add(out _cAlwaysEnabled, "Always enabled").Span(-1);
 			
 			b.R.xAddInfoBlockF($"""
-<a href='https://www.libreautomate.com/api/Au.Triggers.AutotextTriggers.Item.html'>Trigger help</a>
+<a href='{HelpUtil.AuHelpUrl("Au.Triggers.AutotextTriggers.Item")}'>Trigger help</a>
 Also in code you can set PostfixKey, WordCharsPlus and MenuOptions.
 """).Span(-1);
 		}

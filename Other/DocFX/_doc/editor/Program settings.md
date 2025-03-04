@@ -81,6 +81,12 @@ When you select a function in the completion list, whether/when to append `()`. 
 Initial code of new scripts and class files. Can be empty.
 
 ### Other
+#### Internet search URL
+The Internet search URL used by this program. The program will append the query string. Default: `https://www.google.com/search?q=`.
+
+#### Documentation
+Which version of documentation to use. If **Local**, the program downloads the documentation of the installed program version from its website to `C:\ProgramData\LibreAutomate\docs` and uses it. If **Online**, the program uses the online documentation; it is of the latest program version, which may be not the same as your installed program version.
+
 #### Always print "Compiled"
 Always print a \"Compiled\" message when a script etc compiled successfully.
 If unchecked, prints only if role is **exeProgram** or **classLibrary**.

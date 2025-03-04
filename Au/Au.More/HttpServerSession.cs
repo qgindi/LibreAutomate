@@ -13,8 +13,9 @@ namespace Au.More {
 		/// <summary>
 		/// Simple HTTP 1.1 server.
 		/// </summary>
-		/// <param name="port">TCP port.</param>
-		/// <param name="ip">A local IPv4 or IPv6 address. If <c>null</c> (default), uses <see cref="IPAddress.IPv6Any"/> and dual mode (supports IPv6 and IPv4 connections).</param>
+		/// <param name="port">TCP port. Default 4455. If 0, uses the first available port in the dynamic/private ports range (49152-65535); you can use the <i>started</i> callback to discover it.</param>
+		/// <param name="ip">A local IPv4 or IPv6 address, like <c>"127.0.0.1"</c> or <c>"[::1]"</c>. If <c>null</c> (default), uses <see cref="IPAddress.IPv6Any"/> and dual mode (supports IPv6 and IPv4 connections).</param>
+		/// <param name="started">Called when the server started (after <see cref="TcpListener.Start()"/>).</param>
 		/// <exception cref="Exception">Exceptions of <see cref="TcpListener"/> functions. Unlikely.</exception>
 		/// <remarks>
 		/// Runs all the time and listens for new TCP client connections. For each connected client starts new thread, creates new object of your <b>HttpServerSession</b>-based type, and calls <see cref="Run"/>, which calls <see cref="MessageReceived"/>. Supports keep-alive. Multiple sessions can run simultaneously.
@@ -23,7 +24,7 @@ namespace Au.More {
 		///
 		/// The HTTP server is accessible from local network computers. Usually not accessible from the internet. To make accessible from the internet, you can use ngrok or similar software. This server does not support https (secure connections), but ngrok makes internet connections secure.
 		/// 
-		/// If <i>ip</i> is <c>null</c> or an IPv6 address, supports IPv6 and IPv4 connections.
+		/// The Windows Firewall shows a dialog when the app uses a HTTP server the first time, unless <i>ip</i> is <c>"127.0.0.1"</c>.
 		/// </remarks>
 		/// <example>
 		/// HTTP server.
@@ -58,14 +59,13 @@ namespace Au.More {
 		/// print.it(res);
 		/// ]]></code>
 		/// </example>
-		public static void Listen<TSession>(int port = 4455, string ip = null) where TSession : HttpServerSession, new() {
-			var server = new TcpListener(ip != null ? IPAddress.Parse(ip) : IPAddress.IPv6Any, port);
-			
-			//support IPv6 and IPv4 connections. It solves the "HttpClient 21 s delay" problem.
-			var socket = server.Server;
-			if (ip == null || socket.AddressFamily == AddressFamily.InterNetworkV6) socket.DualMode = true;
+		public static void Listen<TSession>(int port = 4455, string ip = null, Action<TcpListener> started = null) where TSession : HttpServerSession, new() {
+			var server = ip == null
+				? TcpListener.Create(port) //IPAddress.IPv6Any, dual mode (supports IPv6 and IPv4 connections); shows Firewall popup.
+				: new(IPAddress.Parse(ip), port); //no Firewall popup if "127.0.0.1" or "[::1]", but then no dual mode; `server.Server.DualMode=true` fails.
 			
 			server.Start();
+			started?.Invoke(server);
 			try {
 				for (; ; ) {
 					var client = server.AcceptTcpClient();

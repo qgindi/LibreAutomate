@@ -284,7 +284,7 @@ class PanelCookbook {
 	/// <param name="name">Exact recipe name. If null, opens the cookbook index page.</param>
 	public void OpenRecipeInWebBrowser(string name) {
 		var s = name?.Replace("#", "Sharp").Replace(".", "dot") ?? "index"; //see project @Au docs -> AuDocs.Cookbook
-		run.itSafe($"https://www.libreautomate.com/cookbook/{s}.html");
+		HelpUtil.AuHelp($"cookbook/{s}");
 	}
 	
 	_Item _FindRecipe(string s, bool exact = false) {

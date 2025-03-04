@@ -266,50 +266,13 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Registers a temporary hotkey and waits for it.
-	/// </summary>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
-	/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
-	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
-	/// <exception cref="AuException">Failed to register hotkey.</exception>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
-	/// <remarks>
-	/// Uses <see cref="RegisteredHotkey"/> (API <msdn>RegisterHotKey</msdn>).
-	/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if <c>F12</c>.
-	/// <note>Most single-key and <c>Shift+key</c> hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
-	/// </remarks>
-	/// <example>
-	/// <code><![CDATA[
-	/// keys.waitForHotkey(0, "F11");
-	/// keys.waitForHotkey(0, KKey.F11);
-	/// keys.waitForHotkey(0, "Shift+A", true);
-	/// keys.waitForHotkey(0, (KMod.Ctrl | KMod.Shift, KKey.P)); //Ctrl+Shift+P
-	/// keys.waitForHotkey(0, Keys.Control | Keys.Alt | Keys.H); //Ctrl+Alt+H
-	/// keys.waitForHotkey(5, "Ctrl+Win+K"); //exception after 5 s
-	/// if(!keys.waitForHotkey(-5, "Left")) print.it("timeout"); //returns false after 5 s
-	/// ]]></code>
-	/// </example>
-	public static bool waitForHotkey(Seconds timeout, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, bool waitModReleased = false) {
-		if (s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("Au.WaitForHotkey");
-		using (RegisteredHotkey rhk = default) {
-			if (!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
-			if (!wait.forPostedMessage(timeout, (ref MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
-		}
-		if (waitModReleased) return waitForNoModifierKeys(timeout, hotkey.Mod);
-		return true;
-	}
-	static ushort s_atomWFH;
-
-	/// <summary>
 	/// Waits for key-down or key-up event of the specified key.
 	/// </summary>
 	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="key">Wait for this key.</param>
 	/// <param name="up">Wait for key-up event.</param>
-	/// <param name="block">Make the event invisible for other apps. If <i>up</i> is <c>true</c>, makes the down event invisible too, if it comes while waiting for the up event.</param>
+	/// <param name="block">Make the event invisible to other apps. If <i>up</i> is <c>true</c>, makes the down event invisible too, if it comes while waiting for the up event.</param>
 	/// <exception cref="ArgumentException"><i>key</i> is 0.</exception>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 	/// <remarks>
@@ -389,7 +352,7 @@ public partial class keys {
 	/// </returns>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="f">Callback function that receives key down and up events. Let it return <c>true</c> to stop waiting.</param>
-	/// <param name="block">Make the key down event invisible for other apps (when the callback function returns <c>true</c>).</param>
+	/// <param name="block">Make the key down event invisible to other apps (when the callback function returns <c>true</c>).</param>
 	/// <remarks>
 	/// Waits for key event, not for key state.
 	/// Uses low-level keyboard hook.
@@ -413,6 +376,84 @@ public partial class keys {
 		return R;
 	}
 	//CONSIDER: Same for mouse.
+
+	/// <summary>
+	/// Registers a temporary hotkey and waits for it.
+	/// </summary>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
+	/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
+	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
+	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
+	/// <exception cref="AuException">Failed to register hotkey.</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <remarks>
+	/// Uses <see cref="RegisteredHotkey"/> (API <msdn>RegisterHotKey</msdn>).
+	/// Fails if the hotkey is currently registered by this or another application or used by Windows.
+	/// <note>Most single-key and <c>Shift+key</c> hotkeys don't work when the active window has higher UAC integrity level than this process. Media keys may work.</note>
+	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// keys.waitForHotkey(0, "F11");
+	/// keys.waitForHotkey(0, KKey.F11);
+	/// keys.waitForHotkey(0, "Shift+A", true);
+	/// keys.waitForHotkey(0, (KMod.Ctrl | KMod.Shift, KKey.P)); //Ctrl+Shift+P
+	/// keys.waitForHotkey(5, "Ctrl+Win+K"); //exception after 5 s
+	/// if(!keys.waitForHotkey(-5, "Left")) print.it("timeout"); //returns false after 5 s
+	/// ]]></code>
+	/// </example>
+	public static bool waitForHotkey(Seconds timeout, [ParamString(PSFormat.Hotkey)] KHotkey hotkey, bool waitModReleased = false) {
+		if (s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("Au.WaitForHotkey");
+		using (RegisteredHotkey rhk = default) {
+			if (!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
+			if (!wait.forPostedMessage(timeout, (ref MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
+		}
+		
+		if (waitModReleased) waitForNoModifierKeys(0, hotkey.Mod);
+		
+		return true;
+	}
+	static ushort s_atomWFH;
+	
+	/// <summary>
+	/// Sets a temporary keyboard hook and waits for a hotkey.
+	/// </summary>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="hotkeys">One or more hotkeys. Examples: <c>["Ctrl+M"]</c>, <c>["Win+M", "Ctrl+Shift+Left"]</c>.</param>
+	/// <param name="block">Make the key down event of the non-modifier key invisible to other apps. Default <c>true</c>.</param>
+	/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
+	/// <returns>1-based index of the element in the array of hotkeys. On timeout returns 0 (if <i>timeout</i> negative; else exception).</returns>
+	/// <exception cref="TimeoutException"></exception>
+	/// <remarks>
+	/// Uses <see cref="keys.waitForKeys"/>.
+	/// Works even if the hotkey is used by Windows (except <c>Win+L</c> and <c>Ctrl+Alt+Del</c>) or an app as a hotkey or trigger.
+	/// <note>Does not work when the active window has higher UAC integrity level than this process.</note>
+	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// int i = keys.waitForHotkeys(-10, ["Win+Left", "Win+Right"]);
+	/// print.it(i);
+	/// ]]></code>
+	/// </example>
+	public static int waitForHotkeys(Seconds timeout, [ParamString(PSFormat.Hotkey)] KHotkey[] hotkeys, bool block = true, bool waitModReleased = false) {
+		int R = 0;
+		keys.waitForKeys(timeout, k => {
+			if (!k.IsUp && k.Mod == 0) {
+				var mod = keys.getMod();
+				for (int i = 0; i < hotkeys.Length; i++) {
+					if (k.Key == hotkeys[i].Key && mod == hotkeys[i].Mod) {
+						R = i + 1;
+						return true;
+					}
+				}
+			}
+			return false;
+		}, block);
+		
+		if (waitModReleased && R > 0) keys.waitForNoModifierKeys(0, hotkeys[R - 1].Mod);
+		
+		return R;
+	}
 
 	#endregion
 

@@ -18,7 +18,7 @@ Snippet properties:
 - **Print** - text to print in the output panel when inserting the snippet. Can contain [output tags](xref:output_tags) if starts with `<>`.
 - **using** - namespaces to add as `using` directives if need. Example: `System.Windows; System.Windows.Controls`.
 - **Meta** - file properties to add as `/*/ meta comments /*/` if need. Example: `c A.cs; nuget -\B`.
-- ${VAR} - `${VAR}` variable type and default name, like `Au.popupMenu,m`. When inserting the snippet, the program looks for a local variable of the specified type, and replaces `${VAR}` in snippet code with the variable name, or with the default name if not found. To see how it works, in code editor insert **menuSnippet** and then **menuItemSnippet** (it contains `${VAR}`).
+- **\${VAR}** - `${VAR}` variable type and default name, like `Au.popupMenu,m`. When inserting the snippet, the program looks for a local variable of the specified type, and replaces `${VAR}` in snippet code with the variable name, or with the default name if not found. To see how it works, in code editor insert **menuSnippet** and then **menuItemSnippet** (it contains `${VAR}`).
 - **Code** - snippet code.
 
 Snippet code can contain fields and variables, like in [VSCode](https://code.visualstudio.com/docs/editor/userdefinedsnippets).

@@ -96,8 +96,9 @@ record AppSettings : JSettings {
 	//public int templ_flags;
 	
 	//Options > Other
-	public bool? comp_printCompiled = false;
 	public string internetSearchUrl = "https://www.google.com/search?q=";
+	public bool localDocumentation;
+	public bool? comp_printCompiled = false;
 	
 	//code editor
 	public bool edit_wrap, edit_noImages;

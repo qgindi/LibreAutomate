@@ -1095,7 +1095,7 @@ namespace Au {
 		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
 		/// <param name="up">Wait for button-up event.</param>
-		/// <param name="block">Make the event invisible for other apps. If <i>up</i> is <c>true</c>, makes the down event invisible too, if it comes while waiting for the up event.</param>
+		/// <param name="block">Make the event invisible to other apps. If <i>up</i> is <c>true</c>, makes the down event invisible too, if it comes while waiting for the up event.</param>
 		/// <exception cref="ArgumentException"><i>button</i> is 0.</exception>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>

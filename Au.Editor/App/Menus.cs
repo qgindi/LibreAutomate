@@ -564,7 +564,7 @@ static class Menus {
 	[Command(target = "")]
 	public static class Help {
 		[Command(image = "*Modern.Home" + blue)]
-		public static void Website() { HelpUtil.AuHelp(""); }
+		public static void Website() { run.itSafe(HelpUtil.AuHelpBaseUrlDefault_); }
 		
 		[Command(image = "*BoxIcons.RegularLibrary" + darkYellow)]
 		public static void Library_help() { HelpUtil.AuHelp("api/"); }
@@ -583,11 +583,14 @@ static class Menus {
 			}
 		}
 		
+		[Command("Online/local...")]
+		public static void Help_mode() { DOptions.AaShow(DOptions.EPage.Other); }
+		
 		[Command(image = "*Material.Forum" + blue)]
 		public static void Forum() { run.itSafe("https://www.libreautomate.com/forum/"); }
 		
 		[Command]
-		public static void Email() { run.itSafe($"mailto:support@quickmacros.com?subject={App.AppNameShort} {Au_.Version}"); }
+		public static void Email() { run.itSafe($"mailto:info@libreautomate.com?subject={App.AppNameShort} {Au_.Version}"); }
 		
 		[Command]
 		public static void Donate() { run.itSafe("https://github.com/sponsors/qgindi"); }

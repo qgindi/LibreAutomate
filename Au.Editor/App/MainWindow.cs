@@ -63,6 +63,8 @@ partial class MainWindow : Window {
 		
 		_NormalizeMouseWheel();
 		
+		DocsHttpServer.StartOrSwitch();
+		
 		//timer.after(100, _ => DOptions.aaShow());
 		//timer.after(100, _ => App.Model.Properties());
 		//timer.after(100, _ => Menus.File.Workspace.New_workspace());

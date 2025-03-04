@@ -579,6 +579,8 @@ static class CiUtil {
 		
 		while (parent is BinaryExpressionSyntax && parent.IsKind(SyntaxKind.AddExpression)) parent = parent.Parent; //"string"+"string"+...
 		
+		if (parent is ExpressionElementSyntax { Parent: CollectionExpressionSyntax colex }) parent = colex.Parent; //["", ""]
+		
 		PSFormat format = PSFormat.None;
 		if (parent is ArgumentSyntax asy) {
 			if (parent.Parent is ArgumentListSyntax alis) {

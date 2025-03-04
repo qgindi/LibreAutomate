@@ -52,7 +52,7 @@ static class EdWpf {
 	public static TextBlock TextAndHelp(string text, Func<string> helpTopic) {
 		var img = ImageUtil.LoadWpfImageElement("*Entypo.HelpWithCircle #008EEE @14");
 		var s1 = text.NE() ? "" : "  ";
-		return wpfBuilder.formattedText($"{text}{s1}<a {() => { run.itSafe(HelpUtil.AuHelpUrl(helpTopic())); }}>{img}</a>");
+		return wpfBuilder.formattedText($"{text}{s1}<a {() => { HelpUtil.AuHelp(helpTopic()); }}>{img}</a>");
 	}
 }
 

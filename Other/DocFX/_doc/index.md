@@ -45,7 +45,7 @@ The setup program may be blocked by security software. Why: it is new, not commo
 
 ### Links
 - [Forum](https://www.libreautomate.com/forum/)
-- [Email](mailto:gintaras@libreautomate.com)
+- <a href="mailto:info@llibreautomate.com" onmousemove="if (this.dataset.mm == 1) this.href=this.href.replace(/ll/g, 'l'); this.dataset.mm = (this.dataset.mm || 0) + 1;">Email</a>
 - [Source code](https://github.com/qgindi/LibreAutomate)
 - [Changes](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/)
 - [Donate](https://github.com/sponsors/qgindi)
@@ -62,5 +62,5 @@ The goal is to provide automation software for Windows with these features:
 - Powerful library that includes UI automation, triggers, toolbars.
 - Script editor/manager program with tools for automation.
 - In scripts use the C# language and .NET libraries.
-- Free and open-source forever.
+- Free and open-source.
 
