@@ -165,7 +165,7 @@ public partial class toolbar {
 			//if (onDpiChanged) print.it(old == v.image2);
 			if (!_hasCachedImages && !onDpiChanged && v.image2 != null && v.image is string s && s.Length > 0) _hasCachedImages = true;
 		}
-		if (_hasCachedImages) IconImageCache.Common.Cleared += _UpdateCachedImages;
+		if (_hasCachedImages) _ImageCache.Cleared += _UpdateCachedImages;
 	}
 	bool _hasCachedImages;
 	
@@ -228,10 +228,10 @@ public partial class toolbar {
 			tbBorder = tbPadding > 0 ? bBorder : 0;
 			textPaddingR = Dpi.Scale(4, dpi);
 			textPaddingY = Dpi.Scale(1, dpi);
-			image = Dpi.Scale(16, dpi);
+			image = Dpi.Scale(tb.ImageSize, dpi);
 			if (!tb.NoDefaultImage) {
-				dot = Dpi.Scale(5, dpi);
-				triangle = Dpi.Scale(8, dpi);
+				dot = tb.ImageSize / 3;
+				triangle = tb.ImageSize / 2;
 			} else dot = triangle = 0;
 			imagePaddingX = Dpi.Scale(2, dpi);
 			
@@ -368,12 +368,12 @@ public partial class toolbar {
 							if (vert) x += m.image / 4;
 							if (b.IsMenu_) {
 								y += m.triangle / 6;
-								x -= m.triangle / 4; if (!vert) x++;
+								if (vert) x -= m.triangle / 8;
 								brushTriangle ??= new SolidBrush(Color.YellowGreen);
 								g.FillPolygon(brushTriangle, new Point[] { new(x, y), new(x + m.triangle, y), new(x + m.triangle / 2, y + m.triangle / 2) });
 							} else {
 								brushDot ??= new SolidBrush(Color.SkyBlue);
-								g.FillEllipse(brushDot, x - .5f, y, m.dot, m.dot);
+								g.FillEllipse(brushDot, x, y, m.dot, m.dot);
 							}
 							g.SmoothingMode = SmoothingMode.None;
 						}
@@ -388,21 +388,12 @@ public partial class toolbar {
 						oldFont = Api.SelectObject(dc, font.Handle);
 						Api.SetBkMode(dc, 1);
 					}
-					
-					RECT r;
-					var tff = c_tff;
-					if (b.IsGroup_) {
-						r = new(groupTextX, b.rect.top + m.textPaddingY, b.textSize.width, b.textSize.height);
-					} else {
-						r = new(xImage + m.ImageEtc(b, vert) + m.imagePaddingX,
-							b.rect.top + m.bBorder + m.bPaddingY + m.textPaddingY,
-							b.textSize.width,
-							b.textSize.height);
-					}
-					r.right = Math.Min(r.right, b.rect.right - m.bBorder * 2);
-					//if(!b.Text.Contains('\n')) tff|=TFFlags.SINGLELINE|TFFlags.VCENTER;
 					Api.SetTextColor(dc, textColor);
-					Api.DrawText(dc, b.Text.AsSpan(0, _TextDispLen(b)), ref r, tff);
+					
+					RECT r = new(b.IsGroup_ ? groupTextX : xImage + m.ImageEtc(b, vert) + m.imagePaddingX, b.rect.top + (b.rect.Height - b.textSize.height) / 2, b.textSize.width, b.rect.Height);
+					r.right = Math.Min(r.right, b.rect.right - m.bBorder * 2);
+					
+					Api.DrawText(dc, b.Text.AsSpan(0, _TextDispLen(b)), ref r, c_tff);
 				}
 			}
 		}

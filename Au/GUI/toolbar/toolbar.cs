@@ -383,7 +383,7 @@ public partial class toolbar : MTBase {
 	public void Close() {
 		if (_w.Is0) return;
 		if (_IsOtherThread) _w.Post(Api.WM_CLOSE); else Api.DestroyWindow(_w);
-		if (_hasCachedImages) IconImageCache.Common.Cleared -= _UpdateCachedImages;
+		if (_hasCachedImages) _ImageCache.Cleared -= _UpdateCachedImages;
 	}
 	
 	/// <summary>

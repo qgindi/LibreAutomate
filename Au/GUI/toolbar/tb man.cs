@@ -662,17 +662,19 @@ public partial class toolbar {
 	}
 	
 	unsafe void _WmDpiChanged(nint wParam, nint lParam) {
-		if (_os != null) {
-			//print.it(caller(), _w.Rect, *(RECT*)lParam);
-			if (!_SetDpi()) return;
-			_Images(true);
-			_MeasureText();
-			if (_inMoveSize) { //cannot autosize now, or something bad may happen, eg nested wm_dpichanged until stack overflow
-				_w.MoveL(*(RECT*)lParam);
-			} else {
-				if (DpiScaling.offsets == true) _FollowRect(); //update offsets if script wants so
-				_AutoSizeNowIfIsOpen();
-			}
+		if (_os != null && Math2.LoShort(wParam) != _dpi) {
+			timer.after(1, _ => { //workaround for Win11 bug: when moving the toolbar to another screen, often WM_DPICHANGED received when the window is still in old screen
+				_os.UpdateIfAutoScreen();
+				if (!_SetDpi()) return;
+				_Images(true);
+				_MeasureText();
+				if (_inMoveSize && lParam != 0) { //cannot autosize now, or something bad may happen, eg nested wm_dpichanged until stack overflow
+					_w.MoveL(*(RECT*)lParam);
+				} else {
+					if (DpiScaling.offsets == true) _FollowRect(); //update offsets if script wants so
+					_AutoSizeNowIfIsOpen();
+				}
+			});
 		}
 	}
 	
@@ -682,6 +684,11 @@ public partial class toolbar {
 			
 			timer.after(200, _ => {
 				if (_os == null || _closed) return;
+				
+				//workaround for Win11 bug: WS_EX_TOOLWINDOW windows don't receive WM_DPICHANGED when screen DPI changes
+				var dpi = _os.Screen.Dpi;
+				if (dpi != _dpi) _WmDpiChanged(dpi, 0);
+				
 				_os.UpdateRect(out bool changed);
 				if (changed) _FollowRect();
 			});

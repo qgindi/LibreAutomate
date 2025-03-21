@@ -12,6 +12,7 @@ public class PMItem : MTItem {
 	internal byte checkType; //1 checkbox, 2 radio
 	internal bool checkDontClose;
 	internal bool rawText;
+	internal int textHeight;
 	
 	internal PMItem(popupMenu m, bool isDisabled, bool isChecked = false) {
 		_m = m;

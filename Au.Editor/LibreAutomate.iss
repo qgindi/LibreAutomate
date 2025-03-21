@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.8.0"
+#define MyAppVersion "1.9.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -221,8 +221,8 @@ begin
   if (Length(urls) < 2) then
   begin
     SetLength(urls, 2);
-    urls[0] := 'https://download.visualstudio.microsoft.com/download/pr/0e1df956-98b6-48cc-86ac-8b6c02feb6d9/cb90f6c099d4cdefe8d35af6115a3ec5/windowsdesktop-runtime-9.0.2-win-x64.exe';
-    urls[1] := 'https://download.visualstudio.microsoft.com/download/pr/d8b26b48-2f5c-4814-a253-c752a45b504e/2ff9ba5aa7ab19d3736a3c5d9d346b3d/windowsdesktop-runtime-9.0.2-win-arm64.exe';
+    urls[0] := 'https://download.visualstudio.microsoft.com/download/pr/63f0335a-6012-4017-845f-5d655d56a44f/f8d5150469889387a1de578d45415201/windowsdesktop-runtime-9.0.3-win-x64.exe';
+    urls[1] := 'https://download.visualstudio.microsoft.com/download/pr/b2f2a05c-c22b-4409-b41e-5f32aaa119a8/71171816b6261ddf0050b3b9172a75ce/windowsdesktop-runtime-9.0.3-win-arm64.exe';
   end;
 	
 	if IsArm64 then url := urls[1] else url := urls[0];
@@ -246,7 +246,8 @@ begin
     try
       DownloadPage.Download;
       setupFile := ExpandConstant('{tmp}\' + setupFile);
-      Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+      //Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+      Result := Exec(setupFile, '/install', '', 0, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
       DeleteFile(setupFile);
     except
       if DownloadPage.AbortedByUser then Log('Aborted by user.') else Log(GetExceptionMessage);

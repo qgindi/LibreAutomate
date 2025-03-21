@@ -34,11 +34,11 @@ public abstract partial class MTBase {
 	private protected wnd _w;
 	private protected int _dpi;
 	(wnd tt, MTItem item, RECT rect) _tt;
-
+	
 	private protected MTBase() {
 		_threadId = Api.GetCurrentThreadId();
 	}
-
+	
 	private protected MTBase(string name, string f_, int l_, string m_ = null) : this() {
 		if (name == null && !m_.NE())
 			if (m_[0] is not ('<' or '.')) name = m_; //<Main>$, .ctor
@@ -46,12 +46,12 @@ public abstract partial class MTBase {
 		_sourceFile = f_;
 		_sourceLine = l_;
 	}
-
+	
 	private protected virtual void _WmNccreate(wnd w) {
 		_w = w;
 		MouseCursor.SetArrowCursor_(); //workaround for: briefly shows "wait" cursor when entering mouse first time in process
 	}
-
+	
 	private protected virtual void _WmNcdestroy() {
 		_w = default;
 		_tt = default;
@@ -60,7 +60,7 @@ public abstract partial class MTBase {
 			_stdAO = null;
 		}
 	}
-
+	
 	/// <summary>
 	/// Extract file path or script path from item action code (for example <see cref="run.it"/> or <see cref="script.run"/> argument) and use icon of that file or script.
 	/// This property is applied to items added afterwards; submenus inherit it.
@@ -73,7 +73,7 @@ public abstract partial class MTBase {
 	/// If extracts path, also in the context menu adds item <b>Find file</b> which selects the file in Explorer or <b>Open script</b> which opens the script in editor.
 	/// </remarks>
 	public bool ExtractIconPathFromCode { get; set; }
-
+	
 	/// <summary>
 	/// Execute item actions asynchronously in new threads.
 	/// This property is applied to items added afterwards; submenus inherit it.
@@ -83,43 +83,50 @@ public abstract partial class MTBase {
 	/// If current thread is a UI thread (has windows etc) or has triggers or hooks, and item action functions execute some long automations etc in current thread, current thread probably is hung during that time. Set this property = <c>true</c> to avoid it.
 	/// </remarks>
 	public bool ActionThread { get; set; }
-
+	
 	/// <summary>
 	/// Whether to handle exceptions in item action code. If <c>false</c> (default), handles exceptions and on exception calls <see cref="print.warning"/>.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
 	/// <value>Default: <b>toolbar</b> <c>false</c><b>, popupMenu</b> <c>false</c>.</value>
 	public bool ActionException { get; set; }
-
+	
 	/// <summary>
 	/// If an item has file path, show it in tooltip.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
 	/// <value>Default: <b>toolbar</b> <c>false</c><b>, popupMenu</b> <c>false</c>.</value>
 	public bool PathInTooltip { get; set; }
-
+	
+	/// <summary>
+	/// Width and height of images. Default 16, valid 16-256.
+	/// </summary>
+	public int ImageSize { get; set; } = 16;
+	
+	private protected IconImageCache _ImageCache => field ??= IconImageCache.CommonOfSize(ImageSize);
+	
 	private protected void _CopyProps(MTBase m) {
-		//m.ImageCache=this.ImageCache;
+		m.ImageSize = ImageSize;
 		m.ActionException = ActionException;
 		m.ActionThread = ActionThread;
 		m.ExtractIconPathFromCode = ExtractIconPathFromCode;
 		m.PathInTooltip = PathInTooltip;
 	}
-
+	
 	private protected string _SourceLink(MTItem x, string text) => x.sourceFile == null ? null : $"<open {x.sourceFile}|{x.sourceLine}>{text}<>";
-
+	
 	private protected bool _IsOtherThread => _threadId != Api.GetCurrentThreadId();
-
+	
 	internal void _ThreadTrap() {
 		if (_threadId != Api.GetCurrentThreadId()) throw new InvalidOperationException("Wrong thread.");
 	}
-
+	
 	/// <summary>
 	/// Converts <c>x.image</c> (object containing string, <b>Image</b>, etc or <c>null</c>) to <b>Image</b>. Extracts icon path from code if need. Returns default if will extract async.
 	/// </summary>
 	private protected (Image image, bool dispose) _GetImage(MTItem x) {
 		Image im = null; bool dontDispose = false;
-
+		
 		if (x.extractIconPath == 1) { //extract path always, not only when x.image==null, or we would not have path for other purposes
 			x.file = icon.ExtractIconPathFromCode_(x.clicked.Method, out bool cs);
 			if (x.file != null) {
@@ -127,7 +134,7 @@ public abstract partial class MTBase {
 				x.extractIconPath = (byte)(cs ? 4 : 2);
 			} else x.extractIconPath = 3;
 		}
-
+		
 		switch (x.image) {
 		case Image g:
 			im = g;
@@ -137,11 +144,11 @@ public abstract partial class MTBase {
 			try {
 				dontDispose = true;
 				bool isImage = ImageUtil.HasImageOrResourcePrefix(s);
-				im = IconImageCache.Common.Get(s, _dpi, isImage, _OnException);
+				im = _ImageCache.Get(s, _dpi, isImage, _OnException);
 				if (im == null && isImage) _OnException(s, null);
 			}
 			catch (Exception e1) { _OnException(null, e1); }
-
+			
 			void _OnException(string s, Exception e) {
 				print.it($"<>Failed to load image. {e?.ToStringWithoutStack().TrimEnd('.') ?? s}. {_SourceLink(x, "Edit")}");
 			}
@@ -152,7 +159,7 @@ public abstract partial class MTBase {
 		}
 		return (im, im != null && !dontDispose);
 	}
-
+	
 	private protected string _GetFullTooltip(MTItem b) {
 		var s = b.Tooltip;
 		if (this is toolbar tb) {
@@ -168,7 +175,7 @@ public abstract partial class MTBase {
 		}
 		return s;
 	}
-
+	
 	private protected unsafe void _SetTooltip(MTItem b, RECT r, nint lParam, int submenuDelay = -1) {
 		string s = _GetFullTooltip(b);
 		bool setTT = !s.NE() && b != _tt.item;
@@ -181,13 +188,13 @@ public abstract partial class MTBase {
 				_tt.tt.Send(Api.TTM_ACTIVATE, 1);
 				_tt.tt.Send(Api.TTM_SETMAXTIPWIDTH, 0, screen.of(_w).WorkArea.Width / 3);
 			}
-
+			
 			if (b is PMItem) { //ensure the tooltip is above submenu in Z order
 				_tt.tt.ZorderTopRaw_();
 				if (submenuDelay > 0) submenuDelay += 100;
 				_tt.tt.Send(0x403, 3, submenuDelay > (int)_tt.tt.Send(0x415, 3) ? submenuDelay : -1); //TTM_SETDELAYTIME,TTM_GETDELAYTIME,TTDT_INITIAL
 			}
-
+			
 			fixed (char* ps = s) {
 				var g = new Api.TTTOOLINFO { cbSize = sizeof(Api.TTTOOLINFO), hwnd = _w, uId = 1, lpszText = ps, rect = r };
 				_tt.tt.Send(Api.TTM_DELTOOL, 0, &g);
@@ -196,13 +203,13 @@ public abstract partial class MTBase {
 		} else {
 			if (b != _tt.item) _HideTooltip();
 		}
-
+		
 		if (_tt.item != null) {
 			var v = new MSG { hwnd = _w, message = Api.WM_MOUSEMOVE, lParam = lParam };
 			_tt.tt.Send(Api.TTM_RELAYEVENT, 0, &v);
 		}
 	}
-
+	
 	private protected unsafe void _HideTooltip() {
 		if (_tt.item != null) {
 			_tt.item = null;
@@ -228,27 +235,27 @@ public abstract class MTItem {
 	internal string file;
 	internal RECT rect;
 	internal Image image2;
-
+	
 	internal bool HasImage_ => image2 != null;
-
+	
 	/// <summary>
 	/// Item text.
 	/// </summary>
 	public string Text { get; set; }
-
+	
 	/// <summary>
 	/// Item tooltip.
 	/// </summary>
 	public string Tooltip { get; set; }
-
+	
 	/// <summary>
 	/// Any value. Not used by this library.
 	/// </summary>
 	public object Tag { get; set; }
-
+	
 	///
 	public ColorInt TextColor { get; set; }
-
+	
 	/// <summary>
 	/// Gets file or script path extracted from item action code (see <see cref="MTBase.ExtractIconPathFromCode"/>) or sets path as it would be extracted.
 	/// </summary>
@@ -269,13 +276,13 @@ public abstract class MTItem {
 			}
 		}
 	}
-
+	
 	internal void GoToFile_() {
 		if (file.NE()) return;
 		if (extractIconPath == 2) run.selectInExplorer(file);
 		else ScriptEditor.Open(file);
 	}
-
+	
 	internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string sourceFile, MTItem item) {
 		if (sourceFile != null) {
 			if (ScriptEditor.Available) {
@@ -287,7 +294,7 @@ public abstract class MTItem {
 		}
 		return default;
 	}
-
+	
 	/// <summary>
 	/// Call when adding menu/toolbar item.
 	/// Sets text and tooltip (from text). Sets <b>clicked</b>, <b>image</b> and <b>sourceLine</b> fields.
@@ -319,26 +326,26 @@ public abstract class MTItem {
 				}
 			}
 			if (!text.NE()) Text = text;
-
+			
 			static (string, string) _Split(string s, int i) {
 				int j = i + 1; if (s.Eq(j, ' ')) j++;
 				return (i > 0 ? s[..i] : null, j < s.Length ? s[j..] : null);
 			}
 		}
-
+		
 		image = im.Value;
 		if (image is icon ic) { image = ic.ToGdipBitmap(); image ??= ""; } //DestroyIcon now; don't extract from code.
-
+		
 		clicked = click;
 		sourceLine = l_;
 		sourceFile = f_;
-
+		
 		extractIconPath = (byte)((mt.ExtractIconPathFromCode && clicked is not (null or Action<popupMenu> or Func<popupMenu>)) ? 1 : 0);
 		actionThread = mt.ActionThread;
 		actionException = mt.ActionException;
 		pathInTooltip = mt.PathInTooltip;
 	}
-
+	
 	///
 	public override string ToString() => Text;
 }
@@ -353,7 +360,7 @@ public abstract class MTItem {
 public struct MTImage {
 	readonly object _o;
 	MTImage(object o) { _o = o; }
-
+	
 	///
 	public static implicit operator MTImage(string pathEtc) => new(pathEtc);
 	///
@@ -364,7 +371,7 @@ public struct MTImage {
 	public static implicit operator MTImage(StockIcon icon) => new(icon);
 	///
 	public static implicit operator MTImage(FolderPath path) => new((string)path);
-
+	
 	/// <summary>
 	/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Image</b>, <b>icon</b>, <b>StockIcon</b> or <c>null</c>.
 	/// </summary>

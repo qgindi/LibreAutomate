@@ -86,7 +86,7 @@ public unsafe partial class popupMenu {
 			paddingRight = Dpi.Scale(k.ItemPaddingRight, dpi);
 			textPaddingX = Dpi.Scale(8, dpi);
 			textPaddingY = Dpi.Scale(1, dpi);
-			if (hasImages) image = Dpi.Scale(16, dpi);
+			if (hasImages) image = Dpi.Scale(m.ImageSize, dpi);
 			if (hasCheck) check = Dpi.Scale(18, dpi);
 			if (hasSubmenus) submenu = Dpi.Scale(16, dpi);
 			separator = Dpi.Scale(8, dpi);
@@ -153,8 +153,9 @@ public unsafe partial class popupMenu {
 					if (b.FontBold) Api.SelectObject(dc, font);
 					_met.xTextEnd = Math.Max(_met.xTextEnd, z.width);
 					z.width += buttonPlusX;
+					b.textHeight = z.height;
 				} else z = new(0, textHeight);
-				z.height = Math.Max(z.height + _met.textPaddingY * 2 + 1, _met.image) + (_met.border + _met.paddingY) * 2;
+				z.height = Math.Max(z.height + _met.textPaddingY * 2 + 1, _met.image + _met.image / 16 * 2) + (_met.border + _met.paddingY) * 2;
 			}
 			b.rect = new(0, y, z.width, z.height);
 			y += z.height;
@@ -176,7 +177,7 @@ public unsafe partial class popupMenu {
 		return f;
 	}
 	const TFFlags c_tff = TFFlags.EXPANDTABS | TFFlags.WORDBREAK /*| TFFlags.PATH_ELLIPSIS*/;
-	const TFFlags c_tffHotkey = TFFlags.NOPREFIX | TFFlags.SINGLELINE;
+	const TFFlags c_tffHotkey = TFFlags.NOPREFIX | TFFlags.SINGLELINE | TFFlags.VCENTER;
 	
 	void _Render(IntPtr dc, RECT rUpdate) {
 		using (var menuBrush = GdiObject_.SysColorBrush(_met.theme, Api.COLOR_BTNFACE)) menuBrush.BrushFill(dc, rUpdate);
@@ -231,15 +232,16 @@ public unsafe partial class popupMenu {
 				
 				if (b.Hotkey != null) {
 					Api.SetTextColor(dc, textColorDisabled);
-					var rh = r; rh.left += _met.xHotkeyStart;
-					Api.DrawText(dc, b.Hotkey, ref rh, c_tffHotkey);
+					var rr = r; rr.left += _met.xHotkeyStart;
+					Api.DrawText(dc, b.Hotkey, ref rr, c_tffHotkey);
 				}
 				
 				Api.SetTextColor(dc, b.TextColor != default ? b.TextColor.ToBGR() : (b.IsDisabled ? textColorDisabled : textColor));
 				if (!b.Text.NE()) {
 					if (b.FontBold) Api.SelectObject(dc, _GetFont(true));
 					r.Width = _met.xTextEnd;
-					Api.DrawText(dc, b.Text, ref r, _TfFlags(b));
+					var rr = r; rr.Offset(0, (r.Height - b.textHeight) / 2); //vcenter
+					Api.DrawText(dc, b.Text, ref rr, _TfFlags(b));
 					if (b.FontBold) Api.SelectObject(dc, font);
 				}
 				
@@ -247,16 +249,16 @@ public unsafe partial class popupMenu {
 					_DrawControl(_met.sizeSubmenu, 16, b.IsDisabled ? 2 : 1, "➜", r2.right - _met.submenu, r.top, _met.submenu, r.Height);
 				}
 				if (b.IsChecked) {
-					_DrawControl(_met.sizeCheck, 11, b.checkType == 1 ? (b.IsDisabled ? 2 : 1) : (b.IsDisabled ? 4 : 3), b.checkType == 1 ? "✔" : "●", r2.left, r.top, _met.check2, r.Height);
+					_DrawControl(_met.sizeCheck, 11, b.checkType == 1 ? (b.IsDisabled ? 2 : 1) : (b.IsDisabled ? 4 : 3), b.checkType == 1 ? "✔" : "●", r2.left, r.top, Math.Max(_met.check, _met.check2), r.Height);
 				}
 				
 				void _DrawControl(SIZE z, int part, int state, string c, int x, int y, int width, int height) {
 					if (_met.theme != default && z != default) {
-						RECT r = new(x, r2.top + (r2.Height - z.height) / 2, z.width, z.height);
+						RECT r = new(x, r2.top + (r2.Height - z.height) / 2, z.width, z.height); //vcenter
 						Api.DrawThemeBackground(_met.theme, dc, part, state, r);
 					} else {
 						RECT r = new(x, y, width, height);
-						Api.DrawText(dc, c, ref r, TFFlags.CENTER);
+						Api.DrawText(dc, c, ref r, TFFlags.CENTER | TFFlags.VCENTER | TFFlags.SINGLELINE | TFFlags.NOCLIP);
 						//cannot use DrawFrameControl(DFC_MENU, DFCS_MENUARROW etc), it draws with white background and small when high DPI
 					}
 				}

@@ -12,7 +12,7 @@ public partial class toolbar {
 		Debug.Assert(_os != null || !OwnerWindow.Is0);
 		return _SetDpi(_os != null ? _os.Screen.Dpi : screen.of(OwnerWindow).Dpi);
 	}
-
+	
 	bool _SetDpi(int dpi) {
 		if (dpi == _dpi) return false;
 		_dpi = dpi;

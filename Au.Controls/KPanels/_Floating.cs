@@ -29,8 +29,9 @@ public partial class KPanels {
 				
 				var style = WS.THICKFRAME | WS.POPUP | WS.CLIPCHILDREN;
 				if (_node._IsStack) style |= WS.CAPTION;
-				if (_node._windowStyle.Has(_WindowStyle.Unowned)) style |= WS.CAPTION | WS.MAXIMIZEBOX | WS.MINIMIZEBOX | WS.SYSMENU;
-				var estyle = _node._windowStyle.Has(_WindowStyle.Unowned) ? WSE.APPWINDOW | WSE.WINDOWEDGE : WSE.TOOLWINDOW | WSE.WINDOWEDGE;
+				bool unowned = _node._windowStyle.Has(_WindowStyle.Unowned);
+				if (unowned) style |= WS.CAPTION | WS.MAXIMIZEBOX | WS.MINIMIZEBOX | WS.SYSMENU;
+				var estyle = unowned ? WSE.APPWINDOW | WSE.WINDOWEDGE : /*WSE.TOOLWINDOW |*/ WSE.WINDOWEDGE; //note: don't use WS_EX_TOOLWINDOW, because of Win11 bug: no WM_DPICHANGED when screen DPI changes; tested workarounds don't work well.
 				
 				RECT rect = default;
 				bool defaultRect = onDrag | (_node._floatSavedRect == null);
@@ -54,9 +55,9 @@ public partial class KPanels {
 				base.Title = script.name + " - " + _node.ToString();
 				base.WindowStartupLocation = WindowStartupLocation.Manual;
 				base.ShowActivated = false;
-				if (!_node._windowStyle.Has(_WindowStyle.Unowned)) {
+				if (!unowned) {
 					if (!_node._windowStyle.Has(_WindowStyle.Topmost)) base.Owner = _owner;
-					base.WindowStyle = WindowStyle.ToolWindow;
+					/*base.WindowStyle = WindowStyle.ToolWindow;*/
 					base.ShowInTaskbar = false; //never mind: if false, WPF creates a "Hidden Window", probably as owner, even if owner specified
 				}
 				if (_node._windowStyle.Has(_WindowStyle.Topmost)) base.Topmost = true;
@@ -215,7 +216,7 @@ public partial class KPanels {
 					if (!on) w.ShowNotMinMax();
 					bool topmost = _node._windowStyle.Has(_WindowStyle.Topmost);
 					if (!topmost) base.Owner = on ? null : _owner; //or `WndUtil.SetOwnerWindow(w, on ? default : _owner.Hwnd());`
-					w.SetExStyle(w.ExStyle & ~(WSE.TOOLWINDOW | WSE.APPWINDOW) | (on ? WSE.APPWINDOW : WSE.TOOLWINDOW));
+					w.SetExStyle(WSE.APPWINDOW, on ? WSFlags.Add : WSFlags.Remove); //w.SetExStyle(w.ExStyle & ~(WSE.TOOLWINDOW | WSE.APPWINDOW) | (on ? WSE.APPWINDOW : WSE.TOOLWINDOW));
 					var ws = WS.CAPTION | WS.MAXIMIZEBOX | WS.MINIMIZEBOX | WS.SYSMENU;
 					if (!on && _node._IsStack) ws &= ~WS.CAPTION;
 					w.SetStyle(ws, on ? WSFlags.Add | WSFlags.UpdateNonclient : WSFlags.Remove | WSFlags.UpdateNonclient);

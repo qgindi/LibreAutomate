@@ -105,23 +105,33 @@ public sealed class IconImageCache : IDisposable {
 	}
 	
 	/// <summary>
+	/// Width and height of images.
+	/// </summary>
+	public int ImageSize => _imageSize;
+	
+	//public string CacheDirectory => _dir;
+	
+	/// <summary>
 	/// Common cache for icons of size 16. Used by menus, toolbars and editor.
 	/// </summary>
 	/// <remarks>
 	/// Uses cache directory <c>folders.ThisAppDataLocal + "iconCache"</c>.
 	/// </remarks>
-	public static IconImageCache Common => s_common.Value;
+	public static IconImageCache Common => CommonOfSize(16);
 	
-	static readonly Lazy<IconImageCache> s_common = new(() => {
-		string dir = folders.ThisAppDataLocal + "iconCache";
-		
-		//rejected: if this is a portable app in a removable drive, use only memory cache (dir=null). Maybe only if folders.ThisAppDataLocal is in a fixed drive.
-		//	Cannot reliably detect whether this app is portable. And whether the app (or user) wants to use the file cache.
-		//	Eg this app may be in an external SSD drive, but external SSD drives are detected as fixed, and impossible to know whether it is used as a portable app.
-		//	Instead, if this is a portable app and does not want to write in other drives, let it set folders.ThisAppDataLocal. And portable LA does it (as well as script processes started from it).
-		
-		return new(16, dir);
-	});
+	/// <summary>
+	/// Common cache for icons of given size. Used by menus and toolbars if custom <see cref="MTBase.ImageSize"/>.
+	/// </summary>
+	/// <param name="imageSize">Width and height of images. Min 16, max 256.</param>
+	public static IconImageCache CommonOfSize(int imageSize) {
+		if (imageSize < 16 || imageSize > 256) throw new ArgumentOutOfRangeException(nameof(imageSize));
+		return s_commonDict.GetOrAdd(imageSize, o => new(o, folders.ThisAppDataLocal + "iconCache" + (o == 16 ? "" : o.ToS())));
+	}
+	static ConcurrentDictionary<int, IconImageCache> s_commonDict = new();
+	//rejected: if this is a portable app in a removable drive, use only memory cache (dir=null). Maybe only if folders.ThisAppDataLocal is in a fixed drive.
+	//	Cannot reliably detect whether this app is portable. And whether the app (or user) wants to use the file cache.
+	//	Eg this app may be in an external SSD drive, but external SSD drives are detected as fixed, and impossible to know whether it is used as a portable app.
+	//	Instead, if this is a portable app and does not want to write in other drives, let it set folders.ThisAppDataLocal. And portable LA does it (as well as script processes started from it).
 	
 	/// <summary>
 	/// Gets image from cache or file etc.
