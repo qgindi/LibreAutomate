@@ -16,7 +16,7 @@ tf.ReplaceWith(new XElement("TargetFrameworks", tf.Value + ";net8.0-windows"));
 //tf.ReplaceWith(new XElement("TargetFrameworks", tf.Value + ";net8.0-windows;net6.0-windows")); //rejected. Too many places in code use API that are unavailable in .NET 6. And .NET 6 LTS ended. If somebody needs it, can find an older version of the library on NuGet.
 x.XPathSelectElement("/PropertyGroup/Version").Value = typeof(osVersion).Assembly.GetName().Version.ToString(3);
 x.XPathSelectElement("/PropertyGroup/Copyright").Value = $"Copyright (c) Gintaras Didžgalvis {DateTime.Now.Year}";
-x.XPathSelectElement("/Target[@Name='PreBuild']/Exec").Remove();
+//x.XPathSelectElement("/Target[@Name='PreBuild']/Exec").Remove();
 //print.it(x);
 //return;
 filesystem.saveText(auProj_nuget, x.ToString()); //not x.Save, it adds xml decl
@@ -46,9 +46,6 @@ za.CreateEntryFromFile(@"C:\code\au\_\32\AuCpp.dll", @"runtimes\win-x86\native\A
 za.CreateEntryFromFile(@"C:\code\au\_\64\Au.DllHost.exe", @"runtimes\win-x64\native\Au.DllHost.exe");
 za.CreateEntryFromFile(@"C:\code\au\_\64\ARM\Au.DllHost.exe", @"runtimes\win-arm64\native\Au.DllHost.exe");
 za.CreateEntryFromFile(@"C:\code\au\_\32\Au.DllHost.exe", @"runtimes\win-x86\native\Au.DllHost.exe");
-za.CreateEntryFromFile(@"C:\code\au\_\64\sqlite3.dll", @"runtimes\win-x64\native\sqlite3.dll");
-za.CreateEntryFromFile(@"C:\code\au\_\64\ARM\sqlite3.dll", @"runtimes\win-arm64\native\sqlite3.dll");
-za.CreateEntryFromFile(@"C:\code\au\_\32\sqlite3.dll", @"runtimes\win-x86\native\sqlite3.dll");
 
 print.it($"<><explore>{path}<>");
 print.it($"<><link>https://www.nuget.org/packages/manage/upload<>");

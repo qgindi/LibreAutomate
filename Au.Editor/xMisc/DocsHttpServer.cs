@@ -19,6 +19,7 @@ class DocsHttpServer : HttpServerSession {
 				}
 				catch (Exception ex) {
 					print.warning(ex);
+					print.it("<><c red>Failed to install local documentation. You can retry: in <b>Options > Other<> select <b>Documentation > Local<>, and click <b>Apply<>. Meanwhile will be used online documentation.<>");
 					HelpUtil.AuHelpBaseUrl = HelpUtil.AuHelpBaseUrlDefault_;
 					App.Settings.localDocumentation = false;
 				}
@@ -43,11 +44,17 @@ class DocsHttpServer : HttpServerSession {
 		var versionFile = siteDir + @"\version.txt";
 		if (filesystem.exists(versionFile) && File.ReadAllLines(versionFile)[0] == Au_.Version) return;
 		
-		filesystem.delete(siteDir);
+		print.it($"<><lc YellowGreen>Installing local documentation for {App.AppNameShort} {Au_.Version}.<>");
+		if (filesystem.exists(siteDir)) {
+			print.it("Deleting old documentation");
+			filesystem.delete(siteDir);
+		}
 		
+		print.it("Downloading documentation from libreautomate.com, ~3 MB");
 		var zipPath = siteDir + @"\site.tar.bz2";
 		internet.http.Get($"https://www.libreautomate.com/download/doc/{Au_.Version}.tar.bz2", zipPath);
 		
+		print.it($"Extracting documentation to {siteDir}");
 		var sevenzip = folders.ThisAppBS + @"32\7za.exe";
 		if (0 != run.console(out var s, sevenzip, $@"x -aoa -o""{siteDir}"" ""{zipPath}""")) throw new AuException($"*extract {zipPath}. {s}");
 		filesystem.delete(zipPath);
@@ -56,5 +63,6 @@ class DocsHttpServer : HttpServerSession {
 		filesystem.delete(zipPath);
 		
 		filesystem.saveText(versionFile, Au_.Version);
+		print.it("DONE.");
 	}
 }

@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate C#"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.9.0"
+#define MyAppVersion "1.9.1"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -246,8 +246,9 @@ begin
     try
       DownloadPage.Download;
       setupFile := ExpandConstant('{tmp}\' + setupFile);
-      //Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
-      Result := Exec(setupFile, '/install', '', 0, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+			Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+			//if WizardSilent() then Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0) else Result := Exec(setupFile, '/install', '', 0, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+			//info: in Windows Sandbox .NET 9.0.3 setup hangs for ~10 minutes. Same with UI. Used to work normally.
       DeleteFile(setupFile);
     except
       if DownloadPage.AbortedByUser then Log('Aborted by user.') else Log(GetExceptionMessage);
