@@ -30,12 +30,25 @@ public partial class toolbar {
 		
 		public bool UpdateRect(out bool changed) {
 			changed = false;
+			
+			//if a toolbar has MaximizedWindowTopPlus, calculate how many physical pixels to add to the top of the window rect or client rect
+			int? mtpw = null, mtpc = null;
+			foreach (var tb in a) {
+				if (tb._oc != null || tb._os != null) continue;
+				if (tb.MaximizedWindowTopPlus != 0 && w.IsMaximized) {
+					ref int? mtp = ref tb._followClientArea ? ref mtpc : ref mtpw;
+					if (mtp != null) print.warning("TODO");
+					else mtp = tb._Scale(tb.MaximizedWindowTopPlus, true);
+				}
+			}
+			
 			int have = 0;
 			foreach (var tb in a) {
 				if (tb._oc != null || tb._os != null) continue;
 				if (tb._followClientArea) {
 					if (0 != (have & 2)) continue;
 					if (!w.GetClientRect(out var r, inScreen: true)) return false;
+					r.top += mtpc.GetValueOrDefault();
 					if (r != _clientRect) {
 						_prevClientSize = (_clientRect.Width, _clientRect.Height);
 						_clientRect = r;
@@ -45,6 +58,7 @@ public partial class toolbar {
 				} else {
 					if (0 != (have & 1)) continue;
 					if (!w.GetRect(out var r)) return false;
+					r.top += mtpw.GetValueOrDefault();
 					if (r != _rect) {
 						_prevSize = (_rect.Width, _rect.Height);
 						_rect = r;
@@ -58,9 +72,8 @@ public partial class toolbar {
 			return true;
 		}
 		
-		public RECT GetCachedRect(toolbar tb) => tb._followClientArea ? _clientRect : _rect;
-		
-		public SIZE GetPrevSize(toolbar tb) => tb._followClientArea ? _prevClientSize : _prevSize;
+		public (RECT r, SIZE size) GetCachedRectAndPrevSize(toolbar tb)
+			=> (tb._followClientArea ? _clientRect : _rect, tb._followClientArea ? _prevClientSize : _prevSize);
 	}
 	
 	class _OwnerControl {
@@ -645,7 +658,7 @@ public partial class toolbar {
 	(RECT r, SIZE prevSize) _GetCachedOwnerRect() {
 		if (_os != null) return (_os.cachedRect, _os.prevSize);
 		if (_oc != null) return (_oc.cachedRect, _oc.prevSize);
-		return (_ow.GetCachedRect(this), _ow.GetPrevSize(this));
+		return _ow.GetCachedRectAndPrevSize(this);
 	}
 	
 	unsafe nint _WmGetDpiScaledSize(nint wParam, nint lParam) {

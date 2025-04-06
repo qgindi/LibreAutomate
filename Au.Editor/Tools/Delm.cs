@@ -136,7 +136,7 @@ class Delm : KDialogWindow {
 		b.AddSeparator(true);
 		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _ToolSettings(), "Tool settings");
 		b.AddSeparator(true);
-		b.Add(out _cUIA, "UIA").Checked(null, threeState: true).Tooltip("Capture UI Automation elements.\nChecked - always\nUnchecked - never\nIndeterminate - auto");
+		b.Add(out _cUIA, "UIA").Checked(App.Settings.delm.def_UIA, threeState: true).Tooltip("What API to use to capture UI elements:\nChecked - UI Automation\nUnchecked - MSAA\nIndeterminate - auto");
 		
 		b.End();
 		//row 2
@@ -150,7 +150,7 @@ class Delm : KDialogWindow {
 		b.R.StartStack();
 		b.AddButton(out _bWindow, "Window...", _bWnd_Click).Width(70);
 		b.xAddCheck(out _cControl, "Control").Margin("R30");
-		_wait = b.xAddCheckText("Wait", App.Settings.delm.wait ?? "1", check: !_Opt.Has(_EOptions.NoWait)); b.Width(48);
+		_wait = b.xAddCheckText("Wait", App.Settings.delm.def_wait ?? "1", check: !_Opt.Has(_EOptions.NoWait)); b.Width(48);
 		b.xAddCheck(out _cException, "Fail if not found").Checked();
 		b.End();
 		
@@ -720,7 +720,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		var a = _CaptureSmallerIsOnInWindow(p)
 			? _CaptureSmallerNow(p)
 			: _RunElmTask(2000, (p, flags, ctor), static m => _GetElm(m.p, m.flags, m.ctor));
-		if (a == null) return false;
+		if (a.NE_()) return false;
 		var e = a[0];
 		
 		_screenshot = TUtil.MakeScreenshot(p, _capt);
@@ -1105,8 +1105,9 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	
 	void _InitTree() {
 		_tree.SingleClickActivate = true;
-		_tree.ItemActivated += e => {
-			var ti = e.Item as _TreeItem;
+		_tree.ItemActivated += e => _ItemActivated(e.Item as _TreeItem);
+		
+		void _ItemActivated(_TreeItem ti) {
 			_elm = ti.e;
 			//_screenshot = null;
 			_SetWndCon(_wnd, _GetWndContainer(), _useCon);
@@ -1115,13 +1116,21 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			}
 			_FormatCode();
 			TUtil.ShowOsdRect(_RunElmTask(1000, _elm, e => e.Rect));
-		};
+		}
 		
 		_tree.ItemClick += e => {
 			if (e.Button == MouseButton.Right) {
 				var ti = e.Item as _TreeItem;
 				var m = new popupMenu();
-				m["Navigate to this from the selected"] = _ => _NavigateTo(ti);
+				m["Navigate to this from the selected", disable: ti == _tree.SelectedItem] = _ => _NavigateTo(ti);
+				if (!_path.NE_() && !_path.Any(o => o.ti == ti)) {
+					m["Navigate to this from the last in path"] = _ => {
+						var tiPath = _path[^1].ti;
+						_tree.SelectSingle(tiPath, true);
+						_ItemActivated(tiPath);
+						_NavigateTo(ti);
+					};
+				}
 				m.Show(owner: this);
 			}
 		};
@@ -1521,7 +1530,7 @@ new elmFinder || 5
 		}
 		
 		_testedAction = _aActions[0];
-		_ActionChange(_ActionFind(App.Settings.delm.actionn));
+		_ActionChange(_ActionFind(App.Settings.delm.def_action));
 	}
 	
 	void _ActionChange(_Action action) {
@@ -1669,15 +1678,18 @@ new elmFinder || 5
 		var cVR = m.AddCheck("var role", _Opt.Has(_EOptions.VarRole)); cVR.Tooltip = "Use role in elm variable name";
 		//var cCC = m.AddCheck("Compact code", _Opt.Has(_EOptions.Compact)); cNS.Tooltip = "Insert code without { } and don't use elm e with action";
 		m.Separator();
-		m["Save action"] = _ => {
-			App.Settings.delm.actionn = _selectedAction.name;
+		m.Add("Save action", _ => {
+			App.Settings.delm.def_action = _selectedAction.name;
 			_SetOpt(_EOptions.MouseXY, _xy.c.IsChecked);
 			_SetOpt(_EOptions.MouseScroll, _cScroll.IsChecked);
-		}; m.Last.Tooltip = "Let the tool start with current action and its settings";
-		m["Save wait"] = _ => {
-			App.Settings.delm.wait = _wait.t.Text;
+		}).Tooltip = "Let the tool start with current action and its settings";
+		m.Add("Save wait", _ => {
+			App.Settings.delm.def_wait = _wait.t.Text;
 			_SetOpt(_EOptions.NoWait, !_wait.c.IsChecked);
-		}; m.Last.Tooltip = "Let the tool start with current wait settings";
+		}).Tooltip = "Let the tool start with current wait settings";
+		m.Add("Save UIA", _ => {
+			App.Settings.delm.def_UIA = _cUIA.IsChecked;
+		}).Tooltip = "Let the tool start with current UIA checkbox state";
 		//if (Java.GetJavaPath(out _)) { //moved to Options -> OS. It isn't a tool setting.
 		//	m.Separator();
 		//	m["Java..."] = o => Java.EnableDisableJabUI(this);

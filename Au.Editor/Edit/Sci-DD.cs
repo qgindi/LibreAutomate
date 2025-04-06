@@ -75,17 +75,18 @@ partial class SciCode {
 			} else pos = 0;
 		}
 		
-		unsafe void _Drop(POINT xy, int effect) {
+		void _Drop(POINT xy, int effect) {
 			_GetDropPos(ref xy, out _);
 			var z = new Sci_DragDropData { x = xy.x, y = xy.y };
 			string s = null;
 			var b = new StringBuilder();
 			bool isCodeFile = _sci.EFile.IsCodeFile;
+			Action finalAction = null;
 			
 			if (_justText) {
 				s = _data.text;
 			} else {
-				_sci.Call(SCI_DRAGDROP, 2, &z); //just hides the drag indicator and sets caret position
+				unsafe { _sci.Call(SCI_DRAGDROP, 2, &z); } //just hides the drag indicator and sets caret position
 				
 				if (_data.scripts) {
 					if (Panels.Files.TreeControl.DragDropFiles is { } a) {
@@ -137,7 +138,7 @@ partial class SciCode {
 						what = popupMenu.showSimple("11 string s = URL;|12 run.it(URL);|13 t[name] = o => run.it(URL);");
 						if (what == 0) return;
 					}
-					_AppendScriptOrLink(what, _data.text, _GetLinkName(_data.linkName));
+					finalAction = _AppendScriptOrLink(what, _data.text, _GetLinkName(_data.linkName));
 				}
 				s = b.ToString();
 			}
@@ -145,12 +146,14 @@ partial class SciCode {
 			if (!s.NE()) {
 				if (_justText) { //a simple drag-drop inside scintilla or text-only from outside
 					var s8 = Encoding.UTF8.GetBytes(s);
-					fixed (byte* p8 = s8) {
-						z.text = p8;
-						z.len = s8.Length;
-						if (0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
-						using (new CodeInfo.Pasting(_sci))
-							_sci.Call(SCI_DRAGDROP, 2, &z);
+					unsafe {
+						fixed (byte* p8 = s8) {
+							z.text = p8;
+							z.len = s8.Length;
+							if (0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
+							using (new CodeInfo.Pasting(_sci))
+								_sci.Call(SCI_DRAGDROP, 2, &z);
+						}
 					}
 				} else { //file, script or URL
 					if (isCodeFile) InsertCode.Statements(s, ICSFlags.NoFocus);
@@ -166,7 +169,9 @@ partial class SciCode {
 				if (_justText) _sci.Call(SCI_DRAGDROP, 3);
 			}
 			
-			void _AppendScriptOrLink(int what, string path, string name, int index = 0, FileNode fn = null) {
+			finalAction?.Invoke();
+			
+			Action _AppendScriptOrLink(int what, string path, string name, int index = 0, FileNode fn = null) {
 				if (b.Length > 0) b.AppendLine();
 				if (what == 0) {
 					b.Append(path);
@@ -187,7 +192,19 @@ partial class SciCode {
 						3 or 4 => $"script.run(@\"{path}\");",
 						_ => $"run.it(@\"{path}\");"
 					});
+					
+					if (what == 13) { //favicon
+						int dropPos = _sci.aaaCurrentPos16;
+						return async () => { //this code will run after inserting the statement
+							string text1 = _sci.aaaText, url = $"https://www.google.com/s2/favicons?domain={path}";
+							var pngBytes = await Task.Run(() => internet.http.TryGet(out var r, url) && r.Content.Headers.ContentType.MediaType == "image/png" ? r.Bytes() : null);
+							if (pngBytes != null && Panels.Editor.ActiveDoc == _sci && _sci.aaaText == text1 && text1.RxMatch(@"\G.+?""(\]) = o => run\.it\(", 1, out RXGroup g, range: dropPos..)) {
+								_sci.aaaInsertText(true, g.Start, $", @\"image:{Convert.ToBase64String(pngBytes)}\"");
+							}
+						};
+					}
 				}
+				return null;
 			}
 			
 			static unsafe string[] _GetShell(byte[] b, out string[] names) {

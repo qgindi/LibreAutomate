@@ -12,9 +12,9 @@ namespace uia {
 	}
 
 	void PrintUiaElem(IUIAutomationElement* e) {
-		RECT r={};
+		RECT r = {};
 		auto hr = e->get_CurrentBoundingRectangle(&r);
-		if(hr!=0) Print("bad"); else Printf(L"{%i %i %i %i}", r.left, r.top, r.right-r.left, r.bottom-r.top);
+		if (hr != 0) Print("bad"); else Printf(L"{%i %i %i %i}", r.left, r.top, r.right - r.left, r.bottom - r.top);
 	}
 #endif
 
@@ -603,8 +603,7 @@ namespace uia {
 				VARIANT v = {};
 				hr = _ae->GetCurrentPropertyValue(UIA_FullDescriptionPropertyId, &v);
 				if (hr == 0) {
-					if (v.vt != VT_BSTR) { hr = 1; VariantClear(&v); }
-					else if (SysStringLen(v.bstrVal) == 0) useMSAA = true;
+					if (v.vt != VT_BSTR) { hr = 1; VariantClear(&v); } else if (SysStringLen(v.bstrVal) == 0) useMSAA = true;
 					else *(BSTR*)R = v.bstrVal;
 				}
 			} else if (prop == 'v') { //tested: most same (msaa and uia); some only msaa (eg scrollbar arrow, rarely useful)
@@ -626,18 +625,16 @@ namespace uia {
 				if (hr == 0) {
 					switch (prop) {
 					case 'd': hr = p->get_CurrentDescription((BSTR*)R); break;
-					//case 'v': hr = p->get_CurrentValue((BSTR*)R); break;
-					//case 'h': hr = p->get_CurrentHelp((BSTR*)R); break;
-					//case 'k': hr = p->get_CurrentKeyboardShortcut((BSTR*)R); break;
+						//case 'v': hr = p->get_CurrentValue((BSTR*)R); break;
+						//case 'h': hr = p->get_CurrentHelp((BSTR*)R); break;
+						//case 'k': hr = p->get_CurrentKeyboardShortcut((BSTR*)R); break;
 					case 'a': hr = p->get_CurrentDefaultAction((BSTR*)R); break;
 					case 's': hr = p->get_CurrentState((DWORD*)R); break;
 					}
 				}
 			}
 #else
-			bool test = !(prop == 's' || prop == 'a') && GetKeyState(VK_NUMLOCK)&1;
 			{
-				if (test)*(BSTR*)R = null;
 				Smart<IUIAutomationLegacyIAccessiblePattern> p;
 				hr = _ae->GetCurrentPatternAs(UIA_LegacyIAccessiblePatternId, IID_PPV_ARGS(&p));
 				if (hr == 0 && !p) hr = 1;
@@ -652,45 +649,57 @@ namespace uia {
 					}
 				}
 			}
-			if (!test)return hr;
-			int len1 = hr == 0 ? SysStringLen(*(BSTR*)R) : 0;
-			BSTR b1 = *(BSTR*)R;
 
-			BSTR R2=null; R=&R2;
-			HRESULT hr2=1;
-			{
-				if (prop == 'd') {
-					VARIANT v = {};
-					hr2 = _ae->GetCurrentPropertyValue(UIA_FullDescriptionPropertyId, &v);
-					if (hr2 == 0) {
-						if (v.vt == VT_BSTR) *(BSTR*)R = v.bstrVal;
-						else { hr2 = 1; VariantClear(&v); }
+			if (GetKeyState(VK_NUMLOCK) & 1) {
+				HRESULT hr2 = 1;
+				if (prop == 's') {
+					//DWORD s1 = *(DWORD*)R;
+					//DWORD R2 = 0; R = &R2;
+					//BOOL bo = 0;
+					//if (0 == _ae->get_CurrentHasKeyboardFocus(&bo) && bo) R2 |= STATE_SYSTEM_FOCUSED;
+					//if (0 == _ae->get_CurrentIsKeyboardFocusable(&bo) && bo) R2 |= STATE_SYSTEM_FOCUSABLE;
+					//if (0 == _ae->get_CurrentIsEnabled(&bo) && !bo) R2 |= STATE_SYSTEM_UNAVAILABLE;
+					//if (0 == _ae->get_CurrentIsOffscreen(&bo) && bo) R2 |= STATE_SYSTEM_OFFSCREEN;
+					//if (0 == _ae->get_CurrentIsPassword(&bo) && bo) R2 |= STATE_SYSTEM_PROTECTED;
+					//if (0 == _ae->) R2 |= STATE_SYSTEM_
+					//Probably don't need this test code. All tested UIA-only elements had correct state retrieved with the legacy accessible pattern.
+				} else if (prop != 'a') {
+					int len1 = hr == 0 ? SysStringLen(*(BSTR*)R) : 0;
+					BSTR b1 = *(BSTR*)R;
+					BSTR R2 = null; R = &R2;
+					if (prop == 'd') {
+						VARIANT v = {};
+						hr2 = _ae->GetCurrentPropertyValue(UIA_FullDescriptionPropertyId, &v);
+						if (hr2 == 0) {
+							if (v.vt == VT_BSTR) *(BSTR*)R = v.bstrVal;
+							else { hr2 = 1; VariantClear(&v); }
+						}
+					} else if (prop == 'v') {
+						Smart<IUIAutomationValuePattern> p;
+						hr2 = _ae->GetCurrentPatternAs(UIA_ValuePatternId, IID_PPV_ARGS(&p));
+						if (hr2 == 0 && !p) hr2 = 1;
+						if (hr2 == 0) hr2 = p->get_CurrentValue((BSTR*)R);
+					} else if (prop == 'h') {
+						hr2 = _ae->get_CurrentHelpText((BSTR*)R);
+					} else if (prop == 'k') {
+						hr2 = _ae->get_CurrentAcceleratorKey((BSTR*)R);
+						//hr2 = _ae->get_CurrentAccessKey((BSTR*)R);
 					}
-				} else if (prop == 'v') {
-					Smart<IUIAutomationValuePattern> p;
-					hr2 = _ae->GetCurrentPatternAs(UIA_ValuePatternId, IID_PPV_ARGS(&p));
-					if (hr2 == 0 && !p) hr2 = 1;
-					if (hr2 == 0) hr2 = p->get_CurrentValue((BSTR*)R);
-				} else if (prop == 'h') {
-					hr2 = _ae->get_CurrentHelpText((BSTR*)R);
-				} else if (prop == 'k') {
-					hr2 = _ae->get_CurrentAcceleratorKey((BSTR*)R);
-					//hr2 = _ae->get_CurrentAccessKey((BSTR*)R);
+					int len2 = hr2 == 0 ? SysStringLen(*(BSTR*)R) : 0;
+					BSTR b2 = *(BSTR*)R;
+
+					if (len1 > 0 || len2 > 0) {
+						BSTR provider = null;
+						_ae->get_CurrentProviderDescription(&provider);
+
+						if (len1 == len2 && wcscmp(b1, b2) == 0) Printf(L"same: %s        provider=%s", b1, provider);
+						else if (len1 > 0 && len2 > 0) Printf(L"<><c 0xff>diff:</c> msaa=%s, uia=%s        provider=%s", b1, b2, provider);
+						else if (len1 > 0) Printf(L"<><c 0xff>msaa:</c> %s        hr2=0x%x isnull=%i    provider=%s", b1, hr2, b2 == null, provider);
+						else Printf(L"<><c 0xff>uia:</c> %s        hr1=0x%x isnull=%i    provider=%s", b2, hr, b1 == null, provider);
+
+						//if (len1 > 0 && len2 == 0) PrintUiaElem(_ae);
+					}
 				}
-			}
-			int len2 = hr2 == 0 ? SysStringLen(*(BSTR*)R) : 0;
-			BSTR b2 = *(BSTR*)R;
-
-			if (len1 > 0 || len2 > 0) {
-				BSTR provider=null;
-				_ae->get_CurrentProviderDescription(&provider);
-
-				if (len1 == len2 && wcscmp(b1, b2) == 0) Printf(L"same: %s        provider=%s", b1, provider);
-				else if (len1 > 0 && len2 > 0) Printf(L"<><c 0xff>diff:</c> msaa=%s, uia=%s        provider=%s", b1, b2, provider);
-				else if (len1 > 0) Printf(L"<><c 0xff>msaa:</c> %s        hr2=0x%x isnull=%i    provider=%s", b1, hr2, b2==null, provider);
-				else Printf(L"<><c 0xff>uia:</c> %s        hr1=0x%x isnull=%i    provider=%s", b2, hr, b1==null, provider);
-			
-				//if (len1 > 0 && len2 == 0) PrintUiaElem(_ae);
 			}
 #endif
 

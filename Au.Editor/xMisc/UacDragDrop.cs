@@ -170,19 +170,33 @@ class UacDragDrop {
 		System.Windows.DataObject _data;
 		wnd _wTargetControl; //control or window from mouse
 		
-		int _InvokeDropTarget(wnd w, DDEvent ev, int effect, int keyState, POINT pt) {
-			nint prop = w.Prop["OleDropTargetInterface"];
-			if (prop == 0 && w != _wWindow) { //if w is of a HwndHost that does not register drop target, use that of the main window
+		unsafe int _InvokeDropTarget(wnd w, DDEvent ev, int effect, int keyState, POINT pt) {
+			nint dt = w.Prop["OleDropTargetInterface"];
+			if (dt == 0 && w != _wWindow) { //if w is of a HwndHost that does not register drop target, use that of the main window
 				w = _wWindow;
-				prop = w.Prop["OleDropTargetInterface"];
+				dt = w.Prop["OleDropTargetInterface"];
 			}
-			if (prop == 0) return 0;
-			
-			var data = ev == DDEvent.Enter || ev == DDEvent.Drop ? _data : null;
-			int hr = Cpp.Cpp_CallIDroptarget(prop, (int)ev, data, keyState, pt, ref effect);
-			if (hr != 0) effect = 0;
+			if (dt == 0) return 0;
+
+#pragma warning disable CS0168 // Variable is declared but never used
+			try {
+				nint* vtbl = *(nint**)dt + 3;
+				int hr = ev switch {
+					DDEvent.Enter or DDEvent.Drop => ((delegate* unmanaged<nint, IDataObject, int, POINT, ref int, int>)vtbl[ev == DDEvent.Drop ? 3 : 0])(dt, _data, keyState, pt, ref effect),
+					DDEvent.Over => ((delegate* unmanaged<nint, int, POINT, ref int, int>)vtbl[1])(dt, keyState, pt, ref effect),
+					_ => ((delegate* unmanaged<nint, int>)vtbl[2])(dt)
+				};
+				if (hr != 0) effect = 0;
+			}
+			catch (Exception ex) { //once: exception "access violation". Can't repro. To call IDropTarget methods easily, then was used a C++ helper function, not C# delegate*.
+#if DEBUG
+				print.it("_InvokeDropTarget", dt, _data, w);
+				print.it(ex);
+#endif
+				return 0;
+			}
+#pragma warning restore CS0168 // Variable is declared but never used
 			return effect;
-			//working with COM in C# often is difficult. Cannot call IDropTarget methods.
 		}
 	}
 	
@@ -284,6 +298,7 @@ struct DDData {
 			var afe = new FORMATETC[1]; var fe = new int[1];
 			var e = d.EnumFormatEtc(DATADIR.DATADIR_GET);
 			while (e.Next(1, afe, fe) == 0 && fe[0] == 1) {
+				//print.it(ClipFormats.GetName((ushort)afe[0].cfFormat));
 				if (afe[0].tymed != TYMED.TYMED_HGLOBAL) continue;
 				int cf = (ushort)afe[0].cfFormat;
 				if (cf == Api.CF_HDROP) fHdrop = afe[0];

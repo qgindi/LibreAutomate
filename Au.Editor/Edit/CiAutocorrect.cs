@@ -1055,7 +1055,7 @@ class CiAutocorrect {
 		var tk = tok.Kind();
 		if (ch == ':') {
 			if (n is not SwitchLabelSyntax sls) return;
-			if (!App.Settings.ci_formatAuto) maxTo = sls.Keyword.SpanStart; //just correct indent
+			if (!App.Settings.ci_formatAuto) maxTo = sls.Keyword.Span.End; //just correct indent
 		} else if (tk is SyntaxKind.SemicolonToken) {
 			if (n is StatementSyntax && n.Parent is var p && p is StatementSyntax and not BlockSyntax) n = p; //eg format `if(...) statement;`, not just `statement;`
 		} else if (tk is SyntaxKind.OpenBraceToken) {
@@ -1078,7 +1078,6 @@ class CiAutocorrect {
 	}
 	
 	static void _AutoFormat(SyntaxNode n, CodeInfo.Context cd, int maxTo = -1) {
-		Debug.Assert(App.Settings.ci_formatAuto);
 		var (from, to) = n.GetRealFullSpan(spanEnd: true);
 		if (maxTo > from) to = maxTo;
 		//CiUtil.DebugHiliteRange(from, to); wait.doEvents(); 500.ms(); CiUtil.DebugHiliteRange(0, 0);

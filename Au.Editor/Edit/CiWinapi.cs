@@ -1,3 +1,5 @@
+//TODO: interface functions: option to insert simplified (without [PreserveSig]). Maybe both versions, one commented out.
+
 extern alias CAW;
 
 using Au.Controls;

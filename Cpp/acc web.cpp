@@ -140,8 +140,9 @@ namespace {
 			return x.tag.Detach();
 		}
 
+#if false //get_attributesForNames broken in new Chrome
 		BSTR GetAttribute(STR name) {
-			Bstr bn(name); short ns; BSTR r = null;
+			Bstr bn(name); short ns = 0; BSTR r = null;
 			if (0 != _x->get_attributesForNames(1, &bn, &ns, &r)) return null;
 
 			//problem: Firefox gets "" for missing attributes. I don't know a fast workaround. Chrome and IE then fail (null).
@@ -158,6 +159,19 @@ namespace {
 
 			//problem: Chrome case-sensitive. Firefox and IE not.
 		}
+#else
+		BSTR GetAttribute(STR name) {
+			int n = 0;
+			BstrNameValue* a = GetAttributes(out n);
+			if (a == null) return null;
+			BSTR R = null;
+			for (int i = 0; i < n; i++) {
+				if (a[i].name.Equals(name, true)) { R = a[i].value.Detach(); break; }
+			}
+			delete[] a;
+			return R;
+		}
+#endif
 
 		//Returns null if fails or has 0 attributes.
 		//Later delete[] the result.
@@ -342,7 +356,7 @@ namespace {
 
 //Gets/compares specified HTML attributes and returns true if all match.
 //Returns false if cannot get HTML attributes, for example if this is not a HTML element, or if called not inproc.
-//Supports Chrome, Internet Explorer and apps that use their code.
+//Supports Chrome, Internet Explorer, Firefox (except in web content) and apps that use their code.
 //Names of HTML attributes must be with "@" prefix, like "@href". Other names are ignored.
 bool AccMatchHtmlAttributes(IAccessible* iacc, NameValue* prop, int count) {
 	_BrowserInterface bi; bool isBI = false;

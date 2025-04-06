@@ -163,7 +163,8 @@ System.Threading.Tasks.TaskCanceledException
 	//Delm
 	public record delm_t {
 		public string hk_capture = "F3", hk_insert = "F4", hk_smaller = "Shift+F3"; //for all tools
-		public string wait, actionn; //named actionn because once was int action
+		public string def_wait, def_action;
+		public bool? def_UIA;
 		public int flags;
 	}
 	public delm_t delm;
