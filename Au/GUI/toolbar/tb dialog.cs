@@ -1,3 +1,5 @@
+//TODO: sometimes the first time shows the window with several s delay. Can't repro, even after reboot. Possibly more likely after hibernation.
+
 using System.Windows.Forms;
 
 namespace Au;
@@ -10,19 +12,34 @@ public partial class toolbar {
 	/// </summary>
 	/// <param name="show">Show the window now, non-modal. If a window shown by this function already exists in this thread - activate it.</param>
 	public static Form toolbarsDialog(bool show = true) {
+		perf.next();//TODO
 		if (show && s_listWindow != null) {
 			s_listWindow.Hwnd().ActivateL(true);
 			return s_listWindow;
 		}
 		
-		var f = new Form {
-			Text = "Active toolbars",
-			Size = new(330, 330),
-			AutoScaleMode = AutoScaleMode.Dpi,
-			StartPosition = FormStartPosition.CenterScreen,
-			Icon = icon.ofThisApp()?.ToGdipIcon()
-		};
-		f.Load += (_, _) => { f.Hwnd().ActivateL(); };
+		var ico1 = icon.ofThisApp();
+		perf.next('i');//TODO
+		var ico2 = ico1?.ToGdipIcon();
+		perf.next('g');//TODO
+		var f = new Form();
+		perf.next('F');//TODO
+		f.Text = "Active toolbars";
+		f.Size = new(330, 330);
+		f.AutoScaleMode = AutoScaleMode.Dpi;
+		f.StartPosition = FormStartPosition.CenterScreen;
+		f.Icon = icon.ofThisApp()?.ToGdipIcon();
+		//var f = new Form {
+		//	Text = "Active toolbars",
+		//	Size = new(330, 330),
+		//	AutoScaleMode = AutoScaleMode.Dpi,
+		//	StartPosition = FormStartPosition.CenterScreen,
+		//	Icon = icon.ofThisApp()?.ToGdipIcon()
+		//};
+		perf.next('f');//TODO
+		//f.Load += (_, _) => { f.Hwnd().ActivateL(); };
+		//f.Load += (_, _) => {using var p1 = perf.local();f.Hwnd().ActivateL(); };//TODO
+		f.Load += (_, _) => {perf.next('1');f.Hwnd().ActivateL();perf.next('2'); };//TODO
 		
 		var lv = new ListView {
 			Dock = DockStyle.Fill,
@@ -32,6 +49,7 @@ public partial class toolbar {
 			ContextMenuStrip = new()
 		};
 		f.Controls.Add(lv);
+		perf.next();//TODO
 		
 		var osdr = new osdRect { Color = 0xff0000, Thickness = 12 };
 		osdText osdt = null;
@@ -59,7 +77,9 @@ public partial class toolbar {
 			timer1.Stop();
 		};
 		
+		perf.next();//TODO
 		_FillList();
+		perf.next('L');//TODO
 		
 		void _FillList() {
 			lv.Items.Clear();
@@ -137,7 +157,9 @@ public partial class toolbar {
 			m.Show(owner: w);
 		};
 		
+		perf.next();//TODO
 		if (show) f.Show();
+		perf.nw();//TODO
 		return s_listWindow = f;
 	}
 }

@@ -315,7 +315,7 @@ static class Menus {
 			[Command(image = "*BoxIcons.RegularCommentMinus" + brown)]
 			public static void Uncomment_selection() { ModifyCode.Comment(false); }
 			
-			//TODO: Toggle multiline (parameters, collections, etc). Hotkey Ctrl+L.
+			//TODO2: Toggle multiline (parameters, collections, etc). Hotkey Ctrl+L.
 			
 			[Command("...", image = "*RemixIcon.BracesLine" + brown, separator = true)]
 			public static void Surround() { CiSnippets.Surround(); }
@@ -365,6 +365,18 @@ static class Menus {
 			
 			[Command]
 			public static void Create_overrides() { GenerateCode.CreateOverrides(); }
+			
+			[Command("Create GUID")]
+			public static void Create_GUID() { var s = Guid.NewGuid().ToString(); clipboard.text = s; print.it($"Clipboard: {s}"); }
+		//}
+		
+		//[Command]
+		//public static class Refactor {
+			[Command]
+			public static void Add_function_Main() { InsertCode.AddClassProgram(); }
+			
+			[Command("Convert [PreserveSig] methods")]
+			public static void Convert_PreserveSig() { ModifyCode.ConvertInterfaceMethodPreserveSig(); }
 		}
 		
 		[Command(separator = true)]
@@ -416,16 +428,7 @@ static class Menus {
 		public static void Windows_API() { new DWinapi().Show(); }
 		
 		[Command(separator = true)]
-		public static class Simple {
-			[Command]
-			public static void Add_function_Main() { InsertCode.AddClassProgram(); }
-			
-			[Command("Create GUID")]
-			public static void Create_GUID() { var s = Guid.NewGuid().ToString(); clipboard.text = s; print.it($"Clipboard: {s}"); }
-			
-			[Command]
-			public static void Quick_capturing_info() { QuickCapture.Info(); }
-		}
+		public static void Quick_capturing_info() { QuickCapture.Info(); }
 	}
 	
 	[Command("T\x2009T", target = "", tooltip = "Triggers and toolbars")]
@@ -449,8 +452,9 @@ static class Menus {
 		//[Command("...")]
 		//public static void Trigger_scope() { TriggersAndToolbars.TriggerScope(); }
 		
-		//[Command("...")]
-		//public static void Active_triggers() {  }
+		//has no sense. It shows triggers for the active window. Also may be multiple trigger scripts running. Instead let use a trigger that calls ActionTriggers.TriggersListWindow.
+		//[Command]
+		//public static void Active_triggers() { TriggersAndToolbars.ShowActiveTriggers(); }
 		
 		[Command]
 		public static void Other_triggers() { TriggersAndToolbars.Edit(@"Triggers\Other triggers.cs"); Panels.Cookbook.OpenRecipe("Other triggers"); }
@@ -465,7 +469,7 @@ static class Menus {
 		public static void Toolbar_trigger() { TriggersAndToolbars.SetToolbarTrigger(); }
 		
 		[Command]
-		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveTriggers(); }
+		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveToolbars(); }
 		
 		[Command(separator = true)]
 		public static void Disable_triggers() { TriggersAndToolbars.DisableTriggers(null); }
@@ -481,6 +485,9 @@ static class Menus {
 		
 		[Command(separator = true, tooltip = "Finds triggers of current script.\nFinds its name in '@Triggers and toolbars' files in trigger actions, toolbar button actions and other code.\nAlso finds scheduled tasks, workspace startup scripts and class file test scripts.")]
 		public static void Find_triggers() { TriggersAndToolbars.AllTriggersMenu(App.Model.CurrentFile); }
+		
+		[Command]
+		public static void Triggers_list_info() { Panels.Cookbook.OpenRecipe("Show triggers"); }
 	}
 	
 	[Command(target = "Edit")]
@@ -602,7 +609,7 @@ Version: {Au_.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
 Uses C# 13, <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 4.11<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/microsoft/win32metadata>win32metadata<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, <link https://github.com/xoofx/markdig>Markdig<>.
-Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
+Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppDataRoaming}>ThisAppDataRoaming<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 {typeof(App).Assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 --------------------------");
 		}

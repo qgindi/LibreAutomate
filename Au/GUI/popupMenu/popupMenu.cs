@@ -522,7 +522,7 @@ public unsafe partial class popupMenu : MTBase {
 		}
 	}
 	
-	void _Show(PMFlags flags, POINT? xy, RECT? excludeRect, wnd owner) { //CONSIDER: _Show(PMPosition pos = null) //then could precisely specify offsets etc
+	void _Show(PMFlags flags, POINT? xy, RECT? excludeRect, wnd owner) {
 		if (_a.Count == 0) return;
 		
 		_result = null;

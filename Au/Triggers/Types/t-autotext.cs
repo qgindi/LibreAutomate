@@ -83,19 +83,27 @@ public record class TAMenuOptions(PMFlags pmFlags = PMFlags.ByCaret);
 /// Represents an autotext trigger.
 /// </summary>
 public class AutotextTrigger : ActionTrigger {
-	internal readonly string text;
-	internal readonly TAFlags flags;
-	internal readonly TAPostfix postfixType;
-	internal readonly string postfixChars;
-	internal readonly TAMenuOptions menuOptions;
 	readonly string _paramsString;
+	internal readonly TAMenuOptions menuOptions;
+	
+	///
+	public string Text { get; }
+	
+	///
+	public TAFlags Flags { get; }
+	
+	///
+	public TAPostfix PostfixType { get; }
+	
+	///
+	public string PostfixChars { get; }
 	
 	internal AutotextTrigger(ActionTriggers triggers, Action<AutotextTriggerArgs> action, string text, TAFlags flags, TAPostfix postfixType, string postfixChars, TAMenuOptions menuOptions, (string, int) source)
 		: base(triggers, action, true, source) {
-		this.text = text;
-		this.flags = flags;
-		this.postfixType = postfixType;
-		this.postfixChars = postfixChars;
+		Text = text;
+		Flags = flags;
+		PostfixType = postfixType;
+		PostfixChars = postfixChars;
 		this.menuOptions = menuOptions;
 		
 		if (flags == 0 && postfixType == 0 && postfixChars == null) {
@@ -112,7 +120,7 @@ public class AutotextTrigger : ActionTrigger {
 		//print.it(this);
 	}
 	
-	internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
+	internal override void Run_(TriggerArgs args) => RunT_(args as AutotextTriggerArgs);
 	
 	/// <summary>
 	/// Returns <c>"Autotext"</c>.
@@ -173,7 +181,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 				k |= (byte)c << j;
 			}
 			//print.it((uint)k);
-			t.DictAdd(_d, k);
+			t.DictAdd_(_d, k);
 			_lastAdded = t;
 		}
 	}
@@ -279,15 +287,17 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	public TAMenuOptions MenuOptions { get; set; }
 	
 	/// <summary>
-	/// Clears all options.
+	/// Clears all options that are applied to autotext triggers added afterwards: <see cref="DefaultFlags"/>, <see cref="DefaultPostfixType"/>, <see cref="DefaultPostfixChars"/>, <see cref="MenuOptions"/>.
 	/// </summary>
 	public void ResetOptions() {
 		this.DefaultFlags = 0;
 		this.DefaultPostfixType = 0;
 		this._defaultPostfixChars = null;
-		this.PostfixKey = KKey.Ctrl;
-		this.WordCharsPlus = null;
 		this.MenuOptions = null;
+		
+		//cannot reset these because they are for all triggers, not only for triggers added afterwards
+		//this.PostfixKey = KKey.Ctrl;
+		//this.WordCharsPlus = null;
 	}
 	
 	#endregion
@@ -334,7 +344,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 		
 		var modd = thc.ModThis;
 		if (modd != 0) {
-			_singlePK = _IsPostfixMod(modd) && thc.Mod == KMod.Ctrl;
+			_singlePK = _IsPostfixMod(modd) && thc.Mod == _postfixMod;
 			return;
 		}
 		_singlePK = false;
@@ -456,19 +466,19 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 				for (; v != null; v = v.next) {
 					var x = v as AutotextTrigger;
 					
-					var s = x.text;
+					var s = x.Text;
 					int i = nc - s.Length;
 					if (i < 0) continue;
 					if (i > 0 && _text[i - 1].isWordChar) continue;
 					
-					if (0 != (x.flags & TAFlags.MatchCase)) {
+					if (0 != (x.Flags & TAFlags.MatchCase)) {
 						for (int j = 0; i < nc; i++, j++) if (_text[i].c != s[j]) break;
 					} else {
 						for (int j = 0; i < nc; i++, j++) if (_text[i].cLow != s[j]) break;
 					}
 					if (i < nc) continue;
 					
-					switch (x.postfixType) {
+					switch (x.PostfixType) {
 					case TAPostfix.CharOrKey:
 						if (postfixType == _DetectedPostfix.None) continue;
 						break;
@@ -480,9 +490,10 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 						break;
 					}
 					
-					if (x.postfixChars != null && postfixType == _DetectedPostfix.Delim && x.postfixChars.IndexOf(c) < 0) continue;
+					if (x.PostfixChars != null && postfixType == _DetectedPostfix.Delim && x.PostfixChars.IndexOf(c) < 0) continue;
 					
 					if (v.DisabledThisOrAll) continue;
+					if (_triggers.triggersListWindowIsActive_) continue;
 					
 					if (args == null) { //may need for scope callbacks too
 						bool hasPChar = postfixType == _DetectedPostfix.Delim;
@@ -492,7 +503,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 						thc.args = args = new AutotextTriggerArgs(x, thc.Window, tt, hasPChar);
 					} else args.Trigger = x;
 					
-					if (!x.MatchScopeWindowAndFunc(thc)) continue;
+					if (!x.MatchScopeWindowAndFunc_(thc)) continue;
 					
 					_Reset(); //CONSIDER: flag DontReset. If the action generates keyboard events or mouse clicks, our kooks will reset.
 					
@@ -642,7 +653,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 		Window = w;
 		Text = text;
 		HasPostfixChar = hasPChar;
-		ShiftLeft = trigger.flags.Has(TAFlags.ShiftLeft);
+		ShiftLeft = trigger.Flags.Has(TAFlags.ShiftLeft);
 		
 		//print.it($"'{text}'", hasPChar);
 	}
@@ -692,7 +703,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	
 	void _Replace(string r, string html, KKeysEtc[] ke) {
 		bool onlyText = r != null && html == null;
-		var flags = this.Trigger.flags;
+		var flags = this.Trigger.Flags;
 		
 		string t = this.Text;
 		
@@ -887,7 +898,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 	public void Menu(params TAMenuItem[] items) {
 		if (items.NE_()) return;
 		
-		var m = new popupMenu(null, Trigger.sourceFile, Trigger.sourceLine) {
+		var m = new popupMenu(null, Trigger.SourceFile, Trigger.SourceLine) {
 			ExtractIconPathFromCode = false,
 			RawText = true,
 		};
@@ -904,7 +915,7 @@ public class AutotextTriggerArgs : TriggerArgs {
 				if (v.Text != null) lab = lab.Replace("[[|]]", null);
 			}
 #if true
-			var mi = m.Add(i + 1, lab, f_: Trigger.sourceFile, l_: v.l_ > 0 ? v.l_ : Trigger.sourceLine);
+			var mi = m.Add(i + 1, lab, f_: Trigger.SourceFile, l_: v.l_ > 0 ? v.l_ : Trigger.SourceLine);
 			if (text != lab) mi.Tooltip ??= text;
 			//if (i == 0) m.FocusedItem = mi; //then no tooltip
 			if (i < 9) mi.Hotkey = (i + 1).ToS();

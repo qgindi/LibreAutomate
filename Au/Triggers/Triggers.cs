@@ -22,7 +22,7 @@ namespace Au.Triggers;
 /// 
 /// Also you can set options (<see cref="TriggerOptions"/>), window scopes (<see cref="TriggerScopes"/>) and custom scopes (<see cref="TriggerFuncs"/>) for triggers added afterwards.
 /// 
-/// Finally call <see cref="Run"/>. It runs all the time and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
+/// Finally call <see cref="Run"/> or <see cref="RunThread"/>. It runs all the time and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
 /// 
 /// To quickly restart the script when editing, click the <b>Run</b> button.
 /// 
@@ -143,7 +143,7 @@ namespace Au.Triggers;
 /// print.it("called Triggers.Stop");
 /// ]]></code>
 /// </example>
-public class ActionTriggers {
+public partial class ActionTriggers {
 	readonly ITriggers[] _t;
 	ITriggers this[TriggerType e] => _t[(int)e];
 	
@@ -151,7 +151,7 @@ public class ActionTriggers {
 	/// Initializes a new instance of this class.
 	/// </summary>
 	public ActionTriggers() {
-		_t = new ITriggers[(int)TriggerType.Count];
+		_t = new ITriggers[4];
 		scopes_ = new TriggerScopes();
 		funcs_ = new TriggerFuncs();
 		options_ = new TriggerOptions();
@@ -301,7 +301,7 @@ public class ActionTriggers {
 						_ = WindowsHook.LowLevelHooksTimeout; //slow JIT of registry functions
 						Jit_.Compile(typeof(ActionTriggers), nameof(_WndProc), nameof(_KeyMouseEvent));
 						Jit_.Compile(typeof(TriggerHookContext), nameof(TriggerHookContext.InitContext), nameof(TriggerHookContext.PerfEnd), nameof(TriggerHookContext.PerfWarn));
-						Jit_.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
+						Jit_.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc_));
 						Jit_.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
 						AutotextTriggers.JitCompile();
 						MouseTriggers.JitCompile();
@@ -362,8 +362,14 @@ public class ActionTriggers {
 				//_ht.Return((int)wParam, false); //test speed without _KeyMouseEvent
 				_KeyMouseEvent((int)wParam, (HooksThread.UsedEvents)lParam);
 				return 0;
-			case Api.WM_USER + 20:
-				_windowTriggers.SimulateNew_(wParam, lParam);
+			//case Api.WM_USER + 2: //rejected
+			//	ShowTriggersListWindow((int)wParam);
+			//	return 0;
+			case Api.WM_USER + 10: //run any action
+				if(((GCHandle)lParam).Target is Action ac) {
+					((GCHandle)lParam).Free();
+					ac();
+				}
 				return 0;
 			}
 		}
@@ -475,8 +481,13 @@ public class ActionTriggers {
 	/// Throws <b>InvalidOperationException</b> if not thread of <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfNotMainThread_() {
-		if (Api.GetCurrentThreadId() != _mainThreadId) throw new InvalidOperationException("Must be in thread of Run, for example in a FuncOf function.");
+		if (!IsMainThread) throw new InvalidOperationException("Must be in thread of Run (for example in a FuncOf function).");
 	}
+	
+	/// <summary>
+	/// Returns <i>true</i> in thread of <see cref="Run"/>.
+	/// </summary>
+	internal bool IsMainThread => Api.GetCurrentThreadId() == _mainThreadId;
 	
 	/// <summary>
 	/// Gets or sets whether triggers of this <see cref="ActionTriggers"/> instance are disabled.
@@ -520,8 +531,19 @@ public class ActionTriggers {
 		public bool resetAutotext;
 	}
 	
-	internal void Notify_(int message, nint wParam = 0, nint lParam = 0) {
-		_wMsg.SendNotify(message, wParam, lParam);
+	/// <summary>
+	/// Sends a sync or async message to _wMsg (_WndProc in the triggers thread).
+	/// </summary>
+	internal void SendMsg_(bool sync, int message, nint wParam = 0, nint lParam = 0) {
+		if (sync) _wMsg.Send(message, wParam, lParam);
+		else _wMsg.SendNotify(message, wParam, lParam);
+	}
+	
+	/// <summary>
+	/// Sends a sync or async message to _wMsg (_WndProc in the triggers thread).
+	/// </summary>
+	internal void SendMsg_(bool sync, Action a) {
+		SendMsg_(sync, Api.WM_USER + 10, 0, (nint)GCHandle.Alloc(a));
 	}
 	
 	unsafe int _Wait(IntPtr* ha, int nh) {
@@ -569,12 +591,6 @@ enum TriggerType {
 	Autotext,
 	Mouse,
 	Window,
-	
-	Count,
-	
-	//TimerAfter,
-	//TimerEvery,
-	//TimerAt,
 }
 
 interface ITriggers {

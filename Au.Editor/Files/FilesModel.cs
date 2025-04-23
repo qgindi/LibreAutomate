@@ -1710,7 +1710,7 @@ partial class FilesModel {
 	
 	public void RunStartupScripts(bool startAsync) {
 		foreach (var (row, f) in GetStartupScriptsExceptDisabled()) {
-			if (f == null) { print.it("Startup script not found: " + row[0] + ". Please edit Options > Workspace > Run scripts..."); continue; }
+			if (f == null) { print.it("<>Startup script not found: " + row[0] + ". Please edit <+options Workspace>Options > Workspace > Run scripts...<>."); continue; }
 			int delay = 0;
 			if (row.Length > 1) {
 				var sd = row[1];

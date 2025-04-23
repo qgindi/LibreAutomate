@@ -379,32 +379,17 @@ static class TUtil {
 		if (Environment.CurrentManagedThreadId != 1) {
 			_Show(false);
 		} else {
-			run.thread(() => {
-				_Show(true);
-				
-				//WPF bug: randomly app crashes when this thread is ending now.
-				//	Can reproduce it when using the Windows "Text cursor indicator" feature, especially if here is `wait.doEvents();`.
-				//	It happens when a HwndHost'ed control receives WM_GETOBJECT (that indicator feature sends many WM_GETOBJECT).
-				//	When closing the dialog, WPF does not unhook/destroy the control. It reparents the control to some hidden window. Even then it receives WM_GETOBJECT. Later GC destroys it.
-				//	The control is hooked. The hook proc calls Thread.CurrentThread, which throws NullReferenceException, probably because the runtime already cleared its thread data.
-				//	Workaround: here add `wait.doEvents(100);`. Also GC.Collect to call DestroyWindowCore etc.
-				try {
-					var a = wnd.getwnd.threadWindows(process.thisThreadId).Where(o => o.Name == "SystemResourceNotifyWindow").SelectMany(o => o.ChildAll(flags: WCFlags.HiddenToo)).ToArray();
-					for (int i = 0; i < 10; i++) {
-						wait.doEvents(100);
-						if (i > 0 && !a.Any(o => o.IsAlive)) break;
-						GC.Collect();
-						GC.WaitForPendingFinalizers();
-					}
-				}
-				catch (Exception e1) { Debug_.Print(e1); }
-			}).Name = "Au.Tool";
+			run.thread(() => { _Show(true); }).Name = "Au.Tool";
 		}
 		
 		bool _Show(bool dialog) {
 			try { //unhandled exception kills process if in nonmain thread
 				var d = newDialog();
-				if (dialog) return true == d.ShowDialog();
+				if (dialog) {
+					bool ok = true == d.ShowDialog();
+					d.Dispatcher.InvokeShutdown(); //without this would be huge memory leaks, random crashes etc. From Dispatcher class docs: If you create a Dispatcher on a background thread, be sure to shut down the dispatcher before exiting the thread.
+					return ok;
+				}
 				d.Show();
 			}
 			catch (Exception e1) { print.it(e1); }

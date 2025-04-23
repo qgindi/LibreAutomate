@@ -27,16 +27,16 @@ namespace Au;
 /// </example>
 public class wndChildFinder {
 	enum _NameIs : byte { name, text, elmName, wfName }
-
+	
 	readonly wildex _name;
-	readonly wildex _className;
+	readonly wildex _cn;
 	readonly Func<wnd, bool> _also;
 	WinformsControlNames _wfControls;
 	readonly int _skipCount;
 	readonly WCFlags _flags;
 	readonly int? _id;
 	readonly _NameIs _nameIs;
-
+	
 	/// <summary>
 	/// See <see cref="wnd.Child"/>.
 	/// </summary>
@@ -53,7 +53,7 @@ public class wndChildFinder {
 		) {
 		if (cn != null) {
 			if (cn.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null.");
-			_className = cn;
+			_cn = cn;
 		}
 		if (name != null) {
 			switch (StringUtil.ParseParam3Stars_(ref name, "text", "elmName", "wfName"/*, "label"*/)) {
@@ -70,12 +70,12 @@ public class wndChildFinder {
 		_also = also;
 		_skipCount = skip;
 	}
-
+	
 	/// <summary>
 	/// The found control.
 	/// </summary>
 	public wnd Result { get; internal set; }
-
+	
 	/// <summary>
 	/// Finds the specified child control, like <see cref="wnd.Child"/>.
 	/// </summary>
@@ -86,7 +86,7 @@ public class wndChildFinder {
 	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
 	/// </remarks>
 	public wnd Find(wnd wParent) => Exists(wParent) ? Result : default;
-
+	
 	/// <summary>
 	/// Finds the specified child control, like <see cref="wnd.Child"/>. Can wait and throw <b>NotFoundException</b>.
 	/// </summary>
@@ -99,21 +99,21 @@ public class wndChildFinder {
 	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
 	/// </remarks>
 	public wnd Find(wnd wParent, Seconds wait) => Exists(wParent, wait) ? Result : default;
-
+	
 	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>, else <c>false</c>.</returns>
 	/// <inheritdoc cref="Find(wnd)"/>
 	public bool Exists(wnd wParent) {
 		using var k = new WndList_(_AllChildren(wParent));
 		return _FindInList(wParent, k) >= 0;
 	}
-
+	
 	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>. Else throws exception or returns <c>false</c> (if <i>wait</i> negative).</returns>
 	/// <inheritdoc cref="Find(wnd, Seconds)"/>
 	public bool Exists(wnd wParent, Seconds wait) {
 		var r = wait.Exists_() ? Exists(wParent) : Au.wait.until(wait, () => Exists(wParent));
 		return r || wait.ReturnFalseOrThrowNotFound_();
 	}
-
+	
 	ArrayBuilder_<wnd> _AllChildren(wnd wParent) {
 		wParent.ThrowIfInvalid();
 		return EnumWindows2(EnumAPI.EnumChildWindows,
@@ -122,7 +122,7 @@ public class wndChildFinder {
 			wParent: wParent,
 			directChild: 0 != (_flags & WCFlags.DirectChild));
 	}
-
+	
 	/// <summary>
 	/// Finds the specified control in a list of controls.
 	/// The <see cref="Result"/> property will be the control.
@@ -134,7 +134,7 @@ public class wndChildFinder {
 		using var k = new WndList_(a);
 		return _FindInList(wParent, k);
 	}
-
+	
 	/// <summary>
 	/// Finds all matching child controls, like <see cref="wnd.ChildAll"/>.
 	/// </summary>
@@ -144,7 +144,7 @@ public class wndChildFinder {
 	public wnd[] FindAll(wnd wParent) {
 		return _FindAll(new WndList_(_AllChildren(wParent)), wParent);
 	}
-
+	
 	/// <summary>
 	/// Finds all matching controls in a list of controls.
 	/// </summary>
@@ -154,7 +154,7 @@ public class wndChildFinder {
 	public wnd[] FindAllInList(IEnumerable<wnd> a, wnd wParent = default) {
 		return _FindAll(new WndList_(a), wParent);
 	}
-
+	
 	wnd[] _FindAll(WndList_ k, wnd wParent) {
 		using (k) {
 			using var ab = new ArrayBuilder_<wnd>();
@@ -162,7 +162,7 @@ public class wndChildFinder {
 			return ab.ToArray();
 		}
 	}
-
+	
 	/// <summary>
 	/// Returns index of matching element or -1.
 	/// </summary>
@@ -174,29 +174,29 @@ public class wndChildFinder {
 		if (a.Type == WndList_.ListType.None) return -1;
 		bool inList = a.Type != WndList_.ListType.ArrayBuilder;
 		int skipCount = _skipCount;
-
+		
 		try { //will need to dispose something
 			for (int index = 0; a.Next(out wnd w); index++) {
 				if (w.Is0) continue;
-
+				
 				if (inList) { //else the enum function did this
 					if (!_flags.Has(WCFlags.HiddenToo)) {
 						if (!w.IsVisibleIn_(wParent)) continue;
 					}
-
+					
 					if (_flags.Has(WCFlags.DirectChild) && !wParent.Is0) {
 						if (w.ParentGWL_ != wParent) continue;
 					}
 				}
-
+				
 				if (_id != null) {
 					if (w.ControlId != _id.Value) continue;
 				}
-
-				if (_className != null) {
-					if (!_className.Match(w.ClassName)) continue;
+				
+				if (_cn != null) {
+					if (!_cn.Match(w.ClassName)) continue;
 				}
-
+				
 				if (_name != null) {
 					string s;
 					switch (_nameIs) {
@@ -228,19 +228,19 @@ public class wndChildFinder {
 						s = w.Name;
 						break;
 					}
-
+					
 					if (!_name.Match(s)) continue;
 				}
-
+				
 				if (_also != null && !_also(w)) continue;
-
+				
 				if (getAll != null) {
 					getAll(w);
 					continue;
 				}
-
+				
 				if (skipCount-- > 0) continue;
-
+				
 				Result = w;
 				return index;
 			}
@@ -248,10 +248,10 @@ public class wndChildFinder {
 		finally {
 			if (_wfControls != null) { _wfControls.Dispose(); _wfControls = null; }
 		}
-
+		
 		return -1;
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if control <c>c</c> properties match the specified properties.
 	/// </summary>
@@ -263,5 +263,28 @@ public class wndChildFinder {
 			return false;
 		}
 		return 0 == _FindInList(wParent, new WndList_(c));
+	}
+	
+	///
+	public override string ToString() {
+		using (new StringBuilder_(out var b)) {
+			b.Append('[');
+			_Append("name", _name, true);
+			_Append("cn", _cn, true);
+			if (_id != null) _Append("id", _id.ToString(), false);
+			if (_flags != 0) _Append("flags", _flags.ToString(), false);
+			if (_also != null) _Append("also", "...", false);
+			if (_skipCount != 0) _Append("skip", _skipCount.ToString(), false);
+			b.Append(']');
+			return b.ToString();
+			
+			void _Append(string k, object v, bool isString) {
+				if (v == null) return;
+				if (b.Length > 1) b.Append(", ");
+				var s = v.ToString();
+				if (isString) s = s.Escape(limit: 50, quote: true);
+				b.Append(k).Append(": ").Append(s);
+			}
+		}
 	}
 }

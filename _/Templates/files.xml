@@ -22,7 +22,7 @@
   <d n="Default" i="71">
     <c n="global.cs" i="72" />
     <d n="@Triggers and toolbars" i="15">
-      <s n="Triggers and toolbars.cs" i="17" icon="*Material.ScriptOutline #008EEE" />
+      <s n="Triggers and toolbars.cs" i="17" />
       <d n="Triggers" i="18">
         <c n="Hotkey triggers.cs" i="19" />
         <c n="Autotext triggers.cs" i="20" />

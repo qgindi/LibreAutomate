@@ -469,6 +469,9 @@ namespace Au {
 		/// </remarks>
 		public static string WorkspaceDriveBS { get; private set; }
 		
+		//CONSIDER:
+		//public static FolderPath ThisLibrarySettings { get => field ??= ThisAppDataRoaming; set; }
+		
 #if !DEBUG //fbc
 		/// <summary>
 		/// Gets drive type (fixed, removable, network, etc) of <see cref="ThisAppDriveBS"/>.

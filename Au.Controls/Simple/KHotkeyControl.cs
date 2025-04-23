@@ -37,6 +37,7 @@ public class KHotkeyControl : UserControl {
 				_Mod(KMod.Alt, _cAlt);
 				_Mod(KMod.Win, _cWin);
 				_Format(mod, modAny);
+				Changed?.Invoke(default);
 				
 				void _Mod(KMod m, CheckBox cb) {
 					bool? c = cb.IsChecked;
@@ -59,19 +60,19 @@ public class KHotkeyControl : UserControl {
 		
 		if (!_onlyMod) {
 			_tHotkey.GotKeyboardFocus += (_, _) => {
+				WindowsHook.DontRestoreKeyboardHooks_ = true;
+				
 				_hook = WindowsHook.Keyboard(k => {
 					if (k.IsUp) return;
 					KMod mod = 0;
 					if (k.Mod == 0) {
 						_key = k.Key;
 						mod = keys.getMod();
-						k.BlockEvent();
+						if (!(_key is KKey.CapsLock or KKey.NumLock or KKey.ScrollLock)) k.BlockEvent();
 					} else {
 						if (_key == 0) return;
 						_key = 0;
 					}
-					
-					_Format(mod);
 					
 					if (_forTrigger) {
 						_noEvents = true;
@@ -86,12 +87,18 @@ public class KHotkeyControl : UserControl {
 						_cAlt.IsEnabled = en;
 						_cWin.IsEnabled = en;
 					}
+					
+					_Format(mod);
+					Changed?.Invoke(k);
 				});
 			};
 			
 			_tHotkey.LostKeyboardFocus += (_, _) => {
-				_hook?.Dispose();
-				_hook = null;
+				if (_hook != null) {
+					_hook.Dispose();
+					_hook = null;
+					WindowsHook.DontRestoreKeyboardHooks_ = false;
+				}
 			};
 		}
 	}
@@ -130,6 +137,12 @@ public class KHotkeyControl : UserControl {
 	/// Returns the hotkey string or null.
 	/// </summary>
 	public string Result { get; private set; }
+	
+	/// <summary>
+	/// Hotkey changed.
+	/// The parameter is null if checked/unchecked a checkbox.
+	/// </summary>
+	public event Action<HookData.Keyboard?> Changed;
 	
 	///
 	public new void Focus() {

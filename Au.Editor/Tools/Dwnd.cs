@@ -689,7 +689,7 @@ $@"This tool creates code to find <help wnd.find>window<> or <help wnd.Child>con
 4. Click Insert. Click Close, or capture/insert again.
 5. If need, edit the code in editor. For example rename variables, delete duplicate wnd.find lines, replace part of window name with *. Add code to use the window or control. Examples: w.Activate(); var s = w.Name;.
 
-If the hotkey does not work when the target window is active, probably its process is admin and this process isn't. Or the process steals the hotkey; try another hotkey (Options > Hotkeys).";
+{(uacInfo.isAdmin ? "" : "If the hotkey does not work when the target window is active, probably its process is admin and this process isn't.")}";
 
 	#endregion
 }

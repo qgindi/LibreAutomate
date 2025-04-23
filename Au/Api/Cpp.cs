@@ -168,6 +168,37 @@ static unsafe partial class Cpp {
 		GC.WaitForPendingFinalizers();
 		Cpp_Unload(0);
 	}
+
+//	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+//	internal static extern IInterface Cpp_GetInterface();
+
+//	[ComImport, Guid("3AB5235E-2768-47A2-909A-B5852A9D1868"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+//	internal interface IInterface {
+//		[PreserveSig] int Add(int a, int b);
+//		//int Prop { set; get; }
+//		//[return: MarshalAs(UnmanagedType.Bool)] bool Prop { set; get; }
+//		//bool Prop { [return: MarshalAs(UnmanagedType.Bool)] set; [return: MarshalAs(UnmanagedType.Bool)] get; }
+//		//[property: MarshalAs(UnmanagedType.Bool)] bool Prop { set; get; }
+
+//		void put_Prop([MarshalAs(UnmanagedType.Bool)] bool r);
+//		[return: MarshalAs(UnmanagedType.Bool)] bool get_Prop();
+
+//		//void put_Prop2([MarshalAs(UnmanagedType.LPStr)] string r);
+//		//[return: MarshalAs(UnmanagedType.LPStr)] string get_Prop2();
+//		//[return: MarshalAs(UnmanagedType.IUnknown)] object Prop2 { get; set; }
+//		//object Prop2 { [return: MarshalAs(UnmanagedType.IUnknown)] get; set; }
+
+//#if false
+//		void put_Prop2([MarshalAs(UnmanagedType.IUnknown)] object r);
+//		[return: MarshalAs(UnmanagedType.IUnknown)] object get_Prop2();
+//#else
+//		void put_Prop2(IUnknown r);
+//		IUnknown get_Prop2();
+
+//		[ComImport, Guid("00000000-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+//		internal interface IUnknown { }
+//#endif
+//	}
 #endif
 
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -208,7 +239,7 @@ static unsafe partial class Cpp {
 
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern void Cpp_InactiveWindowWorkaround(bool on);
-	
+
 	/// <returns>0 failed, 1 x86, 2 x64, 3 arm64</returns>
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern int Cpp_GetProcessArchitecture(int pid);

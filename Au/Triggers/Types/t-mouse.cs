@@ -39,12 +39,9 @@ public enum TMFlags : byte {
 /// Represents a mouse trigger.
 /// </summary>
 public class MouseTrigger : ActionTrigger {
-	internal readonly KMod modMasked, modMask;
-	readonly TMFlags _flags;
-	readonly TMKind _kind;
-	readonly byte _data;
-	readonly screen _screen;
 	readonly string _paramsString;
+	readonly byte _data;
+	internal readonly KMod modMasked, modMask;
 	
 	internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action,
 		TMKind kind, byte data, KMod mod, KMod modAny, TMFlags flags, screen screen,
@@ -52,14 +49,14 @@ public class MouseTrigger : ActionTrigger {
 		const KMod csaw = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win;
 		modMask = ~modAny & csaw;
 		modMasked = mod & modMask;
-		_flags = flags;
-		_kind = kind;
 		_data = data;
-		_screen = screen;
 		_paramsString = paramsString;
+		Flags = flags;
+		Kind = kind;
+		Screen = screen;
 	}
 	
-	internal override void Run(TriggerArgs args) => RunT(args as MouseTriggerArgs);
+	internal override void Run_(TriggerArgs args) => RunT_(args as MouseTriggerArgs);
 	
 	/// <summary>
 	/// Returns <c>"Mouse"</c>.
@@ -72,25 +69,25 @@ public class MouseTrigger : ActionTrigger {
 	public override string ParamsString => _paramsString;
 	
 	///
-	public TMKind Kind => _kind;
+	public TMKind Kind { get; }
 	
 	///
-	public TMClick Button => _kind == TMKind.Click ? (TMClick)_data : default;
+	public TMClick Button => Kind == TMKind.Click ? (TMClick)_data : default;
 	
 	///
-	public TMWheel Wheel => _kind == TMKind.Wheel ? (TMWheel)_data : default;
+	public TMWheel Wheel => Kind == TMKind.Wheel ? (TMWheel)_data : default;
 	
 	///
-	public TMEdge Edge => _kind == TMKind.Edge ? (TMEdge)_data : default;
+	public TMEdge Edge => Kind == TMKind.Edge ? (TMEdge)_data : default;
 	
 	///
-	public TMMove Move => _kind == TMKind.Move ? (TMMove)_data : default;
+	public TMMove Move => Kind == TMKind.Move ? (TMMove)_data : default;
 	
 	///
-	public screen Screen => _screen;
+	public screen Screen { get; }
 	
 	///
-	public TMFlags Flags => _flags;
+	public TMFlags Flags { get; }
 }
 
 /// <summary>
@@ -175,9 +172,9 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger> {
 		string ps;
 		using (new StringBuilder_(out var b)) {
 			b.Append(kind.ToString()).Append(' ').Append(sData);
-			b.Append(" + ").Append(noMod ? "none" : (modKeys == "?" ? "any" : modKeys));
+			if (!noMod) b.Append(" + ").Append(modKeys == "?" ? "any" : modKeys);
 			if (flags != 0) b.Append(" (").Append(flags.ToString()).Append(')');
-			if (kind == TMKind.Edge || kind == TMKind.Move) {
+			if (kind is TMKind.Edge or TMKind.Move) {
 				if (screen.IsEmpty) b.Append(", primary screen");
 				else if (screen.IsOfMouse_) b.Append(", any screen");
 				else b.Append(", ").Append(a1_);
@@ -192,7 +189,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger> {
 			if (!keys.more.parseTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 		}
 		var t = new MouseTrigger(_triggers, f, kind, data, mod, modAny, flags, screen, ps, source);
-		t.DictAdd(_d, _DictKey(kind, data));
+		t.DictAdd_(_d, _DictKey(kind, data));
 		_lastAdded = t;
 		UsedHookEvents_ |= HooksThread.UsedEvents.Mouse; //just sets the hook
 		UsedHookEvents_ |= kind switch {
@@ -314,7 +311,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger> {
 				if (args == null) thc.args = args = new MouseTriggerArgs(x, thc.Window, mod); //may need for scope callbacks too
 				else args.Trigger = x;
 				
-				if (!x.MatchScopeWindowAndFunc(thc)) continue;
+				if (!x.MatchScopeWindowAndFunc_(thc)) continue;
 				
 				if (x.action == null) {
 					_ResetUp();

@@ -49,6 +49,8 @@ and select from the list. It adds the declaration to the class, and more declara
 
 The database contains ~200_000 declarations. They are not perfect. You can edit.
 Data source: https://github.com/microsoft/win32metadata
+
+See also: menu Edit > Generate > Convert [PreserveSig] methods.
 */";
 			code.AaSetText(s);
 		}

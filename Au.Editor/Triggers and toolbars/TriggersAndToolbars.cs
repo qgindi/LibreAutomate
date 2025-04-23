@@ -108,8 +108,14 @@ partial class TriggersAndToolbars {
 		App.TrayIcon.Disabled = dis;
 		if (App.Commands is { } ac) ac[nameof(Menus.TT.Disable_triggers)].Checked = dis;
 	}
+
+	//rejected
+	//public static void ShowActiveTriggers() {
+	//	var w = wnd.findFast(cn: "Au.Triggers.Hooks", messageOnly: true);
+	//	if (!w.Is0) w.Post(Api.WM_USER + 2, -1);
+	//}
 	
-	public static void ShowActiveTriggers() {
+	public static void ShowActiveToolbars() {
 		foreach (var w in wnd.getwnd.allWindows().Where(o => o.ClassNameIs("Au.toolbar")).DistinctBy(o => o.ThreadId)) {
 			Api.AllowSetForegroundWindow(w.ProcessId);
 			w.Post(Api.WM_USER + 51);

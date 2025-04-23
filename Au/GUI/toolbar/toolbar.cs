@@ -104,14 +104,28 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="toolbarName">Toolbar name. If this string is a full path, returns this string.</param>
 	/// <remarks>
-	/// Path: <c>folders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="folders.Workspace"/> is <c>null</c>, uses <see cref="folders.ThisAppDocuments"/>.
+	/// Path: <c>folders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="folders.Workspace"/> is <c>null</c>, uses <see cref="folders.ThisAppDataRoaming"/>.
 	/// </remarks>
 	public static string getSettingsFilePath(string toolbarName) {
 		if (toolbarName.NE()) throw new ArgumentException("Empty name");
 		if (pathname.isFullPath(toolbarName)) return toolbarName;
-		string s = folders.Workspace.Path ?? folders.ThisAppDocuments;
-		return s + @"\.toolbars\" + toolbarName + ".json";
+		string s = folders.Workspace.Path;
+		if (s != null) return s + @"\.toolbars\" + toolbarName + ".json";
+		s = s_settingsDir;
+		if (s == null) {
+			s = folders.ThisAppDataRoaming + ".toolbars";
+			if (!filesystem.exists(s).Directory) { //fbc. Previously was folders.ThisAppDocuments, but a library should not create directories there.
+				bool nac = folders.noAutoCreate;
+				folders.noAutoCreate = true;
+				var s2 = folders.ThisAppDocuments + ".toolbars";
+				folders.noAutoCreate = nac;
+				if (filesystem.exists(s2).Directory) s = s2;
+			}
+			s_settingsDir = s += @"\";
+		}
+		return s + toolbarName + ".json";
 	}
+	static string s_settingsDir;
 	
 	/// <summary>
 	/// Finds an open toolbar by <see cref="Name"/>.
@@ -571,7 +585,10 @@ public partial class toolbar : MTBase {
 			}
 			return 0;
 		case Api.WM_USER + 51:
-			toolbarsDialog();
+			perf.first();//TODO
+			_toolbarsDialog();
+			[MethodImpl(MethodImplOptions.NoInlining)] //don't load System.Windows.Forms assembly
+			static void _toolbarsDialog() => toolbarsDialog();
 			return 0;
 		}
 		

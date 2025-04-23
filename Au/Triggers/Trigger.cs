@@ -5,23 +5,31 @@ namespace Au.Triggers;
 /// </summary>
 public abstract class ActionTrigger {
 	internal ActionTrigger next; //linked list when eg same hotkey is used in multiple scopes
-	internal readonly Delegate action;
 	internal readonly ActionTriggers triggers;
 	internal readonly TOptions options; //Triggers.Options
-	internal readonly TriggerScope scope; //Triggers.Of.WindowX. Used by hotkey, autotext and mouse triggers.
 	readonly TriggerFunc[] _funcAfter, _funcBefore; //Triggers.FuncOf. _funcAfter used by all triggers; _funcBefore - like scope.
-	internal readonly string sourceFile;
-	internal readonly int sourceLine;
+	internal readonly Delegate action;
+	
+	/// <summary>
+	/// <b>Triggers.Of.WindowX</b>. Used by hotkey, autotext and mouse triggers.
+	/// </summary>
+	public TriggerScope Scope { get; }
+	
+	///
+	public string SourceFile { get; }
+	
+	///
+	public int SourceLine { get; }
 	
 	internal ActionTrigger(ActionTriggers triggers, Delegate action, bool usesWindowScope, (string, int) source) {
-		this.sourceFile = source.Item1 ?? throw new ArgumentNullException();
-		this.sourceLine = source.Item2;
+		this.SourceFile = source.Item1 ?? throw new ArgumentNullException();
+		this.SourceLine = source.Item2;
 		this.action = action;
 		this.triggers = triggers;
 		var to = triggers.options_;
 		options = to.Current;
 		EnabledAlways = to.EnabledAlways;
-		if (usesWindowScope) scope = triggers.scopes_.Current;
+		if (usesWindowScope) Scope = triggers.scopes_.Current_;
 		var tf = triggers.funcs_;
 		_funcBefore = _Func(tf.commonBefore, tf.nextBefore); tf.nextBefore = null;
 		_funcAfter = _Func(tf.nextAfter, tf.commonAfter); tf.nextAfter = null;
@@ -39,7 +47,7 @@ public abstract class ActionTrigger {
 		}
 	}
 	
-	internal void DictAdd<TKey>(Dictionary<TKey, ActionTrigger> d, TKey key) {
+	internal void DictAdd_<TKey>(Dictionary<TKey, ActionTrigger> d, TKey key) {
 		if (!d.TryGetValue(key, out var o)) d.Add(key, this);
 		else { //append to the linked list
 			while (o.next != null) o = o.next;
@@ -51,12 +59,12 @@ public abstract class ActionTrigger {
 	/// Called through <see cref="TriggerActionThreads.Run"/> in action thread.
 	/// Possibly runs later.
 	/// </summary>
-	internal abstract void Run(TriggerArgs args);
+	internal abstract void Run_(TriggerArgs args);
 	
 	/// <summary>
-	/// Makes simpler to implement <see cref="Run"/>.
+	/// Makes simpler to implement <see cref="Run_"/>.
 	/// </summary>
-	private protected void RunT<T>(T args) => (action as Action<T>)(args);
+	private protected void RunT_<T>(T args) => (action as Action<T>)(args);
 	
 	/// <summary>
 	/// Returns a trigger type string, like <c>"Hotkey"</c>, <c>"Mouse"</c>, <c>"Window.ActiveNew"</c>.
@@ -73,14 +81,14 @@ public abstract class ActionTrigger {
 	/// </summary>
 	public override string ToString() => TypeString + " " + ParamsString;
 	
-	internal bool MatchScopeWindowAndFunc(TriggerHookContext thc) {
+	internal bool MatchScopeWindowAndFunc_(TriggerHookContext thc) {
 		try {
 			for (int i = 0; i < 3; i++) {
 				if (i == 1) {
-					if (scope != null) {
+					if (Scope != null) {
 						thc.PerfStart();
-						bool ok = scope.Match(thc);
-						thc.PerfEnd(false, ref scope.perfTime);
+						bool ok = Scope.Match(thc.Window, thc);
+						thc.PerfEnd(false, ref Scope.perfTime);
 						if (!ok) return false;
 					}
 				} else {
@@ -106,7 +114,7 @@ public abstract class ActionTrigger {
 		//	should compare it once, and don't call 'before' functions again if did not match. Rare.
 	}
 	
-	internal bool CallFunc(TriggerArgs args) {
+	internal bool CallFunc_(TriggerArgs args) {
 #if true
 		if (_funcAfter != null) {
 			try {
@@ -138,7 +146,7 @@ public abstract class ActionTrigger {
 		//TODO3: measure time more intelligently, like in MatchScope, but maybe give more time.
 	}
 	
-	internal bool HasFunc => _funcBefore != null || _funcAfter != null;
+	internal bool HasFunc_ => _funcBefore != null || _funcAfter != null;
 	
 	//probably not useful. Or also need a property for eg HotkeyTriggers in derived classes.
 	///// <summary>
@@ -169,14 +177,18 @@ public abstract class ActionTrigger {
 	/// Starts the action like when its trigger is activated.
 	/// </summary>
 	/// <param name="args"></param>
-	/// <exception cref="InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Remarks.</exception>
+	/// <exception cref="InvalidOperationException">Called before or after <see cref="ActionTriggers.Run"/>.</exception>
 	/// <remarks>
-	/// Call while <see cref="ActionTriggers.Run"/> is running, from the same thread.
+	/// This function must be called while the main triggers thread is in <see cref="ActionTriggers.Run"/>, for example from another trigger action. It is asynchronous (does not wait).
+	/// If called from a trigger action (hotkey etc), make sure this action runs in another thread or can be queued. Else both actions cannot run simultaneously.
 	/// </remarks>
 	public void RunAction(TriggerArgs args) {
 		triggers.ThrowIfNotRunning_();
-		triggers.ThrowIfNotMainThread_();
-		triggers.RunAction_(this, args);
+		if (triggers.IsMainThread) {
+			triggers.RunAction_(this, args);
+		} else {
+			triggers.SendMsg_(false, () => triggers.RunAction_(this, args));
+		}
 	}
 }
 
@@ -225,14 +237,14 @@ public abstract class TriggerArgs {
 public class TriggerScopes {
 	internal TriggerScopes() { }
 	
-	internal TriggerScope Current { get; private set; }
+	internal TriggerScope Current_ { get; private set; }
 	
 	//rejected. More confusing than useful.
 	///// <summary>
 	///// Sets the scope that was active before the last call to any "set scope" function.
 	///// </summary>
 	//public void PreviousScope() => Current = _previous;
-	//internal TriggerScope Current { get => _current; private set { _previous = _current; _current = value; } }
+	//internal TriggerScope Current_ { get => _current; private set { _previous = _current; _current = value; } }
 	//TriggerScope _current, _previous;
 	
 	/// <summary>
@@ -241,7 +253,7 @@ public class TriggerScopes {
 	/// <remarks>
 	/// Example in class help.
 	/// </remarks>
-	public void AllWindows() => Current = null;
+	public void AllWindows() => Current_ = null;
 	
 	/// <summary>
 	/// Sets (reuses) a previously specified scope.
@@ -250,7 +262,7 @@ public class TriggerScopes {
 	/// Example in class help.
 	/// </remarks>
 	/// <param name="scope">The return value of function <b>Window</b>, <b>NotWindow</b>, <b>Windows</b> or <b>NotWindows</b>.</param>
-	public void Again(TriggerScope scope) => Current = scope;
+	public void Again(TriggerScope scope) => Current_ = scope;
 	
 	/// <summary>
 	/// Sets scope "only this window". Hotkey, autotext and mouse triggers added afterwards will work only when the specified window is active.
@@ -328,18 +340,18 @@ public class TriggerScopes {
 	
 	TriggerScope _Add(bool not, wndFinder f) {
 		Not_.Null(f);
-		Used = true;
-		return Current = new TriggerScope(f, not);
+		Used_ = true;
+		return Current_ = new TriggerScope(f, not);
 	}
 	
 	TriggerScope _Add(bool not, wndFinder[] a) {
 		if (a.Length == 1) return _Add(not, a[0]);
 		foreach (var v in a) if (v == null) throw new ArgumentNullException();
-		Used = true;
-		return Current = new TriggerScope(a, not);
+		Used_ = true;
+		return Current_ = new TriggerScope(a, not);
 	}
 	
-	internal bool Used { get; private set; }
+	internal bool Used_ { get; private set; }
 }
 
 /// <summary>
@@ -357,20 +369,18 @@ public class TriggerScope {
 	}
 	
 	/// <summary>
-	/// Returns <c>true</c> if window matches.
+	/// Returns <c>true</c> if the window matches this scope.
 	/// </summary>
-	/// <param name="thc">This func uses the window handle (gets on demand) and <b>WFCache</b>.</param>
-	internal bool Match(TriggerHookContext thc) {
+	public bool Match(wnd w, WFCache cache) {
 		bool yes = false;
-		var w = thc.Window;
 		if (!w.Is0) {
 			switch (o) {
 			case wndFinder f:
-				yes = f.IsMatch(w, thc);
+				yes = f.IsMatch(w, cache);
 				break;
 			case wndFinder[] a:
 				foreach (var v in a) {
-					if (yes = v.IsMatch(w, thc)) break;
+					if (yes = v.IsMatch(w, cache)) break;
 				}
 				break;
 			}
@@ -425,7 +435,7 @@ public class TriggerFuncs {
 	
 	internal Dictionary<TFunc, TriggerFunc> perfDict = new Dictionary<TFunc, TriggerFunc>();
 	
-	//internal bool Used { get; private set; }
+	//internal bool Used_ { get; private set; }
 	
 	internal TFunc nextAfter, nextBefore, commonAfter, commonBefore;
 	

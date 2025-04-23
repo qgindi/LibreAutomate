@@ -89,6 +89,7 @@ class PanelOutput {
 			SciTags.AddCommonLinkTag("google", _Google);
 			SciTags.AddCommonLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
 			SciTags.AddCommonLinkTag("+nuget", DNuget.ShowSingle);
+			SciTags.AddCommonLinkTag("+options", s => { DOptions.AaShow(s.NE() ? null : Enum.Parse<DOptions.EPage>(s)); });
 			AaTags.AddLinkTag("+properties", fid => {
 				var f = App.Model.FindCodeFile(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;

@@ -11,7 +11,8 @@ partial class Program {
 		//Click the Run button to apply changes after editing.
 		//More info in Cookbook.
 		
-		
+		hk["Ctrl+Shift+T"] = o => Triggers.ShowTriggersListWindow();
+		hk.Last.EnabledAlways = true;
 		
 		if (!true) { //examples. To enable and test it, replace (!true) with (true) and run this script.
 			hk["Ctrl+Alt+K"] = o => print.it("trigger action example 1", o.Trigger); //it means: when I press Ctrl+Alt+K, execute trigger action print.it(...)

@@ -8,6 +8,7 @@ using System.Windows.Data;
 using System.Windows.Automation;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
+using System.Windows.Input;
 
 namespace Au.Types;
 
@@ -129,6 +130,7 @@ public static class ExtWpf {
 	/// <param name="f"></param>
 	/// <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> <c>true</c> or <c>null</c> if <c>false</c>.</param>
 	/// <param name="andLast">If <i>last</i> found, return <i>last</i> instead of <c>null</c>.</param>
+	/// <seealso cref="ItemsControl.ContainerFromElement"/>
 	public static DependencyObject FindVisualAncestor(this DependencyObject t, bool andThis, Func<DependencyObject, bool> f, object last, bool andLast) {
 		for (var v = t; v != null; v = VisualTreeHelper.GetParent(v)) {
 			if (!andThis) { andThis = true; continue; }
@@ -146,6 +148,7 @@ public static class ExtWpf {
 	/// <param name="andThis">Include this object.</param>
 	/// <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> <c>true</c> or <c>null</c> if <c>false</c>.</param>
 	/// <param name="andLast">If <i>last</i> found, return <i>last</i> instead of <c>null</c>.</param>
+	/// <seealso cref="ItemsControl.ContainerFromElement"/>
 	public static DependencyObject FindVisualAncestor<T>(this DependencyObject t, bool andThis, object last, bool andLast) where T : DependencyObject {
 		for (var v = t; v != null; v = VisualTreeHelper.GetParent(v)) {
 			if (!andThis) { andThis = true; continue; }
@@ -603,6 +606,21 @@ public static class ExtWpf {
 			t.SizeChanged += h;
 			//note: in Loaded event handler randomly does not work. Somehow t still does not have the overflow button.
 		}
+	}
+	
+	internal static wpfBuilder AddToolBar_(this wpfBuilder t, out ToolBarTray tt, out ToolBar tb, bool vertical = false, bool hideOverflow = false, bool controlBrush = false) {
+		tt = new ToolBarTray { IsLocked = true };
+		if (vertical) tt.Orientation = Orientation.Vertical;
+		tb = new ToolBar();
+		if (controlBrush) {
+			tt.Background = SystemColors.ControlBrush;
+			tb.Background = SystemColors.ControlBrush;
+		}
+		KeyboardNavigation.SetTabNavigation(tb, KeyboardNavigationMode.Once);
+		tt.ToolBars.Add(tb);
+		if (hideOverflow) tb.HideGripAndOverflow(false);
+		t.Add(tt);
+		return t;
 	}
 	
 	/// <summary>

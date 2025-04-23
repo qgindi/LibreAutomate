@@ -12,6 +12,10 @@
 __interface __declspec(uuid("3AB5235E-2768-47A2-909A-B5852A9D1868"))
 	IInterface : IUnknown {
 	int __stdcall Add(int a, int b);
+	HRESULT __stdcall put_Prop(int r);
+	HRESULT __stdcall get_Prop(int* r);
+	HRESULT __stdcall put_Prop2(IUnknown* r);
+	HRESULT __stdcall get_Prop2(IUnknown** r);
 };
 
 class Inter :public IInterface {
@@ -23,7 +27,7 @@ public:
 	// Inherited via IInterface
 	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override {
 		if (riid == __uuidof(IInterface) || riid == __uuidof(IUnknown)) {
-			Print(L"QueryInterface");
+			Printf(L"QueryInterface(%s)", riid == __uuidof(IInterface) ? L"IInterface" : L"IUnknown");
 			*ppvObject = this;
 			return 0;
 		}
@@ -38,6 +42,12 @@ public:
 		Print(L"Release");
 		return 1;
 	}
+
+	HRESULT __stdcall put_Prop(int r) { Print(r); return 0; }
+	HRESULT __stdcall get_Prop(int* r) { *r = 3; return 0; }
+
+	HRESULT __stdcall put_Prop2(IUnknown* r) { Print(r->AddRef()); return 0; }
+	HRESULT __stdcall get_Prop2(IUnknown** r) { *r = this; return 0; }
 };
 
 EXPORT IInterface* Cpp_GetInterface() { return new Inter(); }

@@ -226,7 +226,7 @@ class TriggerActionThreads {
 				if (script.role == SRole.MiniProgram) {
 					sTrigger = trigger.ToString();
 					Api.QueryPerformanceCounter(out startTime);
-					print.TaskEvent_("AS " + sTrigger, startTime, trigger.sourceFile, trigger.sourceLine);
+					print.TaskEvent_("AS " + sTrigger, startTime, trigger.SourceFile, trigger.SourceLine);
 					//perf.next();
 				}
 				
@@ -234,12 +234,12 @@ class TriggerActionThreads {
 				o.before?.Invoke(baArgs);
 				try {
 					//perf.nw();
-					trigger.Run(args);
+					trigger.Run_(args);
 					
-					if (sTrigger != null) print.TaskEvent_("AE", startTime, trigger.sourceFile, trigger.sourceLine);
+					if (sTrigger != null) print.TaskEvent_("AE", startTime, trigger.SourceFile, trigger.SourceLine);
 				}
 				catch (Exception e1) {
-					if (sTrigger != null) print.TaskEvent_("AF", startTime, trigger.sourceFile, trigger.sourceLine);
+					if (sTrigger != null) print.TaskEvent_("AF", startTime, trigger.SourceFile, trigger.SourceLine);
 					
 					baArgs.Exception = e1;
 					print.it(e1);
@@ -387,7 +387,7 @@ class TriggerActionThreads {
 				if (_running) {
 					if (ifRunningWaitMS == 0) {
 						if (!trigger.options.flags.Has(TOFlags.NoWarning))
-							print.it($"<>Warning: can't run the trigger action because an action is running in this thread. <open {trigger.sourceFile}|{trigger.sourceLine}>Trigger<>: {trigger}."
+							print.it($"<>Warning: can't run the trigger action because an action is running in this thread. <open {trigger.SourceFile}|{trigger.SourceLine}>Trigger<>: {trigger}."
 								+ " <fold>\tTo run simultaneously or wait, use one of Triggers.Options.ThreadX functions.\r\n\tTo disable this warning: Triggers.Options.Thread(noWarning: true);.</fold>");
 						return false;
 					}

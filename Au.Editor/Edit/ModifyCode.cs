@@ -532,6 +532,178 @@ static class ModifyCode {
 			}
 		}
 	}
+	
+	public static void ConvertInterfaceMethodPreserveSig() {
+		if (!CodeInfo.GetContextAndDocument(out var cd, metaToo: true)) return;
+		var doc = cd.sci;
+		var code = cd.code;
+		var (selStart, selEnd) = doc.aaaSelection(true);
+		var tok1 = cd.syntaxRoot.FindToken(selStart);
+		SyntaxNode firstNode = _ToMemberDecl(tok1.Parent), lastNode = firstNode;
+		if (firstNode == null) return;
+		if (selEnd > selStart) {
+			var tok2 = cd.syntaxRoot.FindTokenOnLeftOfPosition(selEnd);
+			if (tok2.SpanStart > tok1.SpanStart) lastNode = _ToMemberDecl(tok2.Parent) ?? firstNode;
+		}
+		
+		//if last is `get_X`, try to include next `put_X` (or vice versa)
+		if (_IsProp(lastNode, out var r1) && _ToMemberDecl(lastNode.GetLastToken().GetNextToken().Parent) is { } n1 && _IsProp(n1, out var u1) && u1.put != r1.put && u1.name[4..] == r1.name[4..]) {
+			lastNode = n1;
+		}
+		//if first is `put_X`, try to include previous `get_X` (or vice versa)
+		if (_IsProp(firstNode, out var r2) && _ToMemberDecl(firstNode.GetFirstToken().GetPreviousToken().Parent) is { } n2 && _IsProp(n2, out var u2) && u2.put != r2.put && u2.name[4..] == r2.name[4..]) {
+			firstNode = n2;
+		}
+		bool _IsProp(SyntaxNode n, out (string name, bool put) r) {
+			r = default;
+			if (n is MethodDeclarationSyntax m) { r.name = m.Identifier.Text; if (r.name.Starts("get_") || (r.put = r.name.Starts("put_"))) return true; }
+			return false;
+		}
+		
+		//CiUtil.PrintNode(firstNode);
+		//CiUtil.PrintNode(lastNode);
+		
+		StringBuilder b = new();
+		var replRange = (start: firstNode.SpanStart, end: lastNode.Span.End);
+		int written = replRange.start;
+		
+		if (firstNode is MethodDeclarationSyntax mds) {
+			if (lastNode is not MethodDeclarationSyntax || firstNode.Parent != lastNode.Parent || firstNode.Parent is not InterfaceDeclarationSyntax ids2) { _PrintErrorBadSelection(); return; }
+			if (firstNode == lastNode) _Methods([mds]);
+			else _Methods(ids2.Members.OfType<MethodDeclarationSyntax>().SkipWhile(o => o != firstNode).TakeWhile(o => { if (lastNode == null) return false; if (o == lastNode) lastNode = null; return true; }).ToArray());
+		} else if (firstNode is InterfaceDeclarationSyntax ids) {
+			if (lastNode is not InterfaceDeclarationSyntax || firstNode.Parent != lastNode.Parent) { _PrintErrorBadSelection(); return; }
+			if (firstNode == lastNode) {
+				_Interface(ids);
+			} else {
+				bool found = false;
+				foreach (var v in _GetDescendantInterfaces(firstNode.Parent)) {
+					if (!found) { if (v == firstNode) found = true; else continue; }
+					_Interface(v);
+					if (v == lastNode) break;
+				}
+			}
+		} else if (firstNode is TypeDeclarationSyntax or BaseNamespaceDeclarationSyntax) {
+			if (lastNode != firstNode) { _PrintErrorBadSelection(); return; }
+			foreach (var v in _GetDescendantInterfaces(firstNode)) {
+				_Interface(v);
+			}
+		} else {
+			_PrintErrorBadSelection();
+			return;
+		}
+		
+		if (b.Length > 0) {
+			b.Append(code, written, replRange.end - written);
+			//print.it(b);
+			doc.EReplaceTextGently(replRange.start, replRange.end, b.ToString());
+		}
+		
+		static void _PrintErrorBadSelection() {
+			print.it("""
+To convert COM interface methods, please click or select one of:
+- One or more methods in a COM interface definition.
+- One or more COM interface definitions; they can be in a class, struct or namespace.
+- A class, struct or namespace that contains COM interface definitions.
+""");
+		}
+		
+		static MemberDeclarationSyntax _ToMemberDecl(SyntaxNode n) {
+			return n?.FirstAncestorOrSelf<MemberDeclarationSyntax>();
+		}
+		
+		static IEnumerable<InterfaceDeclarationSyntax> _GetDescendantInterfaces(SyntaxNode parent) {
+			return parent.DescendantNodes(o => o is TypeDeclarationSyntax or BaseNamespaceDeclarationSyntax or CompilationUnitSyntax).OfType<InterfaceDeclarationSyntax>();
+		}
+		
+		void _Interface(InterfaceDeclarationSyntax ids) {
+			_Methods(ids.Members.OfType<MethodDeclarationSyntax>().ToArray());
+		}
+		
+		void _Methods(MethodDeclarationSyntax[] a) {
+			for (int i = 0; i < a.Length; i++) {
+				var m = a[i];
+				if (!_IsPreserveSig(m)) continue;
+				b.Append(code, written, m.SpanStart - written);
+				string name = m.Identifier.Text, modifiers = m.Modifiers.ToString();
+				//is property?
+				if (_IsProperty(m, out bool isPut, out string type)) {
+					//is read-write property?
+					MethodDeclarationSyntax m2 = null;
+					bool isPair = i < a.Length - 1 && _IsPreserveSig(m2 = a[i + 1])
+						&& m2.Identifier.Text is { } name2 && name2.Starts(isPut ? "get_" : "put_") && name2.AsSpan(4).Eq(name.AsSpan(4))
+						&& _IsProperty(m2, out bool isPut2, out string type2) && isPut2 != isPut
+						&& type2 == type
+						&& m2.Modifiers.ToString() == modifiers
+						&& m2.GetFirstToken().GetPreviousToken().Parent == m;
+					
+					if (!modifiers.NE()) b.Append(modifiers).Append(' ');
+					name = name[4..]; if (SyntaxFacts.IsReservedKeyword(SyntaxFacts.GetKeywordKind(name))) name = '@' + name;
+					b.Append(type).Append(' ').Append(name).Append(isPut ? " { set; " : " { get; ");
+					
+					if (isPair) {
+						b.Append(isPut ? "get; }" : "set; }");
+						written = m2.Span.End;
+						i++;
+					} else {
+						b.Append('}');
+						written = m.Span.End;
+					}
+				} else {
+					//is last parameter `out`?
+					var ap = m.ParameterList.Parameters;
+					if (ap.Any() && ap.Last() is var p && p.Modifiers.ToString() is "out" && _ParamAttr(p, out string marshal)) {
+						if (marshal != null) b.Append($"[return: {marshal}] ");
+						if (!modifiers.NE()) b.Append(modifiers).Append(' ');
+						b.Append(_ParamType(p)).Append(' ');
+						int n = m.ParameterList.Parameters.Count;
+						var span = n == 1 ? m.ParameterList.OpenParenToken.Span : m.ParameterList.Parameters[n - 2].Span;
+						b.Append(code.AsSpan(m.Identifier.SpanStart..span.End)).Append(");");
+					} else {
+						if (!modifiers.NE()) b.Append(modifiers).Append(' ');
+						b.Append("void ").Append(code.AsSpan(m.Identifier.SpanStart..m.Span.End));
+					}
+					written = m.Span.End;
+				}
+			}
+			
+			static bool _IsPreserveSig(MethodDeclarationSyntax m) {
+				return m.ReturnType.ToString() == "int"
+					&& m.AttributeLists.Count == 1 && m.AttributeLists[0].Attributes.ToString() is "PreserveSig" or "PreserveSigAttribute"
+					&& m.Body == null && m.ExpressionBody == null && m.Arity == 0;
+			}
+			
+			static bool _IsProperty(MethodDeclarationSyntax m, out bool put, out string type) {
+				put = false; type = null;
+				if (m.ParameterList.Parameters.Count == 1) {
+					string name = m.Identifier.Text;
+					if (name.Starts("get_") || (put = name.Starts("put_"))) {
+						var p = m.ParameterList.Parameters.Last();
+						if (put ? p.Modifiers.Count == 0 : p.Modifiers.ToString() is "out" or "ref") {
+							if (_ParamAttr(p, out var marshal) && marshal == null) { //info: C# does not allow to set [MarshalAs] on properties and `set`/`get`; with `return` too.
+								type = _ParamType(p);
+								return true;
+							}
+						}
+					}
+				}
+				return false;
+			}
+			
+			static string _ParamType(ParameterSyntax p) => p.Type.ToString().Replace(" ", "");
+			
+			static bool _ParamAttr(ParameterSyntax p, out string marshal) {
+				marshal = null;
+				foreach (var v in p.AttributeLists) {
+					if (v.Attributes.Count != 1) return false;
+					var s = v.Attributes[0].ToString();
+					if (s.Starts("MarshalAs")) marshal = s;
+					else if (!(s is "In" or "Out")) return false;
+				}
+				return true;
+			}
+		}
+	}
 }
 
 

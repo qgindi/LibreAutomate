@@ -315,6 +315,7 @@ namespace Au.More {
 		public void Restore() {
 			if (_hookType is not (Api.WH_KEYBOARD_LL or Api.WH_MOUSE_LL)) throw new InvalidOperationException();
 			if (_proc2 == null) throw new ObjectDisposedException(nameof(WindowsHook));
+			if (_hookType is Api.WH_KEYBOARD_LL && DontRestoreKeyboardHooks_) return;
 
 			//If we simply unhook/hook here, some events are missed.
 			//	Restoring usually takes 0.2 - 0.5 ms. And it seems the new hook starts working with a delay.
@@ -338,6 +339,18 @@ namespace Au.More {
 #endif
 		}
 		IntPtr _oldHook;
+		
+		/// <summary>
+		/// Can be used to temporarily disable <see cref="Restore"/> of all keyboard hooks in all processes.
+		/// For example when a hotkey control is focused.
+		/// </summary>
+		/// <remarks>
+		/// <b>Restore</b> is disabled when the number of <c>=true</c> calls is greater than the number of <c>=false</c> calls. 
+		/// </remarks>
+		internal static unsafe bool DontRestoreKeyboardHooks_ {
+			get => SharedMemory_.Ptr->winHook.dontRestoreKeyboardHooks > 0;
+			set => Interlocked.Add(ref SharedMemory_.Ptr->winHook.dontRestoreKeyboardHooks, value ? 1 : -1);
+		}
 
 		void _Restore_UnhookOld() {
 			if (_oldHook != default) {
@@ -552,7 +565,8 @@ namespace Au.More {
 		[StructLayout(LayoutKind.Sequential, Size = 32)] //note: this struct is in shared memory. Size must be same in all library versions.
 		internal struct SharedMemoryData_ {
 			public long dontBlockModUntil, dontBlocLShiftCapsUntil;
-			//16 bytes reserved
+			public int dontRestoreKeyboardHooks;
+			//12 bytes reserved
 		}
 
 		/// <summary>

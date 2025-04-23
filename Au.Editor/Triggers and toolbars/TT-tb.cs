@@ -90,6 +90,11 @@ partial class TriggersAndToolbars {
 		//}
 		
 """;
+			if (iTrigger == 0) sAutoHide += """
+
+		//t.MaximizedWindowTopPlus = 6.7;
+		
+""";
 		} else if (iTrigger is 1 or 2) { //window+screen or screen
 			string sScreen = _ScreenComboBoxResult(cbScreen, false) ?? "default";
 			sAutoHide = $$"""

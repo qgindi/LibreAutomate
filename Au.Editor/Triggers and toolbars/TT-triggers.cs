@@ -217,9 +217,25 @@ To set trigger scope window can be used {App.Settings.hotkeys.tool_quick}.
 				(TKFlags.NoModOff, "NoModOff - don't release modifier keys"),
 				(TKFlags.LeftMod, "LeftMod - left-side modifier keys"),
 				(TKFlags.RightMod, "RightMod - right-side modifier keys"),
-				(TKFlags.ExtendedYes, "ExtendedYes - it is an \"extended key\""),
-				(TKFlags.ExtendedNo, "ExtendedNo - it is not an \"extended key\""),
+				(TKFlags.Numpad, "NumpadOnly - only if the numpad key"),
+				(TKFlags.NumpadNot, "NumpadNot - not if the numpad key"),
 			]);
+			
+			var (cNumpadOnly, cNumpadNot) = (b.Panel.Children[b.Panel.Children.Count - 2] as CheckBox, b.Panel.Children[b.Panel.Children.Count - 1] as CheckBox);
+			cNumpadOnly.Visibility = cNumpadNot.Visibility = Visibility.Collapsed;
+			_hk.Changed += k_ => {
+				if (k_ is { } k) {
+					cNumpadOnly.IsChecked = cNumpadNot.IsChecked = false;
+					cNumpadOnly.Visibility = cNumpadNot.Visibility = Visibility.Collapsed;
+					if (k.Key is KKey.Enter or KKey.Home or KKey.End or KKey.PageUp or KKey.PageDown or KKey.Left or KKey.Right or KKey.Up or KKey.Down or KKey.Insert or KKey.Delete) {
+						bool isNumpad = k.IsExtended == k.Key is KKey.Enter;
+						var c = isNumpad ? cNumpadOnly : cNumpadNot;
+						c.IsChecked = true;
+						c.Visibility = Visibility.Visible;
+					}
+				}
+			};
+			
 			b.End();
 			b.R.Add(out _cAlwaysEnabled, "Always enabled");
 			

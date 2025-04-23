@@ -208,7 +208,7 @@ Filters: t Type, m Member, n Namespace.
 				foreach (var v in _matches) {
 					foreach (var t in v.MatchedSpans) {
 						int from = _nameStart + t.Start, to = _nameStart + t.End;
-						if (from > i) tr.DrawText(_text, 0, i..from);
+						if (from > i) tr.DrawText(_text, textColor, i..from);
 						tr.DrawText(_text, textColor, from..to, dark ? 0x0080A0 : 0x80F0FF);
 						i = to;
 					}

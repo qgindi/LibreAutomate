@@ -2,7 +2,7 @@ namespace Au;
 
 public partial class toolbar {
 	class _OwnerWindow {
-		public readonly List<toolbar> a;
+		public readonly List<toolbar> a = [];
 		public readonly wnd w;
 		public bool visible;
 		bool _updatedOnce;
@@ -13,7 +13,6 @@ public partial class toolbar {
 		public _OwnerWindow(wnd w) {
 			this.w = w;
 			//thread = w.ThreadId;
-			a = new List<toolbar>();
 		}
 		
 		public void AddTB(toolbar tb) {
@@ -37,7 +36,7 @@ public partial class toolbar {
 				if (tb._oc != null || tb._os != null) continue;
 				if (tb.MaximizedWindowTopPlus != 0 && w.IsMaximized) {
 					ref int? mtp = ref tb._followClientArea ? ref mtpc : ref mtpw;
-					if (mtp != null) print.warning("TODO");
+					if (mtp != null) print.warning("When multiple toolbars attached to the same window, set MaximizedWindowTopPlus once (for any toolbar), not for all toolbars.");
 					else mtp = tb._Scale(tb.MaximizedWindowTopPlus, true);
 				}
 			}
@@ -179,8 +178,8 @@ public partial class toolbar {
 	static _TBManager _Manager => t_man ??= new();
 	
 	class _TBManager {
-		internal readonly List<toolbar> _atb = new();
-		readonly List<_OwnerWindow> _aow = new();
+		internal readonly List<toolbar> _atb = [];
+		readonly List<_OwnerWindow> _aow = [];
 		timer _timer;
 		int _timerPeriod;
 		WinEventHook _hook;
