@@ -8,7 +8,7 @@ namespace Au.More;
 /// This OCR engine uses <see href="https://cloud.google.com/vision/docs/reference/rest/v1/images/annotate">Google Cloud Vision API</see>.
 /// </summary>
 /// <remarks>
-/// Sends image to Google and gets results. The OCR engine is accurate but much slower than the default engine or Tesseract. Depends on internet connection speed, because Google may return several MB of results.
+/// Sends image to Google Cloud and gets results. The OCR engine is accurate but much slower than the default engine or Tesseract. Depends on internet connection speed.
 /// 
 /// To use this engine, need to have a Google Cloud account, enable Vision API and get API key. The service isn't free, but 1000 or so requests/month are free.
 /// </remarks>
@@ -30,7 +30,7 @@ public class OcrGoogleCloud : IOcrEngine {
 	/// JSON of <b>imageContext</b>, like <c>"""{ "languageHints": [ "ja" ] }"""</c>. Optional.
 	/// </summary>
 	public string ImageContext { get; set; }
-
+	
 	/// <inheritdoc cref="IOcrEngine.DpiScale"/>
 	public bool DpiScale { get; set; }
 	
@@ -109,10 +109,11 @@ public class OcrGoogleCloud : IOcrEngine {
 	}
 	
 	static OcrWord[] _ParseJson(JsonNode j, double scale) {
+		if (j["textAnnotations"]?.AsArray() is not { } ta) return []; //no text detected
 		List<OcrWord> a = new();
 		string text = null;
 		int i = 0;
-		foreach (var word in j["textAnnotations"].AsArray()) {
+		foreach (var word in ta) {
 			var s = (string)word["description"];
 			if (text == null) {
 				text = s;

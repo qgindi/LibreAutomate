@@ -92,7 +92,7 @@ static class CiSnippets {
 			case UsingStatementSyntax s8 when pos > s8.CloseParenToken.SpanStart:
 				context = _Context.Function;
 				break;
-			case TypeDeclarationSyntax td when pos > td.OpenBraceToken.Span.Start: //{ } of class, struct, interface
+			case TypeDeclarationSyntax td when pos > td.OpenBraceToken.Span.Start: //{ } of class, struct, interface, extension
 				context = _Context.Type;
 				break;
 			case NamespaceDeclarationSyntax ns when pos > ns.OpenBraceToken.Span.Start:

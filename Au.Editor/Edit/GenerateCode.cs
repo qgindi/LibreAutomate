@@ -36,11 +36,8 @@ static class GenerateCode {
 		var start = node.SpanStart;
 		if (start < pos) return;
 		
-		while (node is not MemberDeclarationSyntax) { //can be eg func return type (if no public etc) or attribute
-			node = node.Parent;
-			if (node == null) return;
-		}
-		if (node is GlobalStatementSyntax || node.SpanStart != start) return;
+		node = node.GetAncestorOrThis<MemberDeclarationSyntax>();
+		if (node is null or GlobalStatementSyntax or ExtensionDeclarationSyntax || node.SpanStart != start) return;
 		
 		//already has doc comment?
 		foreach (var v in node.GetLeadingTrivia()) {
@@ -56,10 +53,10 @@ static class GenerateCode {
 /// 
 /// </summary>";
 		BaseParameterListSyntax pl = node switch {
-			BaseMethodDeclarationSyntax met => met.ParameterList,
-			RecordDeclarationSyntax rec => rec.ParameterList,
-			IndexerDeclarationSyntax ind => ind.ParameterList,
-			DelegateDeclarationSyntax del => del.ParameterList,
+			BaseMethodDeclarationSyntax k => k.ParameterList,
+			TypeDeclarationSyntax k => k.ParameterList,
+			IndexerDeclarationSyntax k => k.ParameterList,
+			DelegateDeclarationSyntax k => k.ParameterList,
 			_ => null
 		};
 		if (pl != null) {
@@ -132,7 +129,7 @@ static class GenerateCode {
 		
 		bool _Format(ITypeSymbol type, AssignmentExpressionSyntax aes = null) {
 			if (type is not INamedTypeSymbol t || t is IErrorTypeSymbol) return false;
-			if(t.TypeKind != TypeKind.Delegate) {
+			if (t.TypeKind != TypeKind.Delegate) {
 				if (t.SpecialType == SpecialType.System_Delegate && type.ContainingAssembly.GetTypeByMetadataName("System.Action") is { } tsa) t = tsa;
 				else return false;
 			}

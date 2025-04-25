@@ -162,12 +162,6 @@ public static unsafe partial class ExtMisc {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsNull<T>(this ReadOnlySpan<T> t) => t == ReadOnlySpan<T>.Empty;
 	
-	/// <summary>
-	/// Returns <c>true</c> if null pointer.
-	/// </summary>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNull<T>(this Span<T> t) => t == Span<T>.Empty;
-	
 	//currently not used. Creates shorter string than ToString.
 	///// <summary>
 	///// Converts this <b>Guid</b> to Base64 string.
@@ -310,11 +304,11 @@ public static unsafe partial class ExtMisc {
 	internal static void SetFlag_(this ref byte t, byte flag, bool set) {
 		if (set) t |= flag; else t = (byte)(t & ~flag);
 	}
-
+	
 	#endregion
-
+	
 	#region char
-
+	
 #if NET8_0_OR_GREATER
 	/// <summary>
 	/// Returns <c>true</c> if character is ASCII <c>'0'</c> to <c>'9'</c>.
@@ -347,11 +341,11 @@ public static unsafe partial class ExtMisc {
 	/// </summary>
 	public static bool IsAsciiAlphaDigit(this char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
 #endif
-
-#endregion
-
+	
+	#endregion
+	
 	#region array
-
+	
 	/// <summary>
 	/// Creates a copy of this array with one or more removed elements.
 	/// </summary>
@@ -515,7 +509,8 @@ public static unsafe partial class ExtMisc {
 		if (v == null && a == null && o != null) throw new ArgumentException("bad type");
 		return r;
 	}
-	
+
+#if true
 	/// <summary>
 	/// Returns <b>Length</b>, or 0 if <c>null</c>.
 	/// </summary>
@@ -536,7 +531,32 @@ public static unsafe partial class ExtMisc {
 	/// Returns <c>true</c> if <c>null</c> or <b>Count</b> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
+#else //still too early to use `extension` in this library. Eg then the XML file contains duplicate names (then exception in _DocumentationProvider.Create). Probably DocFX would not get it too.
+	extension<T>(T[] t) { //with System.Collections.ICollection slower, as well as Array
+		/// <summary>
+		/// Returns <b>Length</b>, or 0 if <c>null</c>.
+		/// </summary>
+		internal int Lenn_ => t?.Length ?? 0;
+		
+		/// <summary>
+		/// Returns <c>true</c> if <c>null</c> or <b>Length</b> == 0.
+		/// </summary>
+		internal bool NE_ => (t?.Length ?? 0) == 0;
+	}
 	
+	extension<T>(List<T> t) {
+		/// <summary>
+		/// Returns <b>Count</b>, or 0 if <c>null</c>.
+		/// </summary>
+		internal int Lenn_ => t?.Count ?? 0;
+		
+		/// <summary>
+		/// Returns <c>true</c> if <c>null</c> or <b>Count</b> == 0.
+		/// </summary>
+		internal bool NE_ => (t?.Count ?? 0) == 0;
+	}
+#endif
+
 	/// <summary>
 	/// Efficiently recursively gets descendants of this tree.
 	/// <see href="https://stackoverflow.com/a/30441479/2547338"/>
@@ -606,7 +626,7 @@ public static unsafe partial class ExtMisc {
 		}
 	}
 	
-	#endregion
+#endregion
 	
 	#region StringBuilder
 	

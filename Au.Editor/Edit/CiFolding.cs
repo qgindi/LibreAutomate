@@ -99,9 +99,13 @@ class CiFolding {
 			SyntaxNode prevSibling = null;
 			
 			switch (n) {
-			case BaseTypeDeclarationSyntax d: //class, struct, interface, enum
-				foldStart = d.Identifier.SpanStart;
+			case ExtensionDeclarationSyntax d:
 				foldKind = FoldKind.Type;
+				foldStart = d.Keyword.SpanStart;
+				break;
+			case BaseTypeDeclarationSyntax d: //class, struct, interface, enum
+				foldKind = FoldKind.Type;
+				foldStart = d.Identifier.SpanStart;
 				separatorBefore = _PrevSibling(n) is StatementSyntax and not LocalFunctionStatementSyntax;
 				break;
 			case BaseMethodDeclarationSyntax d: //method, ctor, etc
@@ -133,6 +137,7 @@ class CiFolding {
 				break;
 			}
 			
+			//print.it(foldStart);
 			if (foldStart >= 0) {
 				_AddFoldPoints(foldKind, foldStart, n.Span.End, separator: (ushort)(foldKind == FoldKind.Statement ? 0 : 1));
 				

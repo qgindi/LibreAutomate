@@ -87,6 +87,7 @@ class CiGoTo {
 			
 			if (sym is not INamedTypeSymbol ts) {
 				ts = sym.ContainingType;
+				//if (ts.IsExtension) ts = ts.ContainingType; //FUTURE
 				_member = sym.Name;
 				if (_member.Starts('.')) _member = null; //".ctor"
 				else {

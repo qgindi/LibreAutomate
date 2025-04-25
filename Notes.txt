@@ -22,7 +22,7 @@ Review all TODO. Occasionally review TODO2, FUTURE, CONSIDER.
 	TODO2 means "low priority TODO". If after a long time it still seems low priority, delete the comment or replace with TODO3.
 
 May need to test something. Eg some changes could break some main features.
-	Also test new and some main features on other OS.
+	Also test new and some main features on other OS. Test on ARM-64.
 
 May need to undefine TRACE in some C++ projects.
 	Usually not using TRACE in Release config, but sometimes may use it to test Release speed etc.

@@ -8,7 +8,7 @@ namespace Au.More;
 /// This OCR engine uses Microsoft Azure Computer Vision OCR.
 /// </summary>
 /// <remarks>
-/// Sends image to Microsoft and gets results. The OCR engine is accurate but much slower than the default engine or Tesseract, and usually slower than Google Cloud.
+/// Sends image to Microsoft Azure and gets results. The OCR engine is accurate but much slower than the default engine or Tesseract, and usually slower than Google Cloud.
 /// 
 /// To use this engine, need to have a Microsoft Azure account and get API key and endpoint URL. The service isn't free, but 500 or so requests/month are free.
 /// </remarks>
@@ -30,7 +30,7 @@ public class OcrMicrosoftAzure : IOcrEngine {
 	/// <exception cref="Exception">Failed.</exception>
 	public OcrWord[] Recognize(Bitmap b, bool dispose, double scale) {
 		var b0 = b;
-		b = IOcrEngine.PrepareBitmap(b, dispose, scale);
+		b = IOcrEngine.PrepareBitmap(b, dispose, scale, 50, 50);
 		var png = IOcrEngine.GetBitmapPngFileData(b);
 		if (dispose || b != b0) b.Dispose();
 		

@@ -258,6 +258,8 @@ class PanelOutline {
 				else name = string.Join(", ", a.Select(o => o.Identifier.ToString())) + " : " + vd.Type;
 			} else if (m is BaseNamespaceDeclarationSyntax nd) {
 				name = nd.Name.ToString();
+			} else if (m is ExtensionDeclarationSyntax ed) {
+				name = $"extension{ed.TypeParameterList}{ed.ParameterList}";
 			} else if (m is TypeDeclarationSyntax td) {
 				name = td.Identifier.Text + td.TypeParameterList;
 			} else {

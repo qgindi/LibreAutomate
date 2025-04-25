@@ -585,7 +585,6 @@ public partial class toolbar : MTBase {
 			}
 			return 0;
 		case Api.WM_USER + 51:
-			perf.first();//TODO
 			_toolbarsDialog();
 			[MethodImpl(MethodImplOptions.NoInlining)] //don't load System.Windows.Forms assembly
 			static void _toolbarsDialog() => toolbarsDialog();

@@ -348,7 +348,7 @@ partial class CiCompletion {
 				model = model,
 				codeLength = code.Length,
 				filterText = code.Substring(span.Start, span.Length),
-				items = new List<CiComplItem>(r.ItemsList.Count),
+				items = new(r.ItemsList.Count),
 				forced = isCommand,
 				noAutoSelect = r.SuggestionModeItem != null,
 				isDot = isDot,
@@ -504,8 +504,8 @@ partial class CiCompletion {
 					var v = d.items[i];
 					var sym = v.FirstSymbol;
 					if (sym == null) {
-						if (v.kind == CiItemKind.Keyword) (keywordsGroup ??= new List<int>()).Add(i);
-						else (etcGroup ??= new List<int>()).Add(i);
+						if (v.kind == CiItemKind.Keyword) (keywordsGroup ??= []).Add(i);
+						else (etcGroup ??= []).Add(i);
 					} else {
 						INamespaceOrTypeSymbol nts;
 						if (!isDot) {
@@ -535,7 +535,10 @@ partial class CiCompletion {
 						//Debug_.PrintIf(nts == null, sym.Name);
 						if (nts == null) continue;
 						
-						if (groups.TryGetValue(nts, out var list)) list.Add(i); else groups.Add(nts, new List<int> { i });
+						//extension type (no Name) -> containing type
+						if (nts is INamedTypeSymbol { IsExtension: true }) nts = nts.ContainingType;
+						
+						if (groups.TryGetValue(nts, out var list)) list.Add(i); else groups.Add(nts, [i]);
 					}
 				}
 				
@@ -548,7 +551,7 @@ partial class CiCompletion {
 						d.winapi = CiWinapi.AddWinapi(symL as INamedTypeSymbol, d.items, typenameStart, newExpr);
 						int n = d.items.Count - i;
 						if (n > 0) {
-							snippetsGroup = new List<int>(n);
+							snippetsGroup = new(n);
 							for (; i < d.items.Count; i++) snippetsGroup.Add(i);
 						}
 					}
@@ -557,7 +560,7 @@ partial class CiCompletion {
 					if (provider is not (CiComplProvider.Cref or CiComplProvider.XmlDoc)) {
 						int i = d.items.Count;
 						CiSnippets.AddSnippets(d.items, span, root, code, false, syncon);
-						for (; i < d.items.Count; i++) (snippetsGroup ??= new List<int>()).Add(i);
+						for (; i < d.items.Count; i++) (snippetsGroup ??= []).Add(i);
 					}
 				}
 				

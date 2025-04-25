@@ -3,7 +3,11 @@ How to install, update and modify:
 
 Once: Build this project. Don't run; it will run automatically when building Roslyn project Microsoft.CodeAnalysis.CSharp.Features.
 
-Download https://github.com/dotnet/roslyn and unzip to C:\code-lib\roslyn. Or git clone (do shallow clone if don't want extra 2 GB or more).
+Fork and clone Roslyn:
+    1. Delete the old fork repo.
+    2. Fork https://github.com/dotnet/roslyn.
+    3. Git-clone to C:\code-lib\roslyn. Do shallow clone (full >2 GB). I clone with TortoiseGit.
+    Another way to update, not tested: in the GitHub fork repo page click `Sync fork`. It discards modifications. Then git-sync eg in VS. Bad: bloats .git.
 Open Roslyn.sln.
 To make VS not so slow, select all folders and unload projects. Then load Microsoft.CodeAnalysis.CSharp.Features with entire dependency tree.
   It loads projects we need:
@@ -11,18 +15,15 @@ To make VS not so slow, select all folders and unload projects. Then load Micros
     In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
     In folder Workspaces: Microsoft.CodeAnalysis.CSharp.Workspaces, Microsoft.CodeAnalysis.Workspaces.
     Several other.
-Optionally create new local git repo (if not git-cloned). Then later you can conveniently see modifications.
 Edit as described below after _________.
 Build Microsoft.CodeAnalysis.CSharp.Features. It also builds all dependency projects. It runs this exe.
+Git commit/push (if git-cloned).
 
 Once: In editor project add references to the main 6 dlls in _\Roslyn, with 'Copy local' false.
   For Microsoft.CodeAnalysis.Workspaces set aliases CAW.
 
 Rejected: to make editor startup faster, publish Microsoft.CodeAnalysis.CSharp.Features with <PublishReadyToRun>.
   Tested, works, but: adds ~14 MB to the setup file; makes just ~350 ms faster, barely noticeable.
-
-FUTURE: bug in latest Roslyn (2024-11-22, 2025-01-26): error if `for` has >1 uninited vars, like `for (int i = 0, j, k; i < 9; i++) {}`. OK if `for (int i = 0, j; i < 9; i++) {}`.
-  Now in VS too. In VS was no error when I first found this; it used an older Roslyn.
 
 _________________________________________________________________
 
@@ -96,7 +97,7 @@ au/
 //2. Add property: internal ISymbol? Symbol { get; } = symbol; //au
 
 // - Let it don't try to load VB assemblies, because then exception when debugging:
-//In MefHostServices.cs, in s_defaultAssemblyNames init list, remove the 2 VisualBasic assemblies.
+//In MefHostServices.cs, in DefaultAssemblyNames init list, remove the 2 VisualBasic assemblies.
 
 // - In project Microsoft.CodeAnalysis, in file PublicAPI.Shipped.txt, append:
 RoslynMod.TestInternal

@@ -591,7 +591,7 @@ internal static unsafe class SLApi {
 			
 			static void _Download(string path) {
 				//Get the download URL of the last sqlite version for this OS. This way is documented in https://www.sqlite.org/download.html.
-				var html = internet.http.Get("https://www.sqlite.org/download.html").Text();
+				var html = internet.http_.Get("https://www.sqlite.org/download.html").Text();
 				//print.it(html);
 				if (!html.RxMatch(@"(?s)<!-- Download product data for scripts to read\s+(.+)\s+-->", 1, out string csv)) throw new AuException();
 				//print.it(csv);
@@ -602,7 +602,7 @@ internal static unsafe class SLApi {
 				//print.it(url);
 				
 				//Download and extract.
-				var bytes = internet.http.Get(url).Bytes();
+				var bytes = internet.http_.Get(url).Bytes();
 				using var za = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
 				var e = za.GetEntry("sqlite3.dll");
 				filesystem.createDirectoryFor(path);

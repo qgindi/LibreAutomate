@@ -1021,11 +1021,15 @@ class MetaComments {
 	}
 	
 	/// <summary>
-	/// Returns (start, end) of metacomments "/*/ ... /*/" at the start of code (before can be comments, empty lines, spaces, tabs). Returns default if no metacomments.
+	/// Returns (start, end) of metacomments "/*/ ... /*/" at the start of code (before can be comments, empty lines, spaces, tabs, shebang). Returns default if no metacomments.
 	/// </summary>
 	/// <seealso cref="MetaCommentsParser"/>
 	public static StartEnd FindMetaComments(RStr code) {
-		for (int i = 0; i <= code.Length - 6; i++) {
+		int i = 0;
+		if (code is ['#', '!', ..]) {
+			i = code.IndexOf(i, '\n') + 1; if (i == 0) return default;
+		}
+		for (; i <= code.Length - 6; i++) {
 			char c = code[i];
 			if (c == '/') {
 				c = code[++i];
