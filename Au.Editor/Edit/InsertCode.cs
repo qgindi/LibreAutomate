@@ -178,7 +178,7 @@ static class InsertCode {
 		
 		int go = -1;
 		if (flags.Has(ICSFlags.GoTo)) {
-			go = s.IndexOf("`|`");
+			go = s.Find("`|`");
 			if (go >= 0) s = s.Remove(go, 3);
 		}
 		
@@ -224,7 +224,7 @@ static class InsertCode {
 				c.Focus();
 		}
 		
-		int i = s.IndexOf("`|`");
+		int i = s.Find("`|`");
 		if (i >= 0) {
 			Debug.Assert(!s.Contains('\n'));
 			s = s.Remove(i, 3);

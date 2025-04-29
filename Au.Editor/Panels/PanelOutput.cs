@@ -141,68 +141,15 @@ class PanelOutput {
 			var s = m.Text; int i;
 			if (s.Length >= 22) {
 				if (s.Starts("<><lc #") && (s.Eq(13, ">Compilation: ") || s.Eq(13, ">Can't export "))) { //compilation. Or error in meta while exporting.
-					s_rx1 ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ((?:error|warning) \w+)");
-					m.Text = s_rx1.Replace(s, x => {
+					s_rxCompError ??= new regexp(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ((?:error|warning) \w+)");
+					m.Text = s_rxCompError.Replace(s, x => {
 						var f = App.Model?.FindByFilePath(x[1].Value);
 						if (f == null) return x[0].Value;
 						var sEW = x[5].Value;
 						return $"<open {f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}>{f.Name}{x[2].Value}<>: <c {(sEW[0] == 'e' ? "red" : "green")}>{sEW}<>";
 					});
-				} else if ((i = s.Find("\n   at ") + 1) > 0 && s.Find(":line ", i) > 0) { //stack trace with source file info
-					var b = _sb ??= new StringBuilder(s.Length + 2000);
-					b.Clear();
-					//print.qm2.write("'" + s + "'");
-					int iLiteral = 0;
-					if (!s.Starts("<>")) b.Append("<>");
-					else {
-						iLiteral = i - 1; if (s[iLiteral - 1] == '\r') iLiteral--;
-						if (0 == s.Eq(iLiteral -= 3, false, "<_>", "<\a>")) iLiteral = 0;
-					}
-					if (iLiteral > 0) b.Append(s, 0, iLiteral).AppendLine(); else b.Append(s, 0, i);
-					s_rx2 ??= new regexp(@" in (.+?):line (?=\d+$)");
-					bool replaced = false, isMain = false;
-					int stackEnd = s.Length/*, stackEnd2 = 0*/;
-					foreach (var k in s.Lines(i..)) {
-						//print.qm2.write("'"+k+"'");
-						if (s.Eq(k.start, "   at ")) {
-							if (isMain) {
-								//if(stackEnd2 == 0 && s.Eq(k.start, "   at A.Main(String[] args) in ")) stackEnd2 = k.start; //rejected. In some cases may cut something important.
-								continue;
-							}
-							if (!s_rx2.Match(s, 1, out RXGroup g, (k.start + 6)..k.end)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
-							var f = App.Model?.FindByFilePath(g.Value); if (f == null) continue;
-							int i1 = g.End + 6, len1 = k.end - i1;
-							b.Append("   at ")
-							.Append("<open ").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append('>')
-							.Append("line ").Append(s, i1, len1).Append("<> in <bc #FAFAD2>").Append(f.Name).Append("<>");
-							
-							isMain
-								= s.Eq(k.start, "   at Program.<Main>$(String[] args) in ") //top-level statements
-								|| s.Eq(k.start, "   at Program..ctor(String[] args) in ")
-								|| s.Eq(k.start, "   at Script..ctor(String[] args) in ");
-							if (!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");
-							b.AppendLine();
-							
-							replaced = true;
-						} else if (!(s.Eq(k.start, "   ---") || s.Eq(k.start, "---"))) {
-							stackEnd = k.start;
-							break;
-						}
-					}
-					if (replaced) {
-						int j = stackEnd; //int j = stackEnd2 > 0 ? stackEnd2 : stackEnd;
-						if (s[j - 1] == '\n') { if (s[--j - 1] == '\r') j--; }
-						b.Append("   <fold><\a>   --- Raw stack trace ---\r\n").Append(s, i, j - i).Append("</\a></fold>");
-						if (iLiteral > 0 && 0 != s.Eq(stackEnd, false, "</_>", "</\a")) stackEnd += 4;
-						int more = s.Length - stackEnd;
-						if (more > 0) {
-							if (!s.Eq(stackEnd, "</fold>")) b.AppendLine();
-							b.Append(s, stackEnd, more);
-						}
-						m.Text = b.ToString();
-						//print.qm2.write("'" + m.Text + "'");
-					}
-					if (_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
+				} else if ((i = s.Find("   at ") + 1) >= 0 && s.Find(":line ", i) > 0) { //stack trace with source file info
+					_ModifyStackTraces(m);
 				}
 			}
 			
@@ -215,7 +162,7 @@ class PanelOutput {
 			
 			_p._leaf.Visible = true;
 		}
-		static regexp s_rx1, s_rx2;
+		static regexp s_rxCompError;
 		
 		static void _OpenLink(string s) {
 			var a = s.Split('|');
@@ -234,5 +181,70 @@ class PanelOutput {
 			string s1 = a[0], s2 = a.Length > 1 ? a[1] : null;
 			run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s1) + s2);
 		}
+		
+		void _ModifyStackTraces(PrintServerMessage psm) {
+			string s = psm.Text;
+			//print.qm2.write("`" + s + "`");
+			var b = _sb ??= new StringBuilder(s.Length + 2000);
+			b.Clear();
+			bool wasFormatted = s.Starts("<>");
+			RXGroup[] aLit = null;
+			if (wasFormatted) (s_rxLiteral ??= new regexp(@"(?s)<([\a_])>.+?</\1>")).FindAllG(s, 0, out aLit);
+			else b.Append("<><\a>");
+			int appendFrom = 0;
+			
+			//for each stack trace
+			s_rxStack ??= new regexp(@"(?m)(^   at .+(?:\R|\z))+(^ *--.*\R(?1)+)*");
+			foreach (var g1 in s_rxStack.FindAllG(s, 0)) {
+				int start = g1.Start, end = g1.End;
+				if (s[end - 1] == '\n' && s[--end - 1] == '\r') end--;
+				bool inLiteral = true;
+				if (wasFormatted) {
+					if (s[end - 1] == '>') //don't include eg `<\a><>` at the end of the last line
+						if ((s_rxClosingTags ??= new regexp(@"(?:<(?:/.+?)?>)+$")).Match(s, 0, out RXGroup g2, s.LastIndexOf('\n', end - 1)..end)) end = g2.Start;
+					inLiteral = aLit?.Any(o => o.Start < start && o.End > end) ?? false;
+				}
+				if (s.Find("<\a>", start..end) >= 0 || s.Find("</\a>", start..end) >= 0 || s.Find("<_>", start..end) >= 0 || s.Find("</_>", start..end) >= 0) continue;
+				
+				b.Append(s, appendFrom, start - appendFrom); appendFrom = end;
+				
+				//for each line that has source file info
+				bool modified = false;
+				s_rxAtLine ??= new regexp(@"(?m)^   at (.+?\)) in ([^\r\n<]+):line (\d+)$");
+				foreach (var m in s_rxAtLine.FindAll(s, start..end)) {
+					var f = App.Model?.FindByFilePath(m[2].Value); if (f == null) continue;
+					b.AppendFormat("{3}   at <open {0}|{1}>line {1}<> in <bc #FAFAD2>{2}<>{4}", f.IdStringWithWorkspace, m[3].Value, f.Name, inLiteral ? "</\a>" : "", inLiteral ? "<\a>" : "");
+					bool isMain = f.IsScript && 0 != s.Eq(m[1].Start, false, "Program.<Main>$(String[] args)", "Program..ctor(String[] args)", "Script..ctor(String[] args)");
+					if (!isMain) {
+						var method = m[1].Value;
+						bool lit = !inLiteral && method.Contains('<');
+						b.AppendFormat("{1}, {0}{2}", method, lit ? "<\a>" : "", lit ? "</\a>" : "");
+					}
+					b.AppendLine();
+					modified = true;
+				}
+				
+				if (modified) { //append `<fold>raw stack trace</fold>`
+					if (b[b.Length - 1] != '\n') b.AppendLine();
+					if (inLiteral) b.Append("</\a>");
+					b.Append("   <fold><\a>   --- Raw stack trace ---\r\n").Append(s, start, end - start);
+					if (b[b.Length - 1] != '\n') b.AppendLine();
+					b.Append("</\a></fold>");
+					if (inLiteral) b.Append("<\a>");
+				} else { //append raw stack trace
+					if (!inLiteral) b.Append("<\a>");
+					b.Append(s, start, end - start);
+					if (!inLiteral) b.Append("</\a>");
+				}
+			}
+			if (appendFrom > 0) {
+				b.Append(s, appendFrom, s.Length - appendFrom);
+				if (!wasFormatted) b.Append("</\a>");
+				//print.qm2.write("+" + b);
+				psm.Text = b.ToString();
+			}
+			if (_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
+		}
+		static regexp s_rxStack, s_rxClosingTags, s_rxAtLine, s_rxLiteral;
 	}
 }

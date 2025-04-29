@@ -20,7 +20,6 @@ namespace Au.Types {
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		
-#if NET8_0_OR_GREATER //no UnscopedRef in 6
 		/// <summary>
 		/// Can be used in structures as flexible array member (the last field, defined like <c>Type[1] name;</c> in C).
 		/// </summary>
@@ -39,7 +38,6 @@ namespace Au.Types {
 				return MemoryMarshal.CreateSpan(ref _0, length);
 			}
 		}
-#endif
 
 		/// <summary>
 		/// Windows API <b>BOOL</b>, with implicit conversions to/from C# <c>bool</c>.

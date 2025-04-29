@@ -398,9 +398,7 @@ public struct AnyWnd {
 /// Used for function parameters to specify multiple strings.
 /// Contains a string like <c>"One|Two|Three"</c> or <b>string[]</b> or <b>List&lt;string&gt;</b>. Has implicit conversions from these types. Can be assigned collection initializer like <c>["a", "b"]</c>.
 /// </summary>
-#if NET8_0_OR_GREATER
 [CollectionBuilder(typeof(Strings), "Create")]
-#endif
 public struct Strings : IEnumerable<string> {
 	readonly object _o;
 	Strings(object o) { _o = o; }

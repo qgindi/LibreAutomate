@@ -27,7 +27,10 @@ partial class PanelDebug {
 	}
 	
 	void _ListVariables() {
-		if (_s.frame.clr_addr.module_id.NE()) return; //f.func "[Native Frames]". Would be ^error.
+		if (_s.frame.clr_addr.module_id.NE()) { //f.func "[Native Frames]". Would be ^error.
+			_VariablesViewSetItems(null);
+			return;
+		}
 		_d.Send($"-stack-list-variables --thread {_s.threadId} --frame {_s.frame.level}");
 	}
 	

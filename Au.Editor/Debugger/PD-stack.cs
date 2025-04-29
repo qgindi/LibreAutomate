@@ -9,7 +9,7 @@ partial class PanelDebug {
 		_tvStack.ItemActivated += _tvStack_ItemActivated;
 	}
 	
-	void _StackViewSetItems(_FRAME[] a) {
+	void _StackViewSetItems(_FRAME[] a, int iSelect = 0) {
 		if (a == null) {
 			_aStack = null;
 		} else {
@@ -20,7 +20,7 @@ partial class PanelDebug {
 		}
 		
 		_tvStack.SetItems(_aStack);
-		if (a != null) _tvStack.SelectSingle(0, andFocus: true);
+		if (a != null) _tvStack.SelectSingle(iSelect, andFocus: true);
 	}
 	
 	void _tvStack_ItemActivated(TVItemEventArgs e) {

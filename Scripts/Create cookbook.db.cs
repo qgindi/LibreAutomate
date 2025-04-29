@@ -11,9 +11,12 @@ CookbookDb.Create(true);
 class CookbookDb {
 	public static void Create(bool createAlways = false) {
 		if (createAlways) print.clear();
-		var dir = folders.Editor + @"..\Cookbook";
+		var dir = folders.Editor + @"..\Cookbook\files";
 		var file = folders.Editor + "cookbook.db";
-		if (!createAlways && filesystem.getProperties(dir, out var pd) && filesystem.getProperties(file, out var pf) && pf.LastWriteTimeUtc >= pd.LastWriteTimeUtc) return;
+		if (!createAlways && filesystem.getProperties(file, out var pf) && filesystem.getProperties(dir, out var pd))
+			if (pd.LastWriteTimeUtc <= pf.LastWriteTimeUtc //detect added/deleted
+				&& !filesystem.enumerate(dir, FEFlags.AllDescendants).Any(o => o.LastWriteTimeUtc > pf.LastWriteTimeUtc) //detect modified
+				) return;
 		
 		DebugTraceListener.Setup(false);
 		
@@ -24,7 +27,7 @@ class CookbookDb {
 		db.Execute("CREATE TABLE files(name TEXT, data TEXT)");
 		using (var trans = db.Transaction()) {
 			using (var p = db.Statement("INSERT INTO files VALUES(?, ?)")) {
-				foreach (var f in filesystem.enumerate(dir, FEFlags.AllDescendants | FEFlags.OnlyFiles, dirFilter: o => o.Name[0] == '-' ? 0 : 2)) {
+				foreach (var f in filesystem.enumerate(folders.Editor + @"..\Cookbook", FEFlags.AllDescendants | FEFlags.OnlyFiles, dirFilter: o => o.Name[0] == '-' ? 0 : 2)) {
 					var name = f.Name;
 					if (name[0] == '-') continue;
 					int ftype = name.Ends(true, ".cs", ".xml"); if (ftype == 0) continue;

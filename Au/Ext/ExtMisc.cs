@@ -309,7 +309,6 @@ public static unsafe partial class ExtMisc {
 	
 	#region char
 	
-#if NET8_0_OR_GREATER
 	/// <summary>
 	/// Returns <c>true</c> if character is ASCII <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
@@ -325,22 +324,6 @@ public static unsafe partial class ExtMisc {
 	/// Returns <c>true</c> if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
 	/// </summary>
 	public static bool IsAsciiAlphaDigit(this char c) => char.IsAsciiLetterOrDigit(c);
-#else
-	/// <summary>
-	/// Returns <c>true</c> if character is ASCII <c>'0'</c> to <c>'9'</c>.
-	/// </summary>
-	public static bool IsAsciiDigit(this char c) => c <= '9' && c >= '0';
-	
-	/// <summary>
-	/// Returns <c>true</c> if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c>.
-	/// </summary>
-	public static bool IsAsciiAlpha(this char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-	
-	/// <summary>
-	/// Returns <c>true</c> if character is ASCII <c>'A'</c> to <c>'Z'</c> or <c>'a'</c> to <c>'z'</c> or <c>'0'</c> to <c>'9'</c>.
-	/// </summary>
-	public static bool IsAsciiAlphaDigit(this char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
-#endif
 	
 	#endregion
 	

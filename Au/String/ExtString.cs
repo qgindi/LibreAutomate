@@ -549,8 +549,6 @@ public static unsafe partial class ExtString {
 	public static SegParser Segments(this string t, string separators, SegFlags flags = 0, Range? range = null) {
 		return new SegParser(t, separators, flags, range);
 	}
-
-#if NET8_0_OR_GREATER //else no ReadOnlySpan.Split
 	
 	/// <summary>
 	/// Splits this string into substrings as start/end offsets.
@@ -684,8 +682,6 @@ public static unsafe partial class ExtString {
 		}
 	}
 	
-#endif
-	
 	static StartEnd[] _SplitOffset(StartEnd[] a, int start) {
 		if (start != 0) {
 			for (int i = 0; i < a.Length; i++) {
@@ -795,13 +791,8 @@ public static unsafe partial class ExtString {
 		return n;
 	}
 
-#if NET8_0_OR_GREATER
 	static readonly SearchValues<char> s_newlineRN = SearchValues.Create(['\r', '\n']),
 		s_newlineAll = SearchValues.Create(['\r', '\n', '\f', '\x85', '\x2028', '\x2029']);
-#else
-	static readonly char[] s_newlineRN = ['\r', '\n'],
-		s_newlineAll = ['\r', '\n', '\f', '\x85', '\x2028', '\x2029'];
-#endif
 
 	/// <summary>
 	/// Converts this string to lower case.
@@ -1450,26 +1441,24 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
-#if NET8_0_OR_GREATER
 	public static bool IsAscii(this RStr t) => !t.ContainsAnyExceptInRange((char)0, (char)127);
-#else
-	public static bool IsAscii(this RStr t) { //much slower with long strings
-		foreach (char c in t) if (c > 0x7f) return false;
-		return true;
-	}
-#endif
 	
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII character bytes.
 	/// </summary>
-#if NET8_0_OR_GREATER
 	public static bool IsAscii(this RByte t) => !t.ContainsAnyExceptInRange((byte)0, (byte)127);
-#else
-	public static bool IsAscii(this RByte t) { //much slower with long strings
-		foreach (char c in t) if (c > 0x7f) return false;
-		return true;
-	}
-#endif
+	
+	/// <summary>
+	/// Returns <c>true</c> if null pointer.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsNull(this RStr t) => t == RStr.Empty;
+	
+	/// <summary>
+	/// Returns <c>true</c> if null pointer.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsNull(this RByte t) => t == RByte.Empty;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static int LengthThrowIfNull_(this RStr t) {
@@ -1596,17 +1585,6 @@ public static unsafe partial class ExtString {
 		if (i < 0) return i;
 		return i + range.Start.GetOffset(t.Length);
 	}
-
-#if !NET8_0_OR_GREATER
-	/// <summary>
-	/// Creates read-only span from range of this string.
-	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException"/>
-	public static RStr AsSpan(this string t, Range r) {
-		var (i, len) = r.GetOffsetAndLength(t.Length);
-		return t.AsSpan(i, len);
-	}
-#endif
 
 	internal static void CopyTo_(this string t, char* p)
 		=> t.AsSpan().CopyTo(new Span<char>(p, t.Length));

@@ -545,12 +545,15 @@ System.Threading.Tasks.TaskCanceledException
 			if (!IsStopped) return;
 			_FRAME[] a = new _MiRecord(s).Data<_DONE_STACK>().stack;
 			if (a.Length == 0) return;
-			_StackViewSetItems(a);
-			_s.frame = a[0];
+			
+			int iSelect = Math.Max(0, Array.FindIndex(a, o => o.fullname?.Starts(App.Model.FilesDirectory) ?? false));
+			
+			_StackViewSetItems(a, iSelect);
+			_s.frame = a[iSelect];
 			_ListVariables();
 			
 			if (!_marker.Exists && !_marker2.Exists) {
-				for (int i = 0; i < a.Length; i++) { //if not in user code, try to go to user code and add _marker2
+				for (int i = iSelect; i < a.Length; i++) {
 					if (_GoToLine(a[i])) break;
 				}
 			}

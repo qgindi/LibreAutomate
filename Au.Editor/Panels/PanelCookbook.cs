@@ -19,7 +19,7 @@ class PanelCookbook {
 	KTreeView _tv;
 	TextBox _search;
 	_Item _root;
-	bool _loaded;
+	bool _loadedOnce;
 	bool _openingRecipe;
 	List<string> _history = new();
 	
@@ -63,8 +63,8 @@ class PanelCookbook {
 	public UserControl P { get; }
 	
 	void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
-		if (!_loaded && e.Property.Name == "IsVisible" && e.NewValue is bool y && y) {
-			_loaded = true;
+		if (!_loadedOnce && e.Property.Name == "IsVisible" && e.NewValue is bool y && y) {
+			_loadedOnce = true;
 			_Load();
 			_tv.ItemActivated += e => _OpenRecipe(e.Item as _Item, false);
 		}
@@ -95,7 +95,7 @@ class PanelCookbook {
 #else
 			var dbPath = folders.ThisAppBS + "cookbook.db";
 			var xr = filesystem.exists(dbPath) ? _OpenDb() : XmlUtil.LoadElem(folders.ThisAppBS + @"..\Cookbook\files.xml");
-			//cookbook.db does not exist if LA compiled not at home (source from from github). See project BuildEvents > GitBinaryFiles.PrePushHook.
+			//cookbook.db does not exist if LA compiled not at home (source from github). See project BuildEvents > GitBinaryFiles.PrePushHook.
 #endif
 			
 			_root = new _Item(null, FNType.Folder);
@@ -121,7 +121,7 @@ class PanelCookbook {
 	
 	//Used by script "Create cookbook.db" to unlock database file and auto-reload.
 	public bool UnloadLoad(bool load) {
-		if (load == _loaded) return false;
+		if (load == (_root != null)) return false;
 		if (load) {
 			_Load();
 		} else {
@@ -130,7 +130,6 @@ class PanelCookbook {
 				s_sqlite.Dispose(); s_sqlite = null;
 			}
 			_root = null;
-			_loaded = false;
 			_tv.SetItems(null);
 		}
 		return true;

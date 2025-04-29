@@ -124,8 +124,7 @@ static class RegexParser {
 						} else if (c is 'R' or '&' || c.IsAsciiDigit() || (c is '-' or '+' && s.At_(i).IsAsciiDigit())) { //`(?R)`, `(?1)`, `(?-1)`, `(?&name)`
 							_FindAdd(s, ')');
 						} else if (c is 'C') { //callout
-							if (!_Read(s, EStyle.RxMeta)) return;
-							//if (c is '\'' or '`' or '"' or '^' or '%' or '#' or '$' or '{') {} //never mind
+							//if (!s.Eq(i, ')')) { if (!_Read(s, EStyle.RxMeta)) return; if (c is '\'' or '`' or '"' or '^' or '%' or '#' or '$' or '{') {} } //never mind
 							_FindAdd(s, ')', EStyle.RxCallout);
 						} else { //`(?options)
 							for (bool minus = false; ;) {

@@ -207,7 +207,7 @@ public partial class KMenuCommands {
 			var keys = c.Keys;
 			if (!keys.NE() && ca.target == name) {
 				//print.it(c, keys);
-				int i = keys.IndexOf(", ");
+				int i = keys.Find(", ");
 				if (i < 0) _Add(keys); else foreach (var v in keys.Split(", ")) _Add(v);
 				void _Add(string s) {
 					if (!Au.keys.more.parseHotkeyString(s, out var mod, out var key, out var mouse)) {

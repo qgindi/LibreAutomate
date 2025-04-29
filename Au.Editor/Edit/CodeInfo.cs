@@ -92,7 +92,7 @@ static class CodeInfo {
 				500.ms();
 				//p1.Next();
 				var compl = CompletionService.GetService(document);
-				compl.GetCompletionsAsync(document, code.IndexOf(".it") + 1); //not necessary, but without it sometimes the first completion list is too slow if the user types fast
+				compl.GetCompletionsAsync(document, code.Find(".it") + 1); //not necessary, but without it sometimes the first completion list is too slow if the user types fast
 				//p1.Next('C');
 				
 				Compiler.Warmup(document); //not necessary, but it's better when the first compilation is 200 ms instead of 500
