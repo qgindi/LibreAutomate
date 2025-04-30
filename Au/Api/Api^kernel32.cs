@@ -637,7 +637,8 @@ static unsafe partial class Api {
 		public uint dwLowDateTime;
 		public uint dwHighDateTime;
 		
-		public static implicit operator long(FILETIME ft) { return (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime); } //in Release faster than *(long*)&ft
+		public static implicit operator long(FILETIME ft) => (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime); //in Release faster than *(long*)&ft
+		public static implicit operator FILETIME(long ft) => new() { dwHighDateTime = (uint)(ft >>> 32), dwLowDateTime = (uint)ft };
 	}
 	
 	internal struct WIN32_FIND_DATA {
