@@ -23,8 +23,7 @@ class DWinapi : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize(800, 500);
 		b.R.Add("Name", out tName, name);
 		b.Row(-1).Add(out code); code.AaInitBorder = true;
-		b.R.AddButton("?", _ => _Help());
-		b.AddOkCancel("OK, copy to clipboard");
+		b.R.StartOkCancel().AddOkCancel("OK, copy to clipboard").xAddDialogHelpButtonAndF1(_Help).End();
 		b.End();
 
 		b.OkApply += o => {

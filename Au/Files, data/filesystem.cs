@@ -232,16 +232,14 @@ public static partial class filesystem {
 	public static unsafe string searchPath(string path, params string[] dirs) {
 		if (path.NE()) return null;
 		
-		string s = path;
-		if (pathname.isFullPathExpand(ref s, strict: false)) {
+		if (pathname.isFullPathExpand(path, out string s, strict: false)) {
 			if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
 			return null;
 		}
 		
 		if (dirs != null) {
 			foreach (var d in dirs) {
-				s = d;
-				if (!pathname.isFullPathExpand(ref s)) continue;
+				if (!pathname.isFullPathExpand(d, out s)) continue;
 				s = pathname.combine(s, path);
 				if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
 			}

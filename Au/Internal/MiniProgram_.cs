@@ -243,10 +243,15 @@ static unsafe class MiniProgram_ {
 				if (verDll > verPC) continue;
 			}
 			
-			string arch = RuntimeInformation.ProcessArchitecture switch { Architecture.X86 => @"-x86\", Architecture.Arm64 => @"-arm64\", _ => @"-x64\" };
-			if (!s.Eq(i, arch, true)) continue;
+			if (s[i] == '-') {
+				string arch = RuntimeInformation.ProcessArchitecture switch { Architecture.X86 => @"-x86\", Architecture.Arm64 => @"-arm64\", _ => @"-x64\" };
+				if (!s.Eq(i, arch, true)) continue;
+				i += arch.Length;
+			} else if (s[i++] != '\\') {
+				continue;
+			}
 			
-			var a = s.Eq(i + arch.Length, @"native\", true) ? aNative : aNet;
+			var a = s.Eq(i, @"native\", true) ? aNative : aNet;
 			a.Add((f, verDll));
 		}
 		

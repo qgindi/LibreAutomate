@@ -203,8 +203,7 @@ class MetaReferences {
 				if (cache[i].name.Eqi(reference) && _PropEq(cache[i], alias, isCOM)) goto g1;
 			}
 			
-			var path = reference;
-			bool isFull = pathname.isFullPathExpand(ref path);
+			bool isFull = pathname.isFullPathExpand(reference, out string path);
 			if (!isFull && isCOM) { isFull = true; path = App.Model.WorkspaceDirectory + @"\.interop\" + path; }
 			if (!isFull) path = folders.ThisAppBS + path;
 			path = pathname.Normalize_(path);

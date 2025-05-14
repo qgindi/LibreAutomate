@@ -1514,7 +1514,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Sets font properties of the last added element and its descendants.
 	/// </summary>
-	/// <param name="name">If not <c>null</c>, sets font name.</param>
+	/// <param name="name">If not <c>null</c>, sets font name. Can be multiple fonts separated by commas.</param>
 	/// <param name="size">If not <c>null</c>, sets font size.</param>
 	/// <param name="bold">If not <c>null</c>, sets font bold or not.</param>
 	/// <param name="italic">If not <c>null</c>, sets font italic or not.</param>
@@ -2179,8 +2179,8 @@ public class wpfBuilder {
 		g1:
 		switch (obj) {
 		case TextBlock k: ic = k.Inlines; break;
-		case HeaderedContentControl k when k.Header == null: k.Header = obj = new TextBlock(); goto g1;
-		case ContentControl k when k.Content == null: k.Content = obj = new TextBlock(); goto g1;
+		case HeaderedContentControl k: k.Header = obj = new TextBlock(); goto g1;
+		case ContentControl k: k.Content = obj = new TextBlock(); goto g1;
 		case Panel k when k.Parent is HeaderedContentControl p1: obj = p1; goto g1; //eg b.StartGrid<GroupBox>(null).FormatText($"...")
 		case InlineCollection k: ic = k; break;
 		default: throw new NotSupportedException("Format(): unsupported element type");

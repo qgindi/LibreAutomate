@@ -43,15 +43,18 @@ partial class TriggersAndToolbars {
 			tb.Items.Add(abc[i] = new RadioButton { Content = aTriggersTypeStrings[i], Width = 60, Margin = new(0, 0, 3, 0), BorderBrush = SystemColors.ActiveBorderBrush });
 		}
 		
-		var bMore = new Button { Content = "...", Width = 24, BorderBrush = SystemColors.ActiveBorderBrush };
-		bMore.Click += (_, _) => {
-			var m = new popupMenu();
-			m["Schedule"] = o => { b.Window.Close(); Menus.TT.Schedule(); };
-			m["Command line, shortcut"] = o => { b.Window.Close(); Menus.TT.Command_line(); };
-			m["Open file \"Other triggers\""] = o => { b.Window.Close(); Menus.TT.Other_triggers(); };
-			m.Show(owner: b.Window);
-		};
-		tb.Items.Add(bMore);
+		//var bMore = new Button { Content = "...", Width = 24, BorderBrush = SystemColors.ActiveBorderBrush };
+		//bMore.Click += (_, _) => {
+		//	var m = new popupMenu();
+		//	m["Command line"] = o => { b.Window.Close(); Menus.TT.Script_launchers.Command_line(); };
+		//	m["Schedule"] = o => { b.Window.Close(); Menus.TT.Script_launchers.Schedule(); };
+		//	m["Shortcut"] = o => { b.Window.Close(); Menus.TT.Script_launchers.Shortcut(); };
+		//	m["Shell menu"] = o => { b.Window.Close(); Menus.TT.Script_launchers.Shell_menu(); };
+		//	m["Run at startup"] = o => { b.Window.Close(); Menus.TT.Script_launchers.Run_at_startup(); };
+		//	m["Open file \"Other triggers\""] = o => { b.Window.Close(); Menus.TT.Other_triggers(); };
+		//	m.Show(owner: b.Window);
+		//};
+		//tb.Items.Add(bMore);
 		
 		b.Row(-1).Add("Action", out ListBox lbAction);
 		ScrollViewer.SetHorizontalScrollBarVisibility(lbAction, ScrollBarVisibility.Disabled);

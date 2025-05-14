@@ -102,7 +102,7 @@ class DSnippets : KDialogWindow {
 		b.R.StartOkCancel().AddOkCancel(out var bOK, out var bCancel, out _, apply: "Apply");
 		bOK.IsDefault = false; bCancel.IsCancel = false;
 		b.AddButton("Import", _ => _ImportMenu()).Width(70);
-		b.AddButton("Help", _ => HelpUtil.AuHelp("editor/Snippets")).Width(70);
+		b.xAddDialogHelpButtonAndF1("editor/Snippets");
 		b.End();
 		
 		b.End(); //right side
@@ -544,15 +544,6 @@ class DSnippets : KDialogWindow {
 			_SaveHiddenSnippets(f.text, hs);
 		}
 		CiSnippets.Reload();
-	}
-	
-	protected override void OnPreviewKeyDown(KeyEventArgs e) {
-		if (e.Key == Key.F1 && Keyboard.Modifiers == 0) {
-			HelpUtil.AuHelp("editor/Snippets");
-			e.Handled = true;
-			return;
-		}
-		base.OnPreviewKeyDown(e);
 	}
 	
 	class _Item : TreeBase<_Item>, ITreeViewItem {

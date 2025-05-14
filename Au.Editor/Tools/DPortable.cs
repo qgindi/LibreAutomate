@@ -76,7 +76,7 @@ class DPortable : KDialogWindow {
 		b.AddButton("Print details", _ => _PrintDetails()).Width(100);
 		b.AddButton("Install", null, WBBFlags.OK);
 		b.AddButton("Cancel", null, WBBFlags.Cancel);
-		b.AddButton("Help", _ => HelpUtil.AuHelp("editor/Portable app")).Width(70);
+		b.xAddDialogHelpButtonAndF1("editor/Portable app");
 		b.End();
 		
 		b.End();

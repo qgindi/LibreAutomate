@@ -71,7 +71,7 @@ class DSchedule : KDialogWindow {
 		b.StartGrid().Columns(-1, 0);
 		b.R.xAddInfoBlockT(out var tExistsInfo, "OK/Apply will create a new scheduled task.");
 		b.StartOkCancel();
-		b.AddOkCancel(out var bOK, out _, out _, apply: "_Apply");
+		b.AddOkCancel(out var bOK, out _, out _, apply: "Apply");
 		b.AddButton("Task Scheduler ▾", _ => {
 			var m = new popupMenu();
 			m["OK, open task in Task Scheduler"] = o => {

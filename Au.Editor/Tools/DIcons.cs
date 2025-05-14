@@ -1,3 +1,7 @@
+//TODO: support layering:
+//<Viewbox><Grid><Path></Path><Path></Path></Grid></Viewbox>
+//**Pack.Icon color *Pack.Icon color
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;

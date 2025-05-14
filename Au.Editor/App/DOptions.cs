@@ -25,7 +25,7 @@ class DOptions : KDialogWindow {
 		
 		_b = new wpfBuilder(this).WinSize(600);
 		_b.Row(-1).Add(out _tc).Height(300..);
-		_b.R.AddOkCancel(out var bOK, out var bCancel, out _, apply: "_Apply");
+		_b.R.StartOkCancel().AddOkCancel(out var bOK, out var bCancel, out _, apply: "Apply").xAddDialogHelpButtonAndF1("editor/Program settings").End();
 		bOK.IsDefault = false; bCancel.IsCancel = false;
 		
 		_Program();
@@ -97,7 +97,7 @@ class DOptions : KDialogWindow {
 		//left column
 		b.R.StartStack(vertical: true);
 		b.Add("Run scripts when workspace loaded", out TextBox startupScripts, App.Model.UserSettings.startupScripts).Multiline(110, TextWrapping.NoWrap)
-			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.csv\"")
+			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.cs\"")
 			.Validation(_startupScripts_Validation);
 		
 		b.Add(out KCheckBox cBackup, "Auto-backup (Git commit)").Checked(App.Model.UserSettings.gitBackup).Margin("T10")
@@ -673,15 +673,6 @@ Example:
 			if (cUnderlineAK.IsChecked != underlineAK)
 				Api.SystemParametersInfo(Api.SPI_SETKEYBOARDCUES, 0, (void*)(underlineAK ? 0 : 1), save: true, notify: true);
 		};
-	}
-	
-	protected override void OnPreviewKeyDown(KeyEventArgs e) {
-		if (e.Key == Key.F1 && Keyboard.Modifiers == 0) {
-			HelpUtil.AuHelp("editor/Program settings");
-			e.Handled = true;
-			return;
-		}
-		base.OnPreviewKeyDown(e);
 	}
 	
 	static class _Api {

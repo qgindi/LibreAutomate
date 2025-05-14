@@ -477,17 +477,29 @@ static class Menus {
 		[Command]
 		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 		
-		[Command("...", separator = true, image = "*Unicons.Schedule" + blue)]
-		public static void Schedule() { DSchedule.ShowFor(App.Model.CurrentFile); }
-		
-		[Command("...", image = "*RemixIcon.TerminalLine" + blue)]
-		public static void Command_line() { DCommandline.ShowForCurrentFile(); }
-		
-		[Command(separator = true, tooltip = "Finds triggers of current script.\nFinds its name in '@Triggers and toolbars' files in trigger actions, toolbar button actions and other code.\nAlso finds scheduled tasks, workspace startup scripts and class file test scripts.")]
+		[Command(tooltip = "Finds triggers of current script.\nFinds its name in '@Triggers and toolbars' files in trigger actions, toolbar button actions and other code.\nAlso finds scheduled tasks, workspace startup scripts and class file test scripts.")]
 		public static void Find_triggers() { TriggersAndToolbars.AllTriggersMenu(App.Model.CurrentFile); }
 		
 		[Command]
 		public static void Triggers_list_info() { Panels.Cookbook.OpenRecipe("Show triggers"); }
+		
+		[Command(separator = true, image = "*RemixIcon.TerminalLine" + blue)]
+		public static class Script_launchers {
+			[Command("...", image = "*RemixIcon.TerminalLine" + blue)]
+			public static void Command_line() { DCommandline.Commandline.ShowForCurrentFile(); }
+			
+			[Command("...", image = "*Unicons.Schedule" + blue)]
+			public static void Schedule() { DSchedule.ShowFor(App.Model.CurrentFile); }
+			
+			[Command("...")]
+			public static void Shortcut() { DCommandline.Shortcut.ShowForCurrentFile(); }
+			
+			[Command("...")]
+			public static void Shell_menu() { DCommandline.ShellMenu.ShowForCurrentFile(); }
+			
+			[Command("...", separator = true)]
+			public static void Run_at_startup() { DOptions.AaShow(DOptions.EPage.Workspace); }
+		}
 	}
 	
 	[Command(target = "Edit")]

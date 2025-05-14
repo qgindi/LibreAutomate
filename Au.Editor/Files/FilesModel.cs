@@ -635,10 +635,10 @@ partial class FilesModel {
 	}
 	
 	/// <summary>
-	/// Finds code file and calls <see cref="OpenAndGoTo(FileNode, int, int, string, bool)"/>. Does nothing if not found.
+	/// Finds file and calls <see cref="OpenAndGoTo(FileNode, int, int, string, bool)"/>. Does nothing if not found. Note: default kind is CodeFile.
 	/// </summary>
-	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1, string findText = null, bool activateLA = true) {
-		var f = FindCodeFile(file); if (f == null) return false;
+	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1, string findText = null, bool activateLA = true, FNFind kind = FNFind.CodeFile) {
+		var f = Find(file, kind); if (f == null) return false;
 		return OpenAndGoTo(f, line, columnOrPos, findText, activateLA);
 	}
 	

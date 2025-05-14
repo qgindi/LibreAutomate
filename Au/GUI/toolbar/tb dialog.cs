@@ -1,4 +1,4 @@
-//TODO: sometimes the first time shows the window with several s delay. Can't repro, even after reboot. Possibly more likely after hibernation. The slow code is `new Form();` (even without setting properties).
+//TODO2: sometimes the first time shows the window with several s delay. Can't repro, even after reboot. Possibly more likely after hibernation. The slow code is `new Form();` (even without setting properties).
 
 using System.Windows.Forms;
 

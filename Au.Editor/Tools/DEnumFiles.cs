@@ -70,10 +70,10 @@ class DEnumDir : KDialogWindow {
 			_p2.Visibility = _cbGet.SelectedIndex == 2 ? Visibility.Visible : Visibility.Hidden;
 		};
 		
-		b.StartGrid().Columns(0, -1, 28);
+		b.StartGrid().Columns(0, -1, 0);
 		_p1 = b.Panel;
 		b.Add("Name wildex", out _tFilter).Tooltip("Optional file name wildex.\nExamples:\n*.txt\n**m *.png||*.jpg")
-			.AddButton("?", _ => HelpUtil.AuHelp("articles/Wildcard expression"));
+			.xAddControlHelpButton("articles/Wildcard expression", "Wildcard expression help");
 		b.End().Span(2);
 		
 		b.And(0).StartStack();

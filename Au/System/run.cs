@@ -54,7 +54,9 @@ namespace Au {
 		/// 
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="pathname.expand"/>.
 		/// 
-		/// By default the new process does not inherit administrator privileges of this process. More info: <see cref="RFlags"/>.
+		/// By default the new process isn't admin even if this process is admin. It's a unique feature of this function. More info: <see cref="RFlags"/>.
+		/// 
+		/// The new process inherits environment variables of this process only if both processes are admin or non-admin. To ensure it, use flag <see cref="RFlags.InheritAdmin"/> or some other "start process" function (<see cref="Process.Start"/>, <see cref="run.console"/>, Windows API).
 		/// </remarks>
 		/// <seealso cref="wnd.find"/>
 		/// <seealso cref="wnd.findOrRun"/>

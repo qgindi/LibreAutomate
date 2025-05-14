@@ -210,6 +210,9 @@ System.Threading.Tasks.TaskCanceledException
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
 	public bool find_parallel;
+	
+	//DCommandLine.ShellMenu
+	public string nilesoftShellDir;
 }
 
 /// <summary>

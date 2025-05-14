@@ -28,7 +28,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			b.R.Add(out KCheckBox cNet, "Add .NET Runtime").Checked(0 != (2 & App.Settings.publish));
 			b.R.Add(out KCheckBox cR2R, "ReadyToRun").Checked(0 != (4 & App.Settings.publish));
 			b.R.Add("Platform", out ComboBox cbPlatform).Width(100, "L").Items("x64|arm64|x86").Select(Math.Clamp(App.Settings.publish >>> 4 & 3, 0, 2));
-			b.R.StartOkCancel().AddOkCancel().AddButton("Help", _ => HelpUtil.AuHelp("editor/Publish")).Width(70).End();
+			b.R.StartOkCancel().AddOkCancel().xAddDialogHelpButtonAndF1("editor/Publish").End();
 			b.End();
 			if (!b.ShowDialog(App.Wmain)) return;
 			

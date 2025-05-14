@@ -110,7 +110,7 @@ namespace Au {
 		/// <returns><c>true</c> if the string is full path, like <c>@"C:\a\b.txt"</c> or <c>@"C:"</c> or <c>@"\\server\share\..."</c>.</returns>
 		/// <param name="path">
 		/// Any string. Can be <c>null</c>.
-		/// If starts with <c>'%'</c> character, calls <see cref="isFullPath"/> with expanded environment variables (<see cref="expand"/>). If it returns <c>true</c>, replaces the passed variable with the expanded path string.
+		/// If starts with <c>'%'</c> character, calls <see cref="expand"/> and then <see cref="isFullPath"/> with expanded environment variables. If it returns <c>true</c>, replaces the passed variable with the expanded path string.
 		/// </param>
 		/// <param name="strict"><inheritdoc cref="expand(string, bool?)" path="/param[@name='strict']/node()"/></param>
 		/// <remarks>
@@ -122,14 +122,22 @@ namespace Au {
 		/// Supports <c>'/'</c> characters too.
 		/// Supports only file-system paths. Returns <c>false</c> if <i>path</i> is URL (<see cref="isUrl"/>) or starts with <c>"::"</c>.
 		/// </remarks>
-		public static bool isFullPathExpand(ref string path, bool? strict = null) {
-			var s = path;
-			if (s == null || s.Length < 2) return false;
+		public static bool isFullPathExpand(ref string path, bool? strict = null) => isFullPathExpand(path, out path, strict);
+		
+		/// <param name="path">
+		/// Any string. Can be <c>null</c>.
+		/// If starts with <c>'%'</c> character, calls <see cref="expand"/> and then <see cref="isFullPath"/> with expanded environment variables. If it returns <c>true</c>, sets <i>path2</i> = the expanded path string.
+		/// </param>
+		/// <param name="path2">Receives the final path.</param>
+		/// <inheritdoc cref="isFullPathExpand(ref string, bool?)"/>
+		public static bool isFullPathExpand(string path, out string path2, bool? strict = null) {
+			var s = path2 = path;
+			if (s.Lenn() < 2) return false;
 			if (s[0] != '%') return isFullPath(s);
 			s = expand(s, strict);
 			if (s[0] == '%') return false;
 			if (!isFullPath(s)) return false;
-			path = s;
+			path2 = s;
 			return true;
 		}
 

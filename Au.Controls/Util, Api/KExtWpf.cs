@@ -341,6 +341,42 @@ public static class KExtWpf {
 	}
 	
 	/// <summary>
+	/// Adds icon-button "Help" for a control.
+	/// </summary>
+	public static wpfBuilder xAddControlHelpButton(this wpfBuilder t, Action<WBButtonClickArgs> click, string tooltip = null) {
+		xAddButtonIcon(t, "*Material.HelpCircleOutline #4080FF|#99CCFF", click, tooltip);
+		t.Margin(0);
+		return t;
+	}
+	
+	/// <summary>
+	/// Adds icon-button "Help" for a control. On click calls <see cref="HelpUtil.AuHelp"/> with <i>helpTopic</i>.
+	/// </summary>
+	public static wpfBuilder xAddControlHelpButton(this wpfBuilder t, string helpTopic, string tooltip = null)
+		=> xAddControlHelpButton(t, _ => HelpUtil.AuHelp(helpTopic), tooltip);
+	
+	/// <summary>
+	/// Adds icon-button "Help" for a dialog window. On click or F1 calls <i>clickF1</i>.
+	/// </summary>
+	public static wpfBuilder xAddDialogHelpButtonAndF1(this wpfBuilder t, Action clickF1) {
+		t.Window.PreviewKeyDown += (_, e) => {
+			if (e.Key == Key.F1 && Keyboard.Modifiers == 0) {
+				clickF1();
+				e.Handled = true;
+			}
+		};
+		xAddButtonIcon(t, "*Material.HelpBox #4080FF|#99CCFF", _ => clickF1(), "Help (F1)");
+		t.Width(24).Margin(20);
+		return t;
+	}
+	
+	/// <summary>
+	/// Adds icon-button "Help" for a dialog window. On click or F1 calls <see cref="HelpUtil.AuHelp"/> with <i>helpTopic</i>.
+	/// </summary>
+	public static wpfBuilder xAddDialogHelpButtonAndF1(this wpfBuilder t, string helpTopic)
+		=> xAddDialogHelpButtonAndF1(t, () => HelpUtil.AuHelp(helpTopic));
+	
+	/// <summary>
 	/// Can be used like <see cref="wpfBuilder.Validation"/> with hotkey <b>TextBox</b> controls.
 	/// </summary>
 	public static wpfBuilder xValidateHotkey(this wpfBuilder b, bool errorIfEmpty = false) {
