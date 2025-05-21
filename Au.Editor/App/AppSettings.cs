@@ -209,7 +209,7 @@ System.Threading.Tasks.TaskCanceledException
 	//panel Find
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
-	public bool find_parallel;
+	public bool find_parallel, find_case, find_word;
 	
 	//DCommandLine.ShellMenu
 	public string nilesoftShellDir;

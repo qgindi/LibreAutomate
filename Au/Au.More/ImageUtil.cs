@@ -15,12 +15,12 @@ public static partial class ImageUtil {
 	/// Returns <c>true</c> if string starts with <c>"image:"</c>.
 	/// </summary>
 	public static bool HasImageStringPrefix(string s) => s.Starts("image:");
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if string starts with <c>"resource:"</c>, <c>"resources/"</c>, <c>"image:"</c> (Base64 encoded image), <c>"imagefile:"</c> (file path), <c>"*"</c> (XAML icon name) or <c>"&lt;"</c> (possibly XAML image).
 	/// </summary>
 	public static bool HasImageOrResourcePrefix(string s) => s.Starts('*') || s.Starts('<') || s.Starts("image:") || s.Starts("imagefile:") || ResourceUtil.HasResourcePrefix(s);
-
+	
 	/// <summary>
 	/// Loads image file data as stream from Base64 string.
 	/// </summary>
@@ -38,7 +38,7 @@ public static partial class ImageUtil {
 		if (!compressedBmp) return new MemoryStream(b, 0, n, false);
 		return new MemoryStream(Convert2.BrotliDecompress(b.AsSpan(0, n)), false);
 	}
-
+	
 	/// <summary>
 	/// Loads GDI+ image from Base64 string.
 	/// </summary>
@@ -46,7 +46,7 @@ public static partial class ImageUtil {
 	/// <exception cref="Exception">Exceptions of <see cref="LoadImageStreamFromString"/> and <see cref="System.Drawing.Bitmap(Stream)"/>.</exception>
 	static System.Drawing.Bitmap _LoadGdipBitmapFromString(string s)
 		=> new(LoadImageStreamFromString(s));
-
+	
 	/// <summary>
 	/// Loads WPF image from Base64 string.
 	/// </summary>
@@ -54,7 +54,7 @@ public static partial class ImageUtil {
 	/// <exception cref="Exception">Exceptions of <see cref="LoadImageStreamFromString"/> and <see cref="BitmapFrame.Create(Stream)"/>.</exception>
 	static BitmapFrame _LoadWpfImageFromString(string s)
 		=> BitmapFrame.Create(LoadImageStreamFromString(s));
-
+	
 	//not used in library
 	///// <summary>
 	///// Calls <see cref="LoadGdipBitmapFromString"/> and handles exceptions. On exception returns <c>null</c> and optionally prints a warning.
@@ -64,7 +64,7 @@ public static partial class ImageUtil {
 	//	catch (Exception ex) { if (warning) print.warning(ex.ToStringWithoutStack()); }
 	//	return null;
 	//}
-
+	
 	///// <summary>
 	///// Calls <see cref="LoadWpfImageFromString"/> and handles exceptions. On exception returns <c>null</c> and optionally prints warning.
 	///// </summary>
@@ -73,7 +73,7 @@ public static partial class ImageUtil {
 	//	catch (Exception ex) { if (warning) print.warning(ex.ToStringWithoutStack()); }
 	//	return null;
 	//}
-
+	
 	/// <summary>
 	/// Loads GDI+ image from file, resource or string.
 	/// </summary>
@@ -98,7 +98,7 @@ public static partial class ImageUtil {
 		using var fs = File.OpenRead(image);
 		return new(fs);
 	}
-
+	
 	/// <summary>
 	/// Loads WPF image or icon from file, resource or string.
 	/// </summary>
@@ -117,7 +117,7 @@ public static partial class ImageUtil {
 		return BitmapFrame.Create(new Uri(image));
 		//rejected: support XAML and "*iconName". Possible but not easy. Probably would be blurred when autoscaled.
 	}
-
+	
 	/// <summary>
 	/// Loads WPF image element from file, resource or string. Supports xaml, png and other image formats supported by WPF.
 	/// </summary>
@@ -127,13 +127,19 @@ public static partial class ImageUtil {
 	/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c>. This function calls <see cref="ResourceUtil.GetXamlObject"/> if ends with <c>".xaml"</c>, else <see cref="ResourceUtil.GetWpfImage"/>.
 	/// <br/>• Base64 encoded image with prefix <c>"image:"</c>. See <see cref="LoadImageStreamFromString"/>.
 	/// <br/>• XAML string that starts with <c>"&lt;"</c>. For example from the <b>Icons</b> tool of LibreAutomate.
-	/// <br/>• XAML icon name like <c>"*Pack.Icon color"</c> or <c>"*Pack.Icon"</c> or <c>"*Pack.Icon color @size"</c> or <c>"*Pack.Icon @size"</c>. More info in Remarks.
+	/// <br/>• XAML icon name like <c>"*Pack.Icon color"</c> or <c>"*Pack.Icon color @size"</c> or <c>"*Pack1.Icon1 color1; *Pack2.Icon2 color2 %8,8,,"</c>. More info in Remarks.
 	/// </param>
 	/// <returns>
 	/// If <i>image</i> is XAML icon name or starts with <c>"&lt;"</c> or ends with <c>".xaml"</c> (case-insensitive), returns new WPF element of type specified by the XAML root element (uses <see cref="XamlReader"/>). Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b> (uses <see cref="LoadWpfImage"/>).
 	/// </returns>
 	/// <remarks>
-	/// <i>image</i> can be an XAML icon name from the <b>Icons</b> tool of LibreAutomate (LA), like <c>"*Pack.Icon color"</c>. If 2 colors like <c>"*Pack.Icon #008000|#00FF00"</c>, the second color is for high contrast dark theme. If like <c>"*Pack.Icon"</c> (without color), will use the system color of control text. To make the displayed icon smaller or in some cases less blurry, can be specified a logical size &lt;= 16, like <c>"*Pack.Icon color @12"</c> or <c>"*Pack.Icon @12"</c>; it is the logical width and height of the icon rendered at the center of a box of logical size 16x16. The LA compiler finds such strings anywhere in code, gets their XAML from the database, and adds the XAML to the assembly as a string resource (see <b>Properties > Resource > Options</b>). This function gets the XAML from resources (<see cref="ResourceUtil.GetString"/>). If fails, then tries to get XAML from database, and fails if LA isn't running. Uses <see cref="ScriptEditor.GetIcon"/>.
+	/// <i>image</i> can be an XAML icon name from the <b>Icons</b> tool of LibreAutomate (LA), like <c>"*Pack.Icon color"</c>. Full format: <c>"[*&lt;library&gt;]*pack.name[ color][ @size][ %margin][;more icons]"</c>. Here parts enclosed in <c>[]</c> are optional. The color, size and margin parts can be in any order.
+	/// <br/>• color - <c>#RRGGBB</c> or color name (WPF). If 2 colors like <c>"#008000|#00FF00"</c>, the second color is for high contrast dark theme. If omitted, will use the system color of control text. Also can be like <c>"#008000|"</c> to use control text only for dark contrast theme, or <c>"|#00FF00"</c> for vice versa.
+	/// <br/>• size - icon size 1 to 16, like <c>"*Pack.Icon blue @12"</c>. Can be used to make the displayed icon smaller or in some cases less blurry. It is the logical width and height of the icon rendered at the center of a box of logical size 16x16. To make icon bigger, instead set properties <b>Width</b> and <b>Height</b> of the returned element; or <see cref="MTBase.ImageSize"/> for a toolbar or menu.
+	/// <br/>• margin - icon margins inside a box of logical size 16x16. Format: <c>%left,top,right,bottom,stretch</c>. All parts are optional. Examples: <c>"*Pack.Icon blue %,,8,8"</c>, <c>"*Pack.Icon blue %8,8"</c>, <c>"*Pack.Icon blue %4,,4,,f"</c>. The stretch part can be <c>f</c> (fill) or <c>m</c> (move); default is uniform. Can be used either margin or size, not both.
+	/// <br/>• more icons - can be specified multiple icons separated by semicolon, like <c>"*Pack1.Icon1 color1; *Pack2.Icon2 color2"</c>. It allows to create multi-color icons (for example a "filled" icon of one color + an "outline" icon of another color) or to add a small overlay icon (eg to indicate disabled state) at a corner (use margin).
+	/// <br/>• library - name of assembly containing the resource. If omitted, uses <see cref="Assembly.GetEntryAssembly"/>.
+	/// <br/>The LA compiler finds icon strings anywhere in code, gets their XAML from the database, and adds the XAML to the assembly as a string resource (see <b>Properties > Resource > Options</b>). This function gets the XAML from resources (<see cref="ResourceUtil.GetString"/>). If fails, then tries to get XAML from database, and fails if LA isn't running. Uses <see cref="ScriptEditor.GetIcon"/>.
 	/// </remarks>
 	/// <exception cref="Exception"></exception>
 	public static FrameworkElement LoadWpfImageElement(string image) {
@@ -153,7 +159,7 @@ public static partial class ImageUtil {
 		//Could set UseLayoutRounding=true as a workaround for blurry images, but often it does not work and have to be set on parent element.
 		//	Then does not work even if wrapped eg in a Border with UseLayoutRounding.
 	}
-
+	
 	/// <summary>
 	/// Loads GDI+ image from WPF XAML file or string.
 	/// </summary>
@@ -172,7 +178,7 @@ public static partial class ImageUtil {
 		//s_cwt.Add(e, new());
 		return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
 	}
-
+	
 	//This unfinished version creates icon element without XAML parser, if possible.
 	//	That part then 5 times faster, and whole function 2 times faster (1500 -> 750 mcs).
 	//	But in reality this speed improvement isnt' very useful. Eg loading WPF is much slower than loading icons, although slightly faster without XAML reader. Better use a good cache.
@@ -190,7 +196,7 @@ public static partial class ImageUtil {
 	//		//s_cwt.Add(e, new());
 	//		return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
 	//	}
-
+	
 	//	static FrameworkElement _GetPathFaster(string image, SIZE size) {
 	//		//if (!image.Starts('<')) return null;
 	//		//int i = image.Find("<Path "); if (i < 0) return null;
@@ -236,12 +242,12 @@ public static partial class ImageUtil {
 	//		return null;
 	//	}
 	//}
-
+	
 	//static readonly BrushConverter s_brushConverter = new();
-
+	
 	//static ConditionalWeakTable<FrameworkElement, _DebugGC> s_cwt = new();
 	//class _DebugGC { ~_DebugGC() { print.it("~"); } }
-
+	
 	/// <summary>
 	/// Converts WPF image element to GDI+ image.
 	/// </summary>

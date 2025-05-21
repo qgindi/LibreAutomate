@@ -221,7 +221,8 @@ partial class SciCode : KScintilla {
 				else if ((n.updated &= ~UPDATE.SC_UPDATE_CONTENT) == 0) break; //ignore when changed styling or markers
 			}
 			if (n.updated.HasAny(UPDATE.SC_UPDATE_CONTENT | UPDATE.SC_UPDATE_SELECTION)) {
-				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
+				if (!n.updated.Has(UPDATE.SC_UPDATE_CONTENT)) //TODO: watch, maybe breaks something. Added 2025-05-01 to fix bug when autocompletion popup randomly disappears when pasting after dot.
+					_TempRangeOnModifiedOrPosChanged(0, 0, 0);
 				if (isActive) {
 					if (n.updated.Has(UPDATE.SC_UPDATE_SELECTION)) App.Model.EditGoBack.OnPosChanged(this);
 					Panels.Editor.UpdateUI_EditEnabled_();

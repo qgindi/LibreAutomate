@@ -251,7 +251,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			if (_meta.IconFile is { } fIco) {
 				if (fIco.IsFolder) return _Err("icons folder not supported");
 				_Add(xpg, "ApplicationIcon", _Path(fIco));
-			} else if (DIcons.TryGetIconFromBigDB(f.CustomIconName, out string xaml)) {
+			} else if (DIcons.TryGetIconFromDB(f.CustomIconName, out string xaml)) {
 				var file = _csprojDir + @"\icon.ico";
 				try {
 					Au.Controls.KImageUtil.XamlImageToIconFile(file, xaml, 16, 24, 32, 48, 64);

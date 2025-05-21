@@ -484,7 +484,7 @@ static class ExtScheduler {
 				bool ok = false;
 				if (v == "*") ok = true;
 				else if (v.Starts("*[System[") && v.Ends("]]")) {
-					foreach (var k in v.AsSpan(9..^2).SplitS(" and ")) {
+					foreach (var k in v[9..^2].Split(" and ")) {
 						if (k.Like("Provider[@Name='*']")) source = k[16..^2];
 						else if (k.Starts("EventID=")) id = k[8..];
 						else if (k.Like("(EventID=*)") && !k.Contains(' ')) id = k[9..^1];

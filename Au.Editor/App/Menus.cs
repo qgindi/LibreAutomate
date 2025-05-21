@@ -24,7 +24,7 @@ static class Menus {
 		iconUndo = "*Ionicons.UndoiOS" + brown,
 		iconPaste = "*Material.ContentPaste" + brown,
 		iconReferences = "*Material.MapMarkerMultiple" + blue,
-		iconRegex = "*FileIcons.Regex @14" + blue
+		iconRegex = "*FileIcons.Regex @12" + blue
 		;
 	
 	[Command(target = "Files")]
@@ -303,16 +303,16 @@ static class Menus {
 		
 		[Command(separator = true)]
 		public static class Selection {
-			[Command(keys = "Ctrl+/", image = "*BoxIcons.RegularComment" + brown)]
+			[Command(keys = "Ctrl+/", image = $"*Material.SlashForward{brown} %1,1,7,1,f; *FontAwesome.AsteriskSolid{brown} %9")]
 			public static void Toggle_comment() { ModifyCode.Comment(null); }
 			
-			[Command(keysText = "R-click margin", image = "*BoxIcons.RegularComment" + brown)]
+			[Command(keysText = "R-click margin", image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %7,1,1,1,f")]
 			public static void Toggle_line_comment() { ModifyCode.Comment(null, notSlashStar: true); }
 			
-			[Command(image = "*BoxIcons.RegularCommentAdd" + brown)]
+			[Command(image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %5,1,3,1,f; *Material.Plus{brown} %10,10,,1")]
 			public static void Comment_selection() { ModifyCode.Comment(true); }
 			
-			[Command(image = "*BoxIcons.RegularCommentMinus" + brown)]
+			[Command(image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %5,1,3,1,f; *Material.Minus{brown} %11,10,,1")]
 			public static void Uncomment_selection() { ModifyCode.Comment(false); }
 			
 			//TODO2: Toggle multiline (parameters, collections, etc). Hotkey Ctrl+L.
@@ -620,7 +620,7 @@ static class Menus {
 Version: {Au_.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
-Uses C# 14, <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 4.11<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/microsoft/win32metadata>win32metadata<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, <link https://github.com/xoofx/markdig>Markdig<>.
+Uses C# 14, <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.1.5<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 5.1<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/microsoft/win32metadata>win32metadata<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, <link https://github.com/xoofx/markdig>Markdig<>.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppDataRoaming}>ThisAppDataRoaming<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 {typeof(App).Assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 --------------------------");

@@ -161,7 +161,7 @@ public sealed class IconImageCache : IDisposable {
 		bool isIconName = isImage && !isXaml && imageSource.Starts('*');
 		if (isIconName) {
 			isXaml = true;
-			imageSource = WpfUtil_.NormalizeIconStringColor(imageSource, false); //color can be "normal|highContrast"
+			imageSource = IconString_.NormalizeColor(imageSource); //color can be "normal|highContrast"
 		}
 		if (!isXaml && !isStore) dpi = 96; //will scale when drawing, it's fast and not so bad. Tested scaling with Lanczos3 etc filters, but the result for icons isn't better.
 		string imageKey = imageSource;
@@ -369,8 +369,12 @@ public sealed class IconImageCache : IDisposable {
 	static void _ClearFiles(string dir) {
 		if (dir == null || !filesystem.exists(dir, true).Directory) return;
 		try {
-			foreach (var v in Directory.GetFiles(dir, "*.dpi")) filesystem.delete(v);
-			foreach (var v in Directory.GetFiles(dir, "*.png")) Api.DeleteFile(v);
+			bool deletedAll = true;
+			foreach (var v in Directory.GetFiles(dir, "*.dpi")) deletedAll &= Api.DeleteFile(v);
+			if (deletedAll) {
+				foreach (var v in Directory.GetFiles(dir, "*.png")) deletedAll &= Api.DeleteFile(v);
+				if (deletedAll && !dir.Ends(@"\iconCache", true) && Api.DeleteFile(dir + @"\version.txt")) Api.RemoveDirectory(dir);
+			}
 		}
 		catch (Exception e1) { Debug_.Print(e1); }
 	}
@@ -387,11 +391,16 @@ public sealed class IconImageCache : IDisposable {
 	public static void ClearAll(bool allProcesses = true) {
 		ClearAll_();
 		if (allProcesses) {
-			//if called in LA process (eg menu Tools > Update icons), clear the cache dir of the common cache of scripts.
+			//if called in LA process (eg menu Tools > Update icons), clear the cache dir of scripts.
 			//	Without it would clear only if some script processes already used the cache.
 			if (script.role == SRole.EditorExtension && Common._dir is string s1) {
 				Debug.Assert(s1.Ends(@"\iconCache"));
-				_ClearFiles(s1.Insert(^10, @"\_script"));
+				s1 = s1.ReplaceAt(^9.., "_script");
+				//clear caches of all image sizes
+				var a = filesystem.enumDirectories(s1, "iconCache*").ToArray();
+				foreach (var f in a) {
+					_ClearFiles(f.FullPath);
+				}
 			}
 			
 			for (var w = wnd.findFast(null, script.c_auxWndClassName, true); !w.Is0; w = wnd.findFast(null, script.c_auxWndClassName, true, w))

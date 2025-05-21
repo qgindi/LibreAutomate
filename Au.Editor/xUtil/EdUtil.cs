@@ -29,6 +29,7 @@ static class EdDebug {
 static class EdResources {
 	public const string
 		c_iconScript = "*Material.ScriptOutline #73BF00|#87E100",
+		//c_iconScript = "*Material.Square white %4,1,4,1,f;*Material.ScriptOutline #73BF00|#87E100", //white-filled. In some places looks not good.
 		c_iconClass = "*Codicons.SymbolClass #4080FF|#84ACFF",
 		c_iconFolder = "*Material.Folder #EABB00",
 		c_iconFolderOpen = "*Material.FolderOpen #EABB00"

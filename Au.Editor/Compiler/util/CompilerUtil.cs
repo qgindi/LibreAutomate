@@ -159,16 +159,15 @@ static partial class CompilerUtil {
 					var tree = trees[i];
 					var root = tree.GetCompilationUnitRoot();
 					foreach (var v in root.DescendantNodes()) {
-						if (v is LiteralExpressionSyntax les && les.IsKind(SyntaxKind.StringLiteralExpression)
-							&& les.Token.Value is string s && s.Length >= 8 && s[0] == '*') {
+						if (v is LiteralExpressionSyntax les && les.IsKind(SyntaxKind.StringLiteralExpression) && les.Token.Value is string s && s.Length >= 8 && s[0] == '*') {
 							bool hasLibraryPrefix = s[1] == '<';
 							if (hasLibraryPrefix) {
 								int j = s.IndexOf('>');
 								if (j < 0 || !s.Eq(2..j, asmName, true)) continue;
 								s = s[++j..];
 							}
-							if (DIcons.TryGetIconFromBigDB(s, out var xaml)) {
-								s = WpfUtil_.RemoveColorFromIconString(s);
+							if (!IconString_.DetectAndRemoveParametersForResources(s, out s)) continue; //remove string icon parameters to support icon strings like `"*Pack.Icon"+colorConstant` and `$"*Pack.Icon{colorConstant}"`. At run time will call IconString_.XamlSetColorSizeMargin to add them.
+							if (DIcons.TryGetIconFromDB(s, out var xaml, forResource: true)) {
 								s = s.Lower();
 								if ((hs ??= new()).Add(s)) {
 									_RW();

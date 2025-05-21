@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MahApps.Metro.IconPacks" Version="4.11.0" />
+		<PackageReference Include="MahApps.Metro.IconPacks" Version="5.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -26,7 +26,7 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="robocopy.exe $(SolutionDir)_\64 $(OutDir)\64 AuCpp.dll /mir >nul || exit 0" />
+		<Exec Command="robocopy.exe $(SolutionDir)_\64 $(OutDir)\64 AuCpp.dll /mir &gt;nul || exit 0" />
 	</Target>
 
 </Project>

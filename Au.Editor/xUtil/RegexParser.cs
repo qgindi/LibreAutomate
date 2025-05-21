@@ -25,7 +25,7 @@ static class RegexParser {
 					if (c.IsAsciiAlpha()) {
 						if (c is 'Q' && inCharClass == 0) { //literal text
 							_Add(ii, i, EStyle.RxMeta);
-							if (s.Find(@"\E", i, out int j)) _Add(j, i = j + 2, EStyle.RxMeta); else i = s.Length;
+							if (_Find(s, @"\E", i, out int j)) _Add(j, i = j + 2, EStyle.RxMeta); else i = s.Length;
 						} else if (c is 'b' or 'B' or 'A' or 'Z' or 'z' or 'G' or 'R' or 'X' or 'K' && inCharClass == 0) { //anchors etc
 							_Add(ii, i, EStyle.RxMeta);
 						} else if (c is 'w' or 'W' or 'd' or 'D' or 's' or 'S' or 'h' or 'H' or 'v' or 'V' or 'C') { //char class
@@ -41,7 +41,7 @@ static class RegexParser {
 							else if (c is '\'') _FindAdd(s, '\'');
 							else if (c is '-' or '+' or (>= '0' and <= '9')) _AddNumber(s);
 						} else if (c is 'x') { //ASCII char code
-							if (s.Eq(i, '{')) i = s.FindEnd('}', i); else while (i < ii + 4 && char.IsAsciiHexDigit(s.At_(i))) i++;
+							if (s.Eq(i, '{')) i = _FindEnd(s, '}', i); else while (i < ii + 4 && char.IsAsciiHexDigit(s.At_(i))) i++;
 							_Add(ii, i, EStyle.RxEscape);
 						} else if (c is 'u' && net) { //Unicode char code
 							while (i < ii + 6 && char.IsAsciiHexDigit(s.At_(i))) i++;
@@ -59,7 +59,7 @@ static class RegexParser {
 						if (net) {
 							if (!(i > charClassStart + 2 && s[i - 2] == '-')) continue; //`[ab-[cd]]`
 						} else {
-							if (s.Eq(i, ':') && s.Find(']', i, out int j) && s[j - 1] == ':') _Add(ii, i = ++j, EStyle.RxChars);
+							if (s.Eq(i, ':') && _Find(s, ']', i, out int j) && s[j - 1] == ':') _Add(ii, i = ++j, EStyle.RxChars);
 							continue;
 						}
 					}
@@ -80,7 +80,7 @@ static class RegexParser {
 					_Add(ii, i, EStyle.RxMeta);
 				} else if (c is '{') {
 					_Add(ii, i, EStyle.RxMeta);
-					if (s.Find('}', i, out int j)) _Add(j, i = j + 1, EStyle.RxMeta);
+					if (_Find(s, '}', i, out int j)) _Add(j, i = j + 1, EStyle.RxMeta);
 				} else if (c is '(') {
 					if (!_Read(s, EStyle.RxMeta)) return;
 					if (c is '*') {
@@ -162,7 +162,7 @@ static class RegexParser {
 				}
 				
 				void _FindAdd(RStr s, char c, EStyle t = EStyle.RxMeta) {
-					_Add(ii, i = s.FindEnd(c, i), t);
+					_Add(ii, i = _FindEnd(s, c, i), t);
 				}
 				
 				void _AddNumber(RStr s, EStyle t = EStyle.RxMeta) {
@@ -177,17 +177,17 @@ static class RegexParser {
 		return a;
 	}
 	
-	static bool Find(this RStr t, char c, int from, out int foundAt) {
+	static bool _Find(RStr t, char c, int from, out int foundAt) {
 		foundAt = t.IndexOf(from, c);
 		return foundAt >= 0;
 	}
 	
-	static bool Find(this RStr t, string s, int from, out int foundAt) {
+	static bool _Find(RStr t, string s, int from, out int foundAt) {
 		foundAt = t.IndexOf(from, s);
 		return foundAt >= 0;
 	}
 	
-	static int FindEnd(this RStr t, char c, int from) {
+	static int _FindEnd(RStr t, char c, int from) {
 		int i = t.IndexOf(from, c);
 		return i < 0 ? t.Length : i + 1;
 	}
@@ -229,7 +229,7 @@ static class RegexParser {
 				var a = GetClassifiedSpans(s, type is WXType.RegexNet);
 				_ToScintillaStylingBytes16(s, a, styles);
 			} else if (type is WXType.Multi) {
-				foreach (var v in s.Split(split ?? "||")) {
+				foreach (var v in s.SplitSE(split ?? "||")) {
 					GetScintillaStylingBytes16(s[v.Range], PSFormat.Wildex, styles[v.start..]);
 				}
 			}

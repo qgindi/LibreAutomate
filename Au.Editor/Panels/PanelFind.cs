@@ -57,8 +57,8 @@ class PanelFind {
 		
 		b.End();
 		
-		b.R.Add(out _cCase, "Case").Tooltip("Match case");
-		b.Add(out _cWord, "Word").Tooltip("Whole word");
+		b.R.Add(out _cCase, "Case").Tooltip("Match case").Checked(App.Settings.find_case);
+		b.Add(out _cWord, "Word").Tooltip("Whole word").Checked(App.Settings.find_word);
 		b.Add(out _cRegex, "Regex").Tooltip("Regular expression");
 		b.End().End();
 		
@@ -66,7 +66,12 @@ class PanelFind {
 		
 		P.IsVisibleChanged += (_, _) => {
 			if (P.IsVisible) UpdateQuickResults();
-			else foreach (var d in Panels.Editor.OpenDocs) d.EInicatorsFound_(null);
+			else {
+				foreach (var d in Panels.Editor.OpenDocs) d.EInicatorsFound_(null);
+				
+				App.Settings.find_case = _cCase.IsChecked;
+				App.Settings.find_word = _cWord.IsChecked;
+			}
 		};
 	}
 	

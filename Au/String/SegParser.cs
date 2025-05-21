@@ -1,6 +1,7 @@
 //Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it, need to get from NuGet.
 //Can be used instead of String.Split, especially when you want less garbage. Faster (the github version with StringTokenizer was slower).
 
+#if !DEBUG
 namespace Au.More {
 	/// <summary>
 	/// Splits a string into substrings as start/end offsets or strings.
@@ -186,3 +187,4 @@ namespace Au.Types {
 		NoEmpty = 1,
 	}
 }
+#endif

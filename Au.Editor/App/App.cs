@@ -96,20 +96,13 @@ static partial class App {
 		//perf.next('i');
 		
 		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose };
-		AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
-		if (!Debugger.IsAttached)
-			_app.DispatcherUnhandledException += (_, e) => {
-				e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
-			};
 		//perf.next('a');
-		
 		_app.MainWindow = Wmain = new MainWindow();
-		//perf.next('w');
 		if (!Settings.runHidden || CommandLine.StartVisible || (App.Settings.startVisibleIfNotAutoStarted && !CommandLine.AutoStarted)) ShowWindow();
-		//perf.next('W');
+		//perf.next('w');
 		
 		s_timer = timer.every(1000, _TimerProc);
-		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
+		//note: timer can make Systeminformer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
 		//Timer1s += () => print.it("1 s");
 		//Timer1sOr025s += () => print.it("0.25 s");
 		
@@ -118,6 +111,13 @@ static partial class App {
 			Model.RunStartupScripts(false);
 			//perf.nw('s');
 		});
+		
+		AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
+		if (!Debugger.IsAttached) {
+			_app.DispatcherUnhandledException += (_, e) => {
+				e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
+			};
+		}
 		
 		try {
 			_app.Run();

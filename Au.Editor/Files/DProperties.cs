@@ -502,8 +502,6 @@ class Class1 {
 	static bool _IsHidden(FrameworkElement t) {
 		if (t.IsVisible) return false;
 		if (t.Visibility != Visibility.Visible) return true;
-		//is in non-expanded Expander, or expander itself is hidden?
-		while ((t = t.Parent as FrameworkElement) != null) if (t is Expander e) return !e.IsVisible;
 		return true;
 	}
 	

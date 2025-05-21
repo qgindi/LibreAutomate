@@ -736,7 +736,7 @@ partial class Compiler {
 	
 	bool _GetMainFileIcon(out MemoryStream ms) {
 		try {
-			if (DIcons.TryGetIconFromBigDB(_meta.MainFile.f.CustomIconName, out string xaml)) {
+			if (DIcons.TryGetIconFromDB(_meta.MainFile.f.CustomIconName, out string xaml)) {
 				_GetIconFromXaml(xaml, out ms);
 				return true;
 			}

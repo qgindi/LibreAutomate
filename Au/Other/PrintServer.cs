@@ -223,7 +223,7 @@ namespace Au.More {
 						
 						if (_isGlobal) { //read messages from mailslot and add to _messages. Else messages are added directly to _messages.
 							while (Api.GetMailslotInfo(_mailslot, null, out int nextSize, out var msgCount) && msgCount > 0) {
-								//note: GetMailslotInfo makes Process Hacker show constant 24 B/s I/O total rate. Does not depend on period.
+								//note: GetMailslotInfo makes Systeminformer show constant 24 B/s I/O total rate. Does not depend on period.
 								_ReadMailslotMessage(nextSize);
 								if (msgCount == 1) break;
 							}

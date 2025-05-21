@@ -9,6 +9,6 @@ static class Program {
 
 		//RefTxt.Create();
 		//RefAndDoc.Create();
-		//Icons.CreateDB();
+		Icons.CreateDB();
 	}
 }

@@ -27,7 +27,6 @@ static class Test {
 	
 	public static void FromMenubar() {
 		print.clear();
-		
 
 		//timer2.every(500, _=> { GC.Collect(); });
 

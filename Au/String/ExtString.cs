@@ -1,3 +1,5 @@
+//FUTURE: now in intellisense RStr methods are mixed with that of string. Many of them are not useful. Maybe .NET 10 or later will add an attribute to clean it up.
+
 using System.Buffers;
 
 namespace Au.Types;
@@ -346,44 +348,8 @@ public static unsafe partial class ExtString {
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	public static int FindNot(this string t, string chars, Range? range = null) {
 		var (start, len) = range.GetOffsetAndLength(t.Length);
-		int r = t.AsSpan(start, len).IndexOfNot(chars);
+		int r = t.AsSpan(start, len).IndexOfAnyExcept(chars);
 		return r < 0 ? r : r + start;
-	}
-
-	/// <summary>
-	/// Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
-	/// </summary>
-	/// <param name="t">This string.</param>
-	/// <param name="chars">Characters.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	public static int IndexOfNot(this RStr t, string chars) {
-		Not_.Null(chars);
-		for (int i = 0; i < t.Length; i++) {
-			char c = t[i];
-			for (int j = 0; j < chars.Length; j++) if (chars[j] == c) goto g1;
-			return i;
-			g1:;
-		}
-		return -1;
-	}
-
-	/// <summary>
-	/// Finds the last character not specified in <i>chars</i>. Returns its index, or -1 if not found.
-	/// </summary>
-	/// <param name="t">This string.</param>
-	/// <param name="chars">Characters.</param>
-	/// <exception cref="ArgumentNullException"><i>chars</i> is <c>null</c>.</exception>
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	public static int LastIndexOfNot(this RStr t, string chars) {
-		Not_.Null(chars);
-		for (int i = t.Length; --i >= 0;) {
-			char c = t[i];
-			for (int j = 0; j < chars.Length; j++) if (chars[j] == c) goto g1;
-			return i;
-			g1:;
-		}
-		return -1;
 	}
 
 	/// <summary>
@@ -412,7 +378,7 @@ public static unsafe partial class ExtString {
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	public static int FindLastNot(this string t, string chars, Range? range = null) {
 		var (start, len) = range.GetOffsetAndLength(t.Length);
-		int r = t.AsSpan(start, len).LastIndexOfNot(chars);
+		int r = t.AsSpan(start, len).LastIndexOfAnyExcept(chars);
 		return r < 0 ? r : r + start;
 	}
 
@@ -530,6 +496,7 @@ public static unsafe partial class ExtString {
 	internal static string NullIfEmpty_(this string t) => t.NE() ? null : t;
 	//not public because probably too rarely used.
 
+#if !DEBUG
 	/// <summary>
 	/// This function can be used with <c>foreach</c> to split this string into substrings as start/end offsets.
 	/// </summary>
@@ -544,106 +511,152 @@ public static unsafe partial class ExtString {
 	/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) print.it(s[t.start..t.end]);
 	/// ]]></code>
 	/// </example>
-	/// <seealso cref="Lines(string, Range, bool, bool, bool)"/>
 	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Use Split or Lines. They are faster, have "trim" option; the returned array is easier to use and not too expensive. For words use regex.
 	public static SegParser Segments(this string t, string separators, SegFlags flags = 0, Range? range = null) {
 		return new SegParser(t, separators, flags, range);
 	}
+#endif
 	
 	/// <summary>
 	/// Splits this string into substrings as start/end offsets.
 	/// </summary>
-	/// <seealso cref="Split"/>
-	/// <seealso cref="SplitS"/>
-	public static StartEnd[] Split(this string t, Range range, char separator, StringSplitOptions flags = 0) {
+	public static StartEnd[] SplitSE(this string t, Range range, char separator, StringSplitOptions flags = 0) {
 		var (start, len) = range.GetOffsetAndLength(t.Length);
-		var a = t.AsSpan(start, len).Split(separator, flags);
+		var a = t.AsSpan(start, len).SplitSE(separator, flags);
 		return _SplitOffset(a, start);
 	}
+	
+#if !DEBUG
+	/// <summary>Alias of <b>SplitSE</b>.</summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public static StartEnd[] Split(this string t, Range range, char separator, StringSplitOptions flags = 0) => SplitSE(t, range, separator, flags);
+#endif
 	
 	/// <summary>
 	/// Splits this string into substrings as start/end offsets.
 	/// </summary>
-	/// <seealso cref="Split"/>
-	/// <seealso cref="SplitS"/>
-	public static StartEnd[] Split(this string t, Range range, string separator, StringSplitOptions flags = 0) {
+	public static StartEnd[] SplitSE(this string t, Range range, string separator, StringSplitOptions flags = 0) {
 		var (start, len) = range.GetOffsetAndLength(t.Length);
-		var a = t.AsSpan(start, len).Split(separator, flags);
+		var a = t.AsSpan(start, len).SplitSE(separator, flags);
 		return _SplitOffset(a, start);
 	}
+	
+#if !DEBUG
+	/// <summary>Alias of <b>SplitSE</b>.</summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public static StartEnd[] Split(this string t, Range range, string separator, StringSplitOptions flags = 0) => SplitSE(t, range, separator, flags);
+#endif
 	
 	/// <summary>
 	/// Splits this string into substrings as start/end offsets. Can be used multiple separators.
 	/// </summary>
-	/// <seealso cref="SplitAny"/>
-	/// <seealso cref="SplitAnyS"/>
-	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, ReadOnlySpan<char> separators) {
+	public static StartEnd[] SplitAnySE(this string t, Range range, RStr separators, StringSplitOptions flags = 0) {
 		var (start, len) = range.GetOffsetAndLength(t.Length);
-		var a = t.AsSpan(start, len).SplitAny(separators, flags);
+		var a = t.AsSpan(start, len).SplitAnySE(separators, flags);
 		return _SplitOffset(a, start);
 	}
+	
+#if !DEBUG
+	/// <summary>Alias of <b>SplitAnySE</b>.</summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, RStr separators) => SplitAnySE(t, range, separators, flags);
+#endif
 	
 	/// <summary>
 	/// Splits this string into substrings as start/end offsets. Can be used multiple separators.
 	/// </summary>
-	/// <seealso cref="SplitAny"/>
-	/// <seealso cref="SplitAnyS"/>
-	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, ReadOnlySpan<string> separators) {
+	public static StartEnd[] SplitAnySE(this string t, Range range, ReadOnlySpan<string> separators, StringSplitOptions flags = 0) {
 		var (start, len) = range.GetOffsetAndLength(t.Length);
-		var a = t.AsSpan(start, len).SplitAny(separators, flags);
+		var a = t.AsSpan(start, len).SplitAnySE(separators, flags);
 		return _SplitOffset(a, start);
 	}
+	
+#if !DEBUG
+	/// <summary>Alias of <b>SplitAnySE</b>.</summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, ReadOnlySpan<string> separators) => SplitAnySE(t, range, separators, flags);
+#endif
 	
 	/// <summary>
 	/// Splits this string span into substrings as start/end offsets.
 	/// </summary>
-	public static StartEnd[] Split(this ReadOnlySpan<char> t, char separator, StringSplitOptions flags = 0)
+	public static StartEnd[] SplitSE(this RStr t, char separator, StringSplitOptions flags = 0)
 		=> _Split(t, flags, false, 1, separator).a1;
 	
+#if !DEBUG
+	/// <summary>Alias of <b>SplitSE</b>.</summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public static StartEnd[] Split(this RStr t, char separator, StringSplitOptions flags = 0) => SplitSE(t, separator, flags);
+#endif
+	
 	/// <summary>
 	/// Splits this string span into substrings as start/end offsets.
 	/// </summary>
-	public static StartEnd[] Split(this ReadOnlySpan<char> t, string separator, StringSplitOptions flags = 0)
+	public static StartEnd[] SplitSE(this RStr t, string separator, StringSplitOptions flags = 0)
 		=> _Split(t, flags, false, 2, sep23: separator).a1;
 	
+#if !DEBUG
+	/// <summary>Alias of <b>SplitSE</b>.</summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public static StartEnd[] Split(this RStr t, string separator, StringSplitOptions flags = 0) => SplitSE(t, separator, flags);
+#endif
+	
 	/// <summary>
 	/// Splits this string span into substrings as start/end offsets. Can be used multiple separators.
 	/// </summary>
-	public static StartEnd[] SplitAny(this ReadOnlySpan<char> t, ReadOnlySpan<char> separators, StringSplitOptions flags = 0)
+	public static StartEnd[] SplitAnySE(this RStr t, RStr separators, StringSplitOptions flags = 0)
 		=> _Split(t, flags, false, 3, sep23: separators).a1;
 	
+#if !DEBUG
+	/// <summary>Alias of <b>SplitAnySE</b>.</summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public static StartEnd[] SplitAny(this RStr t, RStr separators, StringSplitOptions flags = 0) => SplitAnySE(t, separators, flags);
+#endif
+	
 	/// <summary>
 	/// Splits this string span into substrings as start/end offsets. Can be used multiple separators.
 	/// </summary>
-	public static StartEnd[] SplitAny(this ReadOnlySpan<char> t, ReadOnlySpan<string> separators, StringSplitOptions flags = 0)
+	public static StartEnd[] SplitAnySE(this RStr t, ReadOnlySpan<string> separators, StringSplitOptions flags = 0)
 		=> _Split(t, flags, false, 4, sep4: separators).a1;
 	
+#if !DEBUG
+	/// <summary>Alias of <b>SplitAnySE</b>.</summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
+	public static StartEnd[] SplitAny(this RStr t, ReadOnlySpan<string> separators, StringSplitOptions flags = 0) => SplitAnySE(t, separators, flags);
+#endif
+	
+#if !DEBUG //FUTURE: delete these etc. Hidden in v1.12 2025-05-17.
 	/// <summary>
 	/// Splits this string span into substrings.
 	/// </summary>
-	public static string[] SplitS(this ReadOnlySpan<char> t, char separator, StringSplitOptions flags = 0)
+	[EditorBrowsable(EditorBrowsableState.Never)] //C# 14 mess
+	public static string[] SplitS(this RStr t, char separator, StringSplitOptions flags = 0)
 		=> _Split(t, flags, true, 1, separator).a2;
 	
 	/// <summary>
 	/// Splits this string span into substrings.
 	/// </summary>
-	public static string[] SplitS(this ReadOnlySpan<char> t, string separator, StringSplitOptions flags = 0)
+	[EditorBrowsable(EditorBrowsableState.Never)] //C# 14 mess
+	public static string[] SplitS(this RStr t, string separator, StringSplitOptions flags = 0)
 		=> _Split(t, flags, true, 2, sep23: separator).a2;
 	
 	/// <summary>
 	/// Splits this string span into substrings. Can be used multiple separators.
 	/// </summary>
-	public static string[] SplitAnyS(this ReadOnlySpan<char> t, ReadOnlySpan<char> separators, StringSplitOptions flags = 0)
+	[EditorBrowsable(EditorBrowsableState.Never)] //C# 14 mess
+	public static string[] SplitAnyS(this RStr t, RStr separators, StringSplitOptions flags = 0)
 		=> _Split(t, flags, true, 3, sep23: separators).a2;
 	
 	/// <summary>
 	/// Splits this string span into substrings. Can be used multiple separators.
 	/// </summary>
-	public static string[] SplitAnyS(this ReadOnlySpan<char> t, ReadOnlySpan<string> separators, StringSplitOptions flags = 0)
+	[EditorBrowsable(EditorBrowsableState.Never)] //C# 14 mess
+	public static string[] SplitAnyS(this RStr t, ReadOnlySpan<string> separators, StringSplitOptions flags = 0)
 		=> _Split(t, flags, true, 4, sep4: separators).a2;
+#endif
 	
 	[SkipLocalsInit]
-	static (StartEnd[] a1, string[] a2) _Split(ReadOnlySpan<char> t, StringSplitOptions flags, bool retStr, int sep, char sep1 = default, ReadOnlySpan<char> sep23 = default, ReadOnlySpan<string> sep4 = default) {
+	static (StartEnd[] a1, string[] a2) _Split(RStr t, StringSplitOptions flags, bool retStr, int sep, char sep1 = default, RStr sep23 = default, ReadOnlySpan<string> sep4 = default) {
 		const int na = 100;
 		Span<StartEnd> a = stackalloc StartEnd[na];
 		Span<Range> a2 = MemoryMarshal.Cast<StartEnd, Range>(a);
@@ -732,7 +745,7 @@ public static unsafe partial class ExtString {
 		=> _Lines(t, noEmpty, preferMore, rareNewlines, false).a1;
 
 	[SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	static (StartEnd[] a1, string[] a2) _Lines(ReadOnlySpan<char> t, bool noEmpty, bool preferMore, bool rareNewlines, bool retStr) {
+	static (StartEnd[] a1, string[] a2) _Lines(RStr t, bool noEmpty, bool preferMore, bool rareNewlines, bool retStr) {
 		using var f = new FastBuffer<StartEnd>();
 
 		var newline = rareNewlines ? s_newlineAll : s_newlineRN;
@@ -773,7 +786,7 @@ public static unsafe partial class ExtString {
 
 	/// <inheritdoc cref="LineCount(string, bool, Range?, bool)"/>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-	public static int LineCount(this ReadOnlySpan<char> t, bool preferMore = false, bool rareNewlines = false) {
+	public static int LineCount(this RStr t, bool preferMore = false, bool rareNewlines = false) {
 		var newline = rareNewlines ? s_newlineAll : s_newlineRN;
 		int n = 0;
 		for (int pos = 0; ;) {
@@ -1038,7 +1051,7 @@ public static unsafe partial class ExtString {
 	public static bool ToInt(this string t, out ulong result, int startIndex = 0, STIFlags flags = 0)
 		=> ToInt(t, out result, startIndex, out _, flags);
 
-	//FUTURE: make these public and add more overloads.
+	//FUTURE: all `ToInt(this string...)` -> `ToInt(this RStr...)`.
 	internal static int ToInt_(this RStr t, STIFlags flags = 0)
 		=> (int)_ToInt(t, 0, out _, false, flags);
 
@@ -1435,8 +1448,8 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
-	/// <seealso cref="IsAscii(RStr)"/>
 	public static bool IsAscii(this string t) => t.AsSpan().IsAscii();
+	//FUTURE: remove this and other functions that in C# 14+ are duplicate or useless.
 	
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII characters.
@@ -1539,15 +1552,15 @@ public static unsafe partial class ExtString {
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Ends(this RStr t, RStr s, bool ignoreCase = false) => t.EndsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-
+	
 	/// <summary>
-	/// Finds character <i>c</i> in this span, starting from <i>index</i>.
+	/// Finds character <i>c</i> in this span, starting from <i>startIndex</i>.
 	/// </summary>
 	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	public static int IndexOf(this RStr t, int index, char c) {
-		int i = t[index..].IndexOf(c);
-		return i < 0 ? i : i + index;
+	public static int IndexOf(this RStr t, int startIndex, char c) {
+		int i = t[startIndex..].IndexOf(c);
+		return i < 0 ? i : i + startIndex;
 	}
 
 	/// <summary>
@@ -1562,15 +1575,15 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Finds string <i>s</i> in this span, starting from <i>index</i>.
+	/// Finds string <i>s</i> in this span, starting from <i>startIndex</i>.
 	/// </summary>
 	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
-	public static int IndexOf(this RStr t, int index, RStr s, bool ignoreCase = false) {
+	public static int IndexOf(this RStr t, int startIndex, RStr s, bool ignoreCase = false) {
 		if (s.IsNull()) throw new ArgumentNullException();
-		int i = t[index..].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-		return i < 0 ? i : i + index;
+		int i = t[startIndex..].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+		return i < 0 ? i : i + startIndex;
 	}
 
 	/// <summary>
@@ -1585,6 +1598,20 @@ public static unsafe partial class ExtString {
 		if (i < 0) return i;
 		return i + range.Start.GetOffset(t.Length);
 	}
+
+#if !DEBUG
+	/// <summary>
+	/// Alias of <b>IndexOfAnyExcept</b>.
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //.NET now has IndexOfAnyExcept
+	public static int IndexOfNot(this RStr t, string chars) => t.IndexOfAnyExcept(chars);
+	
+	/// <summary>
+	/// Alias of <b>LastIndexOfAnyExcept</b>.
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)] //.NET now has LastIndexOfAnyExcept
+	public static int LastIndexOfNot(this RStr t, string chars) => t.LastIndexOfAnyExcept(chars);
+#endif
 
 	internal static void CopyTo_(this string t, char* p)
 		=> t.AsSpan().CopyTo(new Span<char>(p, t.Length));

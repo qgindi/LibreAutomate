@@ -61,7 +61,7 @@ partial class Compiler {
 			bool isMultiFileProject = false;
 			if (value != null && iPipe < value.Length) {
 				iPipe++;
-				foreach (var v in value.Split(iPipe.., '|', StringSplitOptions.RemoveEmptyEntries)) {
+				foreach (var v in value.SplitSE(iPipe.., '|', StringSplitOptions.RemoveEmptyEntries)) {
 					int offs = v.start + 1;
 					char ch = value[v.start];
 					switch (ch) {

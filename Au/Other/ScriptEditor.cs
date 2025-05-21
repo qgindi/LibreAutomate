@@ -123,16 +123,10 @@ public static class ScriptEditor {
 	public static string GetIcon(string file, EGetIcon what) => GetIcon_(file, what, false);
 	
 	internal static string GetIcon_(string file, EGetIcon what, bool skipResources) {
-		var del = IconNameToXaml_;
-		if (del != null) return del(file, what);
+		if (IconNameToXaml_ is { } intx) return intx(file, what);
 		
 		if (what == EGetIcon.IconNameToXaml && script.role != SRole.EditorExtension && !skipResources) {
-			//print.it(file);
-			if (!WpfUtil_.ParseIconString(file, out var p)) return null;
-			var rr = ResourceUtil.TryGetString_(WpfUtil_.RemoveColorFromIconString(file));
-			Debug_.PrintIf(rr == null, file);
-			if (rr != null) { WpfUtil_.SetColorInXaml(ref rr, p.color); return rr; }
-			//our compiler (_CreateManagedResources) adds XAML of icons to resources, but only from literal strings
+			if (IconString_.GetXamlFromResources(file) is string xaml) return xaml;
 		}
 		
 		var w = WndMsg_; if (w.Is0) return null;

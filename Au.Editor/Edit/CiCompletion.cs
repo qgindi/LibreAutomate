@@ -741,7 +741,7 @@ partial class CiCompletion {
 						if (text[^1] == ']') {
 							int i = text.LastIndexOf('[') + 1;
 							if (i > 0 && text[i] is '+' or '-') {
-								var a = text.AsSpan(i..^1).SplitS(' ', StringSplitOptions.RemoveEmptyEntries);
+								var a = text[i..^1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
 								filters ??= new();
 								filters[u.Name.ToString()] = a;
 								continue;

@@ -290,7 +290,7 @@ static class CiSnippets {
 		
 		static _Context _GetFromAttr(string s) {
 			_Context r = 0;
-			foreach (var se in s.Split(.., '|')) {
+			foreach (var se in s.SplitSE(.., '|')) {
 				r |= s.AsSpan(se.Range) switch {
 					"Function" => _Context.Function | _Context.Arrow,
 					"Type" => _Context.Type,
