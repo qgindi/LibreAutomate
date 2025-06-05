@@ -105,7 +105,7 @@ public static class StringUtil {
 	/// </summary>
 	/// <returns>Empty array if <i>s</i> is <c>null</c> or <c>""</c>.</returns>
 	public static unsafe string[] CommandLineToArray(string s) {
-		if (s.NE()) return Array.Empty<string>();
+		if (s.NE()) return [];
 		char** p = Api.CommandLineToArgvW(s, out int n);
 		var a = new string[n];
 		for (int i = 0; i < n; i++) a[i] = new string(p[i]);
@@ -142,7 +142,7 @@ public static class StringUtil {
 	/// For vice versa use <c>string.Join(" ", array)</c>.
 	/// </remarks>
 	public static int[] StringToIntArray(string s) {
-		if (s.NE()) return Array.Empty<int>();
+		if (s.NE()) return [];
 		int n = 1; foreach (var v in s) if (v == ' ') n++;
 		var a = new int[n];
 		a[0] = s.ToInt(0, STIFlags.DontSkipSpaces);

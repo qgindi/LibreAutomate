@@ -531,11 +531,17 @@ static class Menus {
 		[Command("...", image = "*BoxIcons.RegularHistory" + blue)]
 		public static void Recent() { RecentTT.Show(); }
 		
-		[Command(image = "*Material.Bug" + green2/*, separator = true*/)]
+		[Command(image = "*Material.Bug" + green2)]
 		public static void Debug_run() { Panels.Debug.Start(); }
 		
 		[Command("...", image = "*Entypo.Publish" + blue, separator = true)]
 		public static void Publish() { new XPublish().Publish(); }
+		
+		[Command(image = "*MaterialDesign.PictureInPictureAltSharp" + blue, separator = true, tooltip = "Another session of this user inside a Picture-in-Picture window")]
+		public static void PiP_session() { PipIPC.StartPip(); }
+		
+		[Command(image = "*MaterialDesign.PictureInPictureAltSharp" + green2)]
+		public static void Run_in_PiP() { PipIPC.RunScriptInPip(App.Model.CurrentFile); }
 	}
 	
 	[Command(target = "")]

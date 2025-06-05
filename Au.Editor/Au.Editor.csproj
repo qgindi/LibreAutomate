@@ -138,6 +138,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="AxMSTSCLib">
+		  <HintPath>..\_\AxMSTSCLib.dll</HintPath>
+		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis">
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
 			<Private>False</Private>
@@ -162,6 +165,9 @@
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
 			<Private>False</Private>
 			<Aliases>CAW</Aliases>
+		</Reference>
+		<Reference Include="MSTSCLib">
+		  <HintPath>..\_\MSTSCLib.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

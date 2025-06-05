@@ -77,7 +77,7 @@ public unsafe partial class KTreeView {
 		} //TODO3: now calls v.Items 2 times (_CountVisible and _AddVisible). It can be expensive.
 		
 		if (n == 0) {
-			_avi = Array.Empty<_VisibleItem>();
+			_avi = [];
 			_dvi = null;
 			_focusedIndex = -1;
 			_itemsWidth = 0;

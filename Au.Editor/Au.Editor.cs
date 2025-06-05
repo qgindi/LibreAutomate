@@ -19,6 +19,8 @@ r Roslyn\Microsoft.CodeAnalysis.Features.dll;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.Features.dll;
 r Roslyn\Microsoft.CodeAnalysis.Workspaces.dll /alias=CAW;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.Workspaces.dll;
+r AxMSTSCLib.dll;
+r MSTSCLib.dll;
 resource app\app-resources.xaml /path;
 resource resources\ci /path;
 resource resources\Images /path;

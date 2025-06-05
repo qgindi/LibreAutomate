@@ -56,7 +56,7 @@ partial class PanelDebug {
 			}
 			//print.it("<<<");
 			if (_p == null) return;
-			_fs.BeginRead(Array.Empty<byte>(), 0, 0, ar => {
+			_fs.BeginRead([], 0, 0, ar => {
 				while (_ignoreEvents) Thread.Sleep(10);
 				App.Dispatcher.InvokeAsync(_readEvents);
 			}, null);

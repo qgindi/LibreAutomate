@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Net4.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypelibConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

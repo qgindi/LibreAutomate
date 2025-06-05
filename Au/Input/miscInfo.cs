@@ -127,4 +127,31 @@ public static class miscInfo {
 	//	Api.CloseDesktop(hd);
 	//	return s;
 	//}
+	
+	/// <summary>
+	/// Returns <c>true</c> if this process is running in an RDP child session (aka Picture-in-Picture).
+	/// </summary>
+	public static unsafe bool isChildSession {
+		get {
+			if (!s_isChildSession.HasValue) {
+				bool yes = false;
+				if (osVersion.minWin8) {
+					var psid = process.thisProcessSessionId;
+					if (psid > 1) {
+						int csid = Api.WTSGetActiveConsoleSessionId();
+						if (csid != -1 && psid != csid) {
+							if (Api.WTSQuerySessionInformation(-1, Api.WTS_INFO_CLASS.WTSIsRemoteSession, out bool isRemote) && isRemote) {
+								if (Api.WTSQuerySessionInformation(-1, Api.WTS_INFO_CLASS.WTSWinStationName, out string s1)) {
+									yes = !s1.Starts("RDP-");
+								}
+							}
+						}
+					}
+				}
+				s_isChildSession = yes;
+			}
+			return s_isChildSession.Value;
+		}
+	}
+	static bool? s_isChildSession;
 }

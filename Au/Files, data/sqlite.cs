@@ -803,7 +803,7 @@ namespace Au {
 		public T[] GetArray<T>(SLIndexOrName column) where T : unmanaged {
 			var t = GetBlob(column, out int nb);
 			if (t == null) return null;
-			if (nb == 0) return Array.Empty<T>();
+			if (nb == 0) return [];
 			int size = sizeof(T);
 			int ne = nb / size; nb = ne * size;
 			var r = new T[ne];

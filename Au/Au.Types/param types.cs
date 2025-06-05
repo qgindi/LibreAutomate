@@ -429,7 +429,7 @@ public struct Strings : IEnumerable<string> {
 			string[] a => a,
 			string s => s.Split('|'),
 			List<string> a => a.ToArray(),
-			_ => Array.Empty<string>(), //null
+			_ => [], //null
 		};
 	}
 	

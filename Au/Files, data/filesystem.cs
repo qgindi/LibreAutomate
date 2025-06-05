@@ -493,9 +493,10 @@ public static partial class filesystem {
 	/// <exception cref="AuException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
 	/// <inheritdoc cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>
 	public static IEnumerable<FEFile> enumDirectories(string directoryPath, string pattern = null, FEFlags flags = 0) {
-		if (pattern == null) return enumerate(directoryPath, flags, _ => false);
+		if (pattern == null) return filesystem.enumerate(directoryPath, flags, _ => false);
 		wildex w = pattern;
-		return enumerate(directoryPath, flags, _ => false, d => !w.Match(d.Name) ? 0 : flags.Has(FEFlags.AllDescendants) ? 3 : 1);
+		int enumChildren = flags.Has(FEFlags.AllDescendants) ? 2 : 0;
+		return filesystem.enumerate(directoryPath, flags, _ => false, d => (w.Match(d.Name) ? 1 : 0) | enumChildren);
 	}
 	
 	#endregion

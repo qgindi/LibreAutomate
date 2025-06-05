@@ -1,3 +1,9 @@
+//TODO: if at root, add at the top.
+//TODO: better support for 2 LA instances running in different sessions, eg one in PiP.
+//	If using a filesystem watcher, this is how could be detected files modified in own process:
+//	In all places where LA saves a file: `using(new Saving()) { save file }`. Ctor sets `s_saving=true`. In `Dispose` sets `s_saving=false`, and adds the path to a list of recently saved files.
+//  When watcher receives a "modified" or "added" event: If `s_saving` is true or the path is in the list, postpone the sync.
+
 partial class FilesModel {
 	WildcardList _syncFsSkip;
 	string _syncFsSkipText;

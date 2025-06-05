@@ -126,7 +126,7 @@ public class ExplorerFolder {
 	public string[] GetSelectedItems() {
 		var d = _b.Document as api.IShellFolderView;
 		var items = d?.SelectedItems();
-		if (items == null) return Array.Empty<string>();
+		if (items == null) return [];
 		int n = items.Count;
 		var a = new List<string>(n);
 		for (int i = 0; i < n; i++) {

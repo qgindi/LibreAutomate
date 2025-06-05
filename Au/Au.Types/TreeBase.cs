@@ -323,7 +323,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 			len++;
 		}
 		//array
-		if (len == 0) return Array.Empty<T>();
+		if (len == 0) return [];
 		var a = new T[len];
 		for (var n = nFrom; len > 0; n = n._parent) a[--len] = n;
 		return a;

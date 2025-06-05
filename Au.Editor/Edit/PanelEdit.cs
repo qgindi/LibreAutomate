@@ -208,10 +208,11 @@ class PanelEdit {
 			nameof(Menus.Run.Compile),
 			nameof(Menus.Run.Debug_run),
 			nameof(Menus.Run.Publish),
+			nameof(Menus.Run.Run_in_PiP),
 			//nameof(Menus.Run.Debugger),
 			//and not Properties, Rename, Delete, More, because users can right-click in the Files panel
 			];
-		foreach (string v in a1) App.Commands[v].Enable(enable);
+		foreach (string v in a1) if (v!=null) App.Commands[v].Enable(enable);
 	}
 	bool _uiDisabled_IsOpen;
 	

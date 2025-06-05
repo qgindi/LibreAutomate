@@ -123,6 +123,7 @@ SaveAs={exe1Arch}
 [COMMANDS]
 -add ..\Au.Editor\Resources\ico\app.ico, ICONGROUP,32512,0
 -add ..\Au.Editor\Resources\ico\app_disabled.ico, ICONGROUP,32513,0
+-add ..\Au.Editor\Resources\ico\PictureInPicture.ico, ICONGROUP,32514,0
 -addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
 -add dotnet_ref_editor.txt, 220,1,0
 -add "{verResFile1}", VERSIONINFO,1,0

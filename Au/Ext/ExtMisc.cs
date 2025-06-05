@@ -340,7 +340,7 @@ public static unsafe partial class ExtMisc {
 	public static T[] RemoveAt<T>(this T[] t, int index, int count = 1) {
 		if ((uint)index > t.Length || count < 0 || index + count > t.Length) throw new ArgumentOutOfRangeException();
 		int n = t.Length - count;
-		if (n == 0) return Array.Empty<T>();
+		if (n == 0) return [];
 		var r = new T[n];
 		for (int i = 0; i < index; i++) r[i] = t[i];
 		for (int i = index; i < n; i++) r[i] = t[i + count];

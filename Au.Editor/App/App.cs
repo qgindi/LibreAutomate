@@ -57,7 +57,7 @@ static partial class App {
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 		Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
-		_SetThisAppFoldersEtc();
+		SetThisAppFoldersEtc_(true);
 		
 		if (CommandLine.ProgramStarted2(args)) return;
 		
@@ -110,6 +110,8 @@ static partial class App {
 			//perf.next('r');
 			Model.RunStartupScripts(false);
 			//perf.nw('s');
+			
+			if (miscInfo.isChildSession) PipIPC.StartPipeServerThread(); //after RunStartupScripts. If pipe server now will start a script, it will start after startup scripts with role editorExtension.
 		});
 		
 		AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
@@ -162,7 +164,7 @@ static partial class App {
 	/// <summary>
 	/// <b>Dispatcher</b> of main thread.
 	/// </summary>
-	public static Dispatcher Dispatcher => _app.Dispatcher;
+	public static Dispatcher Dispatcher => _app?.Dispatcher;
 	
 	/// <summary>
 	/// Main window.
@@ -245,28 +247,35 @@ static partial class App {
 		}
 	}
 	
-	static void _SetThisAppFoldersEtc() {
+	internal static void SetThisAppFoldersEtc_(bool mainMode) {
 		script.role = SRole.EditorExtension;
 		script.name = AppNameShort;
 		dialog.options.defaultTitle = AppNameShort + " message";
 		
 		folders.Editor = folders.ThisApp;
 		
-		try {
-			//create now if does not exist
-			_ = folders.ThisAppDocuments;
-			_ = folders.ThisAppDataLocal;
-			_ = folders.ThisAppTemp;
-			//these are currently not used in editor and library, but may be used in role editorExtension scripts. Just prevent changing.
-			folders.noAutoCreate = true;
-			_ = folders.ThisAppDataRoaming;
-			_ = folders.ThisAppDataCommon;
-			_ = folders.ThisAppImages;
-			folders.noAutoCreate = false;
-		}
-		catch (Exception e1) {
-			dialog.showError("Failed to set app folders", e1.ToString());
-			Environment.Exit(1);
+		if (mainMode) {
+			try {
+				//create now if does not exist
+				_ = folders.ThisAppDocuments;
+				_ = folders.ThisAppDataLocal;
+				_ = folders.ThisAppTemp;
+				//these are currently not used in editor and library, but may be used in role editorExtension scripts. Just prevent changing.
+				folders.noAutoCreate = true;
+				_ = folders.ThisAppDataRoaming;
+				_ = folders.ThisAppDataCommon;
+				_ = folders.ThisAppImages;
+				folders.noAutoCreate = false;
+			}
+			catch (Exception e1) {
+				dialog.showError("Failed to set app folders", e1.ToString());
+				Environment.Exit(1);
+			}
+			
+		} else {
+			if (filesystem.exists(folders.ThisAppBS + "data")) {
+				ScriptEditor.IsPortable = true;
+			}
 		}
 	}
 	

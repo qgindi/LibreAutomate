@@ -173,7 +173,7 @@ partial class FilesModel {
 		
 		if (unexpanded != App.Settings.workspace) {
 			if (App.Settings.workspace != null) {
-				var ar = App.Settings.recentWS ?? Array.Empty<string>();
+				string[] ar = App.Settings.recentWS ?? [];
 				int i = Array.IndexOf(ar, unexpanded);
 				if (i < 0) i = Array.IndexOf(ar, wsDir);
 				if (i >= 0) ar = ar.RemoveAt(i);

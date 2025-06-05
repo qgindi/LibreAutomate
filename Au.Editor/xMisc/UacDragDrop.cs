@@ -177,7 +177,7 @@ class UacDragDrop {
 				dt = w.Prop["OleDropTargetInterface"];
 			}
 			if (dt == 0) return 0;
-
+			
 #pragma warning disable CS0168 // Variable is declared but never used
 			try {
 				nint* vtbl = *(nint**)dt + 3;
@@ -211,9 +211,11 @@ class UacDragDrop {
 		static _DropTarget _dt; //GC
 		static bool _enteredOnce;
 		
-		//Called from Main() in non-admin process when command line starts with /dd.
-		public static void MainDD(string[] args) {
-			_msgWnd = (wnd)args[1].ToInt();
+		//Called at startup in non-admin process when command line starts with /dd.
+		public static void MainDD(ReadOnlySpan<string> args) {
+			process.thisProcessCultureIsInvariant = true;
+			
+			_msgWnd = (wnd)args[0].ToInt();
 			
 			WndUtil.RegisterWindowClass("Au.Editor.DD", _WndProc);
 			_w = WndUtil.CreateWindow("Au.Editor.DD", null, WS.POPUP | WS.DISABLED, WSE.LAYERED | WSE.NOACTIVATE | WSE.TOOLWINDOW | WSE.TOPMOST);

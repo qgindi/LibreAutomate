@@ -586,7 +586,7 @@ class Dwnd : KDialogWindow {
 			b.AppendFormat("<+rect {0} 1><i>ClientRect<><>:    ", sh).AppendLine(w.ClientRect.ToString());
 			var style = w.Style;
 			s = (style & (WS)0xffff0000).ToString();
-			if (isCon) s = s.Replace("MINIMIZEBOX", "GROUP").Replace("MAXIMIZEBOX", "TABSTOP");
+			if (isCon) s = s.Replace("MINIMIZEBOX", "GROUP").Replace("MAXIMIZEBOX", "TABSTOP"); else s = s.Replace("GROUP", "MINIMIZEBOX").Replace("TABSTOP", "MAXIMIZEBOX");
 			uint style2 = ((uint)style) & 0xffff; //unknown styles of that class
 			b.Append("<i>Style<>:  0x").Append(((uint)style).ToString("X8")).Append(" (").Append(s);
 			if (style2 != 0) b.Append(", 0x").Append(style2.ToString("X4"));

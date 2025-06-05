@@ -1,9 +1,11 @@
-## Version 1..0 (2025-)
-
-In icon strings can be specified margin and multiple icons (layers). See menu **Tools > Icons > Custom icon string**.
+## Version 1.12.0 (2025-05-31)
 
 ### Editor
-Updated icons database. Many new icons.
+Menu **Run > PiP session** and **Run in PiP**. Creates a separate session in a Picture-in-Picture window, where UI automation scripts can run in the background without interfering with your mouse and keyboard. Requires Windows 8.1 or later.
+
+Updated the icons database. Many new icons.
+
+Icon strings: margin and layers. See menu **Tools > Icons > Custom icon string**.
 
 New tools:
 - .
@@ -23,7 +25,8 @@ New classes:
 - .
 
 New members:
-- .
+- **script.runInPip**, **script.isInPip**.
+- **miscInfo.isChildSession**.
 
 New parameters:
 - .
@@ -32,6 +35,6 @@ Improved:
 - .
 
 Fixed bugs:
-- .
+- **filesystem.enumDirectories**: flag **AllDescendants** does not work.
 
 ### Breaking changes

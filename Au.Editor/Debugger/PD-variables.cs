@@ -273,7 +273,7 @@ partial class PanelDebug {
 			this.itemKind = itemKind;
 			bool isWatch = itemKind == _VVItemKind.Watch;
 			_text = isWatch ? "<watch>" : "<mouse>";
-			if (isWatch) _children = Array.Empty<_VariablesViewItem>();
+			if (isWatch) _children = [];
 		}
 		
 		//public void VarDelete() {
@@ -313,7 +313,7 @@ partial class PanelDebug {
 		//Deletes all if v null.
 		public void RemoveWatch(_VariablesViewItem v) {
 			if (v == null) {
-				_children = Array.Empty<_VariablesViewItem>();
+				_children = [];
 			} else {
 				var i = Array.IndexOf(_children, v);
 				if (i < 0) return;
@@ -436,7 +436,7 @@ partial class PanelDebug {
 						}
 					}
 					if (_children == null) _isFolder = false;
-					_children ??= Array.Empty<_VariablesViewItem>();
+					_children ??= [];
 				}
 				return _children;
 			}

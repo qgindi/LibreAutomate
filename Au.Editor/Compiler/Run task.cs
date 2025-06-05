@@ -33,30 +33,7 @@ static class CompileRun {
 		App.Model.Save.TextNowIfNeed(onlyText: true);
 		App.Model.Save.WorkspaceNowIfNeed(); //because the script may kill editor, eg if runs in editor thread
 		
-		if (f == null) return 0;
-		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
-		
-		//can be set to run other script instead.
-		//	Useful for library projects. Single files have other alternatives - move to a script project or move code to a script file.
-		if (run) {
-			var f2 = f.TestScript;
-			if (f2 != null) {
-				if (!f2.FindProject(out projFolder, out projMain)) f = f2;
-				else if (projMain != f) f = projMain;
-				else { print.it($"<>The test script {f2.SciLink()} cannot be in the project folder {projFolder.SciLink()}"); return 0; }
-			}
-		}
-		
-		if (!f.IsCodeFile) return 0;
-		
-		bool ok = Compiler.Compile(run ? CCReason.Run : CCReason.CompileAlways, out var r, f, projFolder);
-		
-		if (run && r.role is MCRole.classFile or MCRole.classLibrary) { //info: if classFile, compiler sets r.role and returns false (does not compile)
-			_OnRunClassFile(f, projFolder);
-			return 0;
-		}
-		
-		if (!ok) return 0;
+		if (!Compile(run, ref f, out var r)) return 0;
 		if (!run) return 1;
 		
 		if (r.role == MCRole.editorExtension) {
@@ -69,6 +46,38 @@ static class CompileRun {
 		if (ifRunning != null) r.ifRunning = ifRunning.Value;
 		
 		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor, debugAttach: debugAttach);
+	}
+	
+	/// <summary>
+	/// Gets correct file for run or compile (project-main etc), and compiles.
+	/// </summary>
+	/// <param name="forRun"></param>
+	/// <param name="f">Input: any file or null. Output: main code file to run or compile; if <i>forRun</i>, it's an executable code file.</param>
+	/// <param name="r">Compilation results.</param>
+	/// <returns>false if can't get correct code file or if failed to compile.</returns>
+	public static bool Compile(bool forRun, ref FileNode f, out Compiler.CompResults r) {
+		r = null;
+		if (f == null) return false;
+		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
+		
+		//can be set to run other script instead.
+		//	Useful for library projects. Single files have other alternatives - move to a script project or move code to a script file.
+		if (forRun && f.TestScript is { } f2) {
+			if (!f2.FindProject(out projFolder, out projMain)) f = f2;
+			else if (projMain != f) f = projMain;
+			else { print.it($"<>The test script {f2.SciLink()} cannot be in the project folder {projFolder.SciLink()}"); return false; }
+		}
+		
+		if (!f.IsCodeFile) return false;
+		
+		bool ok = Compiler.Compile(forRun ? CCReason.Run : CCReason.CompileAlways, out r, f, projFolder);
+		
+		if (forRun && r.role is MCRole.classFile or MCRole.classLibrary) { //info: if classFile, compiler sets r.role and returns false (does not compile)
+			_OnRunClassFile(f, projFolder);
+			return false;
+		}
+		
+		return ok;
 	}
 	
 	public static void RunWpfPreview(FileNode f, Func<CanCompileArgs, bool> canCompile) {

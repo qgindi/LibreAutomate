@@ -144,7 +144,7 @@ record struct StartEndText(int start, int end, string text) {
 static class EdComUtil {
 	
 	//To convert a COM type library we use TypeLibConverter class. However .NET Core+ does not have it.
-	//Workaround: the code is in Au.Net4.exe. It uses .NET Framework 4.8. We call it through run.console.
+	//Workaround: the code is in Au.Net4.exe. It uses .NET Framework 4.x. We call it through run.console.
 	//We don't use tlbimp.exe:
 	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in a Core+ app.
 	//	2. Does not tell what files created.
@@ -188,8 +188,8 @@ static class EdComUtil {
 			break;
 		}
 		
-		print.it($"Converting COM type library to .NET assembly.");
-		List<string> converted = new();
+		print.it("<><lc YellowGreen>Converting COM type library to .NET assembly.<>");
+		List<string> converted = [];
 		int rr = -1;
 		owner.IsEnabled = false;
 		try {
@@ -200,8 +200,8 @@ static class EdComUtil {
 					//skip some useless warnings, eg "can't convert some internal type"
 					bool mute = s.RxIsMatch(@"Warning: .+ (?:could not convert the signature for the member '(?:\w*_|tag|[A-Z]+\.)|as a pointer and may require unsafe code to manipulate.|to import this property as a method instead.)");
 					if (!mute) print.it(s);
-					if (s.Starts("Converted: ")) {
-						s.RxMatch(@"""(.+?)"".$", 1, out s);
+					if (s.Starts("<>Converted: ")) {
+						s.RxMatch(@"<explore .+?>(.+?)<>$", 1, out s);
 						converted.Add(s);
 					}
 				}
@@ -211,7 +211,7 @@ static class EdComUtil {
 		catch (Exception ex) { print.it("Failed to convert type library", ex.ToStringWithoutStack()); }
 		owner.IsEnabled = true;
 		if (rr != 0) return null;
-		print.it(@"<>Converted and saved in <link>%folders.Workspace%\.interop<>.");
+		print.it("==== DONE ====");
 		return converted;
 	}
 	
@@ -267,7 +267,7 @@ class WildcardList {
 	/// <param name="replaceSlash">Replace <c>'/'</c> with <c>'\\'</c> (to match file paths).</param>
 	public WildcardList(string list, bool replaceSlash = true) {
 		if (list.NE()) {
-			_a = Array.Empty<string>();
+			_a = [];
 		} else {
 			List<string> a = new();
 			foreach (var s in list.Lines(noEmpty: true)) {

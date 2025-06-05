@@ -114,10 +114,13 @@ static unsafe partial class Api {
 	internal static extern bool SetHandleInformation(IntPtr hObject, uint dwMask, uint dwFlags);
 	
 	[DllImport("kernel32.dll", EntryPoint = "CreateMutexW", SetLastError = true)]
-	internal static extern IntPtr CreateMutex(SECURITY_ATTRIBUTES lpMutexAttributes, bool bInitialOwner, string lpName);
+	internal static extern nint CreateMutex(SECURITY_ATTRIBUTES lpMutexAttributes, bool bInitialOwner, string lpName);
+	
+	[DllImport("kernel32.dll", EntryPoint = "OpenMutexW", SetLastError = true)]
+	internal static extern nint OpenMutex(uint dwDesiredAccess, bool bInheritHandle, string lpName);
 	
 	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern bool ReleaseMutex(IntPtr hMutex);
+	internal static extern bool ReleaseMutex(nint hMutex);
 	
 	/// <summary>
 	/// Note: use only for private threads. Not everything works like with <b>Thread.Start</b>. For example .NET does not auto-release COM objects when thread ends.
@@ -155,8 +158,8 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern Handle_ CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
 	
-	//[DllImport("kernel32.dll", EntryPoint = "OpenFileMappingW", SetLastError = true)]
-	//internal static extern Handle_ OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
+	[DllImport("kernel32.dll", EntryPoint = "OpenFileMappingW", SetLastError = true)]
+	internal static extern Handle_ OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
 	
 	[DllImport("kernel32.dll", SetLastError = true)]
 	internal static extern void* MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, nint dwNumberOfBytesToMap);
@@ -1041,6 +1044,12 @@ static unsafe partial class Api {
 	
 	[DllImport("kernel32.dll", EntryPoint = "GetCommandLineW")]
 	internal static extern char* GetCommandLine();
+	
+	[DllImport("kernel32.dll")]
+	internal static extern int WTSGetActiveConsoleSessionId();
+	
+	
+	
 	
 	
 	#region undocumented

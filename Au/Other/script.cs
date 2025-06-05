@@ -340,18 +340,20 @@ public static class script {
 	/// <param name="mutex">Mutex name. If another process called this function with this mutex name, this process cannot run, and this function calls <c>Environment.Exit(3);</c>.</param>
 	/// <param name="wait">Milliseconds to wait until this process can run. No timeout if -1.</param>
 	/// <param name="silent">Don't print <c>"cannot run"</c>.</param>
+	/// <param name="ifCantRun">Called if this process cannot run.</param>
 	/// <exception cref="InvalidOperationException">This function already called.</exception>
 	/// <remarks>
 	/// This function is useful when this script has role <b>exeProgram</b> and the compiled program is launched not from the script editor, because then the <c>/*/ ifRunning /*/</c> property is ignored.
 	/// </remarks>
 	/// <seealso cref="AppSingleInstance"/>
-	public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false) {
+	public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false, Action ifCantRun = null) {
 		//FUTURE: parameter bool endOther. Like meta ifRunning restart.
 		
 		var m = Api.CreateMutex(null, false, mutex ?? "Au-mutex-script.single"); //tested: don't need Api.SECURITY_ATTRIBUTES.ForLowIL
 		if (default != Interlocked.CompareExchange(ref s_singleMutex, m, default)) { Api.CloseHandle(m); throw new InvalidOperationException(); }
 		var r = Api.WaitForSingleObject(s_singleMutex, wait);
 		if (r is not (0 or Api.WAIT_ABANDONED)) {
+			ifCantRun?.Invoke();
 			if (!silent) print.it($"<>Note: script task <open {sourcePath(true)}|||script.single>{name}<> cannot run because a task is running.");
 			Environment.Exit(3);
 		}
@@ -361,6 +363,14 @@ public static class script {
 		//return new(() => Api.ReleaseMutex(s_singleMutex));
 	}
 	static IntPtr s_singleMutex;
+	
+	/// <summary>
+	/// Low-level version of <see cref="single"/>. No <b>Environment.Exit</b>, no exception, no print. Just <b>CreateMutex</b> and <b>WaitForSingleObject</b>.
+	/// </summary>
+	/// <returns>false if another process owns the mutex.</returns>
+	internal static bool TrySingle_(string mutex, int wait = 0) => Api.WaitForSingleObject(Api.CreateMutex(null, false, mutex), wait) is 0 or Api.WAIT_ABANDONED;
+	
+	//public static bool single(out nint mutexHandle, string mutexName, int wait = 0) => Api.WaitForSingleObject(mutexHandle = Api.CreateMutex(null, false, mutexName), wait) is 0 or Api.WAIT_ABANDONED;
 	
 	/// <summary>
 	/// Adds standard tray icon.
@@ -571,6 +581,7 @@ public static class script {
 	/// If role <b>editorExtension</b>, waits until the script ends, then returns 0.
 	/// </returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
+	/// <exception cref="AuException">Script editor not running.</exception>
 	public static int run([ParamString(PSFormat.CodeFile)] string script, params string[] args)
 		=> _Run(0, script, args, out _);
 	
@@ -579,7 +590,7 @@ public static class script {
 	/// </summary>
 	/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
-	/// <exception cref="AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
+	/// <exception cref="AuException">Failed to start script task. For example: the script contains errors; cannot start second task instance; script editor not running.</exception>
 	/// <inheritdoc cref="run"/>
 	public static int runWait([ParamString(PSFormat.CodeFile)] string script, params string[] args)
 		=> _Run(1, script, args, out _);
@@ -590,7 +601,7 @@ public static class script {
 	/// <param name="results">Receives <see cref="writeResult"/> text.</param>
 	/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
-	/// <exception cref="AuException">Failed to start script task, for example if the script contains errors or cannot start second task instance.</exception>
+	/// <exception cref="AuException">Failed to start script task. For example: the script contains errors; cannot start second task instance; script editor not running.</exception>
 	/// <inheritdoc cref="run"/>
 	public static int runWait(out string results, [ParamString(PSFormat.CodeFile)] string script, params string[] args)
 		=> _Run(3, script, args, out results);
@@ -601,7 +612,7 @@ public static class script {
 	/// <param name="results">Receives <see cref="writeResult"/> output whenever the task calls it.</param>
 	/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
-	/// <exception cref="AuException">Failed to start script task.</exception>
+	/// <exception cref="AuException">Failed to start script task. For example: the script contains errors; cannot start second task instance; script editor not running.</exception>
 	/// <inheritdoc cref="run"/>
 	public static int runWait(Action<string> results, [ParamString(PSFormat.CodeFile)] string script, params string[] args)
 		=> _Run(3, script, args, out _, results);
@@ -838,6 +849,34 @@ public static class script {
 	}
 	
 	internal static uint s_idMainFile;
+	
+	/// <summary>
+	/// Starts executing a script in child session running in picture-in-picture (PiP) window. Does not wait.
+	/// </summary>
+	/// <param name="script">Script name like <c>"Script5.cs"</c>, or path like <c>@"\Folder\Script5.cs"</c>.</param>
+	/// <param name="args">Command line arguments. In the script it will be variable <i>args</i>. Should not contain <c>'\0'</c> characters.</param>
+	/// <exception cref="FileNotFoundException">Script file not found.</exception>
+	/// <exception cref="AuException">Script editor not running (in this session). No exception if cannot run the script in PiP session.</exception>
+	public static void runInPip([ParamString(PSFormat.CodeFile)] string script, params string[] args) {
+		var w = ScriptEditor.WndMsg_; if (w.Is0) throw new AuException("Editor process not found.");
+		//CONSIDER: run editor program, if installed
+		
+		var data = Serializer_.Serialize(script, args);
+		RunResult_ r = (RunResult_)WndCopyData.Send<byte>(w, 102, data);
+		
+		switch (r) {
+		//case RunResult_.failed:
+		//	throw new AuException("*start task in PiP");
+		case RunResult_.notFound:
+			throw new FileNotFoundException($"Script '{script}' not found.");
+		}
+	}
+
+	/// <summary>
+	/// Returns true if this process is running in an RDP child session (aka Picture-in-Picture).
+	/// This function is an alias of <see cref="miscInfo.isChildSession"/>.
+	/// </summary>
+	public static bool isInPip => miscInfo.isChildSession;
 	
 	#endregion
 	

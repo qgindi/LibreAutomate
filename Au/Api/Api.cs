@@ -1385,6 +1385,68 @@ static unsafe partial class Api {
 	[DllImport("wtsapi32.dll", SetLastError = true)]
 	internal static extern bool WTSTerminateProcess(IntPtr hServer, int ProcessId, int ExitCode);
 	
+	[DllImport("wtsapi32.dll")]
+	internal static extern void WTSFreeMemory(void* pMemory);
+	
+	[DllImport("wtsapi32.dll", EntryPoint = "WTSQuerySessionInformationW", SetLastError = true)]
+	static extern bool _WTSQuerySessionInformation(nint hServer, int SessionId, WTS_INFO_CLASS WTSInfoClass, out char* ppBuffer, out int pBytesReturned);
+	
+	internal enum WTS_INFO_CLASS {
+		WTSInitialProgram,
+		WTSApplicationName,
+		WTSWorkingDirectory,
+		WTSOEMId,
+		WTSSessionId,
+		WTSUserName,
+		WTSWinStationName,
+		WTSDomainName,
+		WTSConnectState,
+		WTSClientBuildNumber,
+		WTSClientName,
+		WTSClientDirectory,
+		WTSClientProductId,
+		WTSClientHardwareId,
+		WTSClientAddress,
+		WTSClientDisplay,
+		WTSClientProtocolType,
+		WTSIdleTime,
+		WTSLogonTime,
+		WTSIncomingBytes,
+		WTSOutgoingBytes,
+		WTSIncomingFrames,
+		WTSOutgoingFrames,
+		WTSClientInfo,
+		WTSSessionInfo,
+		WTSSessionInfoEx,
+		WTSConfigInfo,
+		WTSValidationInfo,
+		WTSSessionAddressV4,
+		WTSIsRemoteSession
+	}
+	
+	internal static unsafe bool WTSQuerySessionInformation(int sessionId, Api.WTS_INFO_CLASS what, out string r) {
+		if (_WTSQuerySessionInformation(0, -1, what, out char* p, out int len)) {
+			r = len > 2 ? new(p, 0, len / 2 - 1) : null;
+			Api.WTSFreeMemory(p);
+			return r != null;
+		}
+		r = null;
+		return false;
+	}
+	
+	internal static unsafe bool WTSQuerySessionInformation<T>(int sessionId, Api.WTS_INFO_CLASS what, out T r) where T : unmanaged {
+		if (_WTSQuerySessionInformation(0, -1, what, out char* p, out int len)) {
+			Debug_.PrintIf(len != sizeof(T), len.ToS());
+			r = len == sizeof(T) ? *(T*)p : default;
+			Api.WTSFreeMemory(p);
+			return len == sizeof(T);
+		}
+		r = default;
+		return false;
+	}
+	
+	[DllImport("wtsapi32.dll")]
+	internal static extern bool WTSGetChildSessionId(out int pSessionId);
 	
 	
 	#endregion

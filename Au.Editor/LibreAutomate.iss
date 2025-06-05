@@ -45,6 +45,8 @@ Source: "Au.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Net4.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "AxMSTSCLib.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "MSTSCLib.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\ARM\Au.AppHost.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
@@ -85,7 +87,7 @@ Source: "default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
 Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 
 ;CONSIDER: don't include big not frequently updated files. Auto-download on demand.
-;All .db except cookbook, Roslyn folder. Makes smaller: 33 MB -> 5 MB.
+;All .db except cookbook, Roslyn folder. Makes smaller: 44 MB -> 5 MB.
 
 [Dirs]
 Name: "{commonappdata}\LibreAutomate"; Flags: uninsalwaysuninstall; Permissions: authusers-modify

@@ -158,7 +158,7 @@ internal unsafe struct ArrayBuilder_<T> : IDisposable where T : unmanaged {
 	/// Copies elements to a new managed array.
 	/// </summary>
 	public T[] ToArray() {
-		if (_len == 0) return Array.Empty<T>();
+		if (_len == 0) return [];
 		var r = new T[_len];
 		for (int i = 0; i < r.Length; i++) r[i] = _p[i];
 		return r;

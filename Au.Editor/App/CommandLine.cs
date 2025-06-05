@@ -5,26 +5,30 @@ static class CommandLine {
 	/// Processes the command line of this program. Called before any initialization.
 	/// Returns true if this instance must exit.
 	/// </summary>
-	public static bool ProgramStarted1(string[] args, out int exitCode) {
-		//print.it(process.thisExeName, args);
-		
+	public static bool ProgramStarted1(ReadOnlySpan<string> args, out int exitCode) {
+		//print.it(process.thisExeName, args.ToArray());
 		exitCode = 0; //note: Environment.ExitCode bug: the setter's set value is ignored and the process returns 0.
-		int i = args.Length > 0 && args[0] is "/n" or "-n" ? 1 : 0;
-		if (args.Length > i) {
-			var s = args[i];
-			if (s.NE()) return false;
-			if (s[0] is '/' or '-') {
-				switch (s) {
-				case "/s":
-					exitCode = _RunEditorAsAdmin();
-					return true;
-				case "/dd":
-					UacDragDrop.NonAdminProcess.MainDD(args);
+		if (args.Length > 0) {
+			switch (args[0]) {
+			case "/s":
+				exitCode = _RunEditorAsAdmin();
+				return true;
+			case "/pip":
+				exitCode = Pip.Run(args[1..]);
+				return true;
+			case "/dd":
+				UacDragDrop.NonAdminProcess.MainDD(args[1..]);
+				return true;
+			}
+			
+			string argN = null; if (args is ["/n" or "-n", ..]) { argN = args[0]; args = args[1..]; }
+			
+			if (args.Length > 0 && args[0] is var s && !s.NE()) {
+				if (s[0] is '/' or '-') {
+				} else if (!pathname.isFullPath(s)) {
+					exitCode = _LetEditorRunScript(args, argN);
 					return true;
 				}
-			} else if (!pathname.isFullPath(s)) {
-				exitCode = _LetEditorRunScript(args, i);
-				return true;
 			}
 		}
 		return false;
@@ -132,7 +136,7 @@ static class CommandLine {
 	public static bool StartVisible;
 	
 	/// <summary>
-	/// true if /sww
+	/// true if /a
 	/// </summary>
 	public static bool AutoStarted;
 	
@@ -287,9 +291,12 @@ static class CommandLine {
 			return _GetFileInfo(s) is byte[] r1 ? WndCopyData.Return<byte>(r1, wparam) : 0;
 		case 100: //script.run/runWait
 		case 101: //run script from command line
+		case 102: //script.runInPip
 			return _RunScript();
 		case 110: //received from our non-admin drop-target process on OnDragEnter
 			return UacDragDrop.AdminProcess.DragEvent((int)wparam, b);
+		//case 200: //run any action. Use when App.Dispatcher may be still unavailable.
+		//	return 0;
 		default:
 			Debug_.Print("bad action");
 			return 0;
@@ -301,7 +308,7 @@ static class CommandLine {
 			var d = Serializer_.Deserialize(b);
 			string file = d[0];
 			string[] args = d[1];
-			string pipeName = d[2];
+			string pipeName = action == 102 ? null : (string)d[2];
 			int schedPid = action == 101 ? d[3] : 0; //if scheduled task, it is the temp LA process, else 0
 			bool scheduled = schedPid != 0;
 			
@@ -309,6 +316,11 @@ static class CommandLine {
 			if (f == null) {
 				if (action == 101) print.it($"{(scheduled ? "Scheduled task" : "Command line")}: script '{file}' not found."); //else the caller script will throw exception
 				return (int)script.RunResult_.notFound;
+			}
+			
+			if (action == 102) {
+				PipIPC.RunScriptInPip(f, args);
+				return 1;
 			}
 			
 			//options can be specified in args[0] like "[[name1=value1|name2=value2]]"
@@ -401,7 +413,7 @@ static class CommandLine {
 			else for (int j = (int)(se - s1); j < len;) s2[i++] = s2[j++];
 		} else { //$(Arg0) not replaced. Probably started from Task Scheduler.
 			s2[i] = '\0';
-			sesId = _Api.WTSGetActiveConsoleSessionId();
+			sesId = Api.WTSGetActiveConsoleSessionId();
 			if (sesId < 1) return 1;
 		}
 		//_MBox(new string(s2));
@@ -454,7 +466,7 @@ static class CommandLine {
 #if DEBUG
 		var s = o.ToString();
 		var title = "Debug";
-		_Api.WTSSendMessage(default, _Api.WTSGetActiveConsoleSessionId(), title, title.Length * 2, s, s.Length * 2, _Api.MB_TOPMOST | _Api.MB_SETFOREGROUND, 0, out _, true);
+		_Api.WTSSendMessage(default, Api.WTSGetActiveConsoleSessionId(), title, title.Length * 2, s, s.Length * 2, _Api.MB_TOPMOST | _Api.MB_SETFOREGROUND, 0, out _, true);
 #endif
 	}
 	
@@ -480,16 +492,16 @@ static class CommandLine {
 	
 	//Initially for this was used native exe. Rejected because of AV false positives.
 	//	Speed with native exe 50 ms, now 85 ms. Never mind.
-	static unsafe int _LetEditorRunScript(string[] args, int iArg) {
-		if (!_EnsureEditorRunningAndGetMsgWindow(out wnd w, iArg > 0 ? args[0] : null)) return (int)script.RunResult_.noEditor;
+	static unsafe int _LetEditorRunScript(ReadOnlySpan<string> args, string argN) {
+		if (!_EnsureEditorRunningAndGetMsgWindow(out wnd w, argN)) return (int)script.RunResult_.noEditor;
 		
 		//If script name has prefix *, need to wait until script process ends.
 		//	Also auto-detect whether need to write script.writeResult to stdout.
-		var file = args[iArg];
-		args = args.RemoveAt(0, iArg + 1);
+		var file = args[0];
+		string[] scriptArgs = args[1..].ToArray();
 		
 		if (file[0] == '>') { //set by DSchedule
-			return script.RunCL_(w, 1, file[1..], args, null, process.thisProcessId);
+			return script.RunCL_(w, 1, file[1..], scriptArgs, null, process.thisProcessId);
 		}
 		
 		int mode = 0; //1 - wait, 3 - wait and get script.writeResult output
@@ -501,9 +513,9 @@ static class CommandLine {
 				) mode |= 2;
 		}
 		
-		if (0 == (mode & 2)) return script.RunCL_(w, mode, file, args, null);
+		if (0 == (mode & 2)) return script.RunCL_(w, mode, file, scriptArgs, null);
 		
-		return script.RunCL_(w, mode, file, args, static o => {
+		return script.RunCL_(w, mode, file, scriptArgs, static o => {
 			var a = Encoding.UTF8.GetBytes(o);
 			bool ok = Api.WriteFile2(Api.GetStdHandle(Api.STD_OUTPUT_HANDLE), a, out int n);
 			if (!ok || n != a.Length) throw new AuException(0);
@@ -514,9 +526,6 @@ static class CommandLine {
 	}
 	
 	static unsafe class _Api {
-		[DllImport("kernel32.dll")]
-		internal static extern int WTSGetActiveConsoleSessionId();
-		
 		[DllImport("wtsapi32.dll")]
 		internal static extern bool WTSQueryUserToken(int SessionId, out IntPtr phToken);
 		

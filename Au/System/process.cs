@@ -257,7 +257,7 @@ namespace Au {
 			List<int> a = null;
 			bool fp = _NameOrPath(ref processName, fullPath);
 			GetProcessesByName_(ref a, processName, fp, ofThisSession);
-			return a?.ToArray() ?? Array.Empty<int>();
+			return a?.ToArray() ?? [];
 		}
 		
 		static bool _NameOrPath(ref string processName, bool? fullPath) {

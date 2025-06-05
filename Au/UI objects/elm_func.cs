@@ -699,9 +699,9 @@ namespace Au {
 		public elm[] SelectedChildren {
 			get {
 				ThrowIfDisposed_();
-				if (_elem != 0) { lastError.clear(); return Array.Empty<elm>(); }
+				if (_elem != 0) { lastError.clear(); return []; }
 				//return _iacc.get_accSelection();
-				if (0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return Array.Empty<elm>();
+				if (0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return [];
 				GC.KeepAlive(this);
 				var p = (Cpp.Cpp_Acc*)b.Ptr; int n = b.Length / sizeof(Cpp.Cpp_Acc);
 				var r = new elm[n];

@@ -36,7 +36,7 @@ namespace Au.Types;
 /// 	// examples of settings
 /// 	public int i;
 /// 	public string s = "default";
-/// 	public string[] a = Array.Empty<string>();
+/// 	public string[] a = [];
 /// 	public Dictionary<string, DateTime> d = new();
 /// }
 /// ]]></code>

@@ -364,7 +364,7 @@ public partial struct wnd {
 			if (allDescendants) {
 				var od = new OwnedDescendants_();
 				var ai = od.GetIndices(_w, andOwner: andThisWindow);
-				if (ai.Count == 0) return Array.Empty<wnd>();
+				if (ai.Count == 0) return [];
 				var ar = new wnd[ai.Count];
 				for (int i = 0; i < ai.Count; i++) ar[i] = od.all[ai[i]];
 				return ar;

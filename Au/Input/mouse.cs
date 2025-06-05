@@ -1190,6 +1190,8 @@ namespace Au {
 			if (cursorHash == 0) throw new ArgumentException();
 			return wait.until(timeout, () => (MouseCursor.GetCurrentVisibleCursor(out var c) && MouseCursor.Hash(c) == cursorHash) ^ not);
 		}
+		//TODO: example. Cookbook contains example, but no info how to get the hash (MouseCursor.GetCurrentVisibleCursor + MouseCursor.Hash). Maybe even need a tool.
+		//TODO: wait for any in list.
 		
 		/// <summary>
 		/// Posts mouse-click messages to the window.

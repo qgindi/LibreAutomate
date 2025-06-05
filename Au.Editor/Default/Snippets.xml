@@ -492,7 +492,7 @@ script.setup(trayIcon: true, sleepExit: true);
 
 	<snippet name="nativeApiSnippet" info="Adds class for Windows API declarations.">
 		<![CDATA[/// <summary>
-/// Add an empty class like this in scripts (at the end) and projects (in any file) where you want to use Windows API. Change the class name (api) if want.
+/// Add an empty class like this in scripts (at the end) and projects (in any file) where you want to use Windows API.
 /// Then, whenever you need an API function etc, type the class name and dot (api.). The completion list contains API names and adds declarations to this class.
 /// </summary>
 #pragma warning disable 649, 169 //field never assigned/used
@@ -502,7 +502,7 @@ unsafe class ${1:api} : NativeApi {}
 	<snippet name="settingsSnippet" info="Adds a class for settings used by this script/program/library/etc.">
 		<![CDATA[/// <summary>
 /// Settings of this script/program/library/etc.
-/// Function <see cref="MySettings.Load"/> loads settings from file or creates default; returns new variable through which you can get/set settings like <c>var v = sett.i; sett.i = 2;</c>.
+/// Function <see cref="MySettings.Load"/> loads settings from file or creates default; returns a new variable that lets you get or set settings, like <c>var v = sett.i; sett.i = 2;</c>.
 /// Settings are lazily auto-saved soon after changing.
 /// </summary>
 internal record class MySettings : JSettings {
@@ -513,7 +513,7 @@ internal record class MySettings : JSettings {
 	//examples of settings. Most types are supported. Use public fields.
 	public int i;
 	public string s = "default";
-	public string[] a = Array.Empty<string>();
+	public string[] a = [];
 }
 
 //add this at class level:

@@ -164,7 +164,7 @@ namespace Au.Types {
 
 	/// <summary>
 	/// This exception is thrown when current thread is not on the input desktop and therefore cannot use mouse, keyboard, clipboard and window functions. 
-	/// For example when PC locked (<c>Win+L</c>), screen saver, UAC consent, <c>Ctrl+Alt+Delete</c>.
+	/// For example when PC locked (<c>Win+L</c>), screen saver, UAC consent, <c>Ctrl+Alt+Delete</c> or not in the active user session.
 	/// </summary>
 	/// <seealso cref="miscInfo.isInputDesktop"/>
 	public class InputDesktopException : AuException {
@@ -172,7 +172,7 @@ namespace Au.Types {
 		public InputDesktopException(string message = null)
 			: base(message.NE() ? c_message : message + (message.Ends('.') ? " " : ". ") + c_message) { }
 
-		const string c_message = "Other input desktop is active.";
+		const string c_message = "The main input desktop is inactive; mouse, keyboard, clipboard and UI functions are disabled.";
 
 		/// <summary>
 		/// Calls <see cref="miscInfo.isInputDesktop"/>. If it returns <c>false</c>, throws <b>InputDesktopException</b>.
