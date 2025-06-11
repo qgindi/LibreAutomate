@@ -1,3 +1,8 @@
+//TODO: do we really need file id?
+//	Maybe need it only when in memory, but don't need to save.
+//	In state files (open, expanded, bookmarks, etc) could use path; would need to update the saved paths when changed.
+//	In links could use path too. Nothing bad if changed. Or could have a FileNode/linkId map.
+
 using Au.Controls;
 using Au.Compiler;
 using System.Xml;
@@ -22,7 +27,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	#region fields, ctors, load/save
 	
-	FilesModel _model;
+	readonly FilesModel _model;
 	string _name;
 	string _displayName;
 	uint _id;
@@ -107,9 +112,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			filesystem.more.getFinalPath(linkPath, out _linkTarget);
 			if (!importing) {
 				Api.RemoveDirectory(linkPath);
-				_model.Save.WorkspaceLater(1);
+				_model.Save.WorkspaceAsync();
 			}
-		};
+		}
 	}
 	
 	public static FileNode LoadWorkspace(string file, FilesModel model) {
@@ -203,7 +208,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			_type = value;
 			_testScriptId = 0;
 			
-			_model.Save.WorkspaceLater();
+			_model.Save.WorkspaceAsync();
 			Compiler.Uncache(this);
 			CodeInfo.FilesChanged();
 			FilesModel.Redraw(this);
@@ -321,7 +326,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		get => _icon;
 		set {
 			_icon = value;
-			_model.Save.WorkspaceLater();
+			_model.Save.WorkspaceAsync();
 			Compiler.Uncache(this);
 			FilesModel.Redraw(this);
 		}
@@ -348,7 +353,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			uint id = value?._id ?? 0;
 			if (_testScriptId == id) return;
 			_testScriptId = id;
-			_model.Save.WorkspaceLater();
+			_model.Save.WorkspaceAsync();
 		}
 	}
 	
@@ -371,43 +376,23 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </summary>
 	public string ItemPath => _ItemPath();
 	
-	//rejected: cache item path and file path.
-	//	This func compares the cached item path with ancestor names. No garbage when cached, but just 30-40% faster.
-	//	Another way: when an item renamed or moved, reset cached paths of that item and of its descendants.
-	//	But creating paths is fast and not so much garbage. And not so frequently used. Keeping paths in memory isn't good too.
-	//public string ItemPath2() {
-	//	if (_itemPath is string s) {
-	//		var root = Root;
-	//		int end = s.Length;
-	//		for (var f = this; f != root; f = f.Parent) {
-	//			if (f == null) { Debug.Assert(IsDeleted); return null; }
-	//			string name = f._name;
-	//			int len = name.Length, start = end - len;
-	//			//print.it(start, end);
-	//			if (start <= 0 || s[start - 1] != '\\' || !s.Eq(start, name)) break; //the slowest part. Tested: with for loop slower.
-	//			end = start - 1;
-	//			//print.it(end);
-	//		}
-	//		if (end == 0) return s;
-	//		print.it(end);
-	//	}
-	//	return _itemPath = _ItemPath();
-	//}
-	//string _itemPath;
-	
 	/// <summary>
-	/// Returns item path relative to <i>ancestor</i>, like @"Folder\Name.cs" or @"Name.cs".
+	/// Returns item path relative to <i>ancestor</i>, like @"\Folder\Name.cs" or @"\Name.cs".
 	/// Returns null if this item is deleted or not in <i>ancestor</i>.
 	/// If <i>ancestor</i> is null or <b>Root</b>, the result is the same as <b>ItemPath</b>.
 	/// </summary>
-	public string ItemPathIn(FileNode ancestor) => _ItemPath(null, ancestor, noBS: true);
+	public string ItemPathIn(FileNode ancestor) => _ItemPath(null, ancestor);
 	
 	[SkipLocalsInit]
-	unsafe string _ItemPath(string prefix = null, FileNode ancestor = null, bool noBS = false) {
+	unsafe string _ItemPath(string prefix = null, FileNode ancestor = null) {
+		if (Environment.CurrentManagedThreadId != 1) {
+			Debug_.Print("_ItemPath called in wrong thread");
+			return App.Dispatcher.Invoke(() => _ItemPath(prefix, ancestor));
+		}
 		int len = prefix.Lenn();
 		var root = ancestor ?? Root;
 		for (var f = this; f != root; f = f.Parent) {
-			if (f == null) { Debug.Assert(IsDeleted); return null; }
+			if (f == null) { Debug.Assert(IsDeleted); throw new InvalidOperationException(); }
 			len += f._name.Length + 1;
 		}
 		var p = stackalloc char[len];
@@ -417,7 +402,6 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			*(--e) = '\\';
 		}
 		if (e > p) prefix.CopyTo_(p);
-		if (noBS && ancestor?.Parent != null) return new string(p, 1, len - 1);
 		return new string(p, 0, len);
 	}
 	
@@ -437,6 +421,9 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			return _ItemPath(_model.FilesDirectory);
 		}
 	}
+	//rejected: cache item path and file path.
+	//	When an item renamed or moved, reset cached paths of that item and of its descendants.
+	//	But creating paths is fast and not so much garbage. And not so frequently used. Keeping paths in memory isn't good too.
 	
 	/// <summary>
 	/// Returns <b>ItemPath</b> if exist multiple items with <b>Name</b>. Else returns <b>Name</b>.
@@ -614,7 +601,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	public void SaveNewTextOfClosedFile(string text) {
 		Debug.Assert(OpenDoc == null);
 		if (DontSave) throw new AuException("This file should not be modified.");
-		filesystem.saveText(FilePath, text);
+		string path = FilePath;
+		_model.FileOperation([path], () => { filesystem.saveText(path, text); });
 		_UpdateFileModTime();
 		CodeInfo.FilesChanged();
 	}
@@ -1027,18 +1015,24 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// If not folder, adds previous extension if no extension or changed code file extension.
 	/// If invalid filename, replaces invalid characters etc.
 	/// </param>
-	public bool FileRename(string name) {
-		name = pathname.correctName(name);
-		if (!IsFolder) {
-			var ext = FileExt;
-			if (ext.Length > 0) if (name.IndexOf('.') < 0 || (IsCodeFile && !name.Ends(ext, true))) name += ext;
+	/// <param name="syncing">Called by the filesystem sync. The filesystem file is renamed. Need just to set item name and update everything.</param>
+	public bool FileRename(string name, bool syncing = false) {
+		if (syncing) {
+			_SetName(name);
+		} else {
+			name = pathname.correctName(name);
+			if (!IsFolder) {
+				var ext = FileExt;
+				if (ext.Length > 0) if (name.IndexOf('.') < 0 || (IsCodeFile && !name.Ends(ext, true))) name += ext;
+			}
+			if (name == _name) return true;
+			name = CreateNameUniqueInFolder(Parent, name, IsFolder, renaming: this);
+			
+			if (!RenameL_(name)) return false;
 		}
-		if (name == _name) return true;
-		name = CreateNameUniqueInFolder(Parent, name, IsFolder, renaming: this);
 		
-		if (!RenameL_(name)) return false;
-		
-		_model.Save.WorkspaceLater();
+		if (IsFolder) _model.ChangedFolderItemPath_();
+		_model.Save.WorkspaceAsync();
 		FilesModel.Redraw(this, remeasure: true, renamed: true);
 		Compiler.Uncache(this, andDescendants: true);
 		CodeInfo.FilesChanged();
@@ -1047,7 +1041,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	internal bool RenameL_(string name) {
 		if (!IsLink) {
-			if (!_model.TryFileOperation(() => filesystem.rename(this.FilePath, name, FIfExists.Fail))) return false;
+			string path1 = this.FilePath;
+			if (!_model.TryFileOperation([path1], () => filesystem.rename(path1, name, FIfExists.Fail))) return false;
 		}
 		_SetName(name);
 		return true;
@@ -1094,7 +1089,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			var name = CreateNameUniqueInFolder(newParent, _name, IsFolder, moving: true);
 			
 			if (!IsLink) {
-				if (!_model.TryFileOperation(() => filesystem.move(this.FilePath, newParent.FilePath + "\\" + name, FIfExists.Fail))) return false;
+				string path1 = this.FilePath, path2 = newParent.FilePath + "\\" + name;
+				if (!_model.TryFileOperation([path2, path1], () => filesystem.move(path1, path2, FIfExists.Fail))) return false;
 			}
 			
 			if (name != _name) _SetName(name);
@@ -1102,24 +1098,27 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		
 		//move tree node
 		Remove();
-		Common_MoveCopyNew(ipos);
-		Compiler.Uncache(this, andDescendants: true);
+		Common_MoveCopyNew(ipos, true);
 		
 		return true;
 	}
 	
-	public void Common_MoveCopyNew(FNInsertPos ipos) {
-		AddToTree(ipos, setSaveWorkspace: true);
+	public void Common_MoveCopyNew(FNInsertPos ipos, bool moving) {
+		AddToTree(ipos);
+		_model.Save.WorkspaceAsync();
+		if (moving) {
+			if (IsFolder) _model.ChangedFolderItemPath_();
+			Compiler.Uncache(this, andDescendants: true);
+		}
 		CodeInfo.FilesChanged();
 	}
 	
 	/// <summary>
 	/// Adds this to the tree, updates control, optionally sets to save workspace.
 	/// </summary>
-	public void AddToTree(FNInsertPos ipos, bool setSaveWorkspace) {
+	public void AddToTree(FNInsertPos ipos) {
 		if (ipos.Inside) ipos.f.AddChild(this, first: ipos.pos == FNInsert.First); else ipos.f.AddSibling(this, after: ipos.pos == FNInsert.After);
 		_model.UpdateControlItems();
-		if (setSaveWorkspace) _model.Save.WorkspaceLater();
 	}
 	
 	/// <summary>
@@ -1140,7 +1139,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		
 		//copy file or directory
 		if (!IsLink || copyLinkTarget) {
-			if (!_model.TryFileOperation(() => filesystem.copy(FilePath, newParent.FilePath + "\\" + name, FIfExists.Fail))) return null;
+			string path2 = newParent.FilePath + "\\" + name;
+			if (!_model.TryFileOperation([path2], () => filesystem.copy(FilePath, path2, FIfExists.Fail))) return null;
 		}
 		
 		//create new FileNode with descendants
@@ -1158,7 +1158,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		
 		//insert at the specified place and set to save
-		f.Common_MoveCopyNew(ipos);
+		f.Common_MoveCopyNew(ipos, false);
 		return f;
 	}
 	

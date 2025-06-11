@@ -306,13 +306,13 @@ static class Menus {
 			[Command(keys = "Ctrl+/", image = $"*Material.SlashForward{brown} %1,1,7,1,f; *FontAwesome.AsteriskSolid{brown} %9")]
 			public static void Toggle_comment() { ModifyCode.Comment(null); }
 			
-			[Command(keysText = "R-click margin", image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %7,1,1,1,f")]
+			[Command(keysText = "R-click margin", image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %7,1,1,1,f,p")]
 			public static void Toggle_line_comment() { ModifyCode.Comment(null, notSlashStar: true); }
 			
-			[Command(image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %5,1,3,1,f; *Material.Plus{brown} %10,10,,1")]
+			[Command(image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %5,1,3,1,f; *Material.Plus{brown} %10,10,,1,,p")]
 			public static void Comment_selection() { ModifyCode.Comment(true); }
 			
-			[Command(image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %5,1,3,1,f; *Material.Minus{brown} %11,10,,1")]
+			[Command(image = $"*Material.SlashForward{brown} %1,1,7,1,f; *Material.SlashForward{brown} %5,1,3,1,f; *Material.Minus{brown} %11,10,,1,,p")]
 			public static void Uncomment_selection() { ModifyCode.Comment(false); }
 			
 			//TODO2: Toggle multiline (parameters, collections, etc). Hotkey Ctrl+L.
@@ -540,7 +540,7 @@ static class Menus {
 		[Command(image = "*MaterialDesign.PictureInPictureAltSharp" + blue, separator = true, tooltip = "Another session of this user inside a Picture-in-Picture window")]
 		public static void PiP_session() { PipIPC.StartPip(); }
 		
-		[Command(image = "*MaterialDesign.PictureInPictureAltSharp" + green2)]
+		[Command(image = "*Codicons.DebugStart %,,6" + green2 + "; *MaterialDesign.Rectangle %10.2,10.8,,.6,f" + blue)]
 		public static void Run_in_PiP() { PipIPC.RunScriptInPip(App.Model.CurrentFile); }
 	}
 	

@@ -99,6 +99,7 @@ file class PipWindow : Form {
 		/*
 *Material.Rectangle #FFFFFF
 *MaterialDesign.PictureInPictureAltSharp #84ACFF
+//TODO: ugly. Maybe use with round corners.
 		*/
 		
 		Controls.Add(_axRdp = new() { Dock = DockStyle.Fill });

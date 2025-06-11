@@ -79,14 +79,14 @@ class PipIPC {
 				//case "clipboard":
 				//	Task.Run(() => Process.Start("rdpclip.exe"));
 				//	break;
-				case "syncFiles":
-					if (App.Dispatcher is { } disp) {
-						disp.InvokeAsync(() => {
-							Panels.Editor.OnAppActivated_();
-							App.Model?.SyncWithFilesystem();
-						});
-					}
-					break;
+				//case "syncFiles": //no
+				//	if (App.Dispatcher is { } disp) {
+				//		disp.InvokeAsync(() => {
+				//			Panels.Editor.OnAppActivated_();
+				//			App.Model?.SyncWithFilesystem_();
+				//		});
+				//	}
+				//	break;
 				default:
 					ret = "Bad: " + message;
 					break;

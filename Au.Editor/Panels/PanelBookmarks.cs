@@ -121,25 +121,24 @@ class PanelBookmarks {
 	}
 	
 	void _SaveNow() {
-		try {
-			if (_root.HasChildren) {
-				var csv = new csvTable { ColumnCount = 2 };
-				for (var f = _root.FirstChild; f != null; f = f.Next) {
-					csv[^0, 0] = "#" + f.file.IdString;
-					if (f.IsExpanded) csv[^1, 1] = "1";
-					for (var b = f.FirstChild; b != null; b = b.Next) {
-						csv.Set(^0, 0, b.line);
-						csv[^1, 1] = b.name;
-					}
+		Action saveAction;
+		if (_root.HasChildren) {
+			var csv = new csvTable { ColumnCount = 2 };
+			for (var f = _root.FirstChild; f != null; f = f.Next) {
+				csv[^0, 0] = "#" + f.file.IdString;
+				if (f.IsExpanded) csv[^1, 1] = "1";
+				for (var b = f.FirstChild; b != null; b = b.Next) {
+					csv.Set(^0, 0, b.line);
+					csv[^1, 1] = b.name;
 				}
-				csv.Save(_file);
-			} else {
-				filesystem.saveText(_file, "");
 			}
-			_save = 0;
-			//print.it("saved");
+			saveAction = () => { csv.Save(_file); };
+		} else {
+			saveAction = () => { filesystem.saveText(_file, ""); };
 		}
-		catch (Exception e1) { print.it(e1); }
+		if (!App.Model.TryFileOperation([_file], saveAction)) return;
+		_save = 0;
+		//print.it("saved");
 	}
 	
 	void _SaveLater(int afterS = 30) {

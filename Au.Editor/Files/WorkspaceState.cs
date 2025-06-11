@@ -64,13 +64,13 @@ class WorkspaceState : IDisposable {
 					var k = s.ToInt(start, STIFlags.IsHexWithout0x);
 					if (what == 't') x.top = k; else x.pos = k;
 					break;
-				//case 'h': //int[]
-				//	int n = 1; for (int j = start; j < end; j++) if (s[j] == ',') n++;
-				//	var a = new int[n];
-				//	a[0] = start; for (int i = 0, j = start; j < end; j++) if (s[j] == ',') a[++i] = j + 1;
-				//	for (int i = 0, j = 0; i < n; i++) a[i] = j += s.ToInt(a[i], STIFlags.IsHexWithout0x); //deltas
-				//	if (what == 'h') x.someMarker = a;
-				//	break;
+					//case 'h': //int[]
+					//	int n = 1; for (int j = start; j < end; j++) if (s[j] == ',') n++;
+					//	var a = new int[n];
+					//	a[0] = start; for (int i = 0, j = start; j < end; j++) if (s[j] == ',') a[++i] = j + 1;
+					//	for (int i = 0, j = 0; i < n; i++) a[i] = j += s.ToInt(a[i], STIFlags.IsHexWithout0x); //deltas
+					//	if (what == 'h') x.someMarker = a;
+					//	break;
 				}
 			}
 		}
@@ -190,12 +190,14 @@ class WorkspaceState : IDisposable {
 	
 	//Loads/saves the state file. Contains its lines as public string fields.
 	class _State {
+		FilesModel _model;
 		string _file;
 		public string editor, open, expanded;
 		string _editor, _open, _expanded;
 		
 		public _State(FilesModel model) {
-			_file = model.WorkspaceDirectory + @"\.state\state";
+			_model = model;
+			_file = _model.WorkspaceDirectory + @"\.state\state";
 			try {
 				var s = filesystem.loadText(_file);
 				foreach (var line in s.Lines(..)) {
@@ -225,12 +227,12 @@ class WorkspaceState : IDisposable {
 			
 			//convert from old SQLite database
 			void _ConvertOldDb() {
-				var dbFile = model.WorkspaceDirectory + @"\state.db";
+				var dbFile = _model.WorkspaceDirectory + @"\state.db";
 				if (filesystem.exists(dbFile, true)) {
 					try {
 						using (var db = new sqlite(dbFile, SLFlags.SQLITE_OPEN_READONLY)) {
 							//using (var p = db.Statement("SELECT * FROM _misc")) { } //never mind open/expanded/top/pos. Convert just folding.
-							_Folding.ConvertOldDb(db, model);
+							_Folding.ConvertOldDb(db, _model);
 						}
 						filesystem.delete(dbFile);
 					}
@@ -241,20 +243,18 @@ class WorkspaceState : IDisposable {
 		
 		public void SaveIfNeed() {
 			if (editor == _editor && open == _open && expanded == _expanded) return;
-			try {
-				var s = $"editor{editor}\nopen|{open}\nexpanded|{expanded}\n";
-				
-				//print.it("saved");
-				//if (editor != _editor) print.it($"\teditor: old={_editor}, new={editor}");
-				//if (open != _open) print.it($"\topen: old={_open}, new={open}");
-				//if (expanded != _expanded) print.it($"\texpanded: old={_expanded}, new={expanded}");
-				
-				filesystem.saveText(_file, s);
-				_editor = editor;
-				_open = open;
-				_expanded = expanded;
-			}
-			catch (Exception e1) { Debug_.Print(e1); }
+			
+			//print.it("saved");
+			//if (editor != _editor) print.it($"\teditor: old={_editor}, new={editor}");
+			//if (open != _open) print.it($"\topen: old={_open}, new={open}");
+			//if (expanded != _expanded) print.it($"\texpanded: old={_expanded}, new={expanded}");
+			
+			var s = $"editor{editor}\nopen|{open}\nexpanded|{expanded}\n";
+			if (!_model.TryFileOperation([_file], () => { filesystem.saveText(_file, s); })) return;
+			
+			_editor = editor;
+			_open = open;
+			_expanded = expanded;
 		}
 		
 		public bool Find(FileNode f, out (int start, int valueStart, int end) r) {
@@ -349,7 +349,7 @@ class WorkspaceState : IDisposable {
 				bool exists = _Load(f, out var x);
 				if (exists && x.bytes.AsSpan(x.start..x.end).SequenceEqual(b)) return;
 				
-				try {
+				f.Model.TryFileOperation([x.path], () => {
 					filesystem.save(x.path, temp => {
 						using var fs = File.Create(temp);
 						fs.Write(b);
@@ -358,8 +358,7 @@ class WorkspaceState : IDisposable {
 							fs.Write(x.bytes, x.end, x.bytes.Length - x.end);
 						}
 					});
-				}
-				catch (Exception e1) { Debug_.Print(e1); }
+				});
 			}
 		}
 		
@@ -375,12 +374,8 @@ class WorkspaceState : IDisposable {
 		
 		public static void Delete(FileNode f) {
 			if (_Load(f, out var x)) {
-				try {
-					var b = x.bytes.RemoveAt(x.start, x.end - x.start);
-					//if (b.Length > 0) filesystem.saveBytes(x.path, b); else filesystem.delete(x.path);
-					filesystem.saveBytes(x.path, b);
-				}
-				catch (Exception e1) { Debug_.Print(e1); }
+				var b = x.bytes.RemoveAt(x.start, x.end - x.start);
+				f.Model.TryFileOperation([x.path], () => { filesystem.saveBytes(x.path, b); });
 			}
 		}
 		

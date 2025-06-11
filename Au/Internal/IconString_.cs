@@ -11,6 +11,7 @@ record struct IconString_ {
 	public readonly int size, end;
 	public readonly Thickness margin;
 	public readonly char stretch;
+	public readonly bool snapPixels;
 	
 	public bool HasValue => name != null;
 	public bool HasSize => size is > 0 and <= 16;
@@ -26,7 +27,7 @@ record struct IconString_ {
 		
 		if (s.Eq(k, ' ')) {
 			s = s[++k..end];
-			Span<Range> a1 = stackalloc Range[3], a2 = stackalloc Range[5];
+			Span<Range> a1 = stackalloc Range[3], a2 = stackalloc Range[6];
 			foreach (var v in a1[..s.Split(a1, ' ')]) {
 				int i = v.Start.Value, j = v.End.Value;
 				if (j == i) continue;
@@ -39,7 +40,9 @@ record struct IconString_ {
 					foreach (var u in a2[..m.Split(a2, ',')]) {
 						n++;
 						if (u.End.Value == u.Start.Value) continue;
-						if (n == 5) {
+						if (n == 6) {
+							snapPixels = m[u][0] == 'p';
+						} else if (n == 5) {
 							stretch = m[u][0]; if (!(stretch is 'f' or 'm')) stretch = default;
 						} else if (double.TryParse(m[u], CultureInfo.InvariantCulture, out var g)) {
 							switch (n) { case 1: margin.Left = g; break; case 2: margin.Top = g; break; case 3: margin.Right = g; break; case 4: margin.Bottom = g; break; }
@@ -128,7 +131,7 @@ record struct IconString_ {
 				if (xaml[attr] is 'F' or 'S') {
 					string sVal;
 					if (xaml[attr + 1] == 'n') { //SnapsToDevicePixels
-						if (hasSize || hasMargin || anyHasSizeOrMargin) sVal = "True"; else continue;
+						if (hasSize || x.snapPixels) sVal = "True"; else continue;
 					} else if (xaml[attr + 3] == 'e') { //Stretch
 						if (x.stretch is 'f' or 'm') sVal = x.stretch is 'f' ? "Fill" : "UniformToFill"; else continue;
 					} else {
@@ -170,19 +173,25 @@ record struct IconString_ {
 	/// If <i>s</i> is or contains <c>"color|color2"</c>, removes <c>"|color2"</c> or <c>"color|"</c> depending on <see cref="WpfUtil_.IsHighContrastDark"/>.
 	/// If then (or initially) <i>s</i> is empty, returns <c>SystemColors.ControlTextColor</c>.
 	/// </summary>
-	/// <param name="s"></param>
 	public static string NormalizeColor(string s) {
-		if (!s.NE()) {
-			int i = s.IndexOf('|');
-			if (i >= 0) {
-				bool dark = WpfUtil_.IsHighContrastDark;
-				int j = i;
-				if (dark) {
-					for (j++; i > 0 && s[i - 1] != ' ';) i--;
-				} else {
-					while (j < s.Length && s[j] != ' ') j++;
-				}
-				s = s.Remove(i..j);
+		int i = s?.IndexOf('|') ?? -1;
+		if (i >= 0) {
+			bool dark = WpfUtil_.IsHighContrastDark;
+			using (new StringBuilder_(out var b)) {
+				int appendFrom = 0;
+				do {
+					int j = i + 1;
+					if (dark) {
+						while (i > 0 && s[i - 1] != ' ') i--;
+					} else {
+						while (j < s.Length && !(s[j] is ' ' or ';')) j++;
+					}
+					b.Append(s, appendFrom, i - appendFrom);
+					i = s.IndexOf('|', j);
+					appendFrom = j;
+				} while (i > 0);
+				b.Append(s, appendFrom, s.Length - appendFrom);
+				s = b.ToString();
 			}
 		}
 		if (s.NE()) s = SystemColors.ControlTextColor.ToString();

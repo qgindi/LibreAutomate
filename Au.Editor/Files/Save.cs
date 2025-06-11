@@ -21,11 +21,14 @@ partial class FilesModel {
 		}
 		
 		/// <summary>
-		/// Sets timer to save files.xml later, if not already set.
+		/// Async-saves workspace (files.xml).
 		/// </summary>
-		/// <param name="afterS">Timer time, seconds.</param>
-		public void WorkspaceLater(int afterS = 5) {
-			if (_workspaceAfterS < 1 || _workspaceAfterS > afterS) _workspaceAfterS = afterS;
+		public void WorkspaceAsync() {
+			int afterS = 1;
+			if (_workspaceAfterS < 1 || _workspaceAfterS > afterS) {
+				_workspaceAfterS = afterS;
+				App.Dispatcher.InvokeAsync(WorkspaceNowIfNeed);
+			}
 		}
 		
 		/// <summary>
@@ -72,7 +75,7 @@ partial class FilesModel {
 		void _SaveWorkspaceNow() {
 			_workspaceAfterS = 0;
 			Debug.Assert(_model != null); if (_model == null) return;
-			if (!_model._SaveWorkspaceNow()) _workspaceAfterS = 60; //if fails, retry later
+			if (!_model._SaveWorkspaceNow()) _workspaceAfterS = 10; //if fails, retry later
 		}
 		
 		void _SaveStateNow() {
@@ -112,15 +115,8 @@ partial class FilesModel {
 	/// Used only by the Save class.
 	/// </summary>
 	bool _SaveWorkspaceNow() {
-		try {
-			//print.it("saving");
-			Root.SaveWorkspace(WorkspaceFile);
-			return true;
-		}
-		catch (Exception ex) { //XElement.Save exceptions are undocumented
-			dialog.showError("Failed to save", WorkspaceFile, expandedText: ex.Message);
-			return false;
-		}
+		return TryFileOperation([WorkspaceFile], () => { Root.SaveWorkspace(WorkspaceFile); });
+		//XElement.Save exceptions are undocumented
 	}
 	
 	/// <summary>

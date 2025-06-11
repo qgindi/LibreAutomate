@@ -1358,8 +1358,8 @@ public static partial class filesystem {
 		
 		_createDirectoryForPrepared(file);
 		
-		string temp = s1 + "~temp";
-		string back = s1 + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
+		string temp = s1 + "~temp~";
+		string back = s1 + "~backup~"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
 		
 		var w = new _LockedWaiter(lockedWaitMS);
 		g1:

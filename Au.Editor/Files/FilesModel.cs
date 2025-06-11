@@ -72,7 +72,7 @@ partial class FilesModel {
 			}
 			if (!_importing) {
 				filesystem.delete(WorkspaceDirectory + @"\.compiled", FDFlags.CanFail);
-				Save.WorkspaceLater(1);
+				Save.WorkspaceAsync();
 			}
 		}
 		
@@ -97,6 +97,7 @@ partial class FilesModel {
 		Save?.Dispose();
 		State?.Dispose();
 		UndoContext_?.Dispose();
+		_syncWatchers?.Dispose();
 		WSSett?.Dispose();
 		EditGoBack.DisableUI();
 	}
@@ -195,7 +196,7 @@ partial class FilesModel {
 			SetCurrentFile(Root.FirstChild, newFile: true);
 		} else {
 			LoadState(openFiles: true);
-			SyncWithFilesystem(); //async
+			App.Dispatcher.InvokeAsync(() => { SyncWithFilesystem_(); });
 		}
 		ThisWorkspaceLoadedAndDocumentsOpened?.Invoke();
 		AnyWorkspaceLoadedAndDocumentsOpened?.Invoke();
@@ -327,6 +328,39 @@ partial class FilesModel {
 	//	if (full) path = path[d.Length..];
 	//	return full;
 	//}
+	
+	/// <summary>
+	/// Finds file or folder by exact <c>@"\relative path"</c>.
+	/// </summary>
+	/// <param name="path">Must start with <c>@"\"</c> (asserts).</param>
+	/// <remarks>
+	/// Use only with paths created by the program, and not by users.
+	/// Does not retry with ".cs" suffix.
+	/// </remarks>
+	/// <returns></returns>
+	public FileNode FindByItemPath(string path) {
+		Debug.Assert(path.Starts('\\'));
+		int i = path.LastIndexOf('\\');
+		var lastName = path[(i + 1)..];
+		if (_nameMap.MultiGet_(lastName, out FileNode single, out var multiple)) {
+			if (multiple != null) {
+				foreach (var f in multiple) if (_PathOk(f)) return f;
+			} else {
+				if (_PathOk(single)) return single;
+			}
+		}
+		return null;
+		
+		bool _PathOk(FileNode f) {
+			f = f.Parent;
+			for (int j = i; j > 0 && f != null; f = f.Parent) {
+				int k = path.LastIndexOf('\\', j - 1);
+				if (!path.Eq((k + 1)..j, f.Name ?? "", true)) return false;
+				j = k;
+			}
+			return f == Root;
+		}
+	}
 	
 	/// <summary>
 	/// Generates new id for f, and adds both to the dictionary that is used by <see cref="FindById"/> etc.
@@ -721,22 +755,23 @@ partial class FilesModel {
 			_Delete(f); //info: and saves everything, now and/or later
 		}
 		
-		Save.WorkspaceLater();
+		Save.WorkspaceAsync();
 		CodeInfo.FilesChanged();
 	}
 	
-	bool _Delete(FileNode f, bool recycleBin = true, bool syncing = false) {
+	/// <param name="syncing">0 - normal; 1 - syncing all a startup; 2 - filesystem watchers detected a deleted file or folder.</param>
+	bool _Delete(FileNode f, bool recycleBin = true, int syncing = 0) {
 		var e = f.Descendants(true);
 		
 		CloseFiles(e);
 		Uncut();
 		
-		if (!syncing) {
+		if (syncing == 0) {
 			string filePath = f.FilePath;
 			if (f.IsLink) {
 				print.it($"<>Info: The deleted item was a link to <explore>{filePath}<>");
 			} else {
-				if (!TryFileOperation(() => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
+				if (!TryFileOperation([filePath], () => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
 				//CONSIDER: add all paths to List, and delete finally in single call.
 				//CONSIDER: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 			}
@@ -746,15 +781,28 @@ partial class FilesModel {
 		Panels.Bookmarks.FileDeleted(e);
 		Panels.Breakpoints.FileDeleted(e);
 		foreach (var k in e) {
-			if (!k.IsFolder) State.EditorDelete(k);
-			if (k.IsCodeFile) Au.Compiler.Compiler.Uncache(k);
+			if (!k.IsFolder) {
+				State.EditorDelete(k);
+				if (k.IsCodeFile) Au.Compiler.Compiler.Uncache(k);
+			}
+			if (k.IsLink && k.IsFolder) {
+				//_rootLF?.Remove(k);
+				_syncWatchers?.Remove(k);
+			}
+			
 			_idMap[k.Id] = null;
 			_nameMap.MultiRemove_(k.Name, k);
 			k.IsDeleted = true;
 		}
 		
 		f.Remove();
-		if (!syncing) UpdateControlItems();
+		
+		if (syncing != 1) UpdateControlItems();
+		if (syncing == 2) {
+			Save.WorkspaceAsync();
+			CodeInfo.FilesChanged();
+		}
+		
 		return true;
 	}
 	
@@ -1015,13 +1063,13 @@ partial class FilesModel {
 		
 		FileNode parent = ipos.ParentFolder;
 		var path = parent.FilePath + "\\" + name;
-		if (!TryFileOperation(() => {
+		if (!TryFileOperation([path], () => {
 			if (fileType == FNType.Folder) filesystem.createDirectory(path);
-			else filesystem.saveText(path, text, tempDirectory: TempDirectory);
+			else filesystem.saveText(path, text);
 		})) return null;
 		
 		var f = new FileNode(this, name, fileType);
-		f.Common_MoveCopyNew(ipos);
+		f.Common_MoveCopyNew(ipos, false);
 		
 		if (template != null) {
 			if (template.Attr(out string icon, "icon")) f.CustomIconName = icon;
@@ -1261,20 +1309,27 @@ partial class FilesModel {
 						k = new FileNode(this, name, path2 = path, isDir, isLink: true);
 					} else {
 						path2 = newParentPath + name;
-						if (!TryFileOperation(() => {
-							if (action == ImportFlags.Copy) {
-								filesystem.copy(path, path2, FIfExists.Fail);
-							} else if (path2 != path) {
-								filesystem.move(path, path2, FIfExists.Fail);
-							}
-						})) continue;
+						if (action == ImportFlags.Copy) {
+							if (!TryFileOperation([path2], () => { filesystem.copy(path, path2, FIfExists.Fail); })) continue;
+						} else if (path2 != path) {
+							if (!TryFileOperation([path2, path], () => { filesystem.move(path, path2, FIfExists.Fail); })) continue;
+						}
 						k = new FileNode(this, name, path2, isDir);
 					}
-					k.AddToTree(ipos, setSaveWorkspace: false);
-					if (isDir) _AddDir(path2, k); else _UnsafeAdd(k);
+					k.AddToTree(ipos);
+					if (isDir) {
+						_AddDir(path2, k);
+						foreach (var desc in k.Descendants()) _UnsafeAdd(desc, action == ImportFlags.Link);
+					} else {
+						_UnsafeAdd(k);
+					}
 					if (select) {
 						k.IsSelected = true;
 						if (focus) { focus = false; TreeControl.SetFocusedItem(k); }
+					}
+					if (k.IsLink && isDir) {
+						//_rootLF?.Add(k);
+						_syncWatchers?.Add(k);
 					}
 				}
 				
@@ -1285,17 +1340,8 @@ partial class FilesModel {
 				}
 			}
 			catch (Exception ex) { print.it(ex); }
-			Save.WorkspaceLater();
+			Save.WorkspaceAsync();
 			CodeInfo.FilesChanged();
-			
-			void _AddDir(string path, FileNode parent) {
-				foreach (var u in filesystem.enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
-					bool isDir = u.IsDirectory;
-					var k = new FileNode(this, u.Name, u.FullPath, isDir);
-					parent.AddChild(k);
-					if (isDir) _AddDir(u.FullPath, k); else _UnsafeAdd(k, action == ImportFlags.Link);
-				}
-			}
 			
 			void _UnsafeAdd(FileNode f, bool inDir = false) {
 				if (f.IsCodeFile && fromWorkspaceDir == 0 && !isLinkToWsFile && !flags.Has(ImportFlags.DontPrint)) iren.Imported(f, inDir);
@@ -1342,18 +1388,52 @@ partial class FilesModel {
 	/// <summary>
 	/// Adds to workspace 1 file (not folder) that exists in workspace folder in filesystem.
 	/// </summary>
-	public FileNode ImportFileFromWorkspaceFolder(string path, FNInsertPos ipos) {
-		FileNode R = null;
-		try {
+	public FileNode ImportFileFromWorkspaceDir(string path, FNInsertPos ipos) {
+		try { //probably nothing can throw here, but anyway
 			if (!filesystem.exists(path, useRawPath: true).File) return null;
 			if (FindByFilePath(path) is { } f1) return f1.IsFolder ? null : f1;
-			R = new FileNode(this, pathname.getName(path), path, isDir: false);
-			R.AddToTree(ipos, setSaveWorkspace: false);
+			var R = new FileNode(this, pathname.getName(path), path, isDir: false);
+			R.AddToTree(ipos);
+			Save.WorkspaceAsync();
+			CodeInfo.FilesChanged();
+			return R;
+		}
+		catch (Exception ex) { print.warning(ex); return null; }
+	}
+	
+	FileNode _SyncImportFromWorkspaceDir(string path, string itemPath) {
+		try { //probably nothing can throw here, but anyway
+			var exists = filesystem.exists(path, true);
+			if (exists && !exists.Attributes.Has(FileAttributes.Hidden | FileAttributes.System) && FindByItemPath(itemPath) is null) {
+				var parentItemPath = pathname.getDirectory(itemPath);
+				var parent = parentItemPath.Length > 0 ? FindByItemPath(parentItemPath) : Root;
+				if (parent != null) {
+					FNInsertPos ipos = new(parent, parent.Id == 0 ? FNInsert.First : FNInsert.Last);
+					var R = new FileNode(this, pathname.getName(path), path, isDir: exists.Directory);
+					R.AddToTree(ipos);
+					
+					//if folder, add descendants.
+					//	Note: when copying, some descendants may be still not copied; it's OK, we'll receive 'created' events for those. When moving, there are no 'created' events for descendants.
+					if (exists.Directory) _AddDir(path, R);
+					
+					Save.WorkspaceAsync();
+					CodeInfo.FilesChanged();
+					return R;
+				}
+			}
 		}
 		catch (Exception ex) { print.warning(ex); }
-		Save.WorkspaceLater();
-		CodeInfo.FilesChanged();
-		return R;
+		return null;
+	}
+	
+	void _AddDir(string path, FileNode parent) {
+		foreach (var u in filesystem.enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+			if (_IsPathIgnored(parent.ItemPath + "\\" + u.Name)) continue;
+			bool isDir = u.IsDirectory;
+			var k = new FileNode(this, u.Name, u.FullPath, isDir);
+			parent.AddChild(k);
+			if (isDir) _AddDir(u.FullPath, k);
+		}
 	}
 	
 	/// <summary>
@@ -1504,7 +1584,7 @@ partial class FilesModel {
 				foreach (var f in aSel) {
 					if (f.IsFolder && !f.IsLink) {
 						foreach (var v in f.Descendants()) {
-							if (v.IsLink) filesystem.copy(v.FilePath, filesDir + "\\" + f.Name + "\\" + v.ItemPathIn(f));
+							if (v.IsLink) filesystem.copy(v.FilePath, filesDir + "\\" + f.Name + v.ItemPathIn(f));
 						}
 					}
 				}
@@ -1574,7 +1654,7 @@ partial class FilesModel {
 					}
 					
 					foreach (var c in m.CodeFiles) hsParsed.Add(c.f);
-					if (m.ExportC_ is {  } ac) { //meta `c fileOrFolder` (m.CodeFiles - only files)
+					if (m.ExportC_ is { } ac) { //meta `c fileOrFolder` (m.CodeFiles - only files)
 						foreach (var c in ac) _Add(c);
 					}
 					if (m.Resources != null) foreach (var c in m.Resources) _Add(c.f); //meta `resource fileOrFolder`
@@ -1686,6 +1766,24 @@ partial class FilesModel {
 	
 	#region other
 	
+	//public List<FileNode> RootAndLinkFolders {
+	//	get {
+	//		if (_rootLF == null) {
+	//			_rootLF = [];
+	//			_rootLF.Add(Root);
+	//			foreach (var f in Root.Descendants()) {
+	//				if (f.IsLink && f.IsFolder) _rootLF.Add(f);
+	//			}
+	//		}
+	//		return _rootLF;
+	//	}
+	//}
+	//List<FileNode> _rootLF;
+	
+	internal void ChangedFolderItemPath_() {
+		_syncWatchers?.UpdatePaths();
+	}
+	
 	/// <summary>
 	/// Adds some default files if missing.
 	/// </summary>
@@ -1759,12 +1857,29 @@ partial class FilesModel {
 	#region util
 	
 	/// <summary>
-	/// Calls Action a in try/catch. On exception prints message and returns false.
+	/// Calls <i>action</i> in try/catch, and manages filesystem sync. On exception prints message and returns false.
 	/// </summary>
-	public bool TryFileOperation(Action a) {
-		try { a(); }
-		catch (Exception ex) { print.it(ex); return false; }
+	/// <param name="paths">Path of the destination file used in the filesystem operation. On move pass 2 paths: destination and source. This info is used by filesystem watchers to detect and ignore files saved by own process.</param>
+	/// <param name="action"></param>
+	public bool TryFileOperation(ReadOnlySpan<string> paths, Action action) {
+		var fo = _syncWatchers?.FileOperationStarted(paths);
+		bool ok = false;
+		try { action(); ok = true; }
+		catch (Exception ex) { print.warning(ex); return false; }
+		finally { _syncWatchers?.FileOperationEnded(fo, ok); }
 		return true;
+	}
+	
+	/// <summary>
+	/// Calls <i>action</i>, and manages filesystem sync.
+	/// </summary>
+	/// <param name="paths">Path of the destination file used in the filesystem operation. On move pass 2 paths: destination and source. This info is used by filesystem watchers to detect and ignore files saved by own process.</param>
+	/// <param name="action"></param>
+	public void FileOperation(ReadOnlySpan<string> paths, Action action) {
+		var fo = _syncWatchers?.FileOperationStarted(paths);
+		bool ok = false;
+		try { action(); ok = true; }
+		finally { _syncWatchers?.FileOperationEnded(fo, ok); }
 	}
 	
 	/// <summary>

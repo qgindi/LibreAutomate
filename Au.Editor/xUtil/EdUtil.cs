@@ -265,18 +265,37 @@ class WildcardList {
 	/// </summary>
 	/// <param name="list">Multiline string. Use <c>//</c> to comment out a line.</param>
 	/// <param name="replaceSlash">Replace <c>'/'</c> with <c>'\\'</c> (to match file paths).</param>
-	public WildcardList(string list, bool replaceSlash = true) {
+	/// <param name="matchWithoutBackslashAt0">Let `\folder` match `folder`; and let `*\folder` match both `folder` and `ancestors\folder`.</param>
+	public WildcardList(string list, bool replaceSlash = true, bool matchWithoutBackslashAt0 = false) {
 		if (list.NE()) {
 			_a = [];
 		} else {
-			List<string> a = new();
-			foreach (var s in list.Lines(noEmpty: true)) {
+			List<string> a = [];
+			foreach (var s_ in list.Lines(noEmpty: true)) {
+				string s = s_;
 				if (s.Starts("//")) continue;
-				if (s.FindNot(@"*/\") < 0) continue; //wildcard like "*" or "\*" or "\" etc makes no sense. Either matches always or never. Prevent accidentally excluding all files etc.
-				a.Add(replaceSlash ? s.Replace('/', '\\') : s);
+				if (replaceSlash) s = s.Replace('/', '\\');
+				if (s.FindNot(replaceSlash ? @"*\" : "*") < 0) continue; //wildcard like "*" or "\*" or "\" etc makes no sense. Either matches always or never. Prevent accidentally excluding all files etc.
+				if (matchWithoutBackslashAt0 && (s[0] == '\\' || s.Starts(@"*\"))) {
+					if (s[0] == '\\') { //`\folder`: match `folder`
+						a.Add(s[1..]);
+					} else { //`*\folder`: match both `folder` and `ancestors\folder`
+						a.Add(s[2..]);
+						a.Add(s);
+					}
+				} else {
+					a.Add(s);
+				}
 			}
 			_a = a.ToArray();
 		}
+	}
+	
+	/// <summary>
+	/// Sets <c>ListOfStrings = list</c>.
+	/// </summary>
+	public WildcardList(string[] list) {
+		_a = list;
 	}
 	
 	/// <summary>
@@ -287,6 +306,8 @@ class WildcardList {
 		foreach (var v in _a) if (s.Like(v, ignoreCase)) return true;
 		return false;
 	}
+	
+	public string[] ListOfStrings => _a;
 }
 
 //class TempEnvVar : IDisposable {

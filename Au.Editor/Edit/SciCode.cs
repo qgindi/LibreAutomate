@@ -418,8 +418,8 @@ partial class SciCode : KScintilla {
 		if (_fn.DontSave) return true;
 		if (force || EIsUnsaved_) {
 			//print.qm2.write("saving");
-			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsExternal ? null : _fn.Model.TempDirectory))) return false;
-			//info: with tempDirectory less noise for FileSystemWatcher (now removed, but anyway)
+			string path = _fn.FilePath;
+			if (!App.Model.TryFileOperation([path], () => _fls.Save(this, path))) return false;
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
 			_fn._UpdateFileModTime();

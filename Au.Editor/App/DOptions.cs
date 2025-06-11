@@ -121,8 +121,11 @@ Example:
 		
 		_b.OkApply += e => {
 			App.Model.UserSettings.startupScripts = startupScripts.Text.Trim().NullIfEmpty_();
-			App.Model.WSSett.syncfs_skip = tSyncFsSkip.Text.NullIfEmpty_();
 			App.Model.UserSettings.gitBackup = cBackup.IsChecked;
+			
+			string skipOld = App.Model.WSSett.syncfs_skip, skipNew = tSyncFsSkip.Text.NullIfEmpty_();
+			App.Model.WSSett.syncfs_skip = skipNew;
+			if (skipNew != skipOld) App.Model.SyncWithFilesystem_();
 		};
 		
 		static string _startupScripts_Validation(FrameworkElement fe) {

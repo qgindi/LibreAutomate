@@ -1,3 +1,6 @@
+//TODO: setup: add choice to install .NET Runtime or SDK.
+//TODO: remove " C#" from the app name.
+
 using Au.Controls;
 using System.Runtime.Loader;
 using System.Windows;
@@ -82,6 +85,10 @@ static partial class App {
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
 		AssemblyLoadContext.Default.ResolvingUnmanagedDll += _UnmanagedDll_Resolving;
 		
+		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose }; //before LoadWorkspace etc, because need _app.Dispatcher ASAP
+		SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext()); //some code may use await before Application.Run. Without this it would continue in a TP thread.
+		//perf.next('a');
+		
 		Tasks = new RunningTasks();
 		//perf.next('t');
 		
@@ -95,8 +102,6 @@ static partial class App {
 		TrayIcon.Update_();
 		//perf.next('i');
 		
-		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose };
-		//perf.next('a');
 		_app.MainWindow = Wmain = new MainWindow();
 		if (!Settings.runHidden || CommandLine.StartVisible || (App.Settings.startVisibleIfNotAutoStarted && !CommandLine.AutoStarted)) ShowWindow();
 		//perf.next('w');
@@ -443,6 +448,17 @@ static partial class App {
 	public static bool IsAtHome { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
 	
 	public static bool IsPortable { get; private set; }
+	
+	/// <summary>
+	/// Calls <i>action</i> in try/catch, and manages filesystem sync (still not implemented). On exception prints message and returns false.
+	/// </summary>
+	/// <param name="paths">Path of the destination file used in the filesystem operation. On move pass 2 paths: destination and source. This info is used by filesystem watchers to detect and ignore files saved by own process.</param>
+	/// <param name="action"></param>
+	public static bool TryFileOperation(ReadOnlySpan<string> paths, Action action) {
+		try { action(); }
+		catch (Exception ex) { print.warning(ex); return false; }
+		return true;
+	}
 	
 	public static async void CheckForUpdates(System.Windows.Controls.Button b = null) {
 		bool forceNow = b != null;

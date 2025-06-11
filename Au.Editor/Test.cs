@@ -28,7 +28,14 @@ static class Test {
 	public static void FromMenubar() {
 		print.clear();
 		
-		PipIPC.RunScriptInPip(App.Model.FindCodeFile("PipTestScript"));
+		//var s = Panels.Editor.ActiveDoc.aaaText.Trim();
+		//print.it(App.Model.FindByItemPath(s)?.ItemPath);
+		
+		//foreach (var v in App.Model.Root.Descendants(true)) {
+		//	print.it(v.ItemPath, v.FilePath);
+		//}
+		
+		//PipIPC.RunScriptInPip(App.Model.FindCodeFile("PipTestScript"));
 
 		//timer2.every(500, _=> { GC.Collect(); });
 

@@ -372,7 +372,7 @@ class Class1 {
 			var path = f2.ItemPath;
 			if (sFind.Length > 0 && path.Find(sFind, true) < 0) continue;
 			
-			//if (_f.Parent.Parent != null && f.IsDescendantOf(_f.Parent)) path = @".\" + f.ItemPathIn(_f.Parent); //rejected. Bad with export-import.
+			//if (_f.Parent.Parent != null && f.IsDescendantOf(_f.Parent)) path = "." + f.ItemPathIn(_f.Parent); //rejected. Bad with export-import.
 			
 			if (!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) {
 				bool near = _f.Parent.Parent != null && f.IsDescendantOf(_f.Parent);

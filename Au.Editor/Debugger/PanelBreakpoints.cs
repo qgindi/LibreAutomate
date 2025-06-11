@@ -107,29 +107,27 @@ class PanelBreakpoints {
 	}
 	
 	void _SaveNow() {
-		try {
-			var xr = new XElement("breakpoints");
-			for (var f = _root.FirstChild; f != null; f = f.Next) {
-				var xf = new XElement("file");
-				xf.SetAttributeValue("id", f.file.IdString);
-				if (f.IsExpanded) xf.SetAttributeValue("exp", "");
-				xr.Add(xf);
-				for (var b = f.FirstChild; b != null; b = b.Next) {
-					var xb = new XElement("b");
-					xb.SetAttributeValue("line", b.line.ToS());
-					xb.SetAttributeValue("name", b.name);
-					if (b.IsEnabled) xb.SetAttributeValue("en", "");
-					if (!b.condition.NE()) xb.SetAttributeValue("condition", b.condition);
-					if (!b.log.NE()) xb.SetAttributeValue("log", b.log);
-					if (b.LogExpression) xb.SetAttributeValue("flags", "1");
-					xf.Add(xb);
-				}
+		var xr = new XElement("breakpoints");
+		for (var f = _root.FirstChild; f != null; f = f.Next) {
+			var xf = new XElement("file");
+			xf.SetAttributeValue("id", f.file.IdString);
+			if (f.IsExpanded) xf.SetAttributeValue("exp", "");
+			xr.Add(xf);
+			for (var b = f.FirstChild; b != null; b = b.Next) {
+				var xb = new XElement("b");
+				xb.SetAttributeValue("line", b.line.ToS());
+				xb.SetAttributeValue("name", b.name);
+				if (b.IsEnabled) xb.SetAttributeValue("en", "");
+				if (!b.condition.NE()) xb.SetAttributeValue("condition", b.condition);
+				if (!b.log.NE()) xb.SetAttributeValue("log", b.log);
+				if (b.LogExpression) xb.SetAttributeValue("flags", "1");
+				xf.Add(xb);
 			}
-			xr.Save(_file);
-			_save = 0;
-			//print.it("saved");
 		}
-		catch (Exception e1) { print.it(e1); }
+		
+		if (!App.Model.TryFileOperation([_file], () => { xr.Save(_file); })) return;
+		_save = 0;
+		//print.it("saved");
 	}
 	
 	void _SaveLater(int afterS = 30) {

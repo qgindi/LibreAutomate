@@ -288,7 +288,7 @@ Can be Pack.Icon, like Material.Folder.")
 					} else {
 						filesystem.saveText(path, xaml);
 					}
-					var fn = App.Model.ImportFileFromWorkspaceFolder(path, new(folder, folder.Parent == null ? FNInsert.First : FNInsert.Last));
+					var fn = App.Model.ImportFileFromWorkspaceDir(path, new(folder, folder.Parent == null ? FNInsert.First : FNInsert.Last));
 					if (fn == null) print.it("failed");
 					else print.it($"<>Exported to <open>{fn.ItemPath}<>");
 				}

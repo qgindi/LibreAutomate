@@ -595,7 +595,11 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 			}
 			return await Task.Run(() => 0 == run.console(printer, "dotnet.exe", cl));
 		}
-		catch (Exception e1) { dialog.showError("Failed to run dotnet.exe", e1.ToStringWithoutStack(), owner: this); }
+		catch (Exception e1) {
+			var s = e1.ToStringWithoutStack();
+			if (e1 is AuException e2 && e2.NativeErrorCode == Api.ERROR_FILE_NOT_FOUND) s+="\n\nMake sure the PATH environment variable contains the dotnet directory path.";
+			dialog.showError("Failed to run dotnet.exe", s, owner: this);
+		}
 		return false;
 	}
 	
