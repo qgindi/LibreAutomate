@@ -537,7 +537,7 @@ static class Menus {
 		[Command("...", image = "*Entypo.Publish" + blue, separator = true)]
 		public static void Publish() { new XPublish().Publish(); }
 		
-		[Command(image = "*MaterialDesign.PictureInPictureAltSharp" + blue, separator = true, tooltip = "Another session of this user inside a Picture-in-Picture window")]
+		[Command(image = "*MaterialDesign.PictureInPictureAlt" + blue, separator = true, tooltip = "Another session of this user inside a Picture-in-Picture window")]
 		public static void PiP_session() { PipIPC.StartPip(); }
 		
 		[Command(image = "*Codicons.DebugStart %,,6" + green2 + "; *MaterialDesign.Rectangle %10.2,10.8,,.6,f" + blue)]

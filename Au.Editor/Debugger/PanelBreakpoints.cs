@@ -125,7 +125,7 @@ class PanelBreakpoints {
 			}
 		}
 		
-		if (!App.Model.TryFileOperation([_file], () => { xr.Save(_file); })) return;
+		if (!App.Model.TryFileOperation(FOSync.PrivateFileWrite, [_file], () => { xr.Save(_file); })) return;
 		_save = 0;
 		//print.it("saved");
 	}

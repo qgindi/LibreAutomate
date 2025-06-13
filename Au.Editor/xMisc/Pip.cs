@@ -97,9 +97,8 @@ file class PipWindow : Form {
 		Text = "PiP session";
 		Icon = icon.trayIcon(Api.IDI_APPLICATION + 2).ToGdipIcon();
 		/*
-*Material.Rectangle #FFFFFF
-*MaterialDesign.PictureInPictureAltSharp #84ACFF
-//TODO: ugly. Maybe use with round corners.
+*PhosphorIcons.RectangleFill #BBE3FF %.5,2.5,.5,2.5,f
+*PhosphorIcons.PictureInPictureLight #909090
 		*/
 		
 		Controls.Add(_axRdp = new() { Dock = DockStyle.Fill });
@@ -143,13 +142,13 @@ file class PipWindow : Form {
 			}
 			
 			//advSett.SmartSizing = true; //does not work; not useful
-			advSett.Compress = 0; //remove visual noise around text etc
 			advSett.ContainerHandledFullScreen = 1; //less trouble
 			advSett.PinConnectionBar = false;
 			((IMsRdpClientNonScriptable3)_rdp).ConnectionBarText = this.Text; //tested: other members of "NonScriptable" interfaces are not interesting.
 			if (!_sett.redirectClipboard) advSett.RedirectClipboard = false;
 			//if (osVersion.minWin10_1803) _exSett.set_Property("ManualClipboardSyncEnabled", true); //exception when trying to get the `Clipboard` property. Bug in native method. Code: if (_rdp is IMsRdpClientNonScriptable7 rdpns7) timer.every(2000, _=> { print.it(rdpns7.Clipboard); });
 			//advSett.EnableWindowsKey = 1; //default 1, but does not work
+			advSett.Compress = 0;
 			advSett.RedirectSmartCards = true;
 			//timer.after(3000, _ => { es.set_Property("ShowSessionDiagnostics", true); }); //does not work
 			

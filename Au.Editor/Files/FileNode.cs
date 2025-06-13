@@ -88,18 +88,31 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			if (x.Name != "files") throw new ArgumentException("XML root element name must be 'files'");
 		} else {
 			_type = XmlTagToFileType(x.Name, canThrow: true);
-			while (x.MoveToNextAttribute()) {
-				var v = x.Value; if (v.NE()) continue;
-				switch (x.Name) {
-				case "n": _SetName(v); break;
-				case "i": v.ToInt(out _id); break;
-				case "f": _flags = (_Flags)v.ToInt(); break;
-				case "path": _linkTarget = v.Starts(@".\") ? _model.WorkspaceDirectory + v[1..] : v; break;
-				case "icon": _icon = v; break;
-				case "run": v.ToInt(out _testScriptId); break;
-				}
-			}
+			while (x.MoveToNextAttribute()) _ReadXmlAttribute(x.Name, x.Value);
 			if (_name == null) throw new ArgumentException("no 'n' attribute in XML");
+		}
+	}
+	
+	//TODO
+	/// <summary>
+	/// This ctor is used when sincing workspace (reading files.xml modified by another LA process).
+	/// </summary>
+	internal FileNode(XElement x, FilesModel model) {
+		_model = model;
+		_type = XmlTagToFileType(x.Name.LocalName, canThrow: true);
+		foreach (var attr in x.Attributes()) _ReadXmlAttribute(attr.Name.LocalName, attr.Value);
+		if (_name == null) throw new ArgumentException("no 'n' attribute in XML");
+	}
+	
+	void _ReadXmlAttribute(string name, string value) {
+		if (value.NE()) return;
+		switch (name) {
+		case "n": _SetName(value); break;
+		case "i": value.ToInt(out _id); break;
+		case "f": _flags = (_Flags)value.ToInt(); break;
+		case "path": _linkTarget = value.Starts(@".\") ? _model.WorkspaceDirectory + value[1..] : value; break;
+		case "icon": _icon = value; break;
+		case "run": value.ToInt(out _testScriptId); break;
 		}
 	}
 	
@@ -602,7 +615,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		Debug.Assert(OpenDoc == null);
 		if (DontSave) throw new AuException("This file should not be modified.");
 		string path = FilePath;
-		_model.FileOperation([path], () => { filesystem.saveText(path, text); });
+		filesystem.saveText(path, text); //TODO: review, maybe need to sync
 		_UpdateFileModTime();
 		CodeInfo.FilesChanged();
 	}
@@ -1042,7 +1055,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	internal bool RenameL_(string name) {
 		if (!IsLink) {
 			string path1 = this.FilePath;
-			if (!_model.TryFileOperation([path1], () => filesystem.rename(path1, name, FIfExists.Fail))) return false;
+			if (!_model.TryFileOperation(FOSync.UserFileOp, [path1], () => filesystem.rename(path1, name, FIfExists.Fail))) return false;
 		}
 		_SetName(name);
 		return true;
@@ -1090,7 +1103,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			
 			if (!IsLink) {
 				string path1 = this.FilePath, path2 = newParent.FilePath + "\\" + name;
-				if (!_model.TryFileOperation([path2, path1], () => filesystem.move(path1, path2, FIfExists.Fail))) return false;
+				if (!_model.TryFileOperation(FOSync.UserFileOp, [path2, path1], () => filesystem.move(path1, path2, FIfExists.Fail))) return false;
 			}
 			
 			if (name != _name) _SetName(name);
@@ -1140,7 +1153,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		//copy file or directory
 		if (!IsLink || copyLinkTarget) {
 			string path2 = newParent.FilePath + "\\" + name;
-			if (!_model.TryFileOperation([path2], () => filesystem.copy(FilePath, path2, FIfExists.Fail))) return null;
+			if (!_model.TryFileOperation(FOSync.UserFileOp, [path2], () => filesystem.copy(FilePath, path2, FIfExists.Fail))) return null;
 		}
 		
 		//create new FileNode with descendants

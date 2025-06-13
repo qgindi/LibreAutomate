@@ -1,5 +1,7 @@
 //#define USE_CHANGED_EVENTS
 
+using System.Xml.Linq;
+
 partial class FilesModel {
 	WildcardList _ignoredPaths, _ignoredPaths2;
 	_FileWatchers _syncWatchers;
@@ -182,8 +184,10 @@ partial class FilesModel {
 		public _FileWatchers(FilesModel model) {
 			_model = model;
 			_dDir = new(StringComparer.OrdinalIgnoreCase);
+			_guid = Guid.NewGuid().ToString("N");
+			_syncFilePath = _model.FilesDirectory + "\\" + _guid + ".~!~";
 			
-			_Add(null, _model.WorkspaceDirectory);
+			//_Add(null, _model.WorkspaceDirectory);
 			_Add(_model.Root, _model.FilesDirectory);
 			foreach (var f in _model.Root.Descendants()) {
 				if (f.IsLink && f.IsFolder) _Add(f, f.LinkTarget);
@@ -206,14 +210,14 @@ partial class FilesModel {
 			try {
 				//print.it("add", path);
 				fw = new _Watcher(path, fn);
-				if (fn == null) { //workspace dir
-					fw.Filters.Add("files.xml");
-					fw.Filters.Add("settings.json");
-					//fw.Filters.Add("bookmarks.csv");
-				} else {
-					fw.IncludeSubdirectories = true;
-					if (fn == fn.Root) fw.InternalBufferSize = 64 * 1024;
-				}
+				//if (fn == null) { //workspace dir
+				//	fw.Filters.Add("files.xml");
+				//	fw.Filters.Add("settings.json");
+				//	//fw.Filters.Add("bookmarks.csv");
+				//} else {
+				fw.IncludeSubdirectories = true;
+				if (fn == fn.Root) fw.InternalBufferSize = 64 * 1024;
+				//}
 				
 				fw.Created += _EventInTpThread;
 				fw.Deleted += _EventInTpThread;
@@ -221,7 +225,7 @@ partial class FilesModel {
 #if USE_CHANGED_EVENTS
 				fw.Changed += _Event;
 #else
-				if (fn == null) fw.Changed += _EventInTpThread;
+				//if (fn == null) fw.Changed += _EventInTpThread;
 #endif
 #if DEBUG
 				fw.Error += static (o, e) => { Debug_.Print(e.GetException()); }; //never noticed. Never mind, will update at the next startup.
@@ -250,26 +254,54 @@ partial class FilesModel {
 			foreach (var v in _dDir.Values) v.SetFolderItemPathBS();
 		}
 		
-		public FileOp FileOperationStarted(ReadOnlySpan<string> paths) { //TODO: now can be private
-			var fo = new FileOp(paths[0], paths.Length > 1 ? paths[1] : null);
-			//print.it("fileop", fo.path, fo.pathMovedFrom);
-			_fileOps.Add(fo);
-			return fo;
+		public void FileOperationStarted(FOSync fos) {
+			if (fos != FOSync.UserFileOp) return;
+			//print.it("started", fos);
+			_CreateSyncFile();
 		}
 		
-		public void FileOperationEnded(FileOp fo, bool ok) { //TODO: now can be private
-			//print.it("fileop ended", fo.path, fo.pathMovedFrom);
-			if (ok) fo.time = Environment.TickCount64;
-			else _fileOps.Remove(fo);
+		public void FileOperationEnded(FOSync fos) {
+			if (fos != FOSync.FilesXml) return;
+			//print.it("ended", fos);
+			_CreateSyncFile();
+			_hSyncFile.Dispose();
 		}
 		
-		public record class FileOp(string path, string pathMovedFrom) { public long time; }
+		void _CreateSyncFile() {
+			if (_hSyncFile.Is0) {
+				_hSyncFile = Api.CreateFile(_syncFilePath, Api.GENERIC_WRITE, Api.FILE_SHARE_DELETE | Api.FILE_SHARE_READ, Api.CREATE_NEW, Api.FILE_ATTRIBUTE_TEMPORARY | Api.FILE_FLAG_DELETE_ON_CLOSE | Api.FILE_ATTRIBUTE_HIDDEN | Api.FILE_ATTRIBUTE_SYSTEM);
+			}
+		}
 		
-		List<FileOp> _fileOps = [];
+		readonly string _guid, _syncFilePath;
+		Handle_ _hSyncFile;
+		volatile int _paused;
 		
 		void _EventInTpThread(object sender, FileSystemEventArgs e) {
 			var fw = sender as _Watcher;
-			if (e.Name.Ends(true, ["~", ".TMP", ".bak"]) > 0) return; //atomic save (LA, VS), Rider temp backup, etc
+			if (e.Name[^1] == '~') { //atomic save (LA, VS), Rider temp backup, or a sync file
+				
+				//TODO: check if this is the main watcher
+				if (e.Name.Ends(".~!~") && e.Name.Length == _guid.Length + 4 && e.ChangeType is WatcherChangeTypes.Created or WatcherChangeTypes.Deleted) { //a sync file of this or another LA process
+					if (e.ChangeType is WatcherChangeTypes.Created) {
+						Interlocked.Increment(ref _paused);
+					} else {
+						int paused = Interlocked.Decrement(ref _paused);
+						if (paused == 0) {
+							if (e.Name.Starts(_guid)) {
+								//print.it("own");
+							} else {
+								App.Dispatcher.InvokeAsync(_SyncFromAnotherLaProcess);
+							}
+						} else if (paused < 0) { //unlikely but possible. We did not receive the 'created' event because either: 1. Another LA process created its sync file before we started watching; 2. After a watcher error.
+							_paused = 0;
+						}
+					}
+				}
+				return;
+			}
+			if (_paused > 0) return;
+			if (e.Name.Ends(true, [".TMP", ".bak"]) > 0) return; //VS atomic save, etc
 #if !USE_CHANGED_EVENTS
 			if (e.ChangeType == WatcherChangeTypes.Renamed && ((RenamedEventArgs)e).OldName.Ends('~') && fw.FN != null) return; //atomic save
 #endif
@@ -277,6 +309,13 @@ partial class FilesModel {
 			//	It could conflict with the atomic save detection. Rare. Will correct at the next startup.
 			
 			App.Dispatcher.InvokeAsync(() => _EventInMainThread(fw, e));
+		}
+		
+		void _SyncFromAnotherLaProcess() {
+			if (App.Model != _model) return;
+			_timer?.Stop();
+			_ae.Clear();
+			_model._SyncFromAnotherLaProcess();
 		}
 		
 		void _EventInMainThread(_Watcher fw, FileSystemEventArgs e) {
@@ -294,34 +333,6 @@ partial class FilesModel {
 			}
 			
 			print.it($"<><c green>{e.ChangeType}, {e.Name}, {(e as RenamedEventArgs)?.OldName}<>");
-			
-			//remove old items from _fileOps
-			long timeNow = Environment.TickCount64;
-			int iNew = 0; for (; iNew < _fileOps.Count; iNew++) if (_fileOps[iNew] is var v && v.time == 0 || timeNow - v.time < 1000) break;
-			if (iNew > 0) _fileOps.RemoveRange(0, iNew);
-			
-			//now _fileOps contains all our file operations that ended in the last 1 s
-			for (int i = 0; i < _fileOps.Count; i++) {
-				var v = _fileOps[i];
-				if (_Match(v.path)) return;
-				if (e.ChangeType == WatcherChangeTypes.Deleted && v.pathMovedFrom != null && _Match(v.pathMovedFrom)) return;
-				if (e is RenamedEventArgs re) {
-					if (re.OldFullPath.Eqi(v.path)) return;
-				}
-				
-				bool _Match(string path) {
-					var s = e.FullPath;
-					if (s.Starts(path, true)) {
-						if (s.Length == path.Length) return true;
-						
-						//when copying (and in some cases moving or deleting) a folder, we also receive events for descendants. But they were not added to _fileOps. Filter out them now.
-						if (e.ChangeType is WatcherChangeTypes.Created or WatcherChangeTypes.Deleted) if (s[path.Length] == '\\') return true;
-					}
-					return false;
-				}
-			}
-			
-			//print.it($"<><c orange>{e.ChangeType}, {e.Name}, {(e as RenamedEventArgs)?.OldName}<>");
 			
 			//delay to filter out unusual replace-file sequences etc or join multiple events when copying a folder (and in some cases moving or deleting)
 			_ae.Add(new(fw, e, itemPath)); //queue events. Without it, eg on copy folder, the printed items are not all and in random order, although imports without errors.
@@ -360,9 +371,8 @@ partial class FilesModel {
 						}
 						break;
 					}
-				} else if (x.e.ChangeType != WatcherChangeTypes.Deleted) {
-					print.it(x.e.Name);
-					if (x.e.Name.Eqi("files.xml")) _model._SyncModifiedFilesXml();
+					//} else if (x.e.ChangeType != WatcherChangeTypes.Deleted) {
+					//	print.it(x.e.Name);
 				}
 			}
 			_ae.Clear();
@@ -370,30 +380,150 @@ partial class FilesModel {
 	}
 	
 	/// <summary>
-	/// Called by a filesystem watcher when files.xml modified externally.
+	/// Called by a filesystem watcher when files.xml modified by another LA process.
 	/// Normally it happens when using PiP (child session). One LA process runs in main session, and other in child session. Same user, same workspace.
-	/// If the file was saved after the other LA process added/deleted/etc files in workspace, we already received those events and added/removed/etc filenodes.
-	/// Then don't need to reload workspace. Just change the order of files etc. And don't save.
 	/// </summary>
-	void _SyncModifiedFilesXml() {
-		if (miscInfo.isChildSession) {
-			LoadWorkspace(WorkspaceDirectory);
-		} else {
-			var tags = Panels.Output.Scintilla.AaTags; if (!tags.HasLinkTag("+syncWorkspace")) tags.AddLinkTag("+syncWorkspace", _SyncWorkspace);
-			print.it("<><lc #FFE1E1>The workspace tree file was modified by another process.\r\n  Synchronize: <+syncWorkspace 1>reload workspace<> or <+syncWorkspace 2>overwrite external changes<><>");
-			
-			//TODO: but if workspace files changed too, we already overwrote files.xml
-			
-			static void _SyncWorkspace(string s) { //note: static. The link must reload etc the current workspace, not the workspace captured when adding the link tag.
-				switch (s.ToInt()) {
-				case 1:
-					LoadWorkspace(App.Model.WorkspaceDirectory);
-					break;
-				case 2:
-					App.Model.Save.WorkspaceAsync();
-					break;
+	void _SyncFromAnotherLaProcess() {
+		//LoadWorkspace(WorkspaceDirectory);
+		
+		XElement newRoot;
+		try {
+			newRoot = filesystem.waitIfLocked(() => XElement.Load(WorkspaceFile)); //TODO: maybe use XmlReader
+		}
+		catch (Exception ex) { Debug_.Print(ex); return; }
+		
+		//Save.PauseSaveWorkspace = true;
+		try {
+			_SyncFromAnotherLaProcess(newRoot);
+		}
+		catch (Exception ex) {
+			dialog.showError("Failed to sync workspace", ex.ToString(), owner: App.Hmain);
+			Environment.Exit(1);
+		}
+		//Save.PauseSaveWorkspace = false;
+	}
+	
+	void _SyncFromAnotherLaProcess(XElement newRoot) {
+		//Algorithm: remove all our filenodes from their parents, and then re-add like in the new XML.
+		//Then easy to find added, deleted, moved and changed nodes.
+		
+		perf.first();
+		var aOld = Root.Descendants().ToArray();
+		perf.next('a');
+		var dOld = aOld.ToDictionary(f => f.Id);
+		perf.next('d');
+		
+		uint[] aOldParent = new uint[aOld.Length];
+		for (int i = 0; i < aOld.Length; i++) aOldParent[i] = aOld[i].Parent.Id;
+		perf.next('m');
+		
+		foreach (var f in aOld) f.Remove();
+		perf.next('r');
+		
+		List<FileNode> aAdded = [];
+		
+		_Folder(Root, newRoot);
+		Debug.Assert(Root.Descendants().Count() == newRoot.Descendants().Count());
+		void _Folder(FileNode oldFolder, XElement newFolder) {
+			foreach (var x in newFolder.Elements()) {
+				if (!x.Attribute("i").Value.ToInt(out uint id)) throw new ArgumentException();
+				if (!dOld.Remove(id, out var f)) {
+					f = new(x, this);
+					_idMap.Add(id, f); //exception if duplicate
+					aAdded.Add(f);
 				}
+				oldFolder.AddChild(f);
+				if (x.HasElements) _Folder(f, x);
 			}
+		}
+		perf.next('F');
+		
+		//DELETED
+		foreach (var f in dOld.Values) {
+			print.it($"Deleted {f.Name}");
+			if (!f.IsDeleted) _Delete(f, syncing: 1);
+		}
+		
+		//ADDED
+		foreach (var f in aAdded) {
+			print.it($"Added {f}");
+		}
+		perf.next('d');
+		
+		//CHANGED ATTRIBUTES OR TAG
+		using (var oldEnum = Root.Descendants().GetEnumerator())
+		using (var newEnum = newRoot.Descendants().GetEnumerator()) {
+			while (oldEnum.MoveNext() && newEnum.MoveNext()) {
+				var f = oldEnum.Current;
+				Debug.Assert(newEnum.Current.Attribute("i").Value.ToInt(out uint u) && u == f.Id);
+				if (aAdded.Contains(f)) continue;
+				f.SyncAttributes(newEnum.Current);
+			}
+		}
+		perf.next('a');
+		
+		//CHANGED PATH
+		for (int i = 0; i < aOld.Length; i++) {
+			var f = aOld[i];
+			if (f.IsDeleted) continue;
+			if (f.Parent.Id != aOldParent[i]) {
+				print.it($"Moved {f.Name}, {f.Descendants():print}");
+				Au.Compiler.Compiler.Uncache(f, andDescendants: true);
+			}
+		}
+		perf.next('m');
+		
+		ChangedFolderItemPath_();
+		perf.next('L');
+		UpdateControlItems();
+		perf.next('t');
+		CodeInfo.FilesChanged();
+		perf.nw();
+	}
+}
+
+partial class FileNode {
+	internal void SyncAttributes(XElement x) {
+		var type = XmlTagToFileType(x.Name.LocalName, canThrow: true);
+		if (type != _type) {
+			if (!(IsCodeFile && type is FNType.Script or FNType.Class)) throw new ArgumentException();
+			_type = type;
+			_testScriptId = 0;
+			Au.Compiler.Compiler.Uncache(this);
+		}
+		
+		string icon = null;
+		uint testScriptId = 0;
+		//_Flags flags = 0;
+		foreach (var attr in x.Attributes()) {
+			string name = attr.Name.LocalName, value = attr.Value;
+			if (value.NE()) continue;
+			switch (name) {
+			//case "i": break;
+			//case "path": break; //never changes
+			//case "f": flags = (_Flags)value.ToInt(); break; //currently there are no flags
+			case "n" when value != _name:
+				_SetName(value);
+				Au.Compiler.Compiler.Uncache(this, andDescendants: true);
+				break;
+			case "icon": icon = value; break;
+			case "run": value.ToInt(out testScriptId); break;
+			}
+		}
+		
+		//if (flags != _flags) {
+		//	_flags = flags;
+		//}
+		
+		if (icon != _icon) {
+			_icon = icon;
+			Au.Compiler.Compiler.Uncache(this);
+		}
+		
+		if (testScriptId != _testScriptId) {
+			_testScriptId = testScriptId;
 		}
 	}
 }
+
+enum FOSync { UserFileOp, UserFileWrite, FilesXml, PrivateFileWrite }

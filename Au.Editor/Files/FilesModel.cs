@@ -771,7 +771,7 @@ partial class FilesModel {
 			if (f.IsLink) {
 				print.it($"<>Info: The deleted item was a link to <explore>{filePath}<>");
 			} else {
-				if (!TryFileOperation([filePath], () => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
+				if (!TryFileOperation(FOSync.UserFileOp, [filePath], () => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
 				//CONSIDER: add all paths to List, and delete finally in single call.
 				//CONSIDER: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 			}
@@ -1063,7 +1063,7 @@ partial class FilesModel {
 		
 		FileNode parent = ipos.ParentFolder;
 		var path = parent.FilePath + "\\" + name;
-		if (!TryFileOperation([path], () => {
+		if (!TryFileOperation(FOSync.UserFileOp, [path], () => {
 			if (fileType == FNType.Folder) filesystem.createDirectory(path);
 			else filesystem.saveText(path, text);
 		})) return null;
@@ -1310,9 +1310,9 @@ partial class FilesModel {
 					} else {
 						path2 = newParentPath + name;
 						if (action == ImportFlags.Copy) {
-							if (!TryFileOperation([path2], () => { filesystem.copy(path, path2, FIfExists.Fail); })) continue;
+							if (!TryFileOperation(FOSync.UserFileOp, [path2], () => { filesystem.copy(path, path2, FIfExists.Fail); })) continue;
 						} else if (path2 != path) {
-							if (!TryFileOperation([path2, path], () => { filesystem.move(path, path2, FIfExists.Fail); })) continue;
+							if (!TryFileOperation(FOSync.UserFileOp, [path2, path], () => { filesystem.move(path, path2, FIfExists.Fail); })) continue;
 						}
 						k = new FileNode(this, name, path2, isDir);
 					}
@@ -1859,27 +1859,11 @@ partial class FilesModel {
 	/// <summary>
 	/// Calls <i>action</i> in try/catch, and manages filesystem sync. On exception prints message and returns false.
 	/// </summary>
-	/// <param name="paths">Path of the destination file used in the filesystem operation. On move pass 2 paths: destination and source. This info is used by filesystem watchers to detect and ignore files saved by own process.</param>
-	/// <param name="action"></param>
-	public bool TryFileOperation(ReadOnlySpan<string> paths, Action action) {
-		var fo = _syncWatchers?.FileOperationStarted(paths);
-		bool ok = false;
-		try { action(); ok = true; }
+	public bool TryFileOperation(FOSync fos, ReadOnlySpan<string> paths, Action action) { //TODO: remove *paths*
+		_syncWatchers?.FileOperationStarted(fos);
+		try { action(); return true;}
 		catch (Exception ex) { print.warning(ex); return false; }
-		finally { _syncWatchers?.FileOperationEnded(fo, ok); }
-		return true;
-	}
-	
-	/// <summary>
-	/// Calls <i>action</i>, and manages filesystem sync.
-	/// </summary>
-	/// <param name="paths">Path of the destination file used in the filesystem operation. On move pass 2 paths: destination and source. This info is used by filesystem watchers to detect and ignore files saved by own process.</param>
-	/// <param name="action"></param>
-	public void FileOperation(ReadOnlySpan<string> paths, Action action) {
-		var fo = _syncWatchers?.FileOperationStarted(paths);
-		bool ok = false;
-		try { action(); ok = true; }
-		finally { _syncWatchers?.FileOperationEnded(fo, ok); }
+		finally { _syncWatchers?.FileOperationEnded(fos); }
 	}
 	
 	/// <summary>

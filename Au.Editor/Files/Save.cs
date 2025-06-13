@@ -24,12 +24,18 @@ partial class FilesModel {
 		/// Async-saves workspace (files.xml).
 		/// </summary>
 		public void WorkspaceAsync() {
+			//if (PauseSaveWorkspace) { _workspaceAfterS = 0; return; }
 			int afterS = 1;
 			if (_workspaceAfterS < 1 || _workspaceAfterS > afterS) {
 				_workspaceAfterS = afterS;
 				App.Dispatcher.InvokeAsync(WorkspaceNowIfNeed);
 			}
 		}
+
+		///// <summary>
+		///// Used by filesystem sync.
+		///// </summary>
+		//public bool PauseSaveWorkspace { get; set; }
 		
 		/// <summary>
 		/// Sets timer to save state later, if not already set.
@@ -75,7 +81,7 @@ partial class FilesModel {
 		void _SaveWorkspaceNow() {
 			_workspaceAfterS = 0;
 			Debug.Assert(_model != null); if (_model == null) return;
-			if (!_model._SaveWorkspaceNow()) _workspaceAfterS = 10; //if fails, retry later
+			if (!_model._SaveWorkspaceNow()) _workspaceAfterS = 5; //if fails, retry later
 		}
 		
 		void _SaveStateNow() {
@@ -115,7 +121,7 @@ partial class FilesModel {
 	/// Used only by the Save class.
 	/// </summary>
 	bool _SaveWorkspaceNow() {
-		return TryFileOperation([WorkspaceFile], () => { Root.SaveWorkspace(WorkspaceFile); });
+		return TryFileOperation(FOSync.FilesXml, [WorkspaceFile], () => { Root.SaveWorkspace(WorkspaceFile); });
 		//XElement.Save exceptions are undocumented
 	}
 	

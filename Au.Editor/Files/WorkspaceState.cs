@@ -250,7 +250,7 @@ class WorkspaceState : IDisposable {
 			//if (expanded != _expanded) print.it($"\texpanded: old={_expanded}, new={expanded}");
 			
 			var s = $"editor{editor}\nopen|{open}\nexpanded|{expanded}\n";
-			if (!_model.TryFileOperation([_file], () => { filesystem.saveText(_file, s); })) return;
+			if (!_model.TryFileOperation(FOSync.PrivateFileWrite, [_file], () => { filesystem.saveText(_file, s); })) return;
 			
 			_editor = editor;
 			_open = open;
@@ -349,7 +349,7 @@ class WorkspaceState : IDisposable {
 				bool exists = _Load(f, out var x);
 				if (exists && x.bytes.AsSpan(x.start..x.end).SequenceEqual(b)) return;
 				
-				f.Model.TryFileOperation([x.path], () => {
+				f.Model.TryFileOperation(FOSync.PrivateFileWrite, [x.path], () => {
 					filesystem.save(x.path, temp => {
 						using var fs = File.Create(temp);
 						fs.Write(b);
@@ -375,7 +375,7 @@ class WorkspaceState : IDisposable {
 		public static void Delete(FileNode f) {
 			if (_Load(f, out var x)) {
 				var b = x.bytes.RemoveAt(x.start, x.end - x.start);
-				f.Model.TryFileOperation([x.path], () => { filesystem.saveBytes(x.path, b); });
+				f.Model.TryFileOperation(FOSync.PrivateFileWrite, [x.path], () => { filesystem.saveBytes(x.path, b); });
 			}
 		}
 		

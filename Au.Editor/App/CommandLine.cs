@@ -41,6 +41,28 @@ static class CommandLine {
 	/// 	2. If incorrect command line.
 	/// </summary>
 	public static bool ProgramStarted2(string[] args) {
+		//TODO
+#if IDE_LA //test 2 LA instances, eg when developing filesystem sync for PiP
+		if (args is ["/second"]) return false;
+		bool second = true;
+		//second = dialog.showYesNo("LA", $"Start another LA instance?");
+		if (second) {
+			var id2 = new ProcessStarter_(process.thisExePath, "/second").Start().pid;
+			Task.Run(() => {
+				var w1 = wnd.wait(0, false, "LibreAutomate", of: WOwner.Process(process.thisProcessId));
+				var w2 = wnd.wait(0, false, "LibreAutomate", of: WOwner.Process(id2));
+				w1.ShowNotMinMax();
+				w2.ShowNotMinMax();
+				var r = screen.at.left().WorkArea;
+				int k = r.right;
+				r.Width /= 2;
+				w1.MoveL(r);
+				r.left = r.right; r.right = k;
+				w2.MoveL(r);
+			});
+		}
+#endif
+		
 		string s = null;
 		int cmd = 0; //1 open workspace, 2 import workspace, 3 import files, -5 reload workspace
 		bool restarting = false;

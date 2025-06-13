@@ -29,7 +29,9 @@ internal struct Handle_ : IDisposable {
 	/// </summary>
 	public bool Is0 => _h == default;
 	
-	///
+	/// <summary>
+	/// <c>if (!Is0) { Api.CloseHandle(_h); _h = default; }</c>
+	/// </summary>
 	public void Dispose() {
 		if (!Is0) { Api.CloseHandle(_h); _h = default; }
 	}

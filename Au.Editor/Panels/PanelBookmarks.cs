@@ -136,7 +136,7 @@ class PanelBookmarks {
 		} else {
 			saveAction = () => { filesystem.saveText(_file, ""); };
 		}
-		if (!App.Model.TryFileOperation([_file], saveAction)) return;
+		if (!App.Model.TryFileOperation(FOSync.PrivateFileWrite, [_file], saveAction)) return;
 		_save = 0;
 		//print.it("saved");
 	}
