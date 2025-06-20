@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 /// <summary>
@@ -7,13 +8,31 @@ using System.Text.Json.Serialization;
 record AppSettings : JSettings {
 	//This is loaded at startup and therefore must be fast.
 	//	NOTE: Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
-	//	Speed tested with .NET 5: first time 40-60 ms. Mostly to load/jit/etc dlls used in JSON deserialization, which then is fast regardless of data size.
+	//	Speed: first time 80 ms. Mostly to load/jit/etc dlls used by JsonSerializer. Later fast regardless of data size.
 	
-	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json")._Loaded();
+	public static void Load() { //in TP thread
+		var r = Load<AppSettings>(DirBS + "Settings.json");
+		r._Loaded();
+		App.Settings = r;
+	}
 	
-	AppSettings _Loaded() {
-		_NE(ref user) ??= Guid.NewGuid().ToString();
-		hotkeys ??= new();
+	public static void SetReloadModifiedExternally() { //in main thread
+		App.Settings.ModifiedExternally += static () => {
+			if (!App.Settings.Reload(out AppSettings r)) return;
+			r._Loaded();
+			Debug_.PrintIf(r.session.user != App.Settings.session.user);
+			r.session.user = App.Settings.session.user;
+			App.Settings = r;
+		};
+		
+		//Never mind: Currently only Settings.json is synced. There are many other settings/snippets/etc files. Some are separate in PiP. It's important to sync Settings.json if using PiP.
+	}
+	
+	void _Loaded() {
+		if (session_main == null) _InitSessionSettings();
+		session = miscInfo.isChildSession ? session_pip ??= new() : session_main;
+		_NE(ref session.user) ??= Guid.NewGuid().ToString();
+		session.hotkeys ??= new();
 		(font_output ??= new()).Normalize("Consolas", 9);
 		(font_recipeText ??= new()).Normalize("Calibri", 10.5);
 		(font_recipeCode ??= new()).Normalize("Consolas", 9);
@@ -23,11 +42,6 @@ record AppSettings : JSettings {
 		recorder ??= new();
 		if (ci_complParen is < 0 or > 2) ci_complParen = 0;
 		if (ci_enterWith is < 0 or > 2) ci_enterWith = 0;
-		return this;
-	}
-	
-	static void _NE(ref string s, string def) {
-		if (s.NE()) s = def;
 	}
 	
 	static ref string _NE(ref string s) {
@@ -35,17 +49,95 @@ record AppSettings : JSettings {
 		return ref s;
 	}
 	
+	//static void _Def(ref string s, string def) {
+	//	if (s.NE()) s = def;
+	//}
+	
 #if IDE_LA
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings_\";
 #else
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings\";
 #endif
 	
-	public bool runHidden, startVisibleIfNotAutoStarted;
-	public string user, workspace;
+	#region settings that are different in main and child (PiP) session
+	
+	public const string c_pipInfo = """
+A PiP session runs under the same Windows user account as the main session, so programs in both sessions use the same user files and settings.
+
+Only these settings are separate:
+  Program > Start hidden, Visible if, Check for updates
+  Workspace > Run scripts, Auto-backup
+  Hotkeys (all in the Hotkeys page)
+  Window positions (main window, tool windows)
+  Bookmarks, breakpoints, expanded folders, open files, folding.
+
+Ignored in a PiP session started by LibreAutomate:
+  Program > Start with Windows (in PiP always starts)
+
+While LibreAutomate is running in both PiP and main session:
+  Don't change other settings, panel/toolbar layout, snippets.
+  You can manage and edit workspace files (scripts etc) in both sessions.
+  You can run any scrits in the PiP session as well as in the main session.
+  Use the same workspace in both sessions.
+""";
+	
+	public record session_t {
+		public string user;
+		public bool runHidden, startVisibleIfNotAutoStarted;
+		public bool checkForUpdates;
+		public int checkForUpdatesDay;
+		public int wpfpreview_xy;
+		public wndpos_t wndpos;
+		public hotkeys_t hotkeys;
+	}
+	public session_t session_main, session_pip;
+	[JsonIgnore] public session_t session;
+	
+	[JsonIgnore] public ref bool runHidden => ref session.runHidden;
+	[JsonIgnore] public ref bool startVisibleIfNotAutoStarted => ref session.startVisibleIfNotAutoStarted;
+	[JsonIgnore] public string userGuid => session.user;
+	[JsonIgnore] public ref bool checkForUpdates => ref session.checkForUpdates;
+	[JsonIgnore] public ref int checkForUpdatesDay => ref session.checkForUpdatesDay;
+	[JsonIgnore] public ref int wpfpreview_xy => ref session.wpfpreview_xy;
+	
+	//saved positions of various windows
+	public record struct wndpos_t {
+		public string main, wnd, elm, uiimage, ocr, recorder, icons, symbol;
+	}
+	[JsonIgnore] public ref wndpos_t wndpos => ref session.wndpos;
+	
+	//Options > Hotkeys
+	public record hotkeys_t {
+		public string
+			tool_quick = "Ctrl+Shift+Q",
+			tool_wnd = "Ctrl+Shift+W",
+			tool_elm = "Ctrl+Shift+E",
+			tool_uiimage
+			;
+	}
+	[JsonIgnore] public hotkeys_t hotkeys => session.hotkeys;
+	
+	void _InitSessionSettings() {
+		//previously there were no session settings. Copy from the JSON root if need. Else existing users would lose their settings.
+		if (user != null) {
+			try {
+				var file = DirBS + "Settings.json";
+				if (filesystem.exists(file)) {
+					session_main = JsonSerializer.Deserialize<session_t>(filesystem.loadBytes(file), JSettings.SerializerOptions);
+				}
+				user = null;
+			}
+			catch (Exception ex) { Debug_.Print(ex); }
+		}
+		
+		session_main ??= new();
+	}
+	[JsonInclude] string user; //it's one of fields that previoulsy were in the JSON root but now are in a nested record. Now this field is used to detect the old format.
+	
+	#endregion
+	
+	public string workspace;
 	public string[] recentWS;
-	public bool checkForUpdates;
-	public int checkForUpdatesDay;
 	
 	//When need a nested type, use record class. Everything works well; later can add/remove members like in main type.
 	//Don't use record struct when need to set init values (now or in the future), because:
@@ -58,17 +150,6 @@ record AppSettings : JSettings {
 	//Note: deserializer always creates new object, even if default object created. Avoid custom ctors etc.
 	//If like `public hotkeys_t hotkeys = new()`, creates new object 2 times: 1. explicit new(); 2. when deserializing. Also in JSON can be `= null`. Move the `new()` to _Loaded.
 	//Tuple does not work well. New members are null/0. Also item names in file are like "Item1".
-	
-	//Options > Hotkeys
-	public record hotkeys_t {
-		public string
-			tool_quick = "Ctrl+Shift+Q",
-			tool_wnd = "Ctrl+Shift+W",
-			tool_elm = "Ctrl+Shift+E",
-			tool_uiimage
-			;
-	}
-	public hotkeys_t hotkeys;
 	
 	//font of various UI parts
 	public record font_t {
@@ -154,12 +235,6 @@ System.Threading.Tasks.TaskCanceledException
 	//settings common to various tools
 	public bool tools_pathUnexpand = true, tools_pathLnk;
 	
-	//saved positions of various windows
-	public record struct wndpos_t {
-		public string main, wnd, elm, uiimage, ocr, recorder, icons, symbol;
-	}
-	public wndpos_t wndpos;
-	
 	//Delm
 	public record delm_t {
 		public string hk_capture = "F3", hk_insert = "F4", hk_smaller = "Shift+F3"; //for all tools
@@ -189,9 +264,6 @@ System.Threading.Tasks.TaskCanceledException
 	
 	//DOcr
 	public Au.Tools.OcrEngineSettings ocr;
-	
-	//WPF preview
-	public int wpfpreview_xy;
 	
 	//DSnippets
 	public Dictionary<string, HashSet<string>> ci_hiddenSnippets;
@@ -231,9 +303,9 @@ record WorkspaceSettings : JSettings {
 	public User CurrentUser {
 		get {
 			if (_cu == null) {
-				_cu = users?.FirstOrDefault(o => o.guid == App.Settings.user);
+				_cu = users?.FirstOrDefault(o => o.guid == App.Settings.userGuid);
 				if (_cu == null) {
-					_cu = new User(App.Settings.user);
+					_cu = new User(App.Settings.userGuid);
 					users = users == null ? new[] { _cu } : users.InsertAt(0, _cu);
 				}
 			}

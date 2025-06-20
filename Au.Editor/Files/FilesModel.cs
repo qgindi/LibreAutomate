@@ -767,11 +767,10 @@ partial class FilesModel {
 		Uncut();
 		
 		if (syncing == 0) {
-			string filePath = f.FilePath;
 			if (f.IsLink) {
-				print.it($"<>Info: The deleted item was a link to <explore>{filePath}<>");
+				print.it($"<>Info: The deleted item was a link to <explore>{f.FilePath}<>");
 			} else {
-				if (!TryFileOperation(FOSync.UserFileOp, [filePath], () => filesystem.delete(filePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
+				if (!TryFileOperation(FOSync.UserFileOp, () => filesystem.delete(f.FilePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
 				//CONSIDER: add all paths to List, and delete finally in single call.
 				//CONSIDER: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 			}
@@ -1063,7 +1062,7 @@ partial class FilesModel {
 		
 		FileNode parent = ipos.ParentFolder;
 		var path = parent.FilePath + "\\" + name;
-		if (!TryFileOperation(FOSync.UserFileOp, [path], () => {
+		if (!TryFileOperation(FOSync.UserFileOp, () => {
 			if (fileType == FNType.Folder) filesystem.createDirectory(path);
 			else filesystem.saveText(path, text);
 		})) return null;
@@ -1310,9 +1309,9 @@ partial class FilesModel {
 					} else {
 						path2 = newParentPath + name;
 						if (action == ImportFlags.Copy) {
-							if (!TryFileOperation(FOSync.UserFileOp, [path2], () => { filesystem.copy(path, path2, FIfExists.Fail); })) continue;
+							if (!TryFileOperation(FOSync.UserFileOp, () => { filesystem.copy(path, path2, FIfExists.Fail); })) continue;
 						} else if (path2 != path) {
-							if (!TryFileOperation(FOSync.UserFileOp, [path2, path], () => { filesystem.move(path, path2, FIfExists.Fail); })) continue;
+							if (!TryFileOperation(FOSync.UserFileOp, () => { filesystem.move(path, path2, FIfExists.Fail); })) continue;
 						}
 						k = new FileNode(this, name, path2, isDir);
 					}
@@ -1859,10 +1858,20 @@ partial class FilesModel {
 	/// <summary>
 	/// Calls <i>action</i> in try/catch, and manages filesystem sync. On exception prints message and returns false.
 	/// </summary>
-	public bool TryFileOperation(FOSync fos, ReadOnlySpan<string> paths, Action action) { //TODO: remove *paths*
+	public bool TryFileOperation(FOSync fos, Action action) {
 		_syncWatchers?.FileOperationStarted(fos);
 		try { action(); return true;}
 		catch (Exception ex) { print.warning(ex); return false; }
+		finally { _syncWatchers?.FileOperationEnded(fos); }
+	}
+	
+	/// <summary>
+	/// Calls <i>action</i> and manages filesystem sync. Does not handle exceptions.
+	/// </summary>
+	/// <exception cref="Exception"></exception>
+	public void FileOperation(FOSync fos, Action action) {
+		_syncWatchers?.FileOperationStarted(fos);
+		try { action(); }
 		finally { _syncWatchers?.FileOperationEnded(fos); }
 	}
 	

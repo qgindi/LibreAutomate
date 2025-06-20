@@ -31,7 +31,7 @@ class MetaReferences {
 		readonly WeakReference<PortableExecutableReference> _wr = new(null);
 		PortableExecutableReference _refKeeper;
 		long _rkTimeout;
-		DateTime _fileTime;
+		long _fileTime;
 		
 		public _MR(string name, string path, bool isNuget) {
 			//print.it(name);
@@ -47,7 +47,7 @@ class MetaReferences {
 					//perf.first();
 					r = MetadataReference.CreateFromFile(path, (this as _MR2)?.Prop ?? default, _DocumentationProvider.Create(path));
 					if (isNuget) s_attach.AddOrUpdate(r, "");
-					_fileTime = filesystem.getProperties(path, out var p, FAFlags.UseRawPath | FAFlags.DontThrow) ? p.LastWriteTimeUtc : default;
+					filesystem.GetTime_(path, out _fileTime);
 					//perf.nw();
 					
 					_wr.SetTarget(r);
@@ -63,12 +63,12 @@ class MetaReferences {
 		}
 		
 		public void UncacheIfNeed(long timeNow) {
-			if (_fileTime != default) {
-				filesystem.getProperties(path, out var p, FAFlags.UseRawPath | FAFlags.DontThrow);
-				if (p.LastWriteTimeUtc != _fileTime) {
+			if (_fileTime != 0) {
+				filesystem.GetTime_(path, out var t);
+				if (t != _fileTime) {
 					_wr.SetTarget(null);
 					_refKeeper = null;
-					_fileTime = default;
+					_fileTime = 0;
 					return;
 				}
 			}
@@ -343,14 +343,14 @@ class MetaReferences {
 			if (s_d.TryGetValue(asmPath, out var dp)) return dp;
 			
 			var xmlPath = Path.ChangeExtension(asmPath, "xml");
-			if (!filesystem.getProperties(xmlPath, out var px)) return null;
+			if (!filesystem.GetProp_(xmlPath, out var px)) return null;
 			
-			if (px.Size >= 10_000) {
+			if (px.size >= 10_000) {
 				var md5 = new Hash.MD5Context(); md5.Add(xmlPath.Lower());
 				var dbPath = folders.ThisAppTemp + md5.Hash.ToString() + ".db";
 				//CONSIDER: later delete oldest temp files.
 				try {
-					if (!filesystem.getProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
+					if (!filesystem.GetProp_(dbPath, out var pd) || pd.time != px.time) {
 						//Debug_.Print($"creating db: {asmPath}  ->  {dbPath}");
 						filesystem.delete(dbPath);
 						bool isAu = asmPath.Ends("\\Au.dll", true);
@@ -395,7 +395,7 @@ class MetaReferences {
 							trans.Commit();
 							d.Execute("VACUUM");
 						}
-						File.SetLastWriteTimeUtc(dbPath, px.LastWriteTimeUtc);
+						File.SetLastWriteTimeUtc(dbPath, px.TimeAsDateTime);
 					}
 					var db = new sqlite(dbPath, SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
 					s_d[asmPath] = dp = new _DocumentationProvider { _db = db };

@@ -6,6 +6,29 @@ static class CommandLine {
 	/// Returns true if this instance must exit.
 	/// </summary>
 	public static bool ProgramStarted1(ReadOnlySpan<string> args, out int exitCode) {
+		//TODO
+#if IDE_LA && !true //test 2 LA instances, eg when developing filesystem sync for PiP
+		if (args is ["/second"]) {
+			typeof(miscInfo).GetField("s_isChildSession", BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, (bool?)true);
+		} else if (args.Length == 0) {
+			Task.Run(() => {
+				1.s();
+				var id2 = new ProcessStarter_(process.thisExePath, "/second").Start().pid;
+				var w1 = wnd.wait(-5, false, "LibreAutomate", of: WOwner.Process(process.thisProcessId));
+				var w2 = wnd.wait(-5, false, "LibreAutomate", of: WOwner.Process(id2));
+				if (w1.Is0 || w2.Is0) return;
+				w1.ShowNotMinMax();
+				w2.ShowNotMinMax();
+				var r = screen.at.left().WorkArea;
+				int k = r.right;
+				r.Width /= 2;
+				w1.MoveL(r);
+				r.left = r.right; r.right = k;
+				w2.MoveL(r);
+			});
+		}
+#endif
+		
 		//print.it(process.thisExeName, args.ToArray());
 		exitCode = 0; //note: Environment.ExitCode bug: the setter's set value is ignored and the process returns 0.
 		if (args.Length > 0) {
@@ -41,28 +64,6 @@ static class CommandLine {
 	/// 	2. If incorrect command line.
 	/// </summary>
 	public static bool ProgramStarted2(string[] args) {
-		//TODO
-#if IDE_LA //test 2 LA instances, eg when developing filesystem sync for PiP
-		if (args is ["/second"]) return false;
-		bool second = true;
-		//second = dialog.showYesNo("LA", $"Start another LA instance?");
-		if (second) {
-			var id2 = new ProcessStarter_(process.thisExePath, "/second").Start().pid;
-			Task.Run(() => {
-				var w1 = wnd.wait(0, false, "LibreAutomate", of: WOwner.Process(process.thisProcessId));
-				var w2 = wnd.wait(0, false, "LibreAutomate", of: WOwner.Process(id2));
-				w1.ShowNotMinMax();
-				w2.ShowNotMinMax();
-				var r = screen.at.left().WorkArea;
-				int k = r.right;
-				r.Width /= 2;
-				w1.MoveL(r);
-				r.left = r.right; r.right = k;
-				w2.MoveL(r);
-			});
-		}
-#endif
-		
 		string s = null;
 		int cmd = 0; //1 open workspace, 2 import workspace, 3 import files, -5 reload workspace
 		bool restarting = false;
@@ -93,6 +94,8 @@ static class CommandLine {
 						case "test":
 							if (++i < args.Length) TestArg = args[i];
 							break;
+						case "second":
+							return false;
 						default:
 							good = false;
 							break;

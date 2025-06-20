@@ -206,11 +206,7 @@ static partial class CompilerUtil {
 	}
 	
 	public static void CopyFileIfNeed(string sFrom, string sTo) {
-		//print.it(sFrom);
-		if (filesystem.getProperties(sTo, out var p2, FAFlags.UseRawPath) //if exists
-			&& filesystem.getProperties(sFrom, out var p1, FAFlags.UseRawPath)
-			&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc
-			&& p2.Size == p1.Size) return;
+		if (filesystem.GetProp_(sTo, out var p2) && filesystem.GetProp_(sFrom, out var p1) && p2 == p1) return;
 		filesystem.copy(sFrom, sTo, FIfExists.Delete);
 	}
 	

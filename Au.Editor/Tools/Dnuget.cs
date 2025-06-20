@@ -441,20 +441,16 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 					}
 					if (d.TryGetValue(name, out var ppath)) {
 #if DEBUG
-						filesystem.getProperties(ppath, out var u1);
-						filesystem.getProperties(path, out var u2);
-						if (u2.Size != u1.Size) Debug_.Print($"<c orange>\t{name}<>\n\t\t{u1.Size}  {ppath}\n\t\t{u2.Size}  {path}");
+						filesystem.GetProp_(ppath, out var u1);
+						filesystem.GetProp_(path, out var u2);
+						if (u2.size != u1.size) Debug_.Print($"<c orange>\t{name}<>\n\t\t{u1.size}  {ppath}\n\t\t{u2.size}  {path}");
 						bool e1 = filesystem.exists(ppath.ReplaceAt(^3..^1, "xm")), e2 = filesystem.exists(path.ReplaceAt(^3..^1, "xm"));
 						Debug_.PrintIf(e2 != e1, "no xml");
 #endif
 						continue;
 					}
 					var path2 = folderPath + "\\" + name;
-					if (filesystem.getProperties(path2, out var p1, FAFlags.UseRawPath)
-						&& filesystem.getProperties(path, out var p2, FAFlags.UseRawPath)
-						&& p1.Size == p2.Size
-						&& p1.LastWriteTimeUtc == p2.LastWriteTimeUtc
-						) continue;
+					if (filesystem.GetProp_(path2, out var p1) && filesystem.GetProp_(path, out var p2) && p1 == p2) continue;
 					d.Add(name, path);
 					if (refDir == null) filesystem.createDirectory(refDir = folderPath + @"\_ref");
 					filesystem.copyTo(path, refDir);

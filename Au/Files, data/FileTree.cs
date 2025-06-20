@@ -1,6 +1,4 @@
-#if !SCRIPT
 namespace Au.More;
-#endif
 
 /// <summary>
 /// Contains file infos of this and descendant folders and files retrieved by <see cref="filesystem.enumerate"/>.

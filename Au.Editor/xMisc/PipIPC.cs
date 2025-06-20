@@ -5,8 +5,6 @@ using System.Text.Json.Nodes;
 using Microsoft.Win32;
 using System.Text.Json;
 
-//TODO: in PIP session don't save settings. Also maybe files etc. Make readonly. Add strong file-modified sync main -> PIP.
-
 /// <summary>
 /// Used by all PiP processes.
 /// </summary>

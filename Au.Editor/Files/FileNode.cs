@@ -1,8 +1,3 @@
-//TODO: do we really need file id?
-//	Maybe need it only when in memory, but don't need to save.
-//	In state files (open, expanded, bookmarks, etc) could use path; would need to update the saved paths when changed.
-//	In links could use path too. Nothing bad if changed. Or could have a FileNode/linkId map.
-
 using Au.Controls;
 using Au.Compiler;
 using System.Xml;
@@ -93,9 +88,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 	}
 	
-	//TODO
 	/// <summary>
-	/// This ctor is used when sincing workspace (reading files.xml modified by another LA process).
+	/// This ctor is used when syncing workspace (reading files.xml modified by another LA process).
 	/// </summary>
 	internal FileNode(XElement x, FilesModel model) {
 		_model = model;
@@ -558,14 +552,14 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	//called when SciDoc loaded or saved the file
 	internal void _UpdateFileModTime() {
-		_fileModTime = Api.GetFileAttributesEx(FilePath, 0, out var d) ? d.ftLastWriteTime : 0;
+		filesystem.GetTime_(FilePath, out _fileModTime);
 	}
 	
 	internal void _CheckModifiedExternally(SciCode doc) {
 		if (doc.EIsBinary) return;
 		Debug_.PrintIf(_fileModTime == 0);
-		if (!Api.GetFileAttributesEx(FilePath, 0, out var d) || d.ftLastWriteTime == _fileModTime) return;
-		_fileModTime = d.ftLastWriteTime;
+		if (!filesystem.GetTime_(FilePath, out var t) || t == _fileModTime) return;
+		_fileModTime = t;
 		doc.EFileModifiedExternally_(); //calls GetFileText
 	}
 	
@@ -615,7 +609,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		Debug.Assert(OpenDoc == null);
 		if (DontSave) throw new AuException("This file should not be modified.");
 		string path = FilePath;
-		filesystem.saveText(path, text); //TODO: review, maybe need to sync
+		_model.FileOperation(FOSync.UserFileWrite, () => { filesystem.saveText(path, text); });
 		_UpdateFileModTime();
 		CodeInfo.FilesChanged();
 	}
@@ -991,10 +985,10 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		/// <param name="template">null or relative path of template in Templates\files. Case-insensitive.</param>
 		public static XElement LoadXml(string template = null) {
 			//load files.xml first time, or reload if file modified
-			filesystem.getProperties(s_xmlFilePath, out var fp, FAFlags.UseRawPath);
-			if (s_xml == null || fp.LastWriteTimeUtc != s_xmlFileTime) {
+			filesystem.GetTime_(s_xmlFilePath, out var time);
+			if (s_xml == null || time != s_xmlFileTime) {
 				s_xml = XmlUtil.LoadElem(s_xmlFilePath);
-				s_xmlFileTime = fp.LastWriteTimeUtc;
+				s_xmlFileTime = time;
 			}
 			
 			var x = s_xml;
@@ -1007,7 +1001,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		static XElement s_xml;
 		static readonly string s_xmlFilePath = folders.ThisAppBS + @"Templates\files.xml";
-		static DateTime s_xmlFileTime;
+		static long s_xmlFileTime;
 		
 		public static bool IsInDefault(XElement x) => x.Ancestors().Any(o => o.Attr("n") == "Default");
 	}
@@ -1054,8 +1048,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	internal bool RenameL_(string name) {
 		if (!IsLink) {
-			string path1 = this.FilePath;
-			if (!_model.TryFileOperation(FOSync.UserFileOp, [path1], () => filesystem.rename(path1, name, FIfExists.Fail))) return false;
+			if (!_model.TryFileOperation(FOSync.UserFileOp, () => filesystem.rename(FilePath, name, FIfExists.Fail))) return false;
 		}
 		_SetName(name);
 		return true;
@@ -1102,8 +1095,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			var name = CreateNameUniqueInFolder(newParent, _name, IsFolder, moving: true);
 			
 			if (!IsLink) {
-				string path1 = this.FilePath, path2 = newParent.FilePath + "\\" + name;
-				if (!_model.TryFileOperation(FOSync.UserFileOp, [path2, path1], () => filesystem.move(path1, path2, FIfExists.Fail))) return false;
+				string path2 = newParent.FilePath + "\\" + name;
+				if (!_model.TryFileOperation(FOSync.UserFileOp, () => filesystem.move(FilePath, path2, FIfExists.Fail))) return false;
 			}
 			
 			if (name != _name) _SetName(name);
@@ -1153,7 +1146,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		//copy file or directory
 		if (!IsLink || copyLinkTarget) {
 			string path2 = newParent.FilePath + "\\" + name;
-			if (!_model.TryFileOperation(FOSync.UserFileOp, [path2], () => filesystem.copy(FilePath, path2, FIfExists.Fail))) return null;
+			if (!_model.TryFileOperation(FOSync.UserFileOp, () => filesystem.copy(FilePath, path2, FIfExists.Fail))) return null;
 		}
 		
 		//create new FileNode with descendants

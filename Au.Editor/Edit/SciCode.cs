@@ -418,8 +418,7 @@ partial class SciCode : KScintilla {
 		if (_fn.DontSave) return true;
 		if (force || EIsUnsaved_) {
 			//print.qm2.write("saving");
-			string path = _fn.FilePath;
-			if (!App.Model.TryFileOperation(FOSync.UserFileWrite, [path], () => _fls.Save(this, path))) return false;
+			if (!App.Model.TryFileOperation(FOSync.UserFileWrite, () => _fls.Save(this, _fn.FilePath))) return false;
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
 			_fn._UpdateFileModTime();

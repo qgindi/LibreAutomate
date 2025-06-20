@@ -1,5 +1,6 @@
 //#define USE_CHANGED_EVENTS
 
+using System.Xml;
 using System.Xml.Linq;
 
 partial class FilesModel {
@@ -16,8 +17,9 @@ partial class FilesModel {
 		return false;
 	}
 	
+	//CONSIDER: call when workspace loaded, even if LA hidden. Now does not sync until shown (_syncWatchers too). But is it important?
 	/// <summary>
-	/// Called when: 1. Workspace loaded; 2. WSSett.syncfs_skip changed in Options.
+	/// Called when: 1. WorkspaceLoadedWithUI; 2. WSSett.syncfs_skip changed in Options.
 	/// </summary>
 	internal async void SyncWithFilesystem_() {
 		_ignoredPaths = new(WSSett.syncfs_skip);
@@ -94,15 +96,17 @@ partial class FilesModel {
 		}
 		
 		//update filenodes
-		StringBuilder bDel = null, bAdd = null;
+		StringBuilder bAdd = null;
+		bool deleted = false;
 		foreach (var rd in rootDirs) {
 			//print.it(rd.fn, rd.delete?.Select(o => o.ItemPath), rd.add?.Select(o => (o.parent.ItemPath, "[" + print.util.toString(o.files, compact: true) + "]")));
 			if (rd.delete != null) {
 				foreach (var f in rd.delete) {
 					if (f.IsDeleted) continue; //was in a now deleted folder
-					bDel ??= new("Missing or <+options Workspace>excluded<> files were removed from the <b>Files<> panel:");
-					bDel.Append("\r\n  ").Append(f.ItemPath);
-					if (f.IsFolder) bDel.Append("  (folder)");
+					//bDel ??= new("Missing or <+options Workspace>excluded<> files were removed from the <b>Files<> panel:"); //probably not useful info. Just distracts and scares people.
+					//bDel.Append("\r\n  ").Append(f.ItemPath);
+					//if (f.IsFolder) bDel.Append("  (folder)");
+					deleted = true;
 					_Delete(f, syncing: 1);
 				}
 			}
@@ -115,12 +119,14 @@ partial class FilesModel {
 			//	Cannot make it reliable. It would be too dirty/heavy. Possible side effects. Rarely used/useful.
 		}
 		
-		if (bDel != null || bAdd != null) {
+		if (bAdd != null || deleted) {
 			UpdateControlItems();
 			Save.WorkspaceAsync();
 			CodeInfo.FilesChanged();
-			bAdd?.Append("\r\nYou may want to review added files and: change the order; change some properties; delete unused files; hide unused files (Options > Workspace).");
-			print.it("<><lc #FFFFB9>" + bDel + (bDel != null && bAdd != null ? "\r\n" : null) + bAdd + "<>");
+			if (bAdd != null) {
+				bAdd.Append("\r\nYou may want to review added files and: change the order; change some properties; delete unused files; hide unused files (Options > Workspace).<>");
+				print.it(bAdd);
+			}
 		}
 		
 		_syncWatchers ??= new(this);
@@ -132,7 +138,7 @@ partial class FilesModel {
 				var name = v.ToString();
 				var f = new FileNode(this, name, parentPath + name, v is _DirTree);
 				parent.AddChild(f, first: parent == parent.Root);
-				bAdd ??= new("New files were added:");
+				bAdd ??= new("<><lc #FFFFB9>New files were added:");
 				bAdd.AppendLine().Append(' ', indent * 2).Append("  ").Append(f.SciLink(true));
 				if (f.IsFolder) bAdd.Append("  (folder)");
 				
@@ -213,7 +219,6 @@ partial class FilesModel {
 				//if (fn == null) { //workspace dir
 				//	fw.Filters.Add("files.xml");
 				//	fw.Filters.Add("settings.json");
-				//	//fw.Filters.Add("bookmarks.csv");
 				//} else {
 				fw.IncludeSubdirectories = true;
 				if (fn == fn.Root) fw.InternalBufferSize = 64 * 1024;
@@ -280,8 +285,6 @@ partial class FilesModel {
 		void _EventInTpThread(object sender, FileSystemEventArgs e) {
 			var fw = sender as _Watcher;
 			if (e.Name[^1] == '~') { //atomic save (LA, VS), Rider temp backup, or a sync file
-				
-				//TODO: check if this is the main watcher
 				if (e.Name.Ends(".~!~") && e.Name.Length == _guid.Length + 4 && e.ChangeType is WatcherChangeTypes.Created or WatcherChangeTypes.Deleted) { //a sync file of this or another LA process
 					if (e.ChangeType is WatcherChangeTypes.Created) {
 						Interlocked.Increment(ref _paused);
@@ -332,7 +335,7 @@ partial class FilesModel {
 				if (_model._IsPathIgnored(itemPath, true)) return;
 			}
 			
-			print.it($"<><c green>{e.ChangeType}, {e.Name}, {(e as RenamedEventArgs)?.OldName}<>");
+			//print.it($"<><c green>{e.ChangeType}, {e.Name}, {(e as RenamedEventArgs)?.OldName}<>");
 			
 			//delay to filter out unusual replace-file sequences etc or join multiple events when copying a folder (and in some cases moving or deleting)
 			_ae.Add(new(fw, e, itemPath)); //queue events. Without it, eg on copy folder, the printed items are not all and in random order, although imports without errors.
@@ -384,15 +387,13 @@ partial class FilesModel {
 	/// Normally it happens when using PiP (child session). One LA process runs in main session, and other in child session. Same user, same workspace.
 	/// </summary>
 	void _SyncFromAnotherLaProcess() {
-		//LoadWorkspace(WorkspaceDirectory);
-		
 		XElement newRoot;
 		try {
-			newRoot = filesystem.waitIfLocked(() => XElement.Load(WorkspaceFile)); //TODO: maybe use XmlReader
+			newRoot = filesystem.waitIfLocked(() => XElement.Load(WorkspaceFile)); //the slowest part
 		}
 		catch (Exception ex) { Debug_.Print(ex); return; }
 		
-		//Save.PauseSaveWorkspace = true;
+		Save.PauseSaveWorkspace = true; //nothing here tries to save, but would be bad if somehow it would happen without this protection. Also it cancels async save.
 		try {
 			_SyncFromAnotherLaProcess(newRoot);
 		}
@@ -400,27 +401,19 @@ partial class FilesModel {
 			dialog.showError("Failed to sync workspace", ex.ToString(), owner: App.Hmain);
 			Environment.Exit(1);
 		}
-		//Save.PauseSaveWorkspace = false;
+		Save.PauseSaveWorkspace = false;
 	}
 	
 	void _SyncFromAnotherLaProcess(XElement newRoot) {
 		//Algorithm: remove all our filenodes from their parents, and then re-add like in the new XML.
 		//Then easy to find added, deleted, moved and changed nodes.
 		
-		perf.first();
 		var aOld = Root.Descendants().ToArray();
-		perf.next('a');
 		var dOld = aOld.ToDictionary(f => f.Id);
-		perf.next('d');
-		
-		uint[] aOldParent = new uint[aOld.Length];
-		for (int i = 0; i < aOld.Length; i++) aOldParent[i] = aOld[i].Parent.Id;
-		perf.next('m');
+		uint[] aOldParent = new uint[aOld.Length]; for (int i = 0; i < aOld.Length; i++) aOldParent[i] = aOld[i].Parent.Id;
+		List<FileNode> aAdded = [];
 		
 		foreach (var f in aOld) f.Remove();
-		perf.next('r');
-		
-		List<FileNode> aAdded = [];
 		
 		_Folder(Root, newRoot);
 		Debug.Assert(Root.Descendants().Count() == newRoot.Descendants().Count());
@@ -436,19 +429,17 @@ partial class FilesModel {
 				if (x.HasElements) _Folder(f, x);
 			}
 		}
-		perf.next('F');
 		
 		//DELETED
 		foreach (var f in dOld.Values) {
-			print.it($"Deleted {f.Name}");
+			//print.it($"Deleted {f.Name}");
 			if (!f.IsDeleted) _Delete(f, syncing: 1);
 		}
 		
 		//ADDED
-		foreach (var f in aAdded) {
-			print.it($"Added {f}");
-		}
-		perf.next('d');
+		//foreach (var f in aAdded) {
+		//	print.it($"Added {f}");
+		//}
 		
 		//CHANGED ATTRIBUTES OR TAG
 		using (var oldEnum = Root.Descendants().GetEnumerator())
@@ -460,25 +451,20 @@ partial class FilesModel {
 				f.SyncAttributes(newEnum.Current);
 			}
 		}
-		perf.next('a');
 		
-		//CHANGED PATH
+		//CHANGED PARENT
 		for (int i = 0; i < aOld.Length; i++) {
 			var f = aOld[i];
 			if (f.IsDeleted) continue;
 			if (f.Parent.Id != aOldParent[i]) {
-				print.it($"Moved {f.Name}, {f.Descendants():print}");
+				//print.it($"Moved {f.Name}, {f.Descendants():print}");
 				Au.Compiler.Compiler.Uncache(f, andDescendants: true);
 			}
 		}
-		perf.next('m');
 		
 		ChangedFolderItemPath_();
-		perf.next('L');
 		UpdateControlItems();
-		perf.next('t');
 		CodeInfo.FilesChanged();
-		perf.nw();
 	}
 }
 

@@ -107,12 +107,12 @@ public static class EditorExtension {
 	/// Remembers and finds script assemblies loaded in this process, to avoid loading the same unchanged assembly multiple times.
 	/// </summary>
 	struct _LoadedScriptAssembly {
-		DateTime _fileTime;
+		long _fileTime;
 		
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public (Assembly asm, bool loaded) Find(string asmFile) {
-			if (filesystem.getProperties(asmFile, out var p, FAFlags.UseRawPath)) {
-				_fileTime = p.LastWriteTimeUtc;
+			if (filesystem.GetTime_(asmFile, out var time)) {
+				_fileTime = time;
 				if (_d.TryGetValue(asmFile, out var x)) {
 					bool modified = x.time != _fileTime;
 					
@@ -141,7 +141,7 @@ public static class EditorExtension {
 	}
 	
 	class _Asm {
-		public DateTime time;
+		public long time;
 		public Assembly asm;
 		public Action<bool> restarting;
 	}

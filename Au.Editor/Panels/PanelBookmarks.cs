@@ -27,7 +27,7 @@ class PanelBookmarks {
 		if (_root != null) return;
 		_root = new(null, true);
 		
-		_file = App.Model.WorkspaceDirectory + @"\bookmarks.csv";
+		_file = App.Model.WorkspaceDirectory + (miscInfo.isChildSession ? @"\bookmarks-pip.csv" : @"\bookmarks.csv");
 		if (filesystem.exists(_file).File) {
 			try {
 				var csv = csvTable.load(_file);
@@ -136,7 +136,7 @@ class PanelBookmarks {
 		} else {
 			saveAction = () => { filesystem.saveText(_file, ""); };
 		}
-		if (!App.Model.TryFileOperation(FOSync.PrivateFileWrite, [_file], saveAction)) return;
+		if (!App.Model.TryFileOperation(FOSync.PrivateFileWrite, saveAction)) return;
 		_save = 0;
 		//print.it("saved");
 	}

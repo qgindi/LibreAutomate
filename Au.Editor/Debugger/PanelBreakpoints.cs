@@ -28,7 +28,7 @@ class PanelBreakpoints {
 		if (_root != null) return;
 		_root = new(this, null, true);
 		
-		_file = App.Model.WorkspaceDirectory + @"\.state\breakpoints.xml";
+		_file = $@"{App.Model.WorkspaceDirectory}\.state{(miscInfo.isChildSession ? @"\pip" : null)}\breakpoints.xml";
 		if (filesystem.exists(_file).File) {
 			try {
 				var xr = XElement.Load(_file);
@@ -125,7 +125,7 @@ class PanelBreakpoints {
 			}
 		}
 		
-		if (!App.Model.TryFileOperation(FOSync.PrivateFileWrite, [_file], () => { xr.Save(_file); })) return;
+		if (!App.Model.TryFileOperation(FOSync.PrivateFileWrite, () => { xr.SaveElem(_file); })) return;
 		_save = 0;
 		//print.it("saved");
 	}

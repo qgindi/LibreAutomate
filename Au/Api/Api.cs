@@ -1142,64 +1142,60 @@ static unsafe partial class Api {
 	}
 	
 #if false //not used, because we have ExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
-		/// <summary>
-		/// Converts part of string to <b>int</b>.
-		/// Returns the <b>int</b> value.
-		/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
-		/// </summary>
-		/// <param name="s">String.</param>
-		/// <param name="startIndex">Offset in string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
-		/// <param name="radix">If 0, parses the string as hexadecimal number if starts with <c>"0x"</c>, as octal if starts with <c>"0"</c>, else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support <c>"0x"</c> etc); 16 - as hexadecimal (eg returns 26 if string is <c>"1A"</c> or <c>"0x1A"</c>); 2 - as binary (eg returns 5 if string is <c>"101"</c>).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is invalid.</exception>
-		internal static int strtoi(string s, int startIndex, out int numberEndIndex, int radix = 0)
-		{
-			int R = 0, len = s == null ? 0 : s.Length - startIndex;
-			if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
-			if(len != 0)
-				fixed (char* p = s) {
-					char* t = p + startIndex, e = t;
-					R = strtoi(t, &e, radix);
-					len = (int)(e - t);
-				}
-			numberEndIndex = startIndex + len;
-			return R;
-		}
+	/// <summary>
+	/// Converts part of string to <b>int</b>.
+	/// Returns the <b>int</b> value.
+	/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
+	/// </summary>
+	/// <param name="s">String.</param>
+	/// <param name="startIndex">Offset in string where to start parsing.</param>
+	/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
+	/// <param name="radix">If 0, parses the string as hexadecimal number if starts with <c>"0x"</c>, as octal if starts with <c>"0"</c>, else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support <c>"0x"</c> etc); 16 - as hexadecimal (eg returns 26 if string is <c>"1A"</c> or <c>"0x1A"</c>); 2 - as binary (eg returns 5 if string is <c>"101"</c>).</param>
+	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is invalid.</exception>
+	internal static int strtoi(string s, int startIndex, out int numberEndIndex, int radix = 0) {
+		int R = 0, len = s == null ? 0 : s.Length - startIndex;
+		if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
+		if(len != 0)
+			fixed (char* p = s) {
+				char* t = p + startIndex, e = t;
+				R = strtoi(t, &e, radix);
+				len = (int)(e - t);
+			}
+		numberEndIndex = startIndex + len;
+		return R;
+	}
 
-		/// <summary>
-		/// Converts part of string to <b>long</b>.
-		/// Returns the <b>long</b> value.
-		/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
-		/// </summary>
-		/// <param name="s">String.</param>
-		/// <param name="startIndex">Offset in string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
-		/// <param name="radix">If 0, parses the string as hexadecimal number if starts with <c>"0x"</c>, as octal if starts with <c>"0"</c>, else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support <c>"0x"</c> etc); 16 - as hexadecimal (eg returns 26 if string is <c>"1A"</c> or <c>"0x1A"</c>); 2 - as binary (eg returns 5 if string is <c>"101"</c>).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is invalid.</exception>
-		internal static long strtoi64(string s, int startIndex, out int numberEndIndex, int radix = 0)
-		{
-			long R = 0;
-			int len = s == null ? 0 : s.Length - startIndex;
-			if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
-			if(len != 0)
-				fixed (char* p = s) {
-					char* t = p + startIndex, e = t;
-					R = strtoi64(t, &e, radix);
-					len = (int)(e - t);
-				}
-			numberEndIndex = startIndex + len;
-			return R;
-		}
+	/// <summary>
+	/// Converts part of string to <b>long</b>.
+	/// Returns the <b>long</b> value.
+	/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
+	/// </summary>
+	/// <param name="s">String.</param>
+	/// <param name="startIndex">Offset in string where to start parsing.</param>
+	/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
+	/// <param name="radix">If 0, parses the string as hexadecimal number if starts with <c>"0x"</c>, as octal if starts with <c>"0"</c>, else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support <c>"0x"</c> etc); 16 - as hexadecimal (eg returns 26 if string is <c>"1A"</c> or <c>"0x1A"</c>); 2 - as binary (eg returns 5 if string is <c>"101"</c>).</param>
+	/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is invalid.</exception>
+	internal static long strtoi64(string s, int startIndex, out int numberEndIndex, int radix = 0) {
+		long R = 0;
+		int len = s == null ? 0 : s.Length - startIndex;
+		if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
+		if(len != 0)
+			fixed (char* p = s) {
+				char* t = p + startIndex, e = t;
+				R = strtoi64(t, &e, radix);
+				len = (int)(e - t);
+			}
+		numberEndIndex = startIndex + len;
+		return R;
+	}
 
-		internal static int strtoi(string s, int startIndex = 0, int radix = 0)
-		{
-			return strtoi(s, startIndex, out _, radix);
-		}
+	internal static int strtoi(string s, int startIndex = 0, int radix = 0) {
+		return strtoi(s, startIndex, out _, radix);
+	}
 
-		internal static long strtoi64(string s, int startIndex = 0, int radix = 0)
-		{
-			return strtoi64(s, startIndex, out _, radix);
-		}
+	internal static long strtoi64(string s, int startIndex = 0, int radix = 0) {
+		return strtoi64(s, startIndex, out _, radix);
+	}
 #endif
 	
 	[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -24,12 +24,14 @@ static partial class App {
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
 #if DEBUG //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
-		//perf.first();
-		//timer.after(1, _ => perf.nw());
 		print.qm2.use = true;
 		//print.clear(); 
 		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
 #endif
+		
+		script.role = SRole.EditorExtension; //used by the folders class
+		script.name = AppNameShort;
+		
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 		
 		//restart as admin if started as non-admin on admin user account
@@ -40,18 +42,23 @@ static partial class App {
 			if (_RestartAsAdmin(args)) return 0;
 		}
 		
-		_SetPortable(args);
+		SetThisAppFoldersEtc_(args);
 		
 		//Debug_.PrintLoadedAssemblies(true, !true);
 		
-		_Main(args);
+		//load settings in parallel, while Settings still not used. Saves 50 ms. After SetThisAppFoldersEtc_.
+		Task task1 = Task.Run(() => {
+			AppSettings.Load();
+			//Debug_.PrintLoadedAssemblies(true, !true);
+		});
+		
+		_Main(args, task1);
 		return 0;
 	}
 	
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	static void _Main(string[] args) {
+	static void _Main(string[] args, Task task1) {
 		//Debug_.PrintLoadedAssemblies(true, !true);
-		//perf.next();
 		
 		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
@@ -60,62 +67,46 @@ static partial class App {
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 		Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
-		SetThisAppFoldersEtc_(true);
 		
 		if (CommandLine.ProgramStarted2(args)) return;
 		
-		PrintServer = new(
 #if IDE_LA
-			!
+		PrintServer = new(!true) { NoNewline = true };
+#else
+		PrintServer = new(true) { NoNewline = true };
 #endif
-			true) { NoNewline = true };
 		PrintServer.Start();
 #if DEBUG
 		print.qm2.use = !true;
-		//timer.after(1, _ => perf.nw());
 		_RemindToBuildAllPlatforms();
 #endif
 		_envVarUpdater = new();
-		
-		//perf.next('o');
-		Settings = AppSettings.Load();
-		//perf.next('s');
-		//Debug_.PrintLoadedAssemblies(true, !true);
 		
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
 		AssemblyLoadContext.Default.ResolvingUnmanagedDll += _UnmanagedDll_Resolving;
 		
 		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose }; //before LoadWorkspace etc, because need _app.Dispatcher ASAP
 		SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext()); //some code may use await before Application.Run. Without this it would continue in a TP thread.
-		//perf.next('a');
 		
 		Tasks = new RunningTasks();
-		//perf.next('t');
-		
 		ScriptEditor.IconNameToXaml_ = DIcons.GetIconString;
+		
+		task1.Wait(); //note: code executed before this must not use Settings
+		
 		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
-		//perf.next('W');
 		CommandLine.ProgramLoaded();
-		//perf.next('c');
 		Loaded = AppState.LoadedWorkspace;
 		
 		TrayIcon.Update_();
-		//perf.next('i');
 		
 		_app.MainWindow = Wmain = new MainWindow();
 		if (!Settings.runHidden || CommandLine.StartVisible || (App.Settings.startVisibleIfNotAutoStarted && !CommandLine.AutoStarted)) ShowWindow();
-		//perf.next('w');
 		
-		s_timer = timer.every(1000, _TimerProc);
-		//note: timer can make Systeminformer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
-		//Timer1s += () => print.it("1 s");
-		//Timer1sOr025s += () => print.it("0.25 s");
+		_timer = timer.every(1000, _TimerProc);
 		
 		_app.Dispatcher.InvokeAsync(() => {
-			//perf.next('r');
+			AppSettings.SetReloadModifiedExternally();
 			Model.RunStartupScripts(false);
-			//perf.nw('s');
-			
 			if (miscInfo.isChildSession) PipIPC.StartPipeServerThread(); //after RunStartupScripts. If pipe server now will start a script, it will start after startup scripts with role editorExtension.
 		});
 		
@@ -133,7 +124,7 @@ static partial class App {
 			//	But then problems. Eg cannot auto-create main window synchronously, because need to exit native loop and start WPF loop.
 		}
 		catch (Exception e1) when (!Debugger.IsAttached) {
-			s_timer.Stop();
+			_timer.Stop();
 			Wmain.Close();
 			dialog.showError("Exception", e1.ToString(), flags: DFlags.Wider);
 		}
@@ -144,7 +135,7 @@ static partial class App {
 		if (Loaded == AppState.Unloaded) return;
 		Loaded = AppState.Unloading;
 		
-		s_timer.Stop(); //eg if will show a Debug.Assert dialog
+		_timer.Stop(); //eg if will show a Debug.Assert dialog
 		
 		var fm = Model; Model = null;
 		fm.Dispose(); //stops tasks etc
@@ -206,7 +197,7 @@ static partial class App {
 	}
 	
 	private static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
-		var dlls = s_arDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
+		var dlls = _arDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
 			.ToDictionary(o => o.Name[..^4], o => o.FullPath);
 		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
 		
@@ -215,7 +206,7 @@ static partial class App {
 		//print.qm2.write(an); 
 		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 	}
-	static Dictionary<string, string> s_arDlls;
+	static Dictionary<string, string> _arDlls;
 	
 	//resolve native dlls used by meta pr libraries that are used by editorExtension scripts.
 	//	These libraries are loaded in default context.
@@ -237,29 +228,24 @@ static partial class App {
 		return false;
 	}
 	
-	static void _SetPortable(string[] args) {
-		if (filesystem.exists(folders.ThisAppBS + "data")) {
-			IsPortable = true;
-			ScriptEditor.IsPortable = true;
-			
-			//CONSIDER: when changed portable user (SID), delete folders.ThisAppDataLocal (\data\appLocal).
-			//	LA/Au currently uses it only for the icon cache.
-			//	But some scripts may not want it.
-			//	Probably should delete folders.ThisAppTemp (\data\temp).
-			
-			//on ARM64, if Au.Editor.exe is x64, run Au.Editor-arm.exe instead
-			if (!osVersion.isArm64Process && osVersion.isArm64OS) _RestartArm64(args);
-		}
-	}
-	
-	internal static void SetThisAppFoldersEtc_(bool mainMode) {
-		script.role = SRole.EditorExtension;
-		script.name = AppNameShort;
+	internal static void SetThisAppFoldersEtc_(string[] args = null) {
 		dialog.options.defaultTitle = AppNameShort + " message";
-		
 		folders.Editor = folders.ThisApp;
 		
-		if (mainMode) {
+		if (args != null) {
+			if (filesystem.exists(folders.ThisAppBS + "data")) {
+				IsPortable = true;
+				ScriptEditor.IsPortable = true;
+				
+				//CONSIDER: when changed portable user (SID), delete folders.ThisAppDataLocal (\data\appLocal).
+				//	LA/Au currently uses it only for the icon cache.
+				//	But some scripts may not want it.
+				//	Probably should delete folders.ThisAppTemp (\data\temp).
+				
+				//on ARM64, if Au.Editor.exe is x64, run Au.Editor-arm.exe instead
+				if (!osVersion.isArm64Process && osVersion.isArm64OS) _RestartArm64(args);
+			}
+			
 			try {
 				//create now if does not exist
 				_ = folders.ThisAppDocuments;
@@ -287,9 +273,9 @@ static partial class App {
 #if DEBUG
 	static void _RemindToBuildAllPlatforms() {
 		if (IsAtHome)
-			if (filesystem.getProperties(folders.ThisAppBS + @"..\Cpp", out var p64)) {
-				if (!filesystem.getProperties(folders.ThisAppBS + @"32\AuCpp.dll", out var p32) || p64.LastWriteTimeUtc > p32.LastWriteTimeUtc) print.it("Note: may need to build Cpp project x86.");
-				if (!filesystem.getProperties(folders.ThisAppBS + @"64\ARM\AuCpp.dll", out var pARM) || p64.LastWriteTimeUtc > pARM.LastWriteTimeUtc) print.it("Note: may need to build Cpp project ARM64.");
+			if (filesystem.GetTime_(folders.ThisAppBS + @"..\Cpp", out var t64)) {
+				if (!filesystem.GetTime_(folders.ThisAppBS + @"32\AuCpp.dll", out var t32) || t64 > t32) print.it("Note: may need to build Cpp project x86.");
+				if (!filesystem.GetTime_(folders.ThisAppBS + @"64\ARM\AuCpp.dll", out var tARM) || t64 > tARM) print.it("Note: may need to build Cpp project ARM64.");
 			}
 	}
 #endif
@@ -341,7 +327,7 @@ static partial class App {
 	}
 	
 	internal static void OnMainWindowClosed_() {
-		s_timer.Stop();
+		_timer.Stop();
 	}
 	
 	static WinScheduler.RResult _raaResult;
@@ -413,23 +399,23 @@ static partial class App {
 	/// <summary>
 	/// True if Timer1sOr025s period is 0.25 s (when main window visible), false if 1 s (when hidden).
 	/// </summary>
-	public static bool IsTimer025 => s_timerCounter > 0;
-	static uint s_timerCounter;
+	public static bool IsTimer025 => _timerCounter > 0;
+	static uint _timerCounter;
 	
 	static void _TimerProc(timer t) {
 		Timer1sOr025s?.Invoke();
 		bool needFast = Wmain.IsVisible;
-		if (needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
+		if (needFast != (_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
 		if (needFast) {
 			Timer025sWhenVisible?.Invoke();
-			s_timerCounter++;
-		} else s_timerCounter = 0;
-		if (0 == (s_timerCounter & 3)) {
+			_timerCounter++;
+		} else _timerCounter = 0;
+		if (0 == (_timerCounter & 3)) {
 			Timer1s?.Invoke();
 			if (needFast) Timer1sWhenVisible?.Invoke();
 		}
 	}
-	static timer s_timer;
+	static timer _timer;
 	
 	public static AppState Loaded;
 	

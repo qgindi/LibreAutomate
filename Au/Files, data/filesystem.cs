@@ -20,16 +20,60 @@ public static partial class filesystem {
 	#region exists, attributes, properties
 	
 	/// <summary>
+	/// Contains the last write time, size and attributes of a file or directory.
+	/// The equality method and operators compare only time, size and attributes <b>Directory</b> and <b>ReparsePoint</b>.
+	/// </summary>
+	/// <param name="time">The last write time UTC as FILETIME.</param>
+	/// <param name="size">0 if directory.</param>
+	/// <param name="attr"></param>
+	internal record struct Prop_(long time, long size, FileAttributes attr) {
+		public bool Equals(Prop_ p) => p.time == time && p.size == size && (p.attr & (FileAttributes.Directory | FileAttributes.ReparsePoint)) == (attr & (FileAttributes.Directory | FileAttributes.ReparsePoint));
+		
+		public override int GetHashCode() => time.GetHashCode();
+		
+		public DateTime TimeAsDateTime => DateTime.FromFileTimeUtc(time);
+	}
+	
+	/// <summary>
+	/// Gets the last write time, size and attributes of a file or directory.
+	/// </summary>
+	/// <param name="path">Full path. The function just asserts full path and calls <b>prefixLongPathIfNeed</b>.</param>
+	/// <param name="prop"></param>
+	/// <returns><c>false</c> if does not exist or access denied. No exceptions.</returns>
+	internal static unsafe bool GetProp_(string path, out Prop_ prop) {
+		Debug.Assert(pathname.isFullPath(path));
+		prop = default;
+		path = pathname.prefixLongPathIfNeed(path);
+		if (!Api.GetFileAttributesEx(path, 0, out var d)) {
+			if (!_GetAttributesOnError(path, FAFlags.DontThrow, out _, out _, &d)) return false;
+		}
+		prop = new(d.ftLastWriteTime, d.Size, d.dwFileAttributes);
+		return true;
+	}
+	
+	/// <summary>
+	/// Gets the last write time of a file or directory.
+	/// </summary>
+	/// <param name="path">Full path. The function just asserts full path and calls <b>prefixLongPathIfNeed</b>.</param>
+	/// <param name="time">Time UTC as <b>FILETIME</b>.</param>
+	/// <returns><c>false</c> if does not exist or access denied. No exceptions.</returns>
+	internal static bool GetTime_(string path, out long time) {
+		bool ok = GetProp_(path, out var p);
+		time = p.time;
+		return ok;
+	}
+	
+	/// <summary>
 	/// Gets file or directory attributes, size and times.
-	/// Calls API <msdn>GetFileAttributesEx</msdn>.
 	/// </summary>
 	/// <returns><c>false</c> if the file/directory does not exist.</returns>
 	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <b>UseRawPath</b> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
 	/// <param name="properties">Receives properties.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
-	/// <exception cref="AuException">The file/directory exist but failed to get its properties. Not thrown if used flag <b>DontThrow</b>.</exception>
+	/// <exception cref="AuException">The file/directory exists but failed to get its properties. Not thrown if used flag <b>DontThrow</b>.</exception>
 	/// <remarks>
+	/// Calls API <msdn>GetFileAttributesEx</msdn>. Supports <see cref="lastError"/> (useful with flag <b>DontThrow</b>).
 	/// For NTFS links, gets properties of the link, not of its target.
 	/// You can also get most of these properties with <see cref="enumerate"/>.
 	/// </remarks>
@@ -40,7 +84,7 @@ public static partial class filesystem {
 			if (!_GetAttributesOnError(path, flags, out _, out _, &d)) return false;
 		}
 		properties.Attributes = d.dwFileAttributes;
-		properties.Size = (long)d.nFileSizeHigh << 32 | d.nFileSizeLow;
+		properties.Size = d.Size;
 		properties.LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime);
 		properties.CreationTimeUtc = DateTime.FromFileTimeUtc(d.ftCreationTime);
 		properties.LastAccessTimeUtc = DateTime.FromFileTimeUtc(d.ftLastAccessTime);
@@ -58,7 +102,7 @@ public static partial class filesystem {
 	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
 	/// <exception cref="AuException">Failed. Not thrown if used flag <b>DontThrow</b>.</exception>
 	/// <remarks>
-	/// Calls API <msdn>GetFileAttributes</msdn>.
+	/// Calls API <msdn>GetFileAttributes</msdn>. Supports <see cref="lastError"/> (useful with flag <b>DontThrow</b>).
 	/// For NTFS links, gets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
@@ -76,7 +120,7 @@ public static partial class filesystem {
 		case Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND or Api.ERROR_NOT_READY:
 			return false;
 		case Api.ERROR_SHARING_VIOLATION: //eg c:\pagefile.sys. GetFileAttributes fails, but FindFirstFile succeeds.
-		case Api.ERROR_ACCESS_DENIED: //probably in a protected directory. Then FindFirstFile fails, but try anyway.
+		case Api.ERROR_ACCESS_DENIED: //probably in a protected directory. Then FindFirstFile fails, but try anyway. Or a file marked for deletion.
 			var d = new Api.WIN32_FIND_DATA();
 			var hfind = Api.FindFirstFile(path, out d);
 			if (hfind != -1) {
@@ -96,14 +140,12 @@ public static partial class filesystem {
 			lastError.code = ec;
 			attr = (FileAttributes)(-1);
 			break;
+		default:
+			Debug_.Print(lastError.messageFor(ec));
+			break;
 		}
 		if (0 != (flags & FAFlags.DontThrow)) return false;
 		throw new AuException(ec, $"*get file attributes: '{path}'");
-		
-		//tested:
-		//	If the file is in a protected directory, ERROR_ACCESS_DENIED.
-		//	If the path is to a non-existing file in a protected directory, ERROR_FILE_NOT_FOUND.
-		//	ERROR_SHARING_VIOLATION for C:\pagefile.sys etc.
 	}
 	
 	/// <summary>
@@ -168,7 +210,7 @@ public static partial class filesystem {
 	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is <c>false</c> (default), supports environment variables (see <see cref="pathname.expand"/>). Can be <c>null</c>.</param>
 	/// <param name="useRawPath">Pass <i>path</i> to the API as it is, without any normalizing and full-path checking.</param>
 	/// <remarks>
-	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/> and check attribute <b>Directory</b>.
+	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/>.
 	/// Always use full path. If not full path: if <i>useRawPath</i> is <c>false</c> (default), can't find the file; if <i>useRawPath</i> is <c>true</c>, searches in "current directory".
 	/// For NTFS links gets attributes of the link, not of the target; does not care whether its target exists.
 	/// </remarks>
@@ -317,10 +359,17 @@ public static partial class filesystem {
 		) {
 		//tested 2021-04-30: much faster than Directory.EnumerateX in .NET 5. Faster JIT, and then > 2 times faster.
 		//tested 2022-01-31: ~20% slower than Directory.EnumerateX in .NET 6. Not tested JIT. Never mind.
+		//tested 2025-06-20: ~1% slower than Directory.EnumerateX in .NET 9.
 		//	It seems .NET uses undocumented API NtQueryDirectoryFile.
 		//rejected: in this func use .NET FileSystemEnumerable.
 		//	Good: faster; familiar types.
 		//	Bad: something we need is missing or difficult to return or need a workaround. Eg easily detect NTFS links, get relative path, prevent recursion to NTFS link target.
+		
+		//TODO2: stuck at ~340000 files when recursively enumerating C:\ProgramData\Microsoft\Windows\Containers\Layers.
+		//	Even can't end the task process normally (access denied error).
+		//	Actually it just becomes very slow, and maybe would complete if I waited long enough. 
+		//	Directory.EnumerateFileSystemEntries stuck at ~61000 files.
+		//	The TreeSize app at first it seems stuck too, but after long time completes and reports 752000 files.
 		
 		string path = directoryPath;
 		if (0 == (flags & FEFlags.UseRawPath)) path = _PreparePath(path);

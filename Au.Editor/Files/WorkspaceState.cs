@@ -6,6 +6,7 @@
 //			expanded|id1|id2
 //	folding - contracted fold points of all files.
 //		It's a binary file, as compact as possible. Managed by struct WorkspaceState._Folding.
+//In child session separately, in subfolder "pip".
 
 /// <summary>
 /// Workspace state, such as open files, expanded folders, editor caret position, folded lines.
@@ -197,7 +198,7 @@ class WorkspaceState : IDisposable {
 		
 		public _State(FilesModel model) {
 			_model = model;
-			_file = _model.WorkspaceDirectory + @"\.state\state";
+			_file = $@"{_model.WorkspaceDirectory}\.state{(miscInfo.isChildSession ? @"\pip" : null)}\state";
 			try {
 				var s = filesystem.loadText(_file);
 				foreach (var line in s.Lines(..)) {
@@ -227,6 +228,7 @@ class WorkspaceState : IDisposable {
 			
 			//convert from old SQLite database
 			void _ConvertOldDb() {
+				if (miscInfo.isChildSession) return;
 				var dbFile = _model.WorkspaceDirectory + @"\state.db";
 				if (filesystem.exists(dbFile, true)) {
 					try {
@@ -250,7 +252,7 @@ class WorkspaceState : IDisposable {
 			//if (expanded != _expanded) print.it($"\texpanded: old={_expanded}, new={expanded}");
 			
 			var s = $"editor{editor}\nopen|{open}\nexpanded|{expanded}\n";
-			if (!_model.TryFileOperation(FOSync.PrivateFileWrite, [_file], () => { filesystem.saveText(_file, s); })) return;
+			if (!_model.TryFileOperation(FOSync.PrivateFileWrite, () => { filesystem.saveText(_file, s); })) return;
 			
 			_editor = editor;
 			_open = open;
@@ -277,7 +279,7 @@ class WorkspaceState : IDisposable {
 		static bool _Load(FileNode f, out _Folding r) {
 			uint id = f.Id;
 			byte[] b = null;
-			var file = f.Model.WorkspaceDirectory + $@"\.state\folding";
+			var file = $@"{f.Model.WorkspaceDirectory}\.state{(miscInfo.isChildSession ? @"\pip" : null)}\folding";
 			if (filesystem.exists(file, useRawPath: true)) {
 				try {
 					b = filesystem.loadBytes(file);
@@ -349,7 +351,7 @@ class WorkspaceState : IDisposable {
 				bool exists = _Load(f, out var x);
 				if (exists && x.bytes.AsSpan(x.start..x.end).SequenceEqual(b)) return;
 				
-				f.Model.TryFileOperation(FOSync.PrivateFileWrite, [x.path], () => {
+				f.Model.TryFileOperation(FOSync.PrivateFileWrite, () => {
 					filesystem.save(x.path, temp => {
 						using var fs = File.Create(temp);
 						fs.Write(b);
@@ -375,7 +377,7 @@ class WorkspaceState : IDisposable {
 		public static void Delete(FileNode f) {
 			if (_Load(f, out var x)) {
 				var b = x.bytes.RemoveAt(x.start, x.end - x.start);
-				f.Model.TryFileOperation(FOSync.PrivateFileWrite, [x.path], () => { filesystem.saveBytes(x.path, b); });
+				f.Model.TryFileOperation(FOSync.PrivateFileWrite, () => { filesystem.saveBytes(x.path, b); });
 			}
 		}
 		

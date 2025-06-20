@@ -25,8 +25,12 @@ class DOptions : KDialogWindow {
 		
 		_b = new wpfBuilder(this).WinSize(600);
 		_b.Row(-1).Add(out _tc).Height(300..);
-		_b.R.StartOkCancel().AddOkCancel(out var bOK, out var bCancel, out _, apply: "Apply").xAddDialogHelpButtonAndF1("editor/Program settings").End();
+		_b.R.StartOkCancel()
+			.AddOkCancel(out var bOK, out var bCancel, out _, apply: "Apply")
+			.xAddDialogHelpButtonAndF1("editor/Program settings")
+			.End();
 		bOK.IsDefault = false; bCancel.IsCancel = false;
+		if (miscInfo.isChildSession) _b.R.StartGrid<Expander>("PiP session info").Row(120).xAddInfoBlockT(AppSettings.c_pipInfo, scrollViewer: true).End();
 		
 		_Program();
 		_Workspace();
@@ -625,8 +629,8 @@ Example:
 				tool_elm = captureDelm.TextOrNull(),
 				tool_uiimage = captureDuiimage.TextOrNull(),
 			};
-			if (v != App.Settings.hotkeys) {
-				App.Settings.hotkeys = v;
+			if (v != App.Settings.session.hotkeys) {
+				App.Settings.session.hotkeys = v;
 				RegHotkeys.UnregisterPermanent();
 				RegHotkeys.RegisterPermanent();
 			}

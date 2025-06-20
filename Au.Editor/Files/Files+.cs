@@ -128,8 +128,8 @@ class RepairWorkspace {
 				if (f.IsLink) continue;
 				if (f.IsFolder) {
 					_Biggest(f);
-				} else if (filesystem.getProperties(f.FilePath, out var p, FAFlags.UseRawPath | FAFlags.DontThrow) && p.Size >= 50 * 1024) {
-					biggest.Add((p.Size, f));
+				} else if (filesystem.GetProp_(f.FilePath, out var p) && p.size >= 50 * 1024) {
+					biggest.Add((p.size, f));
 				}
 			}
 		}

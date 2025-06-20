@@ -53,8 +53,7 @@ partial class Compiler {
 			}
 			//print.it(asmFile);
 			
-			if (!filesystem.getProperties(asmFile, out var asmProp, FAFlags.UseRawPath | FAFlags.DontThrow)) return false;
-			DateTime asmTime = asmProp.LastWriteTimeUtc;
+			if (!filesystem.GetTime_(asmFile, out var asmTime)) return false;
 			
 			if (_IsFileModified(f)) return false;
 			
@@ -139,10 +138,10 @@ partial class Compiler {
 			bool _IsFileModified(FileNode f_) => _IsFileModified2(f_.FilePath);
 			
 			bool _IsFileModified2(string path_) {
-				if (!filesystem.getProperties(path_, out var prop_, FAFlags.UseRawPath | FAFlags.DontThrow)) return true;
-				Debug.Assert(!prop_.Attributes.Has(FileAttributes.Directory));
+				if (!filesystem.GetProp_(path_, out var prop_)) return true;
+				Debug.Assert(!prop_.attr.Has(FileAttributes.Directory));
 				//print.it(prop_.LastWriteTimeUtc, asmDate);
-				if (prop_.LastWriteTimeUtc > asmTime) return true;
+				if (prop_.time > asmTime) return true;
 				return false;
 			}
 		}

@@ -9,9 +9,6 @@ using Microsoft.Win32;
 using System.Runtime.Loader;
 using wpfc = System.Windows.Controls;
 
-//TODO: test Arm64.
-//TODO: test portable.
-
 static class Pip {
 	public static bool noActivate;
 	static wnd _wMsg;
@@ -24,7 +21,7 @@ static class Pip {
 	public static int Run(ReadOnlySpan<string> args) {
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
-		App.SetThisAppFoldersEtc_(false);
+		App.SetThisAppFoldersEtc_();
 		
 		if (args.Length > 0) {
 			switch (args[0].Lower()) {

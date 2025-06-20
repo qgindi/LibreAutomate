@@ -306,11 +306,12 @@ static unsafe partial class Api {
 	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	internal struct WIN32_FILE_ATTRIBUTE_DATA {
 		public FileAttributes dwFileAttributes;
-		public long ftCreationTime;
-		public long ftLastAccessTime;
-		public long ftLastWriteTime;
+		public FILETIME ftCreationTime;
+		public FILETIME ftLastAccessTime;
+		public FILETIME ftLastWriteTime;
 		public uint nFileSizeHigh;
 		public uint nFileSizeLow;
+		public long Size => (long)nFileSizeHigh << 32 | nFileSizeLow;
 	}
 	
 	[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesExW", SetLastError = true)]
@@ -640,7 +641,7 @@ static unsafe partial class Api {
 		public uint dwLowDateTime;
 		public uint dwHighDateTime;
 		
-		public static implicit operator long(FILETIME ft) => (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime); //in Release faster than *(long*)&ft
+		public static implicit operator long(FILETIME ft) => (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime);
 		public static implicit operator FILETIME(long ft) => new() { dwHighDateTime = (uint)(ft >>> 32), dwLowDateTime = (uint)ft };
 	}
 	
@@ -656,7 +657,10 @@ static unsafe partial class Api {
 		public fixed char cFileName[260];
 		public fixed char cAlternateFileName[14];
 		
-		internal unsafe string Name {
+		/// <summary>
+		/// Returns <b>cFileName</b> as string, or null if it's <c>".."</c> or <c>"."</c>.
+		/// </summary>
+		public unsafe string Name {
 			get {
 				fixed (char* p = cFileName) {
 					if (p[0] == '.') {
@@ -671,7 +675,7 @@ static unsafe partial class Api {
 		/// <summary>
 		/// Returns nonzero if this is a NTFS link: 1 symlink, 2 mount, 3 other.
 		/// </summary>
-		internal int IsNtfsLink
+		public int IsNtfsLink
 			=> dwFileAttributes.Has(FileAttributes.ReparsePoint) && 0 != (dwReserved0 & 0x20000000)
 			? dwReserved0 switch { 0xA000000C => 1, 0xA0000003 => 2, _ => 3 }
 			: 0;
@@ -687,17 +691,17 @@ static unsafe partial class Api {
 	internal static extern bool FindClose(IntPtr hFindFile);
 	
 #if TEST_FINDFIRSTFILEEX
-		internal enum FINDEX_INFO_LEVELS
-		{
-			FindExInfoStandard,
-			FindExInfoBasic,
-			FindExInfoMaxInfoLevel
-		}
+	internal enum FINDEX_INFO_LEVELS
+	{
+		FindExInfoStandard,
+		FindExInfoBasic,
+		FindExInfoMaxInfoLevel
+	}
 
-		internal const uint FIND_FIRST_EX_LARGE_FETCH = 0x2;
+	internal const uint FIND_FIRST_EX_LARGE_FETCH = 0x2;
 
-		[DllImport("kernel32.dll", EntryPoint = "FindFirstFileExW")]
-		internal static extern IntPtr FindFirstFileEx(string lpFileName, FINDEX_INFO_LEVELS fInfoLevelId, out WIN32_FIND_DATA lpFindFileData, int fSearchOp, IntPtr lpSearchFilter, uint dwAdditionalFlags);
+	[DllImport("kernel32.dll", EntryPoint = "FindFirstFileExW")]
+	internal static extern IntPtr FindFirstFileEx(string lpFileName, FINDEX_INFO_LEVELS fInfoLevelId, out WIN32_FIND_DATA lpFindFileData, int fSearchOp, IntPtr lpSearchFilter, uint dwAdditionalFlags);
 #endif
 	
 	internal const uint MOVEFILE_REPLACE_EXISTING = 0x1;

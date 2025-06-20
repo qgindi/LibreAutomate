@@ -433,7 +433,7 @@ This tool modifies only the .git folder, not workspace files.
 			
 			b.OkApply += async e => {
 				e.Cancel = true;
-				App.Model.WSSett.CurrentUser.gitUrl = tUrl.Text;
+				App.Model.UserSettings.gitUrl = tUrl.Text;
 				_Start(setup: true); //may need to set _gitExe
 				var w = b.Window.Hwnd();
 				b.Window.IsEnabled = false; //disables controls but allows to close the window, unlike b.Window.Hwnd().Enable(false);. Git may hang, eg when auth fails on my vmware Win7.
@@ -504,7 +504,7 @@ This tool modifies only the .git folder, not workspace files.
 		}
 		
 		static bool _OkTask(bool clone) {
-			var url = App.Model.WSSett.CurrentUser.gitUrl;
+			var url = App.Model.UserSettings.gitUrl;
 			if (!url.Ends(".git")) url += ".git";
 			
 			if (clone) {
@@ -582,7 +582,7 @@ This tool modifies only the .git folder, not workspace files.
 		
 		static string _GetURL() {
 			if (_gitExe != null && gits("config --get remote.origin.url") && !_go.NE()) return _go.Ends(".git", true) ? _go[..^4] : _go;
-			return App.Model.WSSett.CurrentUser.gitUrl;
+			return App.Model.UserSettings.gitUrl;
 		}
 		
 		static JsonNode _GithubGet(string endpoint) {
