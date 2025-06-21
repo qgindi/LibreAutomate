@@ -37,7 +37,7 @@ class PipIPC {
 			var r = reader.ReadLine();
 			return r;
 		}
-		catch (Exception ex) { print.it(ex); return null; }
+		catch (Exception ex) { Debug_.Print($"{message}.  {ex}"); return null; }
 	}
 	
 	/// <inheritdoc cref="SendSync"/>
@@ -85,6 +85,9 @@ class PipIPC {
 				//		});
 				//	}
 				//	break;
+				case "WM_ACTIVATE":
+					if (App.Hmain.IsActive) App.Dispatcher.InvokeAsync(() => MainWindow.OnActivatedDeactivatedAppOrPip_(param == "1"));
+					break;
 				default:
 					ret = "Bad: " + message;
 					break;
@@ -98,14 +101,15 @@ class PipIPC {
 	}
 	
 	static void _RunScript(string param) {
-		//TODO: sync files
-		
 		try {
+			bool laActive = App.Hmain.IsActive;
+			if (laActive) App.Dispatcher.Invoke(Panels.Editor.OnAppActivated_);
+			
 			var j = JsonNode.Parse(param);
 			string file = (string)j["file"];
 			string[] args = j["args"] is JsonArray ja ? ja.Select(o => (string)o).ToArray() : [];
 			
-			if (!wait.until(-60, () => miscInfo.isInputDesktop(true))) throw new InputDesktopException("Now cannot run scripts in PiP session."); //1-2 s when connecting to existing session
+			if (!laActive) if (!wait.until(-60, () => miscInfo.isInputDesktop(true))) throw new InputDesktopException("Now cannot run scripts in PiP session."); //1-2 s when connecting to existing session
 			
 			//script.run(file, args); //works, but I like more low-level code here
 			App.Dispatcher.InvokeAsync(() => {

@@ -25,6 +25,9 @@
 - uid: output_tags
   name: Output tags
   href: articles/Output%20tags.html
+- uid: pip_session
+  name: PiP session
+  href: editor/PiP%20session.html
 - uid: portable
   name: Portable mode
   href: editor/Portable%20app.html

@@ -178,17 +178,7 @@ partial class MainWindow : Window {
 			RegHotkeys.WmHotkey_(wParam);
 			break;
 		case Api.WM_ACTIVATEAPP: //note: not received at startup, because sets the hook when the window is already active
-			if (wParam != 0) {
-				_appActivatedTimer ??= new(_ => {
-					Panels.Editor.OnAppActivated_();
-					if (App.Settings.checkForUpdates) App.CheckForUpdates();
-					Git.AutoBackup(false);
-				});
-				_appActivatedTimer.After(250);
-			} else {
-				_appActivatedTimer?.Stop();
-				App.Model.Save.AllNowIfNeed();
-			}
+			OnActivatedDeactivatedAppOrPip_(wParam != 0);
 			break;
 		case Api.WM_SYSCOMMAND when (wParam & 0xFFF0) == Api.SC_CLOSE:
 			if (handled = App.Settings.runHidden) Hide_();
@@ -197,7 +187,24 @@ partial class MainWindow : Window {
 		
 		return default;
 	}
-	timer _appActivatedTimer;
+	
+	/// <summary>
+	/// Called on WM_ACTIVATEAPP of the main window. In LA PiP also called on WM_ACTIVATE of the host PiP window, if the main window is active.
+	/// </summary>
+	internal static void OnActivatedDeactivatedAppOrPip_(bool activated) {
+		if (activated) {
+			s_appActivatedTimer ??= new(static _ => {
+				Panels.Editor.OnAppActivated_();
+				if (App.Settings.checkForUpdates) App.CheckForUpdates();
+				Git.AutoBackup(false);
+			});
+			s_appActivatedTimer.After(250);
+		} else {
+			s_appActivatedTimer?.Stop();
+			App.Model.Save.AllNowIfNeed();
+		}
+	}
+	static timer s_appActivatedTimer;
 	
 	internal void Hide_() {
 		if (IsVisible) {
@@ -207,26 +214,6 @@ partial class MainWindow : Window {
 			process.ThisProcessMinimizePhysicalMemory_(1000);
 		}
 	}
-	
-	//this could be a workaround for the inactive window at startup, but probably don't need when we call Activete() in OnSourceInitialized
-	//protected override void OnActivated(EventArgs e) {
-	//	var w = this.Hwnd();
-	//	if (wnd.active != w && _activationWorkaroundTime < Environment.TickCount64 - 5000) {
-	//		//print.it(new StackTrace());
-	//		_activationWorkaroundTime = Environment.TickCount64;
-	//		timer.after(10, _ => {
-	//			Debug_.Print("OnActivated workaround, " + wnd.active);
-	//			//w.ActivateL(); //in some cases does not work, or need key etc
-	//			if (!w.IsMinimized) {
-	//				w.ShowMinimized(noAnimation: true);
-	//				w.ShowNotMinimized(noAnimation: true);
-	//			}
-	//		});
-	//	}
-	
-	//	base.OnActivated(e);
-	//}
-	//long _activationWorkaroundTime;
 	
 	//this was for testing document tabs. Now we don't use document tabs. All documents now are in single panel.
 	//void _OpenDocuments() {

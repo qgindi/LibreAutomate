@@ -327,9 +327,8 @@ file class PipWindow : Form {
 				//	return;
 			}
 			break;
-		case Api.WM_ACTIVATE when Math2.LoWord(m.WParam) != 0 && IsConnected:
-			//print.it("notify");//TODO: if editor just deactivated, wait until it finishes saving all. But maybe better let editor watch file changes. Now eg does not sync if PiP window not activated between editing scripts and "run script in pip".
-			//_ = PipIPC.SendAsync("syncFiles", 1000);
+		case Api.WM_ACTIVATE when IsConnected:
+			_ = PipIPC.SendAsync(Math2.LoWord(m.WParam) != 0 ? "WM_ACTIVATE 1" : "WM_ACTIVATE 0", 1000);
 			break;
 		}
 		
@@ -356,6 +355,8 @@ file class PipWindow : Form {
 			else process.terminate(rdpclip);
 		});
 #endif
+		m.Separator();
+		m["Help"] = o => HelpUtil.AuHelp("articles/PiP session");
 #if DEBUG
 		m.Separator();
 		m["Test 1"] = o => {

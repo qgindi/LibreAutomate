@@ -71,7 +71,7 @@ static partial class App {
 		if (CommandLine.ProgramStarted2(args)) return;
 		
 #if IDE_LA
-		PrintServer = new(!true) { NoNewline = true };
+		PrintServer = new(miscInfo.isChildSession) { NoNewline = true };
 #else
 		PrintServer = new(true) { NoNewline = true };
 #endif

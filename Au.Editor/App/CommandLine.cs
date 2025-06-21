@@ -6,7 +6,6 @@ static class CommandLine {
 	/// Returns true if this instance must exit.
 	/// </summary>
 	public static bool ProgramStarted1(ReadOnlySpan<string> args, out int exitCode) {
-		//TODO
 #if IDE_LA && !true //test 2 LA instances, eg when developing filesystem sync for PiP
 		if (args is ["/second"]) {
 			typeof(miscInfo).GetField("s_isChildSession", BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, (bool?)true);

@@ -27,10 +27,10 @@ class DOptions : KDialogWindow {
 		_b.Row(-1).Add(out _tc).Height(300..);
 		_b.R.StartOkCancel()
 			.AddOkCancel(out var bOK, out var bCancel, out _, apply: "Apply")
-			.xAddDialogHelpButtonAndF1("editor/Program settings")
-			.End();
+			.xAddDialogHelpButtonAndF1("editor/Program settings");
+		if (miscInfo.isChildSession) _b.Add<TextBlock>().FormatText($"<a {() => HelpUtil.AuHelp("articles/PiP session")}>PiP</a>");
+		_b.End();
 		bOK.IsDefault = false; bCancel.IsCancel = false;
-		if (miscInfo.isChildSession) _b.R.StartGrid<Expander>("PiP session info").Row(120).xAddInfoBlockT(AppSettings.c_pipInfo, scrollViewer: true).End();
 		
 		_Program();
 		_Workspace();

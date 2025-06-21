@@ -12,6 +12,8 @@ Workspace settings are saved in the workspace folder. Default workspace: `Docume
 
 If you want to copy settings and workspaces to another computer, copy folder `Documents\LibreAutomate`.
 
+See also: [PiP session](xref:pip_session)
+
 ## Options dialog
 
 ### Program

@@ -873,7 +873,7 @@ public static class script {
 	}
 
 	/// <summary>
-	/// Returns true if this process is running in an RDP child session (aka Picture-in-Picture).
+	/// Returns true if this process is running in a child session (aka Picture-in-Picture).
 	/// This function is an alias of <see cref="miscInfo.isChildSession"/>.
 	/// </summary>
 	public static bool isInPip => miscInfo.isChildSession;

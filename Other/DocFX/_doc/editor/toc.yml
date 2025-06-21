@@ -7,8 +7,8 @@
 - name: Scripts
   href: Scripts.md
 
-- name: "Class files, projects"
-  href: "Class files, projects.md"
+- name: Class files, projects
+  href: Class files, projects.md
 
 - name: Command line
   href: Command line.md
@@ -24,6 +24,9 @@
 
 - name: Debugger
   href: Debugger.md
+
+- name: PiP session
+  href: PiP session.md
 
 - name: Portable app
   href: Portable app.md

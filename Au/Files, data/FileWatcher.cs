@@ -146,7 +146,7 @@ public sealed class FileWatcher : IDisposable {
 	/// </returns>
 	/// <exception cref="NotSupportedException">
 	/// Thrown if this method has already been called for the same file without a corresponding call to <see cref="Dispose"/>.
-	/// If multiple notification handlers are needed, combine them into the <paramref name="onExternalChange"/> delegate.
+	/// If multiple notification handlers are needed, combine them into the <i>onExternalChange</i> delegate.
 	/// </exception>
 	/// <example><see cref="FileWatcher"/></example>
 	public static FileWatcher Watch(string file, Action onExternalChange)

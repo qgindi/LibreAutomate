@@ -6,7 +6,7 @@ else {
 	if(i>0) s=s[..i];
 }
 
-var w = wnd.find(0, "Au - Microsoft Visual Studio*", "HwndWrapper[DefaultDomain;*");
+var w = wnd.find(0, "Au -* Microsoft Visual Studio*", "HwndWrapper[DefaultDomain;*");
 w.Activate();
 //keys.send("Ctrl+T");
 keys.send("Ctrl+(1 S)");

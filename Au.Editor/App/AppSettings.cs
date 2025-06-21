@@ -61,26 +61,6 @@ record AppSettings : JSettings {
 	
 	#region settings that are different in main and child (PiP) session
 	
-	public const string c_pipInfo = """
-A PiP session runs under the same Windows user account as the main session, so programs in both sessions use the same user files and settings.
-
-Only these settings are separate:
-  Program > Start hidden, Visible if, Check for updates
-  Workspace > Run scripts, Auto-backup
-  Hotkeys (all in the Hotkeys page)
-  Window positions (main window, tool windows)
-  Bookmarks, breakpoints, expanded folders, open files, folding.
-
-Ignored in a PiP session started by LibreAutomate:
-  Program > Start with Windows (in PiP always starts)
-
-While LibreAutomate is running in both PiP and main session:
-  Don't change other settings, panel/toolbar layout, snippets.
-  You can manage and edit workspace files (scripts etc) in both sessions.
-  You can run any scrits in the PiP session as well as in the main session.
-  Use the same workspace in both sessions.
-""";
-	
 	public record session_t {
 		public string user;
 		public bool runHidden, startVisibleIfNotAutoStarted;

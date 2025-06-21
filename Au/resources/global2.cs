@@ -41,6 +41,6 @@ namespace Au.More;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class Au_ {
 	///
-	public const string Version = "1.11.0";
+	public const string Version = "1.12.0";
 }
 #endif

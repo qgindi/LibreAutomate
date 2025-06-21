@@ -38,7 +38,7 @@ Change version info (see above) in global2.cs and index.md.
 Build solution in config Release, all platforms.
 	NOTE: use the "Rebuild solution" command, else VS may not update something.
 
-Review menu Help -> About. May need to update beta, C# version, .NET version, used libraries.
+Review menu Help -> About. May need to update Au.More.FileWatcher.WatchC# version, .NET version, used libraries.
 
 Run script "Au docs" just to catch XML documentation errors and test how it works with current C#/.NET/DocFX versions etc.
 	Don't upload. Fix errors if need. More info in AuDocs.txt.

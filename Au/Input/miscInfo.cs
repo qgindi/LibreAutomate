@@ -129,7 +129,7 @@ public static class miscInfo {
 	//}
 	
 	/// <summary>
-	/// Returns <c>true</c> if this process is running in an RDP child session (aka Picture-in-Picture).
+	/// Returns <c>true</c> if this process is running in a child session (aka Picture-in-Picture).
 	/// </summary>
 	public static unsafe bool isChildSession {
 		get {
