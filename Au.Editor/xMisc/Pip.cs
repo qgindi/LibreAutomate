@@ -356,7 +356,7 @@ file class PipWindow : Form {
 		});
 #endif
 		m.Separator();
-		m["Help"] = o => HelpUtil.AuHelp("articles/PiP session");
+		m["Help"] = o => HelpUtil.AuHelp("editor/PiP session");
 #if DEBUG
 		m.Separator();
 		m["Test 1"] = o => {

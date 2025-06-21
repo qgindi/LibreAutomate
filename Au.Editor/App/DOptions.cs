@@ -28,7 +28,7 @@ class DOptions : KDialogWindow {
 		_b.R.StartOkCancel()
 			.AddOkCancel(out var bOK, out var bCancel, out _, apply: "Apply")
 			.xAddDialogHelpButtonAndF1("editor/Program settings");
-		if (miscInfo.isChildSession) _b.Add<TextBlock>().FormatText($"<a {() => HelpUtil.AuHelp("articles/PiP session")}>PiP</a>");
+		if (miscInfo.isChildSession) _b.Add<TextBlock>().FormatText($"<a {() => HelpUtil.AuHelp("editor/PiP session")}>PiP</a>");
 		_b.End();
 		bOK.IsDefault = false; bCancel.IsCancel = false;
 		
