@@ -160,7 +160,7 @@ static class ModifyCode {
 	}
 	
 	static void _FormatReplace(CodeInfo.Context cd, List<TextChange> a) {
-		using var undo = a.Count < 2 ? default : cd.sci.aaaNewUndoAction();
+		using var undo = a.Count < 2 ? default : cd.sci.ENewUndoAction();
 		for (int i = a.Count; --i >= 0;) {
 			var c = a[i];
 			cd.sci.aaaReplaceRange(true, c.Span.Start, c.Span.End, c.NewText);
@@ -525,7 +525,7 @@ static class ModifyCode {
 		doc.EInicatorsFound_(aRepl.Select(o => o.start..o.end).ToList());
 		wait.doEvents(1000);
 		if (doc != Panels.Editor.ActiveDoc || doc.aaaText != cd.code) return;
-		using (doc.aaaNewUndoAction()) {
+		using (doc.ENewUndoAction()) {
 			foreach (var v in aRepl.OrderByDescending(o => o.end)) {
 				if (v.start > to) continue; to = v.start; //a variable in a replaced statement
 				doc.aaaReplaceRange(true, v.start, v.end, v.repl);
@@ -725,7 +725,7 @@ partial class SciCode {
 		var dmp = new DiffMatchPatch.diff_match_patch();
 		var a = dmp.diff_main(old, s, true); //the slowest part. Timeout 1 s; then a valid but smaller.
 		dmp.diff_cleanupEfficiency(a);
-		using (aaaNewUndoAction(onUndoDontChangeCaretPos: !isRange)) {
+		using (ENewUndoAction(onUndoDontChangeCaretPos: !isRange)) {
 			for (int i = a.Count - 1, j = old.Length; i >= 0; i--) {
 				var d = a[i];
 				if (d.operation == DiffMatchPatch.Operation.INSERT) {

@@ -379,7 +379,7 @@ partial class CiStyling {
 	/// <summary>
 	/// Returns true if character at pos8 is in a hidden text.
 	/// </summary>
-	public static bool IsProtected(KScintilla sci, int pos8) => sci.Call(Sci.SCI_GETSTYLEAT, pos8) == STYLE_HIDDEN;
+	public static bool IsProtected(KScintilla sci, int pos8) => sci.aaaStyleGetAt(pos8) == STYLE_HIDDEN;
 	
 	/// <summary>
 	/// Returns true if range from8..to8 intersects a hidden text, except when it is greater or equal than the hidden text range.

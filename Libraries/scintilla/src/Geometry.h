@@ -66,6 +66,9 @@ public:
 	constexpr bool Intersects(Interval other) const noexcept {
 		return (right > other.left) && (left < other.right);
 	}
+	constexpr Interval Offset(XYPOSITION offset) const noexcept {
+		return {left + offset, right + offset};
+	}
 };
 
 /**
@@ -112,11 +115,19 @@ public:
 		return (right > other.left) && (left < other.right) &&
 			(bottom > other.top) && (top < other.bottom);
 	}
+	constexpr bool Intersects(Interval horizontalBounds) const noexcept {
+		return (right > horizontalBounds.left) && (left < horizontalBounds.right);
+	}
+
 	void Move(XYPOSITION xDelta, XYPOSITION yDelta) noexcept {
 		left += xDelta;
 		top += yDelta;
 		right += xDelta;
 		bottom += yDelta;
+	}
+
+	PRectangle WithHorizontalBounds(Interval horizontal) const noexcept {
+		return PRectangle(horizontal.left, top, horizontal.right, bottom);
 	}
 
 	constexpr PRectangle Inset(XYPOSITION delta) const noexcept {
@@ -149,6 +160,7 @@ Interval HorizontalBounds(PRectangle rc) noexcept;
 
 XYPOSITION PixelAlign(XYPOSITION xy, int pixelDivisions) noexcept;
 XYPOSITION PixelAlignFloor(XYPOSITION xy, int pixelDivisions) noexcept;
+XYPOSITION PixelAlignCeil(XYPOSITION xy, int pixelDivisions) noexcept;
 
 Point PixelAlign(const Point &pt, int pixelDivisions) noexcept;
 
@@ -158,14 +170,19 @@ PRectangle PixelAlignOutside(const PRectangle &rc, int pixelDivisions) noexcept;
 /**
 * Holds an RGBA colour with 8 bits for each component.
 */
-constexpr const float componentMaximum = 255.0f;
+constexpr float componentMaximum = 255.0F;
+constexpr unsigned int maximumByte = 0xffU;
 class ColourRGBA {
+	static constexpr float ComponentAsFloat(unsigned char component) {
+		return component / componentMaximum;
+	}
+	static constexpr int rgbMask = 0xffffff;
 	int co;
 public:
 	constexpr explicit ColourRGBA(int co_ = 0) noexcept : co(co_) {
 	}
 
-	constexpr ColourRGBA(unsigned int red, unsigned int green, unsigned int blue, unsigned int alpha=0xff) noexcept :
+	constexpr ColourRGBA(unsigned int red, unsigned int green, unsigned int blue, unsigned int alpha=maximumByte) noexcept :
 		ColourRGBA(red | (green << 8) | (blue << 16) | (alpha << 24)) {
 	}
 
@@ -174,19 +191,24 @@ public:
 	}
 
 	static constexpr ColourRGBA FromRGB(int co_) noexcept {
-		return ColourRGBA(co_ | (0xffu << 24));
+		return ColourRGBA(co_ | (maximumByte << 24));
+	}
+
+	static constexpr ColourRGBA Grey(unsigned int grey, unsigned int alpha=maximumByte) noexcept {
+		return ColourRGBA(grey, grey, grey, alpha);
 	}
 
 	static constexpr ColourRGBA FromIpRGB(intptr_t co_) noexcept {
-		return ColourRGBA(static_cast<int>(co_) | (0xffu << 24));
+		const int rgb = co_ & rgbMask;
+		return ColourRGBA(rgb | (maximumByte << 24));
 	}
 
 	constexpr ColourRGBA WithoutAlpha() const noexcept {
-		return ColourRGBA(co & 0xffffff);
+		return ColourRGBA(co & rgbMask);
 	}
 
 	constexpr ColourRGBA Opaque() const noexcept {
-		return ColourRGBA(co | (0xffu << 24));
+		return ColourRGBA(co | (maximumByte << 24));
 	}
 
 	constexpr int AsInteger() const noexcept {
@@ -194,35 +216,37 @@ public:
 	}
 
 	constexpr int OpaqueRGB() const noexcept {
-		return co & 0xffffff;
+		return co & rgbMask;
 	}
 
 	// Red, green and blue values as bytes 0..255
 	constexpr unsigned char GetRed() const noexcept {
-		return co & 0xff;
+		return co & maximumByte;
 	}
 	constexpr unsigned char GetGreen() const noexcept {
-		return (co >> 8) & 0xff;
+		return (co >> 8) & maximumByte;
 	}
 	constexpr unsigned char GetBlue() const noexcept {
-		return (co >> 16) & 0xff;
+		return (co >> 16) & maximumByte;
 	}
 	constexpr unsigned char GetAlpha() const noexcept {
-		return (co >> 24) & 0xff;
+		// Use a temporary here to prevent a 'Wconversion' warning from GCC
+		const int shifted = co >> 24;
+		return shifted & maximumByte;
 	}
 
 	// Red, green, blue, and alpha values as float 0..1.0
 	constexpr float GetRedComponent() const noexcept {
-		return GetRed() / componentMaximum;
+		return ComponentAsFloat(GetRed());
 	}
 	constexpr float GetGreenComponent() const noexcept {
-		return GetGreen() / componentMaximum;
+		return ComponentAsFloat(GetGreen());
 	}
 	constexpr float GetBlueComponent() const noexcept {
-		return GetBlue() / componentMaximum;
+		return ComponentAsFloat(GetBlue());
 	}
 	constexpr float GetAlphaComponent() const noexcept {
-		return GetAlpha() / componentMaximum;
+		return ComponentAsFloat(GetAlpha());
 	}
 
 	constexpr bool operator==(const ColourRGBA &other) const noexcept {
@@ -230,12 +254,15 @@ public:
 	}
 
 	constexpr bool IsOpaque() const noexcept {
-		return GetAlpha() == 0xff;
+		return GetAlpha() == maximumByte;
 	}
 
 	ColourRGBA MixedWith(ColourRGBA other) const noexcept;
 	ColourRGBA MixedWith(ColourRGBA other, double proportion) const noexcept;
 };
+
+constexpr ColourRGBA white(maximumByte, maximumByte, maximumByte);
+constexpr ColourRGBA black(0x0, 0x0, 0x0);
 
 /**
 * Holds an RGBA colour and stroke width to stroke a shape.

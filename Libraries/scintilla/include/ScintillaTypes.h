@@ -86,10 +86,15 @@ enum class MarkerSymbol {
 	RgbaImage = 30,
 	Bookmark = 31,
 	VerticalBookmark = 32,
+	Bar = 33,
 	Character = 10000,
 };
 
 enum class MarkerOutline {
+	HistoryRevertedToOrigin = 21,
+	HistorySaved = 22,
+	HistoryModified = 23,
+	HistoryRevertedToModified = 24,
 	FolderEnd = 25,
 	FolderOpenMid = 26,
 	FolderMidTail = 27,
@@ -160,6 +165,18 @@ enum class FontWeight {
 	Bold = 700,
 };
 
+enum class FontStretch {
+	UltraCondensed = 1,
+	ExtraCondensed = 2,
+	Condensed = 3,
+	SemiCondensed = 4,
+	Normal = 5,
+	SemiExpanded = 6,
+	Expanded = 7,
+	ExtraExpanded = 8,
+	UltraExpanded = 9,
+};
+
 enum class Element {
 	List = 0,
 	ListBack = 1,
@@ -173,6 +190,8 @@ enum class Element {
 	SelectionSecondaryBack = 15,
 	SelectionInactiveText = 16,
 	SelectionInactiveBack = 17,
+	SelectionInactiveAdditionalText = 18,
+	SelectionInactiveAdditionalBack = 19,
 	Caret = 40,
 	CaretAdditional = 41,
 	CaretLineBack = 50,
@@ -213,13 +232,22 @@ enum class IndicatorStyle {
 	PointCharacter = 19,
 	Gradient = 20,
 	GradientCentre = 21,
+	PointTop = 22,
 };
 
 enum class IndicatorNumbers {
 	Container = 8,
 	Ime = 32,
 	ImeMax = 35,
-	Max = 35,
+	HistoryRevertedToOriginInsertion = 36,
+	HistoryRevertedToOriginDeletion = 37,
+	HistorySavedInsertion = 38,
+	HistorySavedDeletion = 39,
+	HistoryModifiedInsertion = 40,
+	HistoryModifiedDeletion = 41,
+	HistoryRevertedToModifiedInsertion = 42,
+	HistoryRevertedToModifiedDeletion = 43,
+	Max = 43,
 };
 
 enum class IndicValue {
@@ -235,6 +263,7 @@ enum class IndicFlag {
 enum class AutoCompleteOption {
 	Normal = 0,
 	FixedSize = 1,
+	SelectFirstItem = 2,
 };
 
 enum class IndentView {
@@ -263,6 +292,19 @@ enum class FindOption {
 	Cxx11RegEx = 0x00800000,
 };
 
+enum class ChangeHistoryOption {
+	Disabled = 0,
+	Enabled = 1,
+	Markers = 2,
+	Indicators = 4,
+};
+
+enum class UndoSelectionHistoryOption {
+	Disabled = 0,
+	Enabled = 1,
+	Scroll = 2,
+};
+
 enum class FoldLevel {
 	None = 0x0,
 	Base = 0x400,
@@ -281,6 +323,7 @@ enum class FoldAction {
 	Contract = 0,
 	Expand = 1,
 	Toggle = 2,
+	ContractEveryLevel = 4,
 };
 
 enum class AutomaticFold {
@@ -473,6 +516,7 @@ enum class Technology {
 	DirectWrite = 1,
 	DirectWriteRetain = 2,
 	DirectWriteDC = 3,
+	DirectWrite1 = 4,
 };
 
 enum class LineEndType {
@@ -508,6 +552,7 @@ enum class Supports {
 	FractionalStrokeWidth = 2,
 	TranslucentStroke = 3,
 	PixelModification = 4,
+	ThreadSafeMeasureWidths = 5,
 };
 
 enum class LineCharacterIndexType {
@@ -602,6 +647,7 @@ enum class CompletionMethods {
 	Tab = 3,
 	Newline = 4,
 	Command = 5,
+	SingleChoice = 6,
 };
 
 enum class CharacterSource {
@@ -664,6 +710,7 @@ using sptr_t = intptr_t;
 constexpr Position InvalidPosition = -1;
 constexpr int CpUtf8 = 65001;
 constexpr int MarkerMax = 31;
+constexpr int MaskHistory = 0x01E00000;
 constexpr int MaskFolders = 0xFE000000;
 constexpr int MaxMargin = 4;
 constexpr int FontSizeMultiplier = 100;
@@ -794,6 +841,15 @@ constexpr KeyMod operator|(KeyMod a, KeyMod b) noexcept {
 
 constexpr KeyMod operator&(KeyMod a, KeyMod b) noexcept {
 	return static_cast<KeyMod>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+constexpr KeyMod ModifierFlags(bool shift, bool ctrl, bool alt, bool meta=false, bool super=false) noexcept {
+	return
+		(shift ? KeyMod::Shift : KeyMod::Norm) |
+		(ctrl ? KeyMod::Ctrl : KeyMod::Norm) |
+		(alt ? KeyMod::Alt : KeyMod::Norm) |
+		(meta ? KeyMod::Meta : KeyMod::Norm) |
+		(super ? KeyMod::Super : KeyMod::Norm);
 }
 
 // Test if an enum class value has some bit flag(s) of test set.

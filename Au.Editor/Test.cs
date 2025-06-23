@@ -28,6 +28,9 @@ static class Test {
 	public static void FromMenubar() {
 		print.clear();
 		
+		//var doc = Panels.Editor.ActiveDoc;
+		//doc.ESetUndoMark_(-1);
+		
 		//var s = Panels.Editor.ActiveDoc.aaaText.Trim();
 		//print.it(App.Model.FindByItemPath(s)?.ItemPath);
 		

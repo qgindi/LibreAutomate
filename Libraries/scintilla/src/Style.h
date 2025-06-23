@@ -15,6 +15,7 @@ struct FontSpecification {
 	const char *fontName;
 	int size;
 	Scintilla::FontWeight weight = Scintilla::FontWeight::Normal;
+	Scintilla::FontStretch stretch = Scintilla::FontStretch::Normal;
 	bool italic = false;
 	Scintilla::CharacterSet characterSet = Scintilla::CharacterSet::Default;
 	Scintilla::FontQuality extraFontFlag = Scintilla::FontQuality::QualityDefault;
@@ -51,6 +52,7 @@ public:
 	bool visible;
 	bool changeable;
 	bool hotspot;
+	char invisibleRepresentation[5];
 
 	std::shared_ptr<Font> font;
 

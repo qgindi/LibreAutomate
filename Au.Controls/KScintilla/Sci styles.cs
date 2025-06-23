@@ -94,6 +94,7 @@ public unsafe partial class KScintilla {
 		if (belowDefault) aaaStyleClearRange(0, STYLE_DEFAULT);
 		else Call(SCI_STYLECLEARALL);
 		aaaStyleHidden(STYLE_HIDDEN, true);
+		//aaaSetString(SCI_STYLESETINVISIBLEREPRESENTATION, STYLE_HIDDEN, "-"u8); //no
 		aaaSetElementColor(SC_ELEMENT_HOT_SPOT_ACTIVE, 0x8000FF);
 	}
 	
@@ -107,11 +108,11 @@ public unsafe partial class KScintilla {
 	
 	/// <summary>
 	/// Gets style at position.
-	/// Uses SCI_GETSTYLEAT.
+	/// Uses SCI_GETSTYLEINDEXAT.
 	/// Returns 0 if pos is invalid.
 	/// </summary>
 	public int aaaStyleGetAt(int pos8) {
-		return Call(SCI_GETSTYLEAT, pos8);
+		return Call(SCI_GETSTYLEINDEXAT, pos8);
 	}
 	
 	/// <summary>

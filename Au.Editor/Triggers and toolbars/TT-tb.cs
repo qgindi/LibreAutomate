@@ -270,7 +270,7 @@ partial class Program {
 		int pos = -1;
 		if (cbReplace?.SelectedItem is _Trigger u && _GetTriggerStatementFullRange2(u, out var span, replacing: true)) {
 			var doc = _OpenSourceFile(t.fn, span.Start);
-			using var undo = doc.aaaNewUndoAction();
+			using var undo = doc.ENewUndoAction();
 			doc.aaaDeleteRange(true, span.Start, span.End);
 			pos = span.Start;
 			_Add();

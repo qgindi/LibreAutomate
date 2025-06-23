@@ -108,6 +108,7 @@ struct FontParameters {
 	Scintilla::Technology technology;
 	Scintilla::CharacterSet characterSet;
 	const char *localeName;
+	Scintilla::FontStretch stretch;
 
 	constexpr FontParameters(
 		const char *faceName_,
@@ -117,7 +118,8 @@ struct FontParameters {
 		Scintilla::FontQuality extraFontFlag_= Scintilla::FontQuality::QualityDefault,
 		Scintilla::Technology technology_= Scintilla::Technology::Default,
 		Scintilla::CharacterSet characterSet_= Scintilla::CharacterSet::Ansi,
-		const char *localeName_=localeNameDefault) noexcept :
+		const char *localeName_=localeNameDefault,
+		Scintilla::FontStretch stretch_=Scintilla::FontStretch::Normal) noexcept :
 
 		faceName(faceName_),
 		size(size_),
@@ -126,7 +128,8 @@ struct FontParameters {
 		extraFontFlag(extraFontFlag_),
 		technology(technology_),
 		characterSet(characterSet_),
-		localeName(localeName_)
+		localeName(localeName_),
+		stretch(stretch_)
 	{
 	}
 
@@ -191,8 +194,8 @@ public:
 	virtual ~Surface() noexcept = default;
 	static std::unique_ptr<Surface> Allocate(Scintilla::Technology technology);
 
-	virtual void Init(WindowID wid)=0;
-	virtual void Init(SurfaceID sid, WindowID wid)=0;
+	virtual void Init(WindowID wid)=0;	// For measuring text
+	virtual void Init(SurfaceID sid, WindowID wid)=0;	// For drawing
 	virtual std::unique_ptr<Surface> AllocatePixMap(int width, int height)=0;
 
 	virtual void SetMode(SurfaceMode mode)=0;
@@ -219,7 +222,6 @@ public:
 	virtual void FillRectangle(PRectangle rc, Fill fill)=0;
 	virtual void FillRectangleAligned(PRectangle rc, Fill fill)=0;
 	virtual void FillRectangle(PRectangle rc, Surface &surfacePattern)=0;
-	virtual void DrawLineDots(PRectangle rc, ColourRGBA color)=0; //Au
 	virtual void RoundedRectangle(PRectangle rc, FillStroke fillStroke)=0;
 	virtual void AlphaRectangle(PRectangle rc, XYPOSITION cornerSize, FillStroke fillStroke)=0;
 	enum class GradientOptions { leftToRight, topToBottom };
@@ -254,6 +256,7 @@ public:
 	virtual void FlushCachedState()=0;
 	virtual void FlushDrawing()=0;
 
+	virtual void DrawLineDots(PRectangle rc, ColourRGBA color)=0; //Au
 	virtual void* get_hdc() = 0; //Au
 };
 
@@ -317,12 +320,13 @@ struct ListOptions {
 	std::optional<ColourRGBA> foreSelected;
 	std::optional<ColourRGBA> backSelected;
 	AutoCompleteOption options=AutoCompleteOption::Normal;
+	float imageScale=1.0f;
 };
 
 class ListBox : public Window {
 public:
 	ListBox() noexcept;
-	virtual ~ListBox() noexcept override;
+	~ListBox() noexcept override;
 	static std::unique_ptr<ListBox> Allocate();
 
 	virtual void SetFont(const Font *font)=0;

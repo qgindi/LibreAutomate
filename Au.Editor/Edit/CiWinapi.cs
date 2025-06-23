@@ -87,7 +87,7 @@ class CiWinapi {
 		}
 		
 		var hs = new HashSet<string>();
-		using (doc.aaaNewUndoAction()) {
+		using (doc.ENewUndoAction()) {
 			_Insert(0, sr.GetSyntax(), text, item.Text, item.kind);
 		}
 		

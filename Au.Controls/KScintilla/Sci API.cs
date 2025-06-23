@@ -58,15 +58,6 @@ public static unsafe class Sci {
 	}
 #pragma warning restore 649
 
-	//[DllImport(SCINTILLA_DLL)]
-	//public static extern bool Sci_CanUndoRedoContainer(nint sci, bool redo, int token);
-
-	[DllImport(SCINTILLA_DLL)]
-	public static extern void Sci_SetUndoMark(nint sci, int mark);
-
-	[DllImport(SCINTILLA_DLL)]
-	public static extern int Sci_GetUndoMark(nint sci, bool redo);
-
 	public const int STYLE_HIDDEN = 31; //DEFAULT-1
 
 	#endregion
@@ -88,12 +79,14 @@ public static unsafe class Sci {
 	public const int SCI_GETCHARAT = 2007;
 	public const int SCI_GETCURRENTPOS = 2008;
 	public const int SCI_GETANCHOR = 2009;
-	public const int SCI_GETSTYLEAT = 2010;
+	//public const int SCI_GETSTYLEAT = 2010; //obsolete, use SCI_GETSTYLEINDEXAT
+	public const int SCI_GETSTYLEINDEXAT = 2038;
 	public const int SCI_REDO = 2011;
 	public const int SCI_SETUNDOCOLLECTION = 2012;
 	public const int SCI_SELECTALL = 2013;
 	public const int SCI_SETSAVEPOINT = 2014;
 	public const int SCI_GETSTYLEDTEXT = 2015;
+	public const int SCI_GETSTYLEDTEXTFULL = 2778;
 	public const int SCI_CANREDO = 2016;
 	public const int SCI_MARKERLINEFROMHANDLE = 2017;
 	public const int SCI_MARKERDELETEHANDLE = 2018;
@@ -174,7 +167,12 @@ public static unsafe class Sci {
 	public const int SC_MARK_RGBAIMAGE = 30;
 	public const int SC_MARK_BOOKMARK = 31;
 	public const int SC_MARK_VERTICALBOOKMARK = 32;
+	public const int SC_MARK_BAR = 33;
 	public const int SC_MARK_CHARACTER = 10000;
+	public const int SC_MARKNUM_HISTORY_REVERTED_TO_ORIGIN = 21;
+	public const int SC_MARKNUM_HISTORY_SAVED = 22;
+	public const int SC_MARKNUM_HISTORY_MODIFIED = 23;
+	public const int SC_MARKNUM_HISTORY_REVERTED_TO_MODIFIED = 24;
 	public const int SC_MARKNUM_FOLDEREND = 25;
 	public const int SC_MARKNUM_FOLDEROPENMID = 26;
 	public const int SC_MARKNUM_FOLDERMIDTAIL = 27;
@@ -182,6 +180,7 @@ public static unsafe class Sci {
 	public const int SC_MARKNUM_FOLDERSUB = 29;
 	public const int SC_MARKNUM_FOLDER = 30;
 	public const int SC_MARKNUM_FOLDEROPEN = 31;
+	public const int SC_MASK_HISTORY = 0x01E00000;
 	public const int SC_MASK_FOLDERS = unchecked((int)0xFE000000);
 	public const int SCI_MARKERDEFINE = 2040;
 	public const int SCI_MARKERSETFORE = 2041;
@@ -297,6 +296,19 @@ public static unsafe class Sci {
 	public const int SCI_STYLESETHOTSPOT = 2409;
 	public const int SCI_STYLESETCHECKMONOSPACED = 2254;
 	public const int SCI_STYLEGETCHECKMONOSPACED = 2255;
+	public const int SC_STRETCH_ULTRA_CONDENSED = 1;
+	public const int SC_STRETCH_EXTRA_CONDENSED = 2;
+	public const int SC_STRETCH_CONDENSED = 3;
+	public const int SC_STRETCH_SEMI_CONDENSED = 4;
+	public const int SC_STRETCH_NORMAL = 5;
+	public const int SC_STRETCH_SEMI_EXPANDED = 6;
+	public const int SC_STRETCH_EXPANDED = 7;
+	public const int SC_STRETCH_EXTRA_EXPANDED = 8;
+	public const int SC_STRETCH_ULTRA_EXPANDED = 9;
+	public const int SCI_STYLESETSTRETCH = 2258;
+	public const int SCI_STYLEGETSTRETCH = 2259;
+	public const int SCI_STYLESETINVISIBLEREPRESENTATION = 2256;
+	public const int SCI_STYLEGETINVISIBLEREPRESENTATION = 2257;
 	public const int SC_ELEMENT_LIST = 0;
 	public const int SC_ELEMENT_LIST_BACK = 1;
 	public const int SC_ELEMENT_LIST_SELECTED = 2;
@@ -309,6 +321,8 @@ public static unsafe class Sci {
 	public const int SC_ELEMENT_SELECTION_SECONDARY_BACK = 15;
 	public const int SC_ELEMENT_SELECTION_INACTIVE_TEXT = 16;
 	public const int SC_ELEMENT_SELECTION_INACTIVE_BACK = 17;
+	public const int SC_ELEMENT_SELECTION_INACTIVE_ADDITIONAL_TEXT = 18;
+	public const int SC_ELEMENT_SELECTION_INACTIVE_ADDITIONAL_BACK = 19;
 	public const int SC_ELEMENT_CARET = 40;
 	public const int SC_ELEMENT_CARET_ADDITIONAL = 41;
 	public const int SC_ELEMENT_CARET_LINE_BACK = 50;
@@ -353,6 +367,21 @@ public static unsafe class Sci {
 	public const int SCI_GETCHARACTERCATEGORYOPTIMIZATION = 2721;
 	public const int SCI_BEGINUNDOACTION = 2078;
 	public const int SCI_ENDUNDOACTION = 2079;
+	public const int SCI_GETUNDOSEQUENCE = 2799;
+	public const int SCI_GETUNDOACTIONS = 2790;
+	public const int SCI_SETUNDOSAVEPOINT = 2791;
+	public const int SCI_GETUNDOSAVEPOINT = 2792;
+	public const int SCI_SETUNDODETACH = 2793;
+	public const int SCI_GETUNDODETACH = 2794;
+	public const int SCI_SETUNDOTENTATIVE = 2795;
+	public const int SCI_GETUNDOTENTATIVE = 2796;
+	public const int SCI_SETUNDOCURRENT = 2797;
+	public const int SCI_GETUNDOCURRENT = 2798;
+	public const int SCI_PUSHUNDOACTIONTYPE = 2800;
+	public const int SCI_CHANGELASTUNDOACTIONTEXT = 2801;
+	public const int SCI_GETUNDOACTIONTYPE = 2802;
+	public const int SCI_GETUNDOACTIONPOSITION = 2803;
+	public const int SCI_GETUNDOACTIONTEXT = 2804;
 	public const int INDIC_PLAIN = 0;
 	public const int INDIC_SQUIGGLE = 1;
 	public const int INDIC_TT = 2;
@@ -375,11 +404,24 @@ public static unsafe class Sci {
 	public const int INDIC_POINTCHARACTER = 19;
 	public const int INDIC_GRADIENT = 20;
 	public const int INDIC_GRADIENTCENTRE = 21;
+	public const int INDIC_POINT_TOP = 22;
+	public const int INDICATOR_CONTAINER = 8;
+	public const int INDICATOR_IME = 32;
+	public const int INDICATOR_IME_MAX = 35;
+	public const int INDICATOR_HISTORY_REVERTED_TO_ORIGIN_INSERTION = 36;
+	public const int INDICATOR_HISTORY_REVERTED_TO_ORIGIN_DELETION = 37;
+	public const int INDICATOR_HISTORY_SAVED_INSERTION = 38;
+	public const int INDICATOR_HISTORY_SAVED_DELETION = 39;
+	public const int INDICATOR_HISTORY_MODIFIED_INSERTION = 40;
+	public const int INDICATOR_HISTORY_MODIFIED_DELETION = 41;
+	public const int INDICATOR_HISTORY_REVERTED_TO_MODIFIED_INSERTION = 42;
+	public const int INDICATOR_HISTORY_REVERTED_TO_MODIFIED_DELETION = 43;
+	public const int INDICATOR_MAX = 43;
 	//deprecated
+	//public const int INDIC_CONTAINER = 8;
 	//public const int INDIC_IME = 32;
 	//public const int INDIC_IME_MAX = 35;
 	//public const int INDIC_MAX = 35;
-	//public const int INDIC_CONTAINER = 8;
 	//public const int INDIC0_MASK = 0x20;
 	//public const int INDIC1_MASK = 0x40;
 	//public const int INDIC2_MASK = 0x80;
@@ -440,6 +482,7 @@ public static unsafe class Sci {
 	public const int SCI_AUTOCGETAUTOHIDE = 2119;
 	public const int SC_AUTOCOMPLETE_NORMAL = 0;
 	public const int SC_AUTOCOMPLETE_FIXED_SIZE = 1;
+	public const int SC_AUTOCOMPLETE_SELECT_FIRST_ITEM = 2;
 	public const int SCI_AUTOCSETOPTIONS = 2638;
 	public const int SCI_AUTOCGETOPTIONS = 2639;
 	public const int SCI_AUTOCSETDROPRESTOFWORD = 2270;
@@ -452,6 +495,10 @@ public static unsafe class Sci {
 	public const int SCI_AUTOCGETMAXWIDTH = 2209;
 	public const int SCI_AUTOCSETMAXHEIGHT = 2210;
 	public const int SCI_AUTOCGETMAXHEIGHT = 2211;
+	public const int SCI_AUTOCSETSTYLE = 2109;
+	public const int SCI_AUTOCGETSTYLE = 2120;
+	public const int SCI_AUTOCSETIMAGESCALE = 2815;
+	public const int SCI_AUTOCGETIMAGESCALE = 2816;
 	public const int SCI_SETINDENT = 2122;
 	public const int SCI_GETINDENT = 2123;
 	public const int SCI_SETUSETABS = 2124;
@@ -499,7 +546,22 @@ public static unsafe class Sci {
 	public const int SCFIND_POSIX = 0x00400000;
 	public const int SCFIND_CXX11REGEX = 0x00800000;
 	public const int SCI_FINDTEXT = 2150;
+	public const int SCI_FINDTEXTFULL = 2196;
 	public const int SCI_FORMATRANGE = 2151;
+	public const int SCI_FORMATRANGEFULL = 2777;
+	public const int SC_CHANGE_HISTORY_DISABLED = 0;
+	public const int SC_CHANGE_HISTORY_ENABLED = 1;
+	public const int SC_CHANGE_HISTORY_MARKERS = 2;
+	public const int SC_CHANGE_HISTORY_INDICATORS = 4;
+	public const int SCI_SETCHANGEHISTORY = 2780;
+	public const int SCI_GETCHANGEHISTORY = 2781;
+	public const int SC_UNDO_SELECTION_HISTORY_DISABLED = 0;
+	public const int SC_UNDO_SELECTION_HISTORY_ENABLED = 1;
+	public const int SC_UNDO_SELECTION_HISTORY_SCROLL = 2;
+	public const int SCI_SETUNDOSELECTIONHISTORY = 2782;
+	public const int SCI_GETUNDOSELECTIONHISTORY = 2783;
+	public const int SCI_SETSELECTIONSERIALIZED = 2784;
+	public const int SCI_GETSELECTIONSERIALIZED = 2785;
 	public const int SCI_GETFIRSTVISIBLELINE = 2152;
 	public const int SCI_GETLINE = 2153;
 	public const int SCI_GETLINECOUNT = 2154;
@@ -512,12 +574,15 @@ public static unsafe class Sci {
 	public const int SCI_SETSEL = 2160;
 	public const int SCI_GETSELTEXT = 2161;
 	public const int SCI_GETTEXTRANGE = 2162;
+	public const int SCI_GETTEXTRANGEFULL = 2039;
 	public const int SCI_HIDESELECTION = 2163;
+	public const int SCI_GETSELECTIONHIDDEN = 2088;
 	public const int SCI_POINTXFROMPOSITION = 2164;
 	public const int SCI_POINTYFROMPOSITION = 2165;
 	public const int SCI_LINEFROMPOSITION = 2166;
 	public const int SCI_POSITIONFROMLINE = 2167;
 	public const int SCI_LINESCROLL = 2168;
+	public const int SCI_SCROLLVERTICAL = 2817;
 	public const int SCI_SCROLLCARET = 2169;
 	public const int SCI_SCROLLRANGE = 2569;
 	public const int SCI_REPLACESEL = 2170;
@@ -551,6 +616,7 @@ public static unsafe class Sci {
 	public const int SCI_TARGETWHOLEDOCUMENT = 2690;
 	public const int SCI_REPLACETARGET = 2194;
 	public const int SCI_REPLACETARGETRE = 2195;
+	public const int SCI_REPLACETARGETMINIMAL = 2779;
 	public const int SCI_SEARCHINTARGET = 2197;
 	public const int SCI_SETSEARCHFLAGS = 2198;
 	public const int SCI_GETSEARCHFLAGS = 2199;
@@ -595,6 +661,7 @@ public static unsafe class Sci {
 	public const int SC_FOLDACTION_CONTRACT = 0;
 	public const int SC_FOLDACTION_EXPAND = 1;
 	public const int SC_FOLDACTION_TOGGLE = 2;
+	public const int SC_FOLDACTION_CONTRACT_EVERY_LEVEL = 4;
 	public const int SCI_FOLDLINE = 2237;
 	public const int SCI_FOLDCHILDREN = 2238;
 	public const int SCI_EXPANDCHILDREN = 2239;
@@ -727,7 +794,9 @@ public static unsafe class Sci {
 	public const int SCI_CANCEL = 2325;
 	public const int SCI_DELETEBACK = 2326;
 	public const int SCI_TAB = 2327;
+	public const int SCI_LINEINDENT = 2813;
 	public const int SCI_BACKTAB = 2328;
+	public const int SCI_LINEDEDENT = 2814;
 	public const int SCI_NEWLINE = 2329;
 	public const int SCI_FORMFEED = 2330;
 	public const int SCI_VCHOME = 2331;
@@ -870,7 +939,9 @@ public static unsafe class Sci {
 	public const int SC_SEL_LINES = 2;
 	public const int SC_SEL_THIN = 3;
 	public const int SCI_SETSELECTIONMODE = 2422;
+	public const int SCI_CHANGESELECTIONMODE = 2659;
 	public const int SCI_GETSELECTIONMODE = 2423;
+	public const int SCI_SETMOVEEXTENDSSELECTION = 2719;
 	public const int SCI_GETMOVEEXTENDSSELECTION = 2706;
 	public const int SCI_GETLINESELSTARTPOSITION = 2424;
 	public const int SCI_GETLINESELENDPOSITION = 2425;
@@ -952,7 +1023,12 @@ public static unsafe class Sci {
 	public const int SCI_INDICATOREND = 2509;
 	public const int SCI_SETPOSITIONCACHE = 2514;
 	public const int SCI_GETPOSITIONCACHE = 2515;
+	public const int SCI_SETLAYOUTTHREADS = 2775;
+	public const int SCI_GETLAYOUTTHREADS = 2776;
 	public const int SCI_COPYALLOWLINE = 2519;
+	public const int SCI_CUTALLOWLINE = 2810;
+	public const int SCI_SETCOPYSEPARATOR = 2811;
+	public const int SCI_GETCOPYSEPARATOR = 2812;
 	public const int SCI_GETCHARACTERPOINTER = 2520;
 	public const int SCI_GETRANGEPOINTER = 2643;
 	public const int SCI_GETGAPPOSITION = 2644;
@@ -1017,6 +1093,7 @@ public static unsafe class Sci {
 	public const int SCI_CLEARSELECTIONS = 2571;
 	public const int SCI_SETSELECTION = 2572;
 	public const int SCI_ADDSELECTION = 2573;
+	public const int SCI_SELECTIONFROMPOINT = 2474;
 	public const int SCI_DROPSELECTIONN = 2671;
 	public const int SCI_SETMAINSELECTION = 2574;
 	public const int SCI_GETMAINSELECTION = 2575;
@@ -1076,6 +1153,7 @@ public static unsafe class Sci {
 	public const int SC_TECHNOLOGY_DIRECTWRITE = 1;
 	public const int SC_TECHNOLOGY_DIRECTWRITERETAIN = 2;
 	public const int SC_TECHNOLOGY_DIRECTWRITEDC = 3;
+	public const int SC_TECHNOLOGY_DIRECT_WRITE_1 = 4;
 	public const int SCI_SETTECHNOLOGY = 2630;
 	public const int SCI_GETTECHNOLOGY = 2631;
 	public const int SCI_CREATELOADER = 2632;
@@ -1128,6 +1206,7 @@ public static unsafe class Sci {
 	public const int SC_SUPPORTS_FRACTIONAL_STROKE_WIDTH = 2;
 	public const int SC_SUPPORTS_TRANSLUCENT_STROKE = 3;
 	public const int SC_SUPPORTS_PIXEL_MODIFICATION = 4;
+	public const int SC_SUPPORTS_THREAD_SAFE_MEASURE_WIDTHS = 5;
 	public const int SCI_SUPPORTSFEATURE = 2750;
 	public const int SC_LINECHARACTERINDEX_NONE = 0;
 	public const int SC_LINECHARACTERINDEX_UTF32 = 1;
@@ -1240,6 +1319,10 @@ public static unsafe class Sci {
 	public const int SC_AC_TAB = 3;
 	public const int SC_AC_NEWLINE = 4;
 	public const int SC_AC_COMMAND = 5;
+	public const int SC_AC_SINGLE_CHOICE = 6;
+	public const int SC_CHARACTERSOURCE_DIRECT_INPUT = 0;
+	public const int SC_CHARACTERSOURCE_TENTATIVE_INPUT = 1;
+	public const int SC_CHARACTERSOURCE_IME_RESULT = 2;
 	public enum NOTIF {
 		SCN_STYLENEEDED = 2000,
 		SCN_CHARADDED = 2001,
@@ -1378,38 +1461,5 @@ public static unsafe class Sci {
 				return new string((sbyte*)textUTF8, 0, length, Encoding.UTF8);
 			}
 		}
-	}
-
-	//from Scintilla.h
-
-	public enum LexCppStyles {
-		SCE_C_DEFAULT = 0,
-		SCE_C_COMMENT = 1,
-		SCE_C_COMMENTLINE = 2,
-		SCE_C_COMMENTDOC = 3,
-		SCE_C_NUMBER = 4,
-		SCE_C_WORD = 5,
-		SCE_C_STRING = 6,
-		SCE_C_CHARACTER = 7,
-		SCE_C_UUID = 8,
-		SCE_C_PREPROCESSOR = 9,
-		SCE_C_OPERATOR = 10,
-		SCE_C_IDENTIFIER = 11,
-		SCE_C_STRINGEOL = 12,
-		SCE_C_VERBATIM = 13,
-		SCE_C_REGEX = 14,
-		SCE_C_COMMENTLINEDOC = 15,
-		SCE_C_WORD2 = 16,
-		SCE_C_COMMENTDOCKEYWORD = 17,
-		SCE_C_COMMENTDOCKEYWORDERROR = 18,
-		SCE_C_GLOBALCLASS = 19,
-		SCE_C_STRINGRAW = 20,
-		SCE_C_TRIPLEVERBATIM = 21,
-		SCE_C_HASHQUOTEDSTRING = 22,
-		SCE_C_PREPROCESSORCOMMENT = 23,
-		SCE_C_PREPROCESSORCOMMENTDOC = 24,
-		SCE_C_USERLITERAL = 25,
-		SCE_C_TASKMARKER = 26,
-		SCE_C_ESCAPESEQUENCE = 27,
 	}
 }

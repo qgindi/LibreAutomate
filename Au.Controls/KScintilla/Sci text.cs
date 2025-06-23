@@ -906,42 +906,38 @@ public unsafe partial class KScintilla {
 		return _inUndoAction;
 	}
 	
-	/// <summary>
-	/// <c>=> new aaaUndoAction(this);</c>
-	/// </summary>
-	public aaaUndoAction aaaNewUndoAction(bool onUndoDontChangeCaretPos = false) => new aaaUndoAction(this, onUndoDontChangeCaretPos);
+	//currently not used. Moved to SciCode, which also supports onUndoDontChangeCaretPos.
+	///// <summary>
+	///// <c>=> new aaaUndoAction(this);</c>
+	///// </summary>
+	//public aaaUndoAction aaaNewUndoAction() => new aaaUndoAction(this);
 	
-	/// <summary>
-	/// Ctor calls <see cref="aaaBeginUndoAction"/>. Dispose() calls <see cref="aaaEndUndoAction"/>.
-	/// Does nothing if it's a nested undo action.
-	/// </summary>
-	public struct aaaUndoAction : IDisposable {
-		KScintilla _sci;
-		bool _onUndoDontChangeCaretPos;
+	///// <summary>
+	///// Ctor calls <see cref="aaaBeginUndoAction"/>. Dispose() calls <see cref="aaaEndUndoAction"/>.
+	///// Does nothing if it's a nested undo action.
+	///// </summary>
+	//public struct aaaUndoAction : IDisposable {
+	//	KScintilla _sci;
 		
-		/// <summary>
-		/// Calls SCI_BEGINUNDOACTION.
-		/// </summary>
-		/// <param name="sci">Can be null, then does nothing.</param>
-		/// <param name="onUndoDontChangeCaretPos"></param>
-		public aaaUndoAction(KScintilla sci, bool onUndoDontChangeCaretPos = false) {
-			_onUndoDontChangeCaretPos = onUndoDontChangeCaretPos;
-			_sci = sci;
-			_sci?.aaaBeginUndoAction();
-		}
+	//	/// <summary>
+	//	/// Calls SCI_BEGINUNDOACTION.
+	//	/// </summary>
+	//	/// <param name="sci">Can be null, then does nothing.</param>
+	//	public aaaUndoAction(KScintilla sci) {
+	//		_sci = sci;
+	//		_sci?.aaaBeginUndoAction();
+	//	}
 		
-		/// <summary>
-		/// Calls SCI_ENDUNDOACTION and clears this variable.
-		/// </summary>
-		public void Dispose() {
-			if (_sci != null) {
-				if (0 == _sci.aaaEndUndoAction()) {
-					if (_onUndoDontChangeCaretPos) Sci_SetUndoMark(_sci.AaSciPtr, -1);
-				}
-				_sci = null;
-			}
-		}
-	}
+	//	/// <summary>
+	//	/// Calls SCI_ENDUNDOACTION and clears this variable.
+	//	/// </summary>
+	//	public void Dispose() {
+	//		if (_sci != null) {
+	//			_sci.aaaEndUndoAction();
+	//			_sci = null;
+	//		}
+	//	}
+	//}
 }
 
 /// <summary>

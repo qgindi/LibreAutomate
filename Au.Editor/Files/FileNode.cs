@@ -580,7 +580,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 				Debug.Assert(!doc.aaaIsReadonly);
 				StartEndText.ThrowIfNotSorted(a);
 				
-				using (doc.aaaNewUndoAction()) {
+				using (doc.ENewUndoAction()) {
 					for (int i = a.Count; --i >= 0;) {
 						var (from, to, s) = a[i];
 						doc.aaaNormalizeRange(true, ref from, ref to);

@@ -6,6 +6,7 @@
 // The License.txt file describes the conditions under which this software may be distributed.
 
 #include <cstdlib>
+#include <cstdint>
 #include <cstring>
 #include <climits>
 
@@ -117,7 +118,7 @@ void XPM::Init(const char *const *linesForm) {
 	if (!linesForm)
 		return;
 
-	std::fill(colourCodeTable, std::end(colourCodeTable), ColourRGBA(0, 0, 0));
+	std::fill(colourCodeTable, std::end(colourCodeTable), black);
 	const char *line0 = linesForm[0];
 	width = atoi(line0);
 	line0 = NextField(line0);
@@ -239,6 +240,14 @@ RGBAImage::RGBAImage(const XPM &xpm) {
 	}
 }
 
+float RGBAImage::GetScaledHeight() const noexcept {
+	return static_cast<float>(height) / scale;
+}
+
+float RGBAImage::GetScaledWidth() const noexcept {
+	return static_cast<float>(width) / scale;
+}
+
 int RGBAImage::CountBytes() const noexcept {
 	return width * height * 4;
 }
@@ -256,15 +265,23 @@ void RGBAImage::SetPixel(int x, int y, ColourRGBA colour) noexcept {
 	pixel[3] = colour.GetAlpha();
 }
 
+namespace {
+
+constexpr unsigned char AlphaMultiplied(unsigned char value, unsigned char alpha) noexcept {
+	return (value * alpha / UCHAR_MAX) & 0xffU;
+}
+
+}
+
 // Transform a block of pixels from RGBA to BGRA with premultiplied alpha.
 // Used for DrawRGBAImage on some platforms.
 void RGBAImage::BGRAFromRGBA(unsigned char *pixelsBGRA, const unsigned char *pixelsRGBA, size_t count) noexcept {
 	for (size_t i = 0; i < count; i++) {
 		const unsigned char alpha = pixelsRGBA[3];
 		// Input is RGBA, output is BGRA with premultiplied alpha
-		pixelsBGRA[2] = pixelsRGBA[0] * alpha / UCHAR_MAX;
-		pixelsBGRA[1] = pixelsRGBA[1] * alpha / UCHAR_MAX;
-		pixelsBGRA[0] = pixelsRGBA[2] * alpha / UCHAR_MAX;
+		pixelsBGRA[2] = AlphaMultiplied(pixelsRGBA[0], alpha);
+		pixelsBGRA[1] = AlphaMultiplied(pixelsRGBA[1], alpha);
+		pixelsBGRA[0] = AlphaMultiplied(pixelsRGBA[2], alpha);
 		pixelsBGRA[3] = alpha;
 		pixelsRGBA += bytesPerPixel;
 		pixelsBGRA += bytesPerPixel;

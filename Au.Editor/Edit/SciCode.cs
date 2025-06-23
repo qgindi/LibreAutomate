@@ -81,6 +81,11 @@ partial class SciCode : KScintilla {
 		Call(SCI_ASSIGNCMDKEY, Math2.MakeLparam(SCK_RETURN, SCMOD_CTRL | SCMOD_SHIFT), SCI_NEWLINE);
 		Call(SCI_SETEXTRADESCENT, 1); //eg to avoid drawing fold separator lines on text
 		Call(SCI_SETMOUSEDWELLTIME, 500);
+		Call(SCI_SETUNDOSELECTIONHISTORY, 1); //BAD: uses too much memory. Documented: >=150 / action. Tested: 270 (same when 1-char and when coalesced 10 char). Without this somehow the heap does not grow. It seems there is no easy workaround; temporarily turning off this feature clears the selection undo history.
+		Call(SCI_SETLAYOUTTHREADS, Environment.ProcessorCount);
+//#if IDE_LA //works if don't need to draw images, else crashes because there is no HDC. Need to reimplement the drawing functions, to use ID2D1RenderTarget instead of HDC. Much work. The benefit would be antialiased drawing of Scintilla's markers etc, but we don't use them. And text looks differently, maybe better.
+//		Call(SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITEDC);
+//#endif
 		
 		CiStyling.TTheme.Current.ToScintilla(this);
 		
@@ -201,6 +206,7 @@ partial class SciCode : KScintilla {
 				App.Model.Save.TextLater(); //just compares/sets a field. Note: don't use SCN_SAVEPOINTLEFT. No SCN_SAVEPOINTLEFT if text modified externally. Then would not save subsequent changes in editor.
 				_modified = true;
 				_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
+				_ManageUndoOnModified(n.modificationType);
 				SnippetMode_?.SciModified(n);
 				if (isActive) {
 					if (CodeInfo.SciModified(this, n)) _CodeModifiedAndCodeinfoOK(); //WPF preview
@@ -420,7 +426,7 @@ partial class SciCode : KScintilla {
 			//print.qm2.write("saving");
 			if (!App.Model.TryFileOperation(FOSync.UserFileWrite, () => _fls.Save(this, _fn.FilePath))) return false;
 			_isUnsaved = false;
-			Call(SCI_SETSAVEPOINT);
+			Call(SCI_SETSAVEPOINT); //note: splits Undo. Maybe it's good. But I don't remember what is the primary purpose of this. VS splits Undo on save too.
 			_fn._UpdateFileModTime();
 			if (this != Panels.Editor.ActiveDoc) CodeInfo.FilesChanged();
 		}

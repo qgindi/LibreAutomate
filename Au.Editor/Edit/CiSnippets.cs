@@ -901,7 +901,7 @@ class CiSnippetMode {
 			try {
 				MemoryUtil.Copy(_doc.aaaRangePointer(field.start, field.end), text, textLen);
 				_ignoreModified = true;
-				using var undo = _doc.aaaNewUndoAction();
+				using var undo = _doc.ENewUndoAction();
 				foreach (var f in _fields) {
 					if (f.n == field.n && f != field) {
 						_doc.Call(Sci.SCI_SETTARGETRANGE, f.start, f.end);

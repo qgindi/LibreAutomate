@@ -1039,7 +1039,7 @@ partial class CiCompletion {
 					}
 					break;
 				}
-				using var undo = doc.aaaNewUndoAction();
+				using var undo = doc.ENewUndoAction();
 				bool last = true;
 				for (int j = changes.Length; --j >= 0; last = false) {
 					var v = changes[j];

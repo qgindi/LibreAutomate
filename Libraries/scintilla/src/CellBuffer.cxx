@@ -7,10 +7,12 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <cstdint>
 #include <cassert>
 #include <cstring>
 #include <cstdio>
 #include <cstdarg>
+#include <climits>
 
 #include <stdexcept>
 #include <string>
@@ -27,7 +29,11 @@
 #include "Position.h"
 #include "SplitVector.h"
 #include "Partitioning.h"
+#include "RunStyles.h"
+#include "SparseVector.h"
+#include "ChangeHistory.h"
 #include "CellBuffer.h"
+#include "UndoHistory.h"
 #include "UniConversion.h"
 
 namespace Scintilla::Internal {
@@ -42,7 +48,7 @@ struct CountWidths {
 		countOtherPlanes(countOtherPlanes_) {
 	}
 	CountWidths operator-() const noexcept {
-		return CountWidths(-countBasePlane , -countOtherPlanes);
+		return CountWidths(-countBasePlane, -countOtherPlanes);
 	}
 	Sci::Position WidthUTF32() const noexcept {
 		// All code points take one code unit in UTF-32.
@@ -91,6 +97,11 @@ using namespace Scintilla::Internal;
 
 template <typename POS>
 class LineStartIndex {
+	// line_cast(): cast Sci::Line to either 32-bit or 64-bit value
+	// This avoids warnings from Visual C++ Code Analysis and shortens code
+	static constexpr POS line_cast(Sci::Line pos) noexcept {
+		return static_cast<POS>(pos);
+	}
 public:
 	int refCount;
 	Partitioning<POS> starts;
@@ -98,20 +109,13 @@ public:
 	LineStartIndex() : refCount(0), starts(4) {
 		// Minimal initial allocation
 	}
-	// Deleted so LineStartIndex objects can not be copied.
-	LineStartIndex(const LineStartIndex &) = delete;
-	LineStartIndex(LineStartIndex &&) = delete;
-	void operator=(const LineStartIndex &) = delete;
-	void operator=(LineStartIndex &&) = delete;
-	virtual ~LineStartIndex() {
-	}
 	bool Allocate(Sci::Line lines) {
 		refCount++;
 		Sci::Position length = starts.PositionFromPartition(starts.Partitions());
 		for (Sci::Line line = starts.Partitions(); line < lines; line++) {
 			// Produce an ascending sequence that will be filled in with correct widths later
 			length++;
-			starts.InsertPartition(static_cast<POS>(line), static_cast<POS>(length));
+			starts.InsertPartition(line_cast(line), line_cast(length));
 		}
 		return refCount == 1;
 	}
@@ -126,12 +130,12 @@ public:
 		return refCount > 0;
 	}
 	Sci::Position LineWidth(Sci::Line line) const noexcept {
-		return starts.PositionFromPartition(static_cast<POS>(line) + 1) -
-			starts.PositionFromPartition(static_cast<POS>(line));
+		return starts.PositionFromPartition(line_cast(line) + 1) -
+			starts.PositionFromPartition(line_cast(line));
 	}
 	void SetLineWidth(Sci::Line line, Sci::Position width) noexcept {
 		const Sci::Position widthCurrent = LineWidth(line);
-		starts.InsertText(static_cast<POS>(line), static_cast<POS>(width - widthCurrent));
+		starts.InsertText(line_cast(line), line_cast(width - widthCurrent));
 	}
 	void AllocateLines(Sci::Line lines) {
 		if (lines > starts.Partitions()) {
@@ -141,9 +145,9 @@ public:
 	void InsertLines(Sci::Line line, Sci::Line lines) {
 		// Insert multiple lines with each temporarily 1 character wide.
 		// The line widths will be fixed up by later measuring code.
-		const POS lineAsPos = static_cast<POS>(line);
+		const POS lineAsPos = line_cast(line);
 		const POS lineStart = starts.PositionFromPartition(lineAsPos - 1) + 1;
-		for (POS l = 0; l < static_cast<POS>(lines); l++) {
+		for (POS l = 0; l < line_cast(lines); l++) {
 			starts.InsertPartition(lineAsPos + l, lineStart + l);
 		}
 	}
@@ -163,15 +167,20 @@ class LineVector : public ILineVector {
 			| (startsUTF16.Active() ? LineCharacterIndexType::Utf16 : LineCharacterIndexType::None);
 	}
 
+	// pos_cast(): cast Sci::Line and Sci::Position to either 32-bit or 64-bit value
+	// This avoids warnings from Visual C++ Code Analysis and shortens code
+	static constexpr POS pos_cast(Sci::Position pos) noexcept {
+		return static_cast<POS>(pos);
+	}
+
+	// line_from_pos_cast(): return 32-bit or 64-bit value as Sci::Line
+	// This avoids warnings from Visual C++ Code Analysis and shortens code
+	static constexpr Sci::Line line_from_pos_cast(POS line) noexcept {
+		return static_cast<Sci::Line>(line);
+	}
+
 public:
 	LineVector() : starts(256), perLine(nullptr), activeIndices(LineCharacterIndexType::None) {
-	}
-	// Deleted so LineVector objects can not be copied.
-	LineVector(const LineVector &) = delete;
-	LineVector(LineVector &&) = delete;
-	LineVector &operator=(const LineVector &) = delete;
-	LineVector &operator=(LineVector &&) = delete;
-	~LineVector() override {
 	}
 	void Init() override {
 		starts.DeleteAll();
@@ -185,11 +194,11 @@ public:
 		perLine = pl;
 	}
 	void InsertText(Sci::Line line, Sci::Position delta) noexcept override {
-		starts.InsertText(static_cast<POS>(line), static_cast<POS>(delta));
+		starts.InsertText(pos_cast(line), pos_cast(delta));
 	}
 	void InsertLine(Sci::Line line, Sci::Position position, bool lineStart) override {
-		const POS lineAsPos = static_cast<POS>(line);
-		starts.InsertPartition(lineAsPos, static_cast<POS>(position));
+		const POS lineAsPos = pos_cast(line);
+		starts.InsertPartition(lineAsPos, pos_cast(position));
 		if (activeIndices != LineCharacterIndexType::None) {
 			if (FlagSet(activeIndices, LineCharacterIndexType::Utf32)) {
 				startsUTF32.InsertLines(line, 1);
@@ -205,7 +214,7 @@ public:
 		}
 	}
 	void InsertLines(Sci::Line line, const Sci::Position *positions, size_t lines, bool lineStart) override {
-		const POS lineAsPos = static_cast<POS>(line);
+		const POS lineAsPos = pos_cast(line);
 		if constexpr (sizeof(Sci::Position) == sizeof(POS)) {
 			starts.InsertPartitions(lineAsPos, positions, lines);
 		} else {
@@ -226,22 +235,22 @@ public:
 		}
 	}
 	void SetLineStart(Sci::Line line, Sci::Position position) noexcept override {
-		starts.SetPartitionStartPosition(static_cast<POS>(line), static_cast<POS>(position));
+		starts.SetPartitionStartPosition(pos_cast(line), pos_cast(position));
 	}
 	void RemoveLine(Sci::Line line) override {
-		starts.RemovePartition(static_cast<POS>(line));
+		starts.RemovePartition(pos_cast(line));
 		if (FlagSet(activeIndices, LineCharacterIndexType::Utf32)) {
-			startsUTF32.starts.RemovePartition(static_cast<POS>(line));
+			startsUTF32.starts.RemovePartition(pos_cast(line));
 		}
 		if (FlagSet(activeIndices, LineCharacterIndexType::Utf16)) {
-			startsUTF16.starts.RemovePartition(static_cast<POS>(line));
+			startsUTF16.starts.RemovePartition(pos_cast(line));
 		}
 		if (perLine) {
 			perLine->RemoveLine(line);
 		}
 	}
 	Sci::Line Lines() const noexcept override {
-		return static_cast<Sci::Line>(starts.Partitions());
+		return line_from_pos_cast(starts.Partitions());
 	}
 	void AllocateLines(Sci::Line lines) override {
 		if (lines > Lines()) {
@@ -255,17 +264,17 @@ public:
 		}
 	}
 	Sci::Line LineFromPosition(Sci::Position pos) const noexcept override {
-		return static_cast<Sci::Line>(starts.PartitionFromPosition(static_cast<POS>(pos)));
+		return line_from_pos_cast(starts.PartitionFromPosition(pos_cast(pos)));
 	}
 	Sci::Position LineStart(Sci::Line line) const noexcept override {
-		return starts.PositionFromPartition(static_cast<POS>(line));
+		return starts.PositionFromPartition(pos_cast(line));
 	}
 	void InsertCharacters(Sci::Line line, CountWidths delta) noexcept override {
 		if (FlagSet(activeIndices, LineCharacterIndexType::Utf32)) {
-			startsUTF32.starts.InsertText(static_cast<POS>(line), static_cast<POS>(delta.WidthUTF32()));
+			startsUTF32.starts.InsertText(pos_cast(line), pos_cast(delta.WidthUTF32()));
 		}
 		if (FlagSet(activeIndices, LineCharacterIndexType::Utf16)) {
-			startsUTF16.starts.InsertText(static_cast<POS>(line), static_cast<POS>(delta.WidthUTF16()));
+			startsUTF16.starts.InsertText(pos_cast(line), pos_cast(delta.WidthUTF16()));
 		}
 	}
 	void SetLineCharactersWidth(Sci::Line line, CountWidths width) noexcept override {
@@ -308,302 +317,19 @@ public:
 	}
 	Sci::Position IndexLineStart(Sci::Line line, LineCharacterIndexType lineCharacterIndex) const noexcept override {
 		if (lineCharacterIndex == LineCharacterIndexType::Utf32) {
-			return startsUTF32.starts.PositionFromPartition(static_cast<POS>(line));
+			return startsUTF32.starts.PositionFromPartition(pos_cast(line));
 		} else {
-			return startsUTF16.starts.PositionFromPartition(static_cast<POS>(line));
+			return startsUTF16.starts.PositionFromPartition(pos_cast(line));
 		}
 	}
 	Sci::Line LineFromPositionIndex(Sci::Position pos, LineCharacterIndexType lineCharacterIndex) const noexcept override {
 		if (lineCharacterIndex == LineCharacterIndexType::Utf32) {
-			return static_cast<Sci::Line>(startsUTF32.starts.PartitionFromPosition(static_cast<POS>(pos)));
+			return line_from_pos_cast(startsUTF32.starts.PartitionFromPosition(pos_cast(pos)));
 		} else {
-			return static_cast<Sci::Line>(startsUTF16.starts.PartitionFromPosition(static_cast<POS>(pos)));
+			return line_from_pos_cast(startsUTF16.starts.PartitionFromPosition(pos_cast(pos)));
 		}
 	}
 };
-
-Action::Action() noexcept {
-	at = ActionType::start;
-	position = 0;
-	lenData = 0;
-	mayCoalesce = false;
-	auMark = 0; //Au
-}
-
-Action::~Action() {
-}
-
-void Action::Create(ActionType at_, Sci::Position position_, const char *data_, Sci::Position lenData_, bool mayCoalesce_) {
-	data = nullptr;
-	position = position_;
-	at = at_;
-	if (lenData_) {
-		data = std::make_unique<char[]>(lenData_);
-		memcpy(&data[0], data_, lenData_);
-	}
-	lenData = lenData_;
-	mayCoalesce = mayCoalesce_;
-	auMark = 0; //Au
-}
-
-void Action::Clear() noexcept {
-	data = nullptr;
-	lenData = 0;
-}
-
-// The undo history stores a sequence of user operations that represent the user's view of the
-// commands executed on the text.
-// Each user operation contains a sequence of text insertion and text deletion actions.
-// All the user operations are stored in a list of individual actions with 'start' actions used
-// as delimiters between user operations.
-// Initially there is one start action in the history.
-// As each action is performed, it is recorded in the history. The action may either become
-// part of the current user operation or may start a new user operation. If it is to be part of the
-// current operation, then it overwrites the current last action. If it is to be part of a new
-// operation, it is appended after the current last action.
-// After writing the new action, a new start action is appended at the end of the history.
-// The decision of whether to start a new user operation is based upon two factors. If a
-// compound operation has been explicitly started by calling BeginUndoAction and no matching
-// EndUndoAction (these calls nest) has been called, then the action is coalesced into the current
-// operation. If there is no outstanding BeginUndoAction call then a new operation is started
-// unless it looks as if the new action is caused by the user typing or deleting a stream of text.
-// Sequences that look like typing or deletion are coalesced into a single user operation.
-
-UndoHistory::UndoHistory() {
-
-	actions.resize(3);
-	maxAction = 0;
-	currentAction = 0;
-	undoSequenceDepth = 0;
-	savePoint = 0;
-	tentativePoint = -1;
-
-	actions[currentAction].Create(ActionType::start);
-}
-
-UndoHistory::~UndoHistory() {
-}
-
-void UndoHistory::EnsureUndoRoom() {
-	// Have to test that there is room for 2 more actions in the array
-	// as two actions may be created by the calling function
-	if (static_cast<size_t>(currentAction) >= (actions.size() - 2)) {
-		// Run out of undo nodes so extend the array
-		actions.resize(actions.size() * 2);
-	}
-}
-
-const char *UndoHistory::AppendAction(ActionType at, Sci::Position position, const char *data, Sci::Position lengthData,
-	bool &startSequence, bool mayCoalesce) {
-	EnsureUndoRoom();
-	//Platform::DebugPrintf("%% %d action %d %d %d\n", at, position, lengthData, currentAction);
-	//Platform::DebugPrintf("^ %d action %d %d\n", actions[currentAction - 1].at,
-	//	actions[currentAction - 1].position, actions[currentAction - 1].lenData);
-	if (currentAction < savePoint) {
-		savePoint = -1;
-	}
-	int oldCurrentAction = currentAction;
-	if (currentAction >= 1) {
-		if (0 == undoSequenceDepth) {
-			// Top level actions may not always be coalesced
-			int targetAct = -1;
-			const Action *actPrevious = &(actions[currentAction + targetAct]);
-			// Container actions may forward the coalesce state of Scintilla Actions.
-			while ((actPrevious->at == ActionType::container) && actPrevious->mayCoalesce) {
-				targetAct--;
-				actPrevious = &(actions[currentAction + targetAct]);
-			}
-			// See if current action can be coalesced into previous action
-			// Will work if both are inserts or deletes and position is same
-			if ((currentAction == savePoint) || (currentAction == tentativePoint)) {
-				currentAction++;
-			} else if (!actions[currentAction].mayCoalesce) {
-				// Not allowed to coalesce if this set
-				currentAction++;
-			} else if (!mayCoalesce || !actPrevious->mayCoalesce) {
-				currentAction++;
-			} else if (at == ActionType::container || actions[currentAction].at == ActionType::container) {
-				;	// A coalescible containerAction
-			} else if ((at != actPrevious->at) && (actPrevious->at != ActionType::start)) {
-				currentAction++;
-			} else if ((at == ActionType::insert) &&
-			           (position != (actPrevious->position + actPrevious->lenData))) {
-				// Insertions must be immediately after to coalesce
-				currentAction++;
-			} else if (at == ActionType::remove) {
-				if ((lengthData == 1) || (lengthData == 2)) {
-					if ((position + lengthData) == actPrevious->position) {
-						; // Backspace -> OK
-					} else if (position == actPrevious->position) {
-						; // Delete -> OK
-					} else {
-						// Removals must be at same position to coalesce
-						currentAction++;
-					}
-				} else {
-					// Removals must be of one character to coalesce
-					currentAction++;
-				}
-			} else {
-				// Action coalesced.
-			}
-
-		} else {
-			// Actions not at top level are always coalesced unless this is after return to top level
-			if (!actions[currentAction].mayCoalesce)
-				currentAction++;
-		}
-	} else {
-		currentAction++;
-	}
-	startSequence = oldCurrentAction != currentAction;
-	const int actionWithData = currentAction;
-	actions[currentAction].Create(at, position, data, lengthData, mayCoalesce);
-	currentAction++;
-	actions[currentAction].Create(ActionType::start);
-	maxAction = currentAction;
-	return actions[actionWithData].data.get();
-}
-
-void UndoHistory::BeginUndoAction() {
-	EnsureUndoRoom();
-	if (undoSequenceDepth == 0) {
-		if (actions[currentAction].at != ActionType::start) {
-			currentAction++;
-			actions[currentAction].Create(ActionType::start);
-			maxAction = currentAction;
-		}
-		actions[currentAction].mayCoalesce = false;
-	}
-	undoSequenceDepth++;
-}
-
-void UndoHistory::EndUndoAction() {
-	PLATFORM_ASSERT(undoSequenceDepth > 0);
-	EnsureUndoRoom();
-	undoSequenceDepth--;
-	if (0 == undoSequenceDepth) {
-		if (actions[currentAction].at != ActionType::start) {
-			currentAction++;
-			actions[currentAction].Create(ActionType::start);
-			maxAction = currentAction;
-		}
-		actions[currentAction].mayCoalesce = false;
-	}
-}
-
-void UndoHistory::DropUndoSequence() {
-	undoSequenceDepth = 0;
-}
-
-void UndoHistory::DeleteUndoHistory() {
-	for (int i = 1; i < maxAction; i++)
-		actions[i].Clear();
-	maxAction = 0;
-	currentAction = 0;
-	actions[currentAction].Create(ActionType::start);
-	savePoint = 0;
-	tentativePoint = -1;
-}
-
-void UndoHistory::SetSavePoint() noexcept {
-	savePoint = currentAction;
-}
-
-bool UndoHistory::IsSavePoint() const noexcept {
-	return savePoint == currentAction;
-}
-
-void UndoHistory::TentativeStart() {
-	tentativePoint = currentAction;
-}
-
-void UndoHistory::TentativeCommit() {
-	tentativePoint = -1;
-	// Truncate undo history
-	maxAction = currentAction;
-}
-
-bool UndoHistory::TentativeActive() const noexcept {
-	return tentativePoint >= 0;
-}
-
-int UndoHistory::TentativeSteps() noexcept {
-	// Drop any trailing startAction
-	if (actions[currentAction].at == ActionType::start && currentAction > 0)
-		currentAction--;
-	if (tentativePoint >= 0)
-		return currentAction - tentativePoint;
-	else
-		return -1;
-}
-
-bool UndoHistory::CanUndo() const noexcept {
-	return (currentAction > 0) && (maxAction > 0);
-}
-
-int UndoHistory::StartUndo() {
-	// Drop any trailing startAction
-	if (actions[currentAction].at == ActionType::start && currentAction > 0)
-		currentAction--;
-
-	// Count the steps in this action
-	int act = currentAction;
-	while (actions[act].at != ActionType::start && act > 0) {
-		act--;
-	}
-	return currentAction - act;
-}
-
-//Au
-void UndoHistory::SetMark(int mark) {
-	if (CanUndo() && actions[currentAction].at == ActionType::start) {
-		for (int i = currentAction - 1; i > 0 && actions[i].at != ActionType::start; ) actions[i--].auMark = mark;
-	}
-}
-int UndoHistory::GetMark(bool redo) {
-	if (redo) {
-		if (currentAction < maxAction && actions[currentAction].at == ActionType::start)
-			return actions[currentAction + 1].auMark;
-	} else {
-		if (CanUndo() && actions[currentAction].at == ActionType::start)
-			return actions[currentAction - 1].auMark;
-	}
-	return 0;
-}
-
-const Action &UndoHistory::GetUndoStep() const {
-	return actions[currentAction];
-}
-
-void UndoHistory::CompletedUndoStep() {
-	currentAction--;
-}
-
-bool UndoHistory::CanRedo() const noexcept {
-	return maxAction > currentAction;
-}
-
-int UndoHistory::StartRedo() {
-	// Drop any leading startAction
-	if (currentAction < maxAction && actions[currentAction].at == ActionType::start)
-		currentAction++;
-
-	// Count the steps in this action
-	int act = currentAction;
-	while (act < maxAction && actions[act].at != ActionType::start) {
-		act++;
-	}
-	return act - currentAction;
-}
-
-const Action &UndoHistory::GetRedoStep() const {
-	return actions[currentAction];
-}
-
-void UndoHistory::CompletedRedoStep() {
-	currentAction++;
-}
 
 CellBuffer::CellBuffer(bool hasStyles_, bool largeDocument_) :
 	hasStyles(hasStyles_), largeDocument(largeDocument_) {
@@ -611,14 +337,14 @@ CellBuffer::CellBuffer(bool hasStyles_, bool largeDocument_) :
 	utf8Substance = false;
 	utf8LineEnds = LineEndType::Default;
 	collectingUndo = true;
+	uh = std::make_unique<UndoHistory>();
 	if (largeDocument)
 		plv = std::make_unique<LineVector<Sci::Position>>();
 	else
 		plv = std::make_unique<LineVector<int>>();
 }
 
-CellBuffer::~CellBuffer() {
-}
+CellBuffer::~CellBuffer() noexcept = default;
 
 char CellBuffer::CharAt(Sci::Position position) const noexcept {
 	return substance.ValueAt(position);
@@ -644,7 +370,7 @@ void CellBuffer::GetCharRange(char *buffer, Sci::Position position, Sci::Positio
 }
 
 char CellBuffer::StyleAt(Sci::Position position) const noexcept {
-	return hasStyles ? style.ValueAt(position) : 0;
+	return hasStyles ? style.ValueAt(position) : '\0';
 }
 
 void CellBuffer::GetStyleRange(unsigned char *buffer, Sci::Position position, Sci::Position lengthRetrieve) const {
@@ -701,10 +427,13 @@ const char *CellBuffer::InsertString(Sci::Position position, const char *s, Sci:
 		if (collectingUndo) {
 			// Save into the undo/redo stack, but only the characters - not the formatting
 			// This takes up about half load time
-			data = uh.AppendAction(ActionType::insert, position, s, insertLength, startSequence);
+			data = uh->AppendAction(ActionType::insert, position, s, insertLength, startSequence);
 		}
 
 		BasicInsertString(position, s, insertLength);
+		if (changeHistory) {
+			changeHistory->Insert(position, insertLength, collectingUndo, uh->BeforeReachableSavePoint());
+		}
 	}
 	return data;
 }
@@ -750,7 +479,12 @@ const char *CellBuffer::DeleteChars(Sci::Position position, Sci::Position delete
 			// Save into the undo/redo stack, but only the characters - not the formatting
 			// The gap would be moved to position anyway for the deletion so this doesn't cost extra
 			data = substance.RangePointer(position, deleteLength);
-			data = uh.AppendAction(ActionType::remove, position, data, deleteLength, startSequence);
+			data = uh->AppendAction(ActionType::remove, position, data, deleteLength, startSequence);
+		}
+
+		if (changeHistory) {
+			changeHistory->DeleteRangeSavingHistory(position, deleteLength,
+				uh->BeforeReachableSavePoint(), uh->AfterOrAtDetachPoint());
 		}
 
 		BasicDeleteChars(position, deleteLength);
@@ -763,6 +497,9 @@ Sci::Position CellBuffer::Length() const noexcept {
 }
 
 void CellBuffer::Allocate(Sci::Position newSize) {
+	if (!largeDocument && (newSize > INT32_MAX)) {
+		throw std::runtime_error("CellBuffer::Allocate: size of standard document limited to 2G.");
+	}
 	substance.ReAllocate(newSize);
 	if (hasStyles) {
 		style.ReAllocate(newSize);
@@ -838,6 +575,33 @@ Sci::Position CellBuffer::LineStart(Sci::Line line) const noexcept {
 		return plv->LineStart(line);
 }
 
+Sci::Position CellBuffer::LineEnd(Sci::Line line) const noexcept {
+	if (line >= Lines() - 1) {
+		return LineStart(line + 1);
+	} else {
+		Sci::Position position = LineStart(line + 1);
+		if (LineEndType::Unicode == GetLineEndTypes()) {
+			const unsigned char bytes[] = {
+				UCharAt(position - 3),
+				UCharAt(position - 2),
+				UCharAt(position - 1),
+			};
+			if (UTF8IsSeparator(bytes)) {
+				return position - UTF8SeparatorLength;
+			}
+			if (UTF8IsNEL(bytes + 1)) {
+				return position - UTF8NELLength;
+			}
+		}
+		position--; // Back over CR or LF
+		// When line terminator is CR+LF, may need to go back one more
+		if ((position > LineStart(line)) && (CharAt(position - 1) == '\r')) {
+			position--;
+		}
+		return position;
+	}
+}
+
 Sci::Line CellBuffer::LineFromPosition(Sci::Position pos) const noexcept {
 	return plv->LineFromPosition(pos);
 }
@@ -867,27 +631,30 @@ bool CellBuffer::HasStyles() const noexcept {
 }
 
 void CellBuffer::SetSavePoint() {
-	uh.SetSavePoint();
+	uh->SetSavePoint();
+	if (changeHistory) {
+		changeHistory->SetSavePoint();
+	}
 }
 
 bool CellBuffer::IsSavePoint() const noexcept {
-	return uh.IsSavePoint();
+	return uh->IsSavePoint();
 }
 
-void CellBuffer::TentativeStart() {
-	uh.TentativeStart();
+void CellBuffer::TentativeStart() noexcept {
+	uh->TentativeStart();
 }
 
-void CellBuffer::TentativeCommit() {
-	uh.TentativeCommit();
+void CellBuffer::TentativeCommit() noexcept {
+	uh->TentativeCommit();
 }
 
 int CellBuffer::TentativeSteps() noexcept {
-	return uh.TentativeSteps();
+	return uh->TentativeSteps();
 }
 
 bool CellBuffer::TentativeActive() const noexcept {
-	return uh.TentativeActive();
+	return uh->TentativeActive();
 }
 
 // Without undo
@@ -1066,7 +833,7 @@ void CellBuffer::BasicInsertString(Sci::Position position, const char *s, Sci::P
 	const Sci::Line lineStart = lineInsert;
 
 	// s may not NULL-terminated, ensure *ptr == '\n' or *next == '\n' is valid.
-	const char * const end = s + insertLength - 1;
+	const char *const end = s + insertLength - 1;
 	const char *ptr = s;
 	unsigned char ch = 0;
 
@@ -1286,9 +1053,9 @@ void CellBuffer::BasicDeleteChars(Sci::Position position, Sci::Position deleteLe
 	}
 }
 
-bool CellBuffer::SetUndoCollection(bool collectUndo) {
+bool CellBuffer::SetUndoCollection(bool collectUndo) noexcept {
 	collectingUndo = collectUndo;
-	uh.DropUndoSequence();
+	uh->DropUndoSequence();
 	return collectingUndo;
 }
 
@@ -1296,68 +1063,263 @@ bool CellBuffer::IsCollectingUndo() const noexcept {
 	return collectingUndo;
 }
 
-void CellBuffer::BeginUndoAction() {
-	uh.BeginUndoAction();
+void CellBuffer::BeginUndoAction(bool mayCoalesce) noexcept {
+	uh->BeginUndoAction(mayCoalesce);
 }
 
-void CellBuffer::EndUndoAction() {
-	uh.EndUndoAction();
+void CellBuffer::EndUndoAction() noexcept {
+	uh->EndUndoAction();
+}
+
+int CellBuffer::UndoSequenceDepth() const noexcept {
+	return uh->UndoSequenceDepth();
+}
+
+bool CellBuffer::AfterUndoSequenceStart() const noexcept {
+	return uh->AfterUndoSequenceStart();
 }
 
 void CellBuffer::AddUndoAction(Sci::Position token, bool mayCoalesce) {
 	bool startSequence = false;
-	uh.AppendAction(ActionType::container, token, nullptr, 0, startSequence, mayCoalesce);
+	uh->AppendAction(ActionType::container, token, nullptr, 0, startSequence, mayCoalesce);
 }
 
-void CellBuffer::DeleteUndoHistory() {
-	uh.DeleteUndoHistory();
+void CellBuffer::DeleteUndoHistory() noexcept {
+	uh->DeleteUndoHistory();
 }
 
 bool CellBuffer::CanUndo() const noexcept {
-	return uh.CanUndo();
+	return uh->CanUndo();
 }
 
-int CellBuffer::StartUndo() {
-	return uh.StartUndo();
+int CellBuffer::StartUndo() noexcept {
+	return uh->StartUndo();
 }
 
-const Action &CellBuffer::GetUndoStep() const {
-	return uh.GetUndoStep();
+Action CellBuffer::GetUndoStep() const noexcept {
+	return uh->GetUndoStep();
 }
 
 void CellBuffer::PerformUndoStep() {
-	const Action &actionStep = uh.GetUndoStep();
-	if (actionStep.at == ActionType::insert) {
-		if (substance.Length() < actionStep.lenData) {
+	const Action previousStep = uh->GetUndoStep();
+	// PreviousBeforeSavePoint and AfterDetachPoint are called since acting on the previous action,
+	// that is currentAction-1
+	if (changeHistory && uh->PreviousBeforeSavePoint()) {
+		changeHistory->StartReversion();
+	}
+	if (previousStep.at == ActionType::insert) {
+		if (substance.Length() < previousStep.lenData) {
 			throw std::runtime_error(
 				"CellBuffer::PerformUndoStep: deletion must be less than document length.");
 		}
-		BasicDeleteChars(actionStep.position, actionStep.lenData);
-	} else if (actionStep.at == ActionType::remove) {
-		BasicInsertString(actionStep.position, actionStep.data.get(), actionStep.lenData);
+		if (changeHistory) {
+			changeHistory->DeleteRange(previousStep.position, previousStep.lenData,
+				uh->PreviousBeforeSavePoint() && !uh->AfterDetachPoint());
+		}
+		BasicDeleteChars(previousStep.position, previousStep.lenData);
+	} else if (previousStep.at == ActionType::remove) {
+		BasicInsertString(previousStep.position, previousStep.data, previousStep.lenData);
+		if (changeHistory) {
+			changeHistory->UndoDeleteStep(previousStep.position, previousStep.lenData, uh->AfterDetachPoint());
+		}
 	}
-	uh.CompletedUndoStep();
+	uh->CompletedUndoStep();
 }
 
 bool CellBuffer::CanRedo() const noexcept {
-	return uh.CanRedo();
+	return uh->CanRedo();
 }
 
-int CellBuffer::StartRedo() {
-	return uh.StartRedo();
+int CellBuffer::StartRedo() noexcept {
+	return uh->StartRedo();
 }
 
-const Action &CellBuffer::GetRedoStep() const {
-	return uh.GetRedoStep();
+Action CellBuffer::GetRedoStep() const noexcept {
+	return uh->GetRedoStep();
 }
 
 void CellBuffer::PerformRedoStep() {
-	const Action &actionStep = uh.GetRedoStep();
+	const Action actionStep = uh->GetRedoStep();
 	if (actionStep.at == ActionType::insert) {
-		BasicInsertString(actionStep.position, actionStep.data.get(), actionStep.lenData);
+		BasicInsertString(actionStep.position, actionStep.data, actionStep.lenData);
+		if (changeHistory) {
+			changeHistory->Insert(actionStep.position, actionStep.lenData, collectingUndo,
+				uh->BeforeSavePoint() && !uh->AfterOrAtDetachPoint());
+		}
 	} else if (actionStep.at == ActionType::remove) {
+		if (changeHistory) {
+			changeHistory->DeleteRangeSavingHistory(actionStep.position, actionStep.lenData,
+				uh->BeforeReachableSavePoint(), uh->AfterOrAtDetachPoint());
+		}
 		BasicDeleteChars(actionStep.position, actionStep.lenData);
 	}
-	uh.CompletedRedoStep();
+	if (changeHistory && uh->AfterSavePoint()) {
+		changeHistory->EndReversion();
+	}
+	uh->CompletedRedoStep();
 }
 
+int CellBuffer::UndoActions() const noexcept {
+	return uh->Actions();
+}
+
+void CellBuffer::SetUndoSavePoint(int action) noexcept {
+	uh->SetSavePoint(action);
+}
+
+int CellBuffer::UndoSavePoint() const noexcept {
+	return uh->SavePoint();
+}
+
+void CellBuffer::SetUndoDetach(int action) noexcept {
+	uh->SetDetachPoint(action);
+}
+
+int CellBuffer::UndoDetach() const noexcept {
+	return uh->DetachPoint();
+}
+
+void CellBuffer::SetUndoTentative(int action) noexcept {
+	uh->SetTentative(action);
+}
+
+int CellBuffer::UndoTentative() const noexcept {
+	return uh->TentativePoint();
+}
+
+namespace {
+
+void RestoreChangeHistory(const UndoHistory *uh, ChangeHistory *changeHistory) {
+	// Replay all undo actions into changeHistory
+	const int savePoint = uh->SavePoint();
+	const int detachPoint = uh->DetachPoint();
+	const int currentPoint = uh->Current();
+	for (int act = 0; act < uh->Actions(); act++) {
+		const ActionType type = static_cast<ActionType>(uh->Type(act) & ~coalesceFlag);
+		const Sci::Position position = uh->Position(act);
+		const Sci::Position length = uh->Length(act);
+		const bool beforeSave = act < savePoint || ((detachPoint >= 0) && (detachPoint > act));
+		const bool afterDetach = (detachPoint >= 0) && (detachPoint < act);
+		switch (type) {
+		case ActionType::insert:
+			changeHistory->Insert(position, length, true, beforeSave);
+			break;
+		case ActionType::remove:
+			changeHistory->DeleteRangeSavingHistory(position, length, beforeSave, afterDetach);
+			break;
+		default:
+			// Only insertions and deletions go into change history
+			break;
+		}
+		changeHistory->Check();
+	}
+	// Undo back to currentPoint, updating change history
+	for (int act = uh->Actions() - 1; act >= currentPoint; act--) {
+		const ActionType type = static_cast<ActionType>(uh->Type(act) & ~coalesceFlag);
+		const Sci::Position position = uh->Position(act);
+		const Sci::Position length = uh->Length(act);
+		const bool beforeSave = act < savePoint;
+		const bool afterDetach = (detachPoint >= 0) && (detachPoint < act);
+		if (beforeSave) {
+			changeHistory->StartReversion();
+		}
+		switch (type) {
+		case ActionType::insert:
+			changeHistory->DeleteRange(position, length, beforeSave && !afterDetach);
+			break;
+		case ActionType::remove:
+			changeHistory->UndoDeleteStep(position, length, afterDetach);
+			break;
+		default:
+			// Only insertions and deletions go into change history
+			break;
+		}
+		changeHistory->Check();
+	}
+}
+
+}
+
+void CellBuffer::SetUndoCurrent(int action) {
+	uh->SetCurrent(action, Length());
+	if (changeHistory) {
+		if ((uh->DetachPoint() >= 0) && (uh->SavePoint() >= 0)) {
+			// Can't have a valid save point and a valid detach point at same time
+			uh->DeleteUndoHistory();
+			changeHistory.reset();
+			throw std::runtime_error("UndoHistory::SetCurrent: invalid undo history.");
+		}
+		const intptr_t sizeChange = uh->Delta(action);
+		const intptr_t lengthOriginal = Length() - sizeChange;
+		// Recreate empty change history
+		changeHistory = std::make_unique<ChangeHistory>(lengthOriginal);
+		RestoreChangeHistory(uh.get(), changeHistory.get());
+		if (Length() != changeHistory->Length()) {
+			uh->DeleteUndoHistory();
+			changeHistory.reset();
+			throw std::runtime_error("UndoHistory::SetCurrent: invalid undo history.");
+		}
+	}
+}
+
+int CellBuffer::UndoCurrent() const noexcept {
+	return uh->Current();
+}
+
+int CellBuffer::UndoActionType(int action) const noexcept {
+	return uh->Type(action);
+}
+
+Sci::Position CellBuffer::UndoActionPosition(int action) const noexcept {
+	return uh->Position(action);
+}
+
+std::string_view CellBuffer::UndoActionText(int action) const noexcept {
+	return uh->Text(action);
+}
+
+void CellBuffer::PushUndoActionType(int type, Sci::Position position) {
+	uh->PushUndoActionType(type, position);
+}
+
+void CellBuffer::ChangeLastUndoActionText(size_t length, const char *text) {
+	uh->ChangeLastUndoActionText(length, text);
+}
+
+void CellBuffer::ChangeHistorySet(bool set) {
+	if (set) {
+		if (!changeHistory && !uh->CanUndo()) {
+			changeHistory = std::make_unique<ChangeHistory>(Length());
+		}
+	} else {
+		changeHistory.reset();
+	}
+}
+
+int CellBuffer::EditionAt(Sci::Position pos) const noexcept {
+	if (changeHistory) {
+		return changeHistory->EditionAt(pos);
+	}
+	return 0;
+}
+
+Sci::Position CellBuffer::EditionEndRun(Sci::Position pos) const noexcept {
+	if (changeHistory) {
+		return changeHistory->EditionEndRun(pos);
+	}
+	return Length();
+}
+
+unsigned int CellBuffer::EditionDeletesAt(Sci::Position pos) const noexcept {
+	if (changeHistory) {
+		return changeHistory->EditionDeletesAt(pos);
+	}
+	return 0;
+}
+
+Sci::Position CellBuffer::EditionNextDelete(Sci::Position pos) const noexcept {
+	if (changeHistory) {
+		return changeHistory->EditionNextDelete(pos);
+	}
+	return Length() + 1;
+}

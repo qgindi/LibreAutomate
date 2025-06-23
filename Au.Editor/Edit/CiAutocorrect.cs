@@ -476,7 +476,7 @@ class CiAutocorrect {
 		
 		
 		if (newPos > 0) { // `{ | }`
-			using var undo = cd.sci.aaaNewUndoAction();
+			using var undo = cd.sci.ENewUndoAction();
 			if (replaceSemicolonAt > 0) cd.sci.aaaReplaceRange(true, replaceSemicolonAt, replaceSemicolonAt + 1, "");
 			c.doc.aaaReplaceRange(true, cd.pos, cd.pos + replaceLength, replaceText);
 			c.doc.aaaCurrentPos16 = newPos;
@@ -609,7 +609,7 @@ class CiAutocorrect {
 	
 	static void _OnEnter(int mod) {
 		var doc = Panels.Editor.ActiveDoc;
-		using var undo = doc.aaaNewUndoAction();
+		using var undo = doc.ENewUndoAction();
 		if (mod < 0 && doc.aaaHasSelection) doc.Call(Sci.SCI_DELETEBACK);
 		if (!_OnEnter2(mod)) doc.Call(Sci.SCI_NEWLINE);
 	}
@@ -1020,7 +1020,7 @@ class CiAutocorrect {
 							if (code[to - 1] == '\n') s = sInd + "\r\n"; else { s = "\r\n" + sInd + "\r\n" + sInd; moveCaret -= sInd.Length; }
 						}
 						
-						using var undo = cd.sci.aaaNewUndoAction();
+						using var undo = cd.sci.ENewUndoAction();
 						cd.sci.aaaInsertText(true, to, s);
 						cd.sci.aaaCurrentPos16 = to + s.Length + moveCaret;
 						if (needSemicolon) cd.sci.aaaInsertText(true, braceAt + 1, ";");
@@ -1144,7 +1144,7 @@ class CiAutocorrect {
 		if (App.Settings.ci_formatAuto && node != null) {
 			int from = node.GetRealFullSpan(spanEnd: true).Start, to = pos, pos0 = pos;
 			if (ModifyCode.Format(cd, ref from, ref to, ref pos, ref pos) is { } a) {
-				using var undo = cd.sci.aaaNewUndoAction();
+				using var undo = cd.sci.ENewUndoAction();
 				cd.sci.aaaInsertText(true, pos0, sInsert);
 				for (int i = a.Count; --i >= 0;) {
 					var c = a[i];
