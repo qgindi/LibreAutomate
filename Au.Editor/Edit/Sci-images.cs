@@ -211,6 +211,7 @@ partial class SciCode {
 			//	if (expanded.Length < 8 || expanded[0] == '%') return default;
 			//	s = expanded;
 			//}
+			if (s is ['/' or '\\', '/' or '\\', ..]) return default; //would hang for several s if string like "//bad/network/path", eg xpath. String like @"\\..." is dangerous here too. Also can be a mapped drive like "N:\path", but at least it's probably a path string.
 			if (pathname.isFullPath(s, orEnvVar: true)) { //is image file path?
 				if (s.Length >= 8) { //can be image file. Else can be eg "C:\" or "C:\A".
 					if (s[^4] == '.') {

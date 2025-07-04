@@ -21,7 +21,7 @@ static class Pip {
 	public static int Run(ReadOnlySpan<string> args) {
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
-		App.SetThisAppFoldersEtc_();
+		App.InitThisAppFoldersEtc_();
 		
 		if (args.Length > 0) {
 			switch (args[0].Lower()) {

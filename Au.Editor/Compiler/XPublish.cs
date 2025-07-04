@@ -9,13 +9,14 @@ using System.Windows.Controls;
 class XPublish {
 	MetaComments _meta;
 	string _csprojDir, _csprojFile;
+	WindowDisabler _disabler;
 	
 	public async void Publish() {
 		var cmd = App.Commands[nameof(Menus.Run.Publish)];
 		if (!cmd.Enabled) return;
 		cmd.Enable(false);
 		try {
-			var b = new wpfBuilder("Publish").WinProperties(resizeMode: ResizeMode.NoResize, showInTaskbar: false);
+			var b = new wpfBuilder("Publish").WinSize(300).WinProperties(resizeMode: ResizeMode.NoResize, showInTaskbar: false);
 			b.R.Add(out KCheckBox cSingle, "Single file").Checked(0 == (1 & App.Settings.publish));
 			b.R.Add(out CheckBox cSelfExtract, "Self-extract").Margin(20)
 				.xBindCheckedEnabled(cSingle)
@@ -28,8 +29,19 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			b.R.Add(out KCheckBox cNet, "Add .NET Runtime").Checked(0 != (2 & App.Settings.publish));
 			b.R.Add(out KCheckBox cR2R, "ReadyToRun").Checked(0 != (4 & App.Settings.publish));
 			b.R.Add("Platform", out ComboBox cbPlatform).Width(100, "L").Items("x64|arm64|x86").Select(Math.Clamp(App.Settings.publish >>> 4 & 3, 0, 2));
+			b.R.Add(out TextBlock tProgress).Hidden(null);
 			b.R.StartOkCancel().AddOkCancel().xAddDialogHelpButtonAndF1("editor/Publish").End();
 			b.End();
+			
+			b.OkApply += async o => {
+				o.Cancel = true;
+				using var _ = (_disabler ??= new(o.Window)).Disable();
+				if (await DotnetUtil.EnsureSDK(tProgress)) {
+					o.Window.DialogResult = true;
+					o.Window.Close();
+				}
+			};
+			
 			if (!b.ShowDialog(App.Wmain)) return;
 			
 			int platform = cbPlatform.SelectedIndex;
@@ -77,7 +89,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		var buildDir = _csprojDir + @"\.build";
 		var cl = $@"publish ""{_csprojFile}"" -c Release -o ""{outDir}"" --artifacts-path ""{buildDir}"" -v q";
 		print.it($"<><c blue>dotnet {cl}<>");
-		if (0 != run.console("dotnet.exe", cl)) { print.it("Failed"); return false; }
+		if (0 != run.console(DotnetUtil.DotnetExe, cl)) { print.it("Failed"); return false; }
 		print.it($@"<>{_meta.Name} -> <explore>{outDir}\{_meta.Name}.exe<>");
 		
 		filesystem.delete(buildDir, FDFlags.CanFail);

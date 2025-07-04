@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Documents;
 using System.Text.Json.Nodes;
 using Au.Controls;
+using System.Net.Http;
 
 static partial class Git {
 	static string _gitExe, //git.exe path
@@ -33,7 +34,9 @@ static partial class Git {
 	}
 	
 	static bool _FindGit(out string path, out bool isPrivate) {
-		if (isPrivate = filesystem.exists(path = folders.ThisAppBS + @"Git\cmd\git.exe")) return true; //or folders.ThisAppBS + @"Git\mingw64\bin\git.exe"
+		var gitDir = folders.ThisAppBS + "Git";
+		path = gitDir + @"\cmd\git.exe"; //or @"\mingw64\bin\git.exe"
+		if (isPrivate = filesystem.exists(path) && !Downloader.IsDirectoryInvalid(gitDir)) return true;
 		return null != (path = filesystem.searchPath("git.exe") ?? filesystem.searchPath(folders.ProgramFiles + @"Git\cmd\git.exe"));
 	}
 	
@@ -421,7 +424,7 @@ This tool modifies only the .git folder, not workspace files.
 			b.R.xAddGroupSeparator("Git");
 			CancellationTokenSource cts = null;
 			Button bGitInstall = null;
-			b.R.Add(out Label tGitStatus).Span(2).AddButton(out bGitInstall, "", _InstallGit)
+			b.R.Add(out TextBlock tGitStatus).Span(2).AddButton(out bGitInstall, "", _InstallGit)
 				.Validation(o => !_FindGit(out _, out _) ? "Git not installed" : null);
 			_SetGitControlText();
 			b.Window.Closed += (_, _) => { cts?.Cancel(); };
@@ -447,48 +450,28 @@ This tool modifies only the .git folder, not workspace files.
 			
 			async void _InstallGit(WBButtonClickArgs k) {
 				k.Button.IsEnabled = false;
-				tGitStatus.Content = "Downloading";
-				cts = new();
-				await _InstallGit2();
-				cts = null;
+				try {
+					var dl = new Downloader();
+					if (dl.PrepareDirectory(folders.ThisAppBS + "Git")) {
+						//get URL of the latest mingit zip
+						tGitStatus.Text = "Getting the download URL (GitHub)";
+						var r = await _GithubGetAsync($"repos/git-for-windows/git/releases/latest");
+						r = r["assets"].AsArray().First(o => ((string)o["name"]).RxIsMatch(@"(?i)MinGit-[\d\.]+-64-bit.zip")); //note: not busybox; it's smaller and worked, but now fails.
+						string url = (string)r["browser_download_url"];
+						
+						cts = new();
+						await dl.DownloadAndExtract(url, tGitStatus, cts.Token);
+						cts = null;
+					}
+				}
+				catch (Exception ex) { print.warning(ex); }
 				_SetGitControlText();
 				k.Button.IsEnabled = true;
 			}
 			
-			async Task<bool> _InstallGit2() {
-				try {
-					//can create files in LA dir?
-					var zip = folders.ThisAppBS + "mingit.zip";
-					using (File.Create(zip, 0, FileOptions.DeleteOnClose)) { }
-					
-					//get URL of the latest mingit zip
-					var r = _GithubGet($"repos/git-for-windows/git/releases/latest");
-					r = r["assets"].AsArray().First(o => ((string)o["name"]).RxIsMatch(@"(?i)MinGit-[\d\.]+-64-bit.zip")); //note: not busybox; it's smaller and worked, but now fails.
-					var url = (string)r["browser_download_url"];
-					
-					//download and unzip
-					try {
-						var rm = internet.http.Get(url, dontWait: true);
-						if (!await rm.DownloadAsync(zip, p => { tGitStatus.Content = $"Downloading, {p.Percent}%"; }, cts.Token).ConfigureAwait(false)) return false;
-						var gitDir = folders.ThisAppBS + "Git";
-						filesystem.delete(gitDir);
-						System.IO.Compression.ZipFile.ExtractToDirectory(zip, gitDir, overwriteFiles: true);
-					}
-					finally {
-						try { filesystem.delete(zip); } catch { }
-					}
-				}
-				catch (Exception e1) {
-					print.warning(e1);
-					if (e1 is UnauthorizedAccessException && !uacInfo.isAdmin) print.it("\tRestart this program as administrator.");
-					return false;
-				}
-				return true;
-			}
-			
 			void _SetGitControlText() {
 				bool found = _FindGit(out _, out bool isPrivate);
-				tGitStatus.Content = !found ? "Git not installed" : isPrivate ? "Private Git is installed and will be used" : "Shared Git found and will be used";
+				tGitStatus.Text = !found ? "Git not installed" : isPrivate ? "Private Git is installed and will be used" : "Shared Git found and will be used";
 				bGitInstall.Content = isPrivate ? "Update private Git" : "Install private Git";
 			}
 		}
@@ -586,8 +569,14 @@ This tool modifies only the .git folder, not workspace files.
 		}
 		
 		static JsonNode _GithubGet(string endpoint) {
-			var ah = new[] { "Accept: application/vnd.github+json", "X-GitHub-Api-Version: 2022-11-28" };
-			var r = internet.http.Get($"https://api.github.com/{endpoint}", headers: ah);
+			var r = internet.http.Get($"https://api.github.com/{endpoint}", headers: ["Accept: application/vnd.github+json", "X-GitHub-Api-Version: 2022-11-28"]);
+			return r.Json();
+		}
+		
+		static async Task<JsonNode> _GithubGetAsync(string endpoint) {
+			var m = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/{endpoint}");
+			m.Headers.AddMany(["Accept: application/vnd.github+json", "X-GitHub-Api-Version: 2022-11-28"]);
+			var r = await internet.http.SendAsync(m);
 			return r.Json();
 		}
 		
@@ -710,7 +699,7 @@ This tool modifies only the .git folder, not workspace files.
 		if (filesystem.exists(zipFile)) filesystem.delete(zipFile); else filesystem.createDirectoryFor(zipFile);
 		using (var tf = new TempFile()) {
 			filesystem.saveText(tf, _go);
-			if (0 != run.console(out _, folders.Editor + @"32\7za.exe", $@"a ""{zipFile}"" -iw-@""{tf}""", _dir)) goto ge;
+			if (0 != run.console(out _, folders.ThisAppBS + @"32\7za.exe", $@"a ""{zipFile}"" -iw-@""{tf}""", _dir)) goto ge;
 		}
 		
 		print.it($"<>Created <explore {zipFile}>temporary backup<> of workspace files.");

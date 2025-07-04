@@ -19,6 +19,9 @@
 - name: Creating .exe programs
   href: Publish.md
 
+- name: NuGet
+  href: NuGet.md
+
 - name: Snippets
   href: Snippets.md
 

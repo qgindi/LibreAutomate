@@ -231,7 +231,9 @@ partial class SciCode {
 		int u = Call(SCI_GETUNDOCURRENT) - 1;
 		if (u < 0) return;
 		if (0 != (256 & Call(SCI_GETUNDOACTIONTYPE, u))) throw new InvalidOperationException("Cannot set Undo mark for a possibly not full Undo action"); //has flag "can coalesce"
-		Debug_.PrintIf(_undoMarks.Any(o => o.u >= u));//TODO: remove
+		for (int i = _undoMarks.Count; --i >= 0;) {
+			if (_undoMarks[i].u == u) { _undoMarks[i] = (u, mark); return; }
+		}
 		_undoMarks.Add((u, mark));
 	}
 	

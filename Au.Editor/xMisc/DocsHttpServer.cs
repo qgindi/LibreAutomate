@@ -47,6 +47,7 @@ class DocsHttpServer : HttpServerSession {
 		print.it($"<><lc YellowGreen>Installing local documentation for {App.AppNameShort} {Au_.Version}.<>");
 		if (filesystem.exists(siteDir)) {
 			print.it("Deleting old documentation");
+			filesystem.delete(versionFile);
 			filesystem.delete(siteDir);
 		}
 		

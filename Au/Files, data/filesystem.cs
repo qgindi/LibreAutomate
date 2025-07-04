@@ -117,7 +117,7 @@ public static partial class filesystem {
 		attr = 0; ntfsLink = false;
 		var ec = lastError.code;
 		switch (ec) {
-		case Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND or Api.ERROR_NOT_READY:
+		case Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND or Api.ERROR_NOT_READY: //note: no ERROR_BAD_NETPATH. Let's print, it can help to debug caller code.
 			return false;
 		case Api.ERROR_SHARING_VIOLATION: //eg c:\pagefile.sys. GetFileAttributes fails, but FindFirstFile succeeds.
 		case Api.ERROR_ACCESS_DENIED: //probably in a protected directory. Then FindFirstFile fails, but try anyway. Or a file marked for deletion.
@@ -266,7 +266,7 @@ public static partial class filesystem {
 	/// Else searches in these places:
 	/// 1. <i>dirs</i>, if used.
 	/// 2. <see cref="folders.ThisApp"/>.
-	/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, <c>PATH</c> environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
+	/// 3. Calls API <msdn>SearchPath</msdn>, which searches in the process directory, Windows system directories, current directory, <c>PATH</c> environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
 	/// 4. If <i>path</i> ends with <c>".exe"</c>, tries to get path from registry "App Paths" keys.
 	/// </remarks>
 	/// <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
@@ -311,6 +311,7 @@ public static partial class filesystem {
 		
 		return null;
 	}
+	//TODO: add overload with flags to ignore current directory etc.
 	
 	/// <summary>
 	/// Gets names and other info of files and subdirectories in the specified directory.

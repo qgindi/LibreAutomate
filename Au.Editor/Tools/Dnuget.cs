@@ -7,12 +7,11 @@ using System.Xml.XPath;
 using Au.Compiler;
 using Au.Controls;
 
-//For NuGet management we use dotnet.exe.
-//	BAD: requires installed .NET SDK.
+//For NuGet management we use dotnet.exe and full or minimal .NET SDK.
 //Also tested the NuGet API, but it seems there is no API for installing dlls etc. Can't always detect what files need.
 //We don't install packages for each script that uses them. We install all in current workspace, and let scripts use them.
 //	To avoid conflicts, packages can be installed in separate folders.
-//	More info in the _cbFolder tooltip.
+//	More info in nuget.md and _cbFolder tooltip.
 //Rejected: UI to search for packages and display package info. Why to duplicate the NuGet website.
 
 class DNuget : KDialogWindow {
@@ -30,33 +29,29 @@ class DNuget : KDialogWindow {
 	
 	readonly TextBox _tPackage;
 	readonly ComboBox _cbFolder;
-	readonly CheckBox _cPrerelease;
+	readonly KCheckBox _cPrerelease;
 	readonly KTreeView _tv;
 	readonly Panel _panelManage;
+	readonly TextBlock _tProgress;
 	
 	readonly string _nugetDir = App.Model.NugetDirectory;
 	readonly List<string> _folders = new();
+	WindowDisabler _disabler;
 	
 	DNuget() {
 		InitWinProp("NuGet packages", App.Wmain);
-		var b = new wpfBuilder(this).WinSize(550, 600).Columns(-1);
+		var b = new wpfBuilder(this).WinSize(550, 600).Columns(-1, 30, 0);
 		
 		b.R.StartGrid<KGroupBox>("Install").Columns(0, 76, 0, -1, 0);
 		b.R.Add(out TextBlock _).FormatText($"<a href='https://www.nuget.org'>NuGet</a> package name, or dotnet/PM string:");
 		b.R.Add(out _tPackage)
-			.Tooltip(@"Can be just name, or name with version, or PM string, or dotnet string.
-You can copy the string from the NuGet website.
-If just name, installs the latest compatible version.
-To specify source: PackageName --source URL or folder path")
+			.Tooltip(@"Can be just name (to install the latest compatible version), or Name --version 1.2.3, or a string copied in the NuGet website.")
 			.Focus();
 		
 		b.R.xAddButtonIcon(Menus.iconPaste, _ => { _tPackage.SelectAll(); _tPackage.Paste(); }, "Paste");
 		b.AddButton(out var bInstall, "Install", _ => _Install()).Disabled();
 		
-		b.Add("into folder", out _cbFolder).Tooltip(@"Packages are installed in current workspace and can be used by all its scripts.
-Folders can be used to isolate incompatible packages if need (rarely).
-For example, PackageX version 1 in FolderA, and PackageX version 2 in FolderB.
-A script can use packages from multiple folders if they are compatible.");
+		b.Add("into folder", out _cbFolder).Tooltip(@"Press F1 if need help with this. Or just use the default selected folder.");
 		if (!Directory.Exists(_nugetDir)) {
 			filesystem.createDirectory(_nugetDir);
 			filesystem.createDirectory(_nugetDir + @"\-");
@@ -90,38 +85,27 @@ A script can use packages from multiple folders if they are compatible.");
 		b.AddButton("→ Folder", _ => run.itSafe(_FolderPath())).Margin("B20").Tooltip("Open the folder");
 		b.AddButton("Update", _ => _Update()).Tooltip("Uninstall this version and install the newest version");
 		b.AddButton("Move to ▾", _ => _Move()).Tooltip("Uninstall from this folder and install in another folder");
-		b.AddButton("Uninstall", async _ => await _Uninstall(uninstalling: true)).Tooltip("Remove the package and its files from the folder");
+		b.AddButton("Uninstall", _ => _Uninstall()).Tooltip("Remove the package and its files from the folder");
 		
 		_panelManage = b.Panel;
 		_tv.SelectionChanged += (_, _) => _panelManage.IsEnabled = !_tv.SelectedItem?.IsFolder ?? false;
 		
-		b.End();
+		b.End(); //buttons
+		
+		b.End(); //'Installed' group
+		
+		b.R.Add(out _tProgress)
+			.AddButton("...", _ => _MoreMenu())
+			.xAddDialogHelpButtonAndF1("editor/NuGet"); //TODO: test
 		
 		b.End();
 		
-		b.R.AddButton("...", _ => _MoreMenu()).Width(20, "L");
-		
-		b.R.StartDock<Expander>("Info");
-		b.xAddInfoBlockF($"""
-To add a NuGet package reference to a script, click <b>Add /*/</b> or <b>Properties > NuGet</b>.
-
-If an installed package does not work, possibly some files are missing. <a {_InfoMissingFiles}>Print more info</a>.
-
-<a {_InfoDotNet}>Print .NET info</a>.
-""");
-		b.End();
-		
-		b.R.xAddInfoBlockF($"<s c='red'>Please install <a href='https://dotnet.microsoft.com/en-us/download'>.NET SDK</a> version {Environment.Version.Major}.0 or later. Without it cannot install NuGet packages.</s>").Hidden(null).Margin("B12");
-		var infoSDK = b.Last as TextBlock;
-		
-		Loaded += async (_, _) => {
+		Loaded += (_, _) => {
 			App.Model.UnloadingThisWorkspace += Close;
 			_FillTree();
-			
-			bool sdkOK = false;
-			await _RunDotnet("--list-sdks", s => { if (!sdkOK) sdkOK = s.ToInt() >= Environment.Version.Major; }); //eg "6.0.2 [path]"
-			if (!sdkOK) infoSDK.Visibility = Visibility.Visible;
 		};
+		
+		_disabler = new(this);
 	}
 	
 	protected override void OnClosed(EventArgs e) {
@@ -150,8 +134,11 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 	}
 	
 	async void _Install() {
+		using var _ = _disabler.Disable();
+		if (!await DotnetUtil.EnsureSDK(_tProgress)) return;
+		
 		var package = _tPackage.Text.Trim();
-		if (package.Starts("dotnet add package ")) package = package[19..];
+		if (package.Starts(true, "dotnet add package ", "dotnet package add ") > 0) package = package[19..];
 		else if (package.RxReplace(@"^.+?\bInstall-Package ", "", out package) > 0) package = package.Replace("-Version ", "--version ");
 		
 		await _Install(package, _cbFolder.SelectedItem as string);
@@ -159,7 +146,8 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 	
 	/// <param name="package">Like "Package.Name" or "Package.Name --version x.y.z".</param>
 	/// <param name="folder">Like "web".</param>
-	async Task _Install(string package, string folder) {
+	/// <param name="moving"></param>
+	async Task _Install(string package, string folder, bool moving = false) {
 		var proj = _ProjPath(folder);
 		
 		string writeProjText = null;
@@ -174,6 +162,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<DebugType>none</DebugType>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<NuGetAudit>False</NuGetAudit>
 		<AssemblyName>___</AssemblyName>
 	</PropertyGroup>
 
@@ -200,8 +189,8 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 			catch (Exception e1) { dialog.showError("Failed", e1.ToStringWithoutStack(), owner: this); }
 		}
 		
-		var sAdd = $@"add ""{proj}"" package {package}";
-		if (_cPrerelease.IsChecked == true) sAdd += " --prerelease";
+		var sAdd = $@"package add {package} --project ""{proj}""";
+		if (_cPrerelease.IsChecked && !package.Contains(" --version ")) sAdd += " --prerelease";
 		
 		//now need only package name
 		package = package.RxReplace(@"^\s*(\S+).*", "$1");
@@ -216,7 +205,6 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		bool installing = package != null;
 		bool building = false;
 		
-		this.IsEnabled = false;
 		try {
 			if (installing) {
 				Action<string> watcher = s => {
@@ -234,7 +222,8 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 			
 			//dialog.show("nuget 1");
 			
-			var sBuild = $@"build ""{proj}"" --nologo --output ""{folderPath}""";
+			var noRestore = installing ? "--no-restore " : null; //`package add` restores, `package remove` doesn't
+			var sBuild = $@"build ""{proj}"" {noRestore}--nologo --output ""{folderPath}""";
 			if (!await _RunDotnet(sBuild)) return false;
 			//TODO3: if fails, uninstall the package immediately.
 			//	Else in the future will fail to install any package.
@@ -413,7 +402,6 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		}
 		finally {
 			_FillTree(folder, package); //on error too, else users can't see and uninstall the new package now
-			this.IsEnabled = true;
 			if (building) //failed to build
 				print.it($@"<><c red>IMPORTANT: Please uninstall the package that causes the error.
 	Until then will fail to install or use packages in this folder ({folder}).
@@ -473,11 +461,18 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		}
 	}
 	
-	async Task _Uninstall(bool uninstalling = false, bool updating = false) {
+	async void _Uninstall() {
+		using var _ = _disabler.Disable();
+		await _Uninstall(uninstalling: true);
+	}
+	
+	async Task<bool> _Uninstall(bool uninstalling, bool updating = false) {
+		if (!await DotnetUtil.EnsureSDK(_tProgress)) return false;
+		
 		var folder = _Selected.Parent.Name;
 		var package = _Selected.Name;
 		//if (uninstalling) if (!dialog.showOkCancel("Uninstall package", package, owner: this)) return; //more annoying than useful
-		if (!await _RunDotnet($"remove {_ProjPath()} package {package}")) return;
+		if (!await _RunDotnet($@"package remove {package} --project ""{_ProjPath()}""")) return false;
 		
 		//Which installed files should be deleted?
 		//	Let's delete all files (except .csproj) from the folder and rebuild.
@@ -499,18 +494,24 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 				}
 			}
 			
-			if (!await _Build(_Selected.Parent.Name)) return;
+			if (!await _Build(_Selected.Parent.Name)) return false;
 			if (uninstalling) {
 				CodeInfo.StopAndUpdateStyling();
 				print.it("========== Finished ==========");
 			}
 		}
+		
+		return true;
 	}
 	
 	async void _Update() {
+		using var _ = _disabler.Disable();
 		var v = _Selected;
-		await _Uninstall(updating: true);
-		await _Install($"{v.Name}", v.Parent.Name);
+		if (!await _Uninstall(uninstalling: false, updating: true)) return;
+		var s = v.Name; if (v.Version.Contains('-') && !_cPrerelease.IsChecked) s += " --prerelease";
+		await _Install(s, v.Parent.Name);
+		
+		//rejected: use same --source as when installed. Rarely used. Can use Install instead; it's documented.
 	}
 	
 	async void _Move() {
@@ -519,7 +520,8 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		if (i < 0) return;
 		var folder = _folders[i];
 		var v = _Selected;
-		await _Uninstall();
+		using var _ = _disabler.Disable();
+		if (!await _Uninstall(uninstalling: false)) return;
 		await _Install($"{v.Name} --version {v.Version}", folder);
 	}
 	
@@ -541,25 +543,8 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		return a;
 	}
 	
-	async void _InfoDotNet() {
-		await _RunDotnet("--info");
-	}
-	
-	static void _InfoMissingFiles() {
-		print.it("""
-<>Some NuGet packages don't install all required files, for example used native dlls.
-	Often the missing files are in other NuGet packages. Install these packages.
-	Else you may have to download the missing files. In some cases they are in the .nupkg file (it is a zip file) in the packages cache folder.
-		Then click the <b>Folder</b> button and put these files there. Set read-only attribute to prevent deleting them when managing packages.
-		If missing are managed assemblies, in scripts that use them will need <mono>/*/ r Dll; /*/<> (use <b>Properties > Library<>).
-		If used in scripts with role <b>exeProgram<>, copy these files to the output folder.
-""");
-	}
-	
 	void _MoreMenu() {
 		var m = new popupMenu();
-		m["Download .NET SDK..."] = o => { run.itSafe("https://dotnet.microsoft.com/en-us/download"); };
-		m.Separator();
 		m.Submenu("NuGet cache", m => {
 			m["Open packages folder"] = o => {
 				if (0 == run.console(out var s, "dotnet.exe", "nuget locals global-packages --list") && !s.NE())
@@ -567,17 +552,21 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 					else print.it(s);
 			};
 			m.Submenu("Clear all caches", m => {
-				m["Clear"] = async o => { await _RunDotnet("nuget locals all --clear"); };
+				m["Clear"] = async o => {
+					using var _ = _disabler.Disable();
+					if (!await DotnetUtil.EnsureSDK(_tProgress)) return;
+					await _RunDotnet("nuget locals all --clear");
+				};
 			});
 		});
 		m.Show();
 	}
 	
 	async Task<bool> _RunDotnet(string cl, Action<string> printer = null, Action<string> watcher = null) {
-		Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 		try {
 			if (printer == null) {
 				print.it($"<><c blue>dotnet {cl}<>");
+				int operation = cl.Starts("package add") ? 1 : cl.Starts("build") ? 2 : 0;
 				bool skip = false;
 				printer = s => {
 					if (!skip) skip = s.Starts("Usage:");
@@ -585,15 +574,30 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 					var s0 = s;
 					if (s.Starts("error") || s.Contains(": error ")) s = $"<><c red>{s}<>";
 					else if (s.Starts("warn") || s.Contains(": warning ")) s = $"<><c DarkOrange>{s}<>";
-					print.it(s);
+					else if (operation == 1) {
+						if (s.Starts(false,
+							"info :   OK http",
+							"info : Generating MSBuild file",
+							"info : Writing assets file",
+							"info : X.509 certificate chain validation will",
+							"  Determining projects to restore",
+							"log  : Restored",
+							"  Writing ",
+							"info : PackageReference for package"
+							) > 0) s = null;
+						else if (s.Contains("is compatible with all the specified frameworks in project")) s = null;
+					} else if (operation == 2) {
+						if (s.Starts(false, "Time Elapsed ", "    0 Warning", "    0 Error") > 0 || s.Ends(@"\___.dll")) s = null;
+					}
+					if (!s.NE()) print.it(s);
 					watcher?.Invoke(s0);
 				};
 			}
-			return await Task.Run(() => 0 == run.console(printer, "dotnet.exe", cl));
+			
+			return await Task.Run(() => 0 == run.console(printer, DotnetUtil.DotnetExe, cl));
 		}
 		catch (Exception e1) {
 			var s = e1.ToStringWithoutStack();
-			if (e1 is AuException e2 && e2.NativeErrorCode == Api.ERROR_FILE_NOT_FOUND) s+="\n\nMake sure the PATH environment variable contains the dotnet directory path.";
 			dialog.showError("Failed to run dotnet.exe", s, owner: this);
 		}
 		return false;
@@ -622,6 +626,7 @@ If an installed package does not work, possibly some files are missing. <a {_Inf
 		if (select != null) _tv.SelectSingle(select, true);
 		else _panelManage.IsEnabled = false;
 	}
+	//TODO2: display transitive packages too, as child nodes.
 	
 	void _SelectInTree() {
 		_TreeItem select = null;

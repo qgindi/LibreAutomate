@@ -53,14 +53,16 @@ static class QuickCapture {
 			m["Click screen"] = _ => _Insert($"mouse.click({p.x}, {p.y});{screenshot}");
 		});
 		m.Submenu("Triggers", m => {
-			//CONSIDER: somehow allow to select "program" and "contains".
-			//	Or show 'Find window' tool in trigger mode. Also the tool should allow to set scope.
 			m["Window trigger..."] = _ => TriggersAndToolbars.QuickWindowTrigger(w, 0);
 			m["Trigger scope..."] = _ => TriggersAndToolbars.QuickWindowTrigger(w, 3);
 			m["Trigger scope - window"] = _ => TriggersAndToolbars.QuickWindowTrigger(w, 1);
 			m.Last.Tooltip = "Hotkey/autotext/mouse triggers added afterwards will work only when this window is active";
 			m["Trigger scope - program"] = _ => TriggersAndToolbars.QuickWindowTrigger(w, 2);
 			m.Last.Tooltip = "Hotkey/autotext/mouse triggers added afterwards will work only when a window of this program is active";
+			
+			//TODO: add options for trigger scope:
+			//1. `using Triggers.Of.Window(...) { ... }`
+			//2. `#region ... #endregion`. With regions can find scopes in the Outline panel.
 		});
 		m.Submenu("Program", m => {
 			var k = TUtil.PathInfo.FromWindow(w);

@@ -91,6 +91,8 @@ Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{commonappdata}\LibreAutomate"; Flags: uninsalwaysuninstall; Permissions: authusers-modify
+Name: "{app}\Git"; Flags: uninsalwaysuninstall; Permissions: authusers-modify
+Name: "{app}\SDK"; Flags: uninsalwaysuninstall; Permissions: authusers-modify
 Name: "{app}\Roslyn\.exeProgram"; Attribs: hidden
 ;why Inno stops here when debugging?
 

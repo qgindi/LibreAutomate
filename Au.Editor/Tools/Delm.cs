@@ -1563,6 +1563,7 @@ new elmFinder || 5
 			}
 		}
 		
+		_actionMenu?.Close(); _actionMenu = m; //prevent multiple instances on capture+test
 		int ia;
 		if (test) { //called when testing if no action selected
 			ia = m.Show(owner: this);
@@ -1570,6 +1571,7 @@ new elmFinder || 5
 			var r = _cbAction.RectInScreen();
 			ia = m.Show(PMFlags.AlignRectBottomTop, new POINT(r.left, r.bottom), r, owner: this);
 		}
+		_actionMenu = null;
 		if (--ia < 0) return _aActions[0];
 		var action = _aActions[ia];
 		
@@ -1600,6 +1602,7 @@ new elmFinder || 5
 		}
 		return action;
 	}
+	popupMenu _actionMenu;
 	
 	string _ActionGetCode(bool test) {
 		var action = !test ? _CurrentAction : !_selectedAction.isNone ? _selectedAction : _ActionMenu(true);

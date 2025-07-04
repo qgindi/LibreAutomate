@@ -639,18 +639,20 @@ Example:
 	
 	void _Other() {
 		var b = _Page("Other");
-		b.R.Add("Internet search URL", out TextBox internetSearchUrl, App.Settings.internetSearchUrl);
 		b.R.Add("Documentation", out ComboBox localHelp).Items("Online documentation of the latest program version|Local documentation of the installed program version").Select(App.Settings.localDocumentation ? 1 : 0);
+		b.R.Add("Internet search URL", out TextBox internetSearchUrl, App.Settings.internetSearchUrl);
+		b.R.Add(out KCheckBox minimalSdk, "Use minimal .NET SDK").Checked(App.Settings.minimalSDK).Tooltip("The SDK is used to install NuGet packages and for the Publish feature");
 		b.R.Add(out CheckBox printCompiled, "Always print \"Compiled\"").Checked(App.Settings.comp_printCompiled, threeState: true)
 			.Tooltip("Always print a \"Compiled\" message when a script etc compiled successfully.\nIf unchecked, prints only if role is exeProgram or classLibrary.\nIf 3-rd state, prints only when executing the Compile command.");
 		b.End();
 		
 		_b.OkApply += e => {
-			App.Settings.internetSearchUrl = internetSearchUrl.TextOrNull() ?? "https://www.google.com/search?q=";
 			if ((localHelp.SelectedIndex == 1) != App.Settings.localDocumentation) {
 				App.Settings.localDocumentation ^= true;
 				DocsHttpServer.StartOrSwitch();
 			}
+			App.Settings.internetSearchUrl = internetSearchUrl.TextOrNull() ?? "https://www.google.com/search?q=";
+			App.Settings.minimalSDK = minimalSdk.IsChecked;
 			App.Settings.comp_printCompiled = printCompiled.IsChecked;
 		};
 	}

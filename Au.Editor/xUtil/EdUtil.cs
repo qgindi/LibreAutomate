@@ -4,11 +4,115 @@ using System.Windows;
 using System.Collections;
 
 /// <summary>
-/// Misc util functions.
+/// .NET SDK etc.
 /// </summary>
-static class EdUtil {
+static class DotnetUtil {
+	static DotnetUtil() {
+		Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+	}
 	
-	//public static object oTest;
+	/// <summary>
+	/// Ensures that the full or minimal .NET SDK is installed, depending on <see cref="AppSettings.minimalSDK"/>.
+	/// If not installed, shows an "install" dialog and downloads/installs the minimal SDK.
+	/// In any case sets <see cref="DotnetExe"/>.
+	/// </summary>
+	/// <param name="progress">This func will set text like <c>"Downloading minimal SDK, 20%"</c>. Also its window is used as dialog owner etc.</param>
+	/// <returns>false if failed to install or canceled.</returns>
+	public static async Task<bool> EnsureSDK(TextBlock progress) {
+		if (App.IsPortable) { //TODO: test portable. Don't copy SDK to portable.
+			if (_IsFullSdkInstalled()) return true;
+			print.it("This feature requires the .NET SDK.");
+			return false;
+		}
+		if (!App.Settings.minimalSDK) {
+			if (_IsFullSdkInstalled()) return true;
+		}
+		if (s_minimalDotnetExe is null) {
+			var dotnetDir = folders.ThisAppBS + @"SDK";
+			var sdkDir = dotnetDir + @"\sdk";
+			bool installed = filesystem.exists(sdkDir, true).Directory
+				&& Directory.EnumerateDirectories(sdkDir, Environment.Version.ToString(2) + ".*").Any()
+				&& !Downloader.IsDirectoryInvalid(dotnetDir);
+			if (!installed) {
+				DotnetExe = null;
+				if (!await _InstallMinimalSDK(progress)) return false;
+			}
+			s_minimalDotnetExe = dotnetDir + @"\dotnet.exe";
+		}
+		DotnetExe = s_minimalDotnetExe;
+		App.Settings.minimalSDK = true;
+		return true;
+		
+		static bool _IsFullSdkInstalled() {
+			if (filesystem.searchPath("dotnet.exe") is string s) {
+				try {
+					if (Directory.EnumerateDirectories($@"{s}\..\sdk", $"{Environment.Version.ToString(2)}.*").Any()) {
+						DotnetExe = s;
+						return true;
+					}
+				}
+				catch { }
+			}
+			DotnetExe = null;
+			return false;
+		}
+		
+		static async Task<bool> _InstallMinimalSDK(TextBlock progress) {
+			var window = Window.GetWindow(progress);
+			
+			string info;
+			if (App.Settings.minimalSDK) info = $"""
+The .NET SDK is required to install NuGet packages or use Publish.
+Click OK to install a minimal SDK (~26 MB download) into the program folder.
+To use full SDK instead, click Cancel and uncheck Options > Other > Use minimal SDK.
+""";
+			else info = $"""
+The .NET SDK is required to install NuGet packages or use Publish; it isn't currently installed.
+Click OK to install a minimal SDK (~26 MB download) into the program folder.
+Or click Cancel and install the full .NET {Environment.Version.ToString(2)} SDK (~200 MB download).
+""";
+			string filename = $"sdk-{Environment.Version.ToString(2)}-{(osVersion.isArm64OS ? "arm64" : "x64")}.zip";
+			string url = $"https://www.libreautomate.com/download/sdk/{filename}";
+			string url2 = $"https://github.com/qgindi/LibreAutomate/releases/download/v1.13.0/{filename}";
+			DControls dcontrols = new() { RadioButtons = [url, url2] };
+			if (1 != dialog.show("Install minimal .NET SDK?", info, "1 OK|0 Cancel", owner: window, controls: dcontrols)) return false;
+			if (dcontrols.RadioId == 2) url = url2;
+			
+			var dotnetDir = folders.ThisAppBS + @"SDK";
+			var dl = new Downloader();
+			if (!dl.PrepareDirectory(dotnetDir, failedWarningPrefix: "<>Failed to install minimal SDK. ")) return false;
+			
+			CancellationTokenSource cts = new();
+			window.Closed += (_, _) => { cts?.Cancel(); };
+			bool? ok = await dl.DownloadAndExtract(url, progress, cts.Token, progressText: "Downloading minimal SDK", failedWarningPrefix: "<>Failed to download minimal SDK. ");
+			cts = null;
+			if (ok != true) return false;
+			
+			if (!(_CreateLink("host") && _CreateLink("shared"))) return false;
+			
+			return true;
+			
+			bool _CreateLink(string name) {
+				var link = dotnetDir + @"\" + name;
+				if (!filesystem.exists(link, true).Directory) {
+					var fullDotnetDir = folders.NetRuntime.Path.RxReplace(@"(\\[^\\]+){3}$", "", 1);
+					try { filesystem.more.createSymbolicLink(link, fullDotnetDir + @"\" + name, CSLink.Junction); }
+					catch (Exception ex) { print.warning(ex, "<>Failed to install minimal SDK. "); return false; }
+				}
+				return true;
+			}
+		}
+		
+		//note: when using the minimal SDK, the first time installs 3 extra packages (16 MB download). The normal SDK doesn't.
+		//	It's OK. It's because the minimal SDK doesn't have the `packs` folder. Then the minimal SDK auto-downloads what's missing.
+		//	Also creates empty dir `metadata` in the minimal SDK dir.
+	}
+	static string s_minimalDotnetExe;
+	
+	/// <summary>
+	/// Path of "dotnet.exe" set by <see cref="EnsureSDK"/>. If <see cref="AppSettings.minimalSDK"/>, it is in the minimal dotnet dir, else in the regular dotnet dir.
+	/// </summary>
+	public static string DotnetExe { get; private set; }
 }
 
 /// <summary>
@@ -308,6 +412,41 @@ class WildcardList {
 	}
 	
 	public string[] ListOfStrings => _a;
+}
+
+/// <summary>
+/// Disables/reenables a <b>Window</b>. Supports nested disabling (uses reference counting).
+/// Example:
+/// <c>WindowDisabler _disabler;
+/// ...
+/// _disabler = new(this);
+/// ...
+/// using var _ = _disabler.Disable();</c>
+/// </summary>
+class WindowDisabler {
+	readonly Window _window;
+	int _count;
+	
+	public WindowDisabler(Window window) => _window = window;
+	
+	public IDisposable Disable() {
+		if (_count++ == 0) _window.IsEnabled = false;
+		return new ReenableDisposable(this);
+	}
+	
+	class ReenableDisposable : IDisposable {
+		readonly WindowDisabler _d;
+		bool _disposed;
+		
+		public ReenableDisposable(WindowDisabler d) => _d = d;
+		
+		public void Dispose() {
+			if (_disposed) return;
+			_disposed = true;
+			if (--_d._count == 0)
+				_d._window.IsEnabled = true;
+		}
+	}
 }
 
 //class TempEnvVar : IDisposable {

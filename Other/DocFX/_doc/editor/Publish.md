@@ -21,7 +21,7 @@ Creates program files for the selected platform. If **optimize** true and **plat
 ## Menu Run > Publish
 The **Publish** tool can create single-file programs and programs that can run on computers without installed .NET.
 
-It creates a temporary .csproj file and executes [dotnet publish](https://www.google.com/search?q=dotnet+publish), which uses .NET SDK to compile the script. Error if SDK not installed.
+It creates a temporary .csproj file and executes [dotnet publish](https://www.google.com/search?q=dotnet+publish), which uses .NET SDK to compile the script.
 
 Options:
 - **Single file** - create single-file program. Adds all program files to single .exe file.

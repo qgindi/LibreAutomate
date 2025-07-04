@@ -1,4 +1,3 @@
-//TODO: setup: add choice to install .NET Runtime or SDK.
 //TODO: remove " C#" from the app name.
 
 using Au.Controls;
@@ -42,7 +41,7 @@ static partial class App {
 			if (_RestartAsAdmin(args)) return 0;
 		}
 		
-		SetThisAppFoldersEtc_(args);
+		InitThisAppFoldersEtc_(args);
 		
 		//Debug_.PrintLoadedAssemblies(true, !true);
 		
@@ -65,7 +64,7 @@ static partial class App {
 		process.thisProcessCultureIsInvariant = true;
 		if (!Debugger.IsAttached) DebugTraceListener.Setup(usePrint: true);
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
-		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
+		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | Api.BASE_SEARCH_PATH_PERMANENT); //let SearchPath search in current directory after system directories
 		Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		
 		if (CommandLine.ProgramStarted2(args)) return;
@@ -228,7 +227,7 @@ static partial class App {
 		return false;
 	}
 	
-	internal static void SetThisAppFoldersEtc_(string[] args = null) {
+	internal static void InitThisAppFoldersEtc_(string[] args = null) {
 		dialog.options.defaultTitle = AppNameShort + " message";
 		folders.Editor = folders.ThisApp;
 		

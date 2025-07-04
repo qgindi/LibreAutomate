@@ -215,23 +215,6 @@ System.Threading.Tasks.TaskCanceledException
 	//settings common to various tools
 	public bool tools_pathUnexpand = true, tools_pathLnk;
 	
-	//Delm
-	public record delm_t {
-		public string hk_capture = "F3", hk_insert = "F4", hk_smaller = "Shift+F3"; //for all tools
-		public string def_wait, def_action;
-		public bool? def_UIA;
-		public int flags;
-	}
-	public delm_t delm;
-	
-	//DInputRecorder
-	public record recorder_t {
-		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move;
-		public int xyIn;
-		public string speed = "10";
-	}
-	public recorder_t recorder;
-	
 	//DIcons
 	public int dicons_listColor;
 	public bool dicons_contrastUse;
@@ -241,9 +224,6 @@ System.Threading.Tasks.TaskCanceledException
 	public string portable_dir;
 	public int portable_check = -1;
 	public string[] portable_skip;
-	
-	//DOcr
-	public Au.Tools.OcrEngineSettings ocr;
 	
 	//DSnippets
 	public Dictionary<string, HashSet<string>> ci_hiddenSnippets;
@@ -255,15 +235,34 @@ System.Threading.Tasks.TaskCanceledException
 	//CiFindGo
 	public bool ci_findgoDclick;
 	
-	//misc
-	public int publish, export;
+	//DInputRecorder
+	public record recorder_t {
+		public bool keys = true, text = true, text2 = true, mouse = true, wheel, drag, move;
+		public int xyIn;
+		public string speed = "10";
+	}
+	public recorder_t recorder;
+	
+	//Delm
+	public record delm_t {
+		public string hk_capture = "F3", hk_insert = "F4", hk_smaller = "Shift+F3"; //for all tools
+		public string def_wait, def_action;
+		public bool? def_UIA;
+		public int flags;
+	}
+	public delm_t delm;
+	
+	//DOcr
+	public Au.Tools.OcrEngineSettings ocr;
 	
 	//panel Find
 	public string find_skip;
 	public int find_searchIn, find_printSlow = 50;
 	public bool find_parallel, find_case, find_word;
 	
-	//DCommandLine.ShellMenu
+	//other
+	public int publish, export;
+	public bool minimalSDK;
 	public string nilesoftShellDir;
 }
 
