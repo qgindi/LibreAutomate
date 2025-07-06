@@ -346,11 +346,15 @@ class MetaReferences {
 			if (!filesystem.GetProp_(xmlPath, out var px)) return null;
 			
 			if (px.size >= 10_000) {
+				_Cleanup();
 				var md5 = new Hash.MD5Context(); md5.Add(xmlPath.Lower());
-				var dbPath = folders.ThisAppTemp + md5.Hash.ToString() + ".db";
-				//CONSIDER: later delete oldest temp files.
+				var dbPath = folders.ThisAppTemp + $@"refDoc\{md5.Hash.ToString()}.db";
 				try {
-					if (!filesystem.GetProp_(dbPath, out var pd) || pd.time != px.time) {
+					if (filesystem.GetProp_(dbPath, out var pd) && pd.time == px.time) {
+						DateTime now = DateTime.UtcNow, created = DateTime.FromFileTimeUtc(pd.timeCreated);
+						//print.it("cached", dbPath, now - created);
+						if (now - created > TimeSpan.FromDays(10)) try { File.SetCreationTimeUtc(dbPath, now); } catch { } //keep cached (see _Cleanup())
+					} else {
 						//Debug_.Print($"creating db: {asmPath}  ->  {dbPath}");
 						filesystem.delete(dbPath);
 						bool isAu = asmPath.Ends("\\Au.dll", true);
@@ -395,7 +399,7 @@ class MetaReferences {
 							trans.Commit();
 							d.Execute("VACUUM");
 						}
-						File.SetLastWriteTimeUtc(dbPath, px.TimeAsDateTime);
+						try { File.SetLastWriteTimeUtc(dbPath, px.TimeAsDateTime); } catch { }
 					}
 					var db = new sqlite(dbPath, SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
 					s_d[asmPath] = dp = new _DocumentationProvider { _db = db };
@@ -437,6 +441,26 @@ class MetaReferences {
 			Debug_.Print("GetHashCode");
 			return 1;
 		}
+		
+		static void _Cleanup() {
+			if (!s_cleanup) s_cleanup = true; else return;
+			var now = DateTime.UtcNow;
+			var month = TimeSpan.FromDays(30);
+			try {
+				var dir = folders.ThisAppTemp + "refDoc";
+				if (!filesystem.exists(dir).Directory) { //previously the temp db files were not in refDoc (bad)
+					filesystem.createDirectory(dir);
+					foreach (var f in new DirectoryInfo(folders.ThisAppTemp).GetFiles("*.db")) {
+						if (f.Name.Length == 35) Api.MoveFileEx(f.FullName, f.FullName.Insert(^35, @"refDoc\"), 0);
+					}
+				}
+				foreach (var f in new DirectoryInfo(dir).GetFiles("*.db")) {
+					if (f.Name.Length == 35 && now - f.CreationTimeUtc > month) Api.DeleteFile(f.FullName);
+				}
+			}
+			catch { }
+		}
+		static bool s_cleanup;
 	}
 	
 	/// <summary>

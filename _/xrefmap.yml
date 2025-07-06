@@ -1,5 +1,5 @@
 - uid: Program
-  name: LibreAutomate C#
+  name: LibreAutomate
   href: editor/Program.html
 - uid: caller_info
   name: Caller info parameter
@@ -20,8 +20,11 @@
   name: Git, backup, sync
   href: editor/Git%2C%20backup%2C%20sync.html
 - uid: index
-  name: LibreAutomate C#
+  name: LibreAutomate
   href: index.html
+- uid: nuget
+  name: NuGet
+  href: editor/NuGet.html
 - uid: output_tags
   name: Output tags
   href: articles/Output%20tags.html

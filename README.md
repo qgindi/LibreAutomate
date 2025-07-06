@@ -1,4 +1,4 @@
-# LibreAutomate C#
+# LibreAutomate
 
 C# script editor and automation library for Windows.
 

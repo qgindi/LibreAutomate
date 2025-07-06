@@ -83,11 +83,17 @@ When you select a function in the completion list, whether/when to append `()`. 
 Initial code of new scripts and class files. Can be empty.
 
 ### Other
+#### Documentation
+Which version of documentation to use. If **Local**, the program downloads the documentation of the installed program version from its website to `C:\ProgramData\LibreAutomate\docs` and uses it. If **Online**, the program uses the online documentation; it is of the latest program version, which may be not the same as your installed program version.
+
 #### Internet search URL
 The Internet search URL used by this program. The program will append the query string. Default: `https://www.google.com/search?q=`.
 
-#### Documentation
-Which version of documentation to use. If **Local**, the program downloads the documentation of the installed program version from its website to `C:\ProgramData\LibreAutomate\docs` and uses it. If **Online**, the program uses the online documentation; it is of the latest program version, which may be not the same as your installed program version.
+#### Use minimal .NET SDK
+What .NET SDK to use for NuGet and Publish:
+- Checked - use a minimal SDK that contains .NET SDK files used by the above features. The program automatically installs/updates it when need. Location: subfolder `SDK`.
+- Unchecked - use the full .NET SDK, which must be installed manually.
+- Indeterminate (default) - use the full SDK if installed, else the minimal.
 
 #### Always print "Compiled"
 Always print a \"Compiled\" message when a script etc compiled successfully.

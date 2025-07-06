@@ -451,7 +451,7 @@ This tool modifies only the .git folder, not workspace files.
 			async void _InstallGit(WBButtonClickArgs k) {
 				k.Button.IsEnabled = false;
 				try {
-					var dl = new Downloader();
+					using var dl = new Downloader();
 					if (dl.PrepareDirectory(folders.ThisAppBS + "Git")) {
 						//get URL of the latest mingit zip
 						tGitStatus.Text = "Getting the download URL (GitHub)";

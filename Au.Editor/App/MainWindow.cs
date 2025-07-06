@@ -22,7 +22,7 @@ partial class MainWindow : Window {
 		
 		Application.Current.Resources = Application.LoadComponent(new("/Au.Editor;component/app/app-resources.xaml", UriKind.Relative)) as ResourceDictionary;
 		
-		Title = App.AppNameShort; //don't append document name etc
+		Title = App.AppName; //don't append document name etc
 		
 		if (App.Settings.wndpos.main == null) {
 			Width = 1000;

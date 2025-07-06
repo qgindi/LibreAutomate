@@ -38,7 +38,7 @@ Change version info (see above) in global2.cs and index.md.
 Build solution in config Release, all platforms.
 	NOTE: use the "Rebuild solution" command, else VS may not update something.
 
-Review menu Help -> About. May need to update Au.More.FileWatcher.WatchC# version, .NET version, used libraries.
+Review menu Help -> About. May need to update C# version, .NET version, used libraries.
 
 Run script "Au docs" just to catch XML documentation errors and test how it works with current C#/.NET/DocFX versions etc.
 	Don't upload. Fix errors if need. More info in AuDocs.txt.
@@ -49,21 +49,23 @@ Build solution if needed to edit in above steps.
 May need to update some info in README.md for github. Eg the screenshot and "how to build".
 	When an image updated, github still shows the old cached. Workaround: in the image link append #x and change x for each image version. Before run script "Purge Cloudflare CDN cache".
 
-Open the .iss file in Inno Script Studio. Change MyAppVersion. Review. Compile.
-	Run the setup file to test. Test on other OS too. Occasionally uninstall/install, not just upgrade.
-	May need to update the setup file size in the download webpage (index.md).
-
-Upload the setup file. For example with FileZilla.
-	Backup the old setup file at first: in FileZilla move the old file to the "download" folder and rename (add version).
-	Don't backup if changed only patch version. Simply replace.
-
-Run script "Au docs". Click the upload link.
-
 Review the md file of current version.
 	If it's still "future.md", rename ( RENAME!!! ) to "v1.x.md".
 
 Github commit all and push. The message could be like v1.2.3.
-	Note: don't delay to do it. It uploads the "changes" doc.
+	Note: do it now. Need for upload to GitHub. Also uploads the "changes" doc.
+
+Open the .iss file in Inno Script Studio. Change MyAppVersion. Review. Compile.
+	Run the setup file to test. Test on other OS too. Occasionally uninstall/install, not just upgrade.
+	May need to update the setup file size in the download webpage (index.md).
+
+Upload the setup file to GitHub Releases.
+
+Upload the setup file to https://www.libreautomate.com. For example with WinSCP.
+	Backup the old setup file at first: in WinSCP move the old file to the "download" folder and rename (add version).
+	Don't backup if changed only patch version. Simply replace.
+
+Run script "Au docs". Click the upload link.
 
 Review web pages. Github too.
 
@@ -121,6 +123,9 @@ Create-upload https://www.libreautomate.com/download/net-X-url.txt. Here X is .N
 	The file must contain the .NET Desktop Runtime download URL (the same as in LibreAutomate.iss).
 
 Test DNuget with the new and the old SDK.
-	Test package Microsoft.PowerShell.SDK. Test how it works in miniProgram and exeProgram.
+
+Run script "Minimal .NET SDK". Upload.
+
+Test installing NuGet packages. Test package Microsoft.PowerShell.SDK (because it's the most complex I know). Test how it works in miniProgram and exeProgram.
 
 Maybe more.

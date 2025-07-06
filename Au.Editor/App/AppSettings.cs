@@ -262,7 +262,7 @@ System.Threading.Tasks.TaskCanceledException
 	
 	//other
 	public int publish, export;
-	public bool minimalSDK;
+	public bool? minimalSDK;
 	public string nilesoftShellDir;
 }
 

@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Xml.Linq;
 
 static class NugetDownloader {
+#if USED
 	/// <summary>
 	/// Downloads a NuGet package to a temp directory.
 	/// </summary>
@@ -72,30 +73,31 @@ static class NugetDownloader {
 		}
 	}
 	
-	/// <summary>
-	/// Downloads and extracts both .NET runtimes (core and desktop) for CPU architecture x64/ARM64 other than of this process.
-	/// </summary>
-	/// <param name="dir">Extract both to this directory.</param>
-	/// <param name="portable">Extract to <i>dir</i> subdirectory <c>"dotnet"</c> (if x64) or <c>"dotnetARM"</c> (if ARM64). Delete old subdirectory.</param>
-	/// <exception cref="OperationCanceledException">User-canceled.</exception>
-	/// <exception cref="Exception">Failed.</exception>
-	public static void DownloadNetRuntimesForOtherArch(string dir, bool portable) {
-		bool forArm = !osVersion.isArm64Process;
-		
-		if (portable) {
-			dir = dir + "\\dotnet" + (forArm ? "ARM" : null);
-			filesystem.delete(dir);
-			filesystem.createDirectory(dir);
-		}
-		
-		string arch = forArm ? "arm64" : "x64";
-		string version = Environment.Version.ToString();
-		regexp rx = new(@"(?i)^runtimes/win-\w+/(?:lib/net[^/]+|native)/\K.+");
-		var f1 = Download($"Microsoft.NETCore.App.Runtime.win-{arch}", version);
-		var f2 = Download($"Microsoft.WindowsDesktop.App.Runtime.win-{arch}", version);
-		Extract(f1, dir, rx);
-		Extract(f2, dir, rx);
-	}
+	//This was used before the normal download URLs were known. Now used DotnetUtil.DownloadNetRuntimesForOtherArch.
+	///// <summary>
+	///// Downloads and extracts both .NET runtimes (core and desktop) for CPU architecture x64/ARM64 other than of this process.
+	///// </summary>
+	///// <param name="dir">Extract both to this directory.</param>
+	///// <param name="portable">Extract to <i>dir</i> subdirectory <c>"dotnet"</c> (if x64) or <c>"dotnetARM"</c> (if ARM64). Delete old subdirectory.</param>
+	///// <exception cref="OperationCanceledException">User-canceled.</exception>
+	///// <exception cref="Exception">Failed.</exception>
+	//public static void DownloadNetRuntimesForOtherArch(string dir, bool portable) {
+	//	bool forArm = !osVersion.isArm64Process;
+	
+	//	if (portable) {
+	//		dir = dir + "\\dotnet" + (forArm ? "ARM" : null);
+	//		filesystem.delete(dir);
+	//		filesystem.createDirectory(dir);
+	//	}
+	
+	//	string arch = forArm ? "arm64" : "x64";
+	//	string version = Environment.Version.ToString();
+	//	regexp rx = new(@"(?i)^runtimes/win-\w+/(?:lib/net[^/]+|native)/\K.+");
+	//	var f1 = Download($"Microsoft.NETCore.App.Runtime.win-{arch}", version);
+	//	var f2 = Download($"Microsoft.WindowsDesktop.App.Runtime.win-{arch}", version);
+	//	Extract(f1, dir, rx);
+	//	Extract(f2, dir, rx);
+	//}
 	
 	static string _GetLatestCompatibleVersion(string package) {
 		var runtimeVersion = Environment.Version.ToString(2);
@@ -125,4 +127,5 @@ static class NugetDownloader {
 		}
 		return null;
 	}
+#endif
 }

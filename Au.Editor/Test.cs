@@ -28,6 +28,13 @@ static class Test {
 	public static void FromMenubar() {
 		print.clear();
 		
+		//Task.Run(() => {
+		//	try {
+		//		DotnetUtil.DownloadNetRuntimesForOtherArch(@"C:\Test\DownloadNetRuntimesForOtherArch", true);
+		//	}
+		//	catch (Exception ex) { print.it(ex); }
+		//});
+		
 		//var doc = Panels.Editor.ActiveDoc;
 		//doc.ESetUndoMark_(-1);
 		

@@ -615,14 +615,14 @@ static class Menus {
 		public static void Forum() { run.itSafe("https://www.libreautomate.com/forum/"); }
 		
 		[Command]
-		public static void Email() { run.itSafe($"mailto:info@libreautomate.com?subject={App.AppNameShort} {Au_.Version}"); }
+		public static void Email() { run.itSafe($"mailto:info@libreautomate.com?subject={App.AppName} {Au_.Version}"); }
 		
 		[Command]
 		public static void Donate() { run.itSafe("https://github.com/sponsors/qgindi"); }
 		
 		[Command]
 		public static void About() {
-			print.it($@"<>---- {App.AppNameLong} ----
+			print.it($@"<>---- {App.AppName} ----
 Version: {Au_.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>

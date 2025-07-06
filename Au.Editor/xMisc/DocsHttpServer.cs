@@ -44,7 +44,7 @@ class DocsHttpServer : HttpServerSession {
 		var versionFile = siteDir + @"\version.txt";
 		if (filesystem.exists(versionFile) && File.ReadAllLines(versionFile)[0] == Au_.Version) return;
 		
-		print.it($"<><lc YellowGreen>Installing local documentation for {App.AppNameShort} {Au_.Version}.<>");
+		print.it($"<><lc YellowGreen>Installing local documentation for {App.AppName} {Au_.Version}.<>");
 		if (filesystem.exists(siteDir)) {
 			print.it("Deleting old documentation");
 			filesystem.delete(versionFile);

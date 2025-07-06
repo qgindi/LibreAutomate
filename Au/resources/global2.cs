@@ -28,7 +28,7 @@ global using IEnumerator = System.Collections.IEnumerator;
 [assembly: ComVisible(false)]
 
 [assembly: AssemblyCompany("Gintaras Didžgalvis")]
-[assembly: AssemblyProduct("LibreAutomate C#")]
+[assembly: AssemblyProduct("LibreAutomate")]
 [assembly: AssemblyCopyright("Copyright 2020-2025 Gintaras Didžgalvis")]
 [assembly: AssemblyCulture("")]
 
@@ -41,6 +41,6 @@ namespace Au.More;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class Au_ {
 	///
-	public const string Version = "1.12.0";
+	public const string Version = "1.13.0";
 }
 #endif

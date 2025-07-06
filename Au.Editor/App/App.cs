@@ -1,17 +1,13 @@
-//TODO: remove " C#" from the app name.
-
 using Au.Controls;
 using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
 
-[assembly: AssemblyTitle(App.AppNameLong)]
+[assembly: AssemblyTitle(App.AppName)]
 //more attributes in global2.cs
 
 static partial class App {
-	public const string
-		AppNameLong = "LibreAutomate C#",
-		AppNameShort = "LibreAutomate"; //must be without spaces etc
+	public const string AppName = "LibreAutomate";
 	
 	internal static PrintServer PrintServer;
 	public static AppSettings Settings;
@@ -29,7 +25,7 @@ static partial class App {
 #endif
 		
 		script.role = SRole.EditorExtension; //used by the folders class
-		script.name = AppNameShort;
+		script.name = AppName;
 		
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 		
@@ -228,7 +224,7 @@ static partial class App {
 	}
 	
 	internal static void InitThisAppFoldersEtc_(string[] args = null) {
-		dialog.options.defaultTitle = AppNameShort + " message";
+		dialog.options.defaultTitle = AppName + " message";
 		folders.Editor = folders.ThisApp;
 		
 		if (args != null) {
@@ -317,7 +313,7 @@ static partial class App {
 				Panels.Output.Scintilla.AaTags.AddLinkTag("+restartAdmin", k => Restart(k, admin: true));
 			} else if (CommandLine.Raa) { //restarted because clicked link "Restart as administrator: now and always"
 				var name = IsAtHome ? "_Au.Editor" : "Au.Editor";
-				bool ok = 0 == WinScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppNameShort);
+				bool ok = 0 == WinScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppName);
 				if (!ok) print.warning(@"Failed to create Windows Task Scheduler task \Au\Au.Editor.", -1);
 				
 				//note: don't create the task in the setup program. It requires a C++ dll, and it triggers AV false positives.
@@ -460,9 +456,9 @@ static partial class App {
 			if (s != Au_.Version && System.Version.TryParse(Au_.Version, out var v1) && System.Version.TryParse(s, out var v2) && v2 > v1) {
 				//Panels.Output.Scintilla.AaTags.AddLinkTag("+appUpdate", _Update);
 				//print.it($"<>{AppNameShort} {s} is available. The installed version is {Au_.Version}.  [<+appUpdate>update...<>]  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>website<>]");
-				print.it($"<>{AppNameShort} {s} is available. The installed version is {Au_.Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>download<>]");
+				print.it($"<>{AppName} {s} is available. The installed version is {Au_.Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>download<>]");
 			} else if (forceNow) {
-				dialog.showInfo(null, $"{AppNameShort} is up to date. Version {Au_.Version}.", owner: Hmain);
+				dialog.showInfo(null, $"{AppName} is up to date. Version {Au_.Version}.", owner: Hmain);
 			}
 		}
 		catch (Exception e1) { if (forceNow) print.warning(e1); }

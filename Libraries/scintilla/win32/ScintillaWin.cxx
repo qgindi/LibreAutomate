@@ -383,7 +383,7 @@ public:
 		valid = false;
 	}
 
-	HCURSOR Load(UINT dpi) noexcept {
+	HCURSOR Load([[maybe_unused]] UINT dpi) noexcept {
 		if (cursor)	 {
 			if (valid) {
 				return cursor;

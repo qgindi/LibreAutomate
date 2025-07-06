@@ -281,6 +281,13 @@ namespace Au.Types {
 			return t.Send(m, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
 		}
 		
+		//rejected. It's easy to use .NET methods directly (for those familiar with await). For the same reason rejected CancellationToken parameter of Get etc.
+		///// <inheritdoc cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage}, CancellationToken)"/>
+		//public static Task<HttpResponseMessage> GetAsync(this HttpClient t, string url, bool dontWait = false, IEnumerable<string> headers = null, string auth = null, Action<HttpRequestMessage> also = null, CancellationToken cancel = default) {
+		//	using var m = _HttpMessage(HttpMethod.Get, url, headers, auth, also);
+		//	return t.SendAsync(m, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, cancel);
+		//}
+		
 		static HttpRequestMessage _HttpMessage(HttpMethod method, string url, IEnumerable<string> headers, string auth, Action<HttpRequestMessage> also, HttpContent content = null) {
 			Not_.Null(url);
 			var m = new HttpRequestMessage(method, url);

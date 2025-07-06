@@ -34,7 +34,7 @@ static partial class App {
 			var d = new Api.NOTIFYICONDATA(_wNotify, Api.NIF_MESSAGE | Api.NIF_ICON | Api.NIF_TIP /*| Api.NIF_SHOWTIP*/) { //need NIF_SHOWTIP if called NIM_SETVERSION(NOTIFYICON_VERSION_4)
 				uCallbackMessage = c_msgNotify,
 				hIcon = _GetIcon(),
-				szTip = App.AppNameShort
+				szTip = App.AppName
 			};
 			if (Api.Shell_NotifyIcon(Api.NIM_ADD, d)) {
 				//d.uFlags = 0;

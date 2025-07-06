@@ -141,7 +141,7 @@ partial class filesystem {
 		/// <param name="targetPath">If <i>type</i> is <b>Junction</b>, must be full path. Else can be either full path or path relative to the parent directory of the link. If starts with an environment variable, the function expands it before creating the link.</param>
 		/// <param name="type"></param>
 		/// <param name="elevate">If fails to create symbolic link because this process does not have admin rights, run <c>cmd.exe mklink</c> as administrator. Will show a dialog and UAC consent. Not used if type is <b>Junction</b>, because don't need admin rights to create junctions.</param>
-		/// <param name="deleteOld">If <i>linkPath</i> already exists as a symbolic link or junction, replace it.</param>
+		/// <param name="deleteOld">If <i>linkPath</i> already exists as a symbolic link or junction or empty directory, replace it.</param>
 		/// <remarks>
 		/// Some reasons why this function can fail:
 		/// - The link already exists. Solution: use <c>deleteOld: true</c>.
@@ -163,7 +163,8 @@ partial class filesystem {
 			string trueLinkPath = null;
 			try {
 				if (exists(linkPath, useRawPath: true) is var e && e) {
-					if (!(deleteOld && e.IsNtfsLink)) throw new AuException(Api.ERROR_ALREADY_EXISTS, "*to create symbolic link.");
+					bool ok = deleteOld && (e.IsNtfsLink || (e.Directory && Api.RemoveDirectory(linkPath))); //info: remove empty dir because eg Explorer does not copy links, but istead creates empty dir
+					if (!ok) throw new AuException(Api.ERROR_ALREADY_EXISTS, "*to create symbolic link.");
 					trueLinkPath = linkPath;
 					linkPath = pathname.makeUnique(linkPath, true);
 				} else createDirectoryFor(linkPath);

@@ -3,10 +3,12 @@ using System.Windows.Controls;
 /// <summary>
 /// Downloads and extracts a compressed file. With progress.
 /// To extract uses the LA's installed 7za.exe.
+/// Must be disposed (it deletes a sentinel file if succeeded).
 /// </summary>
-class Downloader {
+sealed class Downloader : IDisposable {
 	string _dirExtract;
 	bool _deleteOldFiles;
+	string _sentinel;
 	
 	/// <summary>
 	/// Prepares to extract files in given directory.
@@ -50,22 +52,25 @@ class Downloader {
 		
 		try {
 			progress?.Visibility = System.Windows.Visibility.Visible;
-			progress?.Text = progressText + ". Connecting...";
 			using var zip = new TempFile(ext);
-			var rm = internet.http.Get(url, dontWait: true);
+			
+			progress?.Text = progressText + ". Connecting...";
+			var rm = await Task.Run(() => internet.http.Get(url, dontWait: true)); //not GetAsync because it blocks for 7 s on my VMWare Win7
 			if (!await rm.DownloadAsync(zip, p => { progress?.Text = $"{progressText}, {p.Percent}%"; }, ct)) return null;
 			
 			progress?.Text = "Extracting";
 			await Task.Run(() => {
+				var aDel = _deleteOldFiles ? Directory.GetFileSystemEntries(_dirExtract) : null;
+				
 				string sentinel = _dirExtract + c_sentinel;
 				filesystem.saveText(sentinel, "");
 				
-				if (_deleteOldFiles) filesystem.delete(Directory.GetFileSystemEntries(_dirExtract));
+				if (_deleteOldFiles) filesystem.delete(aDel);
 				
 				var sevenzip = folders.ThisAppBS + @"32\7za.exe";
 				if (0 != run.console(out var s, sevenzip, $@"x -aoa -o""{_dirExtract}"" ""{zip}""")) throw new AuException($"*extract files. {s}");
 				
-				filesystem.delete(sentinel);
+				_sentinel = sentinel;
 			});
 		}
 		catch (Exception e1) {
@@ -79,6 +84,10 @@ class Downloader {
 	}
 	
 	const string c_sentinel = @"\.la-extract-sentinel";
+	
+	public void Dispose() {
+		if (_sentinel != null) filesystem.delete(_sentinel);
+	}
 	
 	/// <summary>
 	/// Returns <c>true</c> if <see cref="DownloadAndExtract"/> was killed during the "delete existing files and extract" operation. Ie the directory content is invalid.

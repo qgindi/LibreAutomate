@@ -2,6 +2,7 @@ using Microsoft.Win32;
 using System.Windows.Controls;
 using System.Windows;
 using System.Collections;
+using System.IO.Compression;
 
 /// <summary>
 /// .NET SDK etc.
@@ -13,19 +14,23 @@ static class DotnetUtil {
 	
 	/// <summary>
 	/// Ensures that the full or minimal .NET SDK is installed, depending on <see cref="AppSettings.minimalSDK"/>.
-	/// If not installed, shows an "install" dialog and downloads/installs the minimal SDK.
+	/// If not installed, [rejected: shows an "install" dialog and] downloads/installs the minimal SDK.
 	/// In any case sets <see cref="DotnetExe"/>.
 	/// </summary>
-	/// <param name="progress">This func will set text like <c>"Downloading minimal SDK, 20%"</c>. Also its window is used as dialog owner etc.</param>
+	/// <param name="progress">This func will set text like <c>"Downloading minimal SDK, 20%"</c>. Also uses it to cancel when the window closed.</param>
 	/// <returns>false if failed to install or canceled.</returns>
 	public static async Task<bool> EnsureSDK(TextBlock progress) {
-		if (App.IsPortable) { //TODO: test portable. Don't copy SDK to portable.
+		if (App.IsPortable) {
 			if (_IsFullSdkInstalled()) return true;
-			print.it("This feature requires the .NET SDK.");
+			print.it("Error: This feature in portable mode requires the .NET SDK.");
 			return false;
 		}
-		if (!App.Settings.minimalSDK) {
+		if (App.Settings.minimalSDK != true) {
 			if (_IsFullSdkInstalled()) return true;
+			if (App.Settings.minimalSDK == false) {
+				print.it("Error: This feature requires the .NET SDK. Install it or don't uncheck Options > Other > Use minimal SDK.");
+				return false;
+			}
 		}
 		if (s_minimalDotnetExe is null) {
 			var dotnetDir = folders.ThisAppBS + @"SDK";
@@ -37,10 +42,12 @@ static class DotnetUtil {
 				DotnetExe = null;
 				if (!await _InstallMinimalSDK(progress)) return false;
 			}
+			
 			s_minimalDotnetExe = dotnetDir + @"\dotnet.exe";
+			
+			if (!(_EnsureLink("host") && _EnsureLink("shared"))) return false; //not just when installing, because the folder may be copied manually and the links lost
 		}
 		DotnetExe = s_minimalDotnetExe;
-		App.Settings.minimalSDK = true;
 		return true;
 		
 		static bool _IsFullSdkInstalled() {
@@ -60,6 +67,9 @@ static class DotnetUtil {
 		static async Task<bool> _InstallMinimalSDK(TextBlock progress) {
 			var window = Window.GetWindow(progress);
 			
+			string filename = $"sdk-{Environment.Version.ToString(2)}-{(osVersion.isArm64OS ? "arm64" : "x64")}.zip";
+			string url = $"https://www.libreautomate.com/download/sdk/{filename}";
+#if false //rejected
 			string info;
 			if (App.Settings.minimalSDK) info = $"""
 The .NET SDK is required to install NuGet packages or use Publish.
@@ -71,48 +81,107 @@ The .NET SDK is required to install NuGet packages or use Publish; it isn't curr
 Click OK to install a minimal SDK (~26 MB download) into the program folder.
 Or click Cancel and install the full .NET {Environment.Version.ToString(2)} SDK (~200 MB download).
 """;
-			string filename = $"sdk-{Environment.Version.ToString(2)}-{(osVersion.isArm64OS ? "arm64" : "x64")}.zip";
-			string url = $"https://www.libreautomate.com/download/sdk/{filename}";
 			string url2 = $"https://github.com/qgindi/LibreAutomate/releases/download/v1.13.0/{filename}";
 			DControls dcontrols = new() { RadioButtons = [url, url2] };
 			if (1 != dialog.show("Install minimal .NET SDK?", info, "1 OK|0 Cancel", owner: window, controls: dcontrols)) return false;
 			if (dcontrols.RadioId == 2) url = url2;
+#endif
 			
-			var dotnetDir = folders.ThisAppBS + @"SDK";
-			var dl = new Downloader();
-			if (!dl.PrepareDirectory(dotnetDir, failedWarningPrefix: "<>Failed to install minimal SDK. ")) return false;
+			var dotnetDir = folders.ThisAppBS + "SDK";
+			using var dl = new Downloader();
+			if (!dl.PrepareDirectory(dotnetDir, failedWarningPrefix: c_errorInstallMinimalSDK)) return false;
 			
 			CancellationTokenSource cts = new();
 			window.Closed += (_, _) => { cts?.Cancel(); };
-			bool? ok = await dl.DownloadAndExtract(url, progress, cts.Token, progressText: "Downloading minimal SDK", failedWarningPrefix: "<>Failed to download minimal SDK. ");
+			bool? ok = await dl.DownloadAndExtract(url, progress, cts.Token, progressText: "Downloading required components", failedWarningPrefix: c_errorInstallMinimalSDK.Replace("to install", "to download"));
 			cts = null;
-			if (ok != true) return false;
-			
-			if (!(_CreateLink("host") && _CreateLink("shared"))) return false;
-			
-			return true;
-			
-			bool _CreateLink(string name) {
-				var link = dotnetDir + @"\" + name;
-				if (!filesystem.exists(link, true).Directory) {
-					var fullDotnetDir = folders.NetRuntime.Path.RxReplace(@"(\\[^\\]+){3}$", "", 1);
-					try { filesystem.more.createSymbolicLink(link, fullDotnetDir + @"\" + name, CSLink.Junction); }
-					catch (Exception ex) { print.warning(ex, "<>Failed to install minimal SDK. "); return false; }
-				}
-				return true;
-			}
+			return ok == true;
 		}
 		
-		//note: when using the minimal SDK, the first time installs 3 extra packages (16 MB download). The normal SDK doesn't.
-		//	It's OK. It's because the minimal SDK doesn't have the `packs` folder. Then the minimal SDK auto-downloads what's missing.
+		static bool _EnsureLink(string name) {
+			var link = folders.ThisAppBS + @"SDK\" + name;
+			if (!filesystem.exists(link, true).IsNtfsLink) {
+				var fullDotnetDir = folders.NetRuntime.Path.RxReplace(@"(\\[^\\]+){3}$", "", 1);
+				try { filesystem.more.createSymbolicLink(link, fullDotnetDir + @"\" + name, CSLink.Junction, deleteOld: true); }
+				catch (Exception ex) { print.warning(ex, c_errorInstallMinimalSDK); return false; }
+			}
+			return true;
+		}
+		
+		//note: the minimal SDK the first time installs 3 extra packages (16 MB download). The normal SDK doesn't.
+		//	It's OK. It's because the minimal SDK doesn't have the `packs` folder. Auto-downloads what's missing.
 		//	Also creates empty dir `metadata` in the minimal SDK dir.
 	}
 	static string s_minimalDotnetExe;
+	const string c_errorInstallMinimalSDK = "<>Failed to install required component (minimal .NET SDK). You can retry, or manually install the full .NET 9.0 SDK (~200 MB download). See also Options > Other > Use minimal SDK. Issues: https://github.com/qgindi/LibreAutomate/issues.";
 	
 	/// <summary>
-	/// Path of "dotnet.exe" set by <see cref="EnsureSDK"/>. If <see cref="AppSettings.minimalSDK"/>, it is in the minimal dotnet dir, else in the regular dotnet dir.
+	/// Path of "dotnet.exe" set by <see cref="EnsureSDK"/>. Full or minimal SDK.
 	/// </summary>
 	public static string DotnetExe { get; private set; }
+	
+	/// <summary>
+	/// Downloads and extracts both .NET runtimes (core and desktop) for CPU architecture x64/ARM64 other than of this process.
+	/// Run in a background thread.
+	/// </summary>
+	/// <param name="extractDir">Extract both to this directory.</param>
+	/// <param name="portable">Extract to <i>dir</i> subdirectory <c>"dotnet"</c> (if x64) or <c>"dotnetARM"</c> (if ARM64). Delete old subdirectory.</param>
+	/// <exception cref="OperationCanceledException">User-canceled.</exception>
+	/// <exception cref="Exception">Failed.</exception>
+	public static void DownloadNetRuntimesForOtherArch(string extractDir, bool portable) {
+		bool forArm = !osVersion.isArm64Process;
+		
+		if (portable) {
+			extractDir = extractDir + "\\dotnet" + (forArm ? "ARM" : null);
+			filesystem.delete(extractDir);
+			filesystem.createDirectory(extractDir);
+		}
+		
+		string arch = forArm ? "arm64" : "x64";
+		string version = Environment.Version.ToString();
+		
+		_ClearOld();
+		_DownloadAndExtract(false);
+		_DownloadAndExtract(true);
+		
+		void _DownloadAndExtract(bool desktop) {
+			//"https://builds.dotnet.microsoft.com/dotnet/Runtime/9.0.6/dotnet-runtime-9.0.6-win-arm64.zip"
+			//"https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/9.0.6/windowsdesktop-runtime-9.0.6-win-arm64.zip"
+			var filename = $"{(desktop ? "windowsdesktop" : "dotnet")}-runtime-{version}-win-{arch}.zip";
+			var zip = $@"{folders.ThisAppTemp}\download\{filename}";
+			if (!filesystem.exists(zip)) {
+				print.it("Downloading " + filename);
+				var url = $"https://builds.dotnet.microsoft.com/dotnet/{(desktop ? "WindowsDesktop" : "Runtime")}/{version}/{filename}";
+				var r = internet.http.Get(url, dontWait: true);
+				if (!r.Download(zip + "~")) throw new OperationCanceledException();
+				filesystem.rename(zip + "~", filename);
+			}
+			
+			print.it("Extracting " + filename);
+			var starts = $"shared/Microsoft.{(desktop ? "WindowsDesktop" : "NETCore")}.App/{version}/";
+			using var z = ZipFile.OpenRead(zip);
+			foreach (var e in z.Entries) {
+				var relPath = e.FullName;
+				if (!relPath.Starts(starts, true)) continue;
+				relPath = relPath[starts.Length..];
+				var s = extractDir + "\\" + relPath;
+				if (relPath.Contains('/')) filesystem.createDirectoryFor(s);
+				e.ExtractToFile(s, overwrite: true);
+			}
+		}
+		
+		void _ClearOld() {
+			try {
+				var rx = new regexp(@"(?i)^(?:dotnet|windowsdesktop)-runtime-(.+?)-.+\.zip$");
+				foreach (var f in filesystem.enumFiles(folders.ThisAppTemp + "download")) {
+					if (!rx.Match(f.Name, out var m)) continue;
+					if (m[1].Value.Eqi(version)) continue;
+					Api.DeleteFile(f.FullPath);
+				}
+			}
+			catch {  }
+		}
+	}
 }
 
 /// <summary>

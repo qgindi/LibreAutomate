@@ -20,13 +20,14 @@ public static partial class filesystem {
 	#region exists, attributes, properties
 	
 	/// <summary>
-	/// Contains the last write time, size and attributes of a file or directory.
-	/// The equality method and operators compare only time, size and attributes <b>Directory</b> and <b>ReparsePoint</b>.
+	/// Contains the write/create times, size and attributes of a file or directory.
+	/// The equality method and operators compare only <b>time</b>, <b>size</b> and attributes <b>Directory</b> and <b>ReparsePoint</b>; not <b>timeCreated</b>.
 	/// </summary>
 	/// <param name="time">The last write time UTC as FILETIME.</param>
 	/// <param name="size">0 if directory.</param>
 	/// <param name="attr"></param>
-	internal record struct Prop_(long time, long size, FileAttributes attr) {
+	/// <param name="timeCreated">The creation time UTC as FILETIME.</param>
+	internal record struct Prop_(long time, long size, FileAttributes attr, long timeCreated) {
 		public bool Equals(Prop_ p) => p.time == time && p.size == size && (p.attr & (FileAttributes.Directory | FileAttributes.ReparsePoint)) == (attr & (FileAttributes.Directory | FileAttributes.ReparsePoint));
 		
 		public override int GetHashCode() => time.GetHashCode();
@@ -47,7 +48,7 @@ public static partial class filesystem {
 		if (!Api.GetFileAttributesEx(path, 0, out var d)) {
 			if (!_GetAttributesOnError(path, FAFlags.DontThrow, out _, out _, &d)) return false;
 		}
-		prop = new(d.ftLastWriteTime, d.Size, d.dwFileAttributes);
+		prop = new(d.ftLastWriteTime, d.Size, d.dwFileAttributes, d.ftCreationTime);
 		return true;
 	}
 	

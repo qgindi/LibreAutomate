@@ -1,6 +1,6 @@
-﻿#define MyAppName "LibreAutomate C#"
+﻿#define MyAppName "LibreAutomate"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.12.0"
+#define MyAppVersion "1.13.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -204,7 +204,6 @@ begin
 end;
 
 function InstallDotNet(): Boolean;
-//function InstallDotNet(sdk: Boolean): Boolean; //rejected. Downloads 200MB, installs ~800 MB (and slow). Probably most users uninstall the app or never use NuGet or Publish, and the SDK would stay there unused.
 var
   ResultCode: Integer;
   DownloadPage: TDownloadWizardPage;
@@ -230,12 +229,6 @@ begin
   end;
 	
 	if IsArm64 then url := urls[1] else url := urls[0];
-  
-  //rejected. It's a legacy undocumented URL. Very slow in some countries, eg China, because does not use CDN.
-  //url := 'https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe';
-  //Unofficial URL of the latest .NET 8 version. Found in https://github.com/dotnet/installer/issues/11040
-  //The official URL (in the runtime download page) is only for that patch version (8.0.x).
-  //For preview use (not tested): https://aka.ms/dotnet/8.0/preview/windowsdesktop-runtime-win-x64.exe
     
   Result := true;
   setupFile := ExtractFileName(url);

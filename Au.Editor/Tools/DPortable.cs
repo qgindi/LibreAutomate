@@ -16,12 +16,24 @@ class DPortable : KDialogWindow {
 	string _dirNet = folders.NetRuntime, _dirNetDesktop = folders.NetRuntimeDesktop;
 	bool _exists;
 	
-	record class _Dir(string local, string portableRelative) {
+	record class _Dir(string local, string portableRelative, int iSettings, string[] skipAlways) {
 		public string portable => portableRelative.NE() ? App.Settings.portable_dir : App.Settings.portable_dir + "\\" + portableRelative;
 		public bool copy;
-		public string skip;
 		public KCheckBox cCopy;
 		public TextBox tSkip;
+		
+		public string Skip {
+			get => field;
+			set {
+				var s = value;
+				if (skipAlways != null) {
+					var a = (s ?? "").Lines(true);
+					foreach (var v in skipAlways) if (!a.Contains(v, StringComparer.OrdinalIgnoreCase)) s = v + "\r\n" + s;
+				}
+				field = s;
+				App.Settings.portable_skip[iSettings] = s;
+			}
+		}
 	}
 	
 	_Dir _dApp, _dWs, _dSett, _dScript, _dDoc, _dRoaming;
@@ -29,7 +41,7 @@ class DPortable : KDialogWindow {
 	DPortable() {
 		if (App.Settings.portable_dir.NE() && folders.RemovableDrive0.Path is string drive) App.Settings.portable_dir = drive + @"PortableApps\LibreAutomate";
 		if (filesystem.more.comparePaths(folders.ThisApp, _dirNet) is CPResult.Same or CPResult.AContainsB) _dirNet = _dirNetDesktop = null;
-		if (App.Settings.portable_skip.Lenn_() != 6) App.Settings.portable_skip = ["\\Git", ".git\r\n\\exe", "", "", ".git", ""];
+		if (App.Settings.portable_skip.Lenn_() != 6) App.Settings.portable_skip = ["\\SDK\r\n\\Git", ".git\r\n\\exe", "", "", ".git", ""];
 		
 		InitWinProp("Portable LibreAutomate setup", App.Wmain);
 		var b = new wpfBuilder(this);
@@ -41,7 +53,7 @@ class DPortable : KDialogWindow {
 		int iDir = 0;
 		b.R.StartGrid().Span(2).Columns(0, -1);
 		b.R.Add<TextBlock>("Copy folder").Font(bold: true).Add<TextBlock>("Skip subfolders").Font(bold: true);
-		_dApp = _AddDir(folders.ThisApp, "", "Program files (LA, .NET)");
+		_dApp = _AddDir(folders.ThisApp, "", "Program files (LA, .NET)", skipAlways: [@"\SDK"]);
 		_dWs = _AddDir(App.Model.WorkspaceDirectory, @"data\doc\" + pathname.getName(App.Model.WorkspaceDirectory), "Workspace (scripts etc)");
 		_dSett = _AddDir(folders.ThisAppDocuments + ".settings", @"data\doc\.settings", @"Settings");
 		_dScript = _AddDir(folders.ThisAppDocuments + "_script", @"data\doc\_script", @"Script data");
@@ -50,11 +62,11 @@ class DPortable : KDialogWindow {
 		b.R.AddSeparator(false);
 		b.End();
 		
-		_Dir _AddDir(string local, string portableRelative, string label) {
+		_Dir _AddDir(string local, string portableRelative, string label, string[] skipAlways = null) {
 			int i = iDir++;
 			
 			if (!filesystem.exists(local).Directory) filesystem.createDirectory(local);
-			_Dir d = new(local, portableRelative);
+			_Dir d = new(local, portableRelative, i, skipAlways) { Skip = App.Settings.portable_skip[i] };
 			
 			b.R.AddSeparator(false);
 			
@@ -64,9 +76,9 @@ class DPortable : KDialogWindow {
 			b.xAddInfoBlockF($"<a href=\"{local}\">{local.Limit(70, middle: true)}</a>{(i == 0 ? "" : " -> \\")}{portableRelative}").Padding("T1 B2");
 			b.End();
 			
-			b.Add(out d.tSkip, d.skip = App.Settings.portable_skip[i]).Multiline(wrap: TextWrapping.NoWrap).Size(..500, ..120)
+			b.Add(out d.tSkip, d.Skip).Multiline(wrap: TextWrapping.NoWrap).Size(..500, ..120)
 				.Tooltip("These folders will not be copied. Existing folders will not be deleted or updated.\r\nExamples:\r\nDescendantFolderName\r\n\\DirectChildFolderName\r\n\\Folder1\\Folder2\r\n//comment");
-			d.tSkip.TextChanged += (o, _) => { App.Settings.portable_skip[i] = d.skip = (o as TextBox).Text; };
+			d.tSkip.TextChanged += (o, _) => { d.Skip = (o as TextBox).Text; };
 			if (label.Starts("Workspace")) b.Validation(o => d.tSkip.Text.Lines(noEmpty: true) is var a1 && (a1.Contains(@"\files", StringComparer.OrdinalIgnoreCase) || a1.Contains(@"files", StringComparer.OrdinalIgnoreCase)) ? "can't skip the files subfolder" : null);
 			
 			return d;
@@ -115,7 +127,7 @@ class DPortable : KDialogWindow {
 			}
 			
 			try {
-				NugetDownloader.DownloadNetRuntimesForOtherArch(_dApp.portable, true);
+				DotnetUtil.DownloadNetRuntimesForOtherArch(_dApp.portable, true);
 			}
 			catch (Exception ex) {
 				string arch = isArm ? "x64" : "Arm64";
@@ -140,7 +152,7 @@ class DPortable : KDialogWindow {
 		
 		print.it($"<>DONE. Installed in <link>{App.Settings.portable_dir}<>.");
 		
-		static void _Copy(_Dir d, string how = "/mir") => _Copy2(d.local, d.portable, how, d.skip);
+		static void _Copy(_Dir d, string how = "/mir") => _Copy2(d.local, d.portable, how, d.Skip);
 		
 		static void _Copy2(string dir, string dirTo, string how, string skipDirs = null) {
 			print.it($"Copying {dir}");
@@ -225,7 +237,7 @@ class DPortable : KDialogWindow {
 		return b.ToString();
 	}
 	
-	string _RobocopyArgs(bool log, _Dir d, string how) => _RobocopyArgs(log, d.local, d.portable, how, d.skip);
+	string _RobocopyArgs(bool log, _Dir d, string how) => _RobocopyArgs(log, d.local, d.portable, how, d.Skip);
 	
 	async void _PrintDetails() {
 		print.clear();
@@ -239,7 +251,7 @@ class DPortable : KDialogWindow {
 			});
 		}
 		
-		static async Task<long> _GetDirSize(_Dir d, string how = "/mir") => await _GetDirSize2(d.local, how, d.skip);
+		static async Task<long> _GetDirSize(_Dir d, string how = "/mir") => await _GetDirSize2(d.local, how, d.Skip);
 		
 		long sizeApp = await _GetDirSize(_dApp);
 		long sizeNet = _dirNet == null ? 0 : await _GetDirSize2(_dirNet) + await _GetDirSize2(_dirNetDesktop);

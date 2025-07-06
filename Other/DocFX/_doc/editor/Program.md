@@ -2,7 +2,7 @@
 uid: Program
 ---
 
-# LibreAutomate C#
+# LibreAutomate
 
 The program is an integrated scripting environment for creating and executing automation scripts using its automation library and C# programming language.
 

@@ -189,8 +189,9 @@ class DNuget : KDialogWindow {
 			catch (Exception e1) { dialog.showError("Failed", e1.ToStringWithoutStack(), owner: this); }
 		}
 		
-		var sAdd = $@"package add {package} --project ""{proj}""";
-		if (_cPrerelease.IsChecked && !package.Contains(" --version ")) sAdd += " --prerelease";
+		var sAdd = $@"add ""{proj}"" package {package}";
+		//var sAdd = $@"package add {package} --project ""{proj}"""; //new syntax in .NET SDK 10
+		if (_cPrerelease.IsChecked && !(package.Contains(" --version ") || package.Contains(" -v "))) sAdd += " --prerelease";
 		
 		//now need only package name
 		package = package.RxReplace(@"^\s*(\S+).*", "$1");
@@ -216,15 +217,15 @@ class DNuget : KDialogWindow {
 						print.it($"<><c red>\tNeed version. Example: PackageName --version 1.2.3\r\n\t<link https://www.nuget.org/packages/{package}>Get the string<>\r\n\tIf using .NET SDK 9.0.100, install new version to avoid this error.<>");
 					}
 				};
-				if (!await _RunDotnet(sAdd, watcher: watcher)) return false;
+				if (!await _RunDotnet(_Operation.Add, sAdd, watcher: watcher)) return false;
 			}
 			building = true;
 			
 			//dialog.show("nuget 1");
 			
 			var noRestore = installing ? "--no-restore " : null; //`package add` restores, `package remove` doesn't
-			var sBuild = $@"build ""{proj}"" {noRestore}--nologo --output ""{folderPath}""";
-			if (!await _RunDotnet(sBuild)) return false;
+			var sBuild = $@"build ""{proj}"" {noRestore}--nologo -v m -o ""{folderPath}""";
+			if (!await _RunDotnet(_Operation.Build, sBuild)) return false;
 			//TODO3: if fails, uninstall the package immediately.
 			//	Else in the future will fail to install any package.
 			//	Also may delete dll files and leave garbage.
@@ -249,9 +250,9 @@ class DNuget : KDialogWindow {
 				xp.Save(proj2);
 				
 				//then build it, using a temp output directory
-				sBuild = $@"build ""{proj2}"" --nologo --output ""{dirBin2}"""; //note: no --no-restore
-				if (!await _RunDotnet(sBuild, s => { }) //try silent, but print errors if fails (unlikely)
-					&& !await _RunDotnet(sBuild)) return false;
+				sBuild = $@"build ""{proj2}"" --nologo -v m -o ""{dirBin2}"""; //note: no --no-restore
+				if (!await _RunDotnet(_Operation.Build, sBuild, s => { }) //try silent, but print errors if fails (unlikely)
+					&& !await _RunDotnet(_Operation.Build, sBuild)) return false;
 				//#if DEBUG
 				//run.it(dirBin2);
 				//dialog.show("Debug", "single build done"); //to inspect files before deleting
@@ -472,7 +473,9 @@ class DNuget : KDialogWindow {
 		var folder = _Selected.Parent.Name;
 		var package = _Selected.Name;
 		//if (uninstalling) if (!dialog.showOkCancel("Uninstall package", package, owner: this)) return; //more annoying than useful
-		if (!await _RunDotnet($@"package remove {package} --project ""{_ProjPath()}""")) return false;
+		
+		if (!await _RunDotnet(_Operation.Other, $@"remove ""{_ProjPath()}"" package {package}")) return false;
+		//if (!await _RunDotnet($@"package remove {package} --project ""{_ProjPath()}""")) return false; //new syntax in .NET SDK 10
 		
 		//Which installed files should be deleted?
 		//	Let's delete all files (except .csproj) from the folder and rebuild.
@@ -555,18 +558,19 @@ class DNuget : KDialogWindow {
 				m["Clear"] = async o => {
 					using var _ = _disabler.Disable();
 					if (!await DotnetUtil.EnsureSDK(_tProgress)) return;
-					await _RunDotnet("nuget locals all --clear");
+					await _RunDotnet(_Operation.Other, "nuget locals all --clear");
 				};
 			});
 		});
 		m.Show();
 	}
 	
-	async Task<bool> _RunDotnet(string cl, Action<string> printer = null, Action<string> watcher = null) {
+	enum _Operation { Add, Build, Other }
+	
+	async Task<bool> _RunDotnet(_Operation op, string cl, Action<string> printer = null, Action<string> watcher = null) {
 		try {
 			if (printer == null) {
 				print.it($"<><c blue>dotnet {cl}<>");
-				int operation = cl.Starts("package add") ? 1 : cl.Starts("build") ? 2 : 0;
 				bool skip = false;
 				printer = s => {
 					if (!skip) skip = s.Starts("Usage:");
@@ -574,20 +578,26 @@ class DNuget : KDialogWindow {
 					var s0 = s;
 					if (s.Starts("error") || s.Contains(": error ")) s = $"<><c red>{s}<>";
 					else if (s.Starts("warn") || s.Contains(": warning ")) s = $"<><c DarkOrange>{s}<>";
-					else if (operation == 1) {
-						if (s.Starts(false,
-							"info :   OK http",
-							"info : Generating MSBuild file",
-							"info : Writing assets file",
-							"info : X.509 certificate chain validation will",
-							"  Determining projects to restore",
-							"log  : Restored",
-							"  Writing ",
-							"info : PackageReference for package"
+					else if (op == _Operation.Add) {
+						if (s.Like(false,
+							"info :   OK http*",
+							"info : Generating MSBuild file*",
+							"info : Writing assets file*",
+							"info : X.* certificate chain validation will*",
+							"  Determining projects to restore*",
+							"log  : Restored*",
+							"  Writing *",
+							"info : PackageReference for package*",
+							"*is compatible with all the specified frameworks in project*"
 							) > 0) s = null;
-						else if (s.Contains("is compatible with all the specified frameworks in project")) s = null;
-					} else if (operation == 2) {
-						if (s.Starts(false, "Time Elapsed ", "    0 Warning", "    0 Error") > 0 || s.Ends(@"\___.dll")) s = null;
+					} else if (op == _Operation.Build) {
+						if (s.Like(false,
+							"  Determining projects to restore*",
+							"Time Elapsed *",
+							"    0 Warning*",
+							"    0 Error*",
+							@"*\___.dll"
+							) > 0) s = null;
 					}
 					if (!s.NE()) print.it(s);
 					watcher?.Invoke(s0);

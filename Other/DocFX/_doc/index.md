@@ -2,7 +2,7 @@
 uid: index
 ---
 
-# LibreAutomate C#
+# LibreAutomate
 
 LibreAutomate is a C# script editor and library for automation of tasks of any kind and complexity on Windows.
 
@@ -39,9 +39,11 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.12.0, 2025-06-21, ~40 MB
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.13.0, 2025-07-06
 
-The setup program may be blocked by security software. Why: it is new, not commonly downloaded, and not signed.
+The setup program is ~40 MB. It may also download (~70 MB) and install .NET 9.
+
+The setup may be blocked by security software because it is new, not commonly downloaded, and not digitally signed.
 
 ### Links
 - [Forum](https://www.libreautomate.com/forum/)
