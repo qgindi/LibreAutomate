@@ -1,12 +1,13 @@
 ﻿#define MyAppName "LibreAutomate"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.13.0"
+#define MyAppVersion "1.13.1"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
 
 [Setup]
-AppId={#MyAppName}
+//note: the " C#" here is inherited from the old LA full name "LibreAutomate C#". Can't change AppId easily. Docs: not used for display anywhere.
+AppId=LibreAutomate C#
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 UninstallDisplayName={#MyAppName}
@@ -34,6 +35,7 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
+#if true
 Source: "Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor-arm.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -85,9 +87,10 @@ Source: "cookbook.db"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
 Source: "xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
+#endif
 
-;CONSIDER: don't include big not frequently updated files. Auto-download on demand.
-;All .db except cookbook, Roslyn folder. Makes smaller: 44 MB -> 5 MB.
+//CONSIDER: don't include big not frequently updated files. Auto-download on demand.
+//	All .db except cookbook, maybe Roslyn folder. Makes smaller: 40 MB -> 5 MB.
 
 [Dirs]
 Name: "{commonappdata}\LibreAutomate"; Flags: uninsalwaysuninstall; Permissions: authusers-modify
@@ -104,7 +107,10 @@ Type: filesandordirs; Name: "{app}\64"
 Type: filesandordirs; Name: "{app}\32"
 Type: filesandordirs; Name: "{app}\Default"
 Type: filesandordirs; Name: "{app}\Templates"
+
+//FUTURE: remove this code
 Type: files; Name: "{app}\Au.Task.exe"
+Type: files; Name: "{autoprograms}\LibreAutomate C#.lnk"
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -112,6 +118,9 @@ Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 [Registry]
 ;register app path
 Root: HKLM; Subkey: Software\Microsoft\Windows\CurrentVersion\App Paths\Au.Editor.exe; ValueType: string; ValueData: {app}\Au.Editor.exe; Flags: uninsdeletevalue uninsdeletekeyifempty
+
+//FUTURE: remove this. It's to fix a result of a bug in the setup of LA 1.13.0, 2025/07/06, fixed in 1.13.1.
+Root: HKLM; Subkey: Software\Microsoft\Windows\CurrentVersion\Uninstall\LibreAutomate_is1; Flags: deletekey
 
 ;rejected: set environment variable Au.Path, to find unmanaged dlls used by Au.dll when it is used in various scripting environments etc that copy it somewhere (they don't copy unmanaged dlls)
 ; Rarely used. Overwrites mine. Let users learn it, then they can use the dlls on any computer without this program installed.
@@ -128,7 +137,6 @@ Filename: "{sys}\schtasks.exe"; Parameters: "/delete /tn \Au\Au.Editor /f"; Flag
 ;Source: "Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Code]
-
 //procedure Cpp_Install(step: Integer; dir: String);
 //external 'Cpp_Install@files:Setup32.dll cdecl setuponly delayload';
 
@@ -142,6 +150,9 @@ function SendMessageTimeout(w, msg, wp, lp, flags, timeout: Integer; var res: In
 external 'SendMessageTimeoutW@user32.dll';
 
 const nmax = 25000;
+
+var
+  IsDotNetInstalledCalled, IsDotNetInstalledSaidYes: Boolean;
 
 //The same as Cpp_Unload. Maybe possible to call it, but difficult and may trigger AV FP.
 procedure UnloadAuCppDll(unins: Boolean);
@@ -183,7 +194,7 @@ begin
   if silent then Sleep(500);
 end;
 
-function IsDotNetInstalled(): Boolean;
+function _IsDotNetInstalled(): Boolean;
 var
   args: string;
   fileName: string;
@@ -203,24 +214,45 @@ begin
 	//tested: If installed dotnet for multiple platforms (eg ARM64, x64, x86), only the runtime of the OS platform adds its path to PATH. It is what we need.
 end;
 
+function IsDotNetInstalled(): Boolean;
+begin
+  if IsDotNetInstalledCalled then
+  begin
+    Result := IsDotNetInstalledSaidYes;
+	end else begin
+		Result := _IsDotNetInstalled;
+		IsDotNetInstalledSaidYes := Result;
+		IsDotNetInstalledCalled := True;
+  end;
+end;
+
 function InstallDotNet(): Boolean;
 var
   ResultCode: Integer;
-  DownloadPage: TDownloadWizardPage;
-  url, setupFile, info1, info2: string;
+  page: TDownloadWizardPage;
+  url, setupFileName, setupFilePath, txtFileName: string;
   urls: TArrayOfString;
 begin
-  //Get the download URL of the latest .NET Desktop Runtime.
-  //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates the URL here and in https://www.libreautomate.com/download/net-x-url.txt.
-  try
-    DownloadTemporaryFile('https://www.libreautomate.com/download/net-9-url.txt', 'net-url.txt', '', nil);
-    LoadStringsFromFile(ExpandConstant('{tmp}\net-url.txt'), urls);
-  except
-    Log(GetExceptionMessage);
-  end;
+  Result := true;
   
-  //If the above failed, use this hardcoded URL. This URL is updated for each new .NET 9.0.x version.
-  //  Info: Script "Check for new .NET version" runs every day. If a new .NET version available, updates this string in this .iss file.
+  page := CreateDownloadPage('Installing .NET 9 Desktop Runtime', 'If stopped or failed now, download/install it manually. Size ~60 MB.', nil);
+  page.Clear;
+  page.Msg1Label.Caption := 'Getting the download URL of the current version.';
+	txtFileName := 'net-9-url.txt';
+  page.Add('https://www.libreautomate.com/download/' + txtFileName, txtFileName, '');
+  page.Show;
+	try
+		page.Download;
+		//Get the download URL of the latest .NET Desktop Runtime.
+		//  Info: Script "Check for new .NET version" runs every day. If a new .NET build version available, updates the URLs here and in https://www.libreautomate.com/download/net-x-url.txt.
+		//	Bad: may be inaccessible and hang, eg in China. Never mind: instead can exec curl with timeout.
+		LoadStringsFromFile(ExpandConstant('{tmp}\' + txtFileName), urls);
+	except
+		//MsgBox('Failed: ' + 'https://www.libreautomate.com/download/' + txtFileName, mbInformation, MB_OK);
+	end;
+  
+  //If the above failed, use these hardcoded URLs.
+  //  Script "Check for new .NET version" runs every day. If a new .NET build version available, updates these strings here.
   if (Length(urls) < 2) then
   begin
     SetLength(urls, 2);
@@ -229,31 +261,32 @@ begin
   end;
 	
 	if IsArm64 then url := urls[1] else url := urls[0];
+  setupFileName := ExtractFileName(url);
     
-  Result := true;
-  setupFile := ExtractFileName(url);
-  info1 := 'Installing .NET 9 Desktop Runtime';
-  info2 := 'If stopped or failed now, will need to download/install it later. Size ~55 MB.';
-  
-  DownloadPage := CreateDownloadPage(info1, info2, nil);
-  DownloadPage.Clear;
-  DownloadPage.Add(url, setupFile, '');
-  DownloadPage.Show;
-  try
-    try
-      DownloadPage.Download;
-      setupFile := ExpandConstant('{tmp}\' + setupFile);
-			Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
-			//if WizardSilent() then Result := Exec(setupFile, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0) else Result := Exec(setupFile, '/install', '', 0, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
-			//info: in Windows Sandbox .NET 9.0.3 setup hangs for ~10 minutes. Same with UI. Used to work normally.
-      DeleteFile(setupFile);
-    except
-      if DownloadPage.AbortedByUser then Log('Aborted by user.') else Log(GetExceptionMessage);
-      Result := false;
-    end;
-  finally
-    DownloadPage.Hide;
-  end;
+  page.Clear;
+	page.Msg1Label.Caption := 'Downloading.';
+  page.Add(url, setupFileName, '');
+	try
+		page.Download;
+		
+		page.Msg1Label.Caption := 'Executing the .NET installer.';
+		page.Msg2Label.Caption := setupFileName;
+		page.ProgressBar.Style := npbstMarquee;
+		page.AbortButton.Hide;
+		
+		setupFilePath := ExpandConstant('{tmp}\' + setupFileName);
+		ResultCode:=-111;
+		Result := Exec(setupFilePath, '/install /quiet /norestart', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+		//never mind: if the .NET installer in UI mode shows "Modify Setup" (eg if dotnet dir deleted), in silent mode does nothing and returns 0.
+		//	Could call _IsDotNetInstalled and retry in UI mode, but now it does not work because this process uses old PATH env var (without dotnet path).
+		//info: in Windows Sandbox .NET 9.0.3+ setup hangs for ~10 minutes. Same with UI. Used to work normally. See https://github.com/microsoft/Windows-Sandbox/issues/68
+		DeleteFile(setupFilePath);
+	except
+		if page.AbortedByUser then Log('Aborted by user.') else Log(GetExceptionMessage);
+		Result := false;
+	finally
+		page.Hide;
+	end;
 end;
 
 procedure InstallExeForCurrentArch(fileName: String);
@@ -316,6 +349,19 @@ begin
     begin
       s1:=ExpandConstant('{app}');
       if DirExists(s1) and not RemoveDir(s1) then begin RestartReplace(s1, ''); end;
+    end;
+  end;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpReady then
+  begin
+    if not IsDotNetInstalled then
+    begin
+      WizardForm.ReadyMemo.Lines.Add('');
+      WizardForm.ReadyMemo.Lines.Add('Additional tasks:');
+      WizardForm.ReadyMemo.Lines.Add('      Install .NET 9 Desktop Runtime (~60 MB download)');
     end;
   end;
 end;

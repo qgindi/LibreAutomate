@@ -96,7 +96,7 @@ class DNuget : KDialogWindow {
 		
 		b.R.Add(out _tProgress)
 			.AddButton("...", _ => _MoreMenu())
-			.xAddDialogHelpButtonAndF1("editor/NuGet"); //TODO: test
+			.xAddDialogHelpButtonAndF1("editor/NuGet");
 		
 		b.End();
 		
@@ -548,6 +548,11 @@ class DNuget : KDialogWindow {
 	
 	void _MoreMenu() {
 		var m = new popupMenu();
+		m["Print updates"] = async o => {
+			if (!await DotnetUtil.EnsureSDK(_tProgress)) return;
+			
+			await _RunDotnet(_Operation.Other, $@"list ""{_ProjPath()}"" package --outdated");
+		};
 		m.Submenu("NuGet cache", m => {
 			m["Open packages folder"] = o => {
 				if (0 == run.console(out var s, "dotnet.exe", "nuget locals global-packages --list") && !s.NE())

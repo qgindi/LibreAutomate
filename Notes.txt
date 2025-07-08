@@ -59,7 +59,7 @@ Open the .iss file in Inno Script Studio. Change MyAppVersion. Review. Compile.
 	Run the setup file to test. Test on other OS too. Occasionally uninstall/install, not just upgrade.
 	May need to update the setup file size in the download webpage (index.md).
 
-Upload the setup file to GitHub Releases.
+Create a GitHub Release. Upload the setup file.
 
 Upload the setup file to https://www.libreautomate.com. For example with WinSCP.
 	Backup the old setup file at first: in WinSCP move the old file to the "download" folder and rename (add version).
