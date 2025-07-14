@@ -1,18 +1,20 @@
+//For NuGet management we use dotnet.exe and full or minimal .NET SDK.
+//Also some API from the NuGet client SDK. But it does not have API for installing dlls etc.
+//We don't install packages for each script that uses them. We install all in current workspace, and let scripts use them.
+//	To avoid conflicts, packages can be installed in separate folders.
+//	More info in nuget.md.
+//Rejected: UI to search for packages and display package info. Why to duplicate the NuGet website.
+
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Au.Compiler;
 using Au.Controls;
-
-//For NuGet management we use dotnet.exe and full or minimal .NET SDK.
-//Also tested the NuGet API, but it seems there is no API for installing dlls etc. Can't always detect what files need.
-//We don't install packages for each script that uses them. We install all in current workspace, and let scripts use them.
-//	To avoid conflicts, packages can be installed in separate folders.
-//	More info in nuget.md and _cbFolder tooltip.
-//Rejected: UI to search for packages and display package info. Why to duplicate the NuGet website.
+using NGC = NuGet.Configuration;
 
 class DNuget : KDialogWindow {
 	/// <param name="package">null or package name or folder\name.</param>
@@ -28,81 +30,91 @@ class DNuget : KDialogWindow {
 	}
 	
 	readonly TextBox _tPackage;
-	readonly ComboBox _cbFolder;
+	readonly ComboBox _cbFolder, _cbSource;
 	readonly KCheckBox _cPrerelease;
 	readonly KTreeView _tv;
 	readonly Panel _panelManage;
-	readonly TextBlock _tProgress;
+	readonly KGroupBox _groupInstall, _groupInstalled;
+	readonly Button _bMenu;
+	readonly TextBlock _tStatus;
 	
 	readonly string _nugetDir = App.Model.NugetDirectory;
-	readonly List<string> _folders = new();
-	WindowDisabler _disabler;
+	readonly List<string> _folders = [];
+	readonly WindowDisabler _disabler;
 	
 	DNuget() {
 		InitWinProp("NuGet packages", App.Wmain);
 		var b = new wpfBuilder(this).WinSize(550, 600).Columns(-1, 30, 0);
 		
-		b.R.StartGrid<KGroupBox>("Install").Columns(0, 76, 0, -1, 0);
-		b.R.Add(out TextBlock _).FormatText($"<a href='https://www.nuget.org'>NuGet</a> package name, or dotnet/PM string:");
+		b.R.StartGrid(out _groupInstall, "Install").Columns(-1, 0, 150, 0);
+		b.R.Add(out TextBlock _).FormatText($"<a href='https://www.nuget.org'>NuGet</a> package:").Align(y: VerticalAlignment.Bottom);
+		b.Add("Source", out _cbSource).Tooltip("Package source.\nThe list contains nuget.org and sources specified in nuget.config files.");
+		b.Add(out _cPrerelease, "Prerelease").Tooltip("If checked, installs a prerelease version, if available. Else only stable.\nIgnored if the package field contains --version or --prerelease.");
 		b.R.Add(out _tPackage)
-			.Tooltip(@"Can be just name (to install the latest compatible version), or Name --version 1.2.3, or a string copied in the NuGet website.")
+			.Tooltip("Examples:\nPackageName (will get the latest compatible version)\nPackageName --version 1.2.3\ndotnet add package PackageName --version 1.2.3 (copied from https://www.nuget.org/packages/PackageName)")
 			.Focus();
+		
+		b.R.StartGrid().Columns(0, 76, 0, -1, 0);
 		
 		b.R.xAddButtonIcon(Menus.iconPaste, _ => { _tPackage.SelectAll(); _tPackage.Paste(); }, "Paste");
 		b.AddButton(out var bInstall, "Install", _ => _Install()).Disabled();
 		
 		b.Add("into folder", out _cbFolder).Tooltip(@"Press F1 if need help with this. Or just use the default selected folder.");
-		if (!Directory.Exists(_nugetDir)) {
-			filesystem.createDirectory(_nugetDir);
-			filesystem.createDirectory(_nugetDir + @"\-");
-		}
+		filesystem.createDirectory(_nugetDir);
 		foreach (var v in filesystem.enumDirectories(_nugetDir)) _folders.Add(v.Name);
+		if (_folders.Count == 0) {
+			filesystem.createDirectory(_nugetDir + @"\-");
+			_folders.Add("-");
+		}
 		foreach (var v in _folders) _cbFolder.Items.Add(v);
-		if (_folders.Count > 0) _cbFolder.SelectedIndex = 0; //probably "-"
-		_cbFolder.Items.Add(new Separator());
-		var cbiAddFolder = new ComboBoxItem { Content = "New folder..." };
-		_cbFolder.Items.Add(cbiAddFolder);
-		cbiAddFolder.Selected += (_, e) => Dispatcher.InvokeAsync(() => _AddFolder());
+		_cbFolder.SelectedIndex = 0; //probably "-"
 		
-		void _Enabled_Install() { bInstall.IsEnabled = (uint)_cbFolder.SelectedIndex < _cbFolder.Items.Count - 2 && !_tPackage.Text.Trim().NE(); }
+		void _Enabled_Install() { bInstall.IsEnabled = _cbFolder.SelectedIndex >= 0 && !_tPackage.Text.Trim().NE(); }
 		_tPackage.TextChanged += (_, e) => {
 			_Enabled_Install();
-			_SelectInTree();
+			_SelectInTreeWhenPackageFieldTextChanged();
 		};
 		_cbFolder.SelectionChanged += (_, e) => _Enabled_Install();
 		
-		b.Add(out _cPrerelease, "Prerelease").Margin("L20").Tooltip("Install prerelease version, if available.\nNot used if package version is specified in the Package field.");
+		b.xAddButtonIcon("*MaterialDesign.CreateNewFolder" + Menus.darkYellow, _ => _AddFolder(), "New folder");
 		
 		b.End();
+		b.End();
 		
-		b.Row(-1).StartGrid<KGroupBox>("Installed").Columns(-1, 76);
+		b.Row(-1).StartGrid(out _groupInstalled, "Installed").Columns(-1, 76);
 		
 		b.Row(-1).Add<Border>().Border().Add(out _tv, WBAdd.ChildOfLast);
 		
 		b.StartStack(vertical: true).Disabled();
-		b.AddButton("Add /*/", _ => _AddMeta()).Margin("B20").Tooltip(@"Use the package in current C# file. Adds /*/ nuget Package; /*/.");
+		b.AddButton("Add code", _ => _AddMeta()).Margin("B20").Tooltip("Use the package in the current C# file.\nAdds /*/ nuget Package; /*/.");
 		b.AddButton("→ NuGet", _ => run.itSafe("https://www.nuget.org/packages/" + _Selected.Name)).Tooltip("Open the package's NuGet webpage");
-		b.AddButton("→ Folder", _ => run.itSafe(_FolderPath())).Margin("B20").Tooltip("Open the folder");
-		b.AddButton("Update", _ => _Update()).Tooltip("Uninstall this version and install the newest version");
+		b.AddButton("→ Folder", _ => run.itSafe(_FolderPath(_Selected.Parent.Name))).Margin("B20").Tooltip("Open the folder");
+		b.AddButton(out var bUpdate, "Update", _ => _Update(false)).Tooltip("Replace this version with the latest version");
+		b.AddButton(out var bUpdateTo, "Update ▾", _ => _Update(true)).Tooltip("Replace this version with another version");
+		bUpdate.ContextMenuOpening += (_, e) => _Update(true);
 		b.AddButton("Move to ▾", _ => _Move()).Tooltip("Uninstall from this folder and install in another folder");
 		b.AddButton("Uninstall", _ => _Uninstall()).Tooltip("Remove the package and its files from the folder");
 		
 		_panelManage = b.Panel;
 		_tv.SelectionChanged += (_, _) => _panelManage.IsEnabled = !_tv.SelectedItem?.IsFolder ?? false;
+		_tv.ItemClick += _tv_ItemClick;
 		
 		b.End(); //buttons
 		
 		b.End(); //'Installed' group
 		
-		b.R.Add(out _tProgress)
-			.AddButton("...", _ => _MoreMenu())
+		b.R.Add(out _tStatus)
+			.xAddButtonIcon(out _bMenu, "*MaterialDesign.MoreHorizRound" + Menus.black, _ => _Menu(), "Menu")
 			.xAddDialogHelpButtonAndF1("editor/NuGet");
 		
 		b.End();
 		
+		bool missingSdk = DotnetUtil.MissingSdkUI(b.Window, [_groupInstall, _groupInstalled, _bMenu], () => { _InitSources(); _FillTree(); });
+		if (!missingSdk) _InitSources();
+		
 		Loaded += (_, _) => {
 			App.Model.UnloadingThisWorkspace += Close;
-			_FillTree();
+			_FillTree(); //note: fill now even if missingSdk, or the user might have a heart attack when seeing an empty list. When installed, _FillTree will be called again, because need to set _TreeItem.Source.
 		};
 		
 		_disabler = new(this);
@@ -127,33 +139,46 @@ class DNuget : KDialogWindow {
 			catch (Exception e1) { dialog.showError("Failed to create folder", e1.ToStringWithoutStack(), owner: this); return; }
 			Closed += (_, _) => Api.RemoveDirectory(path); //delete if empty. Maybe the user will choose to install to another folder or will not install.
 		}
-		int i = _cbFolder.Items.Count - 2;
-		_cbFolder.Items.Insert(i, name);
-		_cbFolder.SelectedIndex = i;
 		_folders.Add(name);
+		_cbFolder.SelectedIndex = _cbFolder.Items.Add(name);
 	}
 	
 	async void _Install() {
-		using var _ = _disabler.Disable();
-		if (!await DotnetUtil.EnsureSDK(_tProgress)) return;
-		
 		var package = _tPackage.Text.Trim();
-		if (package.Starts(true, "dotnet add package ", "dotnet package add ") > 0) package = package[19..];
-		else if (package.RxReplace(@"^.+?\bInstall-Package ", "", out package) > 0) package = package.Replace("-Version ", "--version ");
+		_NormalizeCopiedPackageString(ref package);
 		
-		await _Install(package, _cbFolder.SelectedItem as string);
+		if (_cPrerelease.IsChecked && !package.RxIsMatch("(?i) --version | -v | --prerelease")) package += " --prerelease";
+		if (_cbSource.SelectedItem is _Source source && !package.RxIsMatch("(?i) --source | -s ")) package += $" --source \"{source.UrlList}\"";
+		
+		using var _ = _disabler.Disable();
+		if (!await _InstallWhenInstallingUpdatingOrMoving(package, _cbFolder.SelectedItem as string)) return;
+		print.it("========== Finished ==========");
+		CodeInfo.StopAndUpdateStyling();
 	}
 	
 	/// <param name="package">Like "Package.Name" or "Package.Name --version x.y.z".</param>
-	/// <param name="folder">Like "web".</param>
-	/// <param name="moving"></param>
-	async Task _Install(string package, string folder, bool moving = false) {
+	async Task<bool> _InstallWhenInstallingUpdatingOrMoving(string package, string folder, _TreeItem updating = null) {
 		var proj = _ProjPath(folder);
 		
-		string writeProjText = null;
-		const string c_targetFramework = "<TargetFramework>net9.0-windows</TargetFramework>";
-		if (!File.Exists(proj)) {
-			writeProjText = $"""
+		if (!_CreateProjectFileIfNeed(proj)) return false;
+		
+		var sAdd = $@"add ""{proj}"" package {package}";
+		//var sAdd = $@"package add {package} --project ""{proj}"""; //new syntax in .NET SDK 10
+		
+		//now need only package name
+		package = package.RxReplace(@"^\s*(\S+).*", "$1");
+		
+		if (!await _RunDotnet(_Operation.Add, sAdd)) return false;
+		bool ok = await _Build(folder, package);
+		_AddToTreeOrUpdate(folder, package, updating);
+		return ok;
+		
+		bool _CreateProjectFileIfNeed(string path) {
+			try {
+				string writeProjText = null;
+				string c_targetFramework = $"<TargetFramework>net{Environment.Version.ToString(2)}-windows</TargetFramework>";
+				if (!filesystem.exists(path)) {
+					writeProjText = $"""
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		{c_targetFramework}
@@ -175,54 +200,32 @@ class DNuget : KDialogWindow {
 
 </Project>
 """;
-		} else { //may need to update something
-			string s = filesystem.loadText(proj), s0 = s;
-			if (!s.Contains(c_targetFramework)) s = s.RxReplace(@"<TargetFramework>.+?</TargetFramework>", c_targetFramework, 1);
-			
-			//previously was no <AssemblyName>___</AssemblyName>. Then usually error if the folder name == a dll name, because the main dll name was the same.
-			if (!s.Contains("<AssemblyName>___</AssemblyName>") && s.RxMatch(@"\R\h*</PropertyGroup>", 0, out RXGroup g1)) s = s.Insert(g1.Start, "\r\n		<AssemblyName>___</AssemblyName>");
-			
-			if (s != s0) writeProjText = s;
+				} else { //may need to update something
+					string s = filesystem.loadText(path), s0 = s;
+					if (!s.Contains(c_targetFramework)) s = s.RxReplace(@"<TargetFramework>.+?</TargetFramework>", c_targetFramework, 1);
+					
+					//previously was no <AssemblyName>___</AssemblyName>. Then usually error if the folder name == a dll name, because the main dll name was the same.
+					if (!s.Contains("<AssemblyName>___</AssemblyName>") && s.RxMatch(@"\R\h*</PropertyGroup>", 0, out RXGroup g1)) s = s.Insert(g1.Start, "\r\n		<AssemblyName>___</AssemblyName>");
+					
+					if (s != s0) writeProjText = s;
+				}
+				if (writeProjText != null) filesystem.saveText(path, writeProjText);
+			}
+			catch (Exception e1) {
+				print.warning(e1);
+				return false;
+			}
+			return true;
 		}
-		if (writeProjText != null) {
-			try { File.WriteAllText(proj, writeProjText); }
-			catch (Exception e1) { dialog.showError("Failed", e1.ToStringWithoutStack(), owner: this); }
-		}
-		
-		var sAdd = $@"add ""{proj}"" package {package}";
-		//var sAdd = $@"package add {package} --project ""{proj}"""; //new syntax in .NET SDK 10
-		if (_cPrerelease.IsChecked && !(package.Contains(" --version ") || package.Contains(" -v "))) sAdd += " --prerelease";
-		
-		//now need only package name
-		package = package.RxReplace(@"^\s*(\S+).*", "$1");
-		
-		await _Build(folder, package, sAdd);
-		CodeInfo.StopAndUpdateStyling();
 	}
 	
-	async Task<bool> _Build(string folder, string package = null, string sAdd = null) {
+	async Task<bool> _Build(string folder, string package = null) {
 		var folderPath = _FolderPath(folder);
 		var proj = _ProjPath(folder);
 		bool installing = package != null;
-		bool building = false;
+		bool building = true;
 		
 		try {
-			if (installing) {
-				Action<string> watcher = s => {
-					//print.it($"<><c green>{s}<>");
-					if (s.Starts("error: '' is not a valid version string")) {
-						//With .NET SDK 9.0.100 some packages fail if version not specified.
-						//	From 51 tested packages, only these fail: Octokit, AngleSharp.
-						//	Fixed in SDK 9.0.102.
-						print.it($"<><c red>\tNeed version. Example: PackageName --version 1.2.3\r\n\t<link https://www.nuget.org/packages/{package}>Get the string<>\r\n\tIf using .NET SDK 9.0.100, install new version to avoid this error.<>");
-					}
-				};
-				if (!await _RunDotnet(_Operation.Add, sAdd, watcher: watcher)) return false;
-			}
-			building = true;
-			
-			//dialog.show("nuget 1");
-			
 			var noRestore = installing ? "--no-restore " : null; //`package add` restores, `package remove` doesn't
 			var sBuild = $@"build ""{proj}"" {noRestore}--nologo -v m -o ""{folderPath}""";
 			if (!await _RunDotnet(_Operation.Build, sBuild)) return false;
@@ -245,14 +248,16 @@ class DNuget : KDialogWindow {
 				var proj2 = dirProj2 + @"\~.csproj";
 				var dirBin2 = dirProj2 + @"\bin";
 				var xp = XElement.Load(proj);
-				var a = xp.XPathSelectElements($"/ItemGroup/PackageReference[@Include!='{package}']").ToArray();
-				foreach (var v in a) v.Remove();
+				var axp = xp.XPathSelectElements($"/ItemGroup/PackageReference[@Include]").ToArray();
+				foreach (var v in axp) if (!v.Attr("Include").Eqi(package)) v.Remove();
 				xp.Save(proj2);
 				
 				//then build it, using a temp output directory
 				sBuild = $@"build ""{proj2}"" --nologo -v m -o ""{dirBin2}"""; //note: no --no-restore
-				if (!await _RunDotnet(_Operation.Build, sBuild, s => { }) //try silent, but print errors if fails (unlikely)
-					&& !await _RunDotnet(_Operation.Build, sBuild)) return false;
+				if (!await _RunDotnet(_Operation.Build, sBuild, s => { })) { //try silent, but print errors if fails (unlikely)
+					Debug_.Print("FAILED");
+					if (!await _RunDotnet(_Operation.Build, sBuild)) return false;
+				}
 				//#if DEBUG
 				//run.it(dirBin2);
 				//dialog.show("Debug", "single build done"); //to inspect files before deleting
@@ -398,11 +403,9 @@ class DNuget : KDialogWindow {
 			}
 			catch (Exception e1) { Debug_.Print(e1); }
 			
-			if (installing) print.it("========== Finished ==========");
 			building = false;
 		}
 		finally {
-			_FillTree(folder, package); //on error too, else users can't see and uninstall the new package now
 			if (building) //failed to build
 				print.it($@"<><c red>IMPORTANT: Please uninstall the package that causes the error.
 	Until then will fail to install or use packages in this folder ({folder}).
@@ -464,77 +467,103 @@ class DNuget : KDialogWindow {
 	
 	async void _Uninstall() {
 		using var _ = _disabler.Disable();
-		await _Uninstall(uninstalling: true);
+		if (!await _UninstallWhenUninstallingOrMoving(_Selected)) return;
+		print.it("========== Finished ==========");
+		CodeInfo.StopAndUpdateStyling();
 	}
 	
-	async Task<bool> _Uninstall(bool uninstalling, bool updating = false) {
-		if (!await DotnetUtil.EnsureSDK(_tProgress)) return false;
-		
-		var folder = _Selected.Parent.Name;
-		var package = _Selected.Name;
+	async Task<bool> _UninstallWhenUninstallingOrMoving(_TreeItem t) {
+		var folder = t.Parent.Name;
+		var package = t.Name;
 		//if (uninstalling) if (!dialog.showOkCancel("Uninstall package", package, owner: this)) return; //more annoying than useful
 		
-		if (!await _RunDotnet(_Operation.Other, $@"remove ""{_ProjPath()}"" package {package}")) return false;
+		if (!await _RunDotnet(_Operation.Other, $@"remove ""{_ProjPath(folder)}"" package {package}")) return false;
 		//if (!await _RunDotnet($@"package remove {package} --project ""{_ProjPath()}""")) return false; //new syntax in .NET SDK 10
 		
-		//Which installed files should be deleted?
-		//	Let's delete all files (except .csproj) from the folder and rebuild.
-		foreach (var v in filesystem.enumerate(_FolderPath())) {
+		//Which installed files should be deleted? Let's delete all files (except .csproj) from the folder and rebuild.
+		_DeleteInstalledFiles(t);
+		
+		var npath = _nugetDir + @"\nuget.xml";
+		if (filesystem.exists(npath)) {
+			var xn = XmlUtil.LoadElem(npath);
+			var xx = xn.Elem("package", "path", folder + "\\" + package, true);
+			if (xx != null) {
+				xx.Remove();
+				xn.SaveElem(npath);
+			}
+		}
+		
+		t.Remove();
+		_tv.SetItems(_tvroot.Children(), true);
+		if (_Selected is null) _panelManage.IsEnabled = false;
+		
+		return await _Build(folder);
+	}
+	
+	void _DeleteInstalledFiles(_TreeItem t) {
+		foreach (var v in filesystem.enumerate(_FolderPath(t.Parent.Name))) {
 			if (v.Name.Ends(".csproj", true)) continue;
 			if (v.Attributes.Has(FileAttributes.ReadOnly)) continue; //don't delete user-added files
 			try { filesystem.delete(v.FullPath); }
 			catch (Exception e1) { print.it($"<><c DarkOrange>warning: {e1.Message}<>"); }
 		}
-		
-		if (!updating) {
-			var npath = _nugetDir + @"\nuget.xml";
-			if (filesystem.exists(npath)) {
-				var xn = XmlUtil.LoadElem(npath);
-				var xx = xn.Elem("package", "path", folder + "\\" + package, true);
-				if (xx != null) {
-					xx.Remove();
-					xn.SaveElem(npath);
-				}
-			}
-			
-			if (!await _Build(_Selected.Parent.Name)) return false;
-			if (uninstalling) {
-				CodeInfo.StopAndUpdateStyling();
-				print.it("========== Finished ==========");
-			}
-		}
-		
-		return true;
 	}
 	
-	async void _Update() {
-		using var _ = _disabler.Disable();
-		var v = _Selected;
-		if (!await _Uninstall(uninstalling: false, updating: true)) return;
-		var s = v.Name; if (v.Version.Contains('-') && !_cPrerelease.IsChecked) s += " --prerelease";
-		await _Install(s, v.Parent.Name);
+	async void _Update(bool showVersionsMenu) {
+		var t = _Selected;
+		var s = t.Name;
 		
-		//rejected: use same --source as when installed. Rarely used. Can use Install instead; it's documented.
+		if (showVersionsMenu) {
+			if (await _GetVersions(t) is not { } versions) return;
+			int i = popupMenu.showSimple(versions, owner: this, rawText: true) - 1; if (i < 0) return;
+			s = $"{s} --version {versions[i]}";
+		} else {
+			bool prer = t.Version.Contains('-');
+			if (!prer && t.Updates is { } u && u.Contains('-')) prer = 2 == popupMenu.showSimple("Latest stable|Latest prerelease", owner: this);
+			if (prer) s += " --prerelease";
+		}
+		if (t.Source is { } so) s += $" --source \"{so.UrlList}\"";
+		
+		using var _ = _disabler.Disable();
+		_DeleteInstalledFiles(t);
+		if (!await _InstallWhenInstallingUpdatingOrMoving(s, t.Parent.Name, t)) return;
+		print.it("========== Finished ==========");
+		CodeInfo.StopAndUpdateStyling();
 	}
 	
 	async void _Move() {
-		//never mind: the menu contains current folder too
-		int i = popupMenu.showSimple(_folders, owner: this) - 1;
-		if (i < 0) return;
-		var folder = _folders[i];
-		var v = _Selected;
+		var t = _Selected;
+		var otherFolders = _folders.Where(o => o != t.Parent.Name).ToArray();
+		int i = popupMenu.showSimple(otherFolders, owner: this, rawText: true) - 1; if (i < 0) return;
+		var folder = otherFolders[i];
+		
+		//can't move to a folder that already contains a package with this name
+		foreach (var f in _tvroot.Children()) {
+			if (f.Name == folder) {
+				if (f.Children().Any(o => o.Name.Eqi(t.Name))) {
+					print.it("Can't move to a folder that contains a package with this name.");
+					return;
+				}
+				break;
+			}
+		}
+		
+		var s = $"{t.Name} --version {t.Version}";
+		if (t.Source is { } so) s += $" --source \"{so.UrlList}\"";
+		
 		using var _ = _disabler.Disable();
-		if (!await _Uninstall(uninstalling: false)) return;
-		await _Install($"{v.Name} --version {v.Version}", folder);
+		if (!await _InstallWhenInstallingUpdatingOrMoving(s, folder)) return;
+		await _UninstallWhenUninstallingOrMoving(t);
+		print.it("========== Finished ==========");
+		CodeInfo.StopAndUpdateStyling();
 	}
 	
 	void _AddMeta() {
-#if !SCRIPT
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
 		var meta = new MetaCommentsParser(doc.aaaText);
-		meta.nuget.Add($@"{_Selected.Parent.Name}\{_Selected.Name}");
+		var t = _Selected;
+		meta.nuget.Add($@"{t.Parent.Name}\{t.Name}");
 		meta.Apply();
-#endif
 	}
 	
 	public static string[] GetInstalledPackages() {
@@ -546,28 +575,43 @@ class DNuget : KDialogWindow {
 		return a;
 	}
 	
-	void _MoreMenu() {
+	void _Menu() {
 		var m = new popupMenu();
-		m["Print updates"] = async o => {
-			if (!await DotnetUtil.EnsureSDK(_tProgress)) return;
-			
-			await _RunDotnet(_Operation.Other, $@"list ""{_ProjPath()}"" package --outdated");
-		};
+		m["Check for updates"] = o => _CheckForUpdates();
+		m.Submenu("nuget.config", m => {
+			foreach (var v in _Config.GetConfigFilePaths()) m[v.Limit(150, middle: true)] = o => { run.selectInExplorer(v); };
+		});
 		m.Submenu("NuGet cache", m => {
-			m["Open packages folder"] = o => {
-				if (0 == run.console(out var s, "dotnet.exe", "nuget locals global-packages --list") && !s.NE())
-					if (s.RxMatch(@"(?m)^global-packages: (.+)$", 1, out s)) run.itSafe(s);
-					else print.it(s);
-			};
+			m["Open packages folder"] = o => { if (_GetCacheDir() is { } s) run.itSafe(s); };
 			m.Submenu("Clear all caches", m => {
-				m["Clear"] = async o => {
-					using var _ = _disabler.Disable();
-					if (!await DotnetUtil.EnsureSDK(_tProgress)) return;
-					await _RunDotnet(_Operation.Other, "nuget locals all --clear");
-				};
+				m["Clear"] = o => { _ = _RunDotnet(_Operation.Other, "nuget locals all --clear"); };
 			});
 		});
 		m.Show();
+	}
+	
+	void _tv_ItemClick(TVItemEventArgs e) {
+		if (e.Button != MouseButton.Right) return;
+		var t = e.Item as _TreeItem;
+		_tv.Select(t);
+		if (t.IsFolder) {
+			//is unused?
+			if (t.HasChildren) return;
+			var path = _FolderPath(t.Name);
+			if (!filesystem.exists(path).Directory) return;
+			var a = filesystem.enumerate(path, FEFlags.UseRawPath).ToArray();
+			if (a.Length > 1 || (a.Length == 1 && (a[0].IsDirectory || !a[0].Name.Ends(".csproj", true)))) return;
+			
+			var m = new popupMenu();
+			m["Delete unused folder"] = o => {
+				if (false == filesystem.delete(path, FDFlags.CanFail)) return;
+				t.Remove();
+				_tv.SetItems(_tvroot.Children(), true);
+				_folders.Remove(t.Name);
+				_cbFolder.Items.Remove(t.Name);
+			};
+			m.Show();
+		}
 	}
 	
 	enum _Operation { Add, Build, Other }
@@ -575,7 +619,8 @@ class DNuget : KDialogWindow {
 	async Task<bool> _RunDotnet(_Operation op, string cl, Action<string> printer = null, Action<string> watcher = null) {
 		try {
 			if (printer == null) {
-				print.it($"<><c blue>dotnet {cl}<>");
+				var clPrint = cl.RxReplace(@" ""[^""]+\.csproj""", "", 1).Replace(" --nologo -v m", ""); //try to print shorter command line
+				print.it($"<><c blue>dotnet {clPrint}<>");
 				bool skip = false;
 				printer = s => {
 					if (!skip) skip = s.Starts("Usage:");
@@ -618,37 +663,407 @@ class DNuget : KDialogWindow {
 		return false;
 	}
 	
-	void _FillTree(string selectFolder = null, string selectPackage = null) {
-		_TreeItem select = null;
-		_tvroot = new _TreeItem(true, null);
-		foreach (var folder in _folders) {
-			var proj = _ProjPath(folder);
-			if (!File.Exists(proj)) continue;
-			XElement xr; try { xr = XElement.Load(proj); } catch { continue; }
-			var k = new _TreeItem(true, folder);
-			foreach (var x in xr.XPathSelectElements("/ItemGroup/PackageReference[@Include]")) {
-				var name = x.Attr("Include");
-				var t = new _TreeItem(false, name, x.Attr("Version"));
-				k.AddChild(t);
-				if (selectPackage != null && name == selectPackage && (selectFolder == null || folder == selectFolder)) {
-					selectPackage = null;
-					select = t;
+	/// <summary>
+	/// Gets our <b>NGC.ISettings</b>.
+	/// </summary>
+	/// <exception cref="Exception"></exception>
+	NGC.ISettings _Config => field ??= NGC.Settings.LoadDefaultSettings(_nugetDir);
+	
+	string _GetCacheDir() {
+		try { return NGC.SettingsUtility.GetGlobalPackagesFolder(_Config)?.TrimEnd('\\'); }
+		catch { return null; }
+	}
+	
+	class _Source {
+		public _Source() {
+			Url = UrlList = "https://api.nuget.org/v3/index.json";
+			Name = "nuget.org";
+			PackageBaseUrl = "https://api.nuget.org/v3-flatcontainer/";
+			_packageBaseUrlInited = true;
+		}
+		
+		public _Source(NGC.PackageSource ps) {
+			Url = UrlList = ps.Source;
+			Name = ps.Name;
+			IsLocal = ps.IsLocal;
+			if (ps.Credentials is { } cred) _auth = $"{cred.Username}:{cred.Password}"; //tested: auto-decrypts password
+		}
+		
+		public _Source(string url) {
+			Url = UrlList = Name = url;
+			IsLocal = !url.Starts("http", true);
+		}
+		
+		public string Url { get; }
+		public string Name { get; }
+		public bool IsLocal { get; }
+		readonly string _auth;
+		public override string ToString() => Name;
+		
+		/// <summary>
+		/// Gets the base URL of packages, or null if local or <see cref="InitPackageBaseUrl"/> not called or failed.
+		/// </summary>
+		public string PackageBaseUrl { get; private set; }
+		
+		/// <summary>
+		/// List of URLs for <c>dotnet add package --sources</c>, like <c>"Url;other_url"</c>.
+		/// </summary>
+		public string UrlList { get; set; }
+		
+		/// <summary>
+		/// Downloads <c>index.json</c> of the source and gets the base URL of packages.
+		/// Does nothing if local or already called.
+		/// Not thread-safe.
+		/// </summary>
+		public void InitPackageBaseUrl() {
+			if (_packageBaseUrlInited || IsLocal) return;
+			try {
+				if (!Url.Ends(".json", true)) return;
+				var j = internet.http.Get(Url, auth: _auth).Json();
+				var ver = (string)j["version"];
+				if (!ver.Starts("3.0.")) { Debug_.Print(ver); return; }
+				foreach (var v in j["resources"].AsArray()) {
+					if (((string)v["@type"])?.Starts("PackageBaseAddress/3.0.") == true) {
+						if ((string)v["@id"] is string s1) {
+							if (!s1.Ends('/')) s1 += "/";
+							PackageBaseUrl = s1;
+						}
+						break;
+					}
 				}
 			}
-			if (k.HasChildren) _tvroot.AddChild(k);
+			catch (Exception ex) { Debug_.Print(ex); }
+			finally { _packageBaseUrlInited = true; }
+		}
+		bool _packageBaseUrlInited;
+		
+		/// <summary>
+		/// Downloads <c>index.json</c> of a package.
+		/// </summary>
+		/// <returns>null if local or failed or <see cref="InitPackageBaseUrl"/> not called or failed.</returns>
+		public JsonNode GetPackageIndexJson(string package) {
+			if (PackageBaseUrl is string pbu) {
+				var url = $"{pbu}{package.Lower()}/index.json";
+				try {
+					var r = internet.http.Get(url, auth: _auth);
+					if (r.IsSuccessStatusCode) return r.Json();
+					Debug_.Print(r);
+				}
+				catch (Exception ex) { Debug_.Print(ex); }
+			}
+			return null;
+		}
+		
+		public string[] GetPackageVersions(string package) {
+			if (GetPackageIndexJson(package) is JsonNode j) {
+				if (j["versions"]?.AsArray() is { } versions) {
+					var a = versions.Select(o => (string)o).ToArray();
+					if (a.Length > 1 && NuGet.Versioning.NuGetVersion.Parse(a[0]) > NuGet.Versioning.NuGetVersion.Parse(a[^1])) Array.Reverse(a); //eg in GitHub Packages the list is in reverse order than in nuget.org
+					return a;
+				}
+			}
+			return null;
+		}
+		
+		public byte[] GetPackageIcon(_TreeItem t) {
+			if (PackageBaseUrl is string pbu) {
+				var url = $"{pbu}{t.Name.Lower()}/{t.Version.Lower()}/icon";
+				try {
+					var r = internet.http.Get(url, auth: _auth);
+					if (r.IsSuccessStatusCode) return r.Bytes();
+					if (r.StatusCode == System.Net.HttpStatusCode.NotFound) return [];
+					Debug_.Print(r);
+				}
+				catch (Exception ex) { Debug_.Print(ex); }
+			}
+			return null;
+		}
+	}
+	
+	void _InitSources() {
+		_sources = [new()]; //nuget.org
+		_dSources = new(StringComparer.OrdinalIgnoreCase) { { _sources[0].Url, _sources[0] } };
+		int nNonlocal = 0;
+		try {
+			var provider = new NGC.PackageSourceProvider(_Config);
+			foreach (var v in provider.LoadPackageSources()) {
+				if (!v.IsEnabled) continue;
+				if (v.Source == _sources[0].Url) continue;
+				_Source so = new(v);
+				if (!_dSources.TryAdd(so.Url, so)) continue; //note: no warning
+				_sources.Add(so);
+				if (!v.IsLocal) nNonlocal++;
+			}
+		}
+		catch (Exception ex) { Debug_.Print(ex); }
+		
+		if (nNonlocal > 0) { //create UrlList for each
+			var b = new StringBuilder();
+			foreach (var so in _sources.Skip(1)) {
+				if (so.IsLocal) continue;
+				b.Clear();
+				b.Append(so.Url);
+				foreach (var k in _sources) if (k != so && !k.IsLocal) b.Append(';').Append(k.Url);
+				so.UrlList = b.ToString();
+			}
+		}
+		
+		foreach (var v in _sources) _cbSource.Items.Add(v);
+		_cbSource.Items.Add("Try all listed sources");
+		_cbSource.SelectedIndex = 0;
+	}
+	
+	List<_Source> _sources;
+	Dictionary<string, _Source> _dSources;
+	
+	_Source _SourceFromUrl(string url) {
+		if (_sources is null) return null; //SDK not installed
+		if (url.NE()) return null;
+		if (_dSources.TryGetValue(url, out var r)) return r;
+		Debug_.Print(url);
+		return new(url);
+	}
+	
+	async Task<string[]> _GetVersions(_TreeItem t) {
+		List<_Source> sources;
+		if (t.Source is { } so) {
+			if (so.IsLocal) {
+				dialog.show("Not supported", "Cannot get package versions from local sources.\nSource: " + so.Name, owner: this);
+				return null;
+			}
+			sources = [so];
+		} else {
+			sources = _sources;
+		}
+		var r = await Task.Run(() => {
+			foreach (var source in sources) {
+				source.InitPackageBaseUrl();
+				if (source.GetPackageVersions(t.Name) is { } a) {
+					Array.Reverse(a);
+					//remove prereleases older than the latest stable version
+					int i = 0; while (i < a.Length) if (!a[i++].Contains('-')) break;
+					for (; i < a.Length; i++) if (a[i].Contains('-')) a[i] = null;
+					return a.Where(o => o != null).ToArray();
+				}
+			}
+			return null;
+		});
+		return r;
+	}
+	
+	async void _CheckForUpdates() {
+		_tStatus.Text = "Checking for updates...";
+		
+		var a = _tvroot.Descendants().Where(o => o.Level == 2).ToArray();
+		int nStable = 0, nPrerelease = 0;
+		
+		await Task.Run(() => {
+			foreach (var v in _sources) v.InitPackageBaseUrl();
+			
+			Parallel.ForEach(a, t => {
+				t.Updates = null;
+				try {
+#if true
+					string[] versions = null;
+					if (t.Source is { } so) {
+						versions = so.GetPackageVersions(t.Name);
+					} else {
+						foreach (var v in _sources) {
+							versions = v.GetPackageVersions(t.Name);
+							if (versions != null) break;
+						}
+					}
+#else
+					var so = t.Source ?? _sources[0];
+					var versions = so.GetPackageVersions(t.Name);
+#endif
+					if (versions.NE_()) return;
+					
+					string latest = versions[^1], latestPrerelease = null, s;
+					if (latest.Contains('-')) {
+						latestPrerelease = latest;
+						latest = versions.LastOrDefault(o => !o.Contains('-'));
+					}
+					
+					if (latestPrerelease != null) {
+						if (t.Version == latestPrerelease) return;
+						bool onlyPR = latest is null || t.Version == latest;
+						s = onlyPR ? latestPrerelease : $"{latest},  {latestPrerelease}";
+						nPrerelease++; if (!onlyPR) nStable++;
+					} else {
+						if (t.Version == latest) return;
+						s = latest;
+						nStable++;
+					}
+					t.Updates = s;
+				}
+				catch (Exception ex) {
+					Debug_.Print($"Failed to check {t.Name}: {ex}");
+				}
+			});
+		});
+		
+		wpfBuilder.formatTextOf(_tStatus, $"Updates: <s c='green'>{nStable} stable</s>, <s c='blue'>{nPrerelease} prerelease</s>");
+		_tv.Redraw(remeasure: true);
+	}
+	
+	static bool _NormalizeCopiedPackageString(ref string s) {
+		if (s.Starts(true, "dotnet add package ", "dotnet package add ") > 0) s = s[19..];
+		else if (s.RxReplace(@"^.+?\bInstall-Package ", "", out s) > 0) s = s.Replace("-Version ", "--version ");
+		else return false;
+		return true;
+	}
+	
+	_TreeItem _Selected => _tv.SelectedItem as _TreeItem;
+	
+	string _FolderPath(string folder) => _nugetDir + "\\" + folder;
+	
+	string _ProjPath(string folder) => $@"{_nugetDir}\{folder}\{folder}.csproj";
+	
+	XElement _LoadProject(string folder) {
+		var path = _ProjPath(folder);
+		if (filesystem.exists(path))
+			try { return XElement.Load(path); }
+			catch (Exception ex) { print.warning(ex); }
+		return null;
+	}
+	
+	IEnumerable<(string folder, XElement project)> _GetProjects() {
+		foreach (var folder in _folders) {
+			if (_LoadProject(folder) is { } xr) yield return (folder, xr);
+		}
+	}
+	
+	IEnumerable<(string name, string version, string source)> _GetProjectPackages(XElement xr) {
+		foreach (var x in xr.XPathSelectElements("/ItemGroup/PackageReference[@Include]")) {
+			yield return (x.Attr("Include"), x.Attr("Version"), x.Attr("la-source"));
+		}
+	}
+	
+	(XElement x, string name, string version, string source) _GetProjectPackage(XElement xr, string name) {
+		foreach (var x in xr.XPathSelectElements("/ItemGroup/PackageReference[@Include]")) {
+			string s = x.Attr("Include");
+			if (s.Eqi(name)) return (x, s, x.Attr("Version"), x.Attr("la-source"));
+		}
+		return default;
+	}
+	
+	void _FillTree() {
+		List<_TreeItem> a = [];
+		_tvroot = new _TreeItem(null);
+		foreach (var (folder, xr) in _GetProjects()) {
+			var k = new _TreeItem(folder);
+			foreach (var (name, version, source) in _GetProjectPackages(xr)) {
+				var t = new _TreeItem(name, version, _SourceFromUrl(source));
+				k.AddChild(t);
+				a.Add(t);
+			}
+			_tvroot.AddChild(k);
 		}
 		_tv.SetItems(_tvroot.Children());
-		if (select != null) _tv.SelectSingle(select, true);
-		else _panelManage.IsEnabled = false;
+		if (_sources != null && a.Count > 0) _DisplayIcons(a, useCache: true); //if SDK installed
 	}
-	//TODO2: display transitive packages too, as child nodes.
+	//CONSIDER: display transitive packages too, as child nodes.
 	
-	void _SelectInTree() {
+	async void _DisplayIcons(List<_TreeItem> a, bool useCache) {
+		const string c_defaultIcon = "*SimpleIcons.NuGet #55A7DD";
+		var cacheDir = folders.ThisAppDataLocal + "nugetIcons";
+		
+		try {
+			if (filesystem.exists(cacheDir, true).Directory) {
+				if (useCache) {
+					var df = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+					foreach (var v in filesystem.enumFiles(cacheDir, "**m *.png||*.jpg||*.ico||*.a")) df[pathname.getNameNoExt(v.Name)] = v.FullPath;
+					for (int i = a.Count; --i >= 0;) {
+						if (df.TryGetValue(a[i].Name, out string file)) {
+							var ext = pathname.getExtension(file);
+							a[i].Icon = ext.Eqi(".a") ? c_defaultIcon : ext.Eqi(".ico") ? file : "imagefile:" + file;
+							a.RemoveAt(i);
+						}
+					}
+				}
+			} else {
+				filesystem.createDirectory(cacheDir);
+			}
+		}
+		catch { return; }
+		
+		if (a.Count > 0) await Task.Run(_GetIcons);
+		_tv.Redraw();
+		
+		void _GetIcons() {
+			foreach (var v in _sources) v.InitPackageBaseUrl();
+			
+			Parallel.ForEach(a, t => {
+				try {
+					t.Icon = c_defaultIcon;
+					var so = t.Source ?? _sources[0];
+					if (so.GetPackageIcon(t) is { } bytes) {
+						var fileType = bytes switch { //note: Content-Type unreliable, eg sometimes "application/octet-stream"
+							[0x89, 0x50, 0x4E, 0x47, ..] => ".png",
+							[0xFF, 0xD8, 0xFF, ..] => ".jpg",
+							[0, 0, 1, 0, ..] => ".ico",
+							_ => ".a" //no icon or unsupported filetype. Why ".a": if will be "file.a" and "file.png", the `df[pathname.getNameNoExt(v.Name)] = v.FullPath` will choose "file.png".
+						};
+						var file = $@"{cacheDir}\{t.Name}{fileType}";
+						filesystem.saveBytes(file, bytes);
+						if (fileType != ".a") t.Icon = fileType == ".ico" ? file : "imagefile:" + file;
+					}
+				}
+				catch (Exception ex) {
+					Debug_.Print($"Failed to get icon of {t.Name}: {ex}");
+				}
+			});
+		}
+	}
+	
+	void _AddToTreeOrUpdate(string folder, string package, _TreeItem updating) {
+		if (_LoadProject(folder) is not { } xr) return;
+		var pr = _GetProjectPackage(xr, package);
+		
+		//from nuget cache get source and correct-cased name
+		if (_GetCacheDir() is string dir) {
+			dir = $@"{dir}\{package}\{pr.version}\";
+			string name0 = pr.name, source0 = pr.source;
+			try { pr.source = (string)JsonNode.Parse(filesystem.loadText(dir + ".nupkg.metadata"))["source"]; } catch { }
+			try { pr.name = XmlUtil.LoadElem(out var ns, dir + package + ".nuspec").Element(ns + "metadata").Element(ns + "id").Value; } catch { }
+			if (pr.name != name0 || pr.source != source0) {
+				if (pr.name != name0) pr.x.SetAttributeValue("Include", pr.name);
+				if (pr.source != source0) pr.x.SetAttributeValue("la-source", pr.source);
+				try { xr.SaveElem(_ProjPath(folder)); } catch { }
+			}
+		}
+		
+		bool isNew = false;
+		_TreeItem t = updating;
+		if (t is null) {
+			var tFolder = _tvroot.Children().FirstOrDefault(o => o.Name == folder);
+			if (tFolder is null) {
+				tFolder = new(folder);
+				var tBefore = _tvroot.Children().FirstOrDefault(o => o.Name.CompareTo(folder) > 0);
+				if (tBefore != null) tBefore.AddSibling(tFolder, false); else _tvroot.AddChild(tFolder);
+			}
+			t = tFolder.Children().FirstOrDefault(o => o.Name.Eqi(pr.name));
+			if (isNew = t is null) {
+				t = new _TreeItem(pr.name, pr.version, _SourceFromUrl(pr.source));
+				tFolder.AddChild(t);
+				_tv.SetItems(_tvroot.Children(), true);
+			}
+		}
+		if (!isNew) {
+			t.Update(pr.name, pr.version, _SourceFromUrl(pr.source));
+			_tv.Redraw(t, true);
+		}
+		_tv.SelectSingle(t, true);
+		_DisplayIcons([t], useCache: false);
+	}
+	
+	void _SelectInTreeWhenPackageFieldTextChanged() {
 		_TreeItem select = null;
 		var s = _tPackage.Text;
 		if (s.Length > 1) {
-			s = s.RxReplace(@"^(?:(?:PM> )?Install-Package )?(\w\S+)( -Version .+)?$", "$1");
-			select = _tvroot.Descendants().Where(o => !o.IsFolder && o.Name.Find(s, true) >= 0).FirstOrDefault();
+			if (_NormalizeCopiedPackageString(ref s)) { int i = s.IndexOf(' '); if (i > 0) s = s[..i]; }
+			select = _tvroot.Descendants().FirstOrDefault(o => !o.IsFolder && o.Name.Find(s, true) >= 0);
 		}
 		
 		if (select != null) _tv.SelectSingle(select, true);
@@ -657,25 +1072,33 @@ class DNuget : KDialogWindow {
 	
 	_TreeItem _tvroot;
 	
-	_TreeItem _Selected => _tv.SelectedItem as _TreeItem;
-	
-	string _FolderPath(string folder) => _nugetDir + "\\" + folder;
-	string _FolderPath() => _FolderPath(_Selected.Parent.Name);
-	string _ProjPath(string folder) => $@"{_nugetDir}\{folder}\{folder}.csproj";
-	string _ProjPath() => _ProjPath(_Selected.Parent.Name);
-	
 	class _TreeItem : TreeBase<_TreeItem>, ITreeViewItem {
 		bool _isExpanded;
 		
-		public _TreeItem(bool isFolder, string name, string version = null) {
-			IsFolder = _isExpanded = isFolder;
-			Name = name;
-			Version = version;
-			DisplayText = version == null ? name : $"{name}, {version}";
+		public _TreeItem(string folder) {
+			IsFolder = _isExpanded = true;
+			Name = NameVersion = folder;
 		}
 		
-		public string Name { get; }
-		public string Version { get; }
+		public _TreeItem(string name, string version, _Source source) {
+			Update(name, version, source);
+		}
+		
+		public string Name { get; private set; }
+		public string Version { get; private set; }
+		public _Source Source { get; private set; }
+		public string NameVersion { get; private set; }
+		public string Updates { get; set; }
+		public object Icon { get; set; }
+		public override string ToString() => NameVersion;
+		
+		public void Update(string name, string version, _Source source) {
+			Name = name;
+			Version = version;
+			Source = source;
+			NameVersion = version == null ? name : $"{name} {version}";
+			Updates = null;
+		}
 		
 		#region ITreeViewItem
 		
@@ -683,9 +1106,16 @@ class DNuget : KDialogWindow {
 		bool ITreeViewItem.IsExpanded => _isExpanded;
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		public bool IsFolder { get; }
-		public string DisplayText { get; }
-		object ITreeViewItem.Image => IsFolder ? EdResources.FolderIcon(_isExpanded) : null;
-		//public TVCheck CheckState { get; }
+		string ITreeViewItem.DisplayText => Updates is null ? NameVersion : NameVersion + "  ->  " + Updates;
+		object ITreeViewItem.Image => IsFolder ? EdResources.FolderIcon(_isExpanded) : Icon;
+		
+		int ITreeViewItem.TextColor(TVColorInfo ci) {
+			if (Updates is string s) {
+				if (s.Contains('-') && !s.Contains(", ")) return 0xFF;
+				return 0x9000;
+			}
+			return -1;
+		}
 		
 		#endregion
 	}

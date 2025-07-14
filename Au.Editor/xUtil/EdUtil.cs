@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows;
 using System.Collections;
 using System.IO.Compression;
+using System.Runtime.Loader;
 
 /// <summary>
 /// .NET SDK etc.
@@ -13,89 +14,141 @@ static class DotnetUtil {
 	}
 	
 	/// <summary>
+	/// Call this when showing a window that uses .NET SDK.
+	/// If SDK missing (full or minimal, depending on <see cref="AppSettings.minimalSDK"/>), disables specified UI elements and adds an install link at the top.
+	/// </summary>
+	/// <param name="installedNow">Called later when SDK is installed if was missing. Called only if then <c>w.IsLoaded</c>.</param>
+	/// <returns>true if missing.</returns>
+	public static bool MissingSdkUI(Window w, FrameworkElement[] disable, Action installedNow = null) {
+		if (InitSdk()) return false;
+		
+		var content = w.Content as UIElement;
+		w.Content = null;
+		if (w.Width < 400) w.Width = 400;
+		_DisableEnableAll(enable: false);
+		var panel = new DockPanel();
+		
+		TextBlock t = new() { Height = 18, Margin = new(5) };
+		if (App.Settings.minimalSDK == false) wpfBuilder.formatTextOf(t, $"Missing .NET SDK. See <b>Options > Other > Use minimal .NET SDK</b>.");
+		else wpfBuilder.formatTextOf(t, $"<b><a {_InstallMinimalSdk}>Download required components</a></b> to use this feature (~26 MB)");
+		
+		UIElement[] a = [t, new Separator(), content];
+		foreach (var e in a) {
+			if (e != content) DockPanel.SetDock(e, Dock.Top);
+			panel.Children.Add(e);
+		}
+		w.Content = panel;
+		
+		return true;
+		
+		async void _InstallMinimalSdk() {
+			if (!await EnsureSdkAsync(t)) return;
+			_DisableEnableAll(enable: true);
+			panel.Children.Remove(content);
+			w.Content = content;
+			if (installedNow is { } k && w.IsLoaded) k();
+		}
+		void _DisableEnableAll(bool enable) { foreach (var v in disable) v.IsEnabled = enable; }
+	}
+	
+	/// <summary>
 	/// Ensures that the full or minimal .NET SDK is installed, depending on <see cref="AppSettings.minimalSDK"/>.
-	/// If not installed, [rejected: shows an "install" dialog and] downloads/installs the minimal SDK.
-	/// In any case sets <see cref="DotnetExe"/>.
+	/// If not installed, downloads/installs the minimal SDK (without confirmation, just displays progress).
+	/// In any case sets <see cref="DotnetExe"/> and <see cref="SdkDir"/>.
+	/// Not thread-safe. Call in main thread.
 	/// </summary>
 	/// <param name="progress">This func will set text like <c>"Downloading minimal SDK, 20%"</c>. Also uses it to cancel when the window closed.</param>
 	/// <returns>false if failed to install or canceled.</returns>
-	public static async Task<bool> EnsureSDK(TextBlock progress) {
-		if (App.IsPortable) {
-			if (_IsFullSdkInstalled()) return true;
-			print.it("Error: This feature in portable mode requires the .NET SDK.");
-			return false;
-		}
-		if (App.Settings.minimalSDK != true) {
-			if (_IsFullSdkInstalled()) return true;
-			if (App.Settings.minimalSDK == false) {
-				print.it("Error: This feature requires the .NET SDK. Install it or don't uncheck Options > Other > Use minimal SDK.");
-				return false;
-			}
-		}
-		if (s_minimalDotnetExe is null) {
-			var dotnetDir = folders.ThisAppBS + @"SDK";
-			var sdkDir = dotnetDir + @"\sdk";
-			bool installed = filesystem.exists(sdkDir, true).Directory
-				&& Directory.EnumerateDirectories(sdkDir, Environment.Version.ToString(2) + ".*").Any()
-				&& !Downloader.IsDirectoryInvalid(dotnetDir);
-			if (!installed) {
-				DotnetExe = null;
-				if (!await _InstallMinimalSDK(progress)) return false;
-			}
-			
-			s_minimalDotnetExe = dotnetDir + @"\dotnet.exe";
-			
-			if (!(_EnsureLink("host") && _EnsureLink("shared"))) return false; //not just when installing, because the folder may be copied manually and the links lost
-		}
-		DotnetExe = s_minimalDotnetExe;
-		return true;
-		
-		static bool _IsFullSdkInstalled() {
-			if (filesystem.searchPath("dotnet.exe") is string s) {
-				try {
-					if (Directory.EnumerateDirectories($@"{s}\..\sdk", $"{Environment.Version.ToString(2)}.*").Any()) {
-						DotnetExe = s;
-						return true;
-					}
-				}
-				catch { }
-			}
-			DotnetExe = null;
-			return false;
-		}
+	public static async Task<bool> EnsureSdkAsync(TextBlock progress) {
+		if (_InitSdk(out bool installMiniSdk)) return true;
+		if (!installMiniSdk) return false;
+		if (!await _InstallMinimalSDK(progress)) return false;
+		return _InitSdk(out _, true);
 		
 		static async Task<bool> _InstallMinimalSDK(TextBlock progress) {
 			var window = Window.GetWindow(progress);
 			
 			string filename = $"sdk-{Environment.Version.ToString(2)}-{(osVersion.isArm64OS ? "arm64" : "x64")}.zip";
 			string url = $"https://www.libreautomate.com/download/sdk/{filename}";
-#if false //rejected
-			string info;
-			if (App.Settings.minimalSDK) info = $"""
-The .NET SDK is required to install NuGet packages or use Publish.
-Click OK to install a minimal SDK (~26 MB download) into the program folder.
-To use full SDK instead, click Cancel and uncheck Options > Other > Use minimal SDK.
-""";
-			else info = $"""
-The .NET SDK is required to install NuGet packages or use Publish; it isn't currently installed.
-Click OK to install a minimal SDK (~26 MB download) into the program folder.
-Or click Cancel and install the full .NET {Environment.Version.ToString(2)} SDK (~200 MB download).
-""";
-			string url2 = $"https://github.com/qgindi/LibreAutomate/releases/download/v1.13.0/{filename}";
-			DControls dcontrols = new() { RadioButtons = [url, url2] };
-			if (1 != dialog.show("Install minimal .NET SDK?", info, "1 OK|0 Cancel", owner: window, controls: dcontrols)) return false;
-			if (dcontrols.RadioId == 2) url = url2;
-#endif
-			
-			var dotnetDir = folders.ThisAppBS + "SDK";
+			string dotnetDir = folders.ThisAppBS + "SDK";
 			using var dl = new Downloader();
 			if (!dl.PrepareDirectory(dotnetDir, failedWarningPrefix: c_errorInstallMinimalSDK)) return false;
 			
 			CancellationTokenSource cts = new();
-			window.Closed += (_, _) => { cts?.Cancel(); };
+			progress.Unloaded += (_, _) => { cts?.Cancel(); };
 			bool? ok = await dl.DownloadAndExtract(url, progress, cts.Token, progressText: "Downloading required components", failedWarningPrefix: c_errorInstallMinimalSDK.Replace("to install", "to download"));
 			cts = null;
 			return ok == true;
+		}
+		
+		//note: the minimal SDK the first time installs 3 extra packages (16 MB download). The normal SDK doesn't.
+		//	It's OK. It's because the minimal SDK doesn't have the `packs` folder. Auto-downloads what's missing.
+		//	Also creates empty dir `metadata` in the minimal SDK dir.
+	}
+	
+	/// <summary>
+	/// Returns <c>true</c> if the full or minimal .NET SDK is installed (depending on <see cref="AppSettings.minimalSDK"/>).
+	/// Sets <see cref="DotnetExe"/> and <see cref="SdkDir"/> (null if returns <c>false</c>).
+	/// Not thread-safe. Call in main thread.
+	/// </summary>
+	public static bool InitSdk() => _InitSdk(out _);
+	
+	static bool _InitSdk(out bool installMiniSdk, bool afterInstall = false) {
+		installMiniSdk = false;
+		
+		if (!afterInstall) {
+			Debug_.PrintIf(Environment.CurrentManagedThreadId != 1);
+			if (App.IsPortable) {
+				if (_IsFullSdkInstalled()) return true;
+				print.warning("This feature in portable mode requires the .NET SDK.", 1);
+				return false;
+			}
+			if (App.Settings.minimalSDK != true) {
+				if (_IsFullSdkInstalled()) return true;
+				if (App.Settings.minimalSDK == false) {
+					(DotnetExe, SdkDir) = (null, null);
+					print.warning("This feature requires the .NET SDK. Install it or don't uncheck Options > Other > Use minimal SDK.", 1);
+					Debug_.Print(new StackTrace(true));
+					return false;
+				}
+			}
+		}
+		
+		if (s_minimalSdkDir is null) {
+			string dotnetDir = folders.ThisAppBS + @"SDK", sdkDir = dotnetDir + @"\sdk", sdkVerDir = null;
+			if (filesystem.exists(sdkDir, true).Directory && !Downloader.IsDirectoryInvalid(dotnetDir)) {
+				sdkVerDir = Directory.EnumerateDirectories(sdkDir, Environment.Version.ToString(2) + ".*").FirstOrDefault();
+			}
+			if (sdkVerDir is null) {
+				installMiniSdk = true;
+			} else {
+				if (sdkVerDir != null && !(_EnsureLink("host") && _EnsureLink("shared"))) sdkVerDir = null; //not just when installing, because the folder may be copied and the links lost
+				
+				if (sdkVerDir != null) (s_minimalDotnetExe, s_minimalSdkDir) = (dotnetDir + @"\dotnet.exe", sdkVerDir);
+			}
+		}
+		
+		DotnetExe = s_minimalDotnetExe;
+		SdkDir = s_minimalSdkDir;
+		return s_minimalSdkDir != null;
+		
+		static bool _IsFullSdkInstalled() {
+			if (!s_fullSdkDirOnce) {
+				if (filesystem.searchPath("dotnet.exe") is string dotnetExe) {
+					try {
+						if (0 == run.console(out string v, dotnetExe, "--version", curDir: folders.ThisApp)) { //fast. Use `curDir: folders.ThisApp` because it searches for global.json (and SDK version in it) in this and ancestor dirs.
+							var dir = pathname.getDirectory(dotnetExe) + @"\sdk\" + v.Trim();
+							if (filesystem.exists(dir, true).Directory) (s_fullDotnetExe, s_fullSdkDir) = (dotnetExe, dir);
+							Debug_.PrintIf(s_fullSdkDir is null, dir);
+						}
+					}
+					catch { }
+				}
+				s_fullSdkDirOnce = true;
+			}
+			DotnetExe = s_fullDotnetExe;
+			SdkDir = s_fullSdkDir;
+			return s_fullSdkDir != null;
 		}
 		
 		static bool _EnsureLink(string name) {
@@ -112,13 +165,49 @@ Or click Cancel and install the full .NET {Environment.Version.ToString(2)} SDK 
 		//	It's OK. It's because the minimal SDK doesn't have the `packs` folder. Auto-downloads what's missing.
 		//	Also creates empty dir `metadata` in the minimal SDK dir.
 	}
-	static string s_minimalDotnetExe;
+	static string s_minimalDotnetExe, s_fullDotnetExe, s_minimalSdkDir, s_fullSdkDir;
+	static bool s_fullSdkDirOnce;
 	const string c_errorInstallMinimalSDK = "<>Failed to install required component (minimal .NET SDK). You can retry, or manually install the full .NET 9.0 SDK (~200 MB download). See also Options > Other > Use minimal SDK. Issues: https://github.com/qgindi/LibreAutomate/issues.";
 	
 	/// <summary>
-	/// Path of "dotnet.exe" set by <see cref="EnsureSDK"/>. Full or minimal SDK.
+	/// Path of "dotnet.exe" set by <see cref="EnsureSdkAsync"/>. Full or minimal SDK.
 	/// </summary>
 	public static string DotnetExe { get; private set; }
+	
+	/// <summary>
+	/// Path of the SDK directory with dlls, set by <see cref="EnsureSdkAsync"/>. Full or minimal SDK.
+	/// </summary>
+	public static string SdkDir { get; private set; }
+	
+	/// <summary>
+	/// Called by App._Assembly_Resolving.
+	/// If <c>name.Starts("NuGet.")</c>, and SDK exists (full or minimal), loads the assembly from the SDK dir. Later its dependencies will be loaded automatically.
+	/// </summary>
+	internal static Assembly TryLoadAssembly_(string name) {
+		if (!name.Starts("NuGet.")) return null;
+		Debug_.PrintIf(!(name is "NuGet.Configuration" or "NuGet.Versioning"));
+		if (s_alc is null) {
+			if (!InitSdk()) return null;
+			s_alc = new(SdkDir);
+		}
+		return s_alc.LoadFromSdkDir(name);
+	}
+	
+	class _AssemblyLoadContext(string sdkDir) : AssemblyLoadContext {
+		protected override Assembly Load(AssemblyName assemblyName) {
+			var name = assemblyName.Name;
+			if (name != "netstandard") {
+				Debug_.PrintIf(!(name is "NuGet.Common" or "System.Security.Cryptography.ProtectedData" or "System.Runtime" or "System.Runtime.InteropServices"), name);
+				var s = $@"{sdkDir}\{name}.dll";
+				if (filesystem.exists(s, true)) return LoadFromAssemblyPath(s);
+				//Debug_.Print(name);
+			}
+			return base.Load(assemblyName);
+		}
+		
+		public Assembly LoadFromSdkDir(string assemblyName) => LoadFromAssemblyPath(@$"{sdkDir}\{assemblyName}.dll");
+	}
+	static _AssemblyLoadContext s_alc;
 	
 	/// <summary>
 	/// Downloads and extracts both .NET runtimes (core and desktop) for CPU architecture x64/ARM64 other than of this process.
@@ -179,7 +268,7 @@ Or click Cancel and install the full .NET {Environment.Version.ToString(2)} SDK 
 					Api.DeleteFile(f.FullPath);
 				}
 			}
-			catch {  }
+			catch { }
 		}
 	}
 }

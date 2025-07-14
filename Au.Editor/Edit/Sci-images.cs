@@ -280,6 +280,7 @@ partial class SciCode {
 				g.DrawImage(v.image, r);
 			}
 		}
+		catch (Exception ex) { Debug_.Print(ex); }
 		finally {
 			g?.Dispose();
 		}

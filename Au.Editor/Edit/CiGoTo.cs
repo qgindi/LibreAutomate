@@ -202,7 +202,7 @@ class CiGoTo {
 			if (_sourceLocations.Count == 1) {
 				_GoTo(_sourceLocations[0]);
 			} else {
-				int i = popupMenu.showSimple(_sourceLocations.Select(v => v.file + ", line " + v.line.ToString()).ToArray());
+				int i = popupMenu.showSimple(_sourceLocations.Select(v => v.file + ", line " + v.line.ToString()).ToArray(), rawText: true);
 				if (i > 0) _GoTo(_sourceLocations[i - 1]);
 			}
 			
@@ -536,7 +536,7 @@ class CiGoTo {
 		if (a.Count == 0) return;
 		if (a.Count == 1) sym = a[0];
 		else {
-			int i = popupMenu.showSimple(a.Select(o => o.Name).ToArray());
+			int i = popupMenu.showSimple(a.Select(o => o.Name).ToArray(), rawText: true);
 			if (--i < 0) return;
 			sym = a[i];
 		}

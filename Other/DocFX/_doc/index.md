@@ -43,9 +43,9 @@ Windows 7, 8, 8.1, 10, 11.
 
 Or download from [GitHub](https://github.com/qgindi/LibreAutomate) Releases.
 
-The setup program is ~40 MB. It may also download (~60 MB) and install .NET 9.
+The setup program is ~40 MB. It may also install .NET 9 (~60 MB download).
 
-The setup may be blocked by security software because it is new, not commonly downloaded, and not digitally signed.
+The setup may be blocked by security software because it is new, not commonly downloaded, and not signed.
 
 ### Links
 - [Forum](https://www.libreautomate.com/forum/)

@@ -135,7 +135,7 @@ Or color, like #c0ff80");
 			b.R.Add("Expression", out KTextBox tExpression).Hidden(null);
 			b.R.Add("Arguments", out KTextBox tArgs, "@sel(true)")
 				.Tooltip("@sel(true) means \"paths of selected files\".\nYou can add more arguments before or after.");
-			var bArgs = b.And(26).xAddButtonIcon("*Modern.LanguageCsharp" + Menus.blue, _ => _ArgsButton(), "Copy C# code");
+			b.And(26).xAddButtonIcon(out var bArgs, "*Modern.LanguageCsharp" + Menus.blue, _ => _ArgsButton(), "Copy C# code");
 			cbAction.SelectionChanged += (_, _) => {
 				int i = cbAction.SelectedIndex;
 				tProgram.Visibility = i == 1 ? Visibility.Visible : Visibility.Collapsed;

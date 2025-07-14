@@ -105,7 +105,7 @@ class KeysWindow : InfoWindow { //KPopup
 			return ok;
 			
 			bool _Menu(params string[] a) {
-				int j = popupMenu.showSimple(a) - 1;
+				int j = popupMenu.showSimple(a, owner: this.Hwnd, rawText: true) - 1;
 				if (j < 0) return false;
 				s = a[j];
 				j = s.IndexOf(' '); if (j > 0) s = s[..j];

@@ -24,27 +24,21 @@ using Au.Compiler;
 using static Au.Controls.Sci;
 
 static class Test {
-	
+
 	public static void FromMenubar() {
 		print.clear();
-		
-		//Task.Run(() => {
-		//	try {
-		//		DotnetUtil.DownloadNetRuntimesForOtherArch(@"C:\Test\DownloadNetRuntimesForOtherArch", true);
-		//	}
-		//	catch (Exception ex) { print.it(ex); }
-		//});
-		
+
+
 		//var doc = Panels.Editor.ActiveDoc;
 		//doc.ESetUndoMark_(-1);
-		
+
 		//var s = Panels.Editor.ActiveDoc.aaaText.Trim();
 		//print.it(App.Model.FindByItemPath(s)?.ItemPath);
-		
+
 		//foreach (var v in App.Model.Root.Descendants(true)) {
 		//	print.it(v.ItemPath, v.FilePath);
 		//}
-		
+
 		//PipIPC.RunScriptInPip(App.Model.FindCodeFile("PipTestScript"));
 
 		//timer2.every(500, _=> { GC.Collect(); });
@@ -52,15 +46,14 @@ static class Test {
 		//Cpp.Cpp_Test();
 
 #if !IDE_LA
-
 #endif
 	}
-	
+
 	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;
 		//	new TestGC();
-		
+
 		//	//timer.every(50, _ => {
 		//	//	if(!s_debug) {
 		//	//		s_debug = true;
@@ -70,7 +63,7 @@ static class Test {
 		//}
 	}
 	//static bool s_debug2;
-	
+
 	class TestGC {
 		~TestGC() {
 			if (Environment.HasShutdownStarted) return;

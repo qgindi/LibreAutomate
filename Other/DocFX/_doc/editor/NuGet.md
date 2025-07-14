@@ -20,7 +20,7 @@ Paste the copied text in the **NuGet packages** window. Or you can enter just th
 
 Then select a folder in the combo box. You can use the default folder `-` or create/select another folder. Finally click the **Install** button.
 
-The **Add /\*/** button inserts a meta-comment like `/*/ nuget folder\Package; /*/` in the current script. It means "use this package in this script". Another way - **Properties > NuGet**. You can use an installed package in multiple scripts (just add the meta-comment).
+The **Add code** button inserts a meta-comment like `/*/ nuget folder\Package; /*/` in the current script. Another way - **Properties > NuGet**. You can use an installed package in multiple scripts (just add the meta-comment).
 
 Many code examples in the Cookbook use NuGet packages.
 
@@ -33,9 +33,7 @@ You can install multiple packages in a folder. You may want to install large lib
 
 When a package depends on other packages, those are installed too. The list contains only the top-level package, but in scripts you can use all of them.
 
-LibreAutomate uses standard, well-documented commands like `dotnet package add`. You can see them printed. You can append command line arguments to the package name when installing.
-
-The default NuGet source is `https://api.nuget.org/v3/index.json`. You can specify another source in the package name field: `PackageName --source URL or folder`. To update such packages, install again (don't use **Update**).
+LibreAutomate uses standard, well-documented commands like `dotnet add package`. Prints them when installing. Uses `nuget.config` files (sources etc) from standard locations and `workspace\.nuget`.
 
 Some NuGet packages don't install all required files, for example native dlls. Try this:
 - Often the missing files are in other NuGet packages. Install these packages.

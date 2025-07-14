@@ -364,7 +364,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// Gets all descendant nodes (direct children, their children and so on).
 	/// </summary>
 	/// <param name="andSelf">Include this node. Default <c>false</c>.</param>
-	/// <param name="stepInto">If not <c>null</c>, the callback function is called for each descendant node that has childred. Let it return <c>false</c> to skip descendants of that node.</param>
+	/// <param name="stepInto">If not <c>null</c>, called for each descendant node that has children. Let it return <c>false</c> to skip descendants of that node.</param>
 	public IEnumerable<T> Descendants(bool andSelf = false, Func<T, bool> stepInto = null) {
 		var n = this as T;
 		if (andSelf) yield return n;

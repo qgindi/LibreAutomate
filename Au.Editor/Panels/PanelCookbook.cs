@@ -36,8 +36,7 @@ class PanelCookbook {
 		_search.TextChanged += (_, _) => _Search(false);
 		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };
 		b.xAddButtonIcon("*Material.TextSearch" + Menus.darkYellow, _ => _Search(true), "Find in recipe text");
-		b.xAddButtonIcon("*EvaIcons.ArrowBack" + Menus.darkYellow, _ => _HistoryMenu(), "Go back...");
-		b.Margin(right: 3);
+		b.xAddButtonIcon("*EvaIcons.ArrowBack" + Menus.darkYellow, _ => _HistoryMenu(), "Go back...").Margin(right: 3);
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, FullRowExpand = true, HotTrack = true, BackgroundColor = 0xf0f8e8 };
 		b.Row(-1).Add(_tv);
 		b.End();
@@ -203,6 +202,8 @@ class PanelCookbook {
 			//rejected: use SQLite FTS5. Tried but didn't like.
 			//	It would be useful with many big files. Now we have < 200 small files, total < 1 MB.
 		}
+		
+		//TODO: use full-text search in body too
 		
 		//try stemmed fuzzy. Max Levenshtein distance 1 for a word.
 		//	rejected: use FuzzySharp. For max distance 1 don't need it.

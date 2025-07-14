@@ -44,13 +44,12 @@ class PanelFind {
 		
 		b.R.AddButton("In files", _FindAllInFiles).Tooltip("Find text in files");
 		b.StartStack();
-		_bFilter = b.xAddButtonIcon("*Material.FolderSearchOutline" + Menus.green, _FilterMenu, "Let 'In files' search only in current project or root folder");
-		b.Padding(1, 0, 1, 1);
+		b.xAddButtonIcon(out _bFilter, "*Material.FolderSearchOutline" + Menus.green, _FilterMenu, "Let 'In files' search only in current project or root folder").Padding(1, 0, 1, 1);
 		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _Options(), "More options");
 		
 		var cmd1 = App.Commands[nameof(Menus.Edit.Navigate.Go_back)];
-		var bBack = b.xAddButtonIcon(Menus.iconBack, _ => Menus.Edit.Navigate.Go_back(), "Go back");
-		b.Disabled(!cmd1.Enabled);
+		b.xAddButtonIcon(Menus.iconBack, _ => Menus.Edit.Navigate.Go_back(), "Go back").Disabled(!cmd1.Enabled);
+		var bBack = b.Last;
 		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
 		
 		b.xAddButtonIcon(Menus.iconRegex, _ => { _cRegex.IsChecked = true; _ShowRegexInfo(_tReplace.IsFocused ? _tReplace : _tFind); }, "Regex tool");

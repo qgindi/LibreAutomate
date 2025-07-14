@@ -341,9 +341,12 @@ public unsafe partial class KTreeView {
 								}
 								
 								if (b != null) {
-									if (cd == null || !cd.DrawImage(b)) {
-										graphics.DrawImage(b, new Rectangle(xImage, yImage, _imageSize, _imageSize));
+									try { //exception if Image.LoadBitmap loaded an invalid or ico file
+										if (cd == null || !cd.DrawImage(b)) {
+											graphics.DrawImage(b, new Rectangle(xImage, yImage, _imageSize, _imageSize));
+										}
 									}
+									catch (Exception ex) { Debug_.Print(ex); }
 								}
 							}
 						}

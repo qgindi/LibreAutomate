@@ -192,12 +192,15 @@ static partial class App {
 	}
 	
 	private static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
+		if (DotnetUtil.TryLoadAssembly_(an.Name) is { } a1) return a1;
+		
 		var dlls = _arDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
 			.ToDictionary(o => o.Name[..^4], o => o.FullPath);
 		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
 		
 		if (_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
 		
+		Debug_.Print(an.FullName);
 		//print.qm2.write(an); 
 		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 	}

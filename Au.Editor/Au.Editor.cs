@@ -21,6 +21,8 @@ r Roslyn\Microsoft.CodeAnalysis.Workspaces.dll /alias=CAW;
 r Roslyn\Microsoft.CodeAnalysis.CSharp.Workspaces.dll;
 r AxMSTSCLib.dll;
 r MSTSCLib.dll;
+r %^la.sdk%\NuGet.Configuration.dll;
+r %^la.sdk%\NuGet.Versioning.dll;
 resource app\app-resources.xaml /path;
 resource resources\ci /path;
 resource resources\Images /path;

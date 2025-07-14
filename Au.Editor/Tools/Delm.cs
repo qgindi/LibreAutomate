@@ -123,9 +123,9 @@ class Delm : KDialogWindow {
 		b.R.StartGrid().Columns(76, 76, 130, 0, 70, -1);
 		//row 1
 		b.R.StartStack();
-		_cCapture = b.xAddCheckIcon("*Unicons.Capture" + Menus.red, $"Enable capturing (hotkey {App.Settings.delm.hk_capture}, and {App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
-		_cAutoTestAction = b.xAddCheckIcon("*Material.CursorDefaultClickOutline" + Menus.red, "Auto test action when captured.\r\nIf no action selected, will show menu.");
-		_cAutoInsert = b.xAddCheckIcon("*VaadinIcons.Insert" + Menus.brown, "Auto insert code when captured");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + Menus.red, $"Enable capturing (hotkey {App.Settings.delm.hk_capture}, and {App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
+		b.xAddCheckIcon(out _cAutoTestAction, "*Material.CursorDefaultClickOutline" + Menus.red, "Auto test action when captured.\r\nIf no action selected, will show menu.");
+		b.xAddCheckIcon(out _cAutoInsert, "*VaadinIcons.Insert" + Menus.brown, "Auto insert code when captured");
 		b.AddSeparator(true);
 		b.xAddButtonIcon(Menus.iconUndo, _ => App.Dispatcher.InvokeAsync(() => SciUndo.OfWorkspace.UndoRedo(false)), "Undo in editor");
 		b.xAddButtonIcon("*Material.SquareEditOutline" + Menus.blue, _ => App.Hmain.ActivateL(true), "Activate editor window");

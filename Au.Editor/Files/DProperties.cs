@@ -306,7 +306,7 @@ class Class1 {
 			a = a.Where(s => s.Contains(sFind, StringComparison.OrdinalIgnoreCase)).ToArray();
 			if (!a.Any()) return;
 		}
-		int i = popupMenu.showSimple(a, owner: this) - 1; if (i < 0) return;
+		int i = popupMenu.showSimple(a, owner: this, rawText: true) - 1; if (i < 0) return;
 		_meta.nuget.Add(a[i]);
 		_ShowInfo_Added(e.Button, _meta.nuget);
 	}

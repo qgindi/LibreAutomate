@@ -9,7 +9,6 @@ using System.Windows.Controls;
 class XPublish {
 	MetaComments _meta;
 	string _csprojDir, _csprojFile;
-	WindowDisabler _disabler;
 	
 	public async void Publish() {
 		var cmd = App.Commands[nameof(Menus.Run.Publish)];
@@ -30,17 +29,10 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			b.R.Add(out KCheckBox cR2R, "ReadyToRun").Checked(0 != (4 & App.Settings.publish));
 			b.R.Add("Platform", out ComboBox cbPlatform).Width(100, "L").Items("x64|arm64|x86").Select(Math.Clamp(App.Settings.publish >>> 4 & 3, 0, 2));
 			b.R.Add(out TextBlock tProgress).Hidden(null);
-			b.R.StartOkCancel().AddOkCancel().xAddDialogHelpButtonAndF1("editor/Publish").End();
+			b.R.StartOkCancel().AddOkCancel(out var bOK, out _, out _).xAddDialogHelpButtonAndF1("editor/Publish").End();
 			b.End();
 			
-			b.OkApply += async o => {
-				o.Cancel = true;
-				using var _ = (_disabler ??= new(o.Window)).Disable();
-				if (await DotnetUtil.EnsureSDK(tProgress)) {
-					o.Window.DialogResult = true;
-					o.Window.Close();
-				}
-			};
+			DotnetUtil.MissingSdkUI(b.Window, [bOK]);
 			
 			if (!b.ShowDialog(App.Wmain)) return;
 			
@@ -331,12 +323,12 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		//	var emitResult = compilation.Emit(asmStream);
 		//	asmStream.Position = 0;
 		//	if (emitResult.Success && CompilerUtil.UsesSqlite(asmStream)) return true;
-			
+		
 		//	foreach (var v in _meta.References.Refs.Skip(_meta.References.DefaultRefCount)) {
 		//		if (v.Properties.EmbedInteropTypes) continue; //com; and no nuget refs when publishing
 		//		if (CompilerUtil.UsesSqlite(v.FilePath, recursive: true)) return true;
 		//	}
-			
+		
 		//	return false;
 		//}
 	}

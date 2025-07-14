@@ -47,7 +47,7 @@ class DSnippets : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize(800, 600).Columns(250, 0, -1);
 		b.Row(-1);
 		
-		b.xAddInBorder(_tv = new());
+		b.xAddInBorder(out _tv);
 		b.Add<GridSplitter>().Splitter(vertical: true);
 		
 		b.StartGrid().Columns(-1); //right side

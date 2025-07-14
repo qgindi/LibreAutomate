@@ -378,7 +378,8 @@ public partial class toolbar {
 							g.SmoothingMode = SmoothingMode.None;
 						}
 					} else if (b.image2 != null) {
-						g.DrawImage(b.image2, x, y + (b.rect.Height - m.image) / 2, m.image, m.image);
+						try { g.DrawImage(b.image2, x, y + (b.rect.Height - m.image) / 2, m.image, m.image); }
+						catch (Exception ex) { Debug_.Print(ex); }
 					}
 				}
 				

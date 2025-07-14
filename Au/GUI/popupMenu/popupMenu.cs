@@ -983,18 +983,19 @@ public unsafe partial class popupMenu : MTBase {
 	/// <returns>id of the selected item when closed, or 0 if canceled.</returns>
 	/// <param name="items">
 	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>.
-	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four"</c> (1|2|100|101).
+	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>, unless <i>rawText</i> <c>true</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four"</c> (1|2|100|101).
 	/// For separators use <c>null</c> or empty strings: <c>"One|Two||Three|Four"</c>.
 	/// </param>
 	/// <param name="flags"></param>
 	/// <param name="xy">Menu position in screen. If <c>null</c> (default), uses mouse position by default. It depends on <i>flags</i>.</param>
 	/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
 	/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
+	/// <param name="rawText">Don't parse id from text.</param>
 	/// <remarks>
 	/// The function adds menu items and calls <see cref="Show"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
 	/// </remarks>
 	/// <seealso cref="dialog.showList"/>
-	public static int showSimple(Strings items, PMFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default) {
+	public static int showSimple(Strings items, PMFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default, bool rawText = false) {
 		var a = items.ToArray();
 		var m = new popupMenu();
 		foreach (var v in a) {
@@ -1002,7 +1003,7 @@ public unsafe partial class popupMenu : MTBase {
 			if (s.NE()) {
 				m.Separator();
 			} else {
-				if (s.ToInt(out int id, 0, out int end)) {
+				if (!rawText && s.ToInt(out int id, 0, out int end)) {
 					if (s.Eq(end, ' ')) end++;
 					s = s[end..];
 					m.Add(id, s);

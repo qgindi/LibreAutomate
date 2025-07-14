@@ -27,7 +27,7 @@ class DPwnd : UserControl {
 		b.Row(50).Add(out _info);
 		
 		b.R.StartGrid().Columns(0, 76, -1);
-		_cCapture = b.xAddCheckIcon("*Unicons.Capture" + Menus.red, $"Enable capturing ({App.Settings.delm.hk_capture}) and show window rectangles");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + Menus.red, $"Enable capturing ({App.Settings.delm.hk_capture}) and show window rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Span(1).Disabled().Tooltip("Find the window and show the rectangle");
 		b.End();
 		

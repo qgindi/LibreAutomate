@@ -306,6 +306,7 @@ public static unsafe class KImageUtil {
 			im.Save(m, ImageFormat.Bmp);
 			return m.ToArray();
 		}
+		catch (Exception ex) { Debug_.Print(ex); return null; }
 		finally { im.Dispose(); }
 	}
 	

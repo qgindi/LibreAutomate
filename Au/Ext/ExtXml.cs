@@ -2,13 +2,11 @@
 using System.Xml.Linq;
 using System.Xml;
 
-namespace Au.Types
-{
+namespace Au.Types {
 	/// <summary>
 	/// Adds extension methods for <see cref="XElement"/> and <see cref="XDocument"/>.
 	/// </summary>
-	public static class ExtXml
-	{
+	public static class ExtXml {
 		/// <summary>
 		/// Gets XML attribute value.
 		/// If the attribute does not exist, returns <c>null</c>.
@@ -17,7 +15,7 @@ namespace Au.Types
 		public static string Attr(this XElement t, XName name) {
 			return t.Attribute(name)?.Value;
 		}
-
+		
 		/// <summary>
 		/// Gets XML attribute value.
 		/// If the attribute does not exist, returns <i>defaultValue</i>.
@@ -27,7 +25,7 @@ namespace Au.Types
 			var x = t.Attribute(name);
 			return x != null ? x.Value : defaultValue;
 		}
-
+		
 		/// <summary>
 		/// Gets XML attribute value.
 		/// If the attribute does not exist, sets <i>value</i> = <c>null</c> and returns <c>false</c>.
@@ -36,7 +34,7 @@ namespace Au.Types
 			value = t.Attribute(name)?.Value;
 			return value != null;
 		}
-
+		
 		/// <summary>
 		/// Gets attribute value converted to <b>int</b> number.
 		/// If the attribute does not exist, returns <i>defaultValue</i>.
@@ -46,7 +44,7 @@ namespace Au.Types
 			var x = t.Attribute(name);
 			return x != null ? x.Value.ToInt() : defaultValue;
 		}
-
+		
 		/// <summary>
 		/// Gets attribute value converted to <b>int</b> number.
 		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
@@ -58,7 +56,7 @@ namespace Au.Types
 			value = x.Value.ToInt();
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Gets attribute value converted to <b>long</b> number.
 		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
@@ -70,7 +68,7 @@ namespace Au.Types
 			x.Value.ToInt(out value);
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Gets attribute value converted to double number.
 		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
@@ -82,7 +80,7 @@ namespace Au.Types
 			x.Value.ToNumber(out value);
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Gets attribute value converted to float number.
 		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
@@ -94,7 +92,7 @@ namespace Au.Types
 			x.Value.ToNumber(out value);
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Gets attribute value as enum type <b>T</b>.
 		/// If the attribute does not exist, sets <i>value</i> = <c>default</c> and returns <c>false</c>.
@@ -106,14 +104,14 @@ namespace Au.Types
 			Enum.TryParse(x.Value, out value);
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if this element has the specified attribute.
 		/// </summary>
 		public static bool HasAttr(this XElement t, XName name) {
 			return t.Attribute(name) != null;
 		}
-
+		
 		/// <summary>
 		/// Gets the first found descendant element.
 		/// </summary>
@@ -121,7 +119,7 @@ namespace Au.Types
 		public static XElement Desc(this XElement t, XName name) {
 			return t.Descendants(name).FirstOrDefault();
 		}
-
+		
 		/// <summary>
 		/// Finds the first descendant element that has the specified attribute or value.
 		/// </summary>
@@ -136,10 +134,10 @@ namespace Au.Types
 				if (_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) return el;
 			}
 			return null;
-
+			
 			//speed: several times faster than XPathSelectElement
 		}
-
+		
 		/// <summary>
 		/// Finds all descendant elements that have the specified attribute or value.
 		/// </summary>
@@ -154,7 +152,7 @@ namespace Au.Types
 				if (_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) yield return el;
 			}
 		}
-
+		
 		/// <summary>
 		/// Gets the first found direct child element that has the specified attribute or value.
 		/// </summary>
@@ -170,7 +168,7 @@ namespace Au.Types
 			}
 			return null;
 		}
-
+		
 		/// <summary>
 		/// Gets all direct child elements that have the specified attribute or value.
 		/// </summary>
@@ -185,7 +183,7 @@ namespace Au.Types
 				if (_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) yield return el;
 			}
 		}
-
+		
 		static bool _CmpAttrOrValue(XElement el, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			if (attributeName != null) {
 				var a = el.Attribute(attributeName); if (a == null) return false;
@@ -195,7 +193,7 @@ namespace Au.Types
 			}
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Gets the first found direct child element. If not found, adds new empty child element.
 		/// </summary>
@@ -205,7 +203,7 @@ namespace Au.Types
 			if (e == null) t.Add(e = new XElement(name));
 			return e;
 		}
-
+		
 		/// <summary>
 		/// Gets the first found direct child element that has the specified attribute. If not found, adds new child element with the attribute.
 		/// More info: <see cref="Elem"/>
@@ -216,7 +214,7 @@ namespace Au.Types
 			if (e == null) t.Add(e = new XElement(name, new XAttribute(attributeName, attributeValue)));
 			return e;
 		}
-
+		
 		/// <summary>
 		/// Returns previous sibling element or <c>null</c>.
 		/// </summary>
@@ -226,7 +224,7 @@ namespace Au.Types
 			}
 			return null;
 		}
-
+		
 		/// <summary>
 		/// Returns next sibling element or <c>null</c>.
 		/// </summary>
@@ -236,7 +234,7 @@ namespace Au.Types
 			}
 			return null;
 		}
-
+		
 		/// <summary>
 		/// Saves XML to a file in a safer way.
 		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="filesystem.save"/>.
@@ -247,7 +245,7 @@ namespace Au.Types
 				if (options.HasValue) t.Save(temp, options.Value); else t.Save(temp);
 			}, backup);
 		}
-
+		
 		/// <summary>
 		/// Saves XML to a file in a safer way.
 		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="filesystem.save"/>
@@ -261,13 +259,11 @@ namespace Au.Types
 	}
 }
 
-namespace Au.More
-{
+namespace Au.More {
 	/// <summary>
 	/// Loads <b>XElement</b> and <b>XDocument</b> in a safer way.
 	/// </summary>
-	public static class XmlUtil
-	{
+	public static class XmlUtil {
 		/// <summary>
 		/// Loads XML file in a safer way.
 		/// Uses <see cref="XElement.Load(XmlReader, LoadOptions)"/> and <see cref="filesystem.waitIfLocked"/>.
@@ -284,7 +280,18 @@ namespace Au.More
 		/// </remarks>
 		public static XElement LoadElem(string file, LoadOptions options = default)
 			=> _Load(file, options, false) as XElement;
-
+		
+		/// <summary>
+		/// Loads XML file with a namespace.
+		/// </summary>
+		/// <param name="ns">Receives the default namespace. Use it to get elements, like <c>var x2 = x1.Element(ns + "name")</c>.</param>
+		/// <inheritdoc cref="LoadElem(string, LoadOptions)"/>
+		public static XElement LoadElem(out XNamespace ns, string file, LoadOptions options = default) {
+			var r = _Load(file, options, false) as XElement;
+			ns = r.Name.Namespace;
+			return r;
+		}
+		
 		/// <summary>
 		/// If XML file exists, loads it (calls <see cref="LoadElem"/>), else creates new element or returns <c>null</c>.
 		/// </summary>
@@ -297,7 +304,7 @@ namespace Au.More
 			if (!filesystem.exists(file)) return elemName == null ? null : new(elemName);
 			return _Load(file, options, false) as XElement;
 		}
-
+		
 		/// <summary>
 		/// Loads XML file in a safer way.
 		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="filesystem.waitIfLocked"/>.
@@ -314,12 +321,12 @@ namespace Au.More
 		/// </remarks>
 		public static XDocument LoadDoc(string file, LoadOptions options = default)
 			=> _Load(file, options, true) as XDocument;
-
+		
 		static XContainer _Load(string file, LoadOptions options, bool doc) {
 			if (file.Starts('<')) return _Load2(file, options, doc, true);
 			file = pathname.NormalizeMinimally_(file);
 			return filesystem.waitIfLocked(() => _Load2(file, options, doc, false));
-
+			
 			static XContainer _Load2(string file, LoadOptions options, bool doc, bool isString) {
 				using var r = isString ? new XmlTextReader(new StringReader(file)) : new XmlTextReader(file); //to preserve \r\n
 				if (0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant; //to save correctly formatted. Default of XElement.Load(string).

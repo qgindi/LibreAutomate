@@ -169,6 +169,14 @@
 		<Reference Include="MSTSCLib">
 		  <HintPath>..\_\MSTSCLib.dll</HintPath>
 		</Reference>
+		<Reference Include="NuGet.Configuration">
+		  <HintPath>$(ProgramFiles)\dotnet\sdk\$(NETCoreSdkVersion)\NuGet.Configuration.dll</HintPath>
+		  <Private>False</Private>
+		</Reference>
+		<Reference Include="NuGet.Versioning">
+		  <HintPath>$(ProgramFiles)\dotnet\sdk\$(NETCoreSdkVersion)\NuGet.Versioning.dll</HintPath>
+		  <Private>False</Private>
+		</Reference>
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

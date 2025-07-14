@@ -102,27 +102,26 @@ public static class KExtWpf {
 	/// <summary>
 	/// Adds button that can be used in a propertygrid row.
 	/// </summary>
-	public static void xAddButton(this wpfBuilder b, out Button button, string text, Action<WBButtonClickArgs> click) {
+	public static wpfBuilder xAddButton(this wpfBuilder b, out Button button, string text, Action<WBButtonClickArgs> click) {
 		b.AddButton(out button, text, click);
 		_xSetOther(b, button);
+		return b;
 	}
 	
 	/// <summary>
 	/// Adds button that can be used in a propertygrid row.
 	/// </summary>
-	public static void xAddButton(this wpfBuilder b, string text, Action<WBButtonClickArgs> click) => xAddButton(b, out _, text, click);
+	public static wpfBuilder xAddButton(this wpfBuilder b, string text, Action<WBButtonClickArgs> click) => xAddButton(b, out _, text, click);
 	
 	/// <summary>
 	/// Adds KCheckBox (<see cref="xAddCheck"/>) and other control (<see cref="xAddOther"/>) in a propertygrid row.
 	/// </summary>
-	/// <param name="b"></param>
 	/// <param name="name">Checkbox text.</param>
-	/// <param name="other"></param>
-	/// <param name="text">Other control text.</param>
-	public static KCheckBox xAddCheckAnd<T>(this wpfBuilder b, string name, out T other, string text = null) where T : FrameworkElement, new() {
-		xAddCheck(b, out KCheckBox c, name);
+	/// <param name="text">Text of other control.</param>
+	public static wpfBuilder xAddCheckAnd<T>(this wpfBuilder b, out KCheckBox r, string name, out T other, string text = null) where T : FrameworkElement, new() {
+		xAddCheck(b, out r, name);
 		xAddOther(b, out other, text);
-		return c;
+		return b;
 	}
 	
 	/// <summary>
@@ -148,25 +147,32 @@ public static class KExtWpf {
 	/// <summary>
 	/// Adds KCheckBox with icon like in a toolbar.
 	/// </summary>
-	public static KCheckBox xAddCheckIcon(this wpfBuilder b, string icon, string tooltip) {
-		b.Add(out KCheckBox c, ImageUtil.LoadWpfImageElement(icon)).Tooltip(tooltip);
-		c.Style = b.Panel.FindResource(ToolBar.CheckBoxStyleKey) as Style;
-		c.Focusable = false;
-		//var p = (c.Content as Viewbox).Child as System.Windows.Shapes.Path;
-		//c.Checked += (_, _) => p.Fill.Opacity = 1;
-		//c.Unchecked += (_, _) => p.Fill.Opacity = 0.3;
-		return c;
+	public static wpfBuilder xAddCheckIcon(this wpfBuilder b, out KCheckBox r, string icon, string tooltip, Action checkChanged = null) {
+		b.Add(out r, ImageUtil.LoadWpfImageElement(icon)).Tooltip(tooltip);
+		r.Style = b.Panel.FindResource(ToolBar.CheckBoxStyleKey) as Style;
+		r.Focusable = false;
+		if (checkChanged != null) r.CheckChanged += (_, _) => checkChanged();
+		//var p = (r.Content as Viewbox).Child as System.Windows.Shapes.Path;
+		//r.Checked += (_, _) => p.Fill.Opacity = 1;
+		//r.Unchecked += (_, _) => p.Fill.Opacity = 0.3;
+		return b;
 	}
 	
 	/// <summary>
 	/// Adds Button with icon like in a toolbar.
 	/// </summary>
-	public static Button xAddButtonIcon(this wpfBuilder b, string icon, Action<WBButtonClickArgs> click, string tooltip) {
-		b.AddButton(out Button c, ImageUtil.LoadWpfImageElement(icon), click).Tooltip(tooltip);
-		c.Style = b.Panel.FindResource(ToolBar.ButtonStyleKey) as Style;
-		c.Focusable = false;
-		return c;
+	public static wpfBuilder xAddButtonIcon(this wpfBuilder b, out Button r, string icon, Action<WBButtonClickArgs> click, string tooltip) {
+		b.AddButton(out r, ImageUtil.LoadWpfImageElement(icon), click).Tooltip(tooltip);
+		r.Style = b.Panel.FindResource(ToolBar.ButtonStyleKey) as Style;
+		r.Focusable = false;
+		return b;
 	}
+	
+	/// <summary>
+	/// Adds Button with icon like in a toolbar.
+	/// </summary>
+	public static wpfBuilder xAddButtonIcon(this wpfBuilder b, string icon, Action<WBButtonClickArgs> click, string tooltip)
+		=> xAddButtonIcon(b, out _, icon, click, tooltip);
 	
 	/// <summary>
 	/// Adds <b>Grid</b> with two horizontal separators and <b>TextBlock</b>.
@@ -344,9 +350,7 @@ public static class KExtWpf {
 	/// Adds icon-button "Help" for a control.
 	/// </summary>
 	public static wpfBuilder xAddControlHelpButton(this wpfBuilder t, Action<WBButtonClickArgs> click, string tooltip = null) {
-		xAddButtonIcon(t, "*Material.HelpCircleOutline #4080FF|#99CCFF", click, tooltip);
-		t.Margin(0);
-		return t;
+		return xAddButtonIcon(t, "*Material.HelpCircleOutline #4080FF|#99CCFF", click, tooltip).Margin(0);
 	}
 	
 	/// <summary>
@@ -365,9 +369,7 @@ public static class KExtWpf {
 				e.Handled = true;
 			}
 		};
-		xAddButtonIcon(t, "*Material.HelpBox #4080FF|#99CCFF", _ => clickF1(), "Help (F1)");
-		t.Width(24).Margin(20);
-		return t;
+		return xAddButtonIcon(t, "*Material.HelpBox #4080FF|#99CCFF", _ => clickF1(), "Help (F1)").Width(24).Margin(20);
 	}
 	
 	/// <summary>

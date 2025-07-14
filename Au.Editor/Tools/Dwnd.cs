@@ -47,7 +47,7 @@ class Dwnd : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize((500, 450..), (600, 430..)).Columns(-1);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
-		_cCapture = b.xAddCheckIcon("*Unicons.Capture" + Menus.red, $"Enable capturing ({App.Settings.delm.hk_capture}) and show window/control rectangles");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + Menus.red, $"Enable capturing ({App.Settings.delm.hk_capture}) and show window/control rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Execute the 'find' part of the code now and show the rectangle");
 		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!_dontInsert) b.Tooltip("Insert code in editor");
 		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind|finder").Tooltip("Function").Width(90);

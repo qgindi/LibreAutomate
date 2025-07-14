@@ -224,7 +224,8 @@ public unsafe partial class popupMenu {
 				r.left += _met.check;
 				
 				if (b.HasImage_) {
-					g.DrawImage(b.image2, r.left + _met.textPaddingY, r.top + (r.Height - _met.image) / 2, _met.image, _met.image);
+					try { g.DrawImage(b.image2, r.left + _met.textPaddingY, r.top + (r.Height - _met.image) / 2, _met.image, _met.image); }
+					catch (Exception ex) { Debug_.Print(ex); }
 				}
 				
 				r.left += _met.image + _met.textPaddingX; r.right -= _met.textPaddingX + _met.submenu + _met.submenuMargin;

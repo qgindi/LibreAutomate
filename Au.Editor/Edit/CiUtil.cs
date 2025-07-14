@@ -237,7 +237,7 @@ static class CiUtil {
 			if (forHelp && CiQuickInfo.GetIndexerToken(cd, token, out var tok2)) {
 				if (tok2.Parent is BracketedArgumentListSyntax { Parent: ElementAccessExpressionSyntax es }) {
 					if (cd.semanticModel.GetSymbolInfo(es).GetAnySymbol() is { } sym2) {
-						switch (popupMenu.showSimple([sym.Name, "[...]"], PMFlags.ByCaret)) {
+						switch (popupMenu.showSimple([sym.Name, "[...]"], PMFlags.ByCaret, rawText: true)) {
 						case 1: break;
 						case 2: sym = sym2; break;
 						default: return (null, null, default, token);

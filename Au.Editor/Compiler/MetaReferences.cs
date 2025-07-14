@@ -203,12 +203,20 @@ class MetaReferences {
 				if (cache[i].name.Eqi(reference) && _PropEq(cache[i], alias, isCOM)) goto g1;
 			}
 			
-			bool isFull = pathname.isFullPathExpand(reference, out string path);
-			if (!isFull && isCOM) { isFull = true; path = App.Model.WorkspaceDirectory + @"\.interop\" + path; }
-			if (!isFull) path = folders.ThisAppBS + path;
-			path = pathname.Normalize_(path);
-			if (!filesystem.exists(path, useRawPath: true).File) return false;
-			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
+			string path;
+			if (!(isCOM || isNuget) && reference.Starts("%^la.")) { //undocumented
+				if (reference.Starts(@"%^la.sdk%\")) {
+					if (!DotnetUtil.InitSdk()) return false;
+					path = DotnetUtil.SdkDir + reference[9..];
+				} else return false;
+			} else {
+				bool isFull = pathname.isFullPathExpand(reference, out path);
+				if (!isFull && isCOM) { isFull = true; path = App.Model.WorkspaceDirectory + @"\.interop\" + path; }
+				if (!isFull) path = folders.ThisAppBS + path;
+				path = pathname.Normalize_(path);
+				if (!filesystem.exists(path, useRawPath: true).File) return false;
+				//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
+			}
 			
 			for (i = 0; i < cache.Count; i++) {
 				if (cache[i].path.Eqi(path) && _PropEq(cache[i], alias, isCOM)) goto g1;
