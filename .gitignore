@@ -246,3 +246,4 @@ ModelManifest.xml
 *.bak
 /Au/global.json
 .tools/
+/Other/DocFX/_doc/cookbook
