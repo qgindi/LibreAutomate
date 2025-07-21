@@ -11,8 +11,10 @@ partial class AuDocs {
 		regexp rxEscape = new(@"[\!\#\$\%\&\'\(\)\*\+\-\/\:\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~]");
 		const string website = "https://www.libreautomate.com";
 		
-		var dirTo = docDir + @"\cookbook\";
+		string dirTo = @"C:\Temp\Au\DocFX\cookbook", dirToLink = docDir + @"\cookbook";
 		if (filesystem.exists(dirTo)) filesystem.delete(Directory.GetFiles(dirTo));
+		else filesystem.createDirectory(dirTo);
+		if (!filesystem.exists(dirToLink).IsNtfsLink) filesystem.more.createSymbolicLink(dirToLink, dirTo, CSLink.Directory);
 		
 		var dirFrom = folders.ThisAppBS + "..\\Cookbook\\files";
 		var xr = XmlUtil.LoadElem(dirFrom + ".xml");
@@ -33,7 +35,7 @@ partial class AuDocs {
 					if (tag != "s") continue;
 					var cspath = path + "\\" + name;
 					name = name[..^3];
-					var nameMd = name.Replace("#", "Sharp").Replace(".", "dot") + ".md"; //also in PanelCookbook._OpenRecipe
+					var nameMd = name.Replace("#", "Sharp").Replace(".", "dot-") + ".md"; //also in PanelCookbook.cs
 					sbToc.Append('#', level).AppendFormat(" [{0}]({1})\r\n", name, nameMd);
 					aFiles.Add((name, nameMd, cspath));
 				}
@@ -44,7 +46,7 @@ partial class AuDocs {
 		filesystem.saveText(dirTo + @"\toc.md", sbToc.ToString());
 		filesystem.saveText(dirTo + @"\index.md", """
 # Cookbook
-This is an online copy of the LibreAutomate C# Cookbook.
+This is an online copy of the LibreAutomate cookbook.
 """);
 		
 		foreach (var (name, nameMd, path) in aFiles) {
@@ -80,7 +82,7 @@ This is an online copy of the LibreAutomate C# Cookbook.
 			}
 			
 			if (test) print.it(b.ToString());
-			filesystem.saveText(dirTo + nameMd, b.ToString());
+			filesystem.saveText($@"{dirTo}\{nameMd}", b.ToString());
 			
 			string _Repl(RXMatch m) {
 				if (test) print.it(m);
@@ -167,10 +169,5 @@ This is an online copy of the LibreAutomate C# Cookbook.
 			
 			string _MarkdownEscape(string s) => rxEscape.Replace(s, @"\$0");
 		}
-	}
-	
-	public static void CookbookClear(string docDir) {
-		var dirTo = docDir + @"\cookbook\";
-		filesystem.delete(Directory.GetFiles(dirTo));
 	}
 }

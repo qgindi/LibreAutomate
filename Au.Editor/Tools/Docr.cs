@@ -385,36 +385,37 @@ If unchecked, returns false.");
 		var g = App.Settings.ocr ?? new();
 
 		var b = new wpfBuilder("OCR engine properties").WinSize(500);
+		b.Window.UseLayoutRounding = true;
 
 		_StartGroupBox("OcrWin10");
-		b.R.Add("Language", out ComboBox wLang, g.wLang).Editable().Tooltip("An installed language that supports OCR.\nIf empty, uses the default OCR language.");
+		b.R.Add("Language", out KComboExpressionBox wLang, g.wLang).Editable().Tooltip("An installed language that supports OCR.\nIf empty, uses the default OCR language.");
 		if (osVersion.minWin10) b.Items(true, cb => { try { cb.ItemsSource = new OcrWin10().AvailableLanguages.Select(o => o.tag); } catch { } });
 		b.End();
 
 		_StartGroupBox("OcrTesseract");
 		//b.R.AddButton("Download", _=> run.itSafe("https://github.com/UB-Mannheim/tesseract/wiki")); //the link is in doc
-		b.R.Add("Language", out ComboBox tLang, g.tLang).Editable().Tooltip("A language installed with Tesseract.\nIf empty, uses eng. Can be sevaral, like eng+deu.");
+		b.R.Add("Language", out KComboExpressionBox tLang, g.tLang).Editable().Tooltip("A language installed with Tesseract.\nIf empty, uses eng. Can be sevaral, like eng+deu.");
 		b.Items(true, cb => { try { cb.ItemsSource = new OcrTesseract().AvailableLanguages; } catch { } });
-		b.R.Add("Command line", out TextBox tCL, g.tCL).Tooltip("Additional tesseract.exe command line arguments.");
+		b.R.Add("Command line", out KTextExpressionBox tCL, g.tCL).Tooltip("Additional tesseract.exe command line arguments.");
 		b.End();
 
 		_StartGroupBox("OcrGoogleCloud");
-		b.R.Add("API key *", out TextBox gKey, g.gKey);
-		b.R.Add("Features", out TextBox gFeat, g.gFeat).Multiline().Tooltip("Feature type, like TEXT_DETECTION, or JSON of features array content.\nIf empty, uses DOCUMENT_TEXT_DETECTION.");
-		b.R.Add("Image context", out TextBox gIC, g.gIC).Multiline().Tooltip("JSON of imageContext.\nFor example can specify language (usually don't need).");
+		b.R.Add("API key *", out KComboExpressionBox gKey, g.gKey).Items("""@@Environment.GetEnvironmentVariable("API_KEY_1")""");
+		b.R.Add("Features", out KTextExpressionBox gFeat, g.gFeat).Multiline().Tooltip("Feature type, like TEXT_DETECTION, or JSON of features array content.\nIf empty, uses DOCUMENT_TEXT_DETECTION.");
+		b.R.Add("Image context", out KTextExpressionBox gIC, g.gIC).Multiline().Tooltip("JSON of imageContext.\nFor example can specify language (usually don't need).");
 		b.End();
 
 		_StartGroupBox("OcrMicrosoftAzure");
-		b.R.Add("Endpoint URL *", out TextBox mUrl, g.mUrl);
-		b.R.Add("API key *", out TextBox mKey, g.mKey);
+		b.R.Add("Endpoint URL *", out KComboExpressionBox mUrl, g.mUrl).Items("https://replacethis.cognitiveservices.azure.com/");
+		b.R.Add("API key *", out KComboExpressionBox mKey, g.mKey).Items("""@@Environment.GetEnvironmentVariable("API_KEY_2")""");
 		b.End();
 
 		b.R.StartGrid().Columns(-1, 0);
-		b.Add<Label>("* required");
+		b.Add<TextBlock>("* required");
 		b.AddOkCancel();
 		b.End();
 		b.End();
-
+		
 		if (!b.ShowDialog(this)) return;
 
 		g.wLang = _Text(wLang.Text);

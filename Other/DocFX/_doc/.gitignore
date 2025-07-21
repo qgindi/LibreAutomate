@@ -10,3 +10,4 @@ _site/
 _exported_templates/
 *.tar
 *.gz
+/test/

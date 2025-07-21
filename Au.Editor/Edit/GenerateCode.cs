@@ -316,6 +316,9 @@ static class GenerateCode {
 	static string _AccToString(ISymbol v) => v.DeclaredAccessibility switch { acc.Public => "public", acc.Internal => "internal", acc.Protected => "protected", acc.ProtectedOrInternal => "protected internal", acc.ProtectedAndInternal => "private protected", _ => "" };
 	
 	public static void ImplementInterfaceOrAbstractClass(int position = -1) {
+		//TODO: now ignores members that have default implementation.
+		//	It seems it worked well, but maybe broken in a new Roslyn version.
+		
 		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
 		var semo = cd.semanticModel;
 		

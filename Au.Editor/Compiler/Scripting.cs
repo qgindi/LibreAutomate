@@ -41,7 +41,7 @@ static class Scripting {
 		SyntaxTree treeGlobal = null;
 		if (addGlobalCs) {
 			static string _GetGlobalCsCode() {
-				var f = App.Model.Find("global.cs", FNFind.Class);
+				var f = App.Model.FindGlobalCs();
 				return f != null && f.GetCurrentText(out var s) ? s : null;
 			}
 			var gcode = Environment.CurrentManagedThreadId == 1 ? _GetGlobalCsCode() : App.Dispatcher.Invoke(_GetGlobalCsCode);

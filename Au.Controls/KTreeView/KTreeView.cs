@@ -259,7 +259,8 @@ public unsafe partial class KTreeView {
 	/// <summary>
 	/// Expands descendant folders and scrolls if need to make item actually visible.
 	/// </summary>
-	public void EnsureVisible(ITreeViewItem item, bool scrollTop = false) {
+	/// <returns>Item index.</returns>
+	public int EnsureVisible(ITreeViewItem item, bool scrollTop = false) {
 		int i = IndexOf(item);
 		if (i < 0) { //expand ancestor folders
 			if (!_Find(_itemsSource, item)) throw new ArgumentException();
@@ -278,6 +279,7 @@ public unsafe partial class KTreeView {
 			}
 		}
 		EnsureVisible(i, scrollTop);
+		return i;
 	}
 	
 	#endregion
@@ -549,9 +551,15 @@ public unsafe partial class KTreeView {
 	/// <param name="unselectOther">Unselect other items. Used only if <see cref="MultiSelect"/> true, else always unselects other items.</param>
 	/// <param name="focus">Make the item focused and ensure visible.</param>
 	/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
-	/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>select</i> false.</exception>
+	/// <exception cref="ArgumentException"><i>item</i> not found in this control. No exception if <i>select</i> false.</exception>
 	public void Select(ITreeViewItem item, bool select = true, bool unselectOther = false, bool focus = false, bool scrollTop = false) {
-		if (!_IndexOfOrThrowIfImportant(select, item, out int i)) return; //ok if tries to unselect an already unselected item in a collapsed folder
+		int i;
+		if (select) {
+			i = EnsureVisible(item, scrollTop);
+		} else {
+			i = IndexOf(item);
+			if (i < 0) return; //ok if tries to unselect an already unselected item in a collapsed folder
+		}
 		Select(i, select, unselectOther, focus, scrollTop);
 	}
 	
@@ -596,11 +604,11 @@ public unsafe partial class KTreeView {
 	public void SelectSingle(int index, bool andFocus, bool scrollTop = false) => Select(index, true, true, andFocus, scrollTop);
 	
 	/// <summary>
-	/// Selects item, unselects others, optionally makes the focused.
+	/// Selects item and unselects others. Makes visible and focused.
 	/// </summary>
-	/// <param name="andFocus">Make the item focused and ensure visible.</param>
 	/// <param name="scrollTop">Scroll if need so that the item would be at the top of really visible range.</param>
-	public void SelectSingle(ITreeViewItem item, bool andFocus, bool scrollTop = false) => Select(item, true, true, andFocus, scrollTop);
+	/// <exception cref="ArgumentException"><i>item</i> not found in this control.</exception>
+	public void SelectSingle(ITreeViewItem item, bool scrollTop = false) => Select(item, true, true, true, scrollTop);
 	
 	void _ShiftSelect(int last) {
 		int from; if (last >= _focusedIndex) from = Math.Max(_focusedIndex, 0); else { from = last; last = _focusedIndex; }

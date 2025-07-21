@@ -226,7 +226,7 @@ class CiProjects {
 		
 		static HashSet<FileNode> _GetGlobals() {
 			HashSet<FileNode> h = new();
-			var g = App.Model.Find("global.cs", FNFind.Class);
+			var g = App.Model.FindGlobalCs();
 			if (g != null) _File(g);
 			void _File(FileNode f) {
 				if (!h.Add(f)) return;

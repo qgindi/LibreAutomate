@@ -7,7 +7,7 @@ using Au.Tools;
 
 partial class PanelFiles {
 	FilesModel.FilesView _tv;
-	TextBox _tFind;
+	KTextBox _tFind;
 	timer _timerFind;
 	FileNode _firstFoundFile;
 	KPopup _ttError;
@@ -33,7 +33,6 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 		
 		_tFind.TextChanged += (_, _) => { (_timerFind ??= new(_ => _Find())).After(_tFind.Text.Length switch { 1 => 1200, 2 => 600, _ => 300 }); };
 		_tFind.GotKeyboardFocus += (_, _) => P.Dispatcher.InvokeAsync(() => _tFind.SelectAll());
-		_tFind.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tFind.Clear(); };
 		_tFind.KeyDown += (_, e) => { if (e.Key is Key.Enter && _firstFoundFile != null) App.Model.OpenAndGoTo(_firstFoundFile); };
 		
 		_tv.EditLabelStarted += e => {

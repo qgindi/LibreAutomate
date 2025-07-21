@@ -78,7 +78,7 @@ public abstract partial class MTBase {
 	/// Execute item actions asynchronously in new threads.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
-	/// <value>Default: <b>toolbar</b> <c>true</c><b>, popupMenu</b> <c>false</c>.</value>
+	/// <value>Default: <b>toolbar</b> <c>true</c>, <b>popupMenu</b> <c>false</c>.</value>
 	/// <remarks>
 	/// If current thread is a UI thread (has windows etc) or has triggers or hooks, and item action functions execute some long automations etc in current thread, current thread probably is hung during that time. Set this property = <c>true</c> to avoid it.
 	/// </remarks>
@@ -88,14 +88,14 @@ public abstract partial class MTBase {
 	/// Whether to handle exceptions in item action code. If <c>false</c> (default), handles exceptions and on exception calls <see cref="print.warning"/>.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
-	/// <value>Default: <b>toolbar</b> <c>false</c><b>, popupMenu</b> <c>false</c>.</value>
+	/// <value>Default: <b>toolbar</b> <c>false</c>, <b>popupMenu</b> <c>false</c>.</value>
 	public bool ActionException { get; set; }
 	
 	/// <summary>
 	/// If an item has file path, show it in tooltip.
 	/// This property is applied to items added afterwards; submenus inherit it.
 	/// </summary>
-	/// <value>Default: <b>toolbar</b> <c>false</c><b>, popupMenu</b> <c>false</c>.</value>
+	/// <value>Default: <b>toolbar</b> <c>false</c>, <b>popupMenu</b> <c>false</c>.</value>
 	public bool PathInTooltip { get; set; }
 	
 	/// <summary>

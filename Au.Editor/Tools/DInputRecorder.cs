@@ -346,8 +346,7 @@ class DInputRecorder : KDialogWindow {
 		}
 	}
 	
-	record _RecoWin : _Reco //wnd.Activate, wnd.WaitForName, base of _RecoWinFind
-	{
+	record _RecoWin : _Reco { //wnd.Activate, wnd.WaitForName, base of _RecoWinFind
 		public int varName;
 		public int waitS;
 		public bool activate;

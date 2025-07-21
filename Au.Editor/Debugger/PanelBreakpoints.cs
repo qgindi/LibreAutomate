@@ -181,7 +181,7 @@ class PanelBreakpoints {
 			else folder.AddChild(b);
 			
 			_TvSetItems(true);
-			_TvSelect(b);
+			_tv.SelectSingle(b);
 			_SaveLater();
 			
 			if (logpoint) _BreakpointProperties(b, doc);
@@ -292,16 +292,11 @@ Not all kinds of expressions are supported.
 		}
 	}
 	
-	void _TvSelect(_Item b) {
-		if (!b.IsFolder && !b.Parent.IsExpanded) _tv.Expand(b.Parent, true);
-		_tv.SelectSingle(b, true);
-	}
-	
 	void _ContextMenu(_Item b) {
 		var m = new popupMenu();
 		
 		if (b != null) {
-			_TvSelect(b);
+			_tv.SelectSingle(b);
 			
 			if (b.IsFolder) {
 				m["Move up\tShift+Up", disable: b.Previous == null] = o => _MoveFolder(b, true);

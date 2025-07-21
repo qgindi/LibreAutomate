@@ -26,7 +26,7 @@ class DIcons : KDialogWindow {
 	int _dpi;
 	//bool _withCollection;
 	KTreeView _tv;
-	TextBox _tName;
+	KTextBox _tName;
 	KScintilla _tCustom;
 	
 	DIcons(bool randomizeColors, bool expandFileIcon, bool expandMenuIcon) {
@@ -42,7 +42,6 @@ Part of icon name, or wildcard expression.
 Examples: part, Part (match case), start*, *end, **rc regex case-sensitive.
 Can be Pack.Icon, like Material.Folder.")
 			.Dock(Dock.Top).Focus();
-		_tName.PreviewMouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _tName.Clear(); };
 		//b.Focus(); //currently cannot use this because of WPF tooltip bugs
 		b.xAddInBorder(out _tv);
 		_tv.ImageBrush = System.Drawing.Brushes.White;

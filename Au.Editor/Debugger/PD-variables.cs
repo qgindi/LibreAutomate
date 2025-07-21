@@ -197,7 +197,7 @@ partial class PanelDebug {
 			_watch.AddWatch(v);
 			_tvVariables.SetItems(_aVar, true);
 			_tvVariables.Expand(1, true);
-			_tvVariables.SelectSingle(v, true);
+			_tvVariables.SelectSingle(v);
 		}
 	}
 	

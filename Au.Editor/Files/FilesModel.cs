@@ -1,3 +1,7 @@
+//TODO: idea: in each directory auto-create-update a hidden file containing a copy of files.xml branch for that directory. Benefits:
+//	Could recreate the ordering etc when the folder imported into another workspace.
+//	Could recreate deleted or corrupt files.xml.
+
 using System.Xml.Linq;
 using System.IO.Compression;
 using System.Windows.Input;
@@ -204,7 +208,6 @@ partial class FilesModel {
 	}
 	
 	static bool s_isNewWorkspace;
-	internal bool NoGlobalCs_; //used by MetaComments.Parse
 	
 	public event Action ThisWorkspaceLoadedAndDocumentsOpened;
 	public static event Action AnyWorkspaceLoadedAndDocumentsOpened;
@@ -406,6 +409,49 @@ partial class FilesModel {
 	public FileNode[] FindAllFiles(string name) {
 		return Root.FindAllDescendantFiles(name);
 	}
+	
+	/// <summary>
+	/// Finds class file "global.cs".
+	/// If multiple exist, ignores external files and prefers "\Classes\global.cs".
+	/// </summary>
+	/// <param name="silent">Don't print warnings when not found or found multiple.</param>
+	/// <returns>null if not found or if found multiple and could not pick the best.</returns>
+	public FileNode FindGlobalCs(bool silent = false) {
+		FoundMultiple = null;
+		if (_nameMap.MultiGet_("global.cs", out FileNode g, out var a)) {
+			if (g != null) {
+				if (!g.IsClass) g = null;
+			} else {
+				for (int i = a.Count; --i >= 0;) if (!a[i].IsClass) a.RemoveAt(i);
+				if (a.Count == 1) g = a[0];
+				else if (a.Count > 0) {
+					foreach (var v in a) if (v.Parent.Parent == Root && v.Parent.Name.Eqi("Classes")) { g = v; break; } //prefer default location
+					if (g is null) { //find single non-external
+						foreach (var v in a) {
+							if (v.IsExternal) continue;
+							if (g is null) g = v; else { g = null; break; }
+						}
+						if (g is null) FoundMultiple = a;
+					}
+				}
+			}
+		}
+		if (g != null) {
+			_noGlobalCsWarning = false;
+			return g;
+		}
+		if (!silent) {
+			if (FoundMultiple != null) {
+				print.warning(@"Cannot use class file 'global.cs', because multiple exist, and none of them is \Classes\global.cs (default location).", -1);
+			} else if (!_noGlobalCsWarning) {
+				_noGlobalCsWarning = true;
+				Panels.Output.Scintilla.AaTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
+				print.warning("Missing class file \"global.cs\". <+restoreGlobal>Create<>.", -1, "<>");
+			}
+		}
+		return null;
+	}
+	bool _noGlobalCsWarning;
 	
 	#endregion
 	
@@ -1217,10 +1263,18 @@ partial class FilesModel {
 		ImportFiles(a, _GetInsertPos(), flags);
 	}
 	
-	public void ImportFiles(string[] a, FNInsertPos ipos, ImportFlags flags = 0) {
+	/// <summary>
+	/// Imports one or more files or/and folders.
+	/// </summary>
+	/// <param name="a"></param>
+	/// <param name="ipos"></param>
+	/// <param name="flags"></param>
+	/// <returns>The first imported item, or null if failed.</returns>
+	public FileNode ImportFiles(string[] a, FNInsertPos ipos, ImportFlags flags = 0) {
+		FileNode fReturn = null;
 		try {
 			a = a.Select(s => filesystem.more.getFinalPath(s, out s, format: FPFormat.PrefixNever) ? s : null).OfType<string>().ToArray();
-			if (a.Length == 0) return;
+			if (a.Length == 0) return null;
 			var newParent = ipos.ParentFolder;
 			
 			//need to detect files coming from the workspace. Get path of the workspace files dir and target paths of all link folders.
@@ -1240,25 +1294,25 @@ partial class FilesModel {
 				var s = a[i];
 				if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
 					print.it($"<>Cannot import files directly from Recycle Bin.");
-					return;
+					return null;
 				}
 				if (wsDirs.FirstOrDefault(o => o.PathStarts(s, orEquals: true)) is { } s2) {
 					print.it($"<>Cannot import. The folder {(s2.Eqi(s) ? "already is" : "contains a folder that is")} in the workspace. {FindByFilePath(s2)?.SciLink(true)}");
-					return;
+					return null;
 				}
 				if (wsDirs.Any(o => s.PathStarts(o))) {
-					if (action != 0) return; //unlikely
+					if (action != 0) return null; //unlikely
 					var f1 = FindByFilePath(s);
 					if (f1 != null) {
 						var sff = f1.IsFolder ? "folder" : "file";
 						if (a.Length > 1) {
 							print.it($"<>Cannot import. The {sff} already is in the workspace. {f1.SciLink(true)}. Try to import single file.");
-							return;
+							return null;
 						}
 						int dr = dialog.show("Import files", $"The {sff} already is in the workspace.\n\n{f1.ItemPath}", "2 Open the existing|1 Create link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
 						if (dr != 1) {
 							if (dr == 2) f1.Model.SetCurrentFile(f1);
-							return;
+							return null;
 						}
 						action = ImportFlags.Link;
 						dontPrint = true;
@@ -1269,7 +1323,7 @@ partial class FilesModel {
 					}
 				}
 			}
-			if (fromWorkspaceDir > 0 && fromWorkspaceDir < a.Length) return; //some files from workspace dir and some not. Unlikely.
+			if (fromWorkspaceDir > 0 && fromWorkspaceDir < a.Length) return null; //some files from workspace dir and some not. Unlikely.
 			
 			if (action == 0) {
 				if (fromWorkspaceDir > 0) {
@@ -1278,7 +1332,7 @@ partial class FilesModel {
 					var ab = new[] { "2 Copy to the workspace", "3 Move to the workspace", "1 Create link", "0 Cancel" };
 					int dr = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
 					action = dr switch { 1 => ImportFlags.Link, 2 => ImportFlags.Copy, 3 => ImportFlags.Move, _ => 0 };
-					if (action == 0) return;
+					if (action == 0) return null;
 				}
 			}
 			
@@ -1330,6 +1384,7 @@ partial class FilesModel {
 						//_rootLF?.Add(k);
 						_syncWatchers?.Add(k);
 					}
+					fReturn ??= k;
 				}
 				
 				if (!dontPrint) {
@@ -1353,6 +1408,7 @@ partial class FilesModel {
 			}
 		}
 		catch (Exception e1) { print.it(e1); }
+		return fReturn;
 	}
 	
 	class _ImportRename {
@@ -1382,6 +1438,23 @@ partial class FilesModel {
 				else print.it($"<>File {f.SciLink(false)} has been renamed{s1}. Original name: \"{oldName}\".");
 			}
 		}
+	}
+	
+	/// <summary>
+	/// Finds a file or directory by path in the workspace. If not found, imports as link. Opens/selects.
+	/// </summary>
+	/// <param name="file">Full path.</param>
+	/// <param name="ipos">If default, inserts at the top.</param>
+	/// <returns>The imported item, or null if failed.</returns>
+	public FileNode ImportLinkOrOpen(string file, FNInsertPos ipos = default) {
+		var k = filesystem.exists(file); if (!k) return null;
+		var f = FindByFilePath(file, k.Directory ? FNFind.Folder : FNFind.File);
+		if (f is null) {
+			if (ipos.f is null) ipos = new(Root, FNInsert.First);
+			f = ImportFiles([file], ipos, ImportFlags.Link | ImportFlags.DontPrint | ImportFlags.DontSelect);
+			if (f is null) return null;
+		}
+		return SetCurrentFile(f) ? f : null;
 	}
 	
 	/// <summary>
@@ -1792,7 +1865,7 @@ partial class FilesModel {
 		if (scriptForNewWorkspace && Root.FirstChild == null) {
 			NewItem(@"Script.cs");
 		}
-		if (globalCs && null == Find("global.cs", FNFind.Class) && FoundMultiple == null) {
+		if (globalCs && null == FindGlobalCs(silent: true) && FoundMultiple == null) {
 			var folder = Find(@"\Classes", FNFind.Folder) ?? NewItemL(null, new(Root, FNInsert.Last), "Classes");
 			NewItemL(@"Default\global.cs", new(folder, FNInsert.Last));
 		}
@@ -1860,7 +1933,7 @@ partial class FilesModel {
 	/// </summary>
 	public bool TryFileOperation(FOSync fos, Action action) {
 		_syncWatchers?.FileOperationStarted(fos);
-		try { action(); return true;}
+		try { action(); return true; }
 		catch (Exception ex) { print.warning(ex); return false; }
 		finally { _syncWatchers?.FileOperationEnded(fos); }
 	}

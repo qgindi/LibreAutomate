@@ -5,8 +5,6 @@ using System.Windows.Input;
 
 namespace Au.Controls;
 
-//TODO3: Esc, Arrows, etc don't work in HwndHost-ed windows, eg Output History.
-
 /// <summary>
 /// Simple <see cref="Popup"/> with child <see cref="ListBox"/>.
 /// </summary>
@@ -37,38 +35,51 @@ public class KPopupListBox : Popup {
 	/// </summary>
 	public event Action<object> OK;
 	
-	///
-	protected override void OnOpened(EventArgs e) {
-		_lb.Focus();
-		base.OnOpened(e);
-	}
-	
-	///
-	protected override void OnKeyDown(KeyEventArgs e) {
-		switch (e.Key) {
-		case Key.Enter: _Close(true, e); break;
-		case Key.Escape: _Close(false, e); break;
-		}
-		base.OnKeyDown(e);
-	}
-	
-	void _Close(bool ok, RoutedEventArgs e) {
-		e.Handled = true;
+	void _CloseOK() {
 		IsOpen = false;
-		PlacementTarget?.Focus();
-		
-		if (ok) {
-			var v = _lb.SelectedItem;
-			if (v != null) OK?.Invoke(v);
-		}
+		if (_lb.SelectedItem is { } v) OK?.Invoke(v);
 	}
 	
 	///
 	protected override void OnMouseUp(MouseButtonEventArgs e) {
 		switch (e.ChangedButton) {
-		case MouseButton.Left: _Close(true, e); break;
-		case MouseButton.Middle: _Close(false, e); break;
+		case MouseButton.Left: _CloseOK(); break;
+		case MouseButton.Middle: IsOpen = false; break;
 		}
 		base.OnMouseUp(e);
 	}
+	
+	#region steal keyboard from the focused HwndHost-ed control
+	
+	protected override void OnKeyUp(KeyEventArgs e) { //if OnKeyDown, next time Esc defocuses the HwndHost-ed control
+		switch (e.Key) {
+		case Key.Enter: _CloseOK(); break;
+		case Key.Escape: IsOpen = false; break;
+		}
+		base.OnKeyUp(e);
+	}
+	
+	protected override void OnOpened(EventArgs e) {
+		_lb.Focus();
+		base.OnOpened(e);
+		_hook = WindowsHook.ThreadKeyboard(_Hook);
+	}
+	WindowsHook _hook; //also tested ComponentDispatcher.ThreadPreprocessMessage, but it does not steal messages from HwndHost-ed controls
+	
+	protected override void OnClosed(EventArgs e) {
+		_hook?.Dispose();
+		_hook = null;
+		base.OnClosed(e);
+	}
+	
+	bool _Hook(HookData.ThreadKeyboard k) {
+		if (!_lb.IsKeyboardFocusWithin) return false;
+		if (PresentationSource.FromVisual(_lb) is not { } inputSource) return false;
+		var key = KeyInterop.KeyFromVirtualKey((int)k.key);
+		var e = new KeyEventArgs(Keyboard.PrimaryDevice, inputSource, 0, key) { RoutedEvent = k.IsUp ? Keyboard.KeyUpEvent : Keyboard.KeyDownEvent };
+		_lb.RaiseEvent(e);
+		return true;
+	}
+	
+	#endregion
 }

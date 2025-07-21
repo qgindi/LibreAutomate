@@ -231,8 +231,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 	}
 	
 	void _SelectAndOpen(_Custom t) {
-		_tv.SelectSingle(t, andFocus: true);
-		_tv.EnsureVisible(t);
+		_tv.SelectSingle(t);
 		if (t != _ti) _Open(t);
 	}
 	

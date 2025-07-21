@@ -25,6 +25,7 @@ e = w.Elm["web:COMBOBOX", prop: "@name=postdate"].Find(1);
 e.ComboSelect("*3 months*");
 
 /// Get element HTML and attributes.
+/// Note: this is very limited. Use <+recipe>Playwright<> instead.
 
 var ec = w.Elm["web:CHECKBOX", prop: "@name=matchusername"].Find(1);
 var html = ec.Html(outer: true);
@@ -37,6 +38,7 @@ string attrValue = ec.HtmlAttribute("checked");
 print.it(attrValue);
 
 /// Get web page name, address (URL) and body HTML.
+/// Note: to get HTML use <+recipe>Playwright<> instead; this is limited.
 
 var ep = w.Elm["web:DOCUMENT"].Find(1);
 var name = ep.Name;

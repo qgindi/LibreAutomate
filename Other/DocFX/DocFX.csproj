@@ -22,6 +22,9 @@
     <None Include="_doc\**" />
     <None Remove="_doc\_site\**" />
     <None Remove="_doc\_exported_templates\**" />
+    <None Remove="_doc\cookbook\**" />
+    <None Remove="_doc\api\*.yml" />
+    <None Remove="_doc\api\.manifest" />
   </ItemGroup>
 
 </Project>

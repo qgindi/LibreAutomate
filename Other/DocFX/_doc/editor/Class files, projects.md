@@ -59,3 +59,17 @@ class Class1 {
 When the first option in `/*/ ... /*/` is **role** other than `classFile` (like in the example), `define TEST` and other incompatible options are ignored when the class file is compiled as part of another script etc (for example the `TEST` symbol isn't added to the compilation). Else such options then cannot be used (error).
 
 This does not work if the class file is in a project. See [ScriptEditor.TestCurrentFileInProject]().
+
+### File `global.cs`
+Class file `global.cs` is automatically included in the compilation of every script, as if the script begins with `/*/ c global.cs /*/`. To exclude it where not needed, add `/*/ define NO_GLOBAL; /*/`.
+
+ By default, `global.cs` contains `global using` directives for commonly used namespaces.
+ 
+ You can edit this file. For example:
+- Add/remove global usings, classes, attributes.
+- Add more class files and library references, like `/*/ c \Classes\file.cs; r Lib.dll; nuget folder\Package; /*/`.
+- Edit completion list filters (see examples in the default code).
+
+Note: editing this file affects all C# code files, not only files created afterward.
+
+If the `global.cs` file is missing, scripts cannot compile, and the program prints a warning with a link to create a new `global.cs` file with the default content. If multiple class files named `global.cs` exist in the workspace, the program uses the one in the default location: `\Classes\global.cs`. If that file is missing, it uses a non-external `global.cs` file if a single such file exists.

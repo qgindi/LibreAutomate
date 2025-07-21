@@ -46,7 +46,7 @@ class PanelOpen {
 			App.Model.SetCurrentFile(f);
 			break;
 		case MouseButton.Right:
-			_tv.SelectSingle(e.Item, andFocus: false);
+			_tv.SelectSingle(e.Item);
 			_ContextMenu(f);
 			break;
 		case MouseButton.Middle:

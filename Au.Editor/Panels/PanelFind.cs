@@ -1,10 +1,12 @@
+//TODO: add icon-button "Pinned" (or "Saved"). Shows menu: "Pin this", "Unpin this" (or "Edit pinned items"), list of pinned items.
+
 using Au.Controls;
 using Au.Tools;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Media;
-using System.Windows.Documents;
+using System.Windows.Data;
 
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
@@ -53,6 +55,7 @@ class PanelFind {
 		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
 		
 		b.xAddButtonIcon(Menus.iconRegex, _ => { _cRegex.IsChecked = true; _ShowRegexInfo(_tReplace.IsFocused ? _tReplace : _tFind); }, "Regex tool");
+		b.xAddButtonIcon("*MaterialDesign.SavedSearch" + Menus.blue, _SavedSearches, "Saved searches");
 		
 		b.End();
 		
@@ -220,11 +223,11 @@ class PanelFind {
 	}
 	
 	void _Options() {
-		var b = new wpfBuilder("Find text options").WinSize(350);
+		var b = new wpfBuilder("Find text options").WinSize(420);
 		b.R.StartGrid<KGroupBox>("Find in files");
 		b.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|Other files").Select(_SearchIn);
 		b.R.Add(
-			new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "Skip files whose paths in workspace match a wildcard from this list" },
+			new TextBlock() { TextWrapping = TextWrapping.Wrap, Text = "Skip files whose workspace paths match a wildcard from this list" },
 			out TextBox tSkip,
 			App.Settings.find_skip,
 			row2: 0)
@@ -340,6 +343,14 @@ This setting also is used by 'Find references' etc.
 			&& ttf.wholeWord == wholeWord
 			&& (ttf.rx != null) == (rx != null);
 		//ignore filter
+		
+		public int OptionsInt {
+			get {
+				int r = matchCase ? 1 : 0;
+				if (wholeWord) r |= 2; else if (rx != null) r |= 4;
+				return r | (filter << 8);
+			}
+		}
 	}
 	
 	bool _GetTextToFind(out _TextToFind ttf, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false) {
@@ -805,7 +816,7 @@ This setting also is used by 'Find references' etc.
 	
 	#endregion
 	
-	#region recent
+	#region recent, saved
 	
 	string _recentPrevFind, _recentPrevReplace;
 	int _recentPrevOptions;
@@ -813,9 +824,8 @@ This setting also is used by 'Find references' etc.
 	//temp is false when clicked a button, true when changed the find text or a checkbox.
 	void _AddToRecent(_TextToFind ttf, bool onlyRepl = false) {
 		if (!onlyRepl) {
-			int k = ttf.matchCase ? 1 : 0; if (ttf.wholeWord) k |= 2; else if (ttf.rx != null) k |= 4;
-			k |= _filter << 8;
-			if (ttf.findText != _recentPrevFind || k != _recentPrevOptions) _Add(false, _recentPrevFind = ttf.findText, _recentPrevOptions = k);
+			int options = ttf.OptionsInt;
+			if (ttf.findText != _recentPrevFind || options != _recentPrevOptions) _Add(false, _recentPrevFind = ttf.findText, _recentPrevOptions = options);
 		}
 		if (!ttf.replaceText.NE() && ttf.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = ttf.replaceText, 0);
 		
@@ -824,9 +834,9 @@ This setting also is used by 'Find references' etc.
 			var ri = new _RecentItem(text, options);
 			var a = _RecentLoad(replace);
 			if (a.NE_()) a = new _RecentItem[] { ri };
-			else if (a[0].t == text) a[0] = ri;
+			else if (a[0].text == text) a[0] = ri;
 			else {
-				for (int i = a.Length; --i > 0;) if (a[i].t == text) a = a.RemoveAt(i); //no duplicates
+				for (int i = a.Length; --i > 0;) if (a[i].text == text) a = a.RemoveAt(i); //no duplicates
 				if (a.Length > 29) a = a[0..29]; //limit count
 				a = a.InsertAt(0, ri);
 			}
@@ -841,18 +851,19 @@ This setting also is used by 'Find references' etc.
 		var p = new KPopupListBox { PlacementTarget = k };
 		var c = p.Control;
 		foreach (var v in a) c.Items.Add(v);
-		p.OK += o => {
-			var r = o as _RecentItem;
-			k.aaaText = r.t;
-			if (!replace) {
-				int g = r.o;
-				_cCase.IsChecked = 0 != (g & 1);
-				_cWord.IsChecked = 0 != (g & 2);
-				_cRegex.IsChecked = 0 != (g & 4);
-				_SetFilter(g >> 8 & 3);
-			}
-		};
+		p.OK += o => _RecentUse(o as _RecentItem, k);
 		P.Dispatcher.InvokeAsync(() => p.IsOpen = true);
+	}
+	
+	void _RecentUse(_RecentItem r, KScintilla k) {
+		k.aaaText = r.text;
+		if (k == _tFind) {
+			int g = r.options;
+			_cCase.IsChecked = 0 != (g & 1);
+			_cWord.IsChecked = 0 != (g & 2);
+			_cRegex.IsChecked = 0 != (g & 4);
+			_SetFilter(g >> 8 & 3);
+		}
 	}
 	
 	static _RecentItem[] _RecentLoad(bool replace) {
@@ -869,16 +880,86 @@ This setting also is used by 'Find references' etc.
 	static void _RecentSave(bool replace, _RecentItem[] a) {
 		var x = new csvTable { ColumnCount = 2, RowCount = a.Length };
 		for (int i = 0; i < a.Length; i++) {
-			x[i][0] = a[i].o.ToS();
-			x[i][1] = a[i].t;
+			x[i][0] = a[i].options.ToS();
+			x[i][1] = a[i].text;
 		}
 		x.Save(_RecentFile(replace));
 	}
 	
 	static string _RecentFile(bool replace) => AppSettings.DirBS + (replace ? "Recent replace.csv" : "Recent find.csv");
 	
-	record _RecentItem(string t, int o) {
-		public override string ToString() => t.Limit(200); //ListBox item display text
+	record _RecentItem(string text, int options) {
+		public override string ToString() => text.Limit(200); //ListBox item display text
+	}
+	
+	record _SavedItem(string name, string text, int options, string repl) : _RecentItem(text, options) {
+		public override string ToString() => name; //ListBox item display text
+	}
+	
+	void _SavedSearches(WBButtonClickArgs ba) {
+		string file = AppSettings.DirBS + "Saved searches.csv";
+		
+		Panels.Editor.SyncEditorTextIfFileIs(file, true);
+		
+		var p = new KPopupListBox { PlacementTarget = ba.Button };
+		var c = p.Control;
+		
+		c.Items.Add("Save this search...");
+		c.Items.Add("Edit saved searches");
+		c.Items.Add(new Separator());
+		
+		if (filesystem.exists(file, true).File) {
+			var x = csvTable.load(file); //note: no try/catch. If bad format, shows an exception mesage box with error description.
+			if (x.ColumnCount < 4) x.ColumnCount = 4;
+			foreach (var r in x.Rows) if (r[0].NE()) r[0] = r[2]?.Limit(200);
+			foreach (var r in x.Rows.OrderBy(o => o[0], StringComparer.OrdinalIgnoreCase)) {
+				if (!r[1].NE()) c.Items.Add(new _SavedItem(r[0], r[2], r[1].ToInt(), r[3]));
+			}
+		}
+		
+		(c.ItemContainerStyle = new(typeof(ListBoxItem))).Setters.Add(new Setter(ListBoxItem.ToolTipProperty, new Binding("text")));
+		
+		p.OK += o => {
+			if (o is _SavedItem g) {
+				if (g.repl is string repl) { _tReplace.Focus(); _tReplace.aaaText = repl; }
+				_tFind.Focus();
+				_RecentUse(g, _tFind);
+			} else if (o == c.Items[0]) { //Save this
+				if (!_GetTextToFind(out var ttf, noRecent: true)) return; //info: returns false if text empty or regex invalid (shows tooltip)
+				string replace = _tReplace.aaaText.NullIfEmpty_();
+				
+				var b = new wpfBuilder("Save this search").WinSize(400);
+				b.R.Add("Name (optional)", out TextBox tName).Focus();
+				b.R.Add(out KCheckBox cAndReplace, "Include the Replace field").Disabled(replace.NE());
+				b.R.AddOkCancel();
+				b.Window.ShowInTaskbar = false;
+				if (!b.ShowDialog(App.Wmain)) return;
+				
+				var x = filesystem.exists(file, true).File ? csvTable.load(file) : new();
+				if (x.ColumnCount < 4) x.ColumnCount = 4;
+				if (x.RowCount == 0) { x.AddRow(); x.AddRow("CSV: name, flags, findText, replaceText"); }
+				string name = tName.Text.NullIfEmpty_(), text = ttf.findText, options = ttf.OptionsInt.ToS();
+				if (!cAndReplace.IsChecked) replace = null;
+				string[] dup = null;
+				var dupName = name is null ? null : x.Rows.FirstOrDefault(o => o[0]?.Eqi(name) == true);
+				var dupText = x.Rows.FirstOrDefault(o => o[2]?.Eqi(text) == true);
+				if (dupName != null || dupText != null) {
+					switch (dialog.show("Replace existing?", $"A search with this {(dupName is null ? "text" : "name")} is already saved.", "1 Replace|2 Add new|0 Cancel", owner: App.Hmain)) {
+					case 1: dup = dupName ?? dupText; break;
+					case 2: break;
+					default: return;
+					}
+				}
+				if (dup != null) (dup[0], dup[1], dup[2], dup[3]) = (name, options, text, replace);
+				else x.InsertRow(0, name, options, text, replace);
+				x.Save(file);
+				Panels.Editor.SyncEditorTextIfFileIs(file, false);
+			} else if (o == c.Items[1]) { //Edit saved searches
+				App.Model.ImportLinkOrOpen(file);
+			}
+		};
+		
+		p.IsOpen = true;
 	}
 	
 	#endregion

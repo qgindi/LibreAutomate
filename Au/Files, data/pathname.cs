@@ -509,7 +509,7 @@ namespace Au {
 		/// Usually returns valid filename, however it can be too long (itself or when combined with a directory path).
 		/// </remarks>
 		public static string correctName(string name, string invalidCharReplacement = "-") {
-			if (name == null || (name = name.Trim()).Length == 0) return "-";
+			if (name == null || (name = name.Trim()).Length == 0) return invalidCharReplacement;
 			name = _rxInvalidFN1.Replace(name, invalidCharReplacement).Trim();
 			if (_rxInvalidFN2.IsMatch(name)) name = "@" + name;
 			return name;

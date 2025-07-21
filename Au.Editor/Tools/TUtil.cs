@@ -12,27 +12,34 @@ static class TUtil {
 	#region text
 	
 	/// <summary>
-	/// Appends ', ' and string argument to this StringBuilder.
+	/// Appends `, ` and string argument.
 	/// </summary>
 	/// <param name="t"></param>
-	/// <param name="s">Argument value. If null, appends 'null'. If verbatim (like '@"text"'), appends 's'. Else appends '"escaped s"'; can make verbatim.</param>
-	/// <param name="param">If not null, appends 'param: s'. By default appends only 's'. If "null", appends 'null, s'.</param>
-	/// <param name="noComma">Don't append ', '. If false, does not append if b.Length is less than 2 or if b ends with one of: <c>,([{&lt;</c>.</param>
+	/// <param name="s">
+	/// Argument value.
+	/// If null, appends `null`.
+	/// Else if like `@@expression`, appends `expression`.
+	/// Else if matches `@"*"` or `$"*"` or `$@"*"` or `@$"*"`, appends `s`.
+	/// Else appends `"escaped s"`; can make verbatim.
+	/// </param>
+	/// <param name="param">If not null, appends `param: s`. By default appends only `s`. If "null", appends `null, s`.</param>
+	/// <param name="noComma">Don't append `, `. If false, does not append if b.Length is less than 2 or if b ends with one of: <c>,([{&lt;</c>.</param>
 	public static StringBuilder AppendStringArg(this StringBuilder t, string s, string param = null, bool noComma = false) {
 		_AppendArgPrefix(t, param, noComma);
 		if (s == null) t.Append("null");
+		else if (s.Starts("@@")) t.Append(s[2..]);
 		else if (IsVerbatim(s, out _) || MakeVerbatim(ref s)) t.Append(s);
 		else t.Append(s.Escape(quote: true));
 		return t;
 	}
 	
 	/// <summary>
-	/// Appends ', ' and non-string argument to this StringBuilder.
+	/// Appends `, ` and non-string argument.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="s">Argument value. Must not be empty.</param>
-	/// <param name="param">If not null, appends 'param: s'. By default appends only 's'. If "null", appends 'null, s'.</param>
-	/// <param name="noComma">Don't append ', '. Use for the first parameter. If false, does not append only if b.Length is less than 2.</param>
+	/// <param name="param">If not null, appends `param: s`. By default appends only `s`. If "null", appends `null, s`.</param>
+	/// <param name="noComma">Don't append `, `. Use for the first parameter. If false, does not append only if b.Length is less than 2.</param>
 	public static StringBuilder AppendOtherArg(this StringBuilder t, string s, string param = null, bool noComma = false) {
 		Debug.Assert(!s.NE());
 		_AppendArgPrefix(t, param, noComma);
@@ -60,7 +67,7 @@ static class TUtil {
 	}
 	
 	/// <summary>
-	/// If some 'use' are true, formats a flags argument like "Enum.Flag1 | Enum.Flag2" and returns true.
+	/// If some <i>use</i> are true, formats a flags argument like "Enum.Flag1 | Enum.Flag2" and returns true.
 	/// </summary>
 	public static bool FormatFlags<T>(out string s, params (bool use, T flag)[] af) where T : unmanaged, Enum {
 		if (!af.Any(o => o.use)) { s = null; return false; }
@@ -69,7 +76,7 @@ static class TUtil {
 	}
 	
 	/// <summary>
-	/// If some 'flags' checkbox controls are checked or indeterminate, formats a flags argument like "Enum.Flag1 | Enum.Flag2" and returns true. Ignores null controls.
+	/// If some <i>use</i> checkboxes are checked or indeterminate, formats a flags argument like "Enum.Flag1 | Enum.Flag2" and returns true. Ignores null controls.
 	/// </summary>
 	public static bool FormatFlags<T>(out string s, params (CheckBox use, T flag)[] af) where T : unmanaged, Enum {
 		return FormatFlags(out s, af.Select(o => (o.use != null && o.use.IsChecked != false, o.flag)).ToArray());
@@ -86,7 +93,7 @@ static class TUtil {
 	}
 	
 	/// <summary>
-	/// Returns true if s is like '@"*"' or '$"*"' or '$@"*"' or '@$"*"'.
+	/// Returns true if s is like `@"*"` or `$"*"` or `$@"*"` or `@$"*"`.
 	/// s can be null.
 	/// </summary>
 	public static bool IsVerbatim(string s, out int prefixLength) {
@@ -573,7 +580,7 @@ static class TUtil {
 		/// Calls <see cref="GetStringsForCode"/> and returns code like <c>run.it(path);</c>.
 		/// </summary>
 		/// <param name="what">Var, Run or RunMenu.</param>
-		/// <param name="varIndex">If not 0, appends to s in 'var s = path'.</param>
+		/// <param name="varIndex">If not 0, appends to s in `var s = path`.</param>
 		public string FormatCode(PathCode what, int varIndex = 0) {
 			var (path, name, args) = GetStringsForCode();
 			string nameComment = (what is PathCode.Var or PathCode.Run && (path.Starts("\":: ") || path.Like("folders.shell.*\"")) && !name.NE()) ? $"/* {name} */ " : null;
@@ -963,8 +970,8 @@ static class TUtil {
 	/// <param name="owner">Owner dialog.</param>
 	/// <param name="code">
 	/// Must start with one or more lines that find window or control and set wnd variable named <i>wndVar</i>. Can be any code.
-	/// The last line must be a 'find object' or 'find all objects' function call, like <c>uiimage.find(...);</c>. No 'var x = ', no 'not found' exception, no wait, no action.
-	/// If 'find all objects', will display rectangles of all found objects and return the first found object.
+	/// The last line must be a "find object" or "find all objects" function call, like <c>uiimage.find(...);</c>. No `var x = `, no "not found" exception, no wait, no action.
+	/// If "find all objects", will display rectangles of all found objects and return the first found object.
 	/// </param>
 	/// <param name="wndVar">Name of wnd variable of the window or control in which to search.</param>
 	/// <param name="w">Window or control in which to search. For a wnd tool can be 0.</param>
@@ -1292,75 +1299,79 @@ Can use global usings and classes/functions from file ""global.cs"".";
 		print.it(b);
 	}
 	
+	/// <summary>
+	/// Replaces the standard context menu. Adds standard items + item "Expressions..." that shows how to enter an expression.
+	/// </summary>
+	public static void SetExpressionContextMenu(this TextBox t) {
+		var m = new ContextMenu();
+		_Add("Cut", "Ctrl+X", t.SelectionLength > 0 ? () => t.Cut() : null);
+		_Add("Copy", "Ctrl+C", t.SelectionLength > 0 ? () => t.Copy() : null);
+		_Add("Paste", "Ctrl+V", Clipboard.ContainsText() ? () => t.Paste() : null);
+		m.Items.Add(new Separator());
+		_Add("Expressions...", null, () => { dialog.show("Expressions", """
+In this text field you can enter literal text or a C# expression.
+Literal text in code will be enclosed in "" or @"" and escaped if need.
+Expression will be added to code without changes.
+
+Examples of all supported expressions:
+
+@@expression
+@"verbatim string"
+$"interpolated string like {variable} text {expression} text"
+$@"interpolated verbatim string like {variable} text {expression} text"
+
+Real expression examples:
+
+@"\bregular expression\b"
+@@Environment.GetEnvironmentVariable("API_KEY")
+@@"line1\r\nline2"
+""", owner: t); });
+		t.ContextMenu = m;
+		
+		void _Add(string name, string key, Action click) {
+			var k = new MenuItem { Header = name, InputGestureText = key };
+			if (click is null) k.IsEnabled = false;else k.Click += (_,_)=>click();
+			m.Items.Add(k);
+		}
+	}
+	
+	/// <summary>
+	/// Replaces the standard context menu. Adds standard items + item "Expressions..." that shows how to enter an expression.
+	/// </summary>
+	public static void SetExpressionContextMenu(this ComboBox t) {
+		if (t.IsLoaded) {
+			_Set();
+		} else {
+			t.Loaded += (_, _) => _Set();
+		}
+		void _Set() {
+			if (t.Template.FindName("PART_EditableTextBox", t) is TextBox x) {
+				SetExpressionContextMenu(x);
+			}
+		}
+	}
+	
 	#endregion
 }
 
-///// <summary>
-///// Starts tasks running always in the same STA thread (each <b>ToolTask</b> instance has own thread).
-///// Caller can use async/await.
-///// </summary>
-//sealed class ToolTask : IDisposable
-//{
-//	readonly StaTaskScheduler_ _tasks = new(1);
-//	int _n;
+/// <summary>
+/// <see cref="KTextBox"/> that supports C# expression in text.
+/// Just adds context menu item "Expressions..." that shows how to enter an expression; see <see cref="TUtil.SetExpressionContextMenu(TextBox)"/>.
+/// </summary>
+class KTextExpressionBox : KTextBox {
+	protected override void OnContextMenuOpening(ContextMenuEventArgs e) {
+		this.SetExpressionContextMenu();
+		base.OnContextMenuOpening(e);
+	}
+}//TODO: use everywhere. Now used only in the DOcr OCR engine settings dialog.
 
-//	/// <summary>
-//	/// Disposes the task scheduler (ends its thread).
-//	/// </summary>
-//	public void Dispose() {
-//		_tasks.Dispose();
-//	}
-
-//	/// <summary>
-//	/// Don't run the task if it could not start in this time (ms) because other tasks were running. Then the task result is default. Default 2000.
-//	/// </summary>
-//	public int StartTimeout { get; set; } = 2000;
-
-//	/// <summary>
-//	/// Starts task that does not return a value.
-//	/// </summary>
-//	/// <param name="param">Callback parameters.</param>
-//	/// <param name="action">Callback.</param>
-//	/// <param name="lowPriority">Don't run (and return null) if a task is running.</param>
-//	public Task Run<TParam>(TParam param, Action<TParam> action, bool lowPriority = false) {
-//		if (!lowPriority) Interlocked.Increment(ref _n); else if (0 != Interlocked.CompareExchange(ref _n, 1, 0)) return null;
-//		long t = Environment.TickCount64;
-//		return Task.Factory.StartNew(() => {
-//			if (Environment.TickCount64 - t > StartTimeout) return;
-//			try { action(param); }
-//			catch (Exception e1) { Debug_.Print(e1); return; }
-//			finally { Interlocked.Decrement(ref _n); }
-//		}, default, 0, _tasks);
-//	}
-
-//	/// <summary>
-//	/// Starts task that returns a value.
-//	/// </summary>
-//	/// <param name="param">Callback parameters.</param>
-//	/// <param name="action">Callback.</param>
-//	/// <param name="lowPriority">Don't run (and return null) if a task is running.</param>
-//	public Task<TRet> Run<TRet, TParam>(TParam param, Func<TParam, TRet> f, bool lowPriority = false) {
-//		if (!lowPriority) Interlocked.Increment(ref _n); else if (0 != Interlocked.CompareExchange(ref _n, 1, 0)) return null;
-//		long t = Environment.TickCount64;
-//		return Task.Factory.StartNew(() => {
-//			if (Environment.TickCount64 - t > StartTimeout) return default;
-//			try { return f(param); }
-//			catch (Exception e1) { Debug_.Print(e1); return default; }
-//			finally { Interlocked.Decrement(ref _n); }
-//		}, default, 0, _tasks);
-//	}
-//}
-
-///// <summary>
-///// All tool dialogs that insert code in editor should inherit from this class.
-///// Adds aaaResultCode property; child class sets, app can get, this class inserts text in editor on OK.
-///// </summary>
-//class CodeToolDialog : KDialogWindow
-//{
-//	protected wpfBuilder _builder;
-//	public virtual string aaaResultCode { get; protected set; }
-
-//	public CodeToolDialog() {
-//		_builder.OkApply += o => { InsertCode.Statements(aaaResultCode); };
-//	}
-//}
+/// <summary>
+/// Editable <b>ComboBox</b> that supports C# expression in text.
+/// Just adds context menu item "Expressions..." that shows how to enter an expression; see <see cref="TUtil.SetExpressionContextMenu(TextBox)"/>.
+/// </summary>
+class KComboExpressionBox : ComboBox {
+	public KComboExpressionBox() {
+		IsEditable = true;
+		this.SetExpressionContextMenu();
+	}
+}

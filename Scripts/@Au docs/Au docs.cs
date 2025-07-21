@@ -74,16 +74,13 @@ void _Build() {
 		//print.it("build ok");
 		postprocess |= serve;
 		filesystem.delete(Directory.EnumerateFiles(docDir + @"\api", "*.yml")); //garbage for VS search
+		filesystem.delete(docDir + @"\api\.manifest");
 	}
 	
 	if (postprocess) {
 		d.Postprocess(siteDirTemp, siteDir);
 		print.it("DONE postprocessing");
 		if (!testSmall) print.it($"<><script Au docs.cs|/upload>Upload Au docs...<>");
-	}
-	
-	if (cookbook) {
-		AuDocs.CookbookClear(docDir);
 	}
 	
 	print.it((perf.ms - time0) / 1000d);
@@ -93,6 +90,8 @@ void _Build() {
 		//if (r != 0) { print.it("docfx serve", r); return; } //no, it prints -1 when process killed
 		run.it(docfx, $@"serve ""{siteDir}""", flags: RFlags.InheritAdmin, dirEtc: new() { WindowState = ProcessWindowStyle.Hidden });
 	}
+	
+	//print.scrollToTop();
 }
 
 void _KillDocfxProcesses() {

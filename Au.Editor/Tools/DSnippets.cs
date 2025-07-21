@@ -313,8 +313,7 @@ class DSnippets : KDialogWindow {
 	}
 	
 	void _SelectAndOpen(_Item t) {
-		_tv.SelectSingle(t, andFocus: true);
-		_tv.EnsureVisible(t);
+		_tv.SelectSingle(t);
 		if (t != _ti) _Open(t);
 	}
 	
@@ -644,7 +643,7 @@ class DSnippets : KDialogWindow {
 		_SelectNone();
 		_FillTree();
 		if (_files.FirstOrDefault(o => o.filePath == file) is { } f) {
-			_tv.SelectSingle(f, andFocus: true, scrollTop: true);
+			_tv.SelectSingle(f, scrollTop: true);
 			_Open(f);
 		}
 		CiSnippets.Reload();

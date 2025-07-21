@@ -382,12 +382,12 @@ namespace Au.Types {
 	/// </summary>
 	public enum WXType : byte {
 		/// <summary>
-		/// Simple text (option <c>t</c>, or no <c>*?</c> characters and no <c>t</c> <c>r</c> <c>R</c> options).
+		/// Simple text (option <c>t</c>, or no <c>*?</c> characters and no <c>t</c>, <c>r</c>, <c>R</c> options).
 		/// </summary>
 		Text,
 		
 		/// <summary>
-		/// Wildcard (has <c>*?</c> characters and no <c>t</c> <c>r</c> <c>R</c> options).
+		/// Wildcard (has <c>*?</c> characters and no <c>t</c>, <c>r</c>, <c>R</c> options).
 		/// <b>Match</b> calls <see cref="ExtString.Like(string, string, bool)"/>.
 		/// </summary>
 		Wildcard,

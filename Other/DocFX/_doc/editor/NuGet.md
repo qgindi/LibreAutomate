@@ -16,9 +16,9 @@ Find a package on the [NuGet](https://www.nuget.org/) website. Click the **Copy*
 
     Tip: There is a link to the source repository on the right side. Visit it to assess the library better. Avoid abandoned libraries (last commit years ago).
 
-Paste the copied text in the **NuGet packages** window. Or you can enter just the package name, and the tool will get the latest compatible version; you can check **Prerelease** to use the prerelease version if available. Or enter `Name --version 1.2.3`.
+Paste the copied text in the **NuGet packages** window. Or you can enter just the package name, and the tool will get the latest version. Or enter `Name --version 1.2.3`.
 
-Then select a folder in the combo box. You can use the default folder `-` or create/select another folder. Finally click the **Install** button.
+In the combo box you can select a folder or type a name for a new folder. Or use the default folder `-`. Finally click the **Install** button.
 
 The **Add code** button inserts a meta-comment like `/*/ nuget folder\Package; /*/` in the current script. Another way - **Properties > NuGet**. You can use an installed package in multiple scripts (just add the meta-comment).
 
@@ -27,7 +27,7 @@ Many code examples in the Cookbook use NuGet packages.
 ## How and where are packages installed (TL;DR)
 LibreAutomate and other NuGet package managers download and extract package files into the global/shared package cache folder `folders.Profile + @".nuget\packages"`. Different versions of a package are installed side by side. The folder is safe to delete.
 
-When installing a package, LibreAutomate copies its files from the cache to `workspace\.nuget\folder selected in the combo box`. Then scripts and the code editor can use these files. When compiling an `exeProgram` script, runtime files are copied to the output folder.
+When installing a package, LibreAutomate copies its files from the cache to `workspace\.nuget\folder specified in the combo box`. Then scripts and the code editor can use these files. When compiling an `exeProgram` script, runtime files are copied to the output folder.
 
 You can install multiple packages in a folder. You may want to install large libraries (many dll files) each in its own folder. Folders also can be used to isolate incompatible packages if need (rarely). For example, `PackageX` version 1 in `FolderA`, and `PackageX` version 2 in `FolderB`. An installed package can be used by all scripts of the workspace. A script can use packages from multiple folders if they are compatible.
 

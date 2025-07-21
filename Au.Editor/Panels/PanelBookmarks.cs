@@ -196,7 +196,7 @@ class PanelBookmarks {
 			else folder.AddChild(b);
 			
 			_TvSetItems(true);
-			_TvSelect(b);
+			_tv.SelectSingle(b);
 			_SaveLater();
 		}
 	}
@@ -280,7 +280,7 @@ class PanelBookmarks {
 		
 		if (go != null) {
 			App.Model.OpenAndGoTo(go.Parent.file, go.line);
-			_TvSelect(go);
+			_tv.SelectSingle(go);
 		}
 		
 		(_Item prev, _Item next) _GetPrevNextInDoc(bool active) {
@@ -316,16 +316,11 @@ class PanelBookmarks {
 		}
 	}
 	
-	void _TvSelect(_Item b) {
-		if (!b.IsFolder && !b.Parent.IsExpanded) _tv.Expand(b.Parent, true);
-		_tv.SelectSingle(b, true);
-	}
-	
 	void _ContextMenu(_Item b) {
 		var m = new popupMenu();
 		
 		if (b != null) {
-			_TvSelect(b);
+			_tv.SelectSingle(b);
 			
 			if (b.IsFolder) {
 				m["Move up\tShift+Up", disable: b.Previous == null] = o => _MoveFolder(b, true);
@@ -402,6 +397,7 @@ class PanelBookmarks {
 	
 	void _Rename(_Item b) {
 		Panels.PanelManager[P].Visible = true;
+		_tv.SelectSingle(b);
 		_tv.EditLabel(b);
 	}
 	

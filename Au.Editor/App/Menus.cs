@@ -627,7 +627,7 @@ Version: {Au_.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
 Uses C# 14, <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.5.7<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 5.1<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/microsoft/win32metadata>win32metadata<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, <link https://github.com/xoofx/markdig>Markdig<>.
-Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppDataRoaming}>ThisAppDataRoaming<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
+Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppDataRoaming}>ThisAppDataRoaming<>, <link {folders.ThisAppDataCommon}>ThisAppDataCommon<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 {typeof(App).Assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 --------------------------");
 		}

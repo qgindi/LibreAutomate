@@ -9,6 +9,7 @@ namespace Au.Controls;
 /// <summary>
 /// Adds some features:
 /// <br/>• Changes caret position when clicked left margin.
+/// <br/>• Clears on middle-click.
 /// <br/>• Can disable horizontal scrollbar when not focused.
 /// </summary>
 public class KTextBox : TextBox {
@@ -45,6 +46,9 @@ public class KTextBox : TextBox {
 			if (i >= 0) this.CaretIndex = i;
 			//never mind: cursor not I-beam.
 			//never mind: can't drag-select starting from the padding area.
+		}
+		if (e.ChangedButton == MouseButton.Middle) {
+			Clear();
 		}
 		base.OnMouseDown(e);
 	}

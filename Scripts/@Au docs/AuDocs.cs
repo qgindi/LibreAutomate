@@ -394,17 +394,22 @@ partial class AuDocs {
 				}
 			}
 			
-			//escape some markdown inline characters
 			uint escaped = 0;
-			foreach (var n in xp.DescendantNodes()) {
-				if (n is XText t && n is not XCData) {
-					var v = t.Value;
-					if (v.Contains('*')) { escaped |= 1; v = v.Replace("*", ",.1.,"); }
-					if (v.Contains('_')) { escaped |= 2; v = v.Replace("_", ",.2.,"); }
-					if (v.Contains('`')) { escaped |= 4; v = v.Replace("`", ",.3.,"); }
-					if (v.Contains('\\') && _rxLineBreak.Replace(v, ",.4.,", out v) > 0) escaped |= 8; //escape \char but not \endofline
-					if (escaped > 0) t.Value = v;
+			foreach (var t in xp.DescendantNodes().OfType<XText>()) {
+				if (t is XCData) continue;
+				var v = t.Value;
+				//workaround for DocFX bug: removes space between two tags. In some cases breaks line instead. Tested: currently no such text in cookbook and markdown articles.
+				if (v == " ") {
+					//print.it("<>" + t.Parent.ToString().RxReplace(@"/\w+> <\w+", "<bc yellow>$0<>"));
+					t.Value = "\u202F"; //narrow non-breaking space; will replace with normal space when postprocessing
+					continue;
 				}
+				//escape some markdown inline characters
+				if (v.Contains('*')) { escaped |= 1; v = v.Replace("*", ",.1.,"); }
+				if (v.Contains('_')) { escaped |= 2; v = v.Replace("_", ",.2.,"); }
+				if (v.Contains('`')) { escaped |= 4; v = v.Replace("`", ",.3.,"); }
+				if (v.Contains('\\') && _rxLineBreak.Replace(v, ",.4.,", out v) > 0) escaped |= 8; //escape \char but not \endofline
+				if (escaped > 0) t.Value = v;
 			}
 			
 			//print.it("---");

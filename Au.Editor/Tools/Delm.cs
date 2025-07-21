@@ -1126,7 +1126,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				if (!_path.NE_() && !_path.Any(o => o.ti == ti)) {
 					m["Navigate to this from the last in path"] = _ => {
 						var tiPath = _path[^1].ti;
-						_tree.SelectSingle(tiPath, true);
+						_tree.SelectSingle(tiPath);
 						_ItemActivated(tiPath);
 						_NavigateTo(ti);
 					};
@@ -1225,8 +1225,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	}
 	
 	void _SelectTreeItem(_TreeItem x) {
-		_tree.EnsureVisible(x);
-		_tree.SelectSingle(x, true);
+		_tree.SelectSingle(x);
 	}
 	
 	//Tries to find and select _elm in current tree when captured from same window.

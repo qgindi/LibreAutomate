@@ -48,7 +48,7 @@
     <s n="Window actions (close, move, resize, properties, etc).cs" i="81" />
     <s n="Screens (display monitors).cs" i="82" />
     <s n="UI elements (find, click, check, focus, select, expand, check menu item, wait for state, etc).cs" i="83" />
-    <s n="Web automation, navigate, HTML attributes.cs" i="89" />
+    <s n="Web automation, navigate.cs" i="89" />
     <s n="Extract table data using UI elements.cs" i="373" />
     <s n="Web browser automation with Playwright.cs" i="386" />
     <s n="Web browser automation with Selenium.cs" i="141" />
@@ -114,7 +114,7 @@
     <s n="Script class with Main().cs" i="261" />
     <s n="Multi-file scripts, projects.cs" i="259" />
     <s n="Shared classes and functions, libraries.cs" i="258" />
-    <s n="Create .exe program.cs" i="188" />
+    <s n="Create exe program.cs" i="188" />
   </d>
   <d n="Triggers, toolbars" i="17">
     <s n="Keyboard triggers (hotkeys).cs" i="160" />

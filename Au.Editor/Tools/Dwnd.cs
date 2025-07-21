@@ -437,10 +437,7 @@ class Dwnd : KDialogWindow {
 
 		//print.it(xWindow.Descendants().Select(o=>o.c));
 
-		if (xSelect != null) {
-			_tree.EnsureVisible(xSelect);
-			_tree.SelectSingle(xSelect, true);
-		}
+		if (xSelect != null) _tree.SelectSingle(xSelect);
 	}
 
 	class _TreeItem : TreeBase<_TreeItem>, ITreeViewItem {

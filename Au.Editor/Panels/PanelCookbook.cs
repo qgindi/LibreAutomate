@@ -17,7 +17,7 @@ using Au.Controls;
 
 class PanelCookbook {
 	KTreeView _tv;
-	TextBox _search;
+	KTextBox _search;
 	_Item _root;
 	bool _loadedOnce;
 	bool _openingRecipe;
@@ -34,7 +34,6 @@ class PanelCookbook {
 		b.R.Add(out _search).Tooltip("Part of recipe name.\nTo search in recipe text, click the button next to this field.\nMiddle-click to clear.").UiaName("Find recipe");
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += (_, _) => _Search(false);
-		_search.MouseUp += (_, e) => { if (e.ChangedButton == MouseButton.Middle) _search.Text = ""; };
 		b.xAddButtonIcon("*Material.TextSearch" + Menus.darkYellow, _ => _Search(true), "Find in recipe text");
 		b.xAddButtonIcon("*EvaIcons.ArrowBack" + Menus.darkYellow, _ => _HistoryMenu(), "Go back...").Margin(right: 3);
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, FullRowExpand = true, HotTrack = true, BackgroundColor = 0xf0f8e8 };
@@ -158,7 +157,6 @@ class PanelCookbook {
 			_openingRecipe = true;
 			_search.Text = "";
 			_openingRecipe = false;
-			_tv.EnsureVisible(recipe);
 			_tv.Select(recipe);
 		}
 		
@@ -173,7 +171,6 @@ class PanelCookbook {
 		if (s.Length < 2) {
 			_tv.SetItems(_root.Children());
 			if (!_openingRecipe && _history.LastOrDefault() is string s1 && _FindRecipe(s1, exact: true) is _Item r) {
-				_tv.EnsureVisible(r);
 				_tv.Select(r);
 			}
 			return;
@@ -283,7 +280,7 @@ class PanelCookbook {
 	/// </summary>
 	/// <param name="name">Exact recipe name. If null, opens the cookbook index page.</param>
 	public void OpenRecipeInWebBrowser(string name) {
-		var s = name?.Replace("#", "Sharp").Replace(".", "dot") ?? "index"; //see project @Au docs -> AuDocs.Cookbook
+		var s = name?.Replace("#", "Sharp").Replace(".", "dot-") ?? "index"; //see project @Au docs -> AuDocs.Cookbook
 		HelpUtil.AuHelp($"cookbook/{s}");
 	}
 	

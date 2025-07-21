@@ -170,6 +170,9 @@ partial class AuDocs {
 				var k = s.RxFindAll("""(?ms)^\h*<h5 class="ns"><a .+?>(.+?)</a>.+?</section>\R""", 0, g).OrderBy(o => o[1].Value);
 				s = s.ReplaceAt(g, string.Join("", k));
 			}
+			
+			//second part of the damaged spaces workaround
+			s = s.Replace('\u202F', ' ');
 		} else {
 			//in .md we use this for links to api: [Class]() or [Class.Func]().
 			//	DocFX converts it to <a href="">Class</a> etc without warning.

@@ -1358,8 +1358,8 @@ public static unsafe partial class ExtString {
 	/// <param name="t">This string.</param>
 	/// <param name="result">Receives the result string. It is this string if there are no escape sequences or if failed.</param>
 	/// <remarks>
-	/// Supports all escape sequences of <see cref="Escape"/>: <c>\\</c> <c>\"</c> <c>\t</c> <c>\n</c> <c>\r</c> <c>\0</c> <c>\uXXXX</c>.
-	/// Does not support <c>\a</c> <c>\b</c> <c>\f</c> <c>\v</c> <c>\'</c> <c>\xXXXX</c> <c>\UXXXXXXXX</c>.
+	/// Supports all escape sequences of <see cref="Escape"/>: <c>\\</c>, <c>\"</c>, <c>\t</c>, <c>\n</c>, <c>\r</c>, <c>\0</c>, <c>\uXXXX</c>.
+	/// Does not support <c>\a</c>, <c>\b</c>, <c>\f</c>, <c>\v</c>, <c>\e</c>, <c>\'</c>, <c>\xXXXX</c>, <c>\UXXXXXXXX</c>.
 	/// </remarks>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static bool Unescape(this string t, out string result) {

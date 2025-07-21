@@ -190,6 +190,19 @@ class PanelEdit {
 	}
 	
 	/// <summary>
+	/// If the specified file is open in <see cref="ActiveDoc"/>: if <i>save</i>, saves text if need; else reloads if need.
+	/// </summary>
+	public void SyncEditorTextIfFileIs(string file, bool save) {
+		if (ActiveDoc is { } doc && filesystem.more.isSameFile(file, doc.EFile.FilePath)) {
+			if (save) {
+				App.Model.Save.TextNowIfNeed();
+			} else {
+				doc.EFile._CheckModifiedExternally(doc);
+			}
+		}
+	}
+	
+	/// <summary>
 	/// Enables/disables Edit and Run toolbars/menus and some other UI parts depending on whether a document is open in editor.
 	/// </summary>
 	void _UpdateUI_IsOpen() {
@@ -249,17 +262,11 @@ class PanelEdit {
 		App.Commands[nameof(Menus.Edit.View.Images_in_code)].Checked = !App.Settings.edit_noImages;
 	}
 	
-	//void _UpdateUI_ActiveDocChanged() {
-	
-	//}
-	
 	[Flags]
 	enum _EUpdateUI {
 		Undo = 1,
 		Redo = 2,
 		Cut = 4,
 		Copy = 8,
-		//Paste = 16,
-		
 	}
 }

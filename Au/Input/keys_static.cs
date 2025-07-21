@@ -513,12 +513,12 @@ public partial class keys {
 	/// <td>
 	/// <b>Alphabetic:</b> <c>A</c>-<c>Z</c> (or <c>a</c>-<c>z</c>)
 	/// <br/><b>Number:</b> <c>0</c>-<c>9</c>
-	/// <br/><b>Numeric keypad:</b> <c>#/</c> <c>#*</c> <c>#-</c> <c>#+</c> <c>#.</c> <c>#0</c>-<c>#9</c>
-	/// <br/><b>Other:</b> <c>`</c> <c>-</c> <c>=</c> <c>[</c> <c>]</c> <c>\</c> <c>;</c> <c>'</c> <c>,</c> <c>.</c> <c>/</c>
+	/// <br/><b>Numeric keypad:</b> <c>#/</c>, <c>#*</c>, <c>#-</c>, <c>#+</c>, <c>#.</c>, <c>#0</c>-<c>#9</c>
+	/// <br/><b>Other:</b> <c>`</c>, <c>-</c>, <c>=</c>, <c>[</c>, <c>]</c>, <c>\</c>, <c>;</c>, <c>'</c>, <c>,</c>, <c>.</c>, <c>/</c>
 	/// </td>
 	/// <td>Spaces between keys are optional, except for uppercase A-Z. For example, can be <c>"A B"</c>, <c>"a b"</c>, <c>"A b"</c> or <c>"ab"</c>, but not <c>"AB"</c> or <c>"Ab"</c>.
 	/// <br/>
-	/// <br/>For <c>`</c> <c>[</c> <c>]</c> <c>\</c> <c>;</c> <c>'</c> <c>,</c> <c>.</c> <c>/</c> also can be used <c>~</c> <c>{</c> <c>}</c> <c>|</c> <c>:</c> <c>"</c> <c>&lt;</c> <c>&gt;</c> <c>?</c>.
+	/// <br/>For <c>`</c>, <c>[</c>, <c>]</c>, <c>\</c>, <c>;</c>, <c>'</c>, <c>,</c>, <c>.</c>, <c>/</c> also can be used <c>~</c>, <c>{</c>, <c>}</c>, <c>|</c>, <c>:</c>, <c>"</c>, <c>&lt;</c>, <c>&gt;</c>, <c>?</c>.
 	/// </td>
 	/// </tr>
 	/// <tr>
@@ -542,12 +542,12 @@ public partial class keys {
 	/// <tr>
 	/// <td>Special characters</td>
 	/// <td>
-	/// <b>Operator:</b> <c>+</c> <c>*</c> <c>(</c> <c>)</c> <c>_</c> <c>^</c>
+	/// <b>Operator:</b> <c>+</c>, <c>*</c>, <c>(</c>, <c>)</c>, <c>_</c>, <c>^</c>
 	/// <br/><b>Numpad key prefix:</b> <c>#</c>
-	/// <br/><b>Text/HTML argument prefix:</b> <c>!</c> <c>%</c>
-	/// <br/><b>Reserved:</b> <c>@</c> <c>$</c> <c>&amp;</c>
+	/// <br/><b>Text/HTML argument prefix:</b> <c>!</c>, <c>%</c>
+	/// <br/><b>Reserved:</b> <c>@</c>, <c>$</c>, <c>&amp;</c>
 	/// </td>
-	/// <td>These characters cannot be used as keys. Instead use <c>=</c> <c>8</c> <c>9</c> <c>0</c> <c>-</c> <c>6</c> <c>3</c> <c>1</c> <c>5</c> <c>2</c> <c>4</c> <c>7</c>.</td>
+	/// <td>These characters cannot be used as keys. Instead use <c>=</c>, <c>8</c>, <c>9</c>, <c>0</c>, <c>-</c>, <c>6</c>, <c>3</c>, <c>1</c>, <c>5</c>, <c>2</c>, <c>4</c>, <c>7</c>.</td>
 	/// </tr>
 	/// </table>
 	/// 

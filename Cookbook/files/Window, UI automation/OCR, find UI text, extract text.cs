@@ -11,7 +11,7 @@ t.MouseClick();
 /// Extract window text using OCR. Print text and each word text + rectangle.
 
 print.clear();
-//ocr.engine = new OcrGoogleCloud("API key"); //better results, although slower
+//ocr.engine = new OcrGoogleCloud(Environment.GetEnvironmentVariable("API_KEY_GOOGLE")); //better results, but slower
 var w2 = wnd.find(1, null, "CabinetWClass");
 var t2 = ocr.recognize(w2);
 print.it("-- Text --");

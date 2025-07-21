@@ -260,6 +260,9 @@ System.Threading.Tasks.TaskCanceledException
 	public int find_searchIn, find_printSlow = 50;
 	public bool find_parallel, find_case, find_word;
 	
+	//DNuget
+	public bool nuget_noPrerelease;
+	
 	//other
 	public int publish, export;
 	public bool? minimalSDK;

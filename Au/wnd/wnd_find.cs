@@ -48,7 +48,7 @@ namespace Au {
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// 
-		/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have <c>disableWindowFiltering</c> <c>true</c> in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
+		/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have <c>disableWindowFiltering = true</c> in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
 		/// 
 		/// To find message-only windows use <see cref="findFast"/> instead.
 		/// </remarks>
@@ -375,7 +375,7 @@ namespace Au {
 			/// Although undocumented, the API retrieves most windows as in the Z order, however places IME windows (hidden) at the end. See also: <see cref="allWindowsZorder"/>;
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="mainWindows"/>.</note>
 			/// Skips message-only windows; use <see cref="findFast"/> if need.
-			/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have <c>disableWindowFiltering</c> <c>true</c> in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
+			/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have <c>disableWindowFiltering = true</c> in its manifest and is not uiAccess; to find such windows you can use <see cref="findFast"/>.
 			/// Tip: To get top-level and child windows in single array: <c>var a = wnd.getwnd.root.Get.Children();</c>.
 			/// </remarks>
 			/// <seealso cref="Children"/>

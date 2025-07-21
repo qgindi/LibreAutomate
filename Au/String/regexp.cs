@@ -1047,7 +1047,7 @@ public unsafe class regexp {
 	}
 	
 	/// <summary>
-	/// Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if <i>always</i> == <c>true</c>.
+	/// Encloses string in <c>\Q \E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if <i>always</i> == <c>true</c>.
 	/// </summary>
 	/// <param name="s">Can be <c>null</c>.</param>
 	/// <param name="always">Enclose always, even if the string does not contain metacharacters. Should be <c>true</c> if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and <c>#</c> is a special character too.</param>

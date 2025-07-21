@@ -470,18 +470,13 @@ class MetaComments {
 		if (isMain) {
 			var model = f.Model;
 			if (!_flags.Has(MCFlags.ExportNoGlobal)) {
-				var glob = model.Find("global.cs", FNFind.Class); //fast, uses dictionary
+				var glob = model.FindGlobalCs(); //fast, uses dictionary
 				if (glob != null) {
 					if (glob == f) isGlobal = true;
 					else {
 						if (_flags.Has(MCFlags.Export)) (ExportC_ ??= new()).Add(glob);
 						_ParseFile(glob, false, true, isGlobal: true);
 					}
-				} else if (!model.NoGlobalCs_) {
-					model.NoGlobalCs_ = true;
-					Panels.Output.Scintilla.AaTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
-					if (model.FoundMultiple == null) print.warning("Missing class file \"global.cs\". <+restoreGlobal>Restore<>.", -1, "<>");
-					else print.warning("Cannot use class file 'global.cs', because multiple exist.", -1);
 				}
 			}
 		}
