@@ -82,6 +82,8 @@ With regular expression functions you can also use flags <help>Au.Types.RXFlags<
 <link https://www.pcre.org/current/doc/html/pcre2api.html#SEC20>PCRE2_ flags and corresponding options<>
 <link https://www.pcre.org/current/doc/html/pcre2unicode.html>Unicode, (*UTF), (*UCP)<>
 
+TODO: update links. Changed section indices. Maybe update PCRE.
+
 -- meta --
 
 <.h>Metacharacters<>

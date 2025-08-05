@@ -115,7 +115,7 @@ This is an online copy of the LibreAutomate cookbook.
 					print.it(tag, color);
 					return s;
 				case "+nuget":
-					return $"<u title='Paste the underlined text in menu > Tools > NuGet'>{s}</u>";
+					return $"<span style='color:#080;text-decoration:underline' title='Paste the underlined text in menu > Tools > NuGet'>{s}</span>";
 				case "open":
 					return s;
 				}

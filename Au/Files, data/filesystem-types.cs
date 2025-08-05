@@ -419,7 +419,7 @@ public enum CPResult {
 
 	/// <summary>
 	/// <i>pathB</i> is of a directory that contains file or directory specified by <i>pathA</i>.
-	/// Example: <c>pathA: <c>pathB: @"C:\Dir1\Dir2\File1.txt"</c>, @"C:\Dir1"</c>.
+	/// Example: <c>pathA: @"C:\Dir1\Dir2\File1.txt"</c>, <c>pathB: @"C:\Dir1"</c>.
 	/// </summary>
 	BContainsA,
 

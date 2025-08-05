@@ -56,7 +56,7 @@ class MetaCommentsParser {
 		case "pr": pr.Add(value); break;
 		case "r": r.Add(value); break;
 		case "com": com.Add(value); break;
-		case "nuget": nuget.Add(value); break;
+		case "nuget": nuget.Add(value.Replace('/', '\\')); break;
 		case "c": c.Add(value); break;
 		case "resource": resource.Add(value); break;
 		case "file": file.Add(value); break;

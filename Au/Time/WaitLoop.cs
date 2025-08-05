@@ -60,7 +60,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Maximal period (<see cref="Sleep"/> sleep time). Milliseconds.
-		/// Initially it is <see cref="Seconds.MaxPeriod"/>, or <see cref="Period"/>*50 if it is <c>null</c> (eg 10*50=500).
+		/// Initially it is <see cref="Seconds.MaxPeriod"/>, or <see cref="Period"/> * 50 if it is <c>null</c> (eg 10*50=500).
 		/// </summary>
 		public float MaxPeriod { get; set; }
 		

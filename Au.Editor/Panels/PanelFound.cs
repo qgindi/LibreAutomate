@@ -434,7 +434,7 @@ class PanelFound {
 	/// Indices of indicators defined by this control.
 	/// </summary>
 	public static class Indicators {
-		public const int HiliteY = 0, HiliteG = 1, HiliteB = 2, FocusRect = 3, Excluded = 4, Link = -16, Link2 = 18;
+		public const int HiliteY = 8, HiliteG = 9, HiliteB = 10, FocusRect = 11, Excluded = 12, Link = -16, Link2 = 18;
 	}
 	
 	/// <summary>

@@ -1,10 +1,10 @@
 namespace Au;
 
 /// <summary>
-/// Provides Windows version info and current process 32/64 bit info.
+/// Provides Windows version info. Also some info about the current process (eg 32/64 bit) and this library.
 /// </summary>
 /// <remarks>
-/// The Windows version properties return true Windows version. If you need version that depends on manifest and debugger, use <see cref="Environment.OSVersion"/>.
+/// The Windows version properties return the true Windows version; it does not depend on manifest etc.
 /// </remarks>
 /// <seealso cref="OperatingSystem"/>
 /// <seealso cref="RuntimeInformation"/>
@@ -48,15 +48,8 @@ public static unsafe class osVersion {
 	public static int winBuild => _winbuild;
 
 	/// <summary>
-	/// Gets Windows major and minor version in single <b>int</b>:
-	/// <br/>• Win7 - 0x601,
-	/// <br/>• Win8 - 0x602,
-	/// <br/>• Win8.1 - 0x603,
-	/// <br/>• Win10/11 - 0xA00.
-	/// 
-	/// <para>
+	/// Gets Windows major and minor version in single <b>int</b>: Win7 - 0x601; Win8 - 0x602; Win8.1 - 0x603; Win10/11 - 0xA00.
 	/// Example: <c>if (osVersion.winVer >= osVersion.win8) ...</c>
-	/// </para>
 	/// </summary>
 	public static int winVer => _winver;
 
@@ -188,6 +181,16 @@ public static unsafe class osVersion {
 	/// Returns <c>true</c> if this process is a 32-bit process running on 64-bit Windows. Also known as WOW64 process.
 	/// </summary>
 	public static bool is32BitProcessAnd64BitOS => _isWow64;
+
+	/// <summary>
+	/// Gets the version string of this library (<c>Au.dll</c>), like <c>"1.2.3"</c>.
+	/// </summary>
+	/// <remarks>
+	/// This function is fast, unlike <c>typeof(osVersion).Assembly.GetName().Version.ToString(3)</c>.
+	/// 
+	/// LibreAutomate uses <c>Au.dll</c> of the same version as of LibreAutomate.
+	/// </remarks>
+	public static string thisLibrary => Au_.Version;
 
 	/// <summary>
 	/// Gets string containing OS version, .NET version and <c>Au.dll</c> version, like <c>"10.0.22621-64|6.0.8|1.2.3"</c>.

@@ -38,6 +38,7 @@ class DOptions : KDialogWindow {
 		_CodeEditor();
 		_Templates();
 		_Hotkeys();
+		_AI();
 		_Other();
 		_OS();
 		
@@ -634,6 +635,34 @@ Example:
 				RegHotkeys.UnregisterPermanent();
 				RegHotkeys.RegisterPermanent();
 			}
+		};
+	}
+	
+	void _AI() {
+		var b = _Page("AI");
+		b.Columns(0, 100, -1);
+		var sett = AI.AiSettings.Instance;
+		b.R.Add("API key of", out ComboBox provider).Tooltip("AI provider");
+		b.Add(out KTextBox apiKey).Tooltip("API key or %ENVIRONMENT_VARIABLE%");
+		provider.ItemsSource = App.Settings.ai_providers.Select(o => o.name);
+		provider.SelectionChanged += (_, _) => {
+			apiKey.Text = App.Settings.ai_providers[provider.SelectedIndex].apiKey;
+		};
+		provider.SelectedIndex = 0;
+		
+		b.R.Add("Search with", out ComboBox emModel).Span(1)
+			.Tooltip("AI model that creates embeddings for search and RAG")
+			.Items(sett.embeddingsModels.Select(o => o.name)).Select(sett.CurrentEmbeddingsModel);
+		//b.R.StartGrid<KGroupBox>("Embeddings model settings");
+		//b.End();
+		b.R.Add("Chat with", out ComboBox chatModel).Span(1)
+			.Tooltip("AI chat model");
+		//b.R.StartGrid<KGroupBox>("Chat model settings");
+		//b.End();
+		b.End();
+		
+		_b.OkApply += e => {
+			App.Settings.ai_embeddingsModel = emModel.SelectedIndex;
 		};
 	}
 	

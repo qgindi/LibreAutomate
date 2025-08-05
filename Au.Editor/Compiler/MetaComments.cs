@@ -880,6 +880,7 @@ class MetaComments {
 	}
 	
 	void _NuGet(string value, string alias) {
+		value = value.Replace('/', '\\');
 		foreach (var v in NugetPackages) if (v.package.Eqi(value)) return;
 		NugetPackages.Add((value, alias));
 		if (_flags.Has(MCFlags.Publish) && !_flags.Has(MCFlags.IsPR)) return;

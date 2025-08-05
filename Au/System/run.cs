@@ -431,7 +431,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Run new process as administrator.
-		/// If this process isn't admin:
+		/// <br/>If this process isn't admin:
 		/// <br/>• Shows UAC consent dialog.
 		/// <br/>• Uses verb <c>"runas"</c>, therefore other verb cannot be specified.
 		/// <br/>• Cannot set current directory for the new process.
@@ -441,7 +441,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// If this process runs as administrator, run new process as administrator too.
-		/// Without this flag, if this process runs as administrator:
+		/// <br/>Without this flag, if this process runs as administrator:
 		/// <br/>• Starts new process as non-administrator from the shell process (<c>explorer.exe</c>).
 		/// <br/>• If it fails (for example if shell process isn't running), calls <see cref="print.warning"/> and starts new process as administrator.
 		/// <br/>• The new process does not inherit environment variables of this process.
@@ -469,20 +469,20 @@ namespace Au.Types {
 		/// <summary>
 		/// Initial current directory for the new process.
 		/// If <c>null</c> (default), the new process will inherit the current directory of this process.
-		/// If <c>""</c>, the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as <c>null</c>.
-		/// <para>NOTE: Some programs look for their files in current directory and fail to start if it is not the program's directory.</para>
+		/// If <c>""</c>, the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found); if not possible, same as <c>null</c>.
 		/// </summary>
 		public string CurrentDirectory;
 		
 		/// <summary>
-		/// File's right-click menu command, also known as verb. For example <c>"edit"</c>, <c>"print"</c>, <c>"properties"</c>. The default verb is bold in the menu.
+		/// File's right-click menu command, also known as verb. For example <c>"edit"</c>, <c>"print"</c>, <c>"properties"</c>.
+		/// The default verb is bold in the menu.
 		/// Not all menu items will work. Some may have different name than in the menu.
 		/// </summary>
 		public string Verb;
 		
 		/// <summary>
 		/// Owner window for error message boxes.
-		/// Also, new window should be opened on the same screen. However many programs ignore it.
+		/// Also, new window should be opened on the same screen, but many programs ignore it.
 		/// </summary>
 		public AnyWnd OwnerWindow;
 		
@@ -516,8 +516,8 @@ namespace Au.Types {
 	public class RResult {
 		/// <summary>
 		/// The exit code of the process.
-		/// 0 if no flag <b>WaitForExit</b> or if cannot wait.
 		/// </summary>
+		/// <value>0 if no flag <b>WaitForExit</b> or if cannot wait.</value>
 		/// <remarks>
 		/// Usually the exit code is 0 or a process-defined error code.
 		/// </remarks>
@@ -525,14 +525,14 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// The process id.
-		/// 0 if used flag <b>WaitForExit</b> or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
+		/// <value>0 if used flag <b>WaitForExit</b> or if did not start new process (eg opened the document in an existing process) or if cannot get it.</value>
 		public int ProcessId { get; internal set; }
 		
 		/// <summary>
 		/// If used flag <b>NeedProcessHandle</b>, contains process handle. Later the <see cref="WaitHandle"/> variable must be disposed.
-		/// <c>null</c> if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
+		/// <value><c>null</c> if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.</value>
 		/// <example>
 		/// This code does the same as <c>run.it(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
 		/// <code><![CDATA[
@@ -545,8 +545,6 @@ namespace Au.Types {
 		/// <summary>
 		/// Returns <see cref="ProcessId"/> as string.
 		/// </summary>
-		public override string ToString() {
-			return ProcessId.ToString();
-		}
+		public override string ToString() => ProcessId.ToString();
 	}
 }

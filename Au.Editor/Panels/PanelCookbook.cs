@@ -15,6 +15,14 @@ using Au.Controls;
 
 //CONSIDER: auto-search in text too, and somehow separate results. Now some users don't know how to search in text; or it's inconvenient.
 
+//TODO: show search results in 4 tabs:
+//	Name - found in names.
+//	+text - found in names and texts.
+//	AI - found using AI embeddings.
+//	AI+ - found using AI RAG.
+//The last 2 show not only cookbook recipes.
+//Maybe move the search box to the Help toolbar. And use separate panel for results (or in Found).
+
 class PanelCookbook {
 	KTreeView _tv;
 	KTextBox _search;

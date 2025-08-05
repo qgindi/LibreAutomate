@@ -134,7 +134,8 @@ public unsafe partial class KScintilla {
 			if (_enc == _Encoding.Utf8_BOM) text = text[3..];
 			if (_enc == _Encoding.Binary) k.Call(SCI_SETREADONLY); //caller may set AaInitReadOnlyAlways = true
 			using (new _NoUndoNotif(k, SciSetTextFlags.NoUndoNoNotify)) {
-				k.aaaSetString(SCI_APPENDTEXT, text.Length, text);
+				if (IsImage && k.AaTags is {  } tags) tags.AddText(text.ToStringUTF8(), false, false, dontHideImageTag: true);
+				else k.aaaSetString(SCI_APPENDTEXT, text.Length, text);
 			}
 			if (_enc != _Encoding.Binary) return true;
 			k.Call(SCI_SETREADONLY, 1);

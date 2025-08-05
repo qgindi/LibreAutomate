@@ -217,8 +217,8 @@ partial class AuDocs {
 			sxml = sym.GetDocumentationCommentXml(expandIncludes: true);
 		}
 		
-		if (sxml.Starts("<!-- Badly formed XML comment ignored")) { //eg EFileInfo.kind (record, <param> text empty)
-			//print.it(sxml);
+		if (sxml.Starts("<!-- Badly formed XML comment ignored")) { //eg EFileInfo.kind (record) if <param> text empty (add space to avoid this warning)
+			print.it(sxml);
 			return true;
 		}
 		
@@ -261,7 +261,13 @@ partial class AuDocs {
 		
 		int nSummary = 0, nRemarks = 0, nExample = 0, nReturns = 0, nValue = 0; _hsException.Clear(); _hsSeealso.Clear(); //ignore inherited duplicates
 		foreach (var x in xr.Elements()) {
-			switch (x.Name.LocalName) {
+			var tag = x.Name.LocalName;
+			
+			if (sym.Kind is SymbolKind.Field && sym.ContainingType.TypeKind is TypeKind.Enum) {
+				if (tag != "summary") _Warning($"Enum member with <{tag}>. Only <summary> will be used.", sym);
+			}
+			
+			switch (tag) {
 			case "param" or "typeparam":
 				break;
 			case "summary":

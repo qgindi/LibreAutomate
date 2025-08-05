@@ -4,116 +4,32 @@ namespace Au;
 /// Represents a UI element. Clicks, gets properties, etc.
 /// </summary>
 /// <remarks>
-/// UI elements are user interface (UI) parts that are accessible through programming interfaces (API). For example buttons, links, list items. This class can find them, get properties, click, etc. Web pages and most other windows support UI elements.
-/// 
+/// <para>
+/// UI elements are user interface (UI) parts that are accessible through programming interfaces (API). For example buttons, links, list items.
+/// This class can find them, get properties, click, etc.
+/// Web pages and most other windows support UI elements.
+/// </para>
+/// <para>
 /// An <b>elm</b> variable contains a COM interface pointer (<msdn>IAccessible</msdn> or other) and uses methods of that interface or/and related API.
-/// 
-/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type). Then they return <c>""</c> (string properties), 0, <c>false</c>, <c>null</c> or empty collection, depending on return type. Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means an error or the property is merely unavailable. These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it. If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
-/// 
+/// </para>
+/// <para>
+/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type).
+/// Then they return <c>""</c> (string properties), 0, <c>false</c>, <c>null</c> or empty collection, depending on return type.
+/// Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes.
+/// It's impossible to reliably detect whether the error code means an error or the property is merely unavailable.
+/// These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it.
+/// If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+/// </para>
+/// <para>
 /// You can dispose <b>elm</b> variables to release the COM object, but it is not necessary (GC will do it later).
-/// 
+/// </para>
+/// <para>
 /// An <b>elm</b> variable cannot be used in multiple threads. Only <b>Dispose</b> can be called in any thread.
-/// 
+/// </para>
+/// <para>
 /// UI elements are implemented and live in their applications. This class just communicates with them.
-/// 
-/// Many applications have various problems with their UI elements: bugs, incorrect/nonstandard/partial implementation, or initially disabled. This class implements workarounds for known problems, where possible.
-/// 
-/// <a data-toggle="collapse" data-target="#collapse1" aria-expanded="false" aria-controls="collapse1">Known problematic applications</a>
-/// <div class="collapse" id="collapse1">
-/// <table>
-/// <tr>
-/// <th>Application</th>
-/// <th>Problems</th>
-/// </tr>
-/// <tr>
-///  <td>Chrome web browser. Also Edge, Opera and other apps that use Chromium. Window class name is like <c>"Chrome_WidgetWin_1"</c>.</td>
-///  <td>
-///   <ol>
-///    <li>Web page UI elements initially are disabled (missing). Workarounds:
-///     <ul>
-///      <li>Functions <b>Find</b>, <b>Exists</b>, <b>Wait</b> and <b>FindAll</b> enable it if used role prefix <c>"web:"</c> or <c>"chrome:"</c>. Functions <b>FromXY</b>, <b>FromMouse</b> and <b>Focused</b> enable it if window class name starts with <c>"Chrome"</c>. However Chrome does it lazily, therefore shortly after enabling something still may not work. Note: this auto-enabling may fail with future Chrome versions.</li>
-///      <li>Start Chrome with command line <c>--force-renderer-accessibility</c>.</li>
-///     </ul>
-///    </li>
-///    <li>Some new web browser versions add new features or bugs that break something.</li>
-///   </ol>
-///  </td>
-/// </tr>
-/// <tr>
-///  <td>Firefox web browser.</td>
-///  <td>
-///   <ol>
-///    <li>When Firefox starts, its web page UI elements are unavailable. Creates them only when somebody asks (eg function <b>Find</b>), but does it lazily, and <b>Find</b> at first fails. Workaround: use parameter <i>wait</i>.</li>
-///    <li>Occasionally Firefox briefly turns off its web page UI elements. Workaround: use parameter <i>wait</i>. With other web browsers also it's better to use <i>wait</i>.</li>
-///    <li>Some new web browser versions add new features or bugs that break something.</li>
-///   </ol>
-///  </td>
-/// </tr>
-/// <tr>
-/// <td>Applications (or just some windows) that don't have accessible objects but have UI Automation elements.</td>
-///  <td>
-///   <ol>
-///    <li>To find UI elements in these applications, need flag <see cref="EFFlags.UIA"/>.</li>
-///   </ol>
-///  </td>
-/// </tr>
-/// <tr>
-///  <td>Java applications that use AWT/Swing. Window class name starts with <c>"SunAwt"</c>.</td>
-///  <td>
-///   <ol>
-///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is missing/disabled/broken, the <b>Find UI element</b> tool shows an "enable" link when you try to capture something in a Java window. Or you can enable JAB in <b>Options > OS</b> or in <b>Control Panel > Ease of Access Center</b>. Or use <c>jabswitch.exe</c>. Then restart Java apps. Also may need to restart apps that tried to use Java UI elements.</li>
-///    <li>JAB is part of Java. Install Java 64-bit x64 or ARM64 (as your OS).</li>
-///    <li>If you'll use JAB in 32-bit script processes (unlikely), also install Java 32-bit. If you'll use JAB in x64 script processes on Windows ARM64 (unlikely), also install Java x64.</li>
-///    <li>Not supported on 32-bit OS.</li>
-///    <li>JAB bug: briefly shows a console window at PC startup, after every sleep, etc. Or opens an invalid Windows Terminal window; workaround: in Terminal settings set Default Terminal Application = Windows Console Host.</li>
-///   </ol>
-///  </td>
-/// </tr>
-/// <tr>
-///  <td>Some controls.</td>
-///  <td>
-///   <ol>
-///    <li>UI elements of some controls are not connected to the UI element of the parent control. Then cannot find them if searching in whole window.<br/>Workaround: search only in that control. For example, use <i>prop</i> <c>"class"</c> or <c>"id"</c>. Or find the control (<see cref="wnd.Child"/> etc) and search in it.</li>
-///   </ol>
-///  </td>
-/// </tr>
-/// <tr>
-///  <td>Some controls with flag <see cref="EFFlags.NotInProc"/>.</td>
-///  <td>
-///   UI elements of many standard Windows controls have bugs when they are retrieved without loading dll into the target process (see <see cref="EFFlags.NotInProc"/>). Known bugs:
-///   <ol>
-///    <li>Toolbar buttons don't have <b>Name</b> in some cases.</li>
-///    <li><see cref="Focus"/> and <see cref="Select"/> often don't work properly.</li>
-///   </ol>
-///   Workarounds: Don't use <see cref="EFFlags.NotInProc"/>. Or use <see cref="EFFlags.UIA"/>.
-///  </td>
-/// </tr>
-/// <tr>
-///  <td>When cannot load dll into the target process. For example Windows Store apps.</td>
-///  <td>
-///   <ol>
-///    <li>Function <b>Find</b> is much slower, and uses much more CPU when waiting. More info: <see cref="EFFlags.NotInProc"/>.</li>
-///   </ol>
-///  </td>
-/// </tr>
-/// <tr>
-///  <td>Processes of a different 32/64 bitness than this process. Also ARM64 processes.</td>
-///  <td>
-///   <ol>
-///    <li>To load the dll is used <c>Au.DllHost.exe</c>, which makes slower by about 50 ms first time.</li>
-///   </ol>
-///  </td>
-/// </tr>
-/// <tr>
-///  <td>DPI-scaled windows (see <see cref="Dpi.IsWindowVirtualized(wnd)"/>).</td>
-///  <td>
-///   <ol>
-///    <li>In some cases "element from point" and "get rectangle" functions may not work correctly with such windows. This process must be per-monitor-DPI-aware.</li>
-///   </ol>
-///  </td>
-/// </tr>
-/// </table>
-/// </div>
+/// [Known UI element issues in various applications](xref:ui_element_issues)
+/// </para>
 /// </remarks>
 /// <example>
 /// Click link <c>"Example"</c> in Chrome.

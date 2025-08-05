@@ -323,7 +323,7 @@ public unsafe partial class KScintilla : HwndHost {
 					
 					bool inserted = mt.Has(MOD.SC_MOD_INSERTTEXT);
 					_RdOnModified(inserted, n);
-					AaImages?.OnTextChanged_(inserted, n);
+					//AaImages?.OnTextChanged_(inserted, n);
 					AaTags?.OnTextChanged_(inserted, n);
 				} else if (n.modificationType.Has(Sci.MOD.SC_MOD_BEFOREDELETE)) {
 					_DeleteMarkers(ref n);

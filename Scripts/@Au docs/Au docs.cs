@@ -32,12 +32,12 @@ void _Build() {
 	var time0 = perf.ms;
 	
 	bool testSmall = !true;
-	bool preprocess = false, postprocess = false, build = false, serve = false, cookbook = false;
+	bool cookbook = false, preprocess = false, postprocess = false, build = false, serve = false;
 	//cookbook = true;
 	//preprocess = true;
 	//postprocess = true;
 	//postprocess = serve = true;
-	preprocess = postprocess = build = serve = cookbook = true;
+	if (!(cookbook | preprocess | postprocess | build | serve)) preprocess = postprocess = build = serve = cookbook = true;
 	bool onlyMetadata = !true;
 	//preprocess = true; build = true; onlyMetadata = true;
 	

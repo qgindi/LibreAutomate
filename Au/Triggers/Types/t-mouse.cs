@@ -107,7 +107,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger> {
 	/// </summary>
 	/// <param name="button"></param>
 	/// <param name="modKeys">
-	/// Modifier keys, like with the <see cref="keys.send"/> function.
+	/// Modifier keys. See [key names and operators](xref:key_names).
 	/// Examples: <c>"Ctrl"</c>, <c>"Ctrl+Shift+Alt+Win"</c>.
 	/// To ignore modifiers: <c>"?"</c>. Then the trigger works with any combination of modifiers.
 	/// To ignore a modifier: <c>"Ctrl?"</c>. Then the trigger works with or without the modifier. More examples: <c>"Ctrl?+Shift?"</c>, <c>"Ctrl+Shift?"</c>.

@@ -21,14 +21,14 @@ Improved:
 - .
 
 Fixed bugs:
-- .
+- When print text contains `<image "image">`, may hang or not display the image.
 
 ### Library
 New classes:
 - .
 
 New members:
-- .
+- **osVersion.thisLibrary**.
 
 New parameters:
 - .

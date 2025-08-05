@@ -257,7 +257,7 @@ public partial class keys {
 	/// Waits while the specified keys are pressed.
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <param name="keys_">One or more keys. Waits until all are released. String like with <see cref="send"/>, without operators.</param>
+	/// <param name="keys_">One or more [keys](xref:key_names) without operators. Waits until all are released.</param>
 	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="ArgumentException">Error in <i>keys_</i> string.</exception>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
@@ -291,7 +291,7 @@ public partial class keys {
 		return 0 != _WaitForKey(timeout, key, up, block);
 	}
 
-	/// <param name="key">Wait for this key. A single-key string like with <see cref="send"/>.</param>
+	/// <param name="key">Wait for this key. A single-key string. See [key names](xref:key_names).</param>
 	/// <exception cref="ArgumentException">Invalid <i>key</i> string.</exception>
 	/// <example>
 	/// <code><![CDATA[
@@ -462,7 +462,7 @@ public partial class keys {
 	/// </summary>
 	/// <param name="keysEtc">
 	/// Arguments of these types:
-	/// <br/>• string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c>.\
+	/// <br/>• string - [key names and operators](xref:key_names), like <c>"Enter A Ctrl+A"</c>.\
 	/// Tool: in <c>""</c> string press <c>Ctrl+Space</c>.
 	/// <br/>• string with prefix <c>"!"</c> - literal text.\
 	/// Example: <c>var p = "pass"; keys.send("!user", "Tab", "!" + p, "Enter");</c>
@@ -483,129 +483,7 @@ public partial class keys {
 	/// <exception cref="AuException">Failed. When sending text, fails if there is no focused window.</exception>
 	/// <exception cref="InputDesktopException"></exception>
 	/// <remarks>
-	/// Usually keys are specified in string, like in this example:
-	/// <code><![CDATA[keys.send("A F2 Ctrl+Shift+A Enter*2"); //keys A, F2, Ctrl+Shift+A, Enter Enter
-	/// ]]></code>
-	/// 
-	/// Key names:
-	/// <table>
-	/// <tr>
-	/// <th>Group</th>
-	/// <th style="width:40%">Keys</th>
-	/// <th>Info</th>
-	/// </tr>
-	/// <tr>
-	/// <td>Named keys</td>
-	/// <td>
-	/// <b>Modifier:</b> <c>Alt</c>, <c>Ctrl</c>, <c>Shift</c>, <c>Win</c>, <c>RAlt</c>, <c>RCtrl</c>, <c>RShift</c>, <c>RWin</c>
-	/// <br/><b>Navigate:</b> <c>Esc</c>, <c>End</c>, <c>Home</c>, <c>PgDn</c>, <c>PgUp</c>, <c>Down</c>, <c>Left</c>, <c>Right</c>, <c>Up</c>
-	/// <br/><b>Other:</b> <c>Back</c>, <c>Del</c>, <c>Enter</c>, <c>Apps</c>, <c>Pause</c>, <c>PrtSc</c>, <c>Space</c>, <c>Tab</c>
-	/// <br/><b>Function:</b> <c>F1</c>-<c>F24</c>
-	/// <br/><b>Lock:</b> <c>CapsLock</c>, <c>NumLock</c>, <c>ScrollLock</c>, <c>Ins</c>
-	/// </td>
-	/// <td>Start with an uppercase character. Only the first 3 characters are significant; others can be any ASCII letters. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c> or <c>"Back5"</c>.
-	/// <br/>
-	/// <br/>Alias: <c>AltGr</c> (<c>RAlt</c>), <c>Menu</c> (<c>Apps</c>), <c>PageDown</c> or <c>PD</c> (<c>PgDn</c>), <c>PageUp</c> or <c>PU</c> (<c>PgUp</c>), <c>PrintScreen</c> or <c>PS</c> (<c>PrtSc</c>), <c>BS</c> (<c>Back</c>), <c>PB</c> (<c>Pause/Break</c>), <c>CL</c> (<c>CapsLock</c>), <c>NL</c> (<c>NumLock</c>), <c>SL</c> (<c>ScrollLock</c>), <c>HM</c> (<c>Home</c>).
-	/// </td>
-	/// </tr>
-	/// <tr>
-	/// <td>Text keys</td>
-	/// <td>
-	/// <b>Alphabetic:</b> <c>A</c>-<c>Z</c> (or <c>a</c>-<c>z</c>)
-	/// <br/><b>Number:</b> <c>0</c>-<c>9</c>
-	/// <br/><b>Numeric keypad:</b> <c>#/</c>, <c>#*</c>, <c>#-</c>, <c>#+</c>, <c>#.</c>, <c>#0</c>-<c>#9</c>
-	/// <br/><b>Other:</b> <c>`</c>, <c>-</c>, <c>=</c>, <c>[</c>, <c>]</c>, <c>\</c>, <c>;</c>, <c>'</c>, <c>,</c>, <c>.</c>, <c>/</c>
-	/// </td>
-	/// <td>Spaces between keys are optional, except for uppercase A-Z. For example, can be <c>"A B"</c>, <c>"a b"</c>, <c>"A b"</c> or <c>"ab"</c>, but not <c>"AB"</c> or <c>"Ab"</c>.
-	/// <br/>
-	/// <br/>For <c>`</c>, <c>[</c>, <c>]</c>, <c>\</c>, <c>;</c>, <c>'</c>, <c>,</c>, <c>.</c>, <c>/</c> also can be used <c>~</c>, <c>{</c>, <c>}</c>, <c>|</c>, <c>:</c>, <c>"</c>, <c>&lt;</c>, <c>&gt;</c>, <c>?</c>.
-	/// </td>
-	/// </tr>
-	/// <tr>
-	/// <td>Other keys</td>
-	/// <td>Names of enum <see cref="KKey"/> members.</td>
-	/// <td>Example: <c>keys.send("BrowserBack");</c>
-	/// </td>
-	/// </tr>
-	/// <tr>
-	/// <td>Other keys</td>
-	/// <td>Virtual-key codes.</td>
-	/// <td>Start with <c>VK</c> or <c>Vk</c>.
-	/// Example: <c>keys.send("VK65 VK0x42");</c>
-	/// </td>
-	/// </tr>
-	/// <tr>
-	/// <td>Forbidden</td>
-	/// <td><c>Fn</c>, <c>Ctrl+Alt+Del</c>, <c>Win+L</c>, some other.</td>
-	/// <td>Programs cannot press these keys.</td>
-	/// </tr>
-	/// <tr>
-	/// <td>Special characters</td>
-	/// <td>
-	/// <b>Operator:</b> <c>+</c>, <c>*</c>, <c>(</c>, <c>)</c>, <c>_</c>, <c>^</c>
-	/// <br/><b>Numpad key prefix:</b> <c>#</c>
-	/// <br/><b>Text/HTML argument prefix:</b> <c>!</c>, <c>%</c>
-	/// <br/><b>Reserved:</b> <c>@</c>, <c>$</c>, <c>&amp;</c>
-	/// </td>
-	/// <td>These characters cannot be used as keys. Instead use <c>=</c>, <c>8</c>, <c>9</c>, <c>0</c>, <c>-</c>, <c>6</c>, <c>3</c>, <c>1</c>, <c>5</c>, <c>2</c>, <c>4</c>, <c>7</c>.</td>
-	/// </tr>
-	/// </table>
-	/// 
-	/// Operators:
-	/// <table>
-	/// <tr>
-	/// <th>Operator</th>
-	/// <th>Examples</th>
-	/// <th>Description</th>
-	/// </tr>
-	/// <tr>
-	/// <td><c>*n</c></td>
-	/// <td><c>"Left*3"</c><br/><c>$"Left*{i}"</c></td>
-	/// <td>Press key n times, like <c>"Left Left Left"</c>.
-	/// <br/>See <see cref="AddRepeat"/>.
-	/// </td>
-	/// <tr>
-	/// <td><c>*down</c></td>
-	/// <td><c>"Ctrl*down"</c></td>
-	/// <td>Press key and don't release.</td>
-	/// </tr>
-	/// <tr>
-	/// <td><c>*up</c></td>
-	/// <td><c>"Ctrl*up"</c></td>
-	/// <td>Release key.</td>
-	/// </tr>
-	/// </tr>
-	/// <tr>
-	/// <td><c>+</c></td>
-	/// <td><c>"Ctrl+Shift+A"</c><br/><c>"Alt+E+P"</c></td>
-	/// <td>The same as <c>"Ctrl*down Shift*down A Shift*up Ctrl*up"</c> and <c>"Alt*down E*down P E*up Alt*up"</c>.</td>
-	/// </tr>
-	/// <tr>
-	/// <td><c>+()</c></td>
-	/// <td><c>"Alt+(E P)"</c></td>
-	/// <td>The same as <c>"Alt*down E P Alt*up"</c>.
-	/// <br/>Inside <c>()</c> cannot be used operators <c>+</c>, <c>+()</c> and <c>^</c>.
-	/// </td>
-	/// </tr>
-	/// <tr>
-	/// <td><c>_</c></td>
-	/// <td><c>"Tab _A_b Tab"</c><br/><c>"Alt+_e_a"</c><br/><c>"_**20"</c></td>
-	/// <td>Send next character like text with option <see cref="OKeyText.KeysOrChar"/>.
-	/// <br/>Can be used to <c>Alt</c>-select items in menus, ribbons and dialogs regardless of current keyboard layout.
-	/// <br/>Next character can be any 16-bit character, including operators and whitespace.
-	/// </td>
-	/// </tr>
-	/// <tr>
-	/// <td><c>^</c></td>
-	/// <td><c>"Alt+^ea"</c></td>
-	/// <td>Send all remaining characters and whitespace like text with option <see cref="OKeyText.KeysOrChar"/>.
-	/// <br/>For example <c>"Alt+^ed b"</c> is the same as <c>"Alt+_e_d Space _b"</c>.
-	/// <br/><c>Alt</c> is released after the first character. Don't use other modifiers.
-	/// </td>
-	/// </tr>
-	/// </table>
-	/// 
-	/// Operators and related keys can be in separate arguments. Examples: <c>keys.send("Shift+", KKey.A); keys.send(KKey.A, "*3");</c>.
+	/// String syntax: [key names and operators](xref:key_names).
 	/// 
 	/// Uses <see cref="opt.key"/>:
 	/// <table>

@@ -999,7 +999,7 @@ public static class script {
 	/// 
 	/// <note>When attaching an external debugger (Visual Studio etc), make sure it debugs .NET code, not native code etc.</note>
 	/// 
-	/// See also <see href="/editor/Debugger.html">debugger</see>.
+	/// See also [](xref:debugger).
 	/// </remarks>
 	[DebuggerStepThrough]
 	public static void debug(bool showDialog = false) {

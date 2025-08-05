@@ -381,6 +381,8 @@ class MetaReferences {
 									e.Element("remarks")?.Remove();
 									e.Element("example")?.Remove();
 									
+									//TODO: show short remarks; add link if long.
+									
 									//rejected. Too much info for "quick info". Can be distracting and annoying. Ok if would show icons instead. Or maybe 1-word links.
 									//var er = e.Element("remarks");
 									//var ee = e.Element("example");

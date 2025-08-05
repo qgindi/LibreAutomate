@@ -1,5 +1,3 @@
-//TODO: add icon-button "Pinned" (or "Saved"). Shows menu: "Pin this", "Unpin this" (or "Edit pinned items"), list of pinned items.
-
 using Au.Controls;
 using Au.Tools;
 using System.Windows;

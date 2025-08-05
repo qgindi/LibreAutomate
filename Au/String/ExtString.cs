@@ -9,7 +9,7 @@ namespace Au.Types;
 /// </summary>
 /// <remarks>
 /// Some .NET <see cref="String"/> methods use <see cref="StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
-/// Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See <see href="https://msdn.microsoft.com/en-us/library/ms973919.aspx"/>.
+/// Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See <google>Best practices for comparing strings in .NET</google>.
 /// This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
 /// See also <see cref="process.thisProcessCultureIsInvariant"/>.
 /// 

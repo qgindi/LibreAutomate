@@ -270,7 +270,7 @@ public unsafe class SciTags {
 	/// <param name="append">Append. Also appends "\r\n". If false, replaces control text.</param>
 	/// <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
 	/// <param name="scroll">Set caret and scroll to the end. If null, does it if <i>append</i> true.</param>
-	public void AddText(string text, bool append, bool skipLTGT, bool? scroll = null) {
+	public void AddText(string text, bool append, bool skipLTGT, bool? scroll = null, bool dontHideImageTag = false) {
 		//perf.first();
 		if (text.NE() || (skipLTGT && text == "<>")) {
 			if (append) _c.aaaAppendText("", true, true, true); else _c.aaaClearText();
@@ -284,7 +284,7 @@ public unsafe class SciTags {
 			if (append) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
 			if (skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
 			s[len] = s[len + 1] = 0;
-			_AddText(s, len, append, scroll);
+			_AddText(s, len, append, scroll, dontHideImageTag);
 		}
 		finally {
 			MemoryUtil.Free(buffer);
@@ -308,15 +308,16 @@ public unsafe class SciTags {
 	}
 	[ThreadStatic] static WeakReference<_Garbage> t_garbage;
 	
-	void _AddText(byte* s, int len, bool append, bool? scroll) {
+	void _AddText(byte* s, int len, bool append, bool? scroll, bool dontHideImageTag) {
 		//perf.next();
 		byte* s0 = s, sEnd = s + len; //source text
-		byte* t = s0; //destination text, ie without some tags
+		byte* t = s0; //destination text (without some tags)
 		byte* r0 = s0 + (len + 2), r = r0; //destination style bytes
 		
 		int prevStylesCount = _styles.Count;
 		bool hasTags = false;
 		byte currentStyle = STYLE_DEFAULT;
+		List<StartEnd> images = null;
 		
 		if ((t_garbage ??= new(null)).TryGetTarget(out var m)) m.Clear(); else t_garbage.SetTarget(m = new());
 		
@@ -437,8 +438,11 @@ public unsafe class SciTags {
 			//	style.Hidden = true;
 			//	break;
 			case 5 << 16 | 'i' when span.SequenceEqual("image"u8) && attr != null:
-				for (var h = tag - 1; h < s; h++) _Write(*h, STYLE_HIDDEN);
+				Debug_.PrintIf(_c.AaImages is null);
+				for (var h = tag - 1; h < s; h++) _Write(*h, (byte)(dontHideImageTag ? STYLE_DEFAULT : STYLE_HIDDEN));
 				hasTags = true;
+				int imageOutPos = (int)((attr - s0) - (s - t));
+				(images ??= []).Add(new(imageOutPos, imageOutPos + attrLen));
 				continue;
 			case 4 << 16 | 'n' when span.SequenceEqual("nonl"u8):
 				if (s[0] == 13) s++;
@@ -560,6 +564,8 @@ public unsafe class SciTags {
 		_StyleRangeTo(len);
 		//perf.next();
 		//print.qm2.write(perf.ToString());
+		
+		if (images != null) _c.AaImages?.SetImagesForTextRange_(new(s0, len), images, prevLen);
 		
 		void _StyleRangeTo(int to) {
 			if (endStyled < to) {

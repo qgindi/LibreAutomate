@@ -54,7 +54,10 @@ partial class SciCode : KScintilla {
 		_fls = fls;
 		
 		if (fls.IsBinary) AaInitReadOnlyAlways = true;
-		if (fls.IsImage) AaInitImages = true;
+		if (fls.IsImage) {
+			AaInitImages = true;
+			AaInitTagsStyle = AaTagsStyle.User;
+		}
 		
 		Name = "document";
 	}

@@ -27,13 +27,10 @@ public enum TAFlags : byte {
 	DontErase = 2,
 	
 	/// <summary>
-	/// Let <see cref="AutotextTriggerArgs.Replace"/> don't modify the replacement text. Without this flag it:
+	/// Let <see cref="AutotextTriggerArgs.Replace"/> don't modify the replacement text.
+	/// <br/>Without <b>ReplaceRaw</b> or <b>MatchCase</b> it:
 	/// <br/>• If the first character of the typed text is uppercase, makes the first character of the replacement text uppercase.
 	/// <br/>• If all typed text is uppercase, makes the replacement text uppercase.
-	/// 
-	/// <para>
-	/// Also does not modify if used flag <b>MatchCase</b> or HTML.
-	/// </para>
 	/// </summary>
 	ReplaceRaw = 4,
 	

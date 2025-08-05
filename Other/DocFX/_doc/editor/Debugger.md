@@ -4,7 +4,7 @@ uid: debugger
 
 # Debugging C# scripts
 ## Useful functions
-See Cookbook recipe [Script testing and debugging](https://www.libreautomate.com/cookbook/Script%20testing%20and%20debugging.html).
+See Cookbook recipe [Script testing and debugging](/cookbook/Script%20testing%20and%20debugging.html).
 
 ## Debugger
 Debugger in LibreAutomate is similar to that of [Visual Studio](https://www.google.com/search?q=Visual+Studio+debugger), [VSCode](https://www.google.com/search?q=VSCode+debugger), [Rider](https://www.google.com/search?q=Rider+debugger) etc.

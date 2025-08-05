@@ -731,7 +731,7 @@ namespace Au {
 		//}
 		
 		/// <summary>
-		/// Calls <google>qlite3_column_double</google>.
+		/// Calls <google>sqlite3_column_double</google>.
 		/// </summary>
 		/// <param name="column">Column name of 0-based index in results.</param>
 		/// <exception cref="SLException">The column does not exist in query results.</exception>

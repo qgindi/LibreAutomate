@@ -29,30 +29,30 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<i>text<>` | Italic text.
 | `<bi>text<>` | Bold italic.
 | `<u>text<>` | Underline.
-| `<c 0xE0A000>text<>`<br/>`<c #E0A000>text<>`<br/>`<c green>text<>` | Text color.<br/>Can be 0xRRGGBB, #RRGGBB or .NET color name.
+| `<c 0xE0A000>text<>`<br>`<c #E0A000>text<>`<br>`<c green>text<>` | Text color.<br>Can be 0xRRGGBB, #RRGGBB or .NET color name.
 | `<bc yellow>text<>` | Text background color.
 | `<lc wheat>line text<>` | Line background color.
-| `<size 10>text<>` |  Font height.<br/>Note: it can increase height of all lines.
+| `<size 10>text<>` |  Font height.<br>Note: it can increase height of all lines.
 | `<mono>text<>` | Monospace font.
 
 ### Links
 | Examples | Comments
 | - | -
-| `<link http://www.example.com>text<>`<br/>`<link C:\files\example.exe>text<>`<br/>`<link>http://www.example.com<>`<br/>`<link>C:\files\example.exe<>`<br/>`<link C:\example.exe|args>text<>` | Opens a web page or runs a program, file, folder.<br/>Calls function [run.itSafe]().
-| `<explore>C:\files\example<>` | Selects a file or folder in File Explorer.<br/>Calls function [run.selectInExplorer]().
-| `<google s1>text<>`<br/>`<google>s1<>`<br/>`<google s1|s2>text<>` | Google. Opens this URL:<br/>`$"http://www.google.com/search?q={s1}{s2}"`<br/>Don't need to URL-encode.
-| `<help>Class.Function<>`<br/>`<help Au.Namespace.Class>text<>`<br/>`<help articles/Output tags>text<>` | Opens a help page of this library.
-| `<open>Script5.cs<>`<br/>`<open \Folder\Script5.cs>text<>`<br/>`<open Script5.cs|10>text<>`<br/>`<open Script5.cs|10|15>text<>`<br/>`<open Script5.cs||100>text<>`<br/>`<open Script5.cs|||word>text<>`<br/>`<open Folder|expand>text<>` | Opens a script or other file of current workspace in the code editor. Optionally moves the text cursor.<br/>Can be file name, relative path in workspace, or full path.<br/>10 is 1-based line index.<br/>15 is 1-based character index in line.<br/>100 is 0-based character index in text.<br/>The word is text to find, whole word(s).<br/>Selects and expands a folder.
-| `<script>Script5.cs<>`<br/>`<script \Folder\Script5.cs>text<>`<br/>`<script Script5.cs|args0|args1>text<>` | Runs a script.
+| `<link http://www.example.com>text<>`<br>`<link C:\files\example.exe>text<>`<br>`<link>http://www.example.com<>`<br>`<link>C:\files\example.exe<>`<br>`<link C:\example.exe|args>text<>` | Opens a web page or runs a program, file, folder.<br>Calls function [run.itSafe]().
+| `<explore>C:\files\example<>` | Selects a file or folder in File Explorer.<br>Calls function [run.selectInExplorer]().
+| `<google s1>text<>`<br>`<google>s1<>`<br>`<google s1|s2>text<>` | Google. Opens this URL:<br>`$"http://www.google.com/search?q={s1}{s2}"`<br>Don't need to URL-encode.
+| `<help>Class.Function<>`<br>`<help Au.Namespace.Class>text<>`<br>`<help articles/Output tags>text<>` | Opens a help page of this library.
+| `<open>Script5.cs<>`<br>`<open \Folder\Script5.cs>text<>`<br>`<open Script5.cs|10>text<>`<br>`<open Script5.cs|10|15>text<>`<br>`<open Script5.cs||100>text<>`<br>`<open Script5.cs|||word>text<>`<br>`<open Folder|expand>text<>` | Opens a script or other file of current workspace in the code editor. Optionally moves the text cursor.<br>Can be file name, relative path in workspace, or full path.<br>10 is 1-based line index.<br>15 is 1-based character index in line.<br>100 is 0-based character index in text.<br>The word is text to find, whole word(s).<br>Selects and expands a folder.
+| `<script>Script5.cs<>`<br>`<script \Folder\Script5.cs>text<>`<br>`<script Script5.cs|args0|args1>text<>` | Runs a script.
 
 ### Other tags
 | Examples | Comments
 | - | -
-| `<_>text</_>` or `<\a>text</\a>` | Literal text. Tags in it are ignored.<br/>Here `\a` is escape sequence for character code 7.
+| `<_>text</_>` or `<\a>text</\a>` | Literal text. Tags in it are ignored.<br>Here `\a` is escape sequence for character code 7.
 | `<code>var s="example";</code>` | Colored C# code. Tags in it are ignored.
 | `<fold>text</fold>` | Folded (hidden) lines. Adds a link to unfold (show).
 | `<fold link text>text</fold>` | Folded lines with custom link text.
-| `<nonl>` | No new line. Next time will write in the same line.<br/>Must be at the end of string.
+| `<nonl>` | No new line. Next time will write in the same line.<br>Must be at the end of string.
 
 ### Images
 Images are displayed below current line. Examples:

@@ -6,36 +6,36 @@ namespace Au.Types;
 //rejected: /// <completionlist cref="Color"/>
 
 /// <summary>
-/// Color, as <b>int</b> in 0xAARRGGBB format.
-/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, <b>int</b> (0xAARRGGBB), Windows <b>COLORREF</b> (0xBBGGRR), string.
+/// Color, as <b>int</b> in <c>0xAARRGGBB</c> format.
+/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, <b>int</b> (<c>0xAARRGGBB</c>), Windows <b>COLORREF</b> (<c>0xBBGGRR</c>), string.
 /// </summary>
 public record struct ColorInt {
 	/// <summary>
-	/// Color value in 0xAARRGGBB format.
+	/// Color value in <c>0xAARRGGBB</c> format.
 	/// </summary>
 	[JsonInclude]
 	public int argb;
 	
-	/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
+	/// <param name="colorARGB">Color value in <c>0xAARRGGBB</c> or <c>0xRRGGBB</c> format.</param>
 	/// <param name="makeOpaque">Set alpha = 0xFF. If <c>null</c> (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
 	public ColorInt(int colorARGB, bool? makeOpaque = null) {
 		if (makeOpaque == true || (makeOpaque == null && (colorARGB & ~0xFFFFFF) == 0)) colorARGB |= 0xFF << 24;
 		argb = colorARGB;
 	}
 	
-	/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
+	/// <param name="colorARGB">Color value in <c>0xAARRGGBB</c> or <c>0xRRGGBB</c> format.</param>
 	/// <param name="makeOpaque">Set alpha = 0xFF. If <c>null</c> (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
 	public ColorInt(uint colorARGB, bool? makeOpaque) : this((int)colorARGB, makeOpaque) { }
 	
 	/// <summary>
-	/// Converts from an <b>int</b> color value in 0xRRGGBB or 0xAARRGGBB format.
+	/// Converts from an <b>int</b> color value in <c>0xRRGGBB</c> or <c>0xAARRGGBB</c> format.
 	/// Sets alpha = 0xFF if it is 0 in <i>color</i>.
 	/// </summary>
 	//[Obsolete] //to find all references
 	public static implicit operator ColorInt(int color) => new(color);
 	
 	/// <summary>
-	/// Converts from an <b>uint</b> color value in 0xRRGGBB or 0xAARRGGBB format.
+	/// Converts from an <b>uint</b> color value in <c>0xRRGGBB</c> or <c>0xAARRGGBB</c> format.
 	/// Sets alpha = 0xFF if it is 0 in <i>color</i>.
 	/// </summary>
 	//[Obsolete] //to find all references
@@ -78,14 +78,14 @@ public record struct ColorInt {
 	}
 	
 	/// <summary>
-	/// Converts from Windows native <b>COLORREF</b> (0xBBGGRR to 0xAARRGGBB).
+	/// Converts from Windows native <b>COLORREF</b> (<c>0xBBGGRR</c> to <c>0xAARRGGBB</c>).
 	/// </summary>
-	/// <param name="colorBGR">Color in 0xBBGGRR format.</param>
+	/// <param name="colorBGR">Color in <c>0xBBGGRR</c> format.</param>
 	/// <param name="makeOpaque">Set alpha = 0xFF. If <c>null</c> (default), sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
 	public static ColorInt FromBGR(int colorBGR, bool? makeOpaque = null) => new(SwapRB(colorBGR), makeOpaque);
 	
 	/// <summary>
-	/// Converts to Windows native <b>COLORREF</b> (0xBBGGRR from 0xAARRGGBB).
+	/// Converts to Windows native <b>COLORREF</b> (<c>0xBBGGRR</c> from <c>0xAARRGGBB</c>).
 	/// </summary>
 	/// <returns>color in <b>COLORREF</b> format. Does not modify this variable.</returns>
 	/// <param name="zeroAlpha">Set the alpha byte = 0.</param>
@@ -159,8 +159,8 @@ public record struct ColorInt {
 	/// <param name="H">Hue, 0 to 240.</param>
 	/// <param name="L">Luminance, 0 to 240.</param>
 	/// <param name="S">Saturation, 0 to 240.</param>
-	/// <param name="bgr">Return color in 0xBBGGRR format. If <c>false</c>, 0xRRGGBB.</param>
-	/// <returns>Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Alpha 0.</returns>
+	/// <param name="bgr">Return color in <c>0xBBGGRR</c> format. If <c>false</c>, <c>0xRRGGBB</c>.</param>
+	/// <returns>Color in <c>0xRRGGBB</c> or <c>0xBBGGRR</c> format, depending on <b>bgr</b>. Alpha 0.</returns>
 	public static int FromHLS(int H, int L, int S, bool bgr) {
 		if (S == 0) { //ColorHLSToRGB bug: returns 0 if S 0
 			int i = L * 255 / 240;
@@ -174,8 +174,8 @@ public record struct ColorInt {
 	/// <summary>
 	/// Converts to hue-luminance-saturation (HLS).
 	/// </summary>
-	/// <param name="color">Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Ignores alpha.</param>
-	/// <param name="bgr"><i>color</i> is in 0xBBGGRR format. If <c>false</c>, 0xRRGGBB.</param>
+	/// <param name="color">Color in <c>0xRRGGBB</c> or <c>0xBBGGRR</c> format, depending on <i>bgr</i>. Ignores alpha.</param>
+	/// <param name="bgr"><i>color</i> is in <c>0xBBGGRR</c> format. If <c>false</c>, <c>0xRRGGBB</c>.</param>
 	/// <returns>Hue, luminance and saturation. All 0 to 240.</returns>
 	public static (int H, int L, int S) ToHLS(int color, bool bgr) {
 		if (!bgr) color = SwapRB(color);
@@ -187,8 +187,8 @@ public record struct ColorInt {
 	/// Calculates color's perceived brightness.
 	/// </summary>
 	/// <returns>0 to 1.</returns>
-	/// <param name="color">Color in 0xRRGGBB or 0xBBGGRR format, depending on <b>bgr</b>. Ignores alpha.</param>
-	/// <param name="bgr"><i>color</i> is in 0xBBGGRR format. If <c>false</c>, 0xRRGGBB.</param>
+	/// <param name="color">Color in <c>0xRRGGBB</c> or <c>0xBBGGRR</c> format, depending on <b>bgr</b>. Ignores alpha.</param>
+	/// <param name="bgr"><i>color</i> is in <c>0xBBGGRR</c> format. If <c>false</c>, <c>0xRRGGBB</c>.</param>
 	/// <remarks>
 	/// Unlike <see cref="ToHLS"/> and <see cref="Color.GetBrightness"/>, this function uses different weights for red, green and blue components.
 	/// Ignores alpha.

@@ -136,7 +136,7 @@ public partial class keys {
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="keys_">
-	/// Key names and operators, like with <see cref="send"/>. Can be <c>null</c> or <c>""</c>.
+	/// [Key names and operators](xref:key_names), like with <see cref="send"/>. Can be <c>null</c> or <c>""</c>.
 	/// Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5"</c>.
 	/// If has prefix <c>"!"</c> or <c>"%"</c>, calls <see cref="AddText(string, string)"/>; use <c>"!"</c> for text, <c>"%"</c> for HTML.
 	/// </param>

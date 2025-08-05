@@ -9,7 +9,7 @@ partial class keys {
 		/// Converts key name to <see cref="KKey"/>.
 		/// </summary>
 		/// <returns>0 if unknown key name.</returns>
-		/// <param name="keyName">Key name, like with <see cref="keys.send"/>.</param>
+		/// <param name="keyName">[Key name](xref:key_names).</param>
 		public static KKey parseKeyName(string keyName) {
 			keyName ??= "";
 			return _KeynameToKey(keyName, 0, keyName.Length);
@@ -18,7 +18,6 @@ partial class keys {
 		/// <summary>
 		/// Calls <see cref="parseKeyName"/> and throws <b>ArgumentException</b> if invalid key string.
 		/// </summary>
-		/// <param name="keyName"></param>
 		internal static KKey ParseKeyNameThrow_(string keyName) {
 			var k = parseKeyName(keyName);
 			if (k == 0) throw new ArgumentException("Unknown key name or error in key string.");
@@ -29,7 +28,7 @@ partial class keys {
 		/// Converts key name to <see cref="KKey"/>.
 		/// </summary>
 		/// <returns>0 if unknown key name.</returns>
-		/// <param name="s">String containing key name, like with <see cref="keys.send"/>.</param>
+		/// <param name="s">String containing [key name](xref:key_names).</param>
 		/// <param name="startIndex">Key name start index in <i>s</i>.</param>
 		/// <param name="length">Key name length.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>length</i>.</exception>
@@ -42,7 +41,7 @@ partial class keys {
 		/// <summary>
 		/// Converts keys string to <see cref="KKey"/> array.
 		/// </summary>
-		/// <param name="keys_">String containing one or more key names, like with <see cref="keys.send"/>. Operators are not supported.</param>
+		/// <param name="keys_">String containing one or more [key names](xref:key_names). Operators are not supported.</param>
 		/// <exception cref="ArgumentException">Error in <i>keys_</i> string.</exception>
 		public static KKey[] parseKeysString(string keys_) {
 			var a = new List<KKey>();
@@ -60,7 +59,7 @@ partial class keys {
 		/// </summary>
 		/// <returns><c>false</c> if the string is invalid.</returns>
 		/// <remarks>
-		/// Key names are like with <see cref="keys.send"/>.
+		/// [Key names](xref:key_names) are like with <see cref="keys.send"/>.
 		/// Must be single non-modifier key, preceded by zero or more of modifier keys <c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>, all joined with <c>+</c>.
 		/// Valid hotkey examples: <c>"A"</c>, <c>"a"</c>, <c>"7"</c>, <c>"F12"</c>, <c>"."</c>, <c>"End"</c>, <c>"Ctrl+D"</c>, <c>"Ctrl+Alt+Shift+Win+Left"</c>, <c>" Ctrl + U "</c>.
 		/// Invalid hotkey examples: <c>null</c>, <c>""</c>, <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
@@ -185,7 +184,7 @@ partial class keys {
 		}
 		
 		/// <summary>
-		/// Gets key name that can be used in keys strings with <see cref="keys.send"/> etc.
+		/// Gets [key name](xref:key_names) that can be used in keys strings with <see cref="keys.send"/> etc.
 		/// </summary>
 		public static string keyToString(KKey key) => c_keyNames[(int)key] ?? ("VK" + (int)key);
 		

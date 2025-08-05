@@ -7,6 +7,7 @@
 /// - <see cref="wpfBuilder.StartStack"/> adds a <google WPF StackPanel>StackPanel<>. It arranges elements in a horizontal or vertical line.
 /// - <see cref="wpfBuilder.StartDock"/> adds a <google WPF DockPanel>DockPanel<>. It docks elements by its edges specified with <see cref="wpfBuilder.Dock"/>. The last added element fills the remaining space.
 /// - <see cref="wpfBuilder.StartCanvas"/> adds a <google WPF Canvas>Canvas<> panel. It does not move/resize elements; for it use <see cref="wpfBuilder.XY"/>.
+/// - <see cref="wpfBuilder.StartPanel"/> adds a panel of another type, for example <b>WrapPanel<>.
 
 /// The <b>wpfBuilder<> constructor adds the root panel. It's a grid or a panel of specified type. Use the <b>StartX<> functions to add nested panels if need. Call <see cref="wpfBuilder.End"/> to end adding controls to the current panel and return to the parent panel.
 ///
@@ -52,3 +53,12 @@ bc.Add(out TextBox _).XY(10, 10, 70, 30);
 bc.Add(out TextBox _).XY(100, 10, 70, 30);
 bc.End();
 if (!bc.ShowDialog()) return;
+
+/// Add a <b>WrapPanel<>.
+
+var bp = new wpfBuilder("Window").WinSize(400, 400);
+var wrapPanel = new WrapPanel { ItemWidth = 100 };
+bp.StartPanel(wrapPanel);
+for (int i = 0; i < 10; i++) { bp.AddButton(i, o => { print.it(o.Button.Content); }); }
+bp.End();
+if (!bp.ShowDialog()) return;

@@ -122,7 +122,7 @@ namespace Au.Types {
 	/// <param name="name">File name, like <c>"File.cs"</c>.</param>
 	/// <param name="path">Path in workspace, like <c>@"\Folder\File.cs"</c>.</param>
 	/// <param name="text">File text; null if <i>needText</i> false or if failed to get text. If the file is open in editor, it's the editor text, else it's the saved text.</param>
-	/// <param name="kind"></param>
+	/// <param name="kind"> </param>
 	/// <param name="id">File id.</param>
 	/// <param name="filePath">Full path.</param>
 	/// <param name="workspace">Path of the workspace folder.</param>

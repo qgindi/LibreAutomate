@@ -77,7 +77,7 @@ partial class AuDocs {
 		filesystem.delete(siteDir);
 		filesystem.createDirectory(siteDir);
 		var files = filesystem.enumFiles(siteDirTemp, flags: FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath).ToArray();
-		Parallel.ForEach(files, f => { //faster: 8 s -> 3 s
+		Parallel.ForEach(files, f => { //faster: 26 s -> 14 s; without code styling 8 s -> 3 s
 			var name = f.Name;
 			var file2 = siteDir + name;
 			if (name.Ends(".html") && !name.Ends(@"\toc.html")) {
@@ -101,8 +101,19 @@ partial class AuDocs {
 		int nr;
 		if (isApi) {
 			//In class member pages, in title insert a link to the type.
-			nr = s.RxReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.`]+))\.#?\w+\*?""[^>]*>(?:Method|Property|Field|Event|Operator|Constructor) (?=\w)",
-				m => m.ExpandReplacement(@"$0<a href=""$1.html"">$2</a>.").Replace("`", "-"),
+			nr = s.RxReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.`]+))\.#?\w+\*?""[^>]*>(?:Method|Property|Field|Event|Operator|Constructor) \K(\w+)",
+				m => {
+					string fileName = m[1].Value, className = m[2].Value, memberName = m[3].Value;
+					if (className.Contains('`')) { //generic
+						fileName = fileName.Replace("`", "-");
+						if (className.Ends("`1")) className = className.ReplaceAt(^2.., "&lt;T&gt;");
+						else if (className.Ends("`2")) className = className.ReplaceAt(^2.., "&lt;T1, T2&gt;");
+						else if (className.Ends("`3")) className = className.ReplaceAt(^2.., "&lt;T1, T2, T3&gt;");
+						else throw new NotImplementedException();
+					}
+					if (m.Subject[m[1].End+1]=='#') return $@"of <a href=""{fileName}.html"">{className}</a>"; //ctor
+					return $@"<a href=""{fileName}.html"">{className}</a>.{memberName}";
+				},
 				out s, 1);
 			
 			//Add "(+ n overloads)" link in h1 and "(next/top)" links in h2 if need.
@@ -174,20 +185,22 @@ partial class AuDocs {
 			//second part of the damaged spaces workaround
 			s = s.Replace('\u202F', ' ');
 		} else {
-			//in .md we use this for links to api: [Class]() or [Class.Func]().
+			//in .md we use this for links to api: [Class]() or [Class.Member]().
 			//	DocFX converts it to <a href="">Class</a> etc without warning.
 			//	Now convert it to a working link.
 			nr = s.RxReplace(@"<a href="""">(.+?)</a>", m => {
 				var k = m[1].Value;
-				string href = null;
-				foreach (var ns in _auNamespaces) {
-					if (filesystem.exists(siteDirTemp + "/api/" + ns + k + ".html").File) {
-						href = "../api/" + ns + k + ".html";
-						break;
-					}
-				}
+				string href = _ResolveLink(k);
+				if (href == null && k.LastIndexOf('.') is var i && i > 0) href = _ResolveLink(k[..i]); //enum member
 				if (href == null) { print.it($"cannot resolve link: [{k}]()"); return m.Value; }
 				return m.ExpandReplacement($@"<a href=""{href}"">$1</a>");
+				
+				string _ResolveLink(string k) {
+					foreach (var ns in _auNamespaces) {
+						if (filesystem.exists(siteDirTemp + "/api/" + ns + k + ".html", true).File) return "../api/" + ns + k + ".html";
+					}
+					return null;
+				}
 			}, out s);
 			
 			

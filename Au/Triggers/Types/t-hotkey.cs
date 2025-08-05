@@ -9,8 +9,8 @@ namespace Au.Triggers;
 public enum TKFlags {
 	/// <summary>
 	/// Allow other apps to receive the key down message too.
-	/// Without this flag, other apps usually receive only modifier keys. Also, OS always receives <c>Ctrl+Alt+Delete</c> and some other hotkeys.
-	/// To receive and block key messages is used a low-level hook. Other hooks may receive blocked messages or not, depending on when they were set. 
+	/// <br/>Without this flag, other apps usually receive only modifier keys. Also, OS always receives <c>Ctrl+Alt+Delete</c> and some other hotkeys.
+	/// <br/>To receive and block key messages is used a low-level hook. Other hooks may receive blocked messages or not, depending on when they were set. 
 	/// </summary>
 	ShareEvent = 1,
 	
@@ -31,9 +31,9 @@ public enum TKFlags {
 	
 	/// <summary>
 	/// Don't release modifier keys.
-	/// Without this flag, for example if trigger is <c>["Ctrl+K"]</c>, when the user presses <c>Ctrl</c> and <c>K</c> down, the trigger sends <c>Ctrl</c> key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfere with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
-	/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
-	/// <para>NOTE: Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is <c>true</c>. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is <c>true</c> and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.</para>
+	/// <br/>Without this flag, for example if trigger is <c>["Ctrl+K"]</c>, when the user presses <c>Ctrl</c> and <c>K</c> down, the trigger sends <c>Ctrl</c> key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfere with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
+	/// <br/>Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
+	/// <br/>Note: Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is <c>true</c>. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is <c>true</c> and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.
 	/// </summary>
 	NoModOff = 16,
 	
@@ -106,7 +106,7 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger> {
 	/// Adds a hotkey trigger.
 	/// </summary>
 	/// <param name="hotkey">
-	/// A hotkey, like with <see cref="keys.send"/>.
+	/// A hotkey, like with <see cref="keys.send"/>. See [key names and operators](xref:key_names).
 	/// Can contain 0 to 4 modifier keys (<c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>) and 1 non-modifier key.
 	/// Examples: <c>"F11"</c>, <c>"Ctrl+K"</c>, <c>"Ctrl+Shift+Alt+Win+A"</c>.
 	/// To ignore modifiers: <c>"?+K"</c>. Then the trigger works with any combination of modifiers.
@@ -143,7 +143,7 @@ public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger> {
 	/// </summary>
 	/// <param name="key"></param>
 	/// <param name="modKeys">
-	/// Modifier keys, like with <see cref="keys.send"/>.
+	/// Modifier keys. See [key names and operators](xref:key_names).
 	/// Examples: <c>"Ctrl"</c>, <c>"Ctrl+Shift+Alt+Win"</c>.
 	/// To ignore modifiers: <c>"?"</c>. Then the trigger works with any combination of modifiers.
 	/// To ignore a modifier: <c>"Ctrl?"</c>. Then the trigger works with or without the modifier. More examples: <c>"Ctrl?+Shift?"</c>, <c>"Ctrl+Shift?"</c>.

@@ -4,7 +4,7 @@
 
 namespace Au.Types;
 
-[DebuggerStepThrough]
+//[DebuggerStepThrough]
 static unsafe partial class Api {
 	#region util
 	
