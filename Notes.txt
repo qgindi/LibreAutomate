@@ -52,12 +52,12 @@ May need to update some info in README.md for github. Eg the screenshot and "how
 Review the md file of current version.
 	If it's still "future.md", rename ( RENAME!!! ) to "v1.x.md".
 
-Github commit all and push. The message could be like v1.2.3.
-	Note: do it now. Need for upload to GitHub. Also uploads the "changes" doc.
-
 Open the .iss file in Inno Script Studio. Change MyAppVersion. Review. Compile.
 	Run the setup file to test. Test on other OS too. Occasionally uninstall/install, not just upgrade.
 	May need to update the setup file size in the download webpage (index.md).
+
+Github commit all and push. The message could be like v1.2.3.
+	Note: do it now. Need for upload to GitHub. Also uploads the "changes" doc.
 
 Create a GitHub Release. Upload the setup file.
 

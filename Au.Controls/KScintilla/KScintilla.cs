@@ -46,8 +46,9 @@ public unsafe partial class KScintilla : HwndHost {
 	}
 	
 	public SciImages AaImages { get; private set; }
-	
-	public SciTags AaTags { get; private set; }
+
+	public SciTags AaTags => field ??= (AaInitTagsStyle == AaTagsStyle.NoTags ? null : new(this));
+	//can be used to add user-defined tags before creating window handle
 	
 	#region HwndHost
 	
@@ -107,7 +108,6 @@ public unsafe partial class KScintilla : HwndHost {
 		//note: cannot set styles here, because later derived class will call aaaStyleClearAll, which sets some special styles.
 		
 		if (AaInitImages) AaImages = new SciImages(this);
-		if (hasTags) AaTags = new SciTags(this);
 		
 		if (FocusManager.GetFocusScope(this) is Window fs && FocusManager.GetFocusedElement(fs) == this && Api.GetFocus() == wParent)
 			Api.SetFocus(_w);
