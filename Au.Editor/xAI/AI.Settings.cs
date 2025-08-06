@@ -1,3 +1,4 @@
+#if false
 using System.Text.Json.Serialization;
 
 namespace AI;
@@ -118,3 +119,4 @@ record class AiProviderSettings(string name) {
 		void _Error(string s) => throw new ArgumentException($"Error in settings of AI provider {name}: {s}");
 	}
 };
+#endif

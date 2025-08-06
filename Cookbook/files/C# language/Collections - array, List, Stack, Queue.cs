@@ -47,7 +47,7 @@ var q = new Queue<int>();
 q.Enqueue(4); //append 1 element with value 4
 while (q.TryDequeue(out var v)) print.it(v); //get and remove elements starting from the first
 
-/// If need to use a collection in multiple threads simultaneously, use <b><+lang lock statement>lock<><>.
+/// If need to use a collection in multiple threads simultaneously, use <+lang lock statement><.k>lock<><>.
 
 lock (k1) {
 	k1.Add(10);

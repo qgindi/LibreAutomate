@@ -16,7 +16,8 @@ public class KDialogWindow : Window {
 	/// </summary>
 	/// <param name="fNew">Called to create new T if there is no T window.</param>
 	protected static T ShowSingle<T>(Func<T> fNew) where T : KDialogWindow {
-		Debug_.PrintIf(Environment.CurrentManagedThreadId != 1);
+		Debug_.PrintIf(!process.IsLaMainThread_);
+
 		if (s_single.Find(o => o is T) is {  } d) {
 			d.Hwnd().ActivateL(true);
 		} else {
@@ -51,7 +52,7 @@ public class KDialogWindow : Window {
 	protected override void OnSourceInitialized(EventArgs e) {
 		var w = this.Hwnd();
 		w.SetStyle(WS.POPUP, WSFlags.Add);
-		if (Environment.CurrentManagedThreadId != 1) w.Prop.Set("close me on exit", 1);
+		if (process.IsLaProcess_ && !process.IsLaMainThread_) w.Prop.Set("close me on exit", 1);
 		base.OnSourceInitialized(e);
 	}
 	

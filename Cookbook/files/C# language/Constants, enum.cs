@@ -21,7 +21,7 @@ class Class1 {
 	}
 }
 
-/// The <b><+lang enum enumeration types>enum<><> keyword declares multiple integer constants and gives them a type. Physically they are like <.k>int<> by default.
+/// The <+lang enum enumeration types><.k>enum<><> keyword declares multiple integer constants and gives them a type. Physically they are like <.k>int<> by default.
 
 enum MyColors {
 	Black, //0

@@ -209,8 +209,8 @@ class PanelRecipe {
 			AaTags.AddLinkTag("+lang", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
 			//aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
 			AaTags.AddLinkTag("+ms", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
-			AaTags.AddStyleTag(".k", new() { textColor = 0x0000FF, bold = true }); //keyword
 			AaTags.AddStyleTag(".c", new() { backColor = 0xF0F0F0, monospace = true }); //inline code
+			AaTags.AddStyleTag(".k", new() { textColor = 0x0000FF, backColor = 0xF0F0F0, monospace = true }); //keyword
 			
 #if DEBUG
 			_panel._AutoRenderCurrentRecipeScript();

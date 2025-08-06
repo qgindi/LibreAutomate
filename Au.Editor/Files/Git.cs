@@ -91,7 +91,7 @@ static partial class Git {
 		if (_InitCommand()) run.thread(func);
 	}
 	
-	static bool _NotThread => Environment.CurrentManagedThreadId == 1;
+	static bool _NotThread => App.IsMainThread;
 	
 #if DEBUG
 	public static void Test() {

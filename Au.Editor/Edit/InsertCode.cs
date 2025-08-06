@@ -51,7 +51,7 @@ static class InsertCode {
 		if (s == null) return;
 		bool sep = separate ?? s.Contains('\n');
 		
-		if (Environment.CurrentManagedThreadId == 1) _Statements(s, flags, sep, renameVars);
+		if (App.IsMainThread) _Statements(s, flags, sep, renameVars);
 		else App.Dispatcher.InvokeAsync(() => _Statements(s, flags, sep, renameVars));
 	}
 	
@@ -202,7 +202,7 @@ static class InsertCode {
 	/// </summary>
 	/// <param name="s">If contains <c>`|`</c>, removes it and moves caret there; must be single line.</param>
 	public static void TextSimply(string s) {
-		Debug.Assert(Environment.CurrentManagedThreadId == 1);
+		Debug.Assert(App.IsMainThread);
 		var d = Panels.Editor.ActiveDoc;
 		if (d == null || d.aaaIsReadonly) return;
 		TextSimplyInControl(d, s);
@@ -258,7 +258,7 @@ static class InsertCode {
 	/// <param name="ns">Namespace, eg "System.Diagnostics". Can be multiple, separated with semicolon (can be whitespce around).</param>
 	/// <param name="missing">Don't check whether the usings exist. Caller knows they don't exist.</param>
 	public static bool UsingDirective(string ns, bool missing = false) {
-		Debug.Assert(Environment.CurrentManagedThreadId == 1);
+		Debug.Assert(App.IsMainThread);
 		if (!CodeInfo.GetContextAndDocument(out var k, 0, metaToo: true)) return false;
 		var namespaces = ns.Split(';', StringSplitOptions.TrimEntries);
 		int i = _FindUsingsInsertPos(k, missing ? null : namespaces);
@@ -349,7 +349,7 @@ static class InsertCode {
 	/// <param name="s">One or more meta options, like <c>"c A; r B;"</c>.</param>
 	/// <returns>true if changed documnt text.</returns>
 	public static bool MetaComment(string s) {
-		Debug.Assert(Environment.CurrentManagedThreadId == 1);
+		Debug.Assert(App.IsMainThread);
 		if (Panels.Editor.ActiveDoc is not { EFile.IsCodeFile: true } doc) return false;
 		var meta = new MetaCommentsParser(doc.aaaText);
 		var meta2 = new MetaCommentsParser($"/*/ {s} /*/");

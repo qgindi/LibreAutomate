@@ -241,7 +241,8 @@ public partial class KMenuCommands {
 				//InputManager.Current.PreProcessInput += _App_PreProcessInput; //works too, but more events
 				
 				void _KeyDown(object source, KeyEventArgs e) {
-					if (Environment.CurrentManagedThreadId != 1) return;
+					if (!process.IsLaMainThread_) return;
+
 					//perf.first();
 					if (e.Handled) return;
 					var k = e.Key; if (k == Key.System) k = e.SystemKey;

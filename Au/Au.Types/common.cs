@@ -7,6 +7,7 @@ namespace Au.Types {
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never), AttributeUsage(AttributeTargets.All)]
 	public sealed class NoDoc : Attribute { }
+	//TODO: now DocFX has /// <exclude />. See https://dotnet.github.io/docfx/docs/dotnet-api-docs.html
 	
 	/// <summary>
 	/// If a class is derived from this class, editor adds undeclared Windows API to its completion list.

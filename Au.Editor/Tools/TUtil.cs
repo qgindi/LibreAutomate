@@ -383,7 +383,7 @@ static class TUtil {
 	//Tool dialogs such as Delm normally run in new thread. If started from another such dialog - in its thread.
 	//	Else main thread would hang when something is slow or hangs when working with UI elements or executing 'also' code.
 	public static void ShowDialogInNonmainThread(Func<KDialogWindow> newDialog) {
-		if (Environment.CurrentManagedThreadId != 1) {
+		if (!App.IsMainThread) {
 			_Show(false);
 		} else {
 			run.thread(() => { _Show(true); }).Name = "Au.Tool";

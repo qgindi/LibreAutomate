@@ -432,7 +432,7 @@ static class CodeInfo {
 		/// </summary>
 		/// <param name="pos">If -1, gets current position. If -2, gets selection start.</param>
 		public Context(int pos) {
-			Debug.Assert(Environment.CurrentManagedThreadId == 1);
+			Debug.Assert(App.IsMainThread);
 			
 			sci = Panels.Editor.ActiveDoc;
 			code = sci.aaaText;

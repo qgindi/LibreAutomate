@@ -392,7 +392,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	[SkipLocalsInit]
 	unsafe string _ItemPath(string prefix = null, FileNode ancestor = null) {
-		if (Environment.CurrentManagedThreadId != 1) {
+		if (!App.IsMainThread) {
 			Debug_.Print("_ItemPath called in wrong thread");
 			return App.Dispatcher.Invoke(() => _ItemPath(prefix, ancestor));
 		}

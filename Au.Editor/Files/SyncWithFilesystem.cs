@@ -60,7 +60,7 @@ partial class FilesModel {
 				}
 			}
 		});
-		Debug.Assert(Environment.CurrentManagedThreadId == 1);
+		Debug.Assert(App.IsMainThread);
 		if (App.Model != this) return;
 		
 		//get added and deleted files

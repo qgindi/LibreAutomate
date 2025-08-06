@@ -1,16 +1,6 @@
-## Version 1.14.0 (2025-)
+## Version 1.15.0 (2025-)
 
 ### Editor
-**NuGet** tool improvements:
-- Check for updates.
-- Easier to update to a selected version.
-- Right-click an unused folder to delete.
-- Supports multiple sources better.
-- Displays package icons.
-- And more.
-
-Panel **Find > Saved searches**.
-
 New tools:
 - .
 
@@ -21,14 +11,14 @@ Improved:
 - .
 
 Fixed bugs:
-- When print text contains `<image "image">`, may hang or not display the image.
+- .
 
 ### Library
 New classes:
 - .
 
 New members:
-- **osVersion.thisLibrary**.
+- .
 
 New parameters:
 - .

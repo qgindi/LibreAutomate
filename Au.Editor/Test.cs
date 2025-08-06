@@ -24,6 +24,13 @@ using Au.Compiler;
 using static Au.Controls.Sci;
 
 static class Test {
+	//TODO
+	/// <summary>
+	/// Aaa moo <paramref name="moo"/> <c>moo</c> <i>moo</i> <b><i>moo</i></b> <b>Koo</b> <c>Koo</c> <b><c>Koo</c></b> kk <u>Koy</u> <see cref="Koo"/>.
+	/// </summary>
+	/// <param name="moo"></param>
+	/// <returns></returns>
+	static int Koo(RECT moo) => 0;
 
 	public static void FromMenubar() {
 		print.clear();

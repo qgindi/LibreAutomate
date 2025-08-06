@@ -1,4 +1,4 @@
-/// The <b><+lang iteration statements, "for">for<><> statement repeatedly executes statements.
+/// The <+lang iteration statements, "for"><.k>for<><> statement repeatedly executes statements.
 
 for (int i = 0; i < 3; i++) { //increment i: 0, 1, 2
 	print.it(i);

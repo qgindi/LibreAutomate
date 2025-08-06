@@ -208,8 +208,6 @@ class PanelCookbook {
 			//	It would be useful with many big files. Now we have < 200 small files, total < 1 MB.
 		}
 		
-		//TODO: use full-text search in body too
-		
 		//try stemmed fuzzy. Max Levenshtein distance 1 for a word.
 		//	rejected: use FuzzySharp. For max distance 1 don't need it.
 		if (root2 == null && !inBody && s.Length >= 3) {
@@ -276,7 +274,7 @@ class PanelCookbook {
 	/// </summary>
 	/// <param name="s">Wildcard or start or any substring of recipe name.</param>
 	public void OpenRecipe(string s) {
-		if (Environment.CurrentManagedThreadId == 1) _Open(); else App.Dispatcher.InvokeAsync(_Open);
+		if (App.IsMainThread) _Open(); else App.Dispatcher.InvokeAsync(_Open);
 		void _Open() {
 			Panels.PanelManager[P].Visible = true;
 			_OpenRecipe(_FindRecipe(s), true);

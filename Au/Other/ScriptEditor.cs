@@ -75,7 +75,7 @@ public static class ScriptEditor {
 		if (r == -1) { _WaitWhileEditorDisabled(); goto g1; }
 	}
 	
-	static int _EditorExtensionFlag => script.role == SRole.EditorExtension && Environment.CurrentManagedThreadId == 1 ? 16 : 0;
+	static int _EditorExtensionFlag => process.IsLaMainThread_ ? 16 : 0;
 	
 	static void _WaitWhileEditorDisabled() { MainWindow().WaitFor(0, o => o.IsEnabled()); }
 	

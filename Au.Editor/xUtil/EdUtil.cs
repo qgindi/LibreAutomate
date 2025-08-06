@@ -97,7 +97,7 @@ static class DotnetUtil {
 		installMiniSdk = false;
 		
 		if (!afterInstall) {
-			Debug_.PrintIf(Environment.CurrentManagedThreadId != 1);
+			Debug_.PrintIf(!App.IsMainThread);
 			if (App.IsPortable) {
 				if (_IsFullSdkInstalled()) return true;
 				print.warning("This feature in portable mode requires the .NET SDK.", 1);

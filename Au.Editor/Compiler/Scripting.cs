@@ -44,7 +44,7 @@ static class Scripting {
 				var f = App.Model.FindGlobalCs();
 				return f != null && f.GetCurrentText(out var s) ? s : null;
 			}
-			var gcode = Environment.CurrentManagedThreadId == 1 ? _GetGlobalCsCode() : App.Dispatcher.Invoke(_GetGlobalCsCode);
+			var gcode = App.IsMainThread ? _GetGlobalCsCode() : App.Dispatcher.Invoke(_GetGlobalCsCode);
 			if (gcode != null) treeGlobal = CSharpSyntaxTree.ParseText(gcode, parseOpt);
 			//TODO3: also recursively add files etc specified in meta c, r, etc.
 			//	Now it is not important, because this func used only in "find UI object" tools, and global.cs can be useful only in 'also' field.

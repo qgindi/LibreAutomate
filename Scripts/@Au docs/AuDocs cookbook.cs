@@ -92,7 +92,7 @@ This is an online copy of the LibreAutomate cookbook.
 				switch (tag) {
 				case "_":
 					return _MarkdownEscape(s);
-				case "mono" or ".c": //key/hotkey or inline code
+				case "mono" or ".c" or ".k": //key/hotkey or inline code, or C# keyword
 					//print.it(s);
 					Debug_.PrintIf(s.Contains('<') && m.Value.Ends("<>")); //if contains <, must end with </mono> or </.c>
 					Debug_.PrintIf(s.Contains('\n'), s);
@@ -107,11 +107,13 @@ This is an online copy of the LibreAutomate cookbook.
 					return $"<{tag}>{s}</{tag}>";
 				case "bi":
 					return $"<b><i>{s}</i></b>";
-				case ".k": //C# keyword
-					return $"<span style='color:#00f;font-weight:bold'>{s}</span>";
+				//case ".k": //C# keyword //avoid <span>, it can't be converted to markdown for AI
+				//	return $"<span style='color:#00f'>{s}</span>";
 				case "c":
+					print.it(m);
+					Debug_.Print("Don't use the c tag (color). It can't be converted to markdown for AI. Use .c (code). " + m);
 					var color = m[2].Value;
-					if (color == "green") return $"<span style='color:{color}'>{s}</span>";
+					if (color == "green") return $"<span style='color:{color}'>`{s}`</span>";
 					print.it(tag, color);
 					return s;
 				case "+nuget":

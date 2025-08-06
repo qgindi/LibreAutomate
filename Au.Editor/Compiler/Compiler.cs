@@ -38,7 +38,7 @@ partial class Compiler {
 	/// 	Else compiles but does not create output files.
 	/// </remarks>
 	public static bool Compile(CCReason reason, out CompResults r, FileNode f, FileNode projFolder = null, bool needMeta = false, Func<CanCompileArgs, bool> canCompile = null, MCFlags addMetaFlags = 0) {
-		Debug.Assert(Environment.CurrentManagedThreadId == 1);
+		Debug.Assert(App.IsMainThread);
 		r = null;
 		var cache = XCompiled.OfWorkspace;
 		if (reason is not (CCReason.CompileAlways or CCReason.WpfPreview) && !addMetaFlags.Has(MCFlags.Publish) && cache.IsCompiled(f, out r, projFolder)) {

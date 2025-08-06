@@ -26,7 +26,11 @@ static partial class App {
 		
 		script.role = SRole.EditorExtension; //used by the folders class
 		script.name = AppName;
-		
+
+		Thread.CurrentThread.Name = "@Au.Main";
+		process.IsLaMainThread_ = true; //[ThreadStatic]
+		process.IsLaProcess_ = true;
+
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 		
 		//restart as admin if started as non-admin on admin user account
@@ -156,6 +160,12 @@ static partial class App {
 	/// <b>Dispatcher</b> of main thread.
 	/// </summary>
 	public static Dispatcher Dispatcher => _app?.Dispatcher;
+
+	/// <summary>
+	/// true if called in the main thread.
+	/// NOTE: don't use <c>Environment.CurrentManagedThreadId == 1</c>, it's not always 1 in the main thread.
+	/// </summary>
+	public static bool IsMainThread => process.IsLaMainThread_;
 	
 	/// <summary>
 	/// Main window.
