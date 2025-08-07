@@ -1293,7 +1293,7 @@ public static partial class filesystem {
 	/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A timeout is less than -1.</exception>
-	/// <exception cref="TimeoutException"><i>missingWaitMS</i> is &gt; 0 and the file still does not exist after waiting.</exception>
+	/// <exception cref="TimeoutException"><i>missingWaitMS</i> is > 0 and the file still does not exist after waiting.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText"/>.</exception>
 	public static string loadText(string file, Encoding encoding = null, int lockedWaitMS = 2000, int missingWaitMS = 0) {
 		file = _LoadIntro(file, missingWaitMS);
@@ -1318,7 +1318,7 @@ public static partial class filesystem {
 	/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A timeout is less than -1.</exception>
-	/// <exception cref="TimeoutException"><i>missingWaitMS</i> is &gt; 0 and the file still does not exist after waiting.</exception>
+	/// <exception cref="TimeoutException"><i>missingWaitMS</i> is > 0 and the file still does not exist after waiting.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes(string)"/>.</exception>
 	public static byte[] loadBytes(string file, int lockedWaitMS = 2000, int missingWaitMS = 0) {
 		file = _LoadIntro(file, missingWaitMS);
@@ -1334,7 +1334,7 @@ public static partial class filesystem {
 	/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A timeout is less than -1.</exception>
-	/// <exception cref="TimeoutException"><i>missingWaitMS</i> is &gt; 0 and the file still does not exist after waiting.</exception>
+	/// <exception cref="TimeoutException"><i>missingWaitMS</i> is > 0 and the file still does not exist after waiting.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="File.OpenRead(string)"/>.</exception>
 	public static FileStream loadStream(string file, int lockedWaitMS = 2000, int missingWaitMS = 0) {
 		file = _LoadIntro(file, missingWaitMS);

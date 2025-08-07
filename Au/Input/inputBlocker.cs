@@ -240,7 +240,7 @@ namespace Au
 		/// Record blocked keys, and play back when stopped blocking.
 		/// </summary>
 		/// <remarks>
-		/// Will not play back if: 1. The blocking time is &gt; 10 seconds; then plays back only key-up events. 2. Detected <c>Ctrl+Alt+Delete</c>, [](xref:uac) consent or some other special screen. 3. Called <see cref="Pause"/>.
+		/// Will not play back if: 1. The blocking time is > 10 seconds; then plays back only key-up events. 2. Detected <c>Ctrl+Alt+Delete</c>, [](xref:uac) consent or some other special screen. 3. Called <see cref="Pause"/>.
 		/// </remarks>
 		public bool ResendBlockedKeys { get; set; }
 

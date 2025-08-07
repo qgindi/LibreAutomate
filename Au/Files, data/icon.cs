@@ -686,7 +686,7 @@ namespace Au {
 		//note: don't use GetSystemMetrics(SM_CXSMICON/SM_CXICON). They are for other purposes, eg window title bar, tray icon. On Win7 they can be different because can be changed in Control Panel. Used by SystemInformation.SmallIconSize etc.
 		
 		/// <summary>
-		/// If not 0, "get icon" functions of this class will print (in editor's output) their execution time in milliseconds when it &gt;= this value.
+		/// If not 0, "get icon" functions of this class will print (in editor's output) their execution time in milliseconds when it >= this value.
 		/// </summary>
 		/// <remarks>
 		/// Icons are mostly used in toolbars and menus. Getting icons of some files can be slow. For example if antivirus program scans the file. Toolbars and menus that use slow icons may start with a noticeable delay. Use this property to find too slow icons. Then you can replace them with fast icons, for example <c>.ico</c> files.

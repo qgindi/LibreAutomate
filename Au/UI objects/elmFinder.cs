@@ -314,7 +314,7 @@ public unsafe class elmFinder {
 	/// Waits for a matching descendant UI element to appear in the window or UI element.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. On timeout returns <c>null</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <exception cref="TimeoutException" />
 	/// <remarks>
 	/// Same as <see cref="Find(Seconds)"/>, except:

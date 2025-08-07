@@ -1,7 +1,7 @@
 namespace Au.More;
 
 /// <summary>
-/// String functions for unmanaged <b>char*</b> or <b>byte*</b> strings.
+/// String functions for unmanaged <c>char*</c> or <c>byte*</c> strings.
 /// </summary>
 internal static unsafe class Ptr_ {
 	#region char*

@@ -951,12 +951,12 @@ namespace Au {
 			return o;
 		}
 		
-		/// <summary>Default font for <see cref="showText"/> and <b>osdText</b>. Default: standard GUI font (usually <b>Segoe UI</b>), size 12.</summary>
+		/// <summary>Default font for <see cref="showText"/> and <b>osdText</b>. Default: standard GUI font (usually <c>Segoe UI</c>), size 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static FontNSS defaultSmallFont { get => s_smallFont; set => s_smallFont = value ?? throw new ArgumentNullException(); }
 		static FontNSS s_smallFont = new(12);
 		
-		/// <summary>Default font for <see cref="showTransparentText"/>. Default: standard GUI font (usually <b>Segoe UI</b>), size 24.</summary>
+		/// <summary>Default font for <see cref="showTransparentText"/>. Default: standard GUI font (usually <c>Segoe UI</c>), size 24.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static FontNSS defaultBigFont { get => s_bigFont; set => s_bigFont = value ?? throw new ArgumentNullException(); }
 		static FontNSS s_bigFont = new(24);

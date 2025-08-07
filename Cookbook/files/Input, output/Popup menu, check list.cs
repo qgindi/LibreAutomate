@@ -21,7 +21,7 @@ m.Show();
 /// Quick ways to add a menu item:
 /// - Clone an existing item.
 /// - Snippet: start typing <.c>menu<> and select <b>menuItemSnippet<>.
-/// - Drag and drop a script, file, folder or link. Then select <b>t[name] = ...<>.
+/// - Drag and drop a script, file, folder or link. Then select menu item <b>t[name] = ...<>.
 /// - Use the quick capturing hotkey (default <mono>Ctrl+Shift+Q<>) to add a "run program" button.
 
 /// To set menu item icon: click the item in the code editor, and double-click an icon in the <b>Icons<> dialog.

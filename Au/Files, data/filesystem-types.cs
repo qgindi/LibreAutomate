@@ -374,7 +374,7 @@ public enum FIfExists {
 /// </summary>
 public enum FPFormat {
 	/// <summary>
-	/// With long-path prefix (<c>"\\?\"</c> or <c>"\\?\UNC\"</c>) if path length &gt; <see cref="pathname.maxDirectoryPathLength"/>. This is default.
+	/// With long-path prefix (<c>"\\?\"</c> or <c>"\\?\UNC\"</c>) if path length > <see cref="pathname.maxDirectoryPathLength"/>. This is default.
 	/// </summary>
 	PrefixIfLong,
 

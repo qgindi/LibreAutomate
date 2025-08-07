@@ -154,7 +154,7 @@ namespace Au.More {
 		/// </param>
 		/// <param name="sDefault">Set <i>s</i> = this string if buffer too small or <i>r</i> &lt; 1 or if the retrieved string == this string (avoid creating new string).</param>
 		/// <returns>
-		/// If <i>r</i> &gt; <b>n</b>, calls <c>More(r);</c> and returns <c>false</c>.
+		/// If <i>r</i> > <b>n</b>, calls <c>More(r);</c> and returns <c>false</c>.
 		/// Else creates new string of <i>r</i> length and returns <c>true</c>.
 		/// </returns>
 		public bool GetString(int r, out string s, BSFlags flags = 0, string sDefault = null) {

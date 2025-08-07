@@ -254,7 +254,7 @@ namespace Au.More {
 		/// <param name="w"></param>
 		/// <param name="font">
 		/// Native font handle.
-		/// If <c>default(IntPtr)</c>, sets font that is used by most windows and controls on this computer, usually <b>Segoe UI</b> 9, DPI-scaled for <i>w</i> screen.
+		/// If <c>default(IntPtr)</c>, sets font that is used by most windows and controls on this computer, usually <c>Segoe UI</c> 9, DPI-scaled for <i>w</i> screen.
 		/// </param>
 		/// <remarks>
 		/// Sends <msdn>WM_SETFONT</msdn> message.

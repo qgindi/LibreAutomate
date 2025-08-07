@@ -13,7 +13,7 @@ namespace Au {
 	/// 
 	/// If a function cannot get folder path, the return value contains <c>null</c> string. Then the <b>+</b> operator would throw <b>ArgumentException</b>.
 	///
-	/// Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
+	/// Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <c>_Win8</c> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registered, may be still not created.
 	/// 
 	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure <b>ITEMIDLIST</b>. Functions of the nested class <see cref="shell"/> return it as <see cref="Pidl"/> or string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (<see cref="run.it"/>, <see cref="icon.of"/>, <see cref="icon.ofPidl(Pidl, int)"/>) but not with .NET functions.

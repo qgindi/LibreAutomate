@@ -1,3 +1,5 @@
+//TODO: adds `\` before `&` (in link text only?), eg `EnumUI\&lt;T\&gt;` in recipe Dialog - enum check-list, select
+
 using System.Xml.Linq;
 
 partial class AuDocs {

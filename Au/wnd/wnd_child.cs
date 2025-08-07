@@ -25,7 +25,7 @@ namespace Au {
 		/// <param name="also">
 		/// Callback function. Called for each matching control.
 		/// It can evaluate more properties of the control and return <c>true</c> when they match.
-		/// Example: <c>also: t =&gt; t.IsEnabled</c>
+		/// Example: <c>also: t => t.IsEnabled</c>
 		/// </param>
 		/// <param name="skip">
 		/// 0-based index of matching control.

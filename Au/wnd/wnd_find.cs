@@ -28,7 +28,7 @@ namespace Au {
 		/// <param name="also">
 		/// Callback function. Called for each matching window.
 		/// It can evaluate more properties of the window and return <c>true</c> when they match.
-		/// Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
+		/// Example: <c>also: t => !t.IsPopupWindow</c>.
 		/// Called after evaluating all other parameters except <i>contains</i>.
 		/// </param>
 		/// <param name="contains">
@@ -213,7 +213,7 @@ namespace Au {
 		/// <param name="run">Callback function. See example.</param>
 		/// <param name="wait">How long to wait for the window after calling the callback function. Seconds. Default 60.</param>
 		/// <param name="activate">Activate the window. Default: <c>true</c>.</param>
-		/// <exception cref="NotFoundException"><i>wait</i> time has expired (if &gt;= 0).</exception>
+		/// <exception cref="NotFoundException"><i>wait</i> time has expired (if >= 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -264,10 +264,10 @@ namespace Au {
 		/// Opens and finds new window. Ignores old windows. Activates.
 		/// </summary>
 		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>timeout</i> &lt; 0 (else exception).</returns>
-		/// <param name="timeout">How long to wait for the window. Seconds. Can be 0 (infinite), &gt;0 (exception on timeout) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">How long to wait for the window. Seconds. Can be 0 (infinite), >0 (exception on timeout) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="run">Callback function. Should open the window. See example.</param>
 		/// <param name="activate">Activate the window. Default: <c>true</c>.</param>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <remarks>
 		/// This function isn't the same as just two statements <b>run.it</b> and <b>wnd.find</b>. It never returns a window that already existed before calling it.

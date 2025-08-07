@@ -456,12 +456,12 @@ namespace Au {
 		/// <summary>
 		/// Calls <see cref="Invoke"/> or <i>action</i> and waits until changes the web page (window name and page name).
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
 		/// Default 60 seconds.
 		/// </param>
 		/// <param name="action">If used, calls it instead of <see cref="Invoke"/>.</param>
 		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> &lt; 0; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <exception cref="AuException">Failed. For example, when this UI element is invalid, or its top-level window does not contain a web page.</exception>
 		/// <exception cref="AuWndException">The window was closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions thrown by <see cref="Invoke"/> or by the <i>action</i> function.</exception>
@@ -974,10 +974,10 @@ namespace Au {
 		/// <summary>
 		/// Waits for a user-defined state/condition of this UI element. For example enabled, checked, changed name.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>, for example <c>true</c>.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>timeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <exception cref="AuWndException">Failed to get container window (<see cref="WndContainer"/>), or it was closed while waiting.</exception>
 		public T WaitFor<T>(Seconds timeout, Func<elm, T> condition) {
 			var w = WndContainer; //calls ThrowIfDisposed_
@@ -1237,7 +1237,7 @@ namespace Au {
 		/// <param name="waitS">If not 0, waits for new expanded/collapsed state max this number of seconds; on timeout throws exception, unless negative.</param>
 		/// <param name="ignoreState">Ignore initial <b>EXPANDED</b>/<b>COLLAPSED</b> state and always perform the expand/collapse action. Can be useful when <see cref="State"/> <b>EXPANDED</b>/<b>COLLAPSED</b> is incorrect. To ignore final state, use negative <i>waitS</i> instead, for example -0.001.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
-		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if > 0).</exception>
 		/// <remarks>
 		/// Does nothing if the UI element already has the requested expanded/collapsed state.
 		/// 
@@ -1361,7 +1361,7 @@ namespace Au {
 		/// <exception cref="ArgumentException"><i>path</i> contains an invalid wildcard expression (<c>"**options "</c> or regular expression).</exception>
 		/// <exception cref="NotFoundException">Failed to find an element specified in <i>path</i>.</exception>
 		/// <exception cref="AuException">Failed.</exception>
-		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if > 0).</exception>
 		/// <exception cref="NotSupportedException">The treeview control type is not supported when this is a 32-bit process running on 64-bit OS (unlikely).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
 		/// <remarks>

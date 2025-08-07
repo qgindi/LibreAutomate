@@ -182,8 +182,8 @@ public class ocr {
 	/// Performs OCR (text recognition) and finds text in results. Waits until found.
 	/// </summary>
 	/// <returns>Returns an <see cref="ocr"/> object that contains the word index and can click it etc. On timeout returns <c>null</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 	/// <inheritdoc cref="find(IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
 	public static ocr wait(Seconds timeout, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
@@ -193,7 +193,7 @@ public class ocr {
 	/// Performs OCR (text recognition) and waits until the specified text does not exist in results.
 	/// </summary>
 	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <inheritdoc cref="wait(Seconds, IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
 	public static bool waitNot(Seconds timeout, IFArea area, string text, OcrFlags flags = 0, double scale = 0, IOcrEngine engine = null, int skip = 0)
 		=> new ocrFinder(text, flags, scale, engine, skip).WaitNot(timeout, area);

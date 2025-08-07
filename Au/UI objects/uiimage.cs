@@ -271,8 +271,8 @@ public class uiimage {
 	/// More info: <see cref="find"/>.
 	/// </summary>
 	/// <returns>Returns <see cref="uiimage"/> object containing the rectangle of the found image. On timeout returns <c>null</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument), or the window closed while waiting.</exception>
 	/// <inheritdoc cref="find(IFArea, IFImage, IFFlags, int, Func{uiimage, IFAlso})"/>
 	public static uiimage wait(Seconds timeout, IFArea area, IFImage image, IFFlags flags = 0, int diff = 0, Func<uiimage, IFAlso> also = null)

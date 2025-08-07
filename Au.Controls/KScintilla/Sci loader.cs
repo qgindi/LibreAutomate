@@ -125,7 +125,7 @@ public unsafe partial class KScintilla {
 
 		/// <summary>
 		/// Sets control text.
-		/// If the file is image, binary or too big (&gt;100_000_000), sets to display the image or/and some short info text, makes the control read-only, sets <b>Save</b> to throw exception, and returns false. Else returns true.
+		/// If the file is image, binary or too big (<c>> 100_000_000</c>), sets to display the image or/and some short info text, makes the control read-only, sets <b>Save</b> to throw exception, and returns false. Else returns true.
 		/// Uses <see cref="SciSetTextFlags"/> NoUndo and NoNotify.
 		/// Must be called once.
 		/// </summary>

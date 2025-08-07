@@ -427,7 +427,7 @@ public partial class keys {
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="count">The repeat count.</param>
-	/// <exception cref="ArgumentOutOfRangeException"><i>count</i> &gt;10000 or &lt;0.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><i>count</i> >10000 or &lt;0.</exception>
 	/// <exception cref="ArgumentException">The last added item is not a key or single character.</exception>
 	public keys AddRepeat(int count) {
 		_ThrowIfSending();
@@ -442,7 +442,7 @@ public partial class keys {
 	/// </summary>
 	/// <returns>This.</returns>
 	/// <param name="timeMS">Time to sleep, milliseconds.</param>
-	/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> &gt;10000 (1 minute) or &lt;0.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> >10000 (1 minute) or &lt;0.</exception>
 	public keys AddSleep(int timeMS) {
 		_ThrowIfSending();
 		if ((uint)timeMS > 10000) throw new ArgumentOutOfRangeException(nameof(timeMS), "Max sleep time is 10000.");

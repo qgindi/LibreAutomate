@@ -236,7 +236,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Makes this rectangle bigger or smaller: <c>left-=dx; right+=dx; top-=dy; bottom+=dy;</c>
-		/// Use negative <i>dx</i>/<i>dy</i> to make the rectangle smaller. Note: too big negative <i>dx</i>/<i>dy</i> can make it invalid (<b>right</b>&lt;<b>left</b> or <b>bottom</b>&lt;<b>top</b>).
+		/// Use negative <i>dx</i>/<i>dy</i> to make the rectangle smaller. Note: too big negative <i>dx</i>/<i>dy</i> can make it invalid (<c>right &lt; left</c> or <c>bottom &lt; top</c>).
 		/// </summary>
 		public void Inflate(int dx, int dy) { left -= dx; right += dx; top -= dy; bottom += dy; }
 		

@@ -31,7 +31,7 @@ namespace Au.More {
 		/// <summary>
 		/// Sets timeout and possibly more wait parameters.
 		/// </summary>
-		/// <param name="timeout">Timeout in seconds, like <c>3</c> or <c>0.5</c>. Or a <b>Seconds</b> variable containing timeout etc, like <c>new(3, period: 5)</c>. If timeout is 0, will wait indefinitely. If > 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns <c>false</c> instead.</param>
+		/// <param name="timeout">Timeout in seconds, like <c>3</c> or <c>0.5</c>. Or a <b>Seconds</b> variable containing timeout etc, like <c>new(3, period: 5)</c>. If timeout is 0, will wait indefinitely. If <c>></c> 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns <c>false</c> instead.</param>
 		public WaitLoop(Seconds timeout) {
 			Period = timeout.Period ?? 10;
 			_step = Period / 10f;
@@ -47,7 +47,7 @@ namespace Au.More {
 			}
 		}
 		
-		/// <param name="secondsTimeout">Timeout in seconds. If 0, will wait indefinitely. If > 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns <c>false</c> instead.</param>
+		/// <param name="secondsTimeout">Timeout in seconds. If 0, will wait indefinitely. If <c>></c> 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns <c>false</c> instead.</param>
 		/// <param name="options">Options. If <c>null</c>, uses <b>opt.wait</b>.</param>
 		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
 		public WaitLoop(double secondsTimeout, OWait options) : this(new(secondsTimeout) { Period = (options ?? opt.wait).Period, DoEvents = (options ?? opt.wait).DoEvents }) { }
@@ -60,7 +60,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Maximal period (<see cref="Sleep"/> sleep time). Milliseconds.
-		/// Initially it is <see cref="Seconds.MaxPeriod"/>, or <see cref="Period"/> * 50 if it is <c>null</c> (eg 10*50=500).
+		/// Initially it is <see cref="Seconds.MaxPeriod"/>, or <see cref="Period"/> <c>*</c> 50 if it is <c>null</c> (eg <c>10*50=500</c>).
 		/// </summary>
 		public float MaxPeriod { get; set; }
 		
@@ -73,7 +73,7 @@ namespace Au.More {
 		/// Calls <see cref="IsTimeout"/>. If it returns <c>true</c>, returns <c>false</c>.
 		/// Else sleeps <see cref="Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="MaxPeriod"/>, and returns <c>true</c>.
 		/// </summary>
-		/// <exception cref="TimeoutException">The timeout time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException">The timeout time has expired (if > 0).</exception>
 		public unsafe bool Sleep() {
 			if (IsTimeout()) return false;
 			int t = (int)Period;

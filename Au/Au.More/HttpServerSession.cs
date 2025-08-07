@@ -103,7 +103,7 @@ namespace Au.More {
 		protected bool Verbose { get; set; }
 		
 		/// <summary>
-		/// Keep-alive timeout, in milliseconds. Default 10_000.
+		/// Keep-alive timeout, in milliseconds. Default 10000.
 		/// </summary>
 		protected int KeepAliveTimeout { get; set; } = 10_000;
 		

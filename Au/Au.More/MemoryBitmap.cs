@@ -80,8 +80,8 @@ public class MemoryBitmap : IDisposable {
 	/// Creates new memory DC and bitmap of specified size and selects it into the DC.
 	/// </summary>
 	/// <returns><c>false</c> if failed. In any case deletes previous bitmap and DC.</returns>
-	/// <param name="width">Width, pixels. Must be &gt; 0.</param>
-	/// <param name="height">Height, pixels. Must be &gt; 0.</param>
+	/// <param name="width">Width, pixels. Must be > 0.</param>
+	/// <param name="height">Height, pixels. Must be > 0.</param>
 	public bool Create(int width, int height) {
 		if (_disposed) throw new ObjectDisposedException(nameof(MemoryBitmap));
 		using var dcs = new ScreenDC_();

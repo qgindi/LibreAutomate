@@ -4,7 +4,7 @@ namespace Au {
 	/// Creates/opens/closes database file or in-memory database. Executes SQL, etc.
 	/// </summary>
 	/// <remarks>
-	/// This class wraps a SQLite API object <b>sqlite3*</b> and related <b>sqlite3_x</b> functions. They are documented in the SQLite website.
+	/// This class wraps a SQLite API object <c>sqlite3*</c> and related <b>sqlite3_x</b> functions. They are documented in the SQLite website.
 	/// 
 	/// To correctly close the database file, at first need to dispose all child objects, such as <see cref="sqliteStatement"/>, then dispose the <b>sqlite</b> object. To dispose a static <b>sqlite</b> variable, you may want to use <see cref="process.thisProcessExit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
 	/// </remarks>
@@ -110,10 +110,10 @@ namespace Au {
 		///
 		~sqlite() => Dispose(false);
 		
-		/// <summary><b>sqlite3*</b></summary>
+		/// <summary><c>sqlite3*</c></summary>
 		public static implicit operator IntPtr(sqlite c) => c._db;
 		
-		/// <summary><b>sqlite3*</b></summary>
+		/// <summary><c>sqlite3*</c></summary>
 		public IntPtr Handle => _db;
 		
 		/// <summary>
@@ -414,10 +414,10 @@ namespace Au {
 		///
 		~sqliteStatement() => Dispose(false);
 		
-		/// <summary><b>sqlite3_stmt*</b></summary>
+		/// <summary><c>sqlite3_stmt*</c></summary>
 		public static implicit operator IntPtr(sqliteStatement s) => s._st;
 		
-		/// <summary><b>sqlite3_stmt*</b></summary>
+		/// <summary><c>sqlite3_stmt*</c></summary>
 		public IntPtr Handle => _st;
 		
 		/// <summary>

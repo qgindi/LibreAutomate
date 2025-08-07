@@ -82,7 +82,7 @@ namespace Au {
 		/// <param name="data"><b>byte[]</b> containing data.</param>
 		/// <param name="format">Clipboard format id. See <see cref="ClipFormats.Register"/>.</param>
 		/// <exception cref="ArgumentNullException"></exception>
-		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats &lt;<b>CF_MAX</b> except GDI handles.</exception>
+		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats <c>&lt;CF_MAX</c> except GDI handles.</exception>
 		public clipboardData AddBinary(byte[] data, int format) {
 			return _Add(data, format);
 		}
@@ -416,7 +416,7 @@ EndFragment:0000000000
 		/// Gets clipboard data of any format as <b>byte[]</b>.
 		/// </summary>
 		/// <returns><c>null</c> if there is no data of this format.</returns>
-		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats &lt;<b>CF_MAX</b> except GDI handles.</exception>
+		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats <c>&lt;CF_MAX</c> except GDI handles.</exception>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static byte[] getBinary(int format) {
 			_CheckFormat(format);

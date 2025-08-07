@@ -60,7 +60,7 @@ internal sealed class NativeFont_ : IDisposable {
 
 	/// <summary>
 	/// Cached standard font used by most windows and controls.
-	/// On Windows 10 it is <c>"Segoe UI"</c> 9 by default.
+	/// Usually it is <c>Segoe UI</c> 9.
 	/// </summary>
 	internal static NativeFont_ RegularCached(int dpi) => _d.GetOrAdd(dpi, i => _CreateCached(i));
 
@@ -86,7 +86,7 @@ internal sealed class NativeFont_ : IDisposable {
 
 //	/// <summary>
 //	/// Standard font used by most windows and controls.
-//	/// On Windows 10 it is "Segoe UI" 9 by default.
+//	/// Usually it is <c>Segoe UI</c> 9.
 //	/// </summary>
 //	public static Font Regular(int dpi) => Font.FromHfont(NativeFont_.RegularCached(dpi));
 

@@ -48,7 +48,7 @@ public class WaitableTimer : WaitHandle {
 	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="dueTime">
 	/// The time after which the state of the timer is to be set to signaled. It is relative time (from now).
-	/// If positive, in milliseconds. If negative, in 100 nanosecond intervals (microseconds*10), see <msdn>FILETIME</msdn>.
+	/// If positive, in milliseconds. If negative, in 100 nanosecond intervals (microseconds <c>*</c> 10), see <msdn>FILETIME</msdn>.
 	/// Also can be 0, to set minimal time.</param>
 	/// <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
 	/// <exception cref="OverflowException"><c>dueTime*10000</c> is greater than <b>long.MaxValue</b>.</exception>

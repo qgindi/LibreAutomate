@@ -157,7 +157,7 @@ public static unsafe class Hash {
 		
 		/// <summary>Adds data.</summary>
 		/// <exception cref="ArgumentOutOfRangeException"><i>size</i> &lt; 0.</exception>
-		/// <exception cref="ArgumentNullException"><i>data</i> is <c>null</c> and <i>size</i> &gt; 0.</exception>
+		/// <exception cref="ArgumentNullException"><i>data</i> is <c>null</c> and <i>size</i> > 0.</exception>
 		public void Add(void* data, int size) {
 			if (size < 0) throw new ArgumentOutOfRangeException();
 			if (size > 0) Not_.Null(data); //allow null if size 0. Eg 'fixed' gets null pointer if the span or array is empty.

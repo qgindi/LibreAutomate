@@ -5,9 +5,9 @@ public partial struct wnd {
 	/// Waits until window exists or is active.
 	/// </summary>
 	/// <returns>Window handle. On timeout returns <c>default(wnd)</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="active">The window must be the active window (<see cref="active"/>), and not minimized.</param>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <exception cref="ArgumentException" />
 	/// <remarks>
 	/// Parameters etc are the same as <see cref="find"/>.
@@ -42,11 +42,11 @@ public partial struct wnd {
 	/// <summary>
 	/// Waits until any of specified windows exists or is active.
 	/// </summary>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="active">The window must be the active window (<see cref="active"/>), and not minimized.</param>
 	/// <param name="windows">Specifies windows, like <c>new("Window1"), new("Window2")</c>.</param>
 	/// <returns>1-based index and window handle. On timeout returns <c>(0, default(wnd))</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <remarks>
 	/// By default ignores invisible and cloaked windows. Use <b>wndFinder</b> flags if need.
 	/// </remarks>
@@ -82,9 +82,9 @@ public partial struct wnd {
 	//		/// <summary>
 	//		/// Waits until window does not exist.
 	//		/// </summary>
-	//		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	//		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	//		/// <returns>Returns true. On timeout returns false if <i>timeout</i> is negative; else exception.</returns>
-	//		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	//		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	//		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 	//		/// <remarks>
 	//		/// Parameters etc are the same as <see cref="Find"/>.
@@ -108,7 +108,7 @@ public partial struct wnd {
 	//		/// <param name="timeout"></param>
 	//		/// <param name="wFound">On timeout receives the first found matching window that exists.</param>
 	//		/// <param name="f">Window properties etc. Can be string, see <see cref="wndFinder.op_Implicit(string)"/>.</param>
-	//		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	//		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	//		public static bool waitNot(Seconds timeout, out wnd wFound, wndFinder f)
 	//		{
 	//			wFound = default;
@@ -136,14 +136,14 @@ public partial struct wnd {
 	/// <summary>
 	/// Waits for a user-defined state/condition of this window. For example active, visible, enabled, closed, contains something.
 	/// </summary>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>, for example <c>true</c>.</param>
 	/// <param name="dontThrowIfClosed">
 	/// Do not throw exception when the window handle is invalid or the window was closed while waiting.
 	/// In such case the callback function must return a non-default value, like in examples with <see cref="IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
 	/// </param>
 	/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 	/// <example>
 	/// <code><![CDATA[
@@ -190,14 +190,14 @@ public partial struct wnd {
 	/// <summary>
 	/// Waits until this window has the specified name.
 	/// </summary>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="name">
 	/// Window name. Usually it is the title bar text.
 	/// String format: [wildcard expression](xref:wildcard_expression).
 	/// </param>
 	/// <param name="not">Wait until this window does not have the specified name.</param>
 	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 	/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
 	public bool WaitForName(Seconds timeout, [ParamString(PSFormat.Wildex)] string name, bool not = false) {
@@ -208,10 +208,10 @@ public partial struct wnd {
 	/// <summary>
 	/// Waits until this window is closed/destroyed or until its process ends.
 	/// </summary>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
 	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <exception cref="AuException">Failed to open process handle when <i>waitUntilProcessEnds</i> is <c>true</c>.</exception>
 	/// <remarks>
 	/// If the window is already closed, immediately returns <c>true</c>.

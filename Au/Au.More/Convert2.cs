@@ -15,7 +15,7 @@ public static unsafe class Convert2 {
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 	/// <remarks>
-	/// The result string length is 2 * data length.
+	/// The result string length is 2 <c>*</c> data length.
 	/// Often it's better to use <see cref="Convert.ToBase64String"/>, then result is 4/3 of data length. But cannot use Base64 in file names and URLs because it is case-sensitive and may contain character <c>'/'</c>. Both functions are fast.
 	/// </remarks>
 	public static string HexEncode(RByte data, bool upperCase = false) {

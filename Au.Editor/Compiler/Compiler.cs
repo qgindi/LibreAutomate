@@ -29,7 +29,7 @@ partial class Compiler {
 	/// <param name="canCompile">Called after parsing meta, creating trees and compilation, but before emit. Return false to cancel.</param>
 	/// <param name="addMetaFlags">Add these flags to the usual flags of MetaComments. Used by MetaComments._PR.</param>
 	/// <remarks>
-	/// Must be always called in the main UI thread (Environment.CurrentManagedThreadId == 1).
+	/// Must be always called in the main UI thread.
 	/// 
 	/// Adds <see cref="MetaReferences.DefaultReferences"/>.
 	/// 

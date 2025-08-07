@@ -145,7 +145,7 @@ public unsafe class uiimageFinder {
 	/// <summary>
 	/// See <see cref="uiimage.wait"/>.
 	/// </summary>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <exception cref="Exception">Exceptions of <see cref="uiimage.wait"/>, except those of the constructor.</exception>
 	/// <remarks>
 	/// Same as <see cref="Find(IFArea, Seconds)"/>, except:

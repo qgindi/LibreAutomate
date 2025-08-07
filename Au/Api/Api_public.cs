@@ -11,8 +11,7 @@ namespace Au.Types;
 /// Here names are without prefix <b>WS_</b>. For example, instead of <c>WS_BORDER</c> use <c>WS.BORDER</c>. Not included constants that are 0 (eg <c>WS_TILED</c>) or are duplicate (eg <c>WS_SIZEBOX</c> is same as <c>WS_THICKFRAME</c>) or consist of multiple other constants (eg <c>WS_TILEDWINDOW</c>).
 /// </remarks>
 [Flags]
-public enum WS : uint
-{
+public enum WS : uint {
 	POPUP = 0x80000000,
 	CHILD = 0x40000000,
 	MINIMIZE = 0x20000000,
@@ -45,8 +44,7 @@ public enum WS : uint
 /// Here names are without prefix <b>WS_EX_</b>. For example, instead of <c>WS_EX_TOOLWINDOW</c> use <c>WSE.TOOLWINDOW</c>. Not included constants that are 0 (eg <c>WS_EX_LEFT</c>).
 /// </remarks>
 [Flags]
-public enum WSE : uint
-{
+public enum WSE : uint {
 	DLGMODALFRAME = 0x00000001,
 	NOPARENTNOTIFY = 0x00000004,
 	TOPMOST = 0x00000008,
@@ -98,8 +96,7 @@ public struct MSG //WinMSG
 
 /// <summary><see cref="GUITHREADINFO"/> flags.</summary>
 [Flags]
-public enum GTIFlags
-{
+public enum GTIFlags {
 	CARETBLINKING = 0x1,
 	INMOVESIZE = 0x2,
 	INMENUMODE = 0x4,
@@ -108,8 +105,7 @@ public enum GTIFlags
 }
 
 /// <summary>API <msdn>GUITHREADINFO</msdn></summary>
-public struct GUITHREADINFO
-{
+public struct GUITHREADINFO {
 	public int cbSize;
 	public GTIFlags flags;
 	public wnd hwndActive;
@@ -122,8 +118,7 @@ public struct GUITHREADINFO
 }
 
 /// <summary>API <msdn>CREATESTRUCT</msdn></summary>
-public unsafe struct CREATESTRUCT
-{
+public unsafe struct CREATESTRUCT {
 	public nint lpCreateParams;
 	public IntPtr hInstance;
 	public nint hMenu;
@@ -152,8 +147,7 @@ public unsafe struct CREATESTRUCT
 }
 
 /// <summary>API <msdn>SIGDN</msdn></summary>
-public enum SIGDN : uint
-{
+public enum SIGDN : uint {
 	NORMALDISPLAY,
 	PARENTRELATIVEPARSING = 0x80018001,
 	DESKTOPABSOLUTEPARSING = 0x80028000,
@@ -167,10 +161,8 @@ public enum SIGDN : uint
 }
 
 /// <summary>API <msdn>SetWindowPos</msdn> flags. Can be used with <see cref="wnd.SetWindowPos"/>.</summary>
-/// <remarks>The <b>_X</b> flags are undocumented.</remarks>
 [Flags]
-public enum SWPFlags : uint
-{
+public enum SWPFlags : uint {
 	NOSIZE = 0x1,
 	NOMOVE = 0x2,
 	NOZORDER = 0x4,
@@ -197,8 +189,7 @@ public enum SWPFlags : uint
 /// Special window handle values. Can be used with <see cref="wnd.SetWindowPos"/>.
 /// See API <msdn>SetWindowPos</msdn>.
 /// </summary>
-public enum SpecHWND
-{
+public enum SpecHWND {
 	TOP = 0,
 	BOTTOM = 1,
 	TOPMOST = -1,
@@ -211,8 +202,7 @@ public enum SpecHWND
 /// Window long constants. Used with <see cref="wnd.GetWindowLong"/> and <see cref="wnd.SetWindowLong"/>.
 /// See API <msdn>GetWindowLong</msdn>. See also API <msdn>SetWindowSubclass</msdn>.
 /// </summary>
-public static class GWL
-{
+public static class GWL {
 	public const int WNDPROC = -4;
 	public const int USERDATA = -21;
 	public const int STYLE = -16;
@@ -222,8 +212,7 @@ public static class GWL
 	public const int EXSTYLE = -20;
 	//info: also there are GWLP_, but their values are the same.
 
-	public static class DWL
-	{
+	public static class DWL {
 		public static readonly int MSGRESULT = 0;
 		public static readonly int DLGPROC = IntPtr.Size;
 		public static readonly int USER = IntPtr.Size * 2;
@@ -234,8 +223,7 @@ public static class GWL
 /// Window class long constants. Used with <see cref="WndUtil.GetClassLong"/>.
 /// See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
 /// </summary>
-public static class GCL
-{
+public static class GCL {
 	public const int ATOM = -32;
 	public const int WNDPROC = -24;
 	public const int STYLE = -26;
@@ -255,8 +243,7 @@ public delegate nint WNDPROC(wnd w, int msg, nint wp, nint lp);
 
 /// <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="wnd.SendTimeout"/>.</summary>
 [Flags]
-public enum SMTFlags : uint
-{
+public enum SMTFlags : uint {
 	BLOCK = 0x0001,
 	ABORTIFHUNG = 0x0002,
 	NOTIMEOUTIFNOTHUNG = 0x0008,
@@ -265,8 +252,7 @@ public enum SMTFlags : uint
 
 /// <summary>API <msdn>DrawTextEx</msdn> format flags.</summary>
 [Flags]
-public enum TFFlags
-{
+public enum TFFlags {
 	CENTER = 0x1,
 	RIGHT = 0x2,
 	VCENTER = 0x4,

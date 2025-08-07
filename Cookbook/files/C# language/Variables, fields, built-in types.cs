@@ -10,7 +10,7 @@ var k = 0; //var means the type of the assigned value. The same as int k = 0;
 bool b1 = keys.isCtrl; //call a function and assign its return value
 if (!dialog.showInput(out string s3, s)) return; //declare with the out keyword. The function assigns a value.
 
-/// Names are case-sensitive and can contain letters, digits (except at the start) and _.
+/// Names are case-sensitive and can contain letters, digits (except at the start) and <.c>_<>.
 
 /// Frequently used <+lang built-in types>C# built-in types<>:
 /// <.k>int<> - integer (whole) number like <.c>10<> or <.c>-10<>. Max about +- 2 billions.

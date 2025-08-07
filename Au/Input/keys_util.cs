@@ -226,7 +226,7 @@ public partial class keys {
 		}
 		
 		/// <summary>
-		/// If <c>t &gt; 10</c>, returns <c>(t / 4 + 8)</c>.
+		/// If <c>t > 10</c>, returns <c>(t / 4 + 8)</c>.
 		/// </summary>
 		internal static int LimitSleepTime(int t) => t <= 10 ? t : (t / 4 + 8);
 		

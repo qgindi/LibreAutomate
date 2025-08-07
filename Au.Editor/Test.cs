@@ -30,10 +30,16 @@ static class Test {
 	/// </summary>
 	/// <param name="moo"></param>
 	/// <returns></returns>
+	/// <remarks>
+	/// <![CDATA[**bold** m `m`]]>
+	/// <see langword="true"/>
+	/// </remarks>
 	static int Koo(RECT moo) => 0;
 
 	public static void FromMenubar() {
 		print.clear();
+
+		File.Copy("", "");
 
 
 		//var doc = Panels.Editor.ActiveDoc;

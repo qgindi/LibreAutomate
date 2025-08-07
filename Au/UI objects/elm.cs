@@ -324,7 +324,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <remarks>
 	/// The parameters are of the callback function.
 	/// Uses API <msdn>AccessibleObjectFromEvent</msdn>.
-	/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is <b>OBJECT_DESTROY</b>, <b>OBJECT_HIDE</b>, <b>SYSTEM_*END</b>.
+	/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is <b>OBJECT_DESTROY</b>, <b>OBJECT_HIDE</b>, <b>SYSTEM_xEND</b>.
 	/// Returns <c>null</c> if failed. Always check the return value, to avoid <b>NullReferenceException</b>. An exception in the callback function kills this process.
 	/// </remarks>
 	public static elm fromEvent(wnd w, EObjid idObject, int idChild) {

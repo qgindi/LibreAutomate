@@ -1064,10 +1064,10 @@ namespace Au {
 		/// <summary>
 		/// Waits while some mouse buttons are pressed. See <see cref="isPressed"/>.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout). Default 0.</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout). Default 0.</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
 		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <seealso cref="keys.waitForNoModifierKeysAndMouseButtons"/>
 		public static bool waitForNoButtonsPressed(Seconds timeout = default, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2) {
 			return keys.waitForNoModifierKeysAndMouseButtons(timeout, 0, buttons);
@@ -1092,12 +1092,12 @@ namespace Au {
 		/// Waits for button-down or button-up event of the specified mouse button or buttons.
 		/// </summary>
 		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
 		/// <param name="up">Wait for button-up event.</param>
 		/// <param name="block">Make the event invisible to other apps. If <i>up</i> is <c>true</c>, makes the down event invisible too, if it comes while waiting for the up event.</param>
 		/// <exception cref="ArgumentException"><i>button</i> is 0.</exception>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <remarks>
 		/// Unlike <see cref="waitForNoButtonsPressed"/>, waits for down or up event, not for button state.
 		/// Uses low-level mouse hook.
@@ -1118,7 +1118,7 @@ namespace Au {
 		/// Waits for button-down or button-up event of any mouse button, and gets the button code.
 		/// </summary>
 		/// <returns>Returns the button code. On timeout returns 0 if <i>timeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// var button = mouse.waitForClick(0, up: true, block: true);
@@ -1166,11 +1166,11 @@ namespace Au {
 		/// <summary>
 		/// Waits for a standard mouse cursor (pointer) visible.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursor">Id of a standard cursor.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
 		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		public static bool waitForCursor(Seconds timeout, MCursor cursor, bool not = false) {
 			IntPtr hcur = Api.LoadCursor(default, cursor);
 			if (hcur == default) throw new AuException(0, "*load cursor");
@@ -1181,11 +1181,11 @@ namespace Au {
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursorHash">Cursor hash, as returned by <see cref="MouseCursor.Hash"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
 		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		public static bool waitForCursor(Seconds timeout, long cursorHash, bool not = false) {
 			if (cursorHash == 0) throw new ArgumentException();
 			return wait.until(timeout, () => (MouseCursor.GetCurrentVisibleCursor(out var c) && MouseCursor.Hash(c) == cursorHash) ^ not);

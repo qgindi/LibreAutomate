@@ -4,9 +4,9 @@ namespace Au.Types;
 /// Manages an <b>ITEMIDLIST</b> structure that is used to identify files and other shell objects instead of a file-system path.
 /// </summary>
 /// <remarks>
-/// Wraps an <b>ITEMIDLIST*</b>, also known as <i>PIDL</i> or <b>LPITEMIDLIST</b>.
+/// Wraps an <c>ITEMIDLIST*</c>, also known as <i>PIDL</i> or <b>LPITEMIDLIST</b>.
 /// 
-/// When calling native shell API, virtual objects can be identified only by <b>ITEMIDLIST*</b>. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by <b>ITEMIDLIST*</b>. URLs can be identified by URL as well as by <b>ITEMIDLIST*</b>.
+/// When calling native shell API, virtual objects can be identified only by <c>ITEMIDLIST*</c>. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by <c>ITEMIDLIST*</c>. URLs can be identified by URL as well as by <c>ITEMIDLIST*</c>.
 /// 
 /// The <b>ITEMIDLIST</b> structure is in unmanaged memory. You can dispose <b>Pidl</b> variables, or GC will do it later. Always dispose if creating many.
 /// 
@@ -16,7 +16,7 @@ public unsafe class Pidl : IDisposable {
 	IntPtr _pidl;
 	
 	/// <summary>
-	/// Gets the <b>ITEMIDLIST*</b>.
+	/// Gets the <c>ITEMIDLIST*</c>.
 	/// </summary>
 	/// <remarks>
 	/// The <b>ITEMIDLIST</b> memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="GC.KeepAlive"/> where need.
@@ -24,7 +24,7 @@ public unsafe class Pidl : IDisposable {
 	public IntPtr UnsafePtr => _pidl;
 	
 	/// <summary>
-	/// Gets the <b>ITEMIDLIST*</b>.
+	/// Gets the <c>ITEMIDLIST*</c>.
 	/// </summary>
 	/// <remarks>
 	/// Use to pass to API where the parameter type is <b>HandleRef</b>. It is safer than <see cref="UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
@@ -32,7 +32,7 @@ public unsafe class Pidl : IDisposable {
 	public HandleRef HandleRef => new HandleRef(this, _pidl);
 	
 	/// <summary>
-	/// Returns <c>true</c> if the <b>ITEMIDLIST*</b> is <c>null</c>.
+	/// Returns <c>true</c> if the <c>ITEMIDLIST*</c> is <c>null</c>.
 	/// </summary>
 	public bool IsNull => _pidl == default;
 	
@@ -40,7 +40,7 @@ public unsafe class Pidl : IDisposable {
 	/// Assigns an <b>ITEMIDLIST</b> to this variable.
 	/// </summary>
 	/// <param name="pidl">
-	/// <b>ITEMIDLIST*</b>.
+	/// <c>ITEMIDLIST*</c>.
 	/// It can be created by any API that creates <b>ITEMIDLIST</b>. They allocate the memory with API <b>CoTaskMemAlloc</b>. This variable will finally free it with <b>Marshal.FreeCoTaskMem</b> which calls API <b>CoTaskMemFree</b>.
 	/// </param>
 	public Pidl(IntPtr pidl) => _pidl = pidl;
@@ -48,8 +48,8 @@ public unsafe class Pidl : IDisposable {
 	/// <summary>
 	/// Combines two <b>ITEMIDLIST</b> (parent and child) and assigns the result to this variable.
 	/// </summary>
-	/// <param name="pidlAbsolute">Absolute <b>ITEMIDLIST*</b> (parent folder).</param>
-	/// <param name="pidlRelative">Relative <b>ITEMIDLIST*</b> (child object).</param>
+	/// <param name="pidlAbsolute">Absolute <c>ITEMIDLIST*</c> (parent folder).</param>
+	/// <param name="pidlRelative">Relative <c>ITEMIDLIST*</c> (child object).</param>
 	/// <remarks>
 	/// Does not free <i>pidlAbsolute</i> and <i>pidlRelative</i>.
 	/// </remarks>
@@ -100,7 +100,7 @@ public unsafe class Pidl : IDisposable {
 	}
 	
 	/// <summary>
-	/// The same as <see cref="FromString"/>, but returns unmanaged <b>ITEMIDLIST*</b>.
+	/// The same as <see cref="FromString"/>, but returns unmanaged <c>ITEMIDLIST*</c>.
 	/// Later need to free it with <b>Marshal.FreeCoTaskMem</b>.
 	/// </summary>
 	/// <param name="s"></param>
@@ -184,7 +184,7 @@ public unsafe class Pidl : IDisposable {
 	
 #if true
 	/// <summary>
-	/// This overload uses an <b>ITEMIDLIST*</b> that is not stored in a <b>Pidl</b> variable.
+	/// This overload uses an <c>ITEMIDLIST*</c> that is not stored in a <b>Pidl</b> variable.
 	/// </summary>
 	public static string ToString(IntPtr pidl) {
 		if (pidl == default) return null;
@@ -251,7 +251,7 @@ public unsafe class Pidl : IDisposable {
 	
 	/// <summary>
 	/// Returns string <c>":: ITEMIDLIST"</c>.
-	/// This overload uses an <b>ITEMIDLIST*</b> that is not stored in a <b>Pidl</b> variable.
+	/// This overload uses an <c>ITEMIDLIST*</c> that is not stored in a <b>Pidl</b> variable.
 	/// </summary>
 	public static string ToHexString(IntPtr pidl) {
 		if (pidl == default) return null;

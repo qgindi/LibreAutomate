@@ -4,7 +4,7 @@ uid: snippets
 
 # Snippets
 
-Code snippets are small blocks of reusable code that you can quickly insert into your C# code. For example, the **piPrintItSnippet** inserts code `print.it();` and moves the text cursor into the `()`. Snippets appear in the completion list, together with types, functions, etc. To show the list, in the code editor start typing a snippet name or press `Ctrl+Space`. Snippets containing `${SELECTED_TEXT}` also can be used to surround selected code (toolbar button **Surround** or menu **Edit -> Selection -> Surround**).
+Code snippets are small blocks of reusable code that you can quickly insert into your C# code. For example, the **piPrintItSnippet** inserts code `print.it();` and moves the text cursor into the `()`. Snippets appear in the completion list, together with types, functions, etc. To show the list, in the code editor start typing a snippet name or press `Ctrl+Space`. Snippets containing `${SELECTED_TEXT}` also can be used to surround selected code (toolbar button **Surround** or menu **Edit > Selection > Surround**).
 
 In the **Snippets** window (menu **Tools > Snippets**) you can add/delete/edit/hide/unhide your snippets and hide/unhide default snippets. Right-click to add/delete. Uncheck to hide (don't show in the completion list).
 

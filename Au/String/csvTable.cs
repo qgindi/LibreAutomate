@@ -231,7 +231,7 @@ public class csvTable {
 	/// Gets or sets a field.
 	/// </summary>
 	/// <param name="row">0-based row index. The <c>set</c> function adds new row if negative or equal to <see cref="RowCount"/>.</param>
-	/// <param name="column">0-based column index. With the <c>set</c> function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
+	/// <param name="column">0-based column index. With the <c>set</c> function it can be >= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <example>
 	/// <code><![CDATA[
@@ -274,7 +274,7 @@ public class csvTable {
 	/// Gets or sets a field.
 	/// </summary>
 	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. The <c>set</c> function adds new row if <c>^0</c>.</param>
-	/// <param name="column">0-based column index. With the <c>set</c> function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
+	/// <param name="column">0-based column index. With the <c>set</c> function it can be >= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public string this[Index row, int column] {
 		get => this[row.GetOffset(_a.Count), column];
@@ -574,7 +574,7 @@ public class csvTable {
 	/// Converts a number to string and sets a field.
 	/// </summary>
 	/// <param name="row">0-based row index. Can be from the end; for example <c>^1</c> is the last row. Adds new row if <c>^0</c>.</param>
-	/// <param name="column">0-based column index. If &gt;= <see cref="ColumnCount"/> and &lt; 1000, sets <c>ColumnCount = column + 1</c>.</param>
+	/// <param name="column">0-based column index. If >= <see cref="ColumnCount"/> and &lt; 1000, sets <c>ColumnCount = column + 1</c>.</param>
 	/// <param name="value"></param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>row</i> or <i>column</i>.</exception>
 	public void Set(Index row, int column, int value) { this[row, column] = value.ToS(); }

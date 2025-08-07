@@ -537,7 +537,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// To send text use clipboard (like with <see cref="OKeyText.Paste"/>) if text length is &gt;= this value.
+		/// To send text use clipboard (like with <see cref="OKeyText.Paste"/>) if text length is >= this value.
 		/// Default: 200.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -654,7 +654,7 @@ namespace Au.Types {
 		/// You can use function <see cref="PrintClipboard"/> to see format names and get-data times.
 		/// 
 		/// There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API constant names, like <c>"CF_WAVE"</c>. Private, display and metafile formats are never restored.
-		/// These formats are never restored: <b>CF_METAFILEPICT</b>, <b>CF_ENHMETAFILE</b>, <b>CF_PALETTE</b>, <b>CF_OWNERDISPLAY</b>, <b>CF_DSPx</b> formats, <b>CF_GDIOBJx</b> formats, <b>CF_PRIVATEx</b> formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
+		/// These formats are never restored: <b>CF_METAFILEPICT</b>, <b>CF_ENHMETAFILE</b>, <b>CF_PALETTE</b>, <b>CF_OWNERDISPLAY</b>, <b>CF_DSPx</b> formats, <b>CF_GDIOBJx</b> formats, <b>CF_PRIVATEx</b> formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or > 10 MB.
 		/// 
 		/// This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
 		/// </remarks>

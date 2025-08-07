@@ -106,7 +106,7 @@ namespace Au.More {
 		/// <param name="s">A string in this process.</param>
 		/// <param name="offsetBytes">Offset in <see cref="Mem"/>.</param>
 		/// <remarks>
-		/// In that process is used <c>(s.Length+1)*2</c> bytes of memory (+1 for the <c>'\0'</c>, *2 because UTF-16 character size is 2 bytes).
+		/// In that process is used <c>(s.Length+1)*2</c> bytes of memory (+1 for the <c>'\0'</c>, <c>*</c> 2 because UTF-16 character size is 2 bytes).
 		/// </remarks>
 		public bool WriteCharString(string s, int offsetBytes = 0) {
 			if (Mem == default) return false;

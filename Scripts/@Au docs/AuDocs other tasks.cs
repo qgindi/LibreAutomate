@@ -8,7 +8,7 @@ partial class AuDocs {
 		var tarDir = pathname.getDirectory(siteDir);
 		_Compress(siteDir, tarDir);
 		_Upload(tarDir);
-		_CloudflarePurgeCache();
+		//_CloudflarePurgeCache(); //currently not using
 	}
 	
 	static void _Compress(string siteDir, string tarDir) {

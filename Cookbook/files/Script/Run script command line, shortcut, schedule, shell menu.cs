@@ -7,7 +7,7 @@
 /// 	<.c>Au.Editor.exe "Script name.cs" /argument1 "argument 2"<>
 /// 	<.c>Au.Editor.exe *Script5.cs<>
 ///
-/// 	With * the program can wait until the script ends and capture text written with <see cref="script.writeResult"/>.
+/// 	With <.c>*<> the program can wait until the script ends and capture text written with <see cref="script.writeResult"/>.
 ///
 /// 	To create a command line string to run current script, use menu <b>TT > Script launchers<>. Also there you'll find tools to create Windows Task Scheduler tasks (triggers: date/time, event log, startup, session connect/disconnect/lock/unlock, idle), shortcuts and <link https://www.libreautomate.com/forum/showthread.php?tid=7819>shell context menu items<>.
 /// 

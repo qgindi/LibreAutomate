@@ -6,7 +6,7 @@ namespace Au;
 /// <remarks>
 /// Specialized "wait for" functions are in other classes, for example <see cref="wnd.wait"/>.
 /// 
-/// All "wait for" functions have a timeout parameter. It is the maximal time to wait, in seconds. If 0, waits indefinitely. If > 0, throws <see cref="TimeoutException"/> when timed out. If &lt; 0, then stops waiting and returns default value of that type (<c>false</c>, etc).
+/// All "wait for" functions have a timeout parameter. It is the maximal time to wait, in seconds. If 0, waits indefinitely. If <c>></c> 0, throws <see cref="TimeoutException"/> when timed out. If &lt; 0, then stops waiting and returns default value of that type (<c>false</c>, etc).
 /// 
 /// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a <b>Window</b>/<b>Form</b>/<b>Control</b> event handler, the window would stop responding. Use another thread, for example async/await/<b>Task</b>, like in the example. Or <see cref="Seconds.DoEvents"/>.
 /// </remarks>

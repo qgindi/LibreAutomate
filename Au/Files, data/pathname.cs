@@ -309,7 +309,7 @@ namespace Au {
 		/// 5. If <i>path</i> is like <c>"C:"</c> makes like <c>"C:\"</c>.
 		/// 6. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
 		/// 7. If no flag <b>DontExpandDosPath</b>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
-		/// 8. If no flag <b>DontRemoveEndSeparator</b>, and string ends with <c>'\\'</c> character, and length &gt; 4, removes the <c>'\\'</c>, unless then it would be a path to an existing file (not directory).
+		/// 8. If no flag <b>DontRemoveEndSeparator</b>, and string ends with <c>'\\'</c> character, and length > 4, removes the <c>'\\'</c>, unless then it would be a path to an existing file (not directory).
 		/// 9. If no flag <b>DontPrefixLongPath</b>, calls <see cref="prefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
 		/// 
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths (unless used <i>defaultParentDirectory</i>), trims <c>'\\'</c> at the end if need.

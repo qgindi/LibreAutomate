@@ -159,9 +159,9 @@ public class wndFinder {
 	/// Waits until window exists or is active.
 	/// </summary>
 	/// <returns>Returns <see cref="Result"/>. On timeout returns <c>default(wnd)</c> if <i>timeout</i> is negative; else exception.</returns>
-	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 	/// <param name="active">The window must be the active window (<see cref="wnd.active"/>), and not minimized.</param>
-	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <remarks>
 	/// Same as <see cref="Find(Seconds)"/>, except:
 	/// - 0 timeout means infinite.

@@ -127,7 +127,7 @@ public record struct Coord {
 	
 	/// <summary>
 	/// Creates <b>Coord</b> of <b>Fraction</b> type.
-	/// Value 0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0 and &gt;=1.0 are outside of the rectangle.
+	/// Value 0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0 and >=1.0 are outside of the rectangle.
 	/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(.5)</c> can be replaced with <c>.5f</c>.
 	/// </summary>
 	public static unsafe Coord Fraction(double v) => (float)v;

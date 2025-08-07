@@ -3,7 +3,7 @@ namespace Au {
 		/// <summary>
 		/// Waits for a user-defined condition. Until the callback function returns a value other than <c>default(T)</c>, for example <c>true</c>.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. Default period is 10, and can be changed like <c>wait.until(new(5) { Timeout = 100 }, ...)</c>.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"></exception>
@@ -21,7 +21,7 @@ namespace Au {
 		/// Obsolete. Use <b>wait.until</b>.
 		/// Waits for a user-defined condition. Until the callback function returns a value other than <c>default(T)</c>, for example <c>true</c>.
 		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. The calling period depends on <i>options</i>.</param>
 		/// <param name="options">Options. If <c>null</c>, uses <b>opt.wait</b>.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
@@ -43,7 +43,7 @@ namespace Au {
 		/// <summary>
 		/// Calls callback function <i>action</i>. If it throws an exception, waits/retries until it does not throw exceptions or until timeout.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="action">Callback function (eg lambda). It is called repeatedly, until does not throw an exception. Default period is 10, and can be changed like <c>wait.retry(new(5) { Timeout = 100 }, ...)</c>.</param>
 		/// <param name="catchWhen">Called on exception. Return <c>true</c> to handle the exception (and wait/retry). Return <c>false</c> to not handle the exception. If <c>null</c> (default), handles all exceptions.</param>
 		/// <returns>Returns <c>true</c> when <i>action</i> succeeded. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
@@ -78,7 +78,7 @@ namespace Au {
 		/// <summary>
 		/// Calls callback function <i>func</i> and returns its result. If it throws an exception, waits/retries until it does not throw exceptions or until timeout.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="func">Callback function (eg lambda). It is called repeatedly, until does not throw an exception. Default period is 10, and can be changed like <c>wait.retry(new(5) { Timeout = 100 }, ...)</c>.</param>
 		/// <param name="catchWhen">Called on exception. Return <c>true</c> to handle the exception (and wait/retry). Return <c>false</c> to not handle the exception. If <c>null</c> (default), handles all exceptions.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>timeout</i> is negative; else exception.</returns>
@@ -108,14 +108,14 @@ namespace Au {
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="flags"></param>
 		/// <param name="handles">One or more handles of kernel objects. Max 63.</param>
 		/// <returns>
 		/// Returns 1-based index of the first signaled handle. Negative if abandoned mutex.
 		/// On timeout returns 0 if <i>timeout</i> is negative; else exception.
 		/// </returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <exception cref="AuException">Failed. For example a handle is invalid.</exception>
 		/// <remarks>
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
@@ -225,10 +225,10 @@ namespace Au {
 		/// <summary>
 		/// Waits for a posted message received by this thread.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="callback">Callback function that returns <c>true</c> to stop waiting. More info in Remarks.</param>
 		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="doEvents(int)"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns <c>true</c>. Does not dispatch the message if the function sets the message field = 0.
 		/// Does not use <see cref="WaitLoop"/> and <b>Seconds.Period/MaxPeriod/DoEvents</b>.
@@ -247,10 +247,10 @@ namespace Au {
 		/// <summary>
 		/// Waits for a condition to be changed while processing messages or other events received by this thread.
 		/// </summary>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function that returns <c>true</c> to stop waiting. More info in Remarks.</param>
 		/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="doEvents(int)"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, COM, APC, etc), calls the callback function. Stops waiting when it returns <c>true</c>.
 		/// Similar to <see cref="until"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc. 3. Does not use <see cref="WaitLoop"/> and <b>Seconds.Period/MaxPeriod/DoEvents</b>.

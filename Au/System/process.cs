@@ -553,10 +553,10 @@ namespace Au {
 		/// Waits until the process ends.
 		/// </summary>
 		/// <returns><c>true</c> when the process ended. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
-		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="processId">Process id. If invalid but not 0, the function returns <c>true</c> and sets <c>exitCode = int.MinValue</c>; probably the process is already ended.</param>
 		/// <param name="exitCode">Receives the exit code.</param>
-		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="ArgumentException"><i>processId</i> is 0.</exception>
 		public static bool waitForExit(Seconds timeout, int processId, out int exitCode) {

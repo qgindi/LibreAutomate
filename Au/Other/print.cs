@@ -250,7 +250,7 @@ public static partial class print {
 	/// By default appends the stack trace.
 	/// </summary>
 	/// <param name="text">Warning text.</param>
-	/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0. Does not append if <i>text</i> looks like a stack trace.</param>
+	/// <param name="showStackFromThisFrame">If >= 0, appends the stack trace, skipping this number of frames. Default 0. Does not append if <i>text</i> looks like a stack trace.</param>
 	/// <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
 	/// <remarks>
 	/// Calls <see cref="print.it"/>.
