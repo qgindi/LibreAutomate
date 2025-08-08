@@ -477,7 +477,7 @@ public partial class keys {
 	/// <br/>• <see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.\
 	/// Example: <c>keys.send(new KKeyScan(0x3B, false)); //key F1</c>\
 	/// Example: <c>keys.send(new KKeyScan(KKey.Enter, true)); //numpad Enter</c>
-	/// <br/>• <b>char</b> - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator <b>^</b>.
+	/// <br/>• <b>char</b> - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator <c>^</c>.
 	/// </param>
 	/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
 	/// <exception cref="AuException">Failed. When sending text, fails if there is no focused window.</exception>

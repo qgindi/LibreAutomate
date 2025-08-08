@@ -331,7 +331,7 @@ public static partial class filesystem {
 	/// </param>
 	/// <param name="errorHandler">
 	/// Callback function that is called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AllDescendants"/>.
-	/// Receives the subdirectory path. Can call <see cref="lastError"/><b>.Code</b> and throw an exception. If does not throw, the enumeration continues as if the directory is empty.
+	/// Receives the subdirectory path. Can call <see cref="lastError.code"/> and throw an exception. If does not throw, the enumeration continues as if the directory is empty.
 	/// If <i>errorHandler</i> not used, then <b>enumerate</b> throws exception. See also: flag <see cref="FEFlags.IgnoreInaccessible"/>.
 	/// </param>
 	/// <exception cref="ArgumentException"><i>directoryPath</i> is invalid path or not full path.</exception>

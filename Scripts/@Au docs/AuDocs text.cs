@@ -238,6 +238,9 @@ partial class AuDocs {
 			s = _rxCode.Replace(s, m => _Code(m[1].Value, 0)); //<code> in api
 		}
 		
+		//TODO
+		s = s.Replace("<b>", "<code>").Replace("</b>", "</code>").Replace("<strong>", "<code>").Replace("</strong>", "</code>");
+		
 #if DISQUS
 		//TODO3: Now shows Disqus content when page loaded (if small) or scrolled to the bottom. Should show only when clicked <h2>User comments</h2>.
 		

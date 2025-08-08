@@ -39,7 +39,6 @@ static class Test {
 	public static void FromMenubar() {
 		print.clear();
 
-		File.Copy("", "");
 
 
 		//var doc = Panels.Editor.ActiveDoc;
