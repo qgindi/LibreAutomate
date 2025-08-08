@@ -5,12 +5,12 @@
 /*/ role editorExtension; define TEST; testInternal Au.Editor; r Au.Editor.dll; /*/
 
 #if TEST
+print.clear();
 CookbookDb.Create(true);
 #endif
 
 class CookbookDb {
 	public static void Create(bool createAlways = false) {
-		if (createAlways) print.clear();
 		var dir = folders.Editor + @"..\Cookbook\files";
 		var file = folders.Editor + "cookbook.db";
 		if (!createAlways && filesystem.getProperties(file, out var pf) && filesystem.getProperties(dir, out var pd))

@@ -10,7 +10,7 @@ print.it("text", i, s);
 
 print.it($"text with variables: i={i}, s={s}");
 
-/// To quickly insert <see cref="print.it"/> code, use snippet <b>piPrintItSnippet<> or <b>outPrintItSnippet<>: type <.c>pi<> or out and select from the list.
+/// To quickly insert <see cref="print.it"/> code, use snippet <b>piPrintItSnippet<> or <b>outPrintItSnippet<>: type <q>pi<> or out and select from the list.
 ///
 /// Can be used <help articles/Output tags>colors, bold etc, links, images, code<>.
 

@@ -21,7 +21,7 @@ if (!b.ShowDialog()) return;
 
 /// Default columns are 0, -1. The first column (auto-sized) is intended for labels; the second fills the remaining space.
 ///
-/// Function <see cref="wpfBuilder.Row"/> starts a new row with specified height. Function <b>R<> starts an auto-sized row, same as <.c>Row(0)<>.
+/// Function <see cref="wpfBuilder.Row"/> starts a new row with specified height. Function <b>R<> starts an auto-sized row, same as <q>Row(0)<>.
 
 /// Row height can be of 3 types:
 /// - If > 0 - height in WPF units (1/96 inch).

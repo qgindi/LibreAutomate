@@ -63,5 +63,5 @@ void Func1(int i) {
 }
 
 /// Two ways to insert <.k>try<> code quickly:
-/// - Type <.c>tryc<> and select <b>trySnippet<>.
+/// - Type <q>tryc<> and select <.x>trySnippet<>.
 /// - Click or select code, and use menu <b>Edit > Selection > Surround<>.

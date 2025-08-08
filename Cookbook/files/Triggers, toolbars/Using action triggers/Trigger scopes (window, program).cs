@@ -1,6 +1,6 @@
 /// For keyboard, autotext and mouse triggers you can specify window(s) where they will work or not work. It is known as <i>trigger scope<>. A trigger scope is applied to triggers added afterwards, until another scope (if any). To create scope code can be used the quick capturing hotkey (default <mono>Ctrl+Shift+Q<>).
 
-///This is a full working script. To test it, create new script and paste all code. Or in file <.c>Keyboard triggers<> paste code from the <.c>#region<>. Then click the <b>Run<> button and press <mono>Alt+1<> etc in various windows.
+///This is a full working script. To test it, create new script and paste all code. Or in file <q>Keyboard triggers<> paste code from the <q>#region<>. Then click the <b>Run<> button and press <mono>Alt+1<> etc in various windows.
 
 using Au.Triggers;
 var Triggers = new ActionTriggers();

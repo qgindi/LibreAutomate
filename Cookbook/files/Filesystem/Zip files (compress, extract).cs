@@ -25,7 +25,7 @@ using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 		z.CreateEntryFromFile(f.FullPath, f.Name);
 }
 
-/// Create <_>zip</_> file from folder. Don't include subfolders <.c>protected<> and <.c>ico<>.
+/// Create <_>zip</_> file from folder. Don't include subfolders <q>protected<> and <q>ico<>.
 
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 	foreach (var f in filesystem.enumerate(@"C:\Test\Folder", FEFlags.NeedRelativePaths, dirFilter: d => d.Name.Ends(true, @"\protected", @"\ico") > 0 ? 0 : 2)) {

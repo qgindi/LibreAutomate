@@ -355,7 +355,7 @@ partial class CiStyling {
 			if (!multiFont) sci.aaaStyleFont(STYLE_DEFAULT, fontName ?? FontName, fontSize ?? FontSize);
 			sci.aaaStyleBackColor(STYLE_DEFAULT, Background);
 			//if(None.color != 0) sci.aaaStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
-			sci.aaaStyleClearAll(); //belowDefault could be true, but currently don't need it and would need to test everywhere
+			sci.aaaStyleClearAll();
 			
 			void _Set(EStyle k, TStyle sty) {
 				if (sty.back) {

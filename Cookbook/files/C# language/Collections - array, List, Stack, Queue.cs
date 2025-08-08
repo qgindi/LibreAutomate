@@ -31,7 +31,7 @@ k1.Clear(); //remove all elements
 print.it(k2.Contains(5), k2.IndexOf(5));
 int[] a10 = k2.ToArray(); //create new array and copy elements
 
-/// <b>List<> elements are accessed (get, set) like array elements.
+/// <.x>List<> elements are accessed (get, set) like array elements.
 
 for (int i = 0; i < k1.Count; i++) print.it(k1[i]); //get values
 
@@ -54,7 +54,7 @@ lock (k1) {
 }
 
 /// If need a variable that holds multiple values of different types, use one of:
-/// - <b>Array<>/<b>List<>/etc with elements of type <.k>object<>.
+/// - <.x>Array<>/<.x>List<>/etc with elements of type <.k>object<>.
 /// - <+lang value tuple types>Tuple<>.
 /// - Create a <google C# class>class<> or <google C# struct>struct<> with public fields.
 

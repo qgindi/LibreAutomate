@@ -8,7 +8,7 @@ wait.s(2); //2 seconds
 10.ms();
 2.s();
 
-/// To quickly insert the above statements you can type <.c>10ms<> and <.c>2s<>.
+/// To quickly insert the above statements you can type <q>10ms<> and <q>2s<>.
 
 /// The sleep time precision is 1-2 ms. The .NET function <b>Thread.Sleep<> is less precise (15-16 ms). 
 

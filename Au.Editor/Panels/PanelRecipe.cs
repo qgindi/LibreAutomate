@@ -196,12 +196,10 @@ class PanelRecipe {
 		
 		protected override void AaOnHandleCreated() {
 			Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
-			
 			aaaMarginSetWidth(1, 14);
 			aaaMarkerDefine(0, SC_MARK_FULLRECT, backColor: 0xB0E0A0);
 			aaaMarkerDefine(1, SC_MARK_BACKGROUND, backColor: 0xF0F0F0);
-			
-			AaSetStyles();
+			_SetFont(false);
 			Call(SCI_SETZOOM, App.Settings.recipe_zoom);
 			
 			AaTags.AddLinkTag("+see", s => { s = GetSeeUrl(s, _panel._usings); if (s != null) run.itSafe(s); });
@@ -209,8 +207,8 @@ class PanelRecipe {
 			AaTags.AddLinkTag("+lang", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
 			//aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
 			AaTags.AddLinkTag("+ms", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
-			AaTags.AddStyleTag(".c", new() { backColor = 0xF0F0F0, monospace = true }); //inline code
-			AaTags.AddStyleTag(".k", new() { textColor = 0x0000FF, backColor = 0xF0F0F0, monospace = true }); //keyword
+			AaTags.AddStyleTag(".x", new() { backColor = 0xE8E8E8, monospace = true }); //API name
+			AaTags.AddStyleTag(".k", new() { backColor = 0xE8E8E8, monospace = true, textColor = 0x0000FF }); //keyword
 			
 #if DEBUG
 			_panel._AutoRenderCurrentRecipeScript();
@@ -218,15 +216,39 @@ class PanelRecipe {
 			base.AaOnHandleCreated();
 		}
 		
-		public void AaSetStyles() {
-			if (AaWnd.Is0) return;
-			//aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
-			//aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
-			//aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
-			//aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
-			//aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
-			aaaStyleFont(STYLE_DEFAULT, App.Settings.font_recipeText.name, App.Settings.font_recipeText.size);
-			CiStyling.TTheme.Default.ToScintilla(this, multiFont: true, fontName: App.Settings.font_recipeCode.name, fontSize: App.Settings.font_recipeCode.size);
+		void _SetFont(bool change) {
+			aaaStyleFont(STYLE_DEFAULT, App.Settings.font_recipeText.name, App.Settings.font_recipeText.size); //no-tags text font
+			AaTags.FontForMonoTags = (App.Settings.font_recipeCode.name, App.Settings.font_recipeCode.size); //<mono>, <q> and custom tags with Mono style
+			
+			if (change) {
+				//code fonts
+				for (int i = 0; i < Sci.STYLE_HIDDEN; i++) {
+					aaaStyleFont(i, App.Settings.font_recipeCode.name, App.Settings.font_recipeCode.size);
+				}
+				//text tag fonts
+				var ts = AaTags.TagStyles;
+				for (int i = ts.first, j = 0; j < ts.a.Count; j++, i++) {
+					var font = ts.a[j].Mono ? App.Settings.font_recipeCode : App.Settings.font_recipeText;
+					aaaStyleFont(i, font.name, font.size);
+				}
+			} else {
+				//aaaStyleFont(STYLE_DEFAULT); //Segoe UI, 9. Too narrow and looks too small when compared with the code font.
+				//aaaStyleFont(STYLE_DEFAULT, "Segoe UI", 10); //too tall
+				//aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
+				//aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
+				//aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
+				CiStyling.TTheme.Default.ToScintilla(this, multiFont: true, fontName: App.Settings.font_recipeCode.name, fontSize: App.Settings.font_recipeCode.size);
+			}
+			
+			//workaround for: the default font Calibri looks best, but need size 10.5 instead of normal 9, and it increases line height
+			if (App.Settings.font_recipeText.name.Eqi("Calibri") && App.Settings.font_recipeText.size >= 10) {
+				Call(SCI_SETEXTRAASCENT, -1);
+				Call(SCI_SETEXTRADESCENT, -1);
+			} //and don't unset. After setting Calibri font, Scintilla later will count its height even if no styles with that font exist.
+		}
+		
+		public void AaChangedFontSettings() {
+			if (!AaWnd.Is0) _SetFont(true);
 		}
 		
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
@@ -279,11 +301,18 @@ class PanelRecipe {
 	unsafe void _AutoRenderCurrentRecipeScript() {
 		string prevText = null;
 		SciCode prevDoc = null;
+		
 		App.Timer1sWhenVisible += () => {
-			if (App.Model.WorkspaceName != "Cookbook") return;
 			if (!P.IsVisible) return;
+			if (App.Model.WorkspaceName != "Cookbook") {
+				if (!(App.Model.WorkspaceName == "ok" && App.Model.CurrentFile is { IsExternal: true, IsScript: true } cf && cf.Ancestors().Any(o => o.Name is "cookbook_files"))) return;
+			}
 			var doc = Panels.Editor.ActiveDoc;
-			if (doc == null || !doc.EFile.IsCodeFile || doc.EFile.Parent.Name == "-") return;
+			if (doc == null || !doc.EFile.IsScript || doc.EFile.Parent.Name == "-") return;
+			_Render(doc);
+		};
+		
+		void _Render(SciCode doc) {
 			string text = doc.aaaText;
 			if (text == prevText) return;
 			prevText = text;
@@ -305,7 +334,7 @@ class PanelRecipe {
 				Panels.Cookbook.AddToHistory_(doc.EFile.DisplayName);
 			}
 			//rejected: autoscroll. Even if works perfectly, often it is more annoying than useful.
-		};
+		}
 	}
 #endif
 }

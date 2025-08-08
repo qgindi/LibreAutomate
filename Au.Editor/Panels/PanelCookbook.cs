@@ -56,6 +56,7 @@ class PanelCookbook {
 			if (e.Button == MouseButton.Right) {
 				var m = new popupMenu();
 				m.Add("DEBUG", disable: true);
+				m["Create cookbook.db"] = o => { script.run("Create cookbook.db"); };
 				m["Reload"] = o => { Menus.File.Workspace.Save_now(); UnloadLoad(false); UnloadLoad(true); };
 				//m["Check links"] = o => _DebugCheckLinks();
 				m["Print name words"] = o => _DebugGetWords(false);

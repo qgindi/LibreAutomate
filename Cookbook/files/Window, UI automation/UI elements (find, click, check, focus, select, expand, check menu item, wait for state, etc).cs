@@ -79,7 +79,7 @@ print.it("---");
 var aAll = eList.Elm.FindAll();
 print.it(aAll);
 
-/// You can find more <b>elm<> functions in the popup list that appears when you type <.c>.<> (dot) after a variable name or <.c>elm<>.
+/// You can find more <b>elm<> functions in the popup list that appears when you type <q>.<> (dot) after a variable name or <q>elm<>.
 
 var em = elm.fromMouse(); //popup list when typed "elm."
 string role = em.Role; //popup list when typed "em."

@@ -65,7 +65,7 @@ await page.GotoAsync("https://www.google.com/");
 dialog.show("Close browser");
 
 /// This script launches Chrome with Playwright Inspector and starts recording.
-/// With <.c>--channel chrome<> it uses your normal Chrome. Without - bundled.
+/// With <q>--channel chrome<> it uses your normal Chrome. Without - bundled.
 /// You can change or remove the URL.
 
 _Run(@"codegen --channel chrome https://www.libreautomate.com/forum/");

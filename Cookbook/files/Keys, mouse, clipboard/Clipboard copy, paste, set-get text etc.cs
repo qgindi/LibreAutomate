@@ -1,4 +1,4 @@
-/// To quickly insert <see cref="clipboard.copy"/> code, use snippet <b>copySnippet<>: type <.c>copy<> and select from the list.
+/// To quickly insert <see cref="clipboard.copy"/> code, use snippet <b>copySnippet<>: type <q>copy<> and select from the list.
 
 string s = clipboard.copy(); //get the selected text
 print.it(s);

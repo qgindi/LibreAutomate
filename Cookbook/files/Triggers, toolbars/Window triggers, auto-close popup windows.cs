@@ -1,6 +1,6 @@
 /// To execute some code or run a script, can be used window <help Au.Triggers.ActionTriggers>triggers<>. For example auto-close popup window X whenever it appears.
 ///
-/// To add a trigger can be used snippet <b>triggerSnippet<> or <mono>Ctrl+Shift+Q<> or menu <b>TT > New trigger<>. Add triggers in function <b>WindowTriggers<> in file <.c>Window triggers<>; you'll find examples there.
+/// To add a trigger can be used snippet <b>triggerSnippet<> or <mono>Ctrl+Shift+Q<> or menu <b>TT > New trigger<>. Add triggers in function <b>WindowTriggers<> in file <q>Window triggers<>; you'll find examples there.
 ///
 /// To open a triggers file for editing can be used the <b>TT<> menu.
 /// 

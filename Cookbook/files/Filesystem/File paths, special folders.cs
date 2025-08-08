@@ -6,7 +6,7 @@ string drive = @"C:\"; //some functions also support C: without \
 string networkFile = @"\\computer\folder\folder2\file.txt";
 string networkDrive = @"\\computer\folder\";
 
-/// Without <.c>@<> would need to escape <.c>\<> characters.
+/// Without <q>@<> would need to escape <q>\<> characters.
 
 file = "C:\\Windows\\System32\\Notepad.exe";
 

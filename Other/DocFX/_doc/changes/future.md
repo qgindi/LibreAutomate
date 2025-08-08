@@ -1,6 +1,9 @@
 ## Version 1.15.0 (2025-)
 
 ### Editor
+
+Added output tag `<q>` - monospace font and gray background.
+
 New tools:
 - .
 

@@ -75,7 +75,7 @@ public unsafe class SciTags {
 	const int STYLE_FIRST_EX = STYLE_LASTPREDEFINED + 1;
 	const int NUM_STYLES_EX = STYLE_MAX - STYLE_LASTPREDEFINED;
 	
-	struct _TagStyle {
+	public struct TagStyle {
 		uint u1, u2;
 		
 		//u1
@@ -93,8 +93,8 @@ public unsafe class SciTags {
 		public bool Hotspot { get => 0 != (u2 & 0x40000000); set { if (value) u2 |= 0x40000000; else u2 &= unchecked((uint)~0x40000000); } }
 		public bool Mono { get => 0 != (u2 & 0x80000000); set { if (value) u2 |= 0x80000000; else u2 &= unchecked((uint)~0x80000000); } }
 		
-		public bool Equals(_TagStyle x) { return x.u1 == u1 && x.u2 == u2; }
-		public void Merge(_TagStyle x) {
+		public bool Equals(TagStyle x) { return x.u1 == u1 && x.u2 == u2; }
+		public void Merge(TagStyle x) {
 			var t1 = x.u1;
 			if (HasColor) t1 &= 0xff000000;
 			if (Size > 0) t1 &= 0x1ffffff;
@@ -108,7 +108,7 @@ public unsafe class SciTags {
 		}
 		public bool IsEmpty => u1 == 0 & u2 == 0;
 		
-		public _TagStyle(UserDefinedStyle k) {
+		public TagStyle(UserDefinedStyle k) {
 			u1 = u2 = 0;
 			if (k.textColor != null) Color = k.textColor.Value.argb;
 			if (k.backColor != null) BackColor = k.backColor.Value.argb;
@@ -131,28 +131,40 @@ public unsafe class SciTags {
 	}
 	
 	readonly KScintilla _c;
-	readonly List<_TagStyle> _styles = new();
+	readonly List<TagStyle> _styles = [];
 	
 	internal SciTags(KScintilla c) {
 		_c = c;
 	}
 	
+	public (IReadOnlyList<TagStyle> a, int first) TagStyles => (_styles, STYLE_FIRST_EX);
+	
+	/// <summary>
+	/// Font name and size for tag styles with <see cref="TagStyle.Mono"/>.
+	/// If not set, will use "Consolas" and default text size.
+	/// Not used for the styled code tag.
+	/// Does not update existing styles when the property changed.
+	/// </summary>
+	public (string name, double size) FontForMonoTags { get; set; }
+	
 	void _SetUserStyles(int from) {
 		int i, j;
 		for (i = from; i < _styles.Count; i++) {
-			_TagStyle st = _styles[i];
+			TagStyle st = _styles[i];
 			j = i + STYLE_FIRST_EX;
 			if (st.HasColor) _c.aaaStyleForeColor(j, st.Color);
 			if (st.HasBackColor) { _c.aaaStyleBackColor(j, st.BackColor); if (st.Eol) _c.aaaStyleEolFilled(j, true); }
 			if (st.Bold) _c.aaaStyleBold(j, true);
 			if (st.Italic) _c.aaaStyleItalic(j, true);
 			if (st.Underline) _c.aaaStyleUnderline(j, true);
-			if (st.Mono) _c.aaaStyleFont(j, "Consolas");
+			if (st.Mono) _c.aaaStyleFont(j, FontForMonoTags.name ?? "Consolas");
 			if (st.Hotspot) _c.aaaStyleHotspot(j, true);
 			int size = st.Size;
 			if (size > 0) {
 				if (size < 6 && st.Hotspot) size = 6;
 				_c.aaaStyleFontSize(j, size);
+			} else if (st.Mono && FontForMonoTags.size >= 6) {
+				_c.aaaStyleFontSize(j, FontForMonoTags.size);
 			}
 		}
 	}
@@ -393,7 +405,7 @@ public unsafe class SciTags {
 			}
 			
 			//tags
-			_TagStyle style = default;
+			TagStyle style = default;
 			bool linkTag = false;
 			int i2;
 			ch = *tag;
@@ -410,6 +422,13 @@ public unsafe class SciTags {
 				break;
 			case 1 << 16 | 'u':
 				style.Underline = true;
+				break;
+			case 1 << 16 | 'q': //TODO: doc
+				style.Mono = true;
+				style.BackColor = 0xE8E8E8;
+				break;
+			case 4 << 16 | 'm' when span.SequenceEqual("mono"u8):
+				style.Mono = true;
 				break;
 			case 1 << 16 | 'c':
 			case 2 << 16 | 'b' when tag[1] == 'c':
@@ -430,9 +449,6 @@ public unsafe class SciTags {
 				break;
 			case 4 << 16 | 's' when span.SequenceEqual("size"u8) && attr != null:
 				style.Size = Api.strtoi(attr);
-				break;
-			case 4 << 16 | 'm' when span.SequenceEqual("mono"u8):
-				style.Mono = true;
 				break;
 			//case 6 << 16 | 'h' when span.SequenceEqual("hidden"u8): //rejected. Not useful; does not hide newlines.
 			//	style.Hidden = true;
@@ -468,7 +484,7 @@ public unsafe class SciTags {
 				bool foldHasAttr = attrLen > 0; if (foldHasAttr) attrLen = Math.Min(attrLen, ushort.MaxValue);
 				m.stack.Add(new(2, 0, (int)(t - s0), attrLen: (ushort)(foldHasAttr ? attrLen : 2)));
 				//add 'expand/collapse' link in this line
-				byte foldStyle = _GetStyleIndex(new _TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle, m.stack);
+				byte foldStyle = _GetStyleIndex(new TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle, m.stack);
 				if (!foldHasAttr) _WriteString(">>", foldStyle); else for (int i = 0; i < attrLen; i++) _Write(attr[i], foldStyle);
 				//let the folded text start from next line
 				var s1 = s; if (s1[0] == '<' && (char)s1[1] is '_' or '\a' && s1[2] == '>') s1 += 3;
@@ -491,14 +507,14 @@ public unsafe class SciTags {
 					//if(!_userLinkTags.ContainsKey(new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
 					linkTag = true;
 					break;
-				} else if (ch == '.' && (_userStyles?.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style) ?? false)) {
+				} else if (ch == '.' && _userStyles?.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style) == true) {
 					break;
 				}
 				goto ge;
 			}
 			
 			if (linkTag) {
-				if (_linkStyle != null) style = new _TagStyle(_linkStyle);
+				if (_linkStyle != null) style = new TagStyle(_linkStyle);
 				else {
 					style.Color = 0x0080FF;
 					style.Underline = true;
@@ -584,7 +600,7 @@ public unsafe class SciTags {
 		}
 	}
 	
-	byte _GetStyleIndex(_TagStyle style, byte currentStyle, List<_StackItem> stack) {
+	byte _GetStyleIndex(TagStyle style, byte currentStyle, List<_StackItem> stack) {
 		//merge nested style with ancestors
 		if (currentStyle >= STYLE_FIRST_EX) style.Merge(_styles[currentStyle - STYLE_FIRST_EX]);
 		for (int j = stack.Count; --j > 0;) {
@@ -736,9 +752,9 @@ public unsafe class SciTags {
 		_userStyles ??= new();
 		if (_userStyles.Count >= 100) throw new InvalidOperationException();
 		if (!name.Starts('.')) throw new ArgumentException();
-		_userStyles.Add(name, new _TagStyle(style));
+		_userStyles.Add(name, new TagStyle(style));
 	}
-	Dictionary<string, _TagStyle> _userStyles;
+	Dictionary<string, TagStyle> _userStyles;
 	
 	public Func<string, byte[]> CodeStylesProvider;
 	

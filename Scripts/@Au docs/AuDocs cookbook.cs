@@ -94,9 +94,9 @@ This is an online copy of the LibreAutomate cookbook.
 				switch (tag) {
 				case "_":
 					return _MarkdownEscape(s);
-				case "mono" or ".c" or ".k": //key/hotkey or inline code, or C# keyword
+				case "mono" or "q" or ".x" or ".k": //key/hotkey or inline code or API name or C# keyword
 					//print.it(s);
-					Debug_.PrintIf(s.Contains('<') && m.Value.Ends("<>")); //if contains <, must end with </mono> or </.c>
+					Debug_.PrintIf(s.Contains('<') && m.Value.Ends("<>")); //if contains <, must end with </q> etc
 					Debug_.PrintIf(s.Contains('\n'), s);
 					return $"`{s}`";
 				}

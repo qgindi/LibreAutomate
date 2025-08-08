@@ -1,4 +1,4 @@
-/// To quickly insert <see cref="keys.send"/> code, use snippet <b>kkKeysSendSnippet<>: type <.c>kk<> and select from the list. Or click toolbar button <b>Keys<> or <b>Input recorder<>.
+/// To quickly insert <see cref="keys.send"/> code, use snippet <b>kkKeysSendSnippet<>: type <q>kk<> and select from the list. Or click toolbar button <b>Keys<> or <b>Input recorder<>.
 
 var w = wnd.find(1, "*- Notepad", "Notepad").Activate();
 keys.send("Alt+E P");

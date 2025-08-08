@@ -15,12 +15,12 @@ class RegexWindow : InfoWindow { //KPopup
 	protected override void OnHandleCreated() {
 		for (int i = 0; i < 2; i++) {
 			var c = i == 0 ? this.Control1 : this.Control2;
-			c.AaTags.AddStyleTag(".r", new SciTags.UserDefinedStyle { textColor = 0xf08080 }); //red regex
+			c.AaTags.AddStyleTag(".r", new() { textColor = 0xf08080 }); //red regex
 			c.AaTags.AddLinkTag("+p", o => CurrentTopic = o); //link to a local info topic
-			c.AaTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
+			c.AaTags.SetLinkStyle(new() { textColor = 0x0080FF, underline = false }); //remove underline from links
 			c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
 		}
-		this.Control2.AaTags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
+		this.Control2.AaTags.AddStyleTag(".h", new() { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
 		this.Control2.AaTags.AddLinkTag("+a", o => InsertCode.TextSimplyInControl(InsertInControl, o)); //link that inserts a regex token
 
 		_SetTocText();

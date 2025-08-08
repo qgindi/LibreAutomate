@@ -1,8 +1,8 @@
 /// Namespaces are containers for types (classes etc) and other namespaces. Like folders. Types in libraries (.NET etc) always are in namespaces. It allows to avoid conflicts with types in other libraries.
 /// 
 /// In a script these types can be used in two ways:
-/// - At the start of the script (but after <.c>/*/ ... /*/<>) add <+lang using directive><.k>using<><> directives with names of namespaces you want to use.
-/// - Prepend <.c>Namespace.<> to the type name.
+/// - At the start of the script (but after <q>/*/ ... /*/<>) add <+lang using directive><.k>using<><> directives with names of namespaces you want to use.
+/// - Prepend <q>Namespace.<> to the type name.
 
 using System;
 using System.Drawing;
@@ -12,7 +12,7 @@ Color c; //Color is a type from namespace System.Drawing
 
 System.Windows.Window w; //Window is a type from namespace System.Windows
 
-/// In scripts don't need <.k>using<> directives for <.k>global using<> namespaces that are in file <.c>global.cs<>.
+/// In scripts don't need <.k>using<> directives for <.k>global using<> namespaces that are in file <q>global.cs<>.
 
 /// In scripts don't need to create namespaces, but here is an example.
 
@@ -40,7 +40,7 @@ public class Class3 {
 }
 }
 
-/// In the examples there are two classes named <b>Class1<>. But that's OK, because they are in different namespaces. If in a script you want to use both these classes, prepend the namespace name to the class name.
+/// In the examples there are two classes named <.x>Class1<>. But that's OK, because they are in different namespaces. If in a script you want to use both these classes, prepend the namespace name to the class name.
 
 Ns1.Class1.Func1();
 Ns2.Class1.Func1();

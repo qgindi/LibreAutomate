@@ -6,12 +6,12 @@ string s3 = null; //no string. Not the same as "".
 print.it("this is a \"string\"\r\n\twith \\ escape sequences");
 
 /// Frequently used escape sequences:
-/// <.c>\"<> - <.c>"<>
-/// <.c>\\<> - <.c>\<>
-/// <.c>\t<> - tab
-/// <.c>\n<> - newline
-/// <.c>\r\n<> - Windows newline (2 characters)
-/// <.c>\0<> - character code 0
+/// <q>\"<> - <q>"<>
+/// <q>\\<> - <q>\<>
+/// <q>\t<> - tab
+/// <q>\n<> - newline
+/// <q>\r\n<> - Windows newline (2 characters)
+/// <q>\0<> - character code 0
 
 /// To avoid writing many escape sequences, use verbatim strings or raw strings.
 
@@ -43,7 +43,7 @@ char c1 = 'A';
 char c2 = ' '; //space
 char[] a1 = { '\t', '\r', '\n', '\"', '\'', '\\', '\0' }; //escape sequences like in strings
 
-/// <+lang integral numeric types>Integer numbers<> are numbers like <.c>10<> but not like <.c>1.5<>.
+/// <+lang integral numeric types>Integer numbers<> are numbers like <q>10<> but not like <q>1.5<>.
 
 int i1 = 10, i2 = -20;
 int i3 = 2000000000; //or 2_000_000_000

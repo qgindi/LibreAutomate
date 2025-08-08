@@ -33,7 +33,7 @@ mouse.restore();
 var wNotepad = wnd.find(0, @"*- Notepad", "Notepad").Activate();
 mouse.drag(wNotepad, 34, 8, 54, 0);
 
-/// <mono>Ctrl<>+drag file <.c>abc<> to folder <.c>Backup<> in File Explorer (folder window name <b>Test<>).
+/// <mono>Ctrl<>+drag file <q>abc<> to folder <q>Backup<> in File Explorer (folder window name <b>Test<>).
 
 var wExplorer = wnd.find(1, "Test", "CabinetWClass").Activate();
 var e1 = wExplorer.Elm["LISTITEM", "abc", "class=DirectUIHWND"].Find(1);

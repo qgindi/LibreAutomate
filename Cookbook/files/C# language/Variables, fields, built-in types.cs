@@ -10,13 +10,13 @@ var k = 0; //var means the type of the assigned value. The same as int k = 0;
 bool b1 = keys.isCtrl; //call a function and assign its return value
 if (!dialog.showInput(out string s3, s)) return; //declare with the out keyword. The function assigns a value.
 
-/// Names are case-sensitive and can contain letters, digits (except at the start) and <.c>_<>.
+/// Names are case-sensitive and can contain letters, digits (except at the start) and <q>_<>.
 
 /// Frequently used <+lang built-in types>C# built-in types<>:
-/// <.k>int<> - integer (whole) number like <.c>10<> or <.c>-10<>. Max about +- 2 billions.
-/// <.k>double<> - can hold non-integer numbers like <.c>3.14<> and large numbers like <.c>1e15<>.
+/// <.k>int<> - integer (whole) number like <q>10<> or <q>-10<>. Max about +- 2 billions.
+/// <.k>double<> - can hold non-integer numbers like <q>3.14<> and large numbers like <q>1e15<>.
 /// <.k>string<> - text. Strings are Unicode UTF-16.
-/// <.k>char<> - single character like <.c>'A'<>. Unicode UTF-16.
+/// <.k>char<> - single character like <q>'A'<>. Unicode UTF-16.
 /// <.k>bool<> - <.k>true<> or <.k>false<>.
 /// <.k>byte<> - small integer, 0-255. Usually used in binary data arrays.
 /// <.k>long<> - 64-bit integer, about 4 billion times larger than int.
@@ -78,7 +78,7 @@ class Example {
 	}
 }
 
-/// Local variables live until the function exits. If declared in inner <.c>{ }<> code blocks - until leaving the block. New variables are created each time the function or <.c>{ }<> block is executed.
+/// Local variables live until the function exits. If declared in inner <q>{ }<> code blocks - until leaving the block. New variables are created each time the function or <q>{ }<> block is executed.
 /// Non-static fields live while the class instance variable lives. Each class instance variable has its own fields.
 /// Static fields live until the script process exits. All class instance variables share them.
 /// Thread-static fields live until the thread exits. Each thread has its own variables. All class instance variables share them.

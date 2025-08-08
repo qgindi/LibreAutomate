@@ -1,4 +1,4 @@
-/// Function <help Au.Types.ExtString.Like>string.Like<> compares strings using wildcard characters <.c>*<> and <.c>?<>.
+/// Function <help Au.Types.ExtString.Like>string.Like<> compares strings using wildcard characters <q>*<> and <q>?<>.
 
 string s = "file.txt";
 if (s.Like("*.txt")) print.it("s ends with .txt");

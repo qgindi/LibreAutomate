@@ -1,4 +1,4 @@
-/// To quickly insert code for <see cref="dialog.show"/> and other <see cref="dialog"/> functions, use snippet <b>dsDialogShowSnippet<>: type <.c>ds<> and select from the list.
+/// To quickly insert code for <see cref="dialog.show"/> and other <see cref="dialog"/> functions, use snippet <b>dsDialogShowSnippet<>: type <q>ds<> and select from the list.
 
 dialog.show("Simplest message box", "Text.");
 

@@ -444,7 +444,7 @@ Example:
 				
 				if (fontFind.Apply(ref App.Settings.font_find) || stylesOrThemeChanged) Panels.Find.CodeStylesChanged_();
 				if (fontOutput.Apply(ref App.Settings.font_output)) Panels.Output.Scintilla.AaSetStyles();
-				if (fontRecipeText.Apply(ref App.Settings.font_recipeText) | fontRecipeCode.Apply(ref App.Settings.font_recipeCode)) Panels.Recipe.Scintilla.AaSetStyles();
+				if (fontRecipeText.Apply(ref App.Settings.font_recipeText) | fontRecipeCode.Apply(ref App.Settings.font_recipeCode)) Panels.Recipe.Scintilla.AaChangedFontSettings();
 			};
 			
 			_OpenTheme(CiStyling.TTheme.Current);

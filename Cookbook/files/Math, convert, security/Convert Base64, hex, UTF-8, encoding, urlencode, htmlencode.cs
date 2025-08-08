@@ -1,6 +1,6 @@
 /// To convert data format can be used class <see cref="Convert"/>.
 
-/// Use Base64 format to store binary data in a short text string. Don't use Base64 in file names and URLs because it is case-sensitive and may contain character <.c>'/'<>.
+/// Use Base64 format to store binary data in a short text string. Don't use Base64 in file names and URLs because it is case-sensitive and may contain character <q>'/'<>.
 
 var b = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 var s = Convert.ToBase64String(b);
