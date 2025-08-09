@@ -39,7 +39,7 @@ process.thisProcessCultureIsInvariant = false;
 print.it(d.ToString("yyyy-MM-dd HH:mm"));
 print.it($"Today is {d:yyyy-MM-dd}. Time {d:HH:mm}.");
 
-/// Convert string to <b>DateTime<>.
+/// Convert string to <.x>DateTime<>.
 
 var d3 = DateTime.Parse("2022-01-29");
 var d4 = DateTime.Parse("29.01.2022", new CultureInfo("de-DE"));

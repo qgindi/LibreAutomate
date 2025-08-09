@@ -85,7 +85,7 @@ static void _Load() {
 	}
 	
 	// Create new toolbar and add to a panel.
-	// The panel root element is <b>DockPanel</b> or <b>Grid</b>, or <b>UserControl</b> containing one of these. This can change in the future.
+	// The panel root element is DockPanel or Grid, or UserControl containing one of these. This can change in the future.
 	
 	DockPanel dp = Panels.Output.P;
 	dp.Children.Remove(dp.Children.OfType<ToolBarTray>().FirstOrDefault(o => o.Tag is string s1 && s1 == tag));
@@ -99,7 +99,7 @@ static void _Load() {
 	ptb.Items.Add(_TBButton("*MaterialDesign.History #0D69E1", "Button tooltip", _ => { print.it("click"); }));
 	ptb.Items.Add(_TBCheckbox("*Modern.Stream #0D69E1", "Checkbox tooltip", c => { print.it("checked", c.IsChecked); }));
 	
-	// Add controls to a <b>Grid</b> panel.
+	// Add controls to a Grid panel.
 	
 	var b1 = new wpfBuilder().Tag(tag);
 	b1.Add<Border>().Border(thickness2: new(0, 1, 0, 0)).Margin("0");

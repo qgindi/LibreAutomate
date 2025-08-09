@@ -2,7 +2,6 @@
 
 ### Editor
 
-Added output tag `<q>` - monospace font and gray background.
 
 New tools:
 - .

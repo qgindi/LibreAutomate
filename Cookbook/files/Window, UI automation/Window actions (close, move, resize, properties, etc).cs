@@ -2,7 +2,7 @@
 
 var w = wnd.find(1, "*- Notepad", "Notepad");
 
-/// Then type the variable name and <q>.<> (dot) and select a function from the list. If need help, click the function name in the code editor and press <mono>F1<>.
+/// Then type the variable name and <.c>.<> (dot) and select a function from the list. If need help, click the function name in the code editor and press <mono>F1<>.
 
 /// Close the found window.
 
@@ -49,7 +49,7 @@ w.Show(false);
 1.s();
 w.Show(true);
 
-/// Also <b>wnd<> variables can be used with functions of various classes as arguments.
+/// Also <.x>wnd<> variables can be used with functions of various classes as arguments.
 
 mouse.move(w, 10, 10);
 

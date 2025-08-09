@@ -3,27 +3,27 @@
 //create a collection (array) to use with other examples
 var a = new string[] { "One", "Two", "Three", "Four", "Five" };
 
-/// Get the first matching item. The <+recipe>callback function<> decides what items match; it can compare any property/condition/etc. This example looks for a string that starts with <q>"F"<>.
+/// Get the first matching item. The <+recipe>callback function<> decides what items match; it can compare any property/condition/etc. This example looks for a string that starts with <.c>"F"<>.
 
 string s1 = a.FirstOrDefault(o => o.Starts("F"));
 print.it(s1);
 
-/// How it works: function <.x>FirstOrDefault<> calls the callback function (lambda) for each item until it returns <q>true<>. Then <.x>FirstOrDefault<> returns that item.
+/// How it works: function <.x>FirstOrDefault<> calls the callback function (lambda) for each item until it returns <.c>true<>. Then <.x>FirstOrDefault<> returns that item.
 
-/// Function <.x>FirstOrDefault<> returns <q>null<> if not found. Function <b>First<> throws exception instead. Function <b>Any<> returns <q>true<>/<q>false<>. Function <b>Count<> tells how many.
+/// Function <.x>FirstOrDefault<> returns <.c>null<> if not found. Function <.x>First<> throws exception instead. Function <.x>Any<> returns <.c>true<>/<.c>false<>. Function <.x>Count<> tells how many.
 
 if (a.Any(o => o.Eqi("three"))) print.it("found"); else print.it("not found");
 if (!a.Any()) print.it("the collection is empty");
 int n1 = a.Count(), n2 = a.Count(o => o.Starts("F"));
 print.it(n1, n2);
 
-/// Function <b>Where<> returns all matching items.
+/// Function <.x>Where<> returns all matching items.
 
 foreach (var v in a.Where(o => o.Starts("F"))) {
 	print.it(v);
 }
 
-/// Many functions return a lazy <b>IEnumerable<> object that may retrieve items later. Convert it to array or <b>List<> if need.
+/// Many functions return a lazy <.x>IEnumerable<> object that may retrieve items later. Convert it to array or <.x>List<> if need.
 
 string[] a2 = a
 	.Where(o => o.Starts("F"))

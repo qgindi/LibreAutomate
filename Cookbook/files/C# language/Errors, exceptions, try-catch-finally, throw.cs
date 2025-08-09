@@ -49,7 +49,7 @@ print.it(3);
 
 /// Note: The <.k>finally<> code does not run if <see cref="Environment.Exit"/> or some other function terminates the process.
 
-/// With disposable objects instead of <_>try-finally-Dispose</_> can be used the <+lang using statement><.k>using<><> statement.
+/// With disposable objects instead of <.c>try-finally-Dispose<> can be used the <+lang using statement><.k>using<><> statement.
 
 /// To throw exceptions use the <+lang throw statement><.k>throw<><> statement.
 
@@ -63,5 +63,5 @@ void Func1(int i) {
 }
 
 /// Two ways to insert <.k>try<> code quickly:
-/// - Type <q>tryc<> and select <.x>trySnippet<>.
+/// - Type <.c>tryc<> and select <.x>trySnippet<>.
 /// - Click or select code, and use menu <b>Edit > Selection > Surround<>.

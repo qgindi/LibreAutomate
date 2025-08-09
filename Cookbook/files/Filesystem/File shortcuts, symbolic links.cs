@@ -1,6 +1,6 @@
 /// Use class <see cref="shortcutFile"/>.
 
-/// Create shortcut to <_>Notepad.exe</_>.
+/// Create shortcut to <.c>notepad.exe<>.
 
 using (var x = shortcutFile.create(@"C:\Test\Notepad.lnk")) {
 	x.TargetPath = folders.System + "Notepad.exe";
@@ -30,4 +30,4 @@ var symlink = folders.Desktop + "Test";
 if (filesystem.exists(symlink).IsNtfsLink) filesystem.delete(symlink); //deletes the symbolic link but not its target
 filesystem.more.createSymbolicLink(symlink, @"C:\Test", CSLink.Directory, elevate: true);
 
-/// Symbolic links can be absolute (target is full path) or relative (target is relative to the link's parent directory, like <q>@"Abc\Def"<> or <q>@"..\Abc\Def"<>).
+/// Symbolic links can be absolute (target is full path) or relative (target is relative to the link's parent directory, like <.c>@"Abc\Def"<> or <.c>@"..\Abc\Def"<>).

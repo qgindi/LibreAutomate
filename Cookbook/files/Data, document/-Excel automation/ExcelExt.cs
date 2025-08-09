@@ -1,4 +1,4 @@
-/// Open the <b>Properties<> dialog of class file <q>ExcelExt<>, click <b>COM<>, select <b>Microsoft Excel<>, click <b>OK<>. It creates Excel COM interop assemblies for current Excel version and replaces the /*/ ... /*/ line.
+/// Open the <b>Properties<> dialog of class file <.c>ExcelExt<>, click <b>COM<>, select <b>Microsoft Excel<>, click <b>OK<>. It creates Excel COM interop assemblies for current Excel version and replaces the /*/ ... /*/ line.
 
 /*/ com Excel 1.9 #9fdf46bf.dll; /*/
 using Excel = Microsoft.Office.Interop.Excel;
@@ -8,7 +8,7 @@ using Excel = Microsoft.Office.Interop.Excel;
 /// </summary>
 public static class ExcelExt {
 	/// <summary>
-	/// Gets <b>Workbook</b> object from this Excel window.
+	/// Gets <c>Workbook</c> object from this Excel window.
 	/// </summary>
 	/// <exception cref="AuWndException">The window handle is 0 or invalid.</exception>
 	/// <exception cref="Exception">Failed to get COM object.</exception>

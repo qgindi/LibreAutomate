@@ -3,29 +3,29 @@
 string zipFile = @"C:\Test\Z.zip";
 //filesystem.delete(zipFile);
 
-/// Create <_>zip</_> file from folder.
+/// Create zip file from folder.
 
 ZipFile.CreateFromDirectory(@"C:\Test\Folder", zipFile);
 ZipFile.CreateFromDirectory(@"C:\Test\Folder", zipFile, CompressionLevel.Fastest, includeBaseDirectory: true);
 
-/// Extract <_>zip</_> file.
+/// Extract zip file.
 
 ZipFile.ExtractToDirectory(zipFile, @"C:\Test\Folder2");
 
-/// Create <_>zip</_> file from single file.
+/// Create zip file from single file.
 
 string file = @"C:\Test\sqlite.db";
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create))
 	z.CreateEntryFromFile(file, pathname.getName(file));
 
-/// Create <_>zip</_> file and add <_>db</_> files from folder.
+/// Create zip file and add db files from folder.
 
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 	foreach (var f in filesystem.enumFiles(@"C:\Test", "*.db"))
 		z.CreateEntryFromFile(f.FullPath, f.Name);
 }
 
-/// Create <_>zip</_> file from folder. Don't include subfolders <q>protected<> and <q>ico<>.
+/// Create zip file from folder. Don't include subfolders <.c>protected<> and <.c>ico<>.
 
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 	foreach (var f in filesystem.enumerate(@"C:\Test\Folder", FEFlags.NeedRelativePaths, dirFilter: d => d.Name.Ends(true, @"\protected", @"\ico") > 0 ? 0 : 2)) {
@@ -34,7 +34,7 @@ using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 	}
 }
 
-/// Create <_>zip</_> file and add files/folders specified in a list or array.
+/// Create zip file and add files/folders specified in a list or array.
 
 string list = @"
 C:\Test\sqlite.db
@@ -57,7 +57,7 @@ using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 	}
 }
 
-/// List/find/extract <_>zip</_> file entries.
+/// List/find/extract zip file entries.
 
 using (var z = ZipFile.OpenRead(zipFile)) {
 	foreach (var e in z.Entries) {
@@ -71,7 +71,7 @@ using (var z = ZipFile.OpenRead(zipFile)) {
 	}
 }
 
-/// If need other compression formats or more features, look for a <_>zip</_> library on the internet, for example in <google>NuGet<>. More info in recipe <+recipe>.NET, NuGet, other libraries<>.
+/// If need other compression formats or more features, look for a zip library on the internet, for example in <google>NuGet<>. More info in recipe <+recipe>.NET, NuGet, other libraries<>.
 /// 
 /// Also you can find command line programs on the internet, or even already have them installed.
 

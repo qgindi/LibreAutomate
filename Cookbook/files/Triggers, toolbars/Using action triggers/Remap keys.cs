@@ -3,8 +3,8 @@
 /// 2. Modify the Registry. It remaps keys. Look for software that can do it.
 /// 3. Create and install a custom keyboard layout. It remaps characters. Use Microsoft Keyboard Layout Creator or similar software.
 /// 
-/// The rest of this recipe is about the first way (keyboard triggers). Assume the codes are in file <q>Hotkey triggers<>.
-/// Note: to remap keys use <b>keys.more.sendKey<> or <b>keys.sendL<>, not <b>keys.send<>.
+/// The rest of this recipe is about the first way (keyboard triggers). Assume the codes are in file <.c>Hotkey triggers<>.
+/// Note: to remap keys use <.x>keys.more.sendKey<> or <.x>keys.sendL<>, not <.x>keys.send<>.
 
 using Au.Triggers;
 
@@ -12,7 +12,7 @@ using Au.Triggers;
 
 hk["CapsLock"] = o => {  };
 
-/// Remap key <mono>Insert<> to <mono>Apps<>. With <q>?+<> also remaps <mono>Ctrl+Insert<> etc.
+/// Remap key <mono>Insert<> to <mono>Apps<>. With <.c>?+<> also remaps <mono>Ctrl+Insert<> etc.
 
 hk["?+Ins"] = o => keys.more.sendKey(KKey.Apps);
 

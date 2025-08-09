@@ -1,4 +1,4 @@
-/// To quickly insert <see cref="popupMenu"/> code, use snippet <b>menuSnippet<>: type <q>menu<> and select from the list.
+/// To quickly insert <see cref="popupMenu"/> code, use snippet <.x>menuSnippet<>: type <.c>menu<> and select from the list.
 
 var m = new popupMenu("4f14a87a-58e5-4bb6-96db-bbc5e6988e21");
 m["A"] = o => { print.it(o); }; //executes code { print.it(o); } when clicked
@@ -20,7 +20,7 @@ m.Show();
 
 /// Quick ways to add a menu item:
 /// - Clone an existing item.
-/// - Snippet: start typing <q>menu<> and select <b>menuItemSnippet<>.
+/// - Snippet: start typing <.c>menu<> and select <.x>menuItemSnippet<>.
 /// - Drag and drop a script, file, folder or link. Then select menu item <b>t[name] = ...<>.
 /// - Use the quick capturing hotkey (default <mono>Ctrl+Shift+Q<>) to add a "run program" button.
 

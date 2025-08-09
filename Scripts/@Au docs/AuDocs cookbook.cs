@@ -90,15 +90,11 @@ This is an online copy of the LibreAutomate cookbook.
 				if (test) print.it(m);
 				string tag = m[1].Value, s = m[3].Value;
 				
-				//raw text tags
-				switch (tag) {
-				case "_":
-					return _MarkdownEscape(s);
-				case "mono" or "q" or ".x" or ".k": //key/hotkey or inline code or API name or C# keyword
-					//print.it(s);
-					Debug_.PrintIf(s.Contains('<') && m.Value.Ends("<>")); //if contains <, must end with </q> etc
+				if (tag == "_") return _MarkdownEscape(s); //raw text
+				
+				if (tag is ".k" or ".x" or ".c" or "mono") {
+					Debug_.PrintIf(s.Contains('<') && m.Value.Ends("<>")); //if contains <, must end with </.c> etc
 					Debug_.PrintIf(s.Contains('\n'), s);
-					return $"`{s}`";
 				}
 				
 				if (s.Contains('<')) s = rxTag.Replace(s, _Repl);
@@ -109,15 +105,14 @@ This is an online copy of the LibreAutomate cookbook.
 					return $"<{tag}>{s}</{tag}>";
 				case "bi":
 					return $"<b><i>{s}</i></b>";
-				//case ".k": //C# keyword //avoid <span>, it can't be converted to markdown for AI
-				//	return $"<span style='color:#00f'>{s}</span>";
+				case ".k": //C# keyword
+					return $"<code style='color:#00f'>{s}</code>";
+				case ".x": //API name
+					return $"<code style='color:#e06060'>{s}</code>";
+				case ".c" or "mono": //inline code or key/hotkey
+					return $"`{s}`";
 				case "c":
-					print.it(m);
-					Debug_.Print("Don't use the c tag (color). It can't be converted to markdown for AI. Use .c (code). " + m);
-					var color = m[2].Value;
-					if (color == "green") return $"<span style='color:{color}'>`{s}`</span>";
-					print.it(tag, color);
-					return s;
+					throw new ArgumentException("Don't use the c tag (color). It can't be converted to markdown for AI. Use .c (code). " + m);
 				case "+nuget":
 					return $"<span style='color:#080;text-decoration:underline' title='Paste the underlined text in menu > Tools > NuGet'>{s}</span>";
 				case "open":

@@ -8,7 +8,7 @@ foreach (var v in a) {
 	print.it(v.Name);
 }
 
-/// Terminate, suspend and resume all <_>Notepad</_> processes (end tasks).
+/// Terminate, suspend and resume all Notepad processes (end tasks).
 
 process.terminate("notepad.exe");
 process.suspend(true, "notepad.exe");
@@ -20,11 +20,11 @@ if (!process.exists("notepad.exe")) {
 	print.it("does not exist");
 }
 
-/// Wait for a <_>Notepad</_> process. See also <+recipe>Process triggers<>.
+/// Wait for a Notepad process. See also <+recipe>Process triggers<>.
 
 wait.until(0, () => process.exists("notepad.exe"));
 
-/// Wait until there are no <_>Notepad</_> processes.
+/// Wait until there are no Notepad processes.
 
 wait.until(0, () => !process.exists("notepad.exe"));
 

@@ -207,8 +207,10 @@ class PanelRecipe {
 			AaTags.AddLinkTag("+lang", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + ", C# reference")));
 			//aaTags.AddLinkTag("+guide", s => run.itSafe("https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/" + s)); //rejected. Use <google>.
 			AaTags.AddLinkTag("+ms", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
-			AaTags.AddStyleTag(".x", new() { backColor = 0xE8E8E8, monospace = true }); //API name
-			AaTags.AddStyleTag(".k", new() { backColor = 0xE8E8E8, monospace = true, textColor = 0x0000FF }); //keyword
+			AaTags.AddStyleTag(".c", new() { backColor = 0xF0F0F0, monospace = true }); //inline code
+			AaTags.AddStyleTag(".x", new() { backColor = 0xF0F0F0, monospace = true, textColor = 0xE06060 }); //API name
+			//AaTags.AddStyleTag(".x", new() { monospace = true, textColor = 0x808080, bold = true }); //API name
+			AaTags.AddStyleTag(".k", new() { backColor = 0xF0F0F0, monospace = true, textColor = 0x0000FF }); //keyword
 			
 #if DEBUG
 			_panel._AutoRenderCurrentRecipeScript();
@@ -218,7 +220,7 @@ class PanelRecipe {
 		
 		void _SetFont(bool change) {
 			aaaStyleFont(STYLE_DEFAULT, App.Settings.font_recipeText.name, App.Settings.font_recipeText.size); //no-tags text font
-			AaTags.FontForMonoTags = (App.Settings.font_recipeCode.name, App.Settings.font_recipeCode.size); //<mono>, <q> and custom tags with Mono style
+			AaTags.FontForMonoTags = (App.Settings.font_recipeCode.name, App.Settings.font_recipeCode.size); //<mono> and custom tags with Mono style that don't set name/size
 			
 			if (change) {
 				//code fonts

@@ -1,4 +1,4 @@
-/// In scripts can be used everything from .NET libraries. Don't need to add assembly references. Add just <.k>using<> directives that aren't in file <q>global.cs<>.
+/// In scripts can be used everything from .NET libraries. Don't need to add assembly references. Add just <.k>using<> directives that aren't in file <.c>global.cs<>.
 
 using System.Xml.Linq;
 

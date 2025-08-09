@@ -49,7 +49,7 @@ if (!dSave.ShowSave(out string path4)) return;
 print.it(path4);
 //File.WriteAllText(path4, "TEXT");
 
-/// The <b>System.Windows.Forms<> namespace has common dialog classes <b>ColorDialog<>, <b>FontDialog<>, etc.
+/// The <.x>System.Windows.Forms<> namespace has common dialog classes <.x>ColorDialog<>, <.x>FontDialog<>, etc.
 
 var d = new System.Windows.Forms.ColorDialog { FullOpen = true };
 if (d.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;

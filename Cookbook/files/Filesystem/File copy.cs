@@ -12,7 +12,7 @@ filesystem.copyTo(fc1, @"C:\Test2"); //copy to the specified folder
 
 filesystem.copy(@"C:\Test", @"C:\Test2", FIfExists.MergeDirectory);
 
-/// Copy all <_>.png</_> files to the specified folder. Don't include subfolders.
+/// Copy all <.c>.png<> files to the specified folder. Don't include subfolders.
 
 foreach (var f in filesystem.enumFiles(@"C:\Test", "*.png"))
 	filesystem.copyTo(f.FullPath, @"C:\Test2");
@@ -20,7 +20,7 @@ foreach (var f in filesystem.enumFiles(@"C:\Test", "*.png"))
 //or can do the same with filter functions
 filesystem.copy(@"C:\Test", @"C:\Test2", fileFilter: f => f.Name.Ends(".png", true), dirFilter: _ => 0);
 
-/// Copy all <_>.png</_> files to the specified folder. From subfolders too.
+/// Copy all <.c>.png<> files to the specified folder. From subfolders too.
 
 //create subfolders like in the source folder
 filesystem.copy(@"C:\Test", @"C:\Test2", 0, FCFlags.NoEmptyDirectories, f => f.Name.Ends(".png", true));
@@ -36,7 +36,7 @@ var date = DateTime.Today;
 //copy from subfolders too. Create subfolders like in the source folder.
 filesystem.copy(@"C:\Test", @"C:\Test2", FIfExists.Delete, FCFlags.NoEmptyDirectories, fileFilter: o => o.LastWriteTimeUtc >= date);
 
-//don't include subfolders. For filtering use LINQ function <b>Where</b>.
+//don't include subfolders. For filtering use LINQ function Where.
 foreach (var f in filesystem.enumFiles(@"C:\Test").Where(o => o.LastWriteTimeUtc >= date))
 	filesystem.copyTo(f.FullPath, @"C:\Test2", FIfExists.Delete);
 

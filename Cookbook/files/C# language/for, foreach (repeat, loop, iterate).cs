@@ -4,11 +4,11 @@ for (int i = 0; i < 3; i++) { //increment i: 0, 1, 2
 	print.it(i);
 }
 
-/// The above code declares variable <i>i<> = 0. Then, while <i>i<> is less than 3, executes statements in the <q>{ }<> block and increments <i>i<> (<q>i++<>).
+/// The above code declares variable <i>i<> = 0. Then, while <i>i<> is less than 3, executes statements in the <.c>{ }<> block and increments <i>i<> (<.c>i++<>).
 /// 
 /// Several ways to insert <.k>for<> code quickly:
-/// - Type text like <q>3t<> (it means "repeat 3 times").
-/// - Type <q>forl<> and select <.x>forLoopSnippet<>.
+/// - Type text like <.c>3t<> (it means "repeat 3 times").
+/// - Type <.c>forl<> and select <.x>forLoopSnippet<>.
 /// - Click or select code, and use menu <b>Edit > Selection > Surround<>.
 
 for (int i = 3; --i >= 0; ) { //decrement i: 2, 1, 0

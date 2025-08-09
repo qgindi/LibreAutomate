@@ -3,7 +3,7 @@
 /// The editor program has a database containing many declarations. There are several ways to get declarations from it.
 /// - Menu <b>Code > Windows API<>. For more info, click the <b>?<> button in the dialog.
 /// - Undeclared API names in code are red-underlined. Click <b>Find Windows API...<> in the error tooltip.
-/// - Usually this is the best way. In code (at the end) type <q>nat<> and select <b>nativeApiSnippet<>. It adds class <b>api<>. Then, wherever you want to use an API function etc, type <q>api.<> and select it from the list; the declaration will be added to the <b>api<> class.
+/// - Usually this is the best way. In code (at the end) type <.c>nat<> and select <.x>nativeApiSnippet<>. It adds class <.x>api<>. Then, wherever you want to use an API function etc, type <.c>api.<> and select it from the list; the declaration will be added to the <.x>api<> class.
 
 api.MessageBox(default, "Text", "Caption", api.MB_TOPMOST);
 

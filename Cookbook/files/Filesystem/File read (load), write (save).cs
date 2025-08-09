@@ -23,18 +23,18 @@ foreach (var s in lines) {
 	print.it(s);
 }
 
-/// Write text lines from <b>List<>.
+/// Write text lines from <.x>List<>.
 
 var a = new List<string>();
 for (int i = 1; i <= 10; i++) a.Add("line " + i);
 File.WriteAllLines(file, a);
 
-/// Usually text in files is Unicode, encoded as UTF-8 or UTF-16. The <b>ReadX<> functions can read both. The <b>WriteX<> functions write UTF-8 by default. Let's write UTF-16:
+/// Usually text in files is Unicode, encoded as UTF-8 or UTF-16. The <.x>ReadX<> functions can read both. The <.x>WriteX<> functions write UTF-8 by default. Let's write UTF-16:
 
 File.WriteAllText(file, text, Encoding.Unicode);
 
-/// If the file already exists, the <b>WriteX<> functions overwrite (replace) it, else they create new file.
-/// The <b>AppendX<> functions append to existing file or create new file.
+/// If the file already exists, the <.x>WriteX<> functions overwrite (replace) it, else they create new file.
+/// The <.x>AppendX<> functions append to existing file or create new file.
 
 File.AppendAllText(file, "line\r\n"); //append a string
 

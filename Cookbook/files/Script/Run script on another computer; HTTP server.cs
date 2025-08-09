@@ -1,4 +1,4 @@
-/// Assume you want to run some codes or scripts on computer named <_>SERVER</_> from computer named <_>CLIENT</_>. The computers can be on local network or internet or it can be the same computer. CLIENT can be any device that can use the internet (PC, smartphone, etc).
+/// Assume you want to run some codes or scripts on computer named <i>SERVER<> from computer named <i>CLIENT<>. The computers can be on local network or internet or it can be the same computer. CLIENT can be any device that can use the internet (PC, smartphone, etc).
 /// 
 /// On SERVER computer run code like this. It can be a script or independent program.
 
@@ -191,7 +191,7 @@ class HttpServerSessionExamples : HttpServerSession {
 		
 		//Instead of a C# script on CLIENT computer can be used a web browser or any program or programming language/library that can send HTTP requests. Any device, any OS.
 		
-		//If you use the URL in a web browser, and SERVER requires a password (calls <b>Auth</b> like in the example), you can either insert <mono>user:password@</mono> after <mono>://</mono> or the web browser will ask for a user name and password.
+		//If you use the URL in a web browser, and SERVER requires a password (calls Auth like in the example), you can either use URL like http://user:password@www.example.com or the web browser will ask for a user name and password.
 		
 		//If port 4455 unavailable, use some other port. Examples:
 		//SERVER: HttpServerSession.Listen<HttpServerSessionExamples>(33333);

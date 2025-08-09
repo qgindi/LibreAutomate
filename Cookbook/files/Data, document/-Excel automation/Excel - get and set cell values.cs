@@ -1,4 +1,4 @@
-/// To get/set cell value, need to get <b>Range<> object for that cell. The <+recipe>Excel types<> recipe shows various ways of getting <b>Range<>.
+/// To get/set cell value, need to get <.x>Range<> object for that cell. The <+recipe>Excel types<> recipe shows various ways of getting <.x>Range<>.
 
 /*/ c ExcelExt.cs; /*/
 using Excel = Microsoft.Office.Interop.Excel;
@@ -44,7 +44,7 @@ object[,] a2 = {
 sheet.AddMany(a2); //append
 //sheet.AddMany(a2, 10, "C"); //add at C10
 
-/// Append multiple values from <b>List<> of rows.
+/// Append multiple values from <.x>List<> of rows.
 
 var a3 = new List<object[]>();
 for (int i = 1; i <= 3; i++) a3.Add(new object[] { i, i * 2, i * 3 });

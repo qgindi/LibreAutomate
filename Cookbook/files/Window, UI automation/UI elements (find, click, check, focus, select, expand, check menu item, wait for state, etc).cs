@@ -51,7 +51,7 @@ var wMenu = wnd.find(1, "", "#32768", wNotepad);
 var ePaste = wMenu.Elm["MENUITEM", "Paste\tCtrl+V"].Find(1);
 ePaste.Invoke();
 
-/// Use <b>elm<> functions to get menu item state (checked, disabled). This code checks menu <b>Format > Word Wrap<>. 
+/// Use <.x>elm<> functions to get menu item state (checked, disabled). This code checks menu <b>Format > Word Wrap<>. 
 
 var wNotepad2 = wnd.find(0, "*- Notepad", "Notepad").Activate();
 keys.send("Alt+O"); //Format
@@ -79,7 +79,7 @@ print.it("---");
 var aAll = eList.Elm.FindAll();
 print.it(aAll);
 
-/// You can find more <b>elm<> functions in the popup list that appears when you type <q>.<> (dot) after a variable name or <q>elm<>.
+/// You can find more <.x>elm<> functions in the popup list that appears when you type <.c>.<> (dot) after a variable name or <.c>elm<>.
 
 var em = elm.fromMouse(); //popup list when typed "elm."
 string role = em.Role; //popup list when typed "em."

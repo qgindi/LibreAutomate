@@ -18,7 +18,7 @@ using var play = Playwrighter.Connect(out var page, "https://www.libreautomate.c
 await page.GetByText("Shared C# code").ClickAsync();
 print.it(page.Url);
 
-/// This script launches a web browser so that <b>Playwrighter.Connect<> can work with it.
+/// This script launches a web browser so that <.x>Playwrighter.Connect<> can work with it.
 
 /*/ c Playwrighter.cs; /*/
 
@@ -65,7 +65,7 @@ await page.GotoAsync("https://www.google.com/");
 dialog.show("Close browser");
 
 /// This script launches Chrome with Playwright Inspector and starts recording.
-/// With <q>--channel chrome<> it uses your normal Chrome. Without - bundled.
+/// With <.c>--channel chrome<> it uses your normal Chrome. Without - bundled.
 /// You can change or remove the URL.
 
 _Run(@"codegen --channel chrome https://www.libreautomate.com/forum/");

@@ -16,7 +16,7 @@ b.R.AddOkCancel();
 b.End();
 if (!b.ShowDialog()) return;
 
-/// Fill <b>ComboBox<> when expanding.
+/// Fill <.x>ComboBox<> when expanding.
 
 var b2 = new wpfBuilder("Window").WinSize(400);
 b2.R.Add("Files", out ComboBox combo2).Items(once: false, cb => { foreach (var f in filesystem.enumFiles(@"C:\Test")) cb.Items.Add(f.Name); });

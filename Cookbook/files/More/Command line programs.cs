@@ -4,7 +4,7 @@
 
 run.console("ipconfig.exe", "/flushdns");
 
-/// To run other commands, use a <_>.bat</_> file or <+ms>cmd.exe<>.
+/// To run other commands, use a <.c>.bat<> file or <+ms>cmd.exe<>.
 
 var commands = """
 cd /d C:\Test\Folder

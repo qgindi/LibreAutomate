@@ -1,4 +1,4 @@
-/// Environment variables is a feature of the operating system and not of the C# language. They are similar to static string variables. Use functions like <see cref="Environment.GetEnvironmentVariable(string)"/>. Some other functions support environment variables in file path string, like <q>"%variable%..."<>. Each process has a copy of environment variables of the caller process or of the system, and can modify the copy (add, remove, change values), but usually does not modify the system environment variables.
+/// Environment variables is a feature of the operating system and not of the C# language. They are similar to static string variables. Use functions like <see cref="Environment.GetEnvironmentVariable(string)"/>. Some other functions support environment variables in file path string, like <.c>"%variable%..."<>. Each process has a copy of environment variables of the caller process or of the system, and can modify the copy (add, remove, change values), but usually does not modify the system environment variables.
 
 var ev = Environment.GetEnvironmentVariable("TEMP");
 print.it(ev);

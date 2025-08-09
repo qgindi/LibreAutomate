@@ -16,7 +16,7 @@ print.it(1 /*another comment*/);
 /// 1. Right-click the gray margin at the left. Select several lines if need.
 /// 2. Select or click the code, and click toolbar button <b>Toggle comment<>.
 
-/// <google C# XML documentation comments>XML documentation comments<> start with <q>///<>.
+/// <google C# XML documentation comments>XML documentation comments<> start with <.c>///<>.
 
 /// Comments specific to this program:
 

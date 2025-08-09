@@ -1,4 +1,4 @@
-/// To start another script, use <see cref="script.run"/>. To insert code, drag and drop the script, or use snippet <b>srScriptRunSnippet<>.
+/// To start another script, use <see cref="script.run"/>. To insert code, drag and drop the script, or use snippet <.x>srScriptRunSnippet<>.
 
 script.run(@"\Folder\Script.cs");
 
@@ -31,7 +31,7 @@ script.runWait(s => { print.it(s); }, @"\Folder\Script.cs");
 script.writeResult("result 1");
 script.writeResult("result 2");
 
-/// Also the script can return an int value. Then function <b>script.runWait<> in the caller script returns it.
+/// Also the script can return an int value. Then function <.x>script.runWait<> in the caller script returns it.
 
 return 2;
 
@@ -40,4 +40,4 @@ return 2;
 script.run(script.sourcePath(true), "[[ifRunning=wait]]");
 return;
 
-/// Scripts don't have a <_>"trigger"</_> property, but you can use <b>script.run<> in hotkey/autotext/mouse/window trigger actions.
+/// Scripts don't have a "trigger" property, but you can use <.x>script.run<> in hotkey/autotext/mouse/window trigger actions.

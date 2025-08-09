@@ -23,7 +23,7 @@ if (x.IsMatch(s)) print.it("found");
 
 if (s.RxIsMatch(@"\b(\w+?)(\d+)\b")) print.it("found");
 
-/// Find and get match info. The <q>m[1]<> and <q>m[2]<> are substrings that match regex parts enclosed in <q>()<>.
+/// Find and get match info. The <.c>m[1]<> and <.c>m[2]<> are substrings that match regex parts enclosed in <.c>()<>.
 
 if(s.RxMatch(@"\b(\w+?)(\d+)\b", out var m)) print.it(m.Start, m.End, m.Value, m[1].Value, m[2].Value);
 
@@ -74,7 +74,7 @@ var a = s.RxSplit(@" *, *");
 for(int i = 0; i < a.Length; i++) print.it(i, a[i]);
 
 /// There are to ways to insert an unknown string into a regular expression:
-/// 1. Enclose it in <q>\Q \E<>.
+/// 1. Enclose it in <.c>\Q \E<>.
 /// 2. Escape special characters in it.
 
 string c = clipboard.text;

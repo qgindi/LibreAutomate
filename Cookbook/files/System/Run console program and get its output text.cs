@@ -18,6 +18,6 @@ run.console(s => { //or do whatever with it
 run.console(out var text, @"C:\Test\console3.exe", encoding: Console.OutputEncoding);
 print.it(text);
 
-/// If the output contains garbage text, need to specify encoding, like in the above example. Most console programs use <b>Encoding.UTF8<>, <b>Encoding.Unicode<> or <b>Console.OutputEncoding<>. If not specified, <b>run.console<> uses <b>Encoding.UTF8<>.
+/// If the output contains garbage text, need to specify encoding, like in the above example. Most console programs use <.x>Encoding.UTF8<>, <.x>Encoding.Unicode<> or <.x>Console.OutputEncoding<>. If not specified, <.x>run.console<> uses <.x>Encoding.UTF8<>.
 
 /// See also: <see cref="consoleProcess"/>.

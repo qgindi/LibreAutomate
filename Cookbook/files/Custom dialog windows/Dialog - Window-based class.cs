@@ -1,4 +1,4 @@
-/// To start creating a <b>Window<>-based class that uses a <see cref="wpfBuilder"/> to add elements etc, you can use menu <b>File > New > Dialogs<>.
+/// To start creating a <.x>Window<>-based class that uses a <see cref="wpfBuilder"/> to add elements etc, you can use menu <b>File > New > Dialogs<>.
 /// The main reason to use a Window-based class is to be able to override functions of the base class in order to receive various notifications (it's a more powerful alternative to events) or change the behavior or initial properties of the class.
 
 var d = new Dialogs.DialogClass();

@@ -47,7 +47,7 @@ record R1(string origin, string url);
 if (!internet.http.TryPost(out var r, "https://httpbin.org/anything", null)) return;
 print.it(r.Json());
 
-/// You can use <b>HttpClient<> directly too. Functions used in other examples just simplify it. Look for more info/examples on the Internet.
+/// You can use <.x>HttpClient<> directly too. Functions used in other examples just simplify it. Look for more info/examples on the Internet.
 
 using var http = new HttpClient();
 var post = new KeyValuePair<string, string>[] {

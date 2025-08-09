@@ -9,7 +9,7 @@ if (i == 1) {
 
 if (i != 0) print.it("i is not 0"); //don't need { } for single statement
 
-/// Inside ( ) can be any expression of type <.k>bool<> (<.k>true<> or <.k>false<>).
+/// Inside <.c>( )<> can be any expression of type <.k>bool<> (<.k>true<> or <.k>false<>).
 
 bool ctrl = keys.isCtrl;
 if (ctrl) print.it("Ctrl pressed");

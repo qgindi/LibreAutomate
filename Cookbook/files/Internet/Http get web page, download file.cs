@@ -56,7 +56,7 @@ internet.http.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
 var s1 = internet.http.Get("https://httpbin.org/anything", headers: new[] { "Accept: application/json, text/json", "Cookie: mmm=nnn; xxx=yyy;" }).Text();
 print.it(s1);
 
-/// You can use <b>HttpClient<> directly too. Functions used in other examples just simplify it. Look for more info/examples on the Internet.
+/// You can use <.x>HttpClient<> directly too. Functions used in other examples just simplify it. Look for more info/examples on the Internet.
 
 using var http = new HttpClient();
 string html2 = http.GetStringAsync("https://www.example.com").Result;

@@ -4,7 +4,7 @@
 
 script.setup(trayIcon: true, sleepExit: true);
 
-/// The <b>ifRunning<> option isn't applied if the <_>.exe</_> script is launched not from the editor. Then function <see cref="script.single"/> can be used to ensure single process instance.
+/// The <b>ifRunning<> option isn't applied if the <.c>.exe<> script is launched not from the editor. Then function <see cref="script.single"/> can be used to ensure single process instance.
 
 script.single("mutex7654329");
 

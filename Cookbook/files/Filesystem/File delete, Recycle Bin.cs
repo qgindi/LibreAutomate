@@ -11,7 +11,7 @@ foreach (var f in filesystem.enumerate(folders.Temp)) {
 	filesystem.delete(f.FullPath, FDFlags.CanFail);
 }
 
-/// Delete all <_>.txt</_> files from folder. Not from subfolders.
+/// Delete all <.c>.txt<> files from folder. Not from subfolders.
 
 foreach (var f in filesystem.enumFiles(@"C:\Temp", "*.txt"))
 	filesystem.delete(f.FullPath);

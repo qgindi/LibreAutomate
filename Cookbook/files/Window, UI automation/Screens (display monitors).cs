@@ -11,7 +11,7 @@ foreach (var v in screen.all) {
 	print.it(v.Rect);
 }
 
-/// Also can be used with some functions of <b>wnd<> and other classes.
+/// Also can be used with some functions of <.x>wnd<> and other classes.
 
 var w = wnd.find(1, "*- Notepad", "Notepad");
 w.Move(100, 100, workArea: true, screen: s1);

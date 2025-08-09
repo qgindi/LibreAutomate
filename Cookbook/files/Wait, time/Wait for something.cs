@@ -1,4 +1,4 @@
-/// Most "wait for" functions are in separate classes. For example "wait for window" is in <b>wnd<>, "wait for key" is in <b>keys<>. To wait for other events can be used class <see cref="wait"/>.
+/// Most "wait for" functions are in separate classes. For example "wait for window" is in <.x>wnd<>, "wait for key" is in <.x>keys<>. To wait for other events can be used class <see cref="wait"/>.
 
 /// Wait for toggled <mono>CapsLock<>.
 

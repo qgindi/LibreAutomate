@@ -1,4 +1,4 @@
-/// Class <see cref="wpfBuilder"/> allows to create <google>WPF<> dialog windows quite easily without a visual designer. To start creating a dialog, use snippet <b>wpfDialogSnippet<>: type <q>wpf<> and select from the list. Or menu <b>File > New > Dialogs<>.
+/// Class <see cref="wpfBuilder"/> allows to create <google>WPF<> dialog windows quite easily without a visual designer. To start creating a dialog, use snippet <.x>wpfDialogSnippet<>: type <.c>wpf<> and select from the list. Or menu <b>File > New > Dialogs<>.
 
 using System.Windows;
 using System.Windows.Controls;
@@ -15,11 +15,11 @@ b.End();
 if (!b.ShowDialog()) return; //show dialog. Exit if closed not with the OK button.
 print.it(text1.Text, combo1.SelectedIndex, check1.IsChecked == true); //get control values
 
-/// WPF elements are of 2 main types: controls (visible elements like button, text box, label) and panels (containers for multiple elements). To add controls use <see cref="wpfBuilder.Add"/> and other <b>AddX<> functions. To add <+recipe>panels<> use <b>StartX<> functions. Use other functions to set properties/content of the last added element.
+/// WPF elements are of 2 main types: controls (visible elements like button, text box, label) and panels (containers for multiple elements). To add controls use <see cref="wpfBuilder.Add"/> and other <.x>AddX<> functions. To add <+recipe>panels<> use <.x>StartX<> functions. Use other functions to set properties/content of the last added element.
 
 /// Adding elements is like filling a table - in rows left-to-right and top-to-bottom. Usually don't need to set control position and size; for it you can define <+recipe Dialog - columns>columns and rows<>.
 
-/// Control variables are used to set control type, get value, set properties, etc. They can be declared as <b>Add<> <.k>out<> parameters (like in the first example) or earlier (like in the next example). Also you can create elements and then add.
+/// Control variables are used to set control type, get value, set properties, etc. They can be declared as <.x>Add<> <.k>out<> parameters (like in the first example) or earlier (like in the next example). Also you can create elements and then add.
 
 TextBox t1, t2;
 CheckBox c1;

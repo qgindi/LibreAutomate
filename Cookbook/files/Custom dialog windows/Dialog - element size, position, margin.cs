@@ -1,7 +1,7 @@
-/// WPF elements (controls, panels) usually are inside panels of type <b>Grid<>, <b>StackPanel<> or <b>DockPanel<>. These panels automatically set positions of child elements. Element positions and sizes in <b>Grid<> depend on <+recipe Dialog - columns>columns and rows<>. In auto-sized columns/rows elements have default size or content size.
+/// WPF elements (controls, panels) usually are inside panels of type <.x>Grid<>, <.x>StackPanel<> or <.x>DockPanel<>. These panels automatically set positions of child elements. Element positions and sizes in <.x>Grid<> depend on <+recipe Dialog - columns>columns and rows<>. In auto-sized columns/rows elements have default size or content size.
 ///
 /// To change the size or position of the last added element:
-/// - <see cref="wpfBuilder.Size"/> sets its width, height and optionally alignment. As well as <b>Width<> and <b>Height<>.
+/// - <see cref="wpfBuilder.Size"/> sets its width, height and optionally alignment. As well as <.x>Width<> and <.x>Height<>.
 /// - <see cref="wpfBuilder.Margin"/> changes the amount of empty space around it, which can be used to set its position.
 /// - <see cref="wpfBuilder.Align"/> changes its alignment inside the grid cell.
 

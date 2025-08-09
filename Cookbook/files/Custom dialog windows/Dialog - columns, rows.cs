@@ -21,14 +21,14 @@ if (!b.ShowDialog()) return;
 
 /// Default columns are 0, -1. The first column (auto-sized) is intended for labels; the second fills the remaining space.
 ///
-/// Function <see cref="wpfBuilder.Row"/> starts a new row with specified height. Function <b>R<> starts an auto-sized row, same as <q>Row(0)<>.
+/// Function <see cref="wpfBuilder.Row"/> starts a new row with specified height. Function <.x>R<> starts an auto-sized row, same as <.c>Row(0)<>.
 
 /// Row height can be of 3 types:
 /// - If > 0 - height in WPF units (1/96 inch).
 /// - If 0 - auto (of the tallest control). It is default.
 /// - If < 0 - fraction of the remaining space.
 
-/// If there are star-sized columns or rows, need to set container width or height (<b>WinSize<>, <b>Size<>, etc).
+/// If there are star-sized columns or rows, need to set container width or height (<.x>WinSize<>, <.x>Size<>, etc).
 
 /// Example of multiple star-sized columns and rows.
 
@@ -40,7 +40,7 @@ b2.R.AddOkCancel();
 b2.End();
 if (!b2.ShowDialog()) return;
 
-/// Parameters of functions <b>Columns<> and <b>Row<> are of type <see cref="WBGridLength"/>. It allows to specify min/max width/height too.
+/// Parameters of functions <.x>Columns<> and <.x>Row<> are of type <see cref="WBGridLength"/>. It allows to specify min/max width/height too.
 
 var b3 = new wpfBuilder("Window").WinSize(400, 400);
 b3.Columns((-25, 100..), -75); //>= 100
@@ -54,4 +54,4 @@ if (!b3.ShowDialog()) return;
 
 /// An element spans 1 row. Use <see cref="wpfBuilder.SpanRows"/> to set how many rows spans the last added element.
 ///
-/// An element is added in the next available cell. To add one or more empty cells, use <see cref="wpfBuilder.Skip"/>; also use it to avoid overlapping with elements that span multiple rows (<b>SpanRows<>).
+/// An element is added in the next available cell. To add one or more empty cells, use <see cref="wpfBuilder.Skip"/>; also use it to avoid overlapping with elements that span multiple rows (<.x>SpanRows<>).

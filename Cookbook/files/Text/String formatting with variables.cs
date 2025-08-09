@@ -36,7 +36,7 @@ string[] a = { "one", "two", "three" };
 s = string.Join("; ", a);
 print.it(s);
 
-/// Function <b>ToString<> of various variable types.
+/// Function <.x>ToString<> of various variable types.
 
 print.it("0x" + n.ToS("X8")); //hexadecimal number format with 8 digits
 

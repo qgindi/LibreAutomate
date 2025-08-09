@@ -423,13 +423,6 @@ public unsafe class SciTags {
 			case 1 << 16 | 'u':
 				style.Underline = true;
 				break;
-			case 1 << 16 | 'q': //TODO: doc
-				style.Mono = true;
-				style.BackColor = 0xE8E8E8;
-				break;
-			case 4 << 16 | 'm' when span.SequenceEqual("mono"u8):
-				style.Mono = true;
-				break;
 			case 1 << 16 | 'c':
 			case 2 << 16 | 'b' when tag[1] == 'c':
 			case 2 << 16 | 'l' when tag[1] == 'c':
@@ -449,6 +442,9 @@ public unsafe class SciTags {
 				break;
 			case 4 << 16 | 's' when span.SequenceEqual("size"u8) && attr != null:
 				style.Size = Api.strtoi(attr);
+				break;
+			case 4 << 16 | 'm' when span.SequenceEqual("mono"u8):
+				style.Mono = true;
 				break;
 			//case 6 << 16 | 'h' when span.SequenceEqual("hidden"u8): //rejected. Not useful; does not hide newlines.
 			//	style.Hidden = true;

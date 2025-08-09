@@ -11,12 +11,12 @@ if (Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au\Test", "A", null) is strin
 	print.it(s1);
 }
 
-/// Set a <_>DWORD</_> value.
+/// Set a <.c>DWORD<> value.
 
 int i1 = 100;
 Registry.SetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au\Test", "B", i1);
 
-/// Get a <_>DWORD</_> value if exists.
+/// Get a <.c>DWORD<> value if exists.
 
 if (Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Au\Test", "B", null) is int i2) {
 	print.it(i2);

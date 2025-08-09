@@ -48,6 +48,6 @@ foreach (var v in process.triggers(true, "**m notepad.exe||mspaint.exe")) {
 	}
 }
 
-/// Wait for a <_>Notepad</_> process if not already running.
+/// Wait for a Notepad process if not already running.
 
 wait.until(0, () => process.exists("notepad.exe"));

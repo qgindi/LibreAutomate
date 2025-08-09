@@ -1,7 +1,7 @@
 /// Various .NET and automation library classes and functions can be used to implement triggers and events of all kinds.
 /// For example <see cref="SystemEvents"/>, <see cref="FileSystemWatcher"/>, <see cref="WindowsHook"/>, <see cref="WinEventHook"/>, <see cref="process.triggers"/>.
-/// A good place for triggers that should be active all the time is file <q>Other triggers<>. To open it, use menu <b>TT > Other triggers<>.
-/// This is an <q>Other triggers<> file example.
+/// A good place for triggers that should be active all the time is file <.c>Other triggers<>. To open it, use menu <b>TT > Other triggers<>.
+/// This is an <.c>Other triggers<> file example.
 
 partial class Program {
 	[Triggers]

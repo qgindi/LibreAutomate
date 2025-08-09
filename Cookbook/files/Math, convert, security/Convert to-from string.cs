@@ -16,7 +16,7 @@ s = "10.5";
 double d = s.ToNumber();
 print.it(d);
 
-/// Also there are <b>ToInt<> and <b>ToNumber<> overloads with various options.
+/// Also there are <.x>ToInt<> and <.x>ToNumber<> overloads with various options.
 
 if (s.ToInt(out int r1)) print.it(r1); else print.it("not a number"); //ToInt can parse part of string
 if (s.ToNumber(out int r2)) print.it(r2); else print.it("not a number"); //ToNumber always parses entire string

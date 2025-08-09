@@ -8,8 +8,8 @@ wait.s(2); //2 seconds
 10.ms();
 2.s();
 
-/// To quickly insert the above statements you can type <q>10ms<> and <q>2s<>.
+/// To quickly insert the above statements you can type <.c>10ms<> and <.c>2s<>.
 
-/// The sleep time precision is 1-2 ms. The .NET function <b>Thread.Sleep<> is less precise (15-16 ms). 
+/// The sleep time precision is 1-2 ms. The .NET function <.x>Thread.Sleep<> is less precise (15-16 ms). 
 
 /// Most wait functions should not be used in threads with windows, hooks, triggers, COM. While waiting, the thread cannot process Windows messages and other events, and may hang. If need to wait and process messages, the simplest (but often not the best) way is <see cref="wait.doEvents"/>.

@@ -13,7 +13,7 @@ b.R.AddOkCancel();
 b.End();
 if (!b.ShowDialog()) return;
 
-/// To set window state, style and other properties can be used <see cref="wpfBuilder.WinProperties"/>. Or get the <b>Window<> object and set its properties.
+/// To set window state, style and other properties can be used <see cref="wpfBuilder.WinProperties"/>. Or get the <.x>Window<> object and set its properties.
 
 var b2 = new wpfBuilder("Window").WinSize(300, 300);
 b2.WinProperties(topmost: true);
