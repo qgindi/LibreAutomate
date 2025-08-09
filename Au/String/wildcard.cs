@@ -353,7 +353,7 @@ namespace Au.Types {
 			
 			//The first two loops are fast, but Eq much faster when !ignoreCase. We cannot use such optimizations that it can.
 			//The slowest case is "*substring*", because then the first two loops don't help.
-			//	Then similar speed as string.IndexOf(ordinal) and API <msdn>FindStringOrdinal</msdn>.
+			//	Then similar speed as string.IndexOf(ordinal) and API <ms>FindStringOrdinal</ms>.
 			//	Possible optimization, but need to add much code, and makes not much faster, and makes other cases slower, difficult to avoid it.
 		}
 #endif

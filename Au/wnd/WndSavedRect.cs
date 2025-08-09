@@ -22,7 +22,7 @@ namespace Au.More;
 /// </example>
 public struct WndSavedRect {
 	/// <summary>
-	/// Window rectangle in normal state (not maximized/minimized), as retrieved by API <msdn>GetWindowPlacement</msdn>.
+	/// Window rectangle in normal state (not maximized/minimized), as retrieved by API <ms>GetWindowPlacement</ms>.
 	/// </summary>
 	public RECT RawRect { get => _r; set => _r = value; }
 	RECT _r;

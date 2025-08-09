@@ -11,7 +11,7 @@ namespace Au
 		/// </param>
 		/// <param name="flags"></param>
 		/// <remarks>
-		/// Unlike API <msdn>WindowFromPhysicalPoint</msdn> etc, this function: does not skip disabled controls; always skips transparent control like group box if a smaller sibling is there. All this is not true with flag <b>Raw</b>.
+		/// Unlike API <ms>WindowFromPhysicalPoint</ms> etc, this function: does not skip disabled controls; always skips transparent control like group box if a smaller sibling is there. All this is not true with flag <b>Raw</b>.
 		/// </remarks>
 		/// <example>
 		/// Find window at 100 200.
@@ -322,7 +322,7 @@ namespace Au.Types
 		NeedControl = 2,
 
 		/// <summary>
-		/// Just call API <msdn>WindowFromPhysicalPoint</msdn>.
+		/// Just call API <ms>WindowFromPhysicalPoint</ms>.
 		/// Faster, but skips disabled controls and in some cases gets transparent control like group box although a smaller visible sibling is there.
 		/// Not used with flag <b>NeedWindow</b>.
 		/// </summary>

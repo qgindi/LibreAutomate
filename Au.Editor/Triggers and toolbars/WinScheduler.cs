@@ -133,7 +133,7 @@ static class WinScheduler {
 	/// <param name="taskName">Can be like <c>"Name"</c> or <c>@"\Folder\Name"</c> or <c>@"Folder\Name"</c>.</param>
 	/// <param name="pathMustBe">If not null, don't run if the task action's path does not match this.</param>
 	/// <param name="joinArgs">Join args into single arg for $(Arg0).</param>
-	/// <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
+	/// <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <ms>IRegisteredTask.Run</ms>.</param>
 	public static (int processId, RResult result) RunTask(string taskFolder, string taskName, string pathMustBe, bool joinArgs, params string[] args) {
 		if (!Connect(out var ts)) return (0, RResult.CantConnect);
 		if (0 != ts.GetFolder(taskFolder, out var tf) || 0 != tf.GetTask(taskName, out var t)) return (0, RResult.TaskNotFound);

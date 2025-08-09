@@ -45,7 +45,7 @@ namespace Au.Types {
 	/// Used with <see cref="wpfBuilder"/> functions for width/height parameters. Allows to specify minimal and/or maximal values too.
 	/// </summary>
 	/// <remarks>
-	/// Has implicit conversions from <b>double</b>, <b>Range</b> and tuple <b>(double length, Range minMax)</b>.
+	/// Has implicit conversions from <b>double</b>, <b>Range</b> and tuple <c>(double length, Range minMax)</c>.
 	/// To specify width or height, pass an <b>int</b> or <b>double</b> value, like <c>100</c> or <c>15.25</c>.
 	/// To specify minimal value, pass a range like <c>100..</c>.
 	/// To specify maximal value, pass a range like <c>..100</c>.

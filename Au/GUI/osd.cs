@@ -636,7 +636,7 @@ namespace Au {
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
-		/// Window shadows can be disabled. See <msdn>SPI_SETDROPSHADOW</msdn>.
+		/// Window shadows can be disabled. See <ms>SPI_SETDROPSHADOW</ms>.
 		/// </remarks>
 		public new bool Shadow { get => base.Shadow; set => base.Shadow = value; }
 		

@@ -38,7 +38,7 @@ public static class AppSingleInstance {
 	/// <param name="notifyArgs">
 	/// If not <c>null</c>:
 	/// <br/>• If already running, sends it to that process, which receives it in <see cref="Notified"/> event.
-	/// <br/>• Else enables <b>Notified</b> event in this process.
+	/// <br/>• Else enables <see cref="Notified"/> event in this process.
 	/// </param>
 	/// <param name="waitMS">Milliseconds to wait until this process can run. No timeout if -1.</param>
 	/// <returns>True if already running.</returns>

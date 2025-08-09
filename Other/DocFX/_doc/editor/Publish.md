@@ -41,7 +41,7 @@ Unsupported features:
 ### Self-extract
 
 This 3-state checkbox is enabled when **Single file** is checked.
-- Checked - use `IncludeAllContentForSelfExtract`. Adds all files to exe. Will extract all (including .NET dlls) to a temporary directory. The program will start slower, but will not have issues like unavailable **Assembly.Location**.
+- Checked - use `IncludeAllContentForSelfExtract`. Adds all files to exe. Will extract all (including .NET dlls) to a temporary directory. The program will start slower, but will not have issues like unavailable [Assembly.Location](ms:).
 - Unchecked - adds only .NET dlls to exe. Native dlls and other files (if any) will live in the exe's directory. Will use .NET dlls without extracting.
 - Indeterminate - use `IncludeNativeLibrariesForSelfExtract`. Adds all dlls to exe. Will extract native dlls, and use .NET dlls without extracting. This is the best for most scripts, but can't be used with some scripts (the **Publish** tool will print a warning). 
 
@@ -64,7 +64,7 @@ Program files don't contain the source code, but can be decompiled into equivale
 
 If you want to use action triggers (hotkeys etc) in .exe program, add them to the script like in the [ActionTriggers]() example.
 
-To get program/OS/computer info can be used classes [script](), [process](), [uacInfo](), [osVersion](), [folders](), **Environment**, **RuntimeInformation**, **OperatingSystem**.
+To get program/OS/computer info can be used classes [script](), [process](), [uacInfo](), [osVersion](), [folders](), [Environment](ms:), [RuntimeInformation](ms:), [OperatingSystem](ms:).
 
 Antivirus programs and OS may block or block-scan-restart unknown (new) program files. To avoid it on the development computer, in the AV program add the output directory to the list of exclusions. To avoid it anywhere, need to sign program files with a code signing certificate, and it must have a good reputation; it isn't cheap and isn't easy to get.
 

@@ -1,7 +1,7 @@
-﻿namespace Au.More;
+namespace Au.More;
 
 /// <summary>
-/// Calls API <msdn>AttachThreadInput</msdn> to attach/detach thread input.
+/// Calls API <ms>AttachThreadInput</ms> to attach/detach thread input.
 /// Constructor attaches thread input of this thread to that of the specified thread. <b>Dispose</b> detaches.
 /// </summary>
 internal struct AttachThreadInput_ : IDisposable {

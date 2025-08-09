@@ -1017,8 +1017,8 @@ namespace Au {
 		/// </summary>
 		/// <param name="buttons">Return <c>true</c> if some of these buttons are down. Default: any.</param>
 		/// <remarks>
-		/// Uses API <msdn>GetAsyncKeyState</msdn>.
-		/// When processing user input in UI code (forms, WPF), instead use class <see cref="keys.gui"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
+		/// Uses API <ms>GetAsyncKeyState</ms>.
+		/// When processing user input in UI code (forms, WPF), instead use class <see cref="keys.gui"/> or .NET functions. They use API <ms>GetKeyState</ms>.
 		/// When mouse left and right buttons are swapped, gets logical state, not physical.
 		/// </remarks>
 		/// <seealso cref="waitForNoButtonsPressed"/>
@@ -1335,9 +1335,9 @@ namespace Au {
 			//rejected:
 			///// <param name="waitMS">
 			///// Maximal time to wait, milliseconds. Also which API to use.
-			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits <c>opt.mouse.ClickSpeed</c> ms.
-			///// If less than 0 (eg <b>Timeout.Infinite</b>), calls API <msdn>SendMessage</msdn> which usually waits until the window finishes to process the message.
-			///// Else calls API <msdn>SendMessageTimeout</msdn> which waits max <i>waitMS</i> milliseconds, then throws <b>AuException</b>.
+			///// If 0 (default), calls API <ms>PostMessage</ms> (it does not wait) and waits <c>opt.mouse.ClickSpeed</c> ms.
+			///// If less than 0 (eg <b>Timeout.Infinite</b>), calls API <ms>SendMessage</ms> which usually waits until the window finishes to process the message.
+			///// Else calls API <ms>SendMessageTimeout</ms> which waits max <i>waitMS</i> milliseconds, then throws <b>AuException</b>.
 			///// The SendX functions are not natural and less likely to work.
 			///// If the window shows a dialog, the SendX functions usually wait until the dialog is closed.
 			///// </param>

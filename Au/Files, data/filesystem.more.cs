@@ -30,7 +30,7 @@ partial class filesystem {
 		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get <b>FileId</b> of the link, not of its target.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
-		/// Calls API <msdn>GetFileInformationByHandle</msdn>.
+		/// Calls API <ms>GetFileInformationByHandle</ms>.
 		/// 
 		/// A file id can be used to uniquely identify a file or directory regardless of path format.
 		/// 
@@ -59,7 +59,7 @@ partial class filesystem {
 		/// <param name="format">Result format.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
-		/// Calls API <msdn>GetFinalPathNameByHandle</msdn>.
+		/// Calls API <ms>GetFinalPathNameByHandle</ms>.
 		/// 
 		/// Unlike <see cref="pathname.normalize"/>, this function works with existing files and directories, not any strings.
 		/// </remarks>
@@ -433,7 +433,7 @@ partial class filesystem {
 		///// <exception cref="ArgumentException">Not full path. Only if <i>canAnalyseData</i> is <c>true</c>.</exception>
 		///// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes"/>. Only if <i>canAnalyseData</i> is <c>true</c>.</exception>
 		///// <remarks>
-		///// Uses API <msdn>FindMimeFromData</msdn>.
+		///// Uses API <ms>FindMimeFromData</ms>.
 		///// </remarks>
 		//public static bool getMimeContentType(string file, out string contentType, bool canAnalyseData = false)
 		//{

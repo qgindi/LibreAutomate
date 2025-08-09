@@ -1,4 +1,4 @@
-﻿---
+---
 uid: caller_info
 ---
 
@@ -6,7 +6,7 @@ uid: caller_info
 
 Some functions have optional parameters *f_* and/or *l_* with attribute `[CallerFilePath]` or `[CallerLineNumber]`. They automatically pass source file/line info to the function. Usually the caller should not use them.
 
-For example, menus (class **popupMenu**) and toolbars (class **toolbar**) use it for the **Edit** command (context menu). Triggers use it for menu **Run > Recent > trigger**.
+For example, [popupMenu]() and [toolbar]() use it for the **Edit** command (context menu). Triggers use it for menu **Run > Recent > trigger**.
 
 If to add menu/toolbar items or triggers you create an intermediate function, the function should have *f_* and/or *l_* parameters and pass them to the menu/toolbar/trigger function. Example script:
 

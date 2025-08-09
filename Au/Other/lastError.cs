@@ -23,7 +23,7 @@ namespace Au {
 	/// </example>
 	public static class lastError {
 		/// <summary>
-		/// Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API last error code of this thread.
+		/// Calls API <ms>SetLastError</ms>(0), which clears the Windows API last error code of this thread.
 		/// </summary>
 		/// <remarks>
 		/// Need it before calling some functions if you want to use <see cref="code"/> or <see cref="message"/>.
@@ -32,7 +32,7 @@ namespace Au {
 		public static void clear() => Api.SetLastError(0);
 		
 		/// <summary>
-		/// Gets (<see cref="Marshal.GetLastWin32Error"/>) or sets (API <msdn>SetLastError</msdn>) the Windows API last error code of this thread.
+		/// Gets (<see cref="Marshal.GetLastWin32Error"/>) or sets (API <ms>SetLastError</ms>) the Windows API last error code of this thread.
 		/// </summary>
 		public static int code {
 			get => Marshal.GetLastWin32Error();

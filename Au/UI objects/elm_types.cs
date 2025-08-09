@@ -180,7 +180,7 @@ namespace Au.Types {
 	/// Used with <see cref="elm.fromWindow"/>
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix <b>OBJID_</b>.
+	/// Most names are as in API <ms>AccessibleObjectFromWindow</ms> documentation but without prefix <b>OBJID_</b>.
 	/// </remarks>
 	public enum EObjid {
 		WINDOW = 0,
@@ -221,7 +221,7 @@ namespace Au.Types {
 	/// Used with <see cref="elm.RoleInt"/>
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>IAccessible.get_accRole Object Roles</msdn> documentation but without prefix <b>ROLE_SYSTEM_</b>. These are renamed: <b>PUSHBUTTON</b> to <b>BUTTON</b>, <b>CHECKBUTTON</b> to <b>CHECKBOX</b>, <b>GRAPHIC</b> to <b>IMAGE</b>, <b>OUTLINE</b> to <b>TREE</b>, <b>OUTLINEITEM</b> to <b>TREEITEM</b>, <b>OUTLINEBUTTON</b> to <b>TREEBUTTON</b>.
+	/// Most names are as in API <ms>IAccessible.get_accRole Object Roles</ms> documentation but without prefix <b>ROLE_SYSTEM_</b>. These are renamed: <b>PUSHBUTTON</b> to <b>BUTTON</b>, <b>CHECKBUTTON</b> to <b>CHECKBOX</b>, <b>GRAPHIC</b> to <b>IMAGE</b>, <b>OUTLINE</b> to <b>TREE</b>, <b>OUTLINEITEM</b> to <b>TREEITEM</b>, <b>OUTLINEBUTTON</b> to <b>TREEBUTTON</b>.
 	/// </remarks>
 	public enum ERole {
 		TITLEBAR = 0x1,
@@ -301,7 +301,7 @@ namespace Au.Types {
 	/// Used by <see cref="elm.State"/>.
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>IAccessible.get_accState Object State Constants</msdn> documentation but without prefix <b>STATE_SYSTEM_</b>.
+	/// Most names are as in API <ms>IAccessible.get_accState Object State Constants</ms> documentation but without prefix <b>STATE_SYSTEM_</b>.
 	/// </remarks>
 	[Flags]
 	public enum EState {
@@ -344,7 +344,7 @@ namespace Au.Types {
 	/// Used by <see cref="elm.Select"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix <b>SELFLAG_</b>.
+	/// The names are as in API <ms>IAccessible.accSelect</ms> documentation but without prefix <b>SELFLAG_</b>.
 	/// </remarks>
 	[Flags]
 	public enum ESelect {
@@ -359,7 +359,7 @@ namespace Au.Types {
 	/// Event constants for <see cref="More.WinEventHook"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>SetWinEventHook Event Constants</msdn> documentation but without prefix <b>EVENT_</b>.
+	/// The names are as in API <ms>SetWinEventHook Event Constants</ms> documentation but without prefix <b>EVENT_</b>.
 	/// </remarks>
 	public enum EEvent {
 		MIN = 0x1,
@@ -495,7 +495,7 @@ namespace Au.Types {
 	/// Flags for <see cref="More.WinEventHook"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>SetWinEventHook</msdn> documentation but without prefix <b>WINEVENT_</b>.
+	/// The names are as in API <ms>SetWinEventHook</ms> documentation but without prefix <b>WINEVENT_</b>.
 	/// There are no flags for <b>OUTOFCONTEXT</b> and <b>INCONTEXT</b>. <b>OUTOFCONTEXT</b> is default (0). <b>INCONTEXT</b> cannot be used in managed code.
 	/// </remarks>
 	[Flags]

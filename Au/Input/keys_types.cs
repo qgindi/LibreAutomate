@@ -291,7 +291,7 @@ public class PastingEventArgs : EventArgs {
 
 /// <summary>
 /// Defines a hotkey as <see cref="KMod"/> and <see cref="KKey"/>.
-/// Has implicit conversion operators from string like <c>"Ctrl+Shift+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>.
+/// Has implicit conversion operators from string like <c>"Ctrl+Shift+K"</c>, tuple <c>(KMod, KKey)</c>, enum <b>KKey</b>, enum <b>Keys</b>.
 /// </summary>
 public struct KHotkey {
 	/// <summary>
@@ -314,7 +314,7 @@ public struct KHotkey {
 		return new KHotkey(mod, key);
 	}
 
-	/// <summary>Implicit conversion from tuple <b>(KMod, KKey)</b>.</summary>
+	/// <summary>Implicit conversion from tuple <c>(KMod, KKey)</c>.</summary>
 	public static implicit operator KHotkey((KMod, KKey) hotkey) => new KHotkey(hotkey.Item1, hotkey.Item2);
 
 	/// <summary>Implicit conversion from <see cref="KKey"/> (hotkey without modifiers).</summary>

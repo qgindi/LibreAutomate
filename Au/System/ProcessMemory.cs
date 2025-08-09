@@ -48,7 +48,7 @@ namespace Au.More {
 		/// Address of memory allocated in that process.
 		/// </summary>
 		/// <remarks>
-		/// The constructor allocates memory with API <msdn>VirtualAllocEx</msdn> if <i>nBytes</i> != 0. Finally <b>Dispose</b> will free it with API <msdn>VirtualFreeEx</msdn>.
+		/// The constructor allocates memory with API <ms>VirtualAllocEx</ms> if <i>nBytes</i> != 0. Finally <b>Dispose</b> will free it with API <ms>VirtualFreeEx</ms>.
 		/// The setter normally isn't used; if you set <c>MemAllocated = default</c>, <b>Dispose</b> will not free the memory.
 		/// The address is invalid in this process.
 		/// </remarks>

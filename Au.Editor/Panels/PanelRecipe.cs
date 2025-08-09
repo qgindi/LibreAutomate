@@ -209,7 +209,6 @@ class PanelRecipe {
 			AaTags.AddLinkTag("+ms", s => run.itSafe(App.Settings.internetSearchUrl + System.Net.WebUtility.UrlEncode(s + " site:microsoft.com")));
 			AaTags.AddStyleTag(".c", new() { backColor = 0xF0F0F0, monospace = true }); //inline code
 			AaTags.AddStyleTag(".x", new() { backColor = 0xF0F0F0, monospace = true, textColor = 0xE06060 }); //API name
-			//AaTags.AddStyleTag(".x", new() { monospace = true, textColor = 0x808080, bold = true }); //API name
 			AaTags.AddStyleTag(".k", new() { backColor = 0xF0F0F0, monospace = true, textColor = 0x0000FF }); //keyword
 			
 #if DEBUG

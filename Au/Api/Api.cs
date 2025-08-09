@@ -22,8 +22,8 @@ static unsafe partial class Api {
 	internal static int SizeOf<T>() => Marshal.SizeOf<T>();
 	
 	/// <summary>
-	/// Gets dll module handle (<b>Api.GetModuleHandle</b>) or loads dll (<b>NativeLibrary.TryLoad</b>), and returns unmanaged exported function address (<b>Api.GetProcAddress</b>).
-	/// See also: <b>GetDelegate</b>.
+	/// Gets dll module handle (<c>GetModuleHandle</c>) or loads dll (<c>NativeLibrary.TryLoad</c>), and returns unmanaged exported function address (<c>GetProcAddress</c>).
+	/// See also: <c>GetDelegate</c>.
 	/// </summary>
 	internal static IntPtr GetProcAddress(string dllName, string funcName) {
 		IntPtr hmod = GetModuleHandle(dllName);
@@ -178,7 +178,7 @@ static unsafe partial class Api {
 	}
 	
 	/// <summary>
-	/// <b>BITMAPINFOHEADER</b> members and 3 uints for color table etc.
+	/// <c>BITMAPINFOHEADER</c> members and 3 uints for color table etc.
 	/// </summary>
 	internal struct BITMAPINFO {
 		public readonly int biSize;
@@ -212,7 +212,7 @@ static unsafe partial class Api {
 		
 		//little tested
 		///// <summary>
-		///// Gets DIB bits of compatible bitmap. Uses API <msdn>GetDIBits</msdn>. Returns <c>null</c> if failed.
+		///// Gets DIB bits of compatible bitmap. Uses API <ms>GetDIBits</ms>. Returns <c>null</c> if failed.
 		///// </summary>
 		///// <param name="hb">Bitmap handle.</param>
 		///// <param name="topDown">Create top-down DIB.</param>
@@ -236,7 +236,7 @@ static unsafe partial class Api {
 	internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, ref BITMAPINFO lpbmi, int usage);
 	
 	/// <summary>
-	/// lpbmi can be <b>BITMAPINFOHEADER</b>/<b>BITMAPV5HEADER</b> or <b>BITMAPCOREHEADER</b>.
+	/// lpbmi can be <c>BITMAPINFOHEADER</c>/<c>BITMAPV5HEADER</c> or <c>BITMAPCOREHEADER</c>.
 	/// </summary>
 	[DllImport("gdi32.dll")]
 	internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, void* lpvBits, void* lpbmi, uint ColorUse = 0); //DIB_RGB_COLORS
@@ -446,8 +446,8 @@ static unsafe partial class Api {
 		public int bInheritHandle;
 		
 		/// <summary>
-		/// Creates <b>SECURITY_ATTRIBUTES</b> from string security descriptor.
-		/// <i>securityDescriptor</i> can be <c>null</c>; then <b>lpSecurityDescriptor</b> will be <c>null</c>.
+		/// Creates <c>SECURITY_ATTRIBUTES</c> from string security descriptor.
+		/// <i>securityDescriptor</i> can be <c>null</c>; then <c>lpSecurityDescriptor</c> will be <c>null</c>.
 		/// </summary>
 		public SECURITY_ATTRIBUTES(string securityDescriptor) {
 			nLength = IntPtr.Size * 3;
@@ -464,13 +464,13 @@ static unsafe partial class Api {
 		~SECURITY_ATTRIBUTES() => Dispose();
 		
 		/// <summary>
-		/// Creates <b>SECURITY_ATTRIBUTES</b> that allows UAC low IL processes to open the kernel object.
+		/// Creates <c>SECURITY_ATTRIBUTES</c> that allows UAC low IL processes to open the kernel object.
 		/// </summary>
 		public static readonly SECURITY_ATTRIBUTES ForLowIL = new SECURITY_ATTRIBUTES("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)");
 		
 		/// <summary>
-		/// Creates <b>SECURITY_ATTRIBUTES</b> that allows UAC medium IL processes to open the pipe.
-		/// Like of <b>PipeSecurity</b> that allows <b>ReadWrite</b> for <b>AuthenticatedUserSid</b>.
+		/// Creates <c>SECURITY_ATTRIBUTES</c> that allows UAC medium IL processes to open the pipe.
+		/// Like of <c>PipeSecurity</c> that allows <c>ReadWrite</c> for <c>AuthenticatedUserSid</c>.
 		/// </summary>
 		public static readonly SECURITY_ATTRIBUTES ForPipes = new SECURITY_ATTRIBUTES("D:(A;;0x12019b;;;AU)");
 	}
@@ -597,7 +597,7 @@ static unsafe partial class Api {
 	
 	internal struct NOTIFYICONDATA {
 		/// <summary>
-		/// Sets <b>cbSize</b>, <b>hWnd</b> and <b>uFlags</b>.
+		/// Sets <c>cbSize</c>, <c>hWnd</c> and <c>uFlags</c>.
 		/// </summary>
 		/// <param name="wNotify"></param>
 		/// <param name="nifFlags"></param>
@@ -944,7 +944,7 @@ static unsafe partial class Api {
 	internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
 	
 	/// <summary>
-	/// Calls <b>TrackMouseEvent</b> with <b>TME_LEAVE</b>.
+	/// Calls <c>TrackMouseEvent</c> with <c>TME_LEAVE</c>.
 	/// </summary>
 	/// <param name="w"></param>
 	/// <param name="track"><c>true</c> to start, <c>false</c> to cancel.</param>
@@ -1143,8 +1143,8 @@ static unsafe partial class Api {
 	
 #if false //not used, because we have ExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
 	/// <summary>
-	/// Converts part of string to <b>int</b>.
-	/// Returns the <b>int</b> value.
+	/// Converts part of string to <c>int</c>.
+	/// Returns the <c>int</c> value.
 	/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
 	/// </summary>
 	/// <param name="s">String.</param>
@@ -1166,8 +1166,8 @@ static unsafe partial class Api {
 	}
 
 	/// <summary>
-	/// Converts part of string to <b>long</b>.
-	/// Returns the <b>long</b> value.
+	/// Converts part of string to <c>long</c>.
+	/// Returns the <c>long</c> value.
 	/// Returns 0 if the string is <c>null</c>, <c>""</c> or does not begin with a number; then <i>numberEndIndex</i> will be = <i>startIndex</i>.
 	/// </summary>
 	/// <param name="s">String.</param>

@@ -1,3 +1,9 @@
+//TODO: once crashed when replacing in files.
+//	It's randon, may be hard to reproduce.
+//	Replaced </msdn> with </ms> in Au project. Crashed in the middle.
+//	Probably crashed while saving, because left one ~backup file. The normal file was saved OK.
+//	Process ended quickly. No exception, no log event, no dump file.
+
 using Au.Controls;
 using Au.Tools;
 using System.Windows;

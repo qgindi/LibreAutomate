@@ -4,6 +4,7 @@
 
 using System.Xml.Linq;
 using System.Xml.XPath;
+using System.Net;
 
 partial class AuDocs {
 	regexp _rxRecord, _rxRecordParam, _rxRecordDocLine, _rxRecordDocParam, _rxSeealso1, _rxSeealso2, _rxSeealso3, _rxSeealso4, _rxSeealso5;
@@ -185,7 +186,7 @@ partial class AuDocs {
 			//second part of the damaged spaces workaround
 			s = s.Replace('\u202F', ' ');
 		} else {
-			//in .md we use this for links to api: [Class]() or [Class.Member]().
+			//in .md we use this for links to our API: [Class]() or [Class.Member]().
 			//	DocFX converts it to <a href="">Class</a> etc without warning.
 			//	Now convert it to a working link.
 			nr = s.RxReplace(@"<a href="""">(.+?)</a>", m => {
@@ -193,24 +194,28 @@ partial class AuDocs {
 				string href = _ResolveLink(k);
 				if (href == null && k.LastIndexOf('.') is var i && i > 0) href = _ResolveLink(k[..i]); //enum member
 				if (href == null) { print.it($"cannot resolve link: [{k}]()"); return m.Value; }
-				return m.ExpandReplacement($@"<a href=""{href}"">$1</a>");
+				return $@"<a href=""{href}"">{k}</a>";
 				
 				string _ResolveLink(string k) {
 					foreach (var ns in _auNamespaces) {
-						if (filesystem.exists(siteDirTemp + "/api/" + ns + k + ".html", true).File) return "../api/" + ns + k + ".html";
+						if (filesystem.exists(siteDirTemp + "/api/" + ns + k + ".html", true).File) return "/api/" + ns + k + ".html";
 					}
 					return null;
 				}
 			}, out s);
 			
-			
-			//<google>...</google> -> <a href="google search">
-			nr = s.RxReplace(@"<google>(.+?)</google>", @"<a href=""https://www.google.com/search?q=$1"">$1</a>", out s);
-			if (nr > 0) print.warning("TODO3: if using <_><google> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.</_>");
-			
-			//<msdn>...</msdn> -> <a href="google search in microsoft.com">
-			nr = s.RxReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:microsoft.com+$1"">$1</a>", out s);
-			if (nr > 0) print.warning("TODO3: if using <_><msdn> in conceptual topics, need to htmldecode-urlencode-htmlencode. Unless it's single word.</_>");
+			//in .md we use this for Google search links: [text](google:) or [text](google:urlencoded+google+query).
+			//	To search only in microsoft.com (.NET/Windows API etc): [text](ms:) or [text](ms:urlencoded+google+query).
+			//	The colon is to avoid DocFX warnings.
+			//	Now convert it to a google search link.
+			nr = s.RxReplace(@"<a href=""(ms|google):([^""]+)?"">(.+?)</a>", m => {
+				string linkText = m[3].Value;
+				string q = m[2].Value ?? WebUtility.UrlEncode(WebUtility.HtmlDecode(linkText));
+				string site = m.Subject[m[1].Start] is 'm' ? "site:microsoft.com+" : null;
+				return $@"<a href=""https://www.google.com/search?q={site}{q}"">{linkText}</a>";
+			}, out s);
+			if (s.Contains("<google>")) print.warning("<google> in .md files not supported. Use [text](google:) or [text](google:urlencoded+google+query)");
+			if (s.Contains("<ms>")) print.warning("<ms> in .md files not supported. Use [text](ms:) or [text](ms:urlencoded+google+query)");
 		}
 		
 		//javascript renderTables() replacement, to avoid it at run time. Also remove class table-striped.

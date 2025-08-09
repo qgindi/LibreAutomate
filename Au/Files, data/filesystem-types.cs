@@ -200,7 +200,7 @@ public enum FEFlags {
 	///// <summary>
 	///// Temporarily disable file system redirection in this thread of this 32-bit process running on 64-bit Windows.
 	///// Then you can enumerate the 64-bit System32 folder in your 32-bit process.
-	///// Uses API <msdn>Wow64DisableWow64FsRedirection</msdn>.
+	///// Uses API <ms>Wow64DisableWow64FsRedirection</ms>.
 	///// For vice versa (in 64-bit process enumerate the 32-bit System folder), instead use path <b>folders.SystemX86</b>.
 	///// </summary>
 	//DisableRedirection = 0x100,
@@ -322,7 +322,7 @@ public class FEFile {
 	public bool IsNtfsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
 
 	/// <summary>
-	/// <msdn>WIN32_FIND_DATA</msdn><c>.dwReserved0</c>.
+	/// <ms>WIN32_FIND_DATA</ms><c>.dwReserved0</c>.
 	/// </summary>
 	public uint ReparseTag { get; }
 
@@ -389,7 +389,7 @@ public enum FPFormat {
 	PrefixNever,
 
 	/// <summary>
-	/// With volume GUID (API <msdn>GetFinalPathNameByHandle</msdn> flag <b>VOLUME_NAME_GUID</b>).
+	/// With volume GUID (API <ms>GetFinalPathNameByHandle</ms> flag <b>VOLUME_NAME_GUID</b>).
 	/// If it fails (eg network path), gets path with prefix, like <b>PrefixAlways</b>.
 	/// </summary>
 	VolumeGuid

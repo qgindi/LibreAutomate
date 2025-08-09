@@ -76,10 +76,10 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Adds data of any format as <b>byte[]</b>.
+		/// Adds data of any format as <c>byte[]</c>.
 		/// </summary>
 		/// <returns>this.</returns>
-		/// <param name="data"><b>byte[]</b> containing data.</param>
+		/// <param name="data"><c>byte[]</c> containing data.</param>
 		/// <param name="format">Clipboard format id. See <see cref="ClipFormats.Register"/>.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats <c>&lt;CF_MAX</c> except GDI handles.</exception>
@@ -93,7 +93,7 @@ namespace Au {
 			/// Adds data of any format as raw clipboard object handle.
 			/// </summary>
 			/// <returns>this.</returns>
-			/// <param name="handle">Any handle supported by API <msdn>SetClipboardData</msdn>. The type depends on format. For most formats, after setting clipboard data the handle is owned and freed by Windows.</param>
+			/// <param name="handle">Any handle supported by API <ms>SetClipboardData</ms>. The type depends on format. For most formats, after setting clipboard data the handle is owned and freed by Windows.</param>
 			/// <param name="format">Clipboard format id. See <see cref="RegisterClipboardFormat"/>.</param>
 			/// <exception cref="ArgumentNullException"></exception>
 			/// <exception cref="ArgumentException">Invalid format.</exception>
@@ -169,7 +169,7 @@ namespace Au {
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
 		/// <exception cref="OutOfMemoryException">Failed to allocate memory for clipboard data.</exception>
 		/// <remarks>
-		/// Calls API <msdn>OpenClipboard</msdn>, <msdn>EmptyClipboard</msdn>, <msdn>SetClipboardData</msdn> and <msdn>CloseClipboard</msdn>.
+		/// Calls API <ms>OpenClipboard</ms>, <ms>EmptyClipboard</ms>, <ms>SetClipboardData</ms> and <ms>CloseClipboard</ms>.
 		/// </remarks>
 		public void SetClipboard() {
 			using (new clipboard.OpenClipboard_(true)) {
@@ -181,12 +181,12 @@ namespace Au {
 		/// <summary>
 		/// Copies the added data of all formats to the clipboard which is open/owned by this thread.
 		/// </summary>
-		/// <param name="renderLater">Call API <msdn>SetClipboardData</msdn>: <c>SetClipboardData(format, default)</c>. When/if some app will try to get clipboard data, the first time your clipboard owner window will receive <msdn>WM_RENDERFORMAT</msdn> message and should call <c>SetOpenClipboard(false);</c>.</param>
+		/// <param name="renderLater">Call API <ms>SetClipboardData</ms>: <c>SetClipboardData(format, default)</c>. When/if some app will try to get clipboard data, the first time your clipboard owner window will receive <ms>WM_RENDERFORMAT</ms> message and should call <c>SetOpenClipboard(false);</c>.</param>
 		/// <param name="format">Copy data only of this format. If 0 (default), of all formats.</param>
 		/// <exception cref="OutOfMemoryException">Failed to allocate memory for clipboard data.</exception>
 		/// <exception cref="AuException">Failed to set clipboard data.</exception>
 		/// <remarks>
-		/// This function is similar to <see cref="SetClipboard"/>. It calls API <msdn>SetClipboardData</msdn> and does not call <b>OpenClipboard</b>, <b>EmptyClipboard</b>, <b>CloseClipboard</b>. The clipboard must be open and owned by a window of this thread.
+		/// This function is similar to <see cref="SetClipboard"/>. It calls API <ms>SetClipboardData</ms> and does not call <b>OpenClipboard</b>, <b>EmptyClipboard</b>, <b>CloseClipboard</b>. The clipboard must be open and owned by a window of this thread.
 		/// </remarks>
 		public void SetOpenClipboard(bool renderLater = false, int format = 0) {
 			for (int i = 0; i < _a.Count; i++) {
@@ -255,7 +255,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Converts HTML string to <b>byte[]</b> containing data in clipboard format <c>"HTML Format"</c>.
+		/// Converts HTML string to <c>byte[]</c> containing data in clipboard format <c>"HTML Format"</c>.
 		/// </summary>
 		/// <param name="html">Full HTML or HTML fragment. If full HTML, a fragment in it can be optionally specified. See examples.</param>
 		/// <exception cref="ArgumentNullException"></exception>
@@ -413,7 +413,7 @@ EndFragment:0000000000
 		}
 
 		/// <summary>
-		/// Gets clipboard data of any format as <b>byte[]</b>.
+		/// Gets clipboard data of any format as <c>byte[]</c>.
 		/// </summary>
 		/// <returns><c>null</c> if there is no data of this format.</returns>
 		/// <exception cref="ArgumentException">Invalid <i>format</i>. Supported are all registered formats and standard formats <c>&lt;CF_MAX</c> except GDI handles.</exception>
@@ -581,7 +581,7 @@ EndFragment:0000000000
 		/// Returns <c>true</c> if the clipboard contains data of the specified format.
 		/// </summary>
 		/// <param name="format">Clipboard format id. See <see cref="ClipFormats"/>.</param>
-		/// <remarks>Calls API <msdn>IsClipboardFormatAvailable</msdn>.</remarks>
+		/// <remarks>Calls API <ms>IsClipboardFormatAvailable</ms>.</remarks>
 		public static bool contains(int format) {
 			return Api.IsClipboardFormatAvailable(format);
 		}
@@ -591,7 +591,7 @@ EndFragment:0000000000
 		/// Returns 0 if the clipboard is empty. Returns -1 if the clipboard contains data but not in any of the specified formats.
 		/// </summary>
 		/// <param name="formats">Clipboard format ids. See <see cref="ClipFormats"/>.</param>
-		/// <remarks>Calls API <msdn>GetPriorityClipboardFormat</msdn>.</remarks>
+		/// <remarks>Calls API <ms>GetPriorityClipboardFormat</ms>.</remarks>
 		public static int contains(params int[] formats) {
 			return Api.GetPriorityClipboardFormat(formats, formats.Length);
 		}
@@ -643,7 +643,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="name">Format name.</param>
 		/// <param name="textEncoding">Text encoding, if it's a text format. Used by <see cref="clipboardData.getText"/>, <see cref="clipboardData.AddText"/> and functions that call them. For example <see cref="Encoding.UTF8"/>. If <c>null</c>, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
-		/// <remarks>Calls API <msdn>RegisterClipboardFormat</msdn>.</remarks>
+		/// <remarks>Calls API <ms>RegisterClipboardFormat</ms>.</remarks>
 		public static int Register(string name, Encoding textEncoding = null) {
 			var R = Api.RegisterClipboardFormat(name);
 			if (textEncoding != null && R != 0 && R != Html) s_textEncoding[R] = textEncoding;
@@ -672,7 +672,7 @@ namespace Au.Types {
 		/// <param name="format">A registered or standard clipboard format. If standard, returns string like <c>"CF_BITMAP"</c>.</param>
 		/// <param name="orNull">Return <c>null</c> if <i>format</i> is unknown. If <c>false</c>, returns <i>format</i> as string.</param>
 		/// <remarks>
-		/// Calls API <msdn>GetClipboardFormatName</msdn>. Although undocumented, it also can get other strings from the same system atom table, for example registered Windows message names and window class names.
+		/// Calls API <ms>GetClipboardFormatName</ms>. Although undocumented, it also can get other strings from the same system atom table, for example registered Windows message names and window class names.
 		/// </remarks>
 		[SkipLocalsInit]
 		public static unsafe string GetName(int format, bool orNull = false) {

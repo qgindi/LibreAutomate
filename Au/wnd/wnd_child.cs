@@ -150,7 +150,7 @@ namespace Au {
 		///// </summary>
 		///// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		///// <param name="id">Control id.</param>
-		///// <param name="flags">This function supports flags <b>DirectChild</b> and <b>HiddenToo</b>. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
+		///// <param name="flags">This function supports flags <b>DirectChild</b> and <b>HiddenToo</b>. If both are set, it is much faster because uses API <ms>GetDlgItem</ms>. Else uses API <ms>EnumChildWindows</ms>, like <see cref="Child"/>.</param>
 		///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		///// <remarks>
 		///// To create code for this function, use tool <b>Find window</b>.
@@ -219,8 +219,8 @@ namespace Au {
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>
-		/// Calls API <msdn>FindWindowEx</msdn>.
-		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
+		/// Calls API <ms>FindWindowEx</ms>.
+		/// Faster than <see cref="Child"/>, which uses API <ms>EnumChildWindows</ms>.
 		/// Can be used only when you know full name and/or class name.
 		/// Finds hidden controls too. Finds only direct children, not other descendants.
 		/// </remarks>
@@ -239,8 +239,8 @@ namespace Au {
 		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>. Supports <see cref="lastError"/>.</returns>
 		/// <param name="id">Control id.</param>
 		/// <remarks>
-		/// Calls API <msdn>GetDlgItem</msdn>.
-		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
+		/// Calls API <ms>GetDlgItem</ms>.
+		/// Faster than <see cref="Child"/>, which uses API <ms>EnumChildWindows</ms>.
 		/// Finds only direct children, not other descendants. Finds hidden controls too.
 		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>
@@ -259,7 +259,7 @@ namespace Au {
 			/// <param name="directChild">Need only direct children, not all descendants.</param>
 			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
-			/// Calls API <msdn>EnumChildWindows</msdn>.
+			/// Calls API <ms>EnumChildWindows</ms>.
 			/// </remarks>
 			/// <seealso cref="ChildAll"/>
 			public wnd[] Children(bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false) {
@@ -355,10 +355,10 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Posts a "menu item clicked" notification (<msdn>WM_COMMAND</msdn>) as if that menu item has been clicked. Does not use the mouse.
+		/// Posts a "menu item clicked" notification (<ms>WM_COMMAND</ms>) as if that menu item has been clicked. Does not use the mouse.
 		/// </summary>
 		/// <param name="itemId">Menu item id. Must be in range 1 to 0xffff.</param>
-		/// <param name="systemMenu">The menu item is in the title bar's context menu, not in the menu bar. Posts <msdn>WM_SYSCOMMAND</msdn> instead.</param>
+		/// <param name="systemMenu">The menu item is in the title bar's context menu, not in the menu bar. Posts <ms>WM_SYSCOMMAND</ms> instead.</param>
 		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>itemId</i>.</exception>
 		/// <remarks>
@@ -445,7 +445,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Posts a "click" message to this button control. Does not use the mouse.
 		/// </summary>
-		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <ms>BM_CLICK</ms> message.</param>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -497,7 +497,7 @@ namespace Au.Types {
 		/// Sets checkbox state. Does not use the mouse.
 		/// </summary>
 		/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <msdn>BM_SETCHECK</msdn> message and also <b>BN_CLICKED</b> notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <ms>BM_SETCHECK</ms> message and also <b>BN_CLICKED</b> notification to the parent window; if that is not possible, instead uses <ms>BM_CLICK</ms> message.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -554,7 +554,7 @@ namespace Au.Types {
 		/// Gets check state of this check box or radio button.
 		/// Returns 0 if unchecked, 1 if checked, 2 if indeterminate. Also returns 0 if this is not a button or if failed to get state.
 		/// </summary>
-		/// <param name="useElm">Use <see cref="elm.State"/>. If <c>false</c> (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
+		/// <param name="useElm">Use <see cref="elm.State"/>. If <c>false</c> (default) and this button has a standard checkbox style, uses API <ms>BM_GETCHECK</ms>.</param>
 		public int GetCheckState(bool useElm = false) {
 			if (useElm || !_IsCheckbox()) {
 				//info: Windows Forms controls are user-drawn and don't have one of the styles, therefore BM_GETCHECK does not work.

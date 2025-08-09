@@ -67,5 +67,5 @@ Supports images of formats: png, bmp, jpg, gif, ico (only 16x16). For other file
 
 Supports icon names (see menu **Tools > Icons**) and XAML images.
 
-Supports Base64 encoded image file data. To create such string use dialog **Find image or color in window** or function **Au.Controls.KImageUtil.ImageToString** (in `Au.Controls.dll`).
+Supports Base64 encoded image file data. To create such string use dialog **Find image or color in window** or function `Au.Controls.KImageUtil.ImageToString` (in `Au.Controls.dll`).
 

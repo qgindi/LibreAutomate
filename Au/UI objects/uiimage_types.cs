@@ -189,7 +189,7 @@ public class IFArea {
 ///   Can be created with tool <b>Find image or color in window</b> or with function <b>Au.Controls.KImageUtil.ImageToString</b> (in <c>Au.Controls.dll</c>).
 /// - <see cref="ColorInt"/>, <b>int</b> or <b>uint</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.
 /// - <see cref="Bitmap"/> - image object.
-/// - <b>IFImage[]</b> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
+/// - <c>IFImage[]</c> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
 /// 
 /// Icons are not supported directly; you can use <see cref="icon"/> to get icon and convert to bitmap.
 /// </remarks>
@@ -209,7 +209,7 @@ public struct IFImage {
 	//public static implicit operator IFImage(List<IFImage> list) => new(list); //rare, can use ToArray()
 
 	/// <summary>
-	/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Bitmap</b>, <b>ColorInt</b>, <b>IFImage[]</b>, <c>null</c>.
+	/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Bitmap</b>, <b>ColorInt</b>, <c>IFImage[]</c>, <c>null</c>.
 	/// </summary>
 	public object Value => _o;
 }
@@ -231,7 +231,7 @@ public enum IFFlags {
 	WindowDC = 1,
 
 	/// <summary>
-	/// Use API <msdn>PrintWindow</msdn> to get window pixels.
+	/// Use API <ms>PrintWindow</ms> to get window pixels.
 	/// Like <b>WindowDC</b>, works with background windows, etc. Differences:
 	/// <br/>• On Windows 8.1 and later works with windows where <b>WindowDC</b> doesn't.
 	/// <br/>• Works without Aero theme too.

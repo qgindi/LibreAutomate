@@ -127,7 +127,7 @@ public partial struct wnd {
 		/// <param name="skip">How many next windows to skip.</param>
 		/// <remarks>
 		/// If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
-		/// Calls API <msdn>GetWindow</msdn>(<b>GW_HWNDNEXT</b>).
+		/// Calls API <ms>GetWindow</ms>(<b>GW_HWNDNEXT</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd Next(int skip = 0) => _GetWindow(Api.GW_HWNDNEXT, skip);
@@ -139,7 +139,7 @@ public partial struct wnd {
 		/// <param name="skip">How many previous windows to skip.</param>
 		/// <remarks>
 		/// If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
-		/// Calls API <msdn>GetWindow</msdn>(<b>GW_HWNDPREV</b>).
+		/// Calls API <ms>GetWindow</ms>(<b>GW_HWNDPREV</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd Previous(int skip = 0) => _GetWindow(Api.GW_HWNDPREV, skip);
@@ -150,7 +150,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <remarks>
 		/// If this is a top-level window, gets the first top-level window, else gets the first control of the same direct parent.
-		/// Calls API <msdn>GetWindow</msdn>(this, <b>GW_HWNDFIRST</b>).
+		/// Calls API <ms>GetWindow</ms>(this, <b>GW_HWNDFIRST</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd FirstSibling => Api.GetWindow(_w, Api.GW_HWNDFIRST);
@@ -161,7 +161,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <remarks>
 		/// If this is a top-level window, gets the last top-level window, else gets the last control of the same direct parent.
-		/// Calls API <msdn>GetWindow</msdn>(this, <b>GW_HWNDLAST</b>).
+		/// Calls API <ms>GetWindow</ms>(this, <b>GW_HWNDLAST</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd LastSibling => Api.GetWindow(_w, Api.GW_HWNDLAST);
@@ -171,7 +171,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <returns><c>default(wnd)</c> if no children or if failed.</returns>
 		/// <remarks>
-		/// Calls API <msdn>GetWindow</msdn>(<b>GW_CHILD</b>).
+		/// Calls API <ms>GetWindow</ms>(<b>GW_CHILD</b>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd FirstChild => Api.GetWindow(_w, Api.GW_CHILD);
@@ -181,7 +181,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <returns><c>default(wnd)</c> if no children or if failed.</returns>
 		/// <remarks>
-		/// Calls API <msdn>GetWindow</msdn>.
+		/// Calls API <ms>GetWindow</ms>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd LastChild { get { var t = Api.GetWindow(_w, Api.GW_CHILD); return t.Is0 ? t : Api.GetWindow(t, Api.GW_HWNDLAST); } }
@@ -192,7 +192,7 @@ public partial struct wnd {
 		/// <returns><c>default(wnd)</c> if no children or if index is invalid or if failed.</returns>
 		/// <param name="index">0-based index of the child control in the Z order.</param>
 		/// <remarks>
-		/// Calls API <msdn>GetWindow</msdn>.
+		/// Calls API <ms>GetWindow</ms>.
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd Child(int index) {
@@ -231,7 +231,7 @@ public partial struct wnd {
 		/// <returns><c>default(wnd)</c> if this is a top-level window or if failed.</returns>
 		/// <remarks>
 		/// Supports <see cref="lastError"/>.
-		/// Unlike API <msdn>GetParent</msdn>, this function never returns the owner window.
+		/// Unlike API <ms>GetParent</ms>, this function never returns the owner window.
 		/// </remarks>
 		public wnd DirectParent {
 			get {
@@ -252,7 +252,7 @@ public partial struct wnd {
 					Debug.Assert(ec == Api.ERROR_INVALID_WINDOW_HANDLE);
 				}
 				return default;
-#else //the msdn-recommended version, but >=6 times slower. The same IsTopLevelWindow (undocumented API).
+#else //the ms-recommended version, but >=6 times slower. The same IsTopLevelWindow (undocumented API).
 					var p = Api.GetAncestor(_w, Api.GA_PARENT);
 					if(p.Is0 || p == Root) return default;
 					return p;
@@ -262,7 +262,7 @@ public partial struct wnd {
 
 		//rejected. Not much faster than our DirectParent.
 		///// <summary>
-		///// Calls API <msdn>GetParent</msdn>.
+		///// Calls API <ms>GetParent</ms>.
 		///// </summary>
 		///// <remarks>
 		///// The API function is fast but unreliable. It can get parent or owner window, and fails in some cases. Read more in the API documentation. It is reliable only if you know that this window is a child window and has <b>WS_CHILD</b> style.
@@ -278,7 +278,7 @@ public partial struct wnd {
 		/// <remarks>
 		/// This window should be top-level, not child; see <see cref="wnd.Window"/>.
 		/// 
-		/// Calls API <msdn>GetWindow</msdn>(<b>GW_ENABLEDPOPUP</b>). Supports <see cref="lastError"/>.
+		/// Calls API <ms>GetWindow</ms>(<b>GW_ENABLEDPOPUP</b>). Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd EnabledOwned(bool orThis = false) {
 			var r = Api.GetWindow(_w, Api.GW_ENABLEDPOPUP);
@@ -442,7 +442,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <remarks>
 		/// Probably it is a topmost window. To get the first non-topmost window, use <see cref="top2"/>.
-		/// Calls API <msdn>GetTopWindow</msdn>.
+		/// Calls API <ms>GetTopWindow</ms>.
 		/// </remarks>
 		public static wnd top => Api.GetTopWindow(default);
 
@@ -466,7 +466,7 @@ public partial struct wnd {
 		}
 
 		/// <summary>
-		/// Calls API <msdn>GetDesktopWindow</msdn>. It gets the virtual parent window of all top-level windows.
+		/// Calls API <ms>GetDesktopWindow</ms>. It gets the virtual parent window of all top-level windows.
 		/// </summary>
 		/// <remarks>
 		/// <note>It is not the desktop window (see <see cref="desktop"/>) that displays icons and wallpaper.</note>
@@ -474,7 +474,7 @@ public partial struct wnd {
 		public static wnd root { get; } = Api.GetDesktopWindow();
 
 		/// <summary>
-		/// Calls API <msdn>GetShellWindow</msdn>. It gets a window of the shell process (usually process <c>"explorer"</c>, class name <c>"Progman"</c>).
+		/// Calls API <ms>GetShellWindow</ms>. It gets a window of the shell process (usually process <c>"explorer"</c>, class name <c>"Progman"</c>).
 		/// </summary>
 		/// <returns><c>default(wnd)</c> if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.</returns>
 		/// <remarks>
@@ -678,7 +678,7 @@ public partial struct wnd {
 	/// Returns <c>true</c> if this is a child or descendant of window <i>w</i>.
 	/// </summary>
 	/// <remarks>
-	/// Calls API <msdn>IsChild</msdn>.
+	/// Calls API <ms>IsChild</ms>.
 	/// Supports <see cref="lastError"/>.
 	/// </remarks>
 	public bool IsChildOf(wnd w) { return Api.IsChild(w, this); }
@@ -690,7 +690,7 @@ public partial struct wnd {
 
 	/// <summary>
 	/// Gets the active (foreground) window.
-	/// Calls API <msdn>GetForegroundWindow</msdn>.
+	/// Calls API <ms>GetForegroundWindow</ms>.
 	/// </summary>
 	/// <value>Returns <c>default(wnd)</c> if there is no active window; more info: <see cref="WndUtil.WaitForAnActiveWindow"/>.</value>
 	public static wnd active => Api.GetForegroundWindow();

@@ -1,10 +1,10 @@
 ﻿namespace Au.More;
 
 /// <summary>
-/// Binary-serializes and deserializes multiple values of types <b>int</b>, <b>string</b>, <b>string[]</b>, <b>byte[]</b> and <c>null</c>.
+/// Binary-serializes and deserializes multiple values of types <b>int</b>, <b>string</b>, <c>string[]</c>, <c>byte[]</c> and <c>null</c>.
 /// Used mostly for sending parameters for IPC through pipe etc.
 /// Similar to <b>BinaryWriter</b>, but faster and less garbage. Much faster than <b>BinaryFormatter</b>, CSV, etc.
-/// Serializes all values into a <b>byte[]</b> in single call. If need to append, use <b>BinaryWriter</b> instead.
+/// Serializes all values into a <c>byte[]</c> in single call. If need to append, use <b>BinaryWriter</b> instead.
 /// </summary>
 internal static unsafe class Serializer_ {
 	/// <summary>
@@ -33,13 +33,13 @@ internal static unsafe class Serializer_ {
 	public enum VType { Null, Int, String, StringArray, ByteArray }
 	
 	/// <summary>
-	/// Serializes multiple values of types <b>int</b>, <b>string</b>, <b>string[]</b> and <c>null</c>.
+	/// Serializes multiple values of types <b>int</b>, <b>string</b>, <c>string[]</c> and <c>null</c>.
 	/// The returned array can be passed to <see cref="Deserialize"/>.
 	/// </summary>
 	public static byte[] Serialize(params Value[] a) => _Serialize(false, a);
 	
 	/// <summary>
-	/// Serializes multiple values of types <b>int</b>, <b>string</b>, <b>string[]</b> and <c>null</c>.
+	/// Serializes multiple values of types <b>int</b>, <b>string</b>, <c>string[]</c> and <c>null</c>.
 	/// Unlike <see cref="Serialize"/>, in the first 4 bytes writes the size of data that follows.
 	/// Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass <c>b</c> to <see cref="Deserialize"/>. 
 	/// </summary>

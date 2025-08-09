@@ -11,9 +11,9 @@ Debugger in LibreAutomate is similar to that of [Visual Studio](https://www.goog
 
 Two panels are dedicated to debugging: **Debug** and **Breakpoints**. If the **Debug** panel was hidden when debugging starts, it becomes visible temporarily while debugging. Both panels initially are hidden; to show always, right-click any panel caption.
 
-To run current script with the debugger, click the **Debug run** button or menu item, or use the toolbar in the **Debug** panel. Usually at first you add one or more breakpoints in code (click the white margin). The script stops at a breakpoint line, or on exception, or in **Debugger.Break**, **Debug.Assert**, or when clicked **Pause**. Then you can use the **Debug** toolbar or hotkeys to execute the script in steps. Also you can click the white margin and select **Run to here**.
+To run current script with the debugger, click the **Debug run** button or menu item, or use the toolbar in the **Debug** panel. Usually at first you add one or more breakpoints in code (click the white margin). The script stops at a breakpoint line, or on exception, or in [Debugger.Break](ms:), [Debug.Assert](ms:), or when clicked **Pause**. Then you can use the **Debug** toolbar or hotkeys to execute the script in steps. Also you can click the white margin and select **Run to here**.
 
-To attach the debugger to an already running script, use the **Tasks** panel or [script.debug](). Or **Debug.Assert**, if the script starts with code like `script.setup(debug: true);`.
+To attach the debugger to an already running script, use the **Tasks** panel or [script.debug](). Or [Debug.Assert](ms:), if the script starts with code like `script.setup(debug: true);`.
 
 ### Features
 - Standard stepping features.
@@ -22,7 +22,7 @@ To attach the debugger to an already running script, use the **Tasks** panel or 
 - Call stack.
 - List of variables. Click a variable to print it.
 - Hover the mouse on a variable in code to display its value.
-- Supports **Debugger.Break**, **Debug.Assert**, **Debug.Print** etc.
+- Supports [Debugger.Break](ms:), [Debug.Assert](ms:), [Debug.Print](ms:) etc.
 - Run to here.
 - Jump to here.
 
@@ -44,7 +44,7 @@ Cannot debug 32-bit processes.
 
 ## Other debuggers
 You may have Visual Studio or other IDE with a better .NET debugger. You can attach that debugger to a running script. Let the script call one of these functions:
-- **Debugger.Launch**. Example: `Debugger.Launch(); Debugger.Break();`. Note: it shows several dialogs before you can start debugging.
+- [Debugger.Launch](ms:). Example: `Debugger.Launch(); Debugger.Break();`. Note: it shows several dialogs before you can start debugging.
 - [script.debug](). Example: `script.debug(true); Debugger.Break();`. It shows a dialog with the script process id and waits for a debugger attached. Then you can attach a debugger. To automate it, create a window-triggered script.
 
 ```csharp

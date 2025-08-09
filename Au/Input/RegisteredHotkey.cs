@@ -1,7 +1,7 @@
 namespace Au.More;
 
 /// <summary>
-/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>. Unregisters when disposing.
+/// Registers a hotkey using API <ms>RegisterHotKey</ms>. Unregisters when disposing.
 /// </summary>
 /// <remarks>
 /// Can be used as a lightweight alternative to hotkey triggers.
@@ -57,12 +57,12 @@ public struct RegisteredHotkey : IDisposable {
 	//public KHotkey Hotkey { get; private set; }
 	
 	/// <summary>
-	/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
+	/// Registers a hotkey using API <ms>RegisterHotKey</ms>.
 	/// </summary>
 	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
-	/// <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <msdn>GlobalAddAtom</msdn>. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
-	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
-	/// <param name="window">Window/form that will receive the <msdn>WM_HOTKEY</msdn> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>
+	/// <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <ms>GlobalAddAtom</ms>. It will be <i>wParam</i> of the <ms>WM_HOTKEY</ms> message.</param>
+	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <c>(KMod, KKey)</c>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
+	/// <param name="window">Window/form that will receive the <ms>WM_HOTKEY</ms> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>
 	///	<param name="noRepeat">Add flag <b>MOD_NOREPEAT</b>.</param>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 	/// <exception cref="InvalidOperationException">This variable already registered a hotkey.</exception>
@@ -120,7 +120,7 @@ public struct RegisteredHotkey : IDisposable {
 	
 	/// <summary>
 	/// This message is posted to the window or to the thread's message loop.
-	/// More info: <msdn>WM_HOTKEY</msdn>.
+	/// More info: <ms>WM_HOTKEY</ms>.
 	/// </summary>
 	public const int WM_HOTKEY = Api.WM_HOTKEY;
 }

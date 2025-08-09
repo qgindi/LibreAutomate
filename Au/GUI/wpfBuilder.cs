@@ -19,7 +19,7 @@ namespace Au;
 /// <remarks>
 /// This class uses WPF (Windows Presentation Foundation). Creates window at run time. No designer. No WPF and XAML knowledge required, unless you want something advanced.
 /// 
-/// To start, use snippet <b>wpfDialogSnippet</b> or menu <b>File > New > Dialogs</b>. Also look in Cookbook.
+/// To start, use snippet <c>wpfDialogSnippet</c> or menu <b>File > New > Dialogs</b>. Also look in Cookbook.
 /// 
 /// Most functions return <c>this</c>, to enable method chaining, aka fluent interface, like with <b>StringBuilder</b>. See example.
 /// 
@@ -251,7 +251,7 @@ public class wpfBuilder {
 	/// An argument can be:
 	/// <br/>• <b>int</b> or <b>double</b> - <see cref="ColumnDefinition.Width"/>. Value 0 means auto-size. Negative value is star-width, ie fraction of total width of star-sized columns. Examples: <c>50</c>, <c>-0.5</c>.
 	/// <br/>• <b>Range</b> - <see cref="ColumnDefinition.MinWidth"/> and/or <see cref="ColumnDefinition.MaxWidth"/>. Sets width value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
-	/// <br/>• tuple <b>(double value, Range minMax)</b> - width and min/max widths. Example: <c>(-2, 50..)</c>.
+	/// <br/>• tuple <c>(double value, Range minMax)</c> - width and min/max widths. Example: <c>(-2, 50..)</c>.
 	/// <br/>• <see cref="ColumnDefinition"/>.
 	/// </param>
 	/// <exception cref="InvalidOperationException">Columns() in non-grid panel or after an <b>Add</b> function.</exception>
@@ -274,7 +274,7 @@ public class wpfBuilder {
 	/// Row height. Can be:
 	/// <br/>• <b>int</b> or <b>double</b> - <see cref="RowDefinition.Height"/>. Value 0 means auto-size. Negative value is star-width, ie fraction of total height of star-sized rows. Examples: <c>50</c>, <c>-0.5</c>.
 	/// <br/>• <b>Range</b> - <see cref="RowDefinition.MinHeight"/> and/or <see cref="RowDefinition.MaxHeight"/>. Sets height value = -1 (star-sized). Examples: <c>50..150</c>, <c>50..</c> or <c>..150</c>.
-	/// <br/>• tuple <b>(double value, Range minMax)</b> - height and min/max heights. Example: <c>(-2, 50..200)</c>.
+	/// <br/>• tuple <c>(double value, Range minMax)</c> - height and min/max heights. Example: <c>(-2, 50..200)</c>.
 	/// <br/>• <see cref="RowDefinition"/>.
 	/// </param>
 	/// <exception cref="InvalidOperationException">In non-grid panel.</exception>
@@ -1978,7 +1978,7 @@ public class wpfBuilder {
 	/// <param name="inlines">
 	/// Arguments of type:
 	/// <br/>• string like <c>"&lt;b>text"</c>, <c>"&lt;i>text"</c> or <c>"&lt;u>text"</c> adds inline of type <b>Bold</b>, <b>Italic</b> or <b>Underline</b>.
-	/// <br/>• string like <c>"&lt;a>text"</c> adds <see cref="Hyperlink"/>. Next argument of type <b>Action</b> or <b>Action&lt;Hyperlink&gt;</b> sets its action.
+	/// <br/>• string like <c>"&lt;a>text"</c> adds <see cref="Hyperlink"/>. Next argument of type <b>Action</b> or <c>Action&lt;Hyperlink&gt;</c> sets its action.
 	/// <br/>• other string - plain text.
 	/// <br/>• <see cref="WBLink"/> adds a hyperlink.
 	/// <br/>• <see cref="Inline"/> of any type, eg <b>Run</b>, <b>Bold</b>, <b>Hyperlink</b>.

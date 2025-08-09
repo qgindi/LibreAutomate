@@ -233,7 +233,7 @@ namespace Au {
 		/// </summary>
 		/// <remarks>
 		/// The order of array elements may be different than in Windows Settings. The primary screen is always at index 0.
-		/// The array is not cached. Each time calls API <msdn>EnumDisplayMonitors</msdn>.
+		/// The array is not cached. Each time calls API <ms>EnumDisplayMonitors</ms>.
 		/// </remarks>
 		public static screen[] all => _All();
 		

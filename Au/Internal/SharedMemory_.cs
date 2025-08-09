@@ -87,7 +87,7 @@ unsafe struct SharedMemory_ {
 		/// <param name="size">Shared memory size. Ignored if the shared memory already exists.</param>
 		/// <exception cref="AuException">The API failed.</exception>
 		/// <remarks>
-		/// Calls API <msdn>CreateFileMapping</msdn> and API <msdn>MapViewOfFile</msdn>.
+		/// Calls API <ms>CreateFileMapping</ms> and API <ms>MapViewOfFile</ms>.
 		/// The shared memory is alive at least until this process ends or the returned <b>Mapping</b> variable disposed. Other processes can keep the memory alive even after that.
 		/// </remarks>
 		public static Mapping CreateOrOpen(string name, int size) {

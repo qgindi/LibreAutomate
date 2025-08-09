@@ -307,8 +307,8 @@ namespace Au {
 		/// 3. If <i>path</i> is not full path, and <i>defaultParentDirectory</i> is not <c>null</c>/<c>""</c>, combines <i>path</i> with <c>expand(defaultParentDirectory)</c>.
 		/// 4. If <i>path</i> is not full path, throws exception.
 		/// 5. If <i>path</i> is like <c>"C:"</c> makes like <c>"C:\"</c>.
-		/// 6. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
-		/// 7. If no flag <b>DontExpandDosPath</b>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
+		/// 6. Calls API <ms>GetFullPathName</ms>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
+		/// 7. If no flag <b>DontExpandDosPath</b>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <ms>GetLongPathName</ms>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
 		/// 8. If no flag <b>DontRemoveEndSeparator</b>, and string ends with <c>'\\'</c> character, and length > 4, removes the <c>'\\'</c>, unless then it would be a path to an existing file (not directory).
 		/// 9. If no flag <b>DontPrefixLongPath</b>, calls <see cref="prefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
 		/// 
@@ -793,7 +793,7 @@ namespace Au.Types {
 	/// </summary>
 	[Flags]
 	public enum PNFlags {
-		/// <summary>Don't call API <msdn>GetLongPathName</msdn>.</summary>
+		/// <summary>Don't call API <ms>GetLongPathName</ms>.</summary>
 		DontExpandDosPath = 1,
 
 		/// <summary>Don't call <see cref="pathname.prefixLongPathIfNeed"/>.</summary>

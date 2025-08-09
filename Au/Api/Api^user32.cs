@@ -334,11 +334,11 @@ static unsafe partial class Api {
 	internal static extern bool UnionRect(out RECT lprcDst, in RECT lprcSrc1, in RECT lprcSrc2);
 	
 	/// <summary>
-	/// <b>GetPhysicalCursorPos</b>.
+	/// <c>GetPhysicalCursorPos</c>.
 	/// </summary>
 	/// <remarks>
 	/// Gets DPI physical cursor pos, ie always in pixels.
-	/// The classic <b>GetCursorPos</b> API behavior is undefined. Sometimes physical, sometimes logical.
+	/// The classic <c>GetCursorPos</c> API behavior is undefined. Sometimes physical, sometimes logical.
 	/// Make sure the process is fully DPI-aware.
 	/// </remarks>
 	[DllImport("user32.dll", EntryPoint = "GetPhysicalCursorPos", SetLastError = true)]
@@ -370,7 +370,7 @@ static unsafe partial class Api {
 	
 	internal struct WINDOWPLACEMENT {
 		public int length;
-		/// <summary><b>WPF_x</b></summary>
+		/// <summary><c>WPF_x</c></summary>
 		public uint flags;
 		public int showCmd;
 		public POINT ptMinPosition;
@@ -793,7 +793,7 @@ static unsafe partial class Api {
 	}
 	
 	/// <summary>
-	/// Gets <b>BOOL</b> value. Returns <c>false</c> if failed.
+	/// Gets <c>BOOL</c> value. Returns <c>false</c> if failed.
 	/// </summary>
 	internal static bool SystemParametersInfo(uint uiAction) {
 		int r = 0;
@@ -820,7 +820,7 @@ static unsafe partial class Api {
 	#endregion
 	
 	/// <summary>
-	/// <b>WindowFromPhysicalPoint</b>. On Win8.1+ it is the same as <b>WindowFromPoint</b>.
+	/// <c>WindowFromPhysicalPoint</c>. On Win8.1+ it is the same as <c>WindowFromPoint</c>.
 	/// </summary>
 	[DllImport("user32.dll", EntryPoint = "WindowFromPhysicalPoint")]
 	internal static extern wnd WindowFromPoint(POINT pt);
@@ -1365,7 +1365,7 @@ static unsafe partial class Api {
 	[DllImport("user32.dll")]
 	internal static extern bool RedrawWindow(wnd hWnd, RECT* lprcUpdate = null, IntPtr hrgnUpdate = default, uint flags = 0);
 	
-	/// <param name="flags"><b>Au.Controls.PopupAlignment</b></param>
+	/// <param name="flags"><c>Au.Controls.PopupAlignment</c></param>
 	[DllImport("user32.dll", SetLastError = true)]
 	internal static extern bool CalculatePopupWindowPosition(in POINT anchorPoint, in SIZE windowSize, uint flags, in RECT excludeRect, out RECT popupWindowPosition);
 	

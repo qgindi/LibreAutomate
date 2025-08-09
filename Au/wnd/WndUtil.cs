@@ -16,13 +16,13 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="className">Class name.</param>
 		/// <param name="wndProc">
-		/// Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
+		/// Delegate of a window procedure. See <ms>Window Procedures</ms>.
 		/// 
 		/// Use <c>null</c> when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> or <see cref="CreateMessageOnlyWindow(WNDPROC, string, string)"/>.
-		/// If not <c>null</c>, it must be a static named method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
+		/// If not <c>null</c>, it must be a static named method; create windows with any other function, including API <ms>CreateWindowEx</ms>.
 		/// </param>
 		/// <param name="etc">
-		/// Can be used to specify API <msdn>WNDCLASSEX</msdn> fields.
+		/// Can be used to specify API <ms>WNDCLASSEX</ms> fields.
 		/// To set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).
 		/// If <c>null</c>, this function sets arrow cursor and style <c>CS_VREDRAW | CS_HREDRAW</c>.
 		/// </param>
@@ -30,7 +30,7 @@ namespace Au.More {
 		/// <exception cref="InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
 		/// <exception cref="Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
 		/// <remarks>
-		/// Calls API <msdn>RegisterClassEx</msdn>.
+		/// Calls API <ms>RegisterClassEx</ms>.
 		/// The window class is registered until this process ends. Don't need to unregister.
 		/// If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both <c>null</c>). Then ignores <i>etc</i>. Throws exception if different.
 		/// Thread-safe.
@@ -111,18 +111,18 @@ namespace Au.More {
 		[ThreadStatic] static bool t_cwUnsafe;
 
 		/// <summary>
-		/// Creates native/unmanaged window (API <msdn>CreateWindowEx</msdn>) and sets its window procedure.
+		/// Creates native/unmanaged window (API <ms>CreateWindowEx</ms>) and sets its window procedure.
 		/// </summary>
 		/// <param name="wndProc">Window procedure.</param>
 		/// <param name="keepAlive">
-		/// Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <msdn>WM_NCDESTROY</msdn> received or thread ended).
+		/// Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <ms>WM_NCDESTROY</ms> received or thread ended).
 		/// <para>IMPORTANT: In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy <b>HwndHost</b>-ed controls. Then let <i>keepAlive</i>=<c>false</c> and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</para>
 		/// </param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
 		/// If the class was registered with <see cref="RegisterWindowClass"/> with <c>null</c> <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (<b>WM_CREATE</b> etc).
 		/// 
-		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
+		/// To destroy the window can be used any function, including API <ms>DestroyWindow</ms>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <ms>WM_CLOSE</ms>.
 		/// </remarks>
 		public static wnd CreateWindow(WNDPROC wndProc, bool keepAlive, string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, wnd parent = default, nint controlId = 0, IntPtr hInstance = default, nint param = 0) {
 			Not_.Null(wndProc, className);
@@ -157,8 +157,8 @@ namespace Au.More {
 		/// </summary>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
-		/// Calls API <msdn>CreateWindowEx</msdn>.
-		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
+		/// Calls API <ms>CreateWindowEx</ms>.
+		/// To destroy the window can be used any function, including API <ms>DestroyWindow</ms>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <ms>WM_CLOSE</ms>.
 		/// </remarks>
 		/// <seealso cref="RegisterWindowClass"/>
 		public static wnd CreateWindow(string className, string name = null, WS style = 0, WSE exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, wnd parent = default, nint controlId = 0, IntPtr hInstance = default, nint param = 0) {
@@ -168,14 +168,14 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Creates native/unmanaged <msdn>message-only window</msdn>.
+		/// Creates native/unmanaged <ms>message-only window</ms>.
 		/// </summary>
 		/// <param name="className">Window class name. Can be any existing class.</param>
 		/// <param name="name">Window name or <c>null</c>.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
 		/// Styles: <b>WS_POPUP</b>, <b>WS_EX_NOACTIVATE</b>.
-		/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <msdn>WM_CLOSE</msdn>.
+		/// To destroy the window can be used any function, including API <ms>DestroyWindow</ms>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <ms>WM_CLOSE</ms>.
 		/// </remarks>
 		public static wnd CreateMessageOnlyWindow(string className, string name = null) {
 			return CreateWindow(className, name, WS.POPUP, WSE.NOACTIVATE, parent: SpecHWND.MESSAGE);
@@ -183,7 +183,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Creates native/unmanaged <msdn>message-only window</msdn> and sets its window procedure.
+		/// Creates native/unmanaged <ms>message-only window</ms> and sets its window procedure.
 		/// </summary>
 		/// <param name="wndProc"></param>
 		/// <param name="className">Window class name.</param>
@@ -240,7 +240,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Destroys a native window of this thread.
-		/// Calls API <msdn>DestroyWindow</msdn>.
+		/// Calls API <ms>DestroyWindow</ms>.
 		/// </summary>
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <seealso cref="wnd.Close"/>
@@ -257,7 +257,7 @@ namespace Au.More {
 		/// If <c>default(IntPtr)</c>, sets font that is used by most windows and controls on this computer, usually <c>Segoe UI</c> 9, DPI-scaled for <i>w</i> screen.
 		/// </param>
 		/// <remarks>
-		/// Sends <msdn>WM_SETFONT</msdn> message.
+		/// Sends <ms>WM_SETFONT</ms> message.
 		/// </remarks>
 		public static void SetFont(wnd w, IntPtr font = default) {
 			w.Send(Api.WM_SETFONT, font != default ? font : NativeFont_.RegularCached(Dpi.OfWindow(w)).Handle);
@@ -266,7 +266,7 @@ namespace Au.More {
 		//rejected. Rarely used. Easy to send message.
 		///// <summary>
 		///// Gets native font handle.
-		///// Sends message API <msdn>WM_GETFONT</msdn>.
+		///// Sends message API <ms>WM_GETFONT</ms>.
 		///// Does not copy the font; don't need to dispose.
 		///// Use this function only with windows of current process.
 		///// </summary>
@@ -332,7 +332,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Calls API <msdn>GetClassLongPtr</msdn>.
+		/// Calls API <ms>GetClassLongPtr</ms>.
 		/// </summary>
 		/// <remarks>
 		/// Supports <see cref="lastError"/>.
@@ -364,7 +364,7 @@ namespace Au.More {
 
 		//probably not useful. Dangerous.
 		///// <summary>
-		///// Calls API <msdn>SetClassLongPtr</msdn> (<b>SetClassLong</b> in 32-bit process).
+		///// Calls API <ms>SetClassLongPtr</ms> (<b>SetClassLong</b> in 32-bit process).
 		///// </summary>
 		///// <exception cref="AuWndException"/>
 		//public static nint SetClassLong(wnd w, int index, nint newValue)
@@ -390,10 +390,10 @@ namespace Au.More {
 		//}
 
 		/// <summary>
-		/// Calls API <msdn>RegisterWindowMessage</msdn>.
+		/// Calls API <ms>RegisterWindowMessage</ms>.
 		/// </summary>
 		/// <param name="name">Message name. Can be any unique string.</param>
-		/// <param name="uacEnable">Also call API <msdn>ChangeWindowMessageFilter</msdn> for the message. More info: <see cref="UacEnableMessages"/>.</param>
+		/// <param name="uacEnable">Also call API <ms>ChangeWindowMessageFilter</ms> for the message. More info: <see cref="UacEnableMessages"/>.</param>
 		public static int RegisterMessage(string name, bool uacEnable = false) {
 			var m = Api.RegisterWindowMessage(name);
 			if (uacEnable && m != 0) Api.ChangeWindowMessageFilter(m, 1);
@@ -401,7 +401,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
+		/// Calls API <ms>ChangeWindowMessageFilter</ms> for each message in the list of messages.
 		/// It allows processes of lower [](xref:uac) integrity level to send these messages to this process.
 		/// </summary>
 		public static void UacEnableMessages(params int[] messages) {
@@ -836,7 +836,7 @@ print.it(s2);
 		/// </summary>
 		/// <param name="doEvents">While waiting call <see cref="wait.doEvents"/> to process Windows messages etc.</param>
 		/// <remarks>
-		/// When there is no active window, functions <see cref="wnd.active"/> and API <msdn>GetForegroundWindow</msdn> return 0.
+		/// When there is no active window, functions <see cref="wnd.active"/> and API <ms>GetForegroundWindow</ms> return 0.
 		/// It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
 		/// This function waits max 500 ms, then returns <c>false</c> if there is no active window.
 		/// Don't need to call this after calling functions of this library.
@@ -855,12 +855,12 @@ print.it(s2);
 		}
 
 		/// <summary>
-		/// Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
+		/// Temporarily enables this process to activate windows with API <ms>SetForegroundWindow</ms>.
 		/// </summary>
 		/// <returns><c>false</c> if failed.</returns>
 		/// <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
 		/// <remarks>
-		/// In some cases you may need this function because Windows often disables API <msdn>SetForegroundWindow</msdn> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
+		/// In some cases you may need this function because Windows often disables API <ms>SetForegroundWindow</ms> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
 		/// Usually you don't call <b>SetForegroundWindow</b> directly. It is called by some other functions.
 		/// Don't need to call this function before calling <see cref="wnd.Activate"/> and other functions of this library that activate windows.
 		/// </remarks>
@@ -870,7 +870,7 @@ print.it(s2);
 		}
 
 		/// <summary>
-		/// Calls API <msdn>PostThreadMessage</msdn>. 
+		/// Calls API <ms>PostThreadMessage</ms>. 
 		/// </summary>
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		public static bool PostThreadMessage(int threadId, int message, nint wParam = 0, nint lParam = 0) {
@@ -884,7 +884,7 @@ print.it(s2);
 		/// <param name="proc">The new window procedure. It is called on every message received by the window (unless blocked by another subclass added later). Let it call <see cref="DefSubclassProc"/>, except when you want to block the message.</param>
 		/// <returns>A cookie for <see cref="Unsubclass"/>. Returns <c>null</c> if failed.</returns>
 		/// <remarks>
-		/// Uses API <msdn>SetWindowSubclass</msdn>.
+		/// Uses API <ms>SetWindowSubclass</ms>.
 		/// Implicitly unsubclasses when the window is destroyed.
 		/// Protects <i>proc</i> from GC for as long as need.
 		/// </remarks>
@@ -963,8 +963,8 @@ namespace Au.Types {
 	/// </summary>
 	public class WDLArgs {
 		/// <summary>
-		/// Current message retrieved by API <msdn>GetMessage</msdn>.
-		/// API <msdn>MSG</msdn>.
+		/// Current message retrieved by API <ms>GetMessage</ms>.
+		/// API <ms>MSG</ms>.
 		/// </summary>
 		public MSG msg;
 

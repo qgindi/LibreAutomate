@@ -187,7 +187,7 @@ You can hide and show code regions like in a tree view control: click the **[-]*
 Editor draws horizontal lines at the end of each function and type definition.
 
 ### Snippets
-The autocompletion list also contains [snippets](xref:snippets). For example the **outSnippet** inserts code `print.it();` when you type `out` and space or `Tab` or `Enter` or click it. Some snippets are in the **Surround** menu.
+The autocompletion list also contains [snippets](xref:snippets). For example the `outSnippet` inserts code `print.it();` when you type `out` and space or `Tab` or `Enter` or click it. Some snippets are in the **Surround** menu.
 
 ### Images in code
 If a code line contains a string or comment with a file path, embedded image (screenshot, `"image:"`) or `"*icon"`, editor draws the image at the left. Also captures screenshots when recording etc. Embedded image data usually is hidden.
@@ -217,7 +217,7 @@ You can also drag and drop scripts etc from the Files panel.
 To focus the code editor control without changing selection: middle-click.
 
 ### WPF window preview
-The program does not have a dialog window editor/designer, but it's easy to create windows in code, using class **wpfBuilder**. The program can automatically show/update the window while you edit its code, if it contains code like this:
+The program does not have a dialog window editor/designer, but it's easy to create windows in code, using class [wpfBuilder](). The program can automatically show/update the window while you edit its code, if it contains code like this:
 
 ```csharp
 #if WPF_PREVIEW
@@ -225,16 +225,16 @@ b.Window.Preview();
 #endif
 ```
 
-This code must be after building the window but before showing it (**ShowDialog** etc).
+This code must be after building the window but before showing it ([wpfBuilder.ShowDialog]() etc).
 
 To activate this feature for current document, check toolbar button **WPF preview** or menu **Edit > View > WPF preview**.
 
 How it works: If **WPF preview** is checked and current script contains `#if WPF_PREVIEW`, the program launches/restarts the script whenever you make changes in its code, unless there are errors. The script runs like when clicked the **Run** button, with these changes:
-- Defined **WPF_PREVIEW**. In script you use `#if WPF_PREVIEW` to include preview-specific code. Or use **script.isWpfPreview**.
+- Defined `WPF_PREVIEW`. In script you use `#if WPF_PREVIEW` to include preview-specific code. Or use [script.isWpfPreview]().
 - Function **Preview** shows the window without activating. Also changes some its properties. Ends the process when the window closed.
 - Some `/*/ properties /*/` are ignored: `role`, `ifRunning`, `uac`, `platform`, `console`, `optimize`, `outputPath`, `preBuild`, `postBuild`, `xmlDoc`.
 - If current file (or its main project file) is a class file, runs it as a script; ignores the test script. Therefore need `#if WPF_PREVIEW` code that runs at startup and calls the function that contains the window code.
-- Function **script.setup** does nothing.
+- Function [script.setup]() does nothing.
 
 In preview mode the script must go straight to the window code. If normally it doesn't, add code like this somewhere at the start:
 ```csharp

@@ -7,8 +7,8 @@ namespace Au.Types;
 /// Window styles.
 /// </summary>
 /// <remarks>
-/// Reference: <msdn>Window Styles</msdn>.
-/// Here names are without prefix <b>WS_</b>. For example, instead of <c>WS_BORDER</c> use <c>WS.BORDER</c>. Not included constants that are 0 (eg <c>WS_TILED</c>) or are duplicate (eg <c>WS_SIZEBOX</c> is same as <c>WS_THICKFRAME</c>) or consist of multiple other constants (eg <c>WS_TILEDWINDOW</c>).
+/// Reference: <ms>Window Styles</ms>.
+/// Here names are without prefix <c>WS_</c>. For example, instead of <c>WS_BORDER</c> use <c>WS.BORDER</c>. Not included constants that are 0 (eg <c>WS_TILED</c>) or are duplicate (eg <c>WS_SIZEBOX</c> is same as <c>WS_THICKFRAME</c>) or consist of multiple other constants (eg <c>WS_TILEDWINDOW</c>).
 /// </remarks>
 [Flags]
 public enum WS : uint {
@@ -40,8 +40,8 @@ public enum WS : uint {
 /// Window extended styles.
 /// </summary>
 /// <remarks>
-/// Reference: <msdn>Extended Window Styles</msdn>.
-/// Here names are without prefix <b>WS_EX_</b>. For example, instead of <c>WS_EX_TOOLWINDOW</c> use <c>WSE.TOOLWINDOW</c>. Not included constants that are 0 (eg <c>WS_EX_LEFT</c>).
+/// Reference: <ms>Extended Window Styles</ms>.
+/// Here names are without prefix <c>WS_EX_</c>. For example, instead of <c>WS_EX_TOOLWINDOW</c> use <c>WSE.TOOLWINDOW</c>. Not included constants that are 0 (eg <c>WS_EX_LEFT</c>).
 /// </remarks>
 [Flags]
 public enum WSE : uint {
@@ -72,7 +72,7 @@ public enum WSE : uint {
 	NOACTIVATE = 0x08000000,
 }
 
-/// <summary>API <msdn>MSG</msdn></summary>
+/// <summary>API <ms>MSG</ms></summary>
 public struct MSG //WinMSG
 {
 	public wnd hwnd;
@@ -104,7 +104,7 @@ public enum GTIFlags {
 	POPUPMENUMODE = 0x10,
 }
 
-/// <summary>API <msdn>GUITHREADINFO</msdn></summary>
+/// <summary>API <ms>GUITHREADINFO</ms></summary>
 public struct GUITHREADINFO {
 	public int cbSize;
 	public GTIFlags flags;
@@ -117,7 +117,7 @@ public struct GUITHREADINFO {
 	public RECT rcCaret;
 }
 
-/// <summary>API <msdn>CREATESTRUCT</msdn></summary>
+/// <summary>API <ms>CREATESTRUCT</ms></summary>
 public unsafe struct CREATESTRUCT {
 	public nint lpCreateParams;
 	public IntPtr hInstance;
@@ -137,7 +137,7 @@ public unsafe struct CREATESTRUCT {
 	//public string Name => lpszName == default ? null : new string(lpszName);
 
 	/// <summary>
-	/// If <b>lpszClass</b> is atom, returns string with <c>#</c> prefix and atom value, like <c>"#32770"</c>.
+	/// If <c>lpszClass</c> is atom, returns string with <c>#</c> prefix and atom value, like <c>"#32770"</c>.
 	/// </summary>
 	public RStr ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToS()
 		: new RStr(lpszClass, Ptr_.Length(lpszClass));
@@ -146,7 +146,7 @@ public unsafe struct CREATESTRUCT {
 	//tested and documented: CBT hook can change only x y cx cy.
 }
 
-/// <summary>API <msdn>SIGDN</msdn></summary>
+/// <summary>API <ms>SIGDN</ms></summary>
 public enum SIGDN : uint {
 	NORMALDISPLAY,
 	PARENTRELATIVEPARSING = 0x80018001,
@@ -160,7 +160,7 @@ public enum SIGDN : uint {
 	PARENTRELATIVEFORUI = 0x80094001
 }
 
-/// <summary>API <msdn>SetWindowPos</msdn> flags. Can be used with <see cref="wnd.SetWindowPos"/>.</summary>
+/// <summary>API <ms>SetWindowPos</ms> flags. Can be used with <see cref="wnd.SetWindowPos"/>.</summary>
 [Flags]
 public enum SWPFlags : uint {
 	NOSIZE = 0x1,
@@ -187,7 +187,7 @@ public enum SWPFlags : uint {
 
 /// <summary>
 /// Special window handle values. Can be used with <see cref="wnd.SetWindowPos"/>.
-/// See API <msdn>SetWindowPos</msdn>.
+/// See API <ms>SetWindowPos</ms>.
 /// </summary>
 public enum SpecHWND {
 	TOP = 0,
@@ -200,7 +200,7 @@ public enum SpecHWND {
 
 /// <summary>
 /// Window long constants. Used with <see cref="wnd.GetWindowLong"/> and <see cref="wnd.SetWindowLong"/>.
-/// See API <msdn>GetWindowLong</msdn>. See also API <msdn>SetWindowSubclass</msdn>.
+/// See API <ms>GetWindowLong</ms>. See also API <ms>SetWindowSubclass</ms>.
 /// </summary>
 public static class GWL {
 	public const int WNDPROC = -4;
@@ -221,7 +221,7 @@ public static class GWL {
 
 /// <summary>
 /// Window class long constants. Used with <see cref="WndUtil.GetClassLong"/>.
-/// See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
+/// See API <ms>WNDCLASSEX</ms>, <ms>GetClassLong</ms>.
 /// </summary>
 public static class GCL {
 	public const int ATOM = -32;
@@ -238,10 +238,10 @@ public static class GCL {
 	//info: also there are GCLP_, but their values are the same.
 }
 
-/// <summary>API <msdn>WNDPROC</msdn></summary>
+/// <summary>API <ms>WNDPROC</ms></summary>
 public delegate nint WNDPROC(wnd w, int msg, nint wp, nint lp);
 
-/// <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="wnd.SendTimeout"/>.</summary>
+/// <summary>API <ms>SendMessageTimeout</ms> flags. Used with <see cref="wnd.SendTimeout"/>.</summary>
 [Flags]
 public enum SMTFlags : uint {
 	BLOCK = 0x0001,
@@ -250,7 +250,7 @@ public enum SMTFlags : uint {
 	ERRORONEXIT = 0x0020,
 }
 
-/// <summary>API <msdn>DrawTextEx</msdn> format flags.</summary>
+/// <summary>API <ms>DrawTextEx</ms> format flags.</summary>
 [Flags]
 public enum TFFlags {
 	CENTER = 0x1,

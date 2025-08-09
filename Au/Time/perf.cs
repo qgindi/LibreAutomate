@@ -2,7 +2,7 @@
 
 namespace Au {
 	/// <summary>
-	/// Code execution time measurement with high precision (API <msdn>QueryPerformanceCounter</msdn>).
+	/// Code execution time measurement with high precision (API <ms>QueryPerformanceCounter</ms>).
 	/// </summary>
 	public static unsafe class perf {
 		//info: we don't use Stopwatch. It used to load System.dll (before .NET Core, now don't know), which is slow and can make speed measurement incorrect and confusing in some cases.
@@ -11,12 +11,12 @@ namespace Au {
 		//note: don't use static ctor. Makes some simplest functions much slower.
 		
 		/// <summary>
-		/// Gets the number of microseconds elapsed since Windows startup. Uses the high-resolution system timer (API <msdn>QueryPerformanceCounter</msdn>).
+		/// Gets the number of microseconds elapsed since Windows startup. Uses the high-resolution system timer (API <ms>QueryPerformanceCounter</ms>).
 		/// </summary>
 		/// <remarks>
 		/// This function is used to measure time differences with 1 microsecond precision, like <c>var t1=perf.mcs; ... var t2=perf.mcs; var diff=t2-t1;</c>.
 		/// Independent of computer clock time changes.
-		/// See also: <msdn>Acquiring high-resolution time stamps</msdn>.
+		/// See also: <ms>Acquiring high-resolution time stamps</ms>.
 		/// </remarks>
 		/// <seealso cref="perf"/>
 		public static long mcs { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMCS); } }
@@ -26,7 +26,7 @@ namespace Au {
 		//rejected: make corrections based on GetTickCount64. It makes slower and is not necessary.
 		
 		/// <summary>
-		/// Gets the number of milliseconds elapsed since Windows startup. Uses the high-resolution system timer (API <msdn>QueryPerformanceCounter</msdn>).
+		/// Gets the number of milliseconds elapsed since Windows startup. Uses the high-resolution system timer (API <ms>QueryPerformanceCounter</ms>).
 		/// </summary>
 		/// <remarks>
 		/// This function is used to measure time differences with 1 ms precision, like <c>var t1=perf.ms; ... var t2=perf.ms; var diff=t2-t1;</c>.

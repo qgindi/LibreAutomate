@@ -159,7 +159,7 @@ class _Analyze {
 		}
 #endif
 		
-#if SYMBOL_NOT_BOLD //names of types, functions, enum members etc should be in <b> or <see>, <msdn>.
+#if SYMBOL_NOT_BOLD //names of types, functions, enum members etc should be in <b> or <see>, <ms>.
 		var hs = _stackSymbols.Peek();
 		foreach (var s in _DescendantTexts()) {
 			bool found = false;
@@ -219,7 +219,7 @@ class _Analyze {
 #endif
 		
 		string[] _DescendantTexts()
-			=> xdoc.DescendantNodes().OfType<XText>().Where(t => t is not XCData && t.Parent.Name.LocalName is not ("c" or "i" or "b" or "google" or "msdn" or "sqlite" or "code"))
+			=> xdoc.DescendantNodes().OfType<XText>().Where(t => t is not XCData && t.Parent.Name.LocalName is not ("c" or "i" or "b" or "google" or "ms" or "sqlite" or "code"))
 			.Select(t => t.Value.Trim("\r\n")).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
 		
 		void _Print(object s) {

@@ -396,7 +396,7 @@ public struct AnyWnd {
 
 /// <summary>
 /// Used for function parameters to specify multiple strings.
-/// Contains a string like <c>"One|Two|Three"</c> or <b>string[]</b> or <b>List&lt;string&gt;</b>. Has implicit conversions from these types. Can be assigned collection initializer like <c>["a", "b"]</c>.
+/// Contains a string like <c>"One|Two|Three"</c> or <c>string[]</c> or <c>List&lt;string&gt;</c>. Has implicit conversions from these types. Can be assigned collection initializer like <c>["a", "b"]</c>.
 /// </summary>
 [CollectionBuilder(typeof(Strings), "Create")]
 public struct Strings : IEnumerable<string> {
@@ -421,7 +421,7 @@ public struct Strings : IEnumerable<string> {
 	public object Value => _o;
 	
 	/// <summary>
-	/// Converts the value to <b>string[]</b>.
+	/// Converts the value to <c>string[]</c>.
 	/// Note: don't modify array elements. If the caller passed an array, this function returns it, not a copy.
 	/// </summary>
 	public string[] ToArray() {

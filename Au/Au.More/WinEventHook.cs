@@ -1,6 +1,6 @@
 namespace Au.More {
 	/// <summary>
-	/// Helps with UI element event hooks. See API <msdn>SetWinEventHook</msdn>.
+	/// Helps with UI element event hooks. See API <ms>SetWinEventHook</ms>.
 	/// </summary>
 	/// <remarks>
 	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a "wait-for" function that dispatches messages or has such option (see <see cref="Seconds.DoEvents"/>).
@@ -32,7 +32,7 @@ namespace Au.More {
 		/// <summary>
 		/// Sets a hook for an event or a range of events.
 		/// </summary>
-		/// <param name="eventMin">The lowest event constant value in the range of events. Can be <b>EEvent.MIN</b> to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>. Value 0 is ignored.</param>
+		/// <param name="eventMin">The lowest event constant value in the range of events. Can be <b>EEvent.MIN</b> to indicate the lowest possible event value. Events reference: <ms>SetWinEventHook</ms>. Value 0 is ignored.</param>
 		/// <param name="eventMax">The highest event constant value in the range of events. Can be <b>EEvent.MAX</b> to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
 		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
@@ -51,7 +51,7 @@ namespace Au.More {
 		/// <summary>
 		/// Sets multiple hooks.
 		/// </summary>
-		/// <param name="events">Events. Reference: API <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
+		/// <param name="events">Events. Reference: API <ms>SetWinEventHook</ms>. Elements with value 0 are ignored.</param>
 		/// <inheritdoc cref="WinEventHook(EEvent, EEvent, Action{HookData.WinEvent}, int, int, EHookFlags)"/>
 		public WinEventHook(EEvent[] events, Action<HookData.WinEvent> hookProc, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {
 			Not_.Null(hookProc);
@@ -183,28 +183,28 @@ namespace Au.Types {
 	public static partial class HookData {
 		/// <summary>
 		/// Hook data for the hook procedure set by <see cref="WinEventHook"/>.
-		/// More info: API <msdn>WinEventProc</msdn>.
+		/// More info: API <ms>WinEventProc</ms>.
 		/// </summary>
 		public unsafe struct WinEvent {
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WinEventHook hook;
 			
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
+			/// <summary>API <ms>WinEventProc</ms></summary>
 			public readonly EEvent event_;
 			
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
+			/// <summary>API <ms>WinEventProc</ms></summary>
 			public readonly wnd w;
 			
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
+			/// <summary>API <ms>WinEventProc</ms></summary>
 			public readonly EObjid idObject;
 			
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
+			/// <summary>API <ms>WinEventProc</ms></summary>
 			public readonly int idChild;
 			
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
+			/// <summary>API <ms>WinEventProc</ms></summary>
 			public readonly int thread;
 			
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
+			/// <summary>API <ms>WinEventProc</ms></summary>
 			public readonly int time;
 			
 			internal WinEvent(WinEventHook hook, EEvent event_, wnd hwnd, EObjid idObject, int idChild, int thread, int time) {

@@ -123,7 +123,7 @@ static unsafe partial class Api {
 	internal static extern bool ReleaseMutex(nint hMutex);
 	
 	/// <summary>
-	/// Note: use only for private threads. Not everything works like with <b>Thread.Start</b>. For example .NET does not auto-release COM objects when thread ends.
+	/// Note: use only for private threads. Not everything works like with <c>Thread.Start</c>. For example .NET does not auto-release COM objects when thread ends.
 	/// </summary>
 	/// <param name="lpStartAddress"><c>[UnmanagedCallersOnly]</c></param>
 	[DllImport("kernel32.dll", SetLastError = true)]
@@ -219,7 +219,7 @@ static unsafe partial class Api {
 	static extern int _GetFullPathName(string lpFileName, int nBufferLength, char* lpBuffer, char** lpFilePart);
 	
 	/// <summary>
-	/// Calls API <b>GetFullPathName</b>.
+	/// Calls API <c>GetFullPathName</c>.
 	/// Returns <c>false</c> if failed or result is same; then <i>r</i> is <i>s</i>.
 	/// <i>r</i> can be same variable as <i>s</i>.
 	/// </summary>
@@ -233,7 +233,7 @@ static unsafe partial class Api {
 	static extern int _GetLongPathName(string lpszShortPath, char* lpszLongPath, int cchBuffer);
 	
 	/// <summary>
-	/// Calls API <b>GetFullPathName</b>.
+	/// Calls API <c>GetFullPathName</c>.
 	/// Returns <c>false</c> if failed or result is same; then <i>r</i> is <i>s</i>.
 	/// <i>r</i> can be same variable as <i>s</i>.
 	/// </summary>
@@ -321,7 +321,7 @@ static unsafe partial class Api {
 	static extern int _SearchPath(string lpPath, string lpFileName, string lpExtension, int nBufferLength, char* lpBuffer, char** lpFilePart);
 	
 	/// <summary>
-	/// Calls API <b>SearchPath</b>. Returns full path, or <c>null</c> if not found.
+	/// Calls API <c>SearchPath</c>. Returns full path, or <c>null</c> if not found.
 	/// </summary>
 	/// <param name="lpPath">Parent directory or <c>null</c>.</param>
 	/// <param name="lpFileName"></param>
@@ -595,7 +595,7 @@ static unsafe partial class Api {
 	static extern int _GetEnvironmentVariable(string lpName, char* lpBuffer, int nSize);
 	
 	/// <summary>
-	/// Calls API <b>GetEnvironmentVariable</b>.
+	/// Calls API <c>GetEnvironmentVariable</c>.
 	/// Returns <c>null</c> if variable not found.
 	/// Does not support <c>folders.X</c>.
 	/// </summary>
@@ -618,7 +618,7 @@ static unsafe partial class Api {
 	static extern int _ExpandEnvironmentStrings(string lpSrc, char* lpDst, int nSize);
 	
 	/// <summary>
-	/// Calls API <b>ExpandEnvironmentStrings</b>.
+	/// Calls API <c>ExpandEnvironmentStrings</c>.
 	/// Returns <c>false</c> if failed or result is same; then <i>r</i> is <i>s</i>.
 	/// <i>r</i> can be same variable as <i>s</i>.
 	/// </summary>
@@ -658,7 +658,7 @@ static unsafe partial class Api {
 		public fixed char cAlternateFileName[14];
 		
 		/// <summary>
-		/// Returns <b>cFileName</b> as string, or null if it's <c>".."</c> or <c>"."</c>.
+		/// Returns <c>cFileName</c> as string, or null if it's <c>".."</c> or <c>"."</c>.
 		/// </summary>
 		public unsafe string Name {
 			get {
@@ -1009,7 +1009,7 @@ static unsafe partial class Api {
 	internal static extern int GetDriveType(string lpRootPathName);
 	
 	/// <summary>
-	/// Use this API instead of <b>Directory.CreateSymbolicLink</b> which has a bug: does not throw exception when fails (eg non-admin).
+	/// Use this API instead of <c>Directory.CreateSymbolicLink</c> which has a bug: does not throw exception when fails (eg non-admin).
 	/// Note: the API fails if non-admin.
 	///		With flag 2 does not fail if enabled developer mode.
 	///		It seems can be enabled for non-admin in <c>gpedit.msc</c>; not tested; google for more info.

@@ -11,15 +11,15 @@ namespace Au {
 	/// 
 	/// <code><![CDATA[string s = folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt]]></code>
 	/// 
-	/// If a function cannot get folder path, the return value contains <c>null</c> string. Then the <b>+</b> operator would throw <b>ArgumentException</b>.
+	/// If a function cannot get folder path, the return value contains <c>null</c> string. Then the <c>+</c> operator would throw <b>ArgumentException</b>.
 	///
 	/// Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <c>_Win8</c> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registered, may be still not created.
 	/// 
 	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure <b>ITEMIDLIST</b>. Functions of the nested class <see cref="shell"/> return it as <see cref="Pidl"/> or string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (<see cref="run.it"/>, <see cref="icon.of"/>, <see cref="icon.ofPidl(Pidl, int)"/>) but not with .NET functions.
 	///
-	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
-	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
+	/// Most functions use Windows "Known Folders" API, such as <ms>SHGetKnownFolderPath</ms>.
+	/// The list of Windows predefined known folders: <ms>KNOWNFOLDERID</ms>.
 	/// Names of folders specific to current process have prefix <b>This</b>, like <b>ThisApp</b>.
 	/// 
 	/// Some paths depend on the bitness (32 or 64 bit) of the OS and this process.

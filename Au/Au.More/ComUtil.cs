@@ -14,7 +14,7 @@ public static class ComUtil {
 	/// <br/>• An object of this type currently is unavailable. Probably the program is not running, or running with a different UAC integrity level.
 	/// </exception>
 	/// <remarks>
-	/// Calls API <msdn>GetActiveObject</msdn>.
+	/// Calls API <ms>GetActiveObject</ms>.
 	///
 	/// This process must have the same [](xref:uac) integrity level as the target process (of the COM object). In script <b>Properties</b> select <b>uac user</b>.
 	/// </remarks>
@@ -41,7 +41,7 @@ public static class ComUtil {
 	}
 
 	/// <summary>
-	/// Gets COM object from a window using API <msdn>AccessibleObjectFromWindow</msdn><c>(OBJID_NATIVEOM, IID_IDispatch</c>).
+	/// Gets COM object from a window using API <ms>AccessibleObjectFromWindow</ms><c>(OBJID_NATIVEOM, IID_IDispatch</c>).
 	/// </summary>
 	/// <param name="w">Window or control.</param>
 	/// <param name="cnChild">Child window class name. Format: [wildcard expression](xref:wildcard_expression). If used, gets COM object from the first found child or descendant window where it succeeds. If <c>null</c>, gets COM object from <i>w</i>.</param>

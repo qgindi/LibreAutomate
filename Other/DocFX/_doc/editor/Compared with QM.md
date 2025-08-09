@@ -47,9 +47,9 @@ As you see, C# code is longer, but usually it is easier to understand. The [code
 
 LibreAutomate has triggers to execute parts of a running script. Trigger types: hotkey, autotext, mouse, window, process, filesystem. Triggers also can be used to launch scripts, but differently than in QM.
 
-LibreAutomate does not have item types like "menu", "toolbar" and "autotext". Instead use classes **popupMenu**, **toolbar** and **AutotextTriggers**.
+LibreAutomate does not have item types like "menu", "toolbar" and "autotext". Instead use classes [popupMenu](), [toolbar]() and [AutotextTriggers]().
 
-To create dialogs now can be used class **wpfBuilder** and snippet **wpfDialogSnippet**.
+To create dialogs now can be used class [wpfBuilder]() and snippet `wpfDialogSnippet`.
 
 Currently LibreAutomate has only the most important tools for creating code.
 
@@ -66,7 +66,7 @@ In the main LibreAutomate window you can resize and dock all panels and toolbars
 LibreAutomate saves all settings in files, not in the Registry.
 
 ### Some important features missing
-- Dialog editor. Instead use class **wpfBuilder**.
+- Dialog editor. Instead use class [wpfBuilder]().
 
 ### Some features LibreAutomate will never have
 - Encrypt scripts.

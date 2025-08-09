@@ -134,7 +134,7 @@ namespace Au {
 
 			/// <summary>
 			/// Converts object to <b>wnd</b>.
-			/// Object can contain <c>null</c>, <b>wnd</b>, <b>Control</b>, or <b>System.Windows.DependencyObject</b> (must be in element 0 of <b>object[]</b>).
+			/// Object can contain <c>null</c>, <b>wnd</b>, <b>Control</b>, or <b>System.Windows.DependencyObject</b> (must be in element 0 of <c>object[]</c>).
 			/// Avoids loading Forms and WPF dlls when not used.
 			/// </summary>
 			public static wnd FromObject(object o) => o switch {

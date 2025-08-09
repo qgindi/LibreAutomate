@@ -1,9 +1,9 @@
 namespace Au.More {
 	/// <summary>
-	/// Send/receive data to/from other process using message <msdn>WM_COPYDATA</msdn>.
+	/// Send/receive data to/from other process using message <ms>WM_COPYDATA</ms>.
 	/// </summary>
 	/// <remarks>
-	/// This struct is <msdn>COPYDATASTRUCT</msdn>.
+	/// This struct is <ms>COPYDATASTRUCT</ms>.
 	/// <note>By default [](xref:uac) blocks messages sent from processes of lower integrity level. Call <see cref="EnableReceivingWM_COPYDATA"/> if need.</note>
 	/// </remarks>
 	/// <seealso cref="System.IO.MemoryMappedFiles.MemoryMappedFile"/>
@@ -17,27 +17,27 @@ namespace Au.More {
 		#region receive
 
 		/// <summary>
-		/// Initializes this variable from <i>lParam</i> of a received <msdn>WM_COPYDATA</msdn> message.
+		/// Initializes this variable from <i>lParam</i> of a received <ms>WM_COPYDATA</ms> message.
 		/// Then you can call functions of this variable to get data in managed format.
 		/// </summary>
-		/// <param name="lParam"><i>lParam</i> of a <msdn>WM_COPYDATA</msdn> message received in a window procedure. It is <msdn>COPYDATASTRUCT</msdn> pointer.</param>
+		/// <param name="lParam"><i>lParam</i> of a <ms>WM_COPYDATA</ms> message received in a window procedure. It is <ms>COPYDATASTRUCT</ms> pointer.</param>
 		public WndCopyData(nint lParam) {
 			var p = (WndCopyData*)lParam;
 			_dwData = p->_dwData; _cbData = p->_cbData; _lpData = p->_lpData;
 		}
 
 		/// <summary>
-		/// Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.
+		/// Data id. It is <ms>COPYDATASTRUCT.dwData</ms>.
 		/// </summary>
 		public int DataId { get => (int)_dwData; set => _dwData = value; }
 
 		/// <summary>
-		/// Unmanaged data pointer. It is <msdn>COPYDATASTRUCT.lpData</msdn>.
+		/// Unmanaged data pointer. It is <ms>COPYDATASTRUCT.lpData</ms>.
 		/// </summary>
 		public byte* RawData { get => _lpData; set => _lpData = value; }
 
 		/// <summary>
-		/// Unmanaged data size. It is <msdn>COPYDATASTRUCT.cbData</msdn>.
+		/// Unmanaged data size. It is <ms>COPYDATASTRUCT.cbData</ms>.
 		/// </summary>
 		public int RawDataSize { get => _cbData; set => _cbData = value; }
 
@@ -49,7 +49,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Gets received data as <b>byte[]</b>.
+		/// Gets received data as <c>byte[]</c>.
 		/// </summary>
 		public byte[] GetBytes() {
 			var a = new byte[_cbData];
@@ -58,7 +58,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
+		/// Calls API <ms>ChangeWindowMessageFilter</ms>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
 		/// </summary>
 		public static void EnableReceivingWM_COPYDATA() {
 			Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
@@ -69,12 +69,12 @@ namespace Au.More {
 		#region send
 
 		/// <summary>
-		/// Sends string or other data to a window of any process. Uses API <msdn>SendMessage</msdn> <msdn>WM_COPYDATA</msdn>.
+		/// Sends string or other data to a window of any process. Uses API <ms>SendMessage</ms> <ms>WM_COPYDATA</ms>.
 		/// </summary>
-		/// <typeparam name="T">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <b>byte[]</b>.</typeparam>
+		/// <typeparam name="T">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <c>byte[]</c>.</typeparam>
 		/// <param name="w">The window.</param>
-		/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
-		/// <param name="data">Data. For example string or <b>byte[]</b>. String can contain <c>'\0'</c> characters.</param>
+		/// <param name="dataId">Data id. It is <ms>COPYDATASTRUCT.dwData</ms>.</param>
+		/// <param name="data">Data. For example string or <c>byte[]</c>. String can contain <c>'\0'</c> characters.</param>
 		/// <param name="wParam">Can be any value. Optional.</param>
 		/// <returns><b>SendMessage</b>'s return value.</returns>
 		public static unsafe nint Send<T>(wnd w, int dataId, ReadOnlySpan<T> data, nint wParam = 0) where T : unmanaged {
@@ -95,14 +95,14 @@ namespace Au.More {
 		static readonly Lazy<IntPtr> s_mutex = new(Api.CreateMutex(null, false, "Au-mutex-WndUtil.Data")); //tested: don't need Api.SECURITY_ATTRIBUTES.ForLowIL
 
 		/// <summary>
-		/// Sends string or other data to a window of any process. Uses API <msdn>SendMessage</msdn> <msdn>WM_COPYDATA</msdn>.
+		/// Sends string or other data to a window of any process. Uses API <ms>SendMessage</ms> <ms>WM_COPYDATA</ms>.
 		/// Receives string or other data returned by that window with <see cref="Return"/>.
 		/// </summary>
-		/// <typeparam name="TSend">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <b>byte[]</b></typeparam>
-		/// <typeparam name="TReceive">Type of received data elements. For example, <b>char</b> for string, <b>byte</b> for <b>byte[]</b>.</typeparam>
+		/// <typeparam name="TSend">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <c>byte[]</c></typeparam>
+		/// <typeparam name="TReceive">Type of received data elements. For example, <b>char</b> for string, <b>byte</b> for <c>byte[]</c>.</typeparam>
 		/// <param name="w">The window.</param>
-		/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
-		/// <param name="send">Data to send. For example string or <b>byte[]</b>. String can contain <c>'\0'</c> characters.</param>
+		/// <param name="dataId">Data id. It is <ms>COPYDATASTRUCT.dwData</ms>.</param>
+		/// <param name="send">Data to send. For example string or <c>byte[]</c>. String can contain <c>'\0'</c> characters.</param>
 		/// <param name="receive">Callback function that can convert the received data to desired format.</param>
 		/// <returns><c>false</c> if failed.</returns>
 		public static unsafe bool SendReceive<TSend, TReceive>(wnd w, int dataId, ReadOnlySpan<TSend> send, ResultReader<TReceive> receive) where TSend : unmanaged where TReceive : unmanaged {
@@ -131,7 +131,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Calls <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> and gets the received data as <b>byte[]</b>.
+		/// Calls <see cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/> and gets the received data as <c>byte[]</c>.
 		/// </summary>
 		/// <param name="received">The received data.</param>
 		/// <inheritdoc cref="SendReceive{TSend, TReceive}(wnd, int, ReadOnlySpan{TSend}, ResultReader{TReceive})"/>
@@ -204,7 +204,7 @@ namespace Au.More {
 		/// <summary>
 		/// Returns string or other data to <see cref="SendReceive"/>.
 		/// </summary>
-		/// <typeparam name="T">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <b>byte[]</b></typeparam>
+		/// <typeparam name="T">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <c>byte[]</c></typeparam>
 		/// <param name="data"></param>
 		/// <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
 		/// <returns>Your window procedure must return this value.</returns>

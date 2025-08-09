@@ -74,7 +74,7 @@ public static partial class filesystem {
 	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
 	/// <exception cref="AuException">The file/directory exists but failed to get its properties. Not thrown if used flag <b>DontThrow</b>.</exception>
 	/// <remarks>
-	/// Calls API <msdn>GetFileAttributesEx</msdn>. Supports <see cref="lastError"/> (useful with flag <b>DontThrow</b>).
+	/// Calls API <ms>GetFileAttributesEx</ms>. Supports <see cref="lastError"/> (useful with flag <b>DontThrow</b>).
 	/// For NTFS links, gets properties of the link, not of its target.
 	/// You can also get most of these properties with <see cref="enumerate"/>.
 	/// </remarks>
@@ -103,7 +103,7 @@ public static partial class filesystem {
 	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
 	/// <exception cref="AuException">Failed. Not thrown if used flag <b>DontThrow</b>.</exception>
 	/// <remarks>
-	/// Calls API <msdn>GetFileAttributes</msdn>. Supports <see cref="lastError"/> (useful with flag <b>DontThrow</b>).
+	/// Calls API <ms>GetFileAttributes</ms>. Supports <see cref="lastError"/> (useful with flag <b>DontThrow</b>).
 	/// For NTFS links, gets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
@@ -176,7 +176,7 @@ public static partial class filesystem {
 	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
 	/// <exception cref="AuException">Failed. Not thrown if used flag <b>DontThrow</b>.</exception>
 	/// <remarks>
-	/// Calls API <msdn>SetFileAttributes</msdn>.
+	/// Calls API <ms>SetFileAttributes</ms>.
 	/// For NTFS links, sets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool setAttributes(string path, FileAttributes attributes, bool? add = null, FAFlags flags = 0) {
@@ -237,7 +237,7 @@ public static partial class filesystem {
 	/// <summary>
 	/// Gets file system entry type - file, directory, NTFS link, whether it exists and is accessible.
 	/// Returns <b>NotFound</b> (0) if does not exist. Returns <b>AccessDenied</b> (&lt; 0) if exists but this process cannot access it and get attributes.
-	/// Calls API <msdn>GetFileAttributes</msdn>.
+	/// Calls API <ms>GetFileAttributes</ms>.
 	/// </summary>
 	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is <c>false</c> (default), supports environment variables (see <see cref="pathname.expand"/>). Can be <c>null</c>.</param>
 	/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
@@ -267,7 +267,7 @@ public static partial class filesystem {
 	/// Else searches in these places:
 	/// 1. <i>dirs</i>, if used.
 	/// 2. <see cref="folders.ThisApp"/>.
-	/// 3. Calls API <msdn>SearchPath</msdn>, which searches in the process directory, Windows system directories, current directory, <c>PATH</c> environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
+	/// 3. Calls API <ms>SearchPath</ms>, which searches in the process directory, Windows system directories, current directory, <c>PATH</c> environment variable. The search order depends on API <ms>SetSearchPathMode</ms> or registry settings.
 	/// 4. If <i>path</i> ends with <c>".exe"</c>, tries to get path from registry "App Paths" keys.
 	/// </remarks>
 	/// <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
@@ -338,7 +338,7 @@ public static partial class filesystem {
 	/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
 	/// <exception cref="AuException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
 	/// <remarks>
-	/// Uses API <msdn>FindFirstFile</msdn>.
+	/// Uses API <ms>FindFirstFile</ms>.
 	/// 
 	/// By default gets only direct children. Use flag <see cref="FEFlags.AllDescendants"/> to get all descendants.
 	/// 
@@ -805,7 +805,7 @@ public static partial class filesystem {
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
-	/// Uses API <msdn>MoveFileEx</msdn>.
+	/// Uses API <ms>MoveFileEx</ms>.
 	/// </remarks>
 	public static void rename(string path, string newName, FIfExists ifExists = FIfExists.Fail) {
 		_FileOperation(_FileOp.Rename, false, path, newName, ifExists);
@@ -824,7 +824,7 @@ public static partial class filesystem {
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
-	/// In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
+	/// In most cases uses API <ms>MoveFileEx</ms>. It's fast, because don't need to copy files.
 	/// In these cases copies/deletes: destination is on another drive; need to merge directories.
 	/// When need to copy, does not copy security properties; sets default.
 	/// Creates the destination directory if does not exist (see <see cref="createDirectory"/>).
@@ -847,7 +847,7 @@ public static partial class filesystem {
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
-	/// In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
+	/// In most cases uses API <ms>MoveFileEx</ms>. It's fast, because don't need to copy files.
 	/// In these cases copies/deletes: destination is on another drive; need to merge directories.
 	/// When need to copy, does not copy security properties; sets default.
 	/// Creates the destination directory if does not exist (see <see cref="createDirectory"/>).
@@ -872,7 +872,7 @@ public static partial class filesystem {
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
-	/// Uses API <msdn>CopyFileEx</msdn> and <msdn>CreateDirectoryEx</msdn>.
+	/// Uses API <ms>CopyFileEx</ms> and <ms>CreateDirectoryEx</ms>.
 	/// On Windows 7 does not copy security properties; sets default.
 	/// Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
 	/// Creates the destination directory if does not exist (see <see cref="createDirectory"/>).
@@ -1084,13 +1084,13 @@ public static partial class filesystem {
 	/// </summary>
 	/// <returns><c>true</c> if created new directory, <c>false</c> if the directory already exists. Throws exception if failed.</returns>
 	/// <param name="path">Path of new directory.</param>
-	/// <param name="templateDirectory">Optional path of a template directory from which to copy some properties. See API <msdn>CreateDirectoryEx</msdn>.</param>
+	/// <param name="templateDirectory">Optional path of a template directory from which to copy some properties. See API <ms>CreateDirectoryEx</ms>.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
 	/// If the directory already exists, this function does nothing, and returns <c>false</c>.
 	/// Else, at first it creates missing parent/ancestor directories, then creates the specified directory.
-	/// To create the specified directory, calls API <msdn>CreateDirectory</msdn> or <msdn>CreateDirectoryEx</msdn> (if <i>templateDirectory</i> is not <c>null</c>).
+	/// To create the specified directory, calls API <ms>CreateDirectory</ms> or <ms>CreateDirectoryEx</ms> (if <i>templateDirectory</i> is not <c>null</c>).
 	/// </remarks>
 	public static bool createDirectory(string path, string templateDirectory = null) {
 		return _CreateDirectory(path, templateDirectory: templateDirectory);
@@ -1366,7 +1366,7 @@ public static partial class filesystem {
 	/// 2. Can corrupt file data. If this thread, process, PC or disk dies while writing, may write only part of data or just make empty file. Usually it happens when PC is turned off incorrectly.
 	/// 
 	/// To protect from 1, this functions waits/retries if the file is temporarily open/locked, like <see cref="waitIfLocked"/>.
-	/// To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
+	/// To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <ms>ReplaceFile</ms>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
 	/// Also this function auto-creates directory if does not exist.
 	/// 
 	/// This function is slower. Speed can be important when saving many files.

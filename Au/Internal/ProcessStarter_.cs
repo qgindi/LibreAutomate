@@ -11,7 +11,7 @@ unsafe struct ProcessStarter_ {
 	string _exe; //for errors only
 	
 	/// <summary>
-	/// Prepares parameters for API <msdn>CreateProcess</msdn> and similar.
+	/// Prepares parameters for API <ms>CreateProcess</ms> and similar.
 	/// </summary>
 	/// <param name="exe">
 	/// Full path of program file. If not full path, uses <see cref="folders.ThisApp"/>. Uses <see cref="pathname.normalize"/>.

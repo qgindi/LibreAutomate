@@ -22,8 +22,8 @@ static unsafe partial class Cpp {
 	/// <remarks>
 	/// Searches in:
 	/// - subfolder <c>64</c> or <c>32</c> or <c>64\ARM</c> of the <c>Au.dll</c> folder.
-	/// - calls <b>NativeLibrary.TryLoad</b>, which works like simple <c>[DllImport]</c>, eg may use info from <c>deps.json</c>.
-	/// - subfolder <c>64</c> etc of folder specified in environment variable <c>Au.Path</c>. For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then <b>folders.ThisApp</b> is <c>"C:\Program Files (x86)\Microsoft Visual Studio\..."</c>). Workaround: set environment variable <c>Au.Path</c> = the main Au directory and restart Windows.
+	/// - calls <c>NativeLibrary.TryLoad</c>, which works like simple <c>[DllImport]</c>, eg may use info from <c>deps.json</c>.
+	/// - subfolder <c>64</c> etc of folder specified in environment variable <c>Au.Path</c>. For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then <c>folders.ThisApp</c> is <c>"C:\Program Files (x86)\Microsoft Visual Studio\..."</c>). Workaround: set environment variable <c>Au.Path</c> = the main Au directory and restart Windows.
 	/// </remarks>
 	public static nint LoadAuNativeDll(string fileName) {
 		//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc

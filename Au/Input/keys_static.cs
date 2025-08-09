@@ -9,24 +9,24 @@ public partial class keys {
 	/// <remarks>
 	/// Use functions of this class in user interface code (winforms, WPF, etc). In other code (automation scripts, etc) usually it's better to use functions of <see cref="keys"/> class.
 	/// 
-	/// In Windows there are two API to get key state - <msdn>GetKeyState</msdn> and <msdn>GetAsyncKeyState</msdn>.
+	/// In Windows there are two API to get key state - <ms>GetKeyState</ms> and <ms>GetAsyncKeyState</ms>.
 	/// 
 	/// API <b>GetAsyncKeyState</b> is used by class <see cref="keys"/> and not by this class (<b>keys.gui</b>). When physical key state changes (pressed/released), <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
 	/// 
-	/// This class (<b>keys.gui</b>) uses API <msdn>GetKeyState</msdn>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <msdn>AttachThreadInput</msdn> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
+	/// This class (<b>keys.gui</b>) uses API <ms>GetKeyState</ms>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <ms>AttachThreadInput</ms> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
 	/// 
 	/// The key state returned by these API is not always the same as of the physical keyboard. There is no API to get real physical state. Some cases when it is different:
 	/// 1. The key is pressed or released by software, such as the <see cref="send"/> function of this library.
 	/// 2. The key is blocked by a low-level hook. For example, hotkey triggers of this library use hooks.
 	/// 3. The foreground window belongs to a process with higher UAC integrity level.
 	/// 
-	/// Also there is API <msdn>GetKeyboardState</msdn>. It gets states of all keys in single call. Works like <b>GetKeyState</b>.
+	/// Also there is API <ms>GetKeyboardState</ms>. It gets states of all keys in single call. Works like <b>GetKeyState</b>.
 	/// </remarks>
 	public static class gui {
 		//rejected: instead of class keys.gui add property keys.isUIThread. If true, let its functions work like now keys.gui.
 
 		/// <summary>
-		/// Calls API <msdn>GetKeyState</msdn> and returns its return value.
+		/// Calls API <ms>GetKeyState</ms> and returns its return value.
 		/// </summary>
 		/// <remarks>
 		/// If returns &lt; 0, the key is pressed. If the low-order bit is 1, the key is toggled; it works only with <c>CapsLock</c>, <c>NumLock</c>, <c>ScrollLock</c> and several other keys, as well as mouse buttons.
@@ -131,7 +131,7 @@ public partial class keys {
 	/// In UI code use <see cref="keys.gui"/> instead.
 	/// </summary>
 	/// <remarks>
-	/// Uses API <msdn>GetAsyncKeyState</msdn>.
+	/// Uses API <ms>GetAsyncKeyState</ms>.
 	/// </remarks>
 	public static bool isPressed(KKey key) {
 		if ((key == KKey.MouseLeft || key == KKey.MouseRight) && 0 != Api.GetSystemMetrics(Api.SM_SWAPBUTTON)) key = (KKey)((int)key ^ 3); //makes this func 3 times slower, eg 2 -> 6 mcs when cold CPU. But much faster when called next time without a delay; for example mouse.isPressed(Left|Right) is not slower than mouse.isPressed(Left), although calls this func 2 times.
@@ -381,14 +381,14 @@ public partial class keys {
 	/// Registers a temporary hotkey and waits for it.
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <b>(KMod, KKey)</b>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
+	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <c>(KMod, KKey)</c>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
 	/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 	/// <exception cref="AuException">Failed to register hotkey.</exception>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <remarks>
-	/// Uses <see cref="RegisteredHotkey"/> (API <msdn>RegisterHotKey</msdn>).
+	/// Uses <see cref="RegisteredHotkey"/> (API <ms>RegisterHotKey</ms>).
 	/// Fails if the hotkey is currently registered by this or another application or used by Windows.
 	/// <note>Most single-key and <c>Shift+key</c> hotkeys don't work when the active window has higher UAC integrity level than this process. Media keys may work.</note>
 	/// </remarks>
@@ -590,7 +590,7 @@ public partial class keys {
 	/// 
 	/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddChar"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, ushort, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="SendNow"/>.
 	/// 
-	/// Uses API <msdn>SendInput</msdn>.
+	/// Uses API <ms>SendInput</ms>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[

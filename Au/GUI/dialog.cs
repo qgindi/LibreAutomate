@@ -14,9 +14,9 @@ namespace Au {
 	/// You can use static functions (less code) or create class instances (more options).
 	/// More info: <see cref="show"/>.
 	/// 
-	/// Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
+	/// Uses task dialog API <ms>TaskDialogIndirect</ms>.
 	/// 
-	/// Cannot be used in services. Instead use <b>MessageBox.Show</b> with option <b>ServiceNotification</b> or <b>DefaultDesktopOnly</b>, or API <msdn>MessageBox</msdn> with corresponding flags.
+	/// Cannot be used in services. Instead use <b>MessageBox.Show</b> with option <b>ServiceNotification</b> or <b>DefaultDesktopOnly</b>, or API <ms>MessageBox</ms> with corresponding flags.
 	/// </remarks>
 	/// <example>
 	/// Simple examples.
@@ -493,7 +493,7 @@ namespace Au {
 		/// <param name="asCommandLinks">Custom buttons style. If <c>false</c> - row of classic buttons. If <c>true</c> - column of command-link buttons that can have multiline text.</param>
 		/// <param name="customButtons">
 		/// Additional custom buttons. All will be custom, even if named <c>"OK"</c> etc.
-		/// List of labels without ids. Can be string like <c>"One|Two|..."</c> or <b>string[]</b> or <b>List&lt;string&gt;</b>.
+		/// List of labels without ids. Can be string like <c>"One|Two|..."</c> or <c>string[]</c> or <c>List&lt;string&gt;</c>.
 		/// Button ids will be 1, 2, ... .
 		/// <see cref="DefaultButton"/> will be 1. You can change it later.
 		/// </param>
@@ -1039,7 +1039,7 @@ namespace Au {
 		public event Action<DEventArgs> HelpF1;
 		
 		/// <summary>
-		/// Events other than <see cref="Created"/>, <see cref="Destroyed"/>, <see cref="Timer"/>, <see cref="ButtonClicked"/>, <see cref="HyperlinkClicked"/>, <see cref="HelpF1"/>. See API <msdn>TaskDialogCallbackProc</msdn>.
+		/// Events other than <see cref="Created"/>, <see cref="Destroyed"/>, <see cref="Timer"/>, <see cref="ButtonClicked"/>, <see cref="HyperlinkClicked"/>, <see cref="HelpF1"/>. See API <ms>TaskDialogCallbackProc</ms>.
 		/// </summary>
 		public event Action<DEventArgs> OtherEvents;
 		
@@ -1797,7 +1797,7 @@ namespace Au.Types {
 		//ShieldSuccessGreenBar = ushort.MaxValue - 7,
 		
 		/// <summary>
-		/// Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file or main assembly.
+		/// Use <ms>IDI_APPLICATION</ms> icon from unmanaged resources of this program file or main assembly.
 		/// If there are no icons - default program icon.
 		/// C# compilers add app icon with this id. The <b>DIcon.App</b> value is = <b>IDI_APPLICATION</b> (32512).
 		/// If this program file contains multiple native icons in range <b>DIcon.App</b> to 0xf000, you can specify them like <c>DIcon.App+1</c>.
@@ -1934,7 +1934,7 @@ namespace Au.Types {
 	/// </summary>
 	/// <remarks>
 	/// To return a non-zero value from the callback function, assign the value to the <b>returnValue</b> field.
-	/// More info: <msdn>TaskDialogCallbackProc</msdn>.
+	/// More info: <ms>TaskDialogCallbackProc</ms>.
 	/// </remarks>
 	public class DEventArgs : EventArgs {
 		internal DEventArgs(dialog obj_, wnd hwnd_, DNative.TDN message_, nint wParam_, nint lParam_) {
@@ -1945,7 +1945,7 @@ namespace Au.Types {
 #pragma warning disable 1591 //missing XML documentation
 		public dialog d;
 		public wnd hwnd;
-		/// <summary>Reference: <msdn>task dialog notifications</msdn>.</summary>
+		/// <summary>Reference: <ms>task dialog notifications</ms>.</summary>
 		public DNative.TDN message;
 		public nint wParam;
 		public int returnValue;
@@ -2000,7 +2000,7 @@ namespace Au.Types {
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// Example (in an event handler): <c>e.d.Send.Message(DNative.TDM.CLICK_VERIFICATION, 1);</c>
 		/// Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, update progress.
-		/// Reference: <msdn>task dialog messages</msdn>.
+		/// Reference: <ms>task dialog messages</ms>.
 		/// <b>NAVIGATE_PAGE</b> currently not supported.
 		/// </remarks>
 		public int Message(DNative.TDM message, nint wParam = 0, nint lParam = 0) {

@@ -4,9 +4,9 @@ uid: wait_timeout
 
 # Wait timeout
 
-Most "wait for" functions have a *timeout* parameter. It is the maximal time to wait, in seconds. If 0, waits indefinitely. If > 0, after that time interval throws **TimeoutException**. If < 0, after that time interval returns the default value of the return type (`false`, `null`, `0`, `default`).
+Most "wait for" functions have a *timeout* parameter. It is the maximal time to wait, in seconds. If 0, waits indefinitely. If > 0, after that time interval throws `TimeoutException`. If < 0, after that time interval returns the default value of the return type (`false`, `null`, `0`, `default`).
 
-Some "find" functions have a *wait* parameter. It is like *timeout*, but 0 means "don't wait". To wait indefinitely, use some large value, for example `8e88`. Also, "find" functions throw **NotFoundException**, not **TimeoutException**.
+Some "find" functions have a *wait* parameter. It is like *timeout*, but 0 means "don't wait". To wait indefinitely, use some large value, for example `8e88`. Also, "find" functions throw `NotFoundException`, not `TimeoutException`.
 
 The type of these parameters is [Seconds](). It allows to specify wait options.
 

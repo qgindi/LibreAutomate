@@ -108,7 +108,7 @@ namespace Au.More {
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 		
 		/// <summary>
-		/// Returns segment values as <b>string[]</b>.
+		/// Returns segment values as <c>string[]</c>.
 		/// </summary>
 		/// <param name="maxCount">The maximal number of substrings to get. If negative (default), gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="String.Split"/>.</param>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]

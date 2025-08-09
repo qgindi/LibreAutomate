@@ -142,8 +142,8 @@ public static partial class print {
 	/// Array or generic collection of any type.
 	/// If <c>null</c>, writes <c>"null"</c>.
 	/// The format depends on type:
-	/// <br/>• <b>char[]</b> - like string.
-	/// <br/>• <b>byte[]</b> - like <c>xx-xx-xx</c>; in hexadecimal, unless <see cref="noHex"/> <c>true</c>.
+	/// <br/>• <c>char[]</c> - like string.
+	/// <br/>• <c>byte[]</c> - like <c>xx-xx-xx</c>; in hexadecimal, unless <see cref="noHex"/> <c>true</c>.
 	/// <br/>• Other - multiple lines.
 	/// </param>
 	public static void it<T>(IEnumerable<T> value) {
@@ -315,12 +315,12 @@ public static partial class print {
 	//note: don't call this before AllocConsole. Then can't restore, and IsOutputRedirected always returns true.
 	
 	/// <summary>
-	/// Let <b>Debug.Write</b>, <b>Trace.Write</b> and similar methods also write to the same destination as <see cref="it"/>.
+	/// Let <see cref="Debug.Write"/>, <see cref="Trace.Write"/> and similar methods also write to the same destination as <see cref="it"/>.
 	/// </summary>
 	/// <remarks>
 	/// Does not replace existing <b>Debug.Write</b> etc destinations, just add new destination.
 	/// 
-	/// If <b>Debug/Trace.Write</b> text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <b>Debug/Trace.WriteLine</b>.
+	/// If <b>Debug.Write</b> etc argument text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <b>Debug.WriteLine</b> etc.
 	/// 
 	/// Tip: To write to the output window even in console process, set <c>print.ignoreConsole=true;</c> before calling this method first time.
 	/// </remarks>
@@ -348,7 +348,7 @@ public static partial class print {
 	/// <remarks>
 	/// The first <see cref="it"/> etc call (in this process) creates or opens the file and deletes old content if the file already exists.
 	/// 
-	/// Also supports mailslots. For <b>LogFile</b> use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple processes can use the same mailslot.
+	/// Also supports mailslots. For <b>LogFile</b> use mailslot name, as documented in <ms>CreateMailslot</ms>. Multiple processes can use the same mailslot.
 	/// </remarks>
 	/// <exception cref="ArgumentException">The <c>set</c> function throws this exception if the value is not full path and not <c>null</c>.</exception>
 	public static string logFile {

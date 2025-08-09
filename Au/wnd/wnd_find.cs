@@ -159,8 +159,8 @@ namespace Au {
 		/// <param name="messageOnly">Search only message-only windows.</param>
 		/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
 		/// <remarks>
-		/// Calls API <msdn>FindWindowEx</msdn>.
-		/// Faster than <see cref="find"/>, which uses API <msdn>EnumWindows</msdn>.
+		/// Calls API <ms>FindWindowEx</ms>.
+		/// Faster than <see cref="find"/>, which uses API <ms>EnumWindows</ms>.
 		/// Finds hidden windows too.
 		/// Supports <see cref="lastError"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
@@ -371,7 +371,7 @@ namespace Au {
 			/// Place hidden windows at the end of the array.
 			/// Not used when <i>onlyVisible</i> is <c>true</c>.</param>
 			/// <remarks>
-			/// Calls API <msdn>EnumWindows</msdn>.
+			/// Calls API <ms>EnumWindows</ms>.
 			/// Although undocumented, the API retrieves most windows as in the Z order, however places IME windows (hidden) at the end. See also: <see cref="allWindowsZorder"/>;
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="mainWindows"/>.</note>
 			/// Skips message-only windows; use <see cref="findFast"/> if need.
@@ -389,7 +389,7 @@ namespace Au {
 			/// </summary>
 			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
 			/// <remarks>
-			/// Uses API <msdn>GetWindow</msdn> and ensures it is reliable.
+			/// Uses API <ms>GetWindow</ms> and ensures it is reliable.
 			/// </remarks>
 			public static wnd[] allWindowsZorder() {
 				//Algorithm to make getting all windows with GetWindow reliable:
@@ -448,7 +448,7 @@ namespace Au {
 			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
 			/// <exception cref="ArgumentException"><i>threadId</i> is 0.</exception>
 			/// <remarks>
-			/// Calls API <msdn>EnumThreadWindows</msdn>.
+			/// Calls API <ms>EnumThreadWindows</ms>.
 			/// </remarks>
 			/// <seealso cref="process.thisThreadHasMessageLoop"/>
 			public static wnd[] threadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false) {

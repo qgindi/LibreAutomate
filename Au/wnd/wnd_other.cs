@@ -9,7 +9,7 @@ namespace Au {
 		/// <param name="noException">Don't throw exception when fails.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
-		/// Uses API <msdn>SetLayeredWindowAttributes</msdn>.
+		/// Uses API <ms>SetLayeredWindowAttributes</ms>.
 		/// On Windows 7 works only with top-level windows, not with controls.
 		/// Fails with WPF windows (class name starts with <c>"HwndWrapper"</c>).
 		/// </remarks>
@@ -35,9 +35,9 @@ namespace Au {
 		/// </summary>
 		/// <param name="opacity">If this function returns <c>true</c> and the window has an opacity attribute, receives the opacity value 0-255, else <c>null</c>.</param>
 		/// <param name="colorKey">If this function returns <c>true</c> and the window has a transparency color attribute, receives the color, else <c>null</c>.</param>
-		/// <returns>True if the window has transparency attributes set with <see cref="SetTransparency"/> or API <msdn>SetLayeredWindowAttributes</msdn>. Supports <see cref="lastError"/>.</returns>
+		/// <returns>True if the window has transparency attributes set with <see cref="SetTransparency"/> or API <ms>SetLayeredWindowAttributes</ms>. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Uses API <msdn>GetLayeredWindowAttributes</msdn>.
+		/// Uses API <ms>GetLayeredWindowAttributes</ms>.
 		/// </remarks>
 		public bool GetTransparency(out int? opacity, out ColorInt? colorKey) {
 			opacity = default; colorKey = default;
@@ -168,7 +168,7 @@ namespace Au {
 		/// If this control is (or is based on) a standard control provided by Windows, such as button or treeview, returns the control type. Else returns <b>None</b>.
 		/// </summary>
 		/// <remarks>
-		/// Sends message <b>WM_GETOBJECT</b> <msdn>QUERYCLASSNAMEIDX</msdn>. Slower than <see cref="ClassName"/> or <see cref="ClassNameIs(string)"/>, but can detect the base type of controls based on standard Windows controls but with a different class name.
+		/// Sends message <b>WM_GETOBJECT</b> <ms>QUERYCLASSNAMEIDX</ms>. Slower than <see cref="ClassName"/> or <see cref="ClassNameIs(string)"/>, but can detect the base type of controls based on standard Windows controls but with a different class name.
 		/// </remarks>
 		public WControlType CommonControlType => (WControlType)Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX);
 	}

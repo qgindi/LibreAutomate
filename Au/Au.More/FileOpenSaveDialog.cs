@@ -22,7 +22,7 @@ namespace Au.More {
 		readonly string _clientGuid;
 		readonly bool _clearClientData;
 
-		/// <param name="clientGuid">A GUID used to save the recently used folder path and other data of this dialog. Optional. See <msdn>IFileDialog.SetClientGuid</msdn>.</param>
+		/// <param name="clientGuid">A GUID used to save the recently used folder path and other data of this dialog. Optional. See <ms>IFileDialog.SetClientGuid</ms>.</param>
 		/// <param name="clearClientData">Clear the recently used folder path and other data of this dialog.</param>
 		public FileOpenSaveDialog(string clientGuid = null, bool clearClientData = false) {
 			_clientGuid = clientGuid;
@@ -392,7 +392,7 @@ namespace Au.Types {
 	[Flags]
 	public enum FOSFlags : uint //the values are like in FOS, some xored
 	{
-		/// <summary>Add the selected file to recent documents. See API <msdn>SHAddToRecentDocs</msdn>.</summary>
+		/// <summary>Add the selected file to recent documents. See API <ms>SHAddToRecentDocs</ms>.</summary>
 		AddToRecent = 0x2000000,
 
 		/// <summary>Do not check for situations that would prevent an application from opening the selected file, such as sharing violations or access denied errors.</summary>

@@ -419,7 +419,7 @@ namespace Au.More {
 
 namespace Au.Types {
 	/// <summary>
-	/// Flags for <see cref="sound.speak"/>. See <msdn>SPEAKFLAGS</msdn>.
+	/// Flags for <see cref="sound.speak"/>. See <ms>SPEAKFLAGS</ms>.
 	/// </summary>
 	[Flags]
 	public enum SVFlags {

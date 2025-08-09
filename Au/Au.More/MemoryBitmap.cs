@@ -106,7 +106,7 @@ public class MemoryBitmap : IDisposable {
 
 	/// <summary>
 	/// Deletes memory DC, clears this variable and returns its bitmap (native bitmap handle).
-	/// The returned bitmap is not selected into a DC. Will need to delete it with API <msdn>DeleteObject</msdn>.
+	/// The returned bitmap is not selected into a DC. Will need to delete it with API <ms>DeleteObject</ms>.
 	/// </summary>
 	public IntPtr Detach() {
 		IntPtr bret = _bm;

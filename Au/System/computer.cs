@@ -12,7 +12,7 @@ namespace Au {
 		/// To get time with sleep, use <see cref="Environment.TickCount64"/>.
 		/// </summary>
 		/// <remarks>
-		/// Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
+		/// Uses API <ms>QueryUnbiasedInterruptTime</ms>.
 		/// Uses the low-resolution system timer. Its period usually is 15.25 ms.
 		/// Independent of computer clock time changes.
 		/// </remarks>
@@ -37,7 +37,7 @@ namespace Au {
 		/// <param name="message">Display this text in the shutdown dialog box and write to the event log.</param>
 		/// <param name="computer">The network name of the computer to be shut down. If <c>null</c> (default), shuts down this computer. If used, this process must be admin.</param>
 		/// <remarks>
-		/// Calls API <msdn>InitiateSystemShutdown</msdn>.
+		/// Calls API <ms>InitiateSystemShutdown</ms>.
 		/// </remarks>
 		public static bool shutdown(bool restart = false, bool force = false, int timeoutS = 0, string message = null, string computer = null) {
 			SecurityUtil.SetPrivilege("SeShutdownPrivilege", true);
@@ -52,7 +52,7 @@ namespace Au {
 		/// <param name="flags"><b>ExitWindowsEx</b> parameter <i>uFlags</i>.</param>
 		/// <param name="reason"><b>ExitWindowsEx</b> parameter <i>dwReason</i>.</param>
 		/// <remarks>
-		/// Calls API <msdn>ExitWindowsEx</msdn>.
+		/// Calls API <ms>ExitWindowsEx</ms>.
 		/// </remarks>
 		public static bool shutdown(int flags, uint reason = 0) {
 			SecurityUtil.SetPrivilege("SeShutdownPrivilege", true);
@@ -75,9 +75,9 @@ namespace Au {
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="how"></param>
 		/// <remarks>
-		/// To sleep or hibernate uses API <msdn>SetSuspendState</msdn>. To turn off display uses <msdn>WM_SYSCOMMAND</msdn>.
+		/// To sleep or hibernate uses API <ms>SetSuspendState</ms>. To turn off display uses <ms>WM_SYSCOMMAND</ms>.
 		/// 
-		/// The <b>SetSuspendState</b> behavior is undefined if the system does not support S1-S3 sleep or S4 hibernate power states. It may fail or use hibernation instead of sleep. About power states: <msdn>System Power States</msdn>. Available sleep states: <c>run.console("powercfg.exe", "/A");</c>
+		/// The <b>SetSuspendState</b> behavior is undefined if the system does not support S1-S3 sleep or S4 hibernate power states. It may fail or use hibernation instead of sleep. About power states: <ms>System Power States</ms>. Available sleep states: <c>run.console("powercfg.exe", "/A");</c>
 		/// </remarks>
 		public static bool suspend(CSuspend how) {
 			if (how == CSuspend.SleepOrDisplay) how = 0 != Api.IsPwrSuspendAllowed() ? CSuspend.Sleep : CSuspend.Display;
@@ -97,7 +97,7 @@ namespace Au {
 		/// </summary>
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Uses API <msdn>LockWorkStation</msdn>.
+		/// Uses API <ms>LockWorkStation</ms>.
 		/// </remarks>
 		public static bool lockOrSwitchUser() {
 			//if (switchUser) return Api.WTSDisconnectSession(default, -1, false); //on Win10 the same as lock
@@ -138,7 +138,7 @@ namespace Au {
 		/// <remarks>
 		/// Many system events are available in <see cref="SystemEvents"/> class. For suspend/resume notifications could be used <see cref="SystemEvents.PowerModeChanged"/>, but it does not work on most computers. Use this event instead.
 		///
-		/// The event handler is executed in other thread. The parameter can be only <b>Resume</b> or <b>Suspend</b>. See API <msdn>PBT_APMSUSPEND</msdn> and <msdn>PBT_APMRESUMESUSPEND</msdn>.
+		/// The event handler is executed in other thread. The parameter can be only <b>Resume</b> or <b>Suspend</b>. See API <ms>PBT_APMSUSPEND</ms> and <ms>PBT_APMRESUMESUSPEND</ms>.
 		/// </remarks>
 		public static event Action<PowerModes> suspendResumeEvent {
 			add {

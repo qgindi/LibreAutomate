@@ -812,7 +812,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Calls <google>sqlite3_column_blob</google> and creates <b>List&lt;T&gt;</b>.
+		/// Calls <google>sqlite3_column_blob</google> and creates <c>List&lt;T&gt;</c>.
 		/// </summary>
 		/// <param name="column">Column name of 0-based index in results.</param>
 		/// <exception cref="SLException">The column does not exist in query results.</exception>

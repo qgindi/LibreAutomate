@@ -3,7 +3,7 @@ namespace Au {
 	/// Shows tray icon.
 	/// </summary>
 	/// <remarks>
-	/// Wraps API <msdn>Shell_NotifyIconW</msdn>, <msdn>NOTIFYICONDATAW</msdn>. More info there.
+	/// Wraps API <ms>Shell_NotifyIconW</ms>, <ms>NOTIFYICONDATAW</ms>. More info there.
 	/// 
 	/// This thread must dispatch messages.
 	/// 
@@ -33,7 +33,7 @@ namespace Au {
 		/// <param name="id">An id that helps Windows to distinguish multiple tray icons added by same program. Use 0, 1, 2, ... or all 0.</param>
 		/// <param name="disposeOnExit">
 		/// Remove tray icon when process exits (<see cref="process.thisProcessExit"/>).
-		/// Note: can't remove if the process terminated or called <see cref="Environment.FailFast"/> or API <msdn>ExitProcess</msdn>.
+		/// Note: can't remove if the process terminated or called <see cref="Environment.FailFast"/> or API <ms>ExitProcess</ms>.
 		/// </param>
 		public trayIcon(int id = 0, bool disposeOnExit = true) {
 			_disposeOnExit = disposeOnExit;
@@ -85,7 +85,7 @@ namespace Au {
 		/// Gets or sets icon.
 		/// </summary>
 		/// <remarks>
-		/// To display nice icon at any DPI, the icon should be loaded with <see cref="icon.trayIcon"/> or API <msdn>LoadIconMetric</msdn>, either from a native resource in your app or from an <c>.ico</c> file, which should contain icons of sizes 16, 32 and also recommended 20, 24.
+		/// To display nice icon at any DPI, the icon should be loaded with <see cref="icon.trayIcon"/> or API <ms>LoadIconMetric</ms>, either from a native resource in your app or from an <c>.ico</c> file, which should contain icons of sizes 16, 32 and also recommended 20, 24.
 		/// </remarks>
 		public icon Icon {
 			get => _icon;
@@ -287,7 +287,7 @@ namespace Au {
 		/// When received any message from the tray icon.
 		/// </summary>
 		/// <remarks>
-		/// Receives mouse messages, <b>NIN_</b> messages and some other. See <msdn>Shell_NotifyIconW</msdn>.
+		/// Receives mouse messages, <b>NIN_</b> messages and some other. See <ms>Shell_NotifyIconW</ms>.
 		/// </remarks>
 		public event Action<TIEventArgs> Message;
 		
@@ -365,7 +365,7 @@ namespace Au {
 
 namespace Au.Types {
 	/// <summary>
-	/// Flags for <see cref="trayIcon.ShowNotification"/>. See <b>NIIF_</b> flags of API <msdn>NOTIFYICONDATAW</msdn>.
+	/// Flags for <see cref="trayIcon.ShowNotification"/>. See <b>NIIF_</b> flags of API <ms>NOTIFYICONDATAW</ms>.
 	/// </summary>
 	[Flags]
 	public enum TINFlags {

@@ -450,7 +450,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets content data as <b>byte[]</b>. Downloads it if need. If content is text, the array contains that text, usually UTF-8.
+		/// Gets content data as <c>byte[]</c>. Downloads it if need. If content is text, the array contains that text, usually UTF-8.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreError">Don't call <see cref="HttpResponseMessage.EnsureSuccessStatusCode"/>.</param>

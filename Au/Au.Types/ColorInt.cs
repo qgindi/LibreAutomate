@@ -143,7 +143,7 @@ public record struct ColorInt {
 	///// <param name="n">The luminance in units of 0.1 percent of the range (which depends on <i>totalRange</i>). Can be from -1000 to 1000.</param>
 	///// <param name="totalRange">If <c>true</c>, <i>n</i> is in whole luminance range (from minimal to maximal possible). If <c>false</c>, <i>n</i> is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
 	///// <remarks>
-	///// Calls API <msdn>ColorAdjustLuma</msdn>.
+	///// Calls API <ms>ColorAdjustLuma</ms>.
 	///// Does not change hue and saturation. Does not use alpha.
 	///// </remarks>
 	//internal ColorInt AdjustLuminance(int n, bool totalRange = false) {

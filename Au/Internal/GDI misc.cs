@@ -102,8 +102,8 @@ sealed class FontDC_ : MemoryDC_ {
 	}
 
 	/// <summary>
-	/// Measures text with API <msdn>GetTextExtentPoint32</msdn>.
-	/// Should be single line without tabs. For drawing with API <msdn>TextOut</msdn> or <msdn>ExtTextOut</msdn>.
+	/// Measures text with API <ms>GetTextExtentPoint32</ms>.
+	/// Should be single line without tabs. For drawing with API <ms>TextOut</ms> or <ms>ExtTextOut</ms>.
 	/// </summary>
 	public SIZE MeasureEP(string s) {
 		Api.GetTextExtentPoint32(_dc, s, s.Length, out var z);
@@ -111,8 +111,8 @@ sealed class FontDC_ : MemoryDC_ {
 	}
 
 	/// <summary>
-	/// Measures text with API <msdn>DrawTextEx</msdn>.
-	/// Can be multiline. For drawing with API <msdn>DrawTextEx</msdn>.
+	/// Measures text with API <ms>DrawTextEx</ms>.
+	/// Can be multiline. For drawing with API <ms>DrawTextEx</ms>.
 	/// </summary>
 	public SIZE MeasureDT(RStr s, TFFlags format, int wrapWidth = 0) {
 		if (s.Length == 0) return default;

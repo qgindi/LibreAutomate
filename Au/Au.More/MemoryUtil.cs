@@ -4,7 +4,7 @@ namespace Au.More {
 	/// Also has more functions to work with memory: copy, move, virtual alloc.
 	/// </summary>
 	/// <remarks>
-	/// Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
+	/// Uses the common heap of this process, API <ms>GetProcessHeap</ms>.
 	/// </remarks>
 	public static unsafe class MemoryUtil {
 		static IntPtr _processHeap = Api.GetProcessHeap();
@@ -16,7 +16,7 @@ namespace Au.More {
 		/// <param name="zeroInit">Set all bytes = 0.</param>
 		/// <exception cref="OutOfMemoryException">Failed. Probably <i>size</i> is too big.</exception>
 		/// <remarks>
-		/// Calls API <msdn>HeapAlloc</msdn>.
+		/// Calls API <ms>HeapAlloc</ms>.
 		/// The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done. Call <see cref="ReAlloc"/> or <see cref="FreeAlloc"/> if need to resize.
 		/// </remarks>
 		public static byte* Alloc(nint size, bool zeroInit = false)
@@ -59,7 +59,7 @@ namespace Au.More {
 		/// <param name="zeroInit">When size is growing, set all added bytes = 0.</param>
 		/// <exception cref="OutOfMemoryException">Failed. Probably <i>count</i> is too big.</exception>
 		/// <remarks>
-		/// Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn>.
+		/// Calls API <ms>HeapReAlloc</ms> or <ms>HeapAlloc</ms>.
 		/// Preserves data in <c>Math.Min(oldCount, newCount)</c> elements of old memory (copies from old memory if need).
 		/// The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done. Call <b>ReAlloc</b> or <see cref="FreeAlloc"/> if need to resize.
 		/// </remarks>
@@ -71,7 +71,7 @@ namespace Au.More {
 		/// Does nothing if <i>mem</i> is <c>null</c>.
 		/// </summary>
 		/// <remarks>
-		/// Calls API <msdn>HeapFree</msdn>.
+		/// Calls API <ms>HeapFree</ms>.
 		/// </remarks>
 		public static void Free(void* mem) {
 			if (mem != null) Api.HeapFree(_processHeap, 0, mem);
@@ -94,7 +94,7 @@ namespace Au.More {
 		}
 		
 		/// <summary>
-		/// Allocates new virtual memory block with API <msdn>VirtualAlloc</msdn> and returns its address: <c>VirtualAlloc(default, size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE)</c>.
+		/// Allocates new virtual memory block with API <ms>VirtualAlloc</ms> and returns its address: <c>VirtualAlloc(default, size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE)</c>.
 		/// </summary>
 		/// <param name="size">Byte count.</param>
 		/// <exception cref="OutOfMemoryException">Failed. Probably <i>size</i> is too big.</exception>
@@ -138,7 +138,7 @@ namespace Au.More {
 		//speed Span.CopyTo vs Buffer.MemoryCopy: same if non-overlapped, slower if overlapped.
 		
 		/// <summary>
-		/// Copies memory with API <msdn>memmove</msdn>.
+		/// Copies memory with API <ms>memmove</ms>.
 		/// </summary>
 		/// <remarks>
 		/// If some part of memory blocks overlaps, this function is much faster than <see cref="Copy"/>. Else same speed or slightly slower.

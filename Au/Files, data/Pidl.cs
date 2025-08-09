@@ -91,7 +91,7 @@ public unsafe class Pidl : IDisposable {
 	/// <param name="throwIfFailed">Throw exception if failed.</param>
 	/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is <c>true</c>. Probably invalid <i>s</i>.</exception>
 	/// <remarks>
-	/// Calls <msdn>SHParseDisplayName</msdn>, except when string is <c>":: ITEMIDLIST"</c>.
+	/// Calls <ms>SHParseDisplayName</ms>, except when string is <c>":: ITEMIDLIST"</c>.
 	/// If <c>":: ITEMIDLIST"</c>, does not check whether the shell object exists.
 	/// </remarks>
 	public static Pidl FromString(string s, bool throwIfFailed = false) {
@@ -140,7 +140,7 @@ public unsafe class Pidl : IDisposable {
 	/// </summary>
 	/// <returns>Returns <c>null</c> if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached). If failed, returns <c>null</c> or throws exception.</returns>
 	/// <param name="stringType">
-	/// String format. API <msdn>SIGDN</msdn>.
+	/// String format. API <ms>SIGDN</ms>.
 	/// Often used:
 	/// <br/>• <b>SIGDN.NORMALDISPLAY</b> - returns object name without path. It is best to display in UI but cannot be parsed to create <b>ITEMIDLIST</b> again.
 	/// <br/>• <b>SIGDN.FILESYSPATH</b> - returns path if the <b>ITEMIDLIST</b> identifies a file system object (file or directory). Else returns <c>null</c>.
@@ -150,7 +150,7 @@ public unsafe class Pidl : IDisposable {
 	/// <param name="throwIfFailed">If failed, throw <b>AuException</b>.</param>
 	/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is <c>true</c>.</exception>
 	/// <remarks>
-	/// Calls <msdn>SHGetNameFromIDList</msdn>.
+	/// Calls <ms>SHGetNameFromIDList</ms>.
 	/// </remarks>
 	public string ToShellString(SIGDN stringType, bool throwIfFailed = false) {
 		var R = ToShellString(_pidl, stringType, throwIfFailed);

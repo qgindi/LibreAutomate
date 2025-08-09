@@ -33,7 +33,7 @@ public unsafe class WTaskbarButton {
 
 	/// <summary>
 	/// Sets the state of the progress indicator displayed on the taskbar button of this window.
-	/// Calls <msdn>ITaskbarList3.SetProgressState</msdn>.
+	/// Calls <ms>ITaskbarList3.SetProgressState</ms>.
 	/// </summary>
 	/// <param name="state">Progress indicator state and color.</param>
 	public void SetProgressState(WTBProgressState state) {
@@ -42,7 +42,7 @@ public unsafe class WTaskbarButton {
 
 	/// <summary>
 	/// Sets the value of the progress indicator displayed on the taskbar button of this window.
-	/// Calls <msdn>ITaskbarList3.SetProgressValue</msdn>.
+	/// Calls <ms>ITaskbarList3.SetProgressValue</ms>.
 	/// </summary>
 	/// <param name="progressValue">Progress indicator value, 0 to <i>progressTotal</i>.</param>
 	/// <param name="progressTotal">Max progress indicator value.</param>
@@ -52,7 +52,7 @@ public unsafe class WTaskbarButton {
 
 	/// <summary>
 	/// Adds taskbar button of this window.
-	/// Calls <msdn>ITaskbarList.AddTab</msdn>.
+	/// Calls <ms>ITaskbarList.AddTab</ms>.
 	/// </summary>
 	public void Add() {
 		_TaskbarButton.taskbarInstance.AddTab(_w);
@@ -62,7 +62,7 @@ public unsafe class WTaskbarButton {
 
 	/// <summary>
 	/// Deletes taskbar button of this window.
-	/// Calls <msdn>ITaskbarList.DeleteTab</msdn>.
+	/// Calls <ms>ITaskbarList.DeleteTab</ms>.
 	/// </summary>
 	public void Delete() {
 		_TaskbarButton.taskbarInstance.DeleteTab(_w);

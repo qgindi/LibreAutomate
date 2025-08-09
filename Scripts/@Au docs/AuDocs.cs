@@ -323,7 +323,7 @@ partial class AuDocs {
 			foreach (var x in xp.Elements()) {
 				var tag = x.Name.LocalName;
 				switch (tag) {
-				case "b" or "i" or "br" or "a" or "see" or "c" or "google" or "msdn" or "sqlite":
+				case "b" or "i" or "br" or "a" or "see" or "c" or "google" or "ms" or "sqlite":
 					break;
 				case "code":
 					break;
@@ -365,7 +365,7 @@ partial class AuDocs {
 				case "see":
 					_Cref(x);
 					break;
-				case "google" or "msdn" or "sqlite":
+				case "google" or "ms" or "sqlite":
 					x.Name = "a";
 					var site = tag[0] switch { 'm' => "+site:microsoft.com", 's' => "+site:sqlite.org", _ => "" };
 					x.SetAttributeValue("href", $"https://www.google.com/search?q={System.Net.WebUtility.UrlEncode(x.Value)}{site}");

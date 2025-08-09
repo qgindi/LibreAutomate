@@ -1,7 +1,7 @@
 namespace Au.More;
 
 /// <summary>
-/// Wraps buffered paint API <msdn>BeginBufferedPaint</msdn> etc.
+/// Wraps buffered paint API <ms>BeginBufferedPaint</ms> etc.
 /// Must be disposed locally, like in the example.
 /// </summary>
 /// <example>
@@ -14,12 +14,12 @@ namespace Au.More;
 public struct BufferedPaint : IDisposable {
 	//rejected. Users often will forget it. Better init automatically.
 	///// <summary>
-	///// Calls API <msdn>BufferedPaintInit</msdn>.
+	///// Calls API <ms>BufferedPaintInit</ms>.
 	///// </summary>
 	//public static void Init() { Api.BufferedPaintInit(); } //fast
 	
 	///// <summary>
-	///// Calls API <msdn>BufferedPaintUnInit</msdn>.
+	///// Calls API <ms>BufferedPaintUnInit</ms>.
 	///// </summary>
 	//public static void Uninit() { Api.BufferedPaintUnInit(); }
 	
@@ -37,10 +37,10 @@ public struct BufferedPaint : IDisposable {
 	RECT _r;
 	
 	/// <summary>
-	/// Gets non-buffered DC with API <msdn>BeginPaint</msdn> or <msdn>GetDC</msdn>. Then gets buffered DC with API <msdn>BeginBufferedPaint</msdn> for entire client area or rectangle <i>r</i>.
+	/// Gets non-buffered DC with API <ms>BeginPaint</ms> or <ms>GetDC</ms>. Then gets buffered DC with API <ms>BeginBufferedPaint</ms> for entire client area or rectangle <i>r</i>.
 	/// </summary>
 	/// <param name="w"></param>
-	/// <param name="wmPaint">Use API <b>BeginPaint</b>/<b>EndPaint</b>. If <c>false</c>, uses <b>GetDC</b>/<b>ReleaseDC</b>.</param>
+	/// <param name="wmPaint">Use API <c>BeginPaint</c>/<c>EndPaint</c>. If <c>false</c>, uses <c>GetDC</c>/<c>ReleaseDC</c>.</param>
 	/// <param name="r">Part of client area.</param>
 	public unsafe BufferedPaint(wnd w, bool wmPaint, RECT? r = null) {
 		if (!s_inited) s_inited = 0 == Api.BufferedPaintInit();
@@ -61,7 +61,7 @@ public struct BufferedPaint : IDisposable {
 	}
 	
 	/// <summary>
-	/// Calls API <msdn>EndBufferedPaint</msdn> and <msdn>EndPaint</msdn> or <msdn>ReleaseDC</msdn>.
+	/// Calls API <ms>EndBufferedPaint</ms> and <ms>EndPaint</ms> or <ms>ReleaseDC</ms>.
 	/// </summary>
 	public void Dispose() {
 		if (_dcn == default) return;
@@ -76,7 +76,7 @@ public struct BufferedPaint : IDisposable {
 	public IntPtr NonBufferedDC => _dcn;
 	
 	/// <summary>
-	/// Gets the buffered DC. Returns <see cref="NonBufferedDC"/> if API <msdn>BeginBufferedPaint</msdn> failed.
+	/// Gets the buffered DC. Returns <see cref="NonBufferedDC"/> if API <ms>BeginBufferedPaint</ms> failed.
 	/// </summary>
 	public IntPtr DC => _dcb;
 	

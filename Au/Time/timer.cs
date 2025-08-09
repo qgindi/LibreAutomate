@@ -4,7 +4,7 @@ namespace Au;
 /// Timer that calls callback function in same thread, which must have a message loop.
 /// </summary>
 /// <remarks>
-/// Uses API <msdn>SetTimer</msdn> and <msdn>WM_TIMER</msdn>.
+/// Uses API <ms>SetTimer</ms> and <ms>WM_TIMER</ms>.
 /// Works only in threads that have a message loop which retrieves/dispatches posted messages. For example threads with windows (except console).
 /// Timer action delegates are protected from GC.
 /// </remarks>
@@ -53,7 +53,7 @@ public class timer {
 	/// <param name="milliseconds">Time interval after which to call the callback function. The actual minimal interval is 10-20 ms.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 	/// <exception cref="InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
-	/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+	/// <exception cref="Win32Exception">API <ms>SetTimer</ms> returned 0. Unlikely.</exception>
 	/// <remarks>
 	/// The timer will be stopped before calling the callback function. The callback function can start it again.
 	/// If already started, this function must be called in the same thread as when started.
@@ -66,7 +66,7 @@ public class timer {
 	/// <param name="milliseconds">Time interval (period) of calling the callback function. The actual minimal period is 10-20 ms.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 	/// <exception cref="InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
-	/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+	/// <exception cref="Win32Exception">API <ms>SetTimer</ms> returned 0. Unlikely.</exception>
 	/// <remarks>
 	/// The callback function can stop the timer or restart with different period.
 	/// If already started, this function must be called in the same thread as when started.
@@ -159,7 +159,7 @@ public class timer {
 	/// <param name="timerAction">Callback function.</param>
 	/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
-	/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+	/// <exception cref="Win32Exception">API <ms>SetTimer</ms> returned 0. Unlikely.</exception>
 	/// <remarks>
 	/// The timer will be stopped before calling the callback function. The callback function can start it again.
 	/// The callback function will be called in this thread.
@@ -176,7 +176,7 @@ public class timer {
 	/// <param name="timerAction">Callback function.</param>
 	/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
-	/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+	/// <exception cref="Win32Exception">API <ms>SetTimer</ms> returned 0. Unlikely.</exception>
 	/// <remarks>
 	/// The callback function can stop the timer or restart with different period.
 	/// The callback function will be called in this thread.

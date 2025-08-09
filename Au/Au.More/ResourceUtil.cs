@@ -56,7 +56,7 @@ namespace Au.More {
 		/// <exception cref="InvalidOperationException">Unsupported resource type.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		/// <remarks>
-		/// Supports resources of type <b>string</b>, <b>byte[]</b> (UTF-8), stream (UTF-8).
+		/// Supports resources of type <b>string</b>, <c>byte[]</c> (UTF-8), stream (UTF-8).
 		/// </remarks>
 		public static string GetString(string name) {
 			var o = _GetObject(ref name);
@@ -71,14 +71,14 @@ namespace Au.More {
 		internal static string TryGetString_(string name) => _TryGetObject(ref name) as string;
 		
 		/// <summary>
-		/// Gets <b>byte[]</b>.
+		/// Gets <c>byte[]</c>.
 		/// </summary>
 		/// <param name="name">Resource name, like <c>"file.txt"</c> or <c>"sub/file.txt"</c>. More info: <see cref="ResourceUtil"/>.</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">Unsupported resource type.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		/// <remarks>
-		/// Supports resources of type <b>byte[]</b>, <b>string</b> (gets UTF-8 bytes), stream.
+		/// Supports resources of type <c>byte[]</c>, <b>string</b> (gets UTF-8 bytes), stream.
 		/// </remarks>
 		public static byte[] GetBytes(string name) {
 			var o = _GetObject(ref name);

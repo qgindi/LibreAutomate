@@ -533,14 +533,14 @@ print.it(b.ToString());
 		/// <param name="k">Virtual-key code.</param>
 		/// <param name="down"><c>true</c> down, <c>false</c> up, <c>null</c> down and up.</param>
 		/// <param name="hkl">
-		/// Keyboard layout handle for scan code. See API <msdn>GetKeyboardLayout</msdn>.
+		/// Keyboard layout handle for scan code. See API <ms>GetKeyboardLayout</ms>.
 		/// If 0 (default), uses keyboard layout of this thread; don't use 0 for keys whose scancode depends on keyboard layout.
 		/// If -1, uses keyboard layout of the focused or active window.
 		/// </param>
 		/// <param name="extra">An "extra info" value that can be used for example by keyboard hooks to recognize the key sender. If <c>null</c> (default), uses the same value as other functions of this library.</param>
 		/// <param name="dontThrow">Don't throw exception.</param>
 		/// <remarks>
-		/// This is a low-level function. Does nothing more (sleep, block input, etc). Does not use <b>opt</b> options. Just gets missing info (scan code etc) and calls API <msdn>SendInput</msdn>.
+		/// This is a low-level function. Does nothing more (sleep, block input, etc). Does not use <b>opt</b> options. Just gets missing info (scan code etc) and calls API <ms>SendInput</ms>.
 		/// </remarks>
 		/// <exception cref="InputDesktopException"></exception>
 		public static void sendKey(KKey k, bool? down = null, nint hkl = 0, int? extra = null, bool dontThrow = false)

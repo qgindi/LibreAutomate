@@ -1,7 +1,7 @@
 namespace Au.Types
 {
 	/// <summary>
-	/// Sets, gets, removes and lists window properties using API <msdn>SetProp</msdn> and co.
+	/// Sets, gets, removes and lists window properties using API <ms>SetProp</ms> and co.
 	/// </summary>
 	public struct WProp
 	{
@@ -11,7 +11,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets a window property.
-		/// Calls API <msdn>GetProp</msdn> and returns its return value.
+		/// Calls API <ms>GetProp</ms> and returns its return value.
 		/// </summary>
 		/// <param name="name">Property name.</param>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
@@ -19,17 +19,17 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets a window property.
-		/// Calls API <msdn>GetProp</msdn> and returns its return value.
+		/// Calls API <ms>GetProp</ms> and returns its return value.
 		/// </summary>
 		/// <param name="atom">Property name atom in the global atom table.</param>
 		/// <remarks>
-		/// This overload uses atom instead of string. It's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
+		/// This overload uses atom instead of string. It's about 3 times faster. See API <ms>GlobalAddAtom</ms>, <ms>GlobalDeleteAtom</ms>.
 		/// </remarks>
 		public nint this[ushort atom] => Api.GetProp(_w, atom);
 
 		/// <summary>
 		/// Sets a window property.
-		/// Calls API <msdn>SetProp</msdn> and returns its return value.
+		/// Calls API <ms>SetProp</ms> and returns its return value.
 		/// </summary>
 		/// <param name="name">Property name.</param>
 		/// <param name="value">Property value.</param>
@@ -44,12 +44,12 @@ namespace Au.Types
 
 		/// <summary>
 		/// Sets a window property.
-		/// Calls API <msdn>SetProp</msdn> and returns its return value.
+		/// Calls API <ms>SetProp</ms> and returns its return value.
 		/// </summary>
 		/// <param name="atom">Property name atom in the global atom table.</param>
 		/// <param name="value">Property value.</param>
 		/// <remarks>
-		/// This overload uses atom instead of string. It's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
+		/// This overload uses atom instead of string. It's about 3 times faster. See API <ms>GlobalAddAtom</ms>, <ms>GlobalDeleteAtom</ms>.
 		/// </remarks>
 		public bool Set(ushort atom, nint value) {
 			return Api.SetProp(_w, atom, value);
@@ -57,7 +57,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Removes a window property.
-		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
+		/// Calls API <ms>RemoveProp</ms> and returns its return value.
 		/// </summary>
 		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
 		/// <remarks>Supports <see cref="lastError"/>.</remarks>
@@ -67,7 +67,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Removes a window property.
-		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
+		/// Calls API <ms>RemoveProp</ms> and returns its return value.
 		/// </summary>
 		/// <param name="atom">Property name atom in the global atom table.</param>
 		public nint Remove(ushort atom) {
@@ -76,7 +76,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets list of window properties.
-		/// Uses API <msdn>EnumPropsEx</msdn>.
+		/// Uses API <ms>EnumPropsEx</ms>.
 		/// </summary>
 		/// <returns>0-length list if failed. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="lastError"/>.</returns>
 		public Dictionary<string, nint> GetList() {

@@ -9,7 +9,7 @@ static unsafe class Not_ {
 	
 	/// <summary>
 	/// Same as <b>ArgumentNullException.ThrowIfNull</b>.
-	/// It's pity, they removed operator <b>!!</b> from C# 11.
+	/// It's pity, they removed operator <c>!!</c> from C# 11.
 	/// </summary>
 	internal static void Null(object o,
 		[CallerArgumentExpression("o")] string paramName = null) {

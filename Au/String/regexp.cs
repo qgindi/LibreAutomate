@@ -540,7 +540,7 @@ public unsafe class regexp {
 	/// <summary>
 	/// Finds all match instances of the regular expression.
 	/// </summary>
-	/// <returns>A lazy <b>IEnumerable&lt;RXMatch&gt;</b> that can be used with <c>foreach</c>.</returns>
+	/// <returns>A lazy <c>IEnumerable&lt;RXMatch&gt;</c> that can be used with <c>foreach</c>.</returns>
 	/// <param name="s">Subject string. Cannot be <c>null</c>.</param>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
@@ -565,7 +565,7 @@ public unsafe class regexp {
 		while (e.Next()) yield return e.Match;
 	}
 	
-	/// <returns>A lazy <b>IEnumerable&lt;string&gt;</b> that can be used with <c>foreach</c>.</returns>
+	/// <returns>A lazy <c>IEnumerable&lt;string&gt;</c> that can be used with <c>foreach</c>.</returns>
 	/// <param name="group">
 	/// Group number (1-based index) of results. If 0 - whole match.
 	/// See also <see cref="GetGroupNumberOf"/>.
@@ -590,7 +590,7 @@ public unsafe class regexp {
 		while (e.Next()) yield return e.GroupS;
 	}
 	
-	/// <returns>A lazy <b>IEnumerable&lt;RXGroup&gt;</b> that can be used with <c>foreach</c>.</returns>
+	/// <returns>A lazy <c>IEnumerable&lt;RXGroup&gt;</c> that can be used with <c>foreach</c>.</returns>
 	/// <example>
 	/// <code><![CDATA[
 	/// var s = "one two three";

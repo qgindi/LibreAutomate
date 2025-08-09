@@ -41,7 +41,7 @@ namespace Au.More {
 		/// - unaware - 96.
 		/// 
 		/// The result also depends on the Windows version:
-		/// - Works best on Windows 10 1607 and later. Uses API <msdn>GetDpiForWindow</msdn>.
+		/// - Works best on Windows 10 1607 and later. Uses API <ms>GetDpiForWindow</ms>.
 		/// - On Windows 8.1 works if <i>supportWin81</i> <c>true</c>. If <c>false</c> (default), returns <see cref="System"/>.
 		/// - On Windows 7 and 8.0 always returns <see cref="System"/>, because there are no Windows API. Most apps are system-DPI-aware and the result is correct; for unaware apps the result is incorrect. These Windows versions don't support per-monitor DPI.
 		/// </remarks>
@@ -80,7 +80,7 @@ namespace Au.More {
 		/// <param name="hMonitor">Native screen handle (<b>HMONITOR</b>).</param>
 		/// <param name="supportWin81">Support Windows 8.1 and later. If <c>false</c> (default), supports Windows 10 1607 and later.</param>
 		/// <remarks>
-		/// Uses API <msdn>GetDpiForMonitor</msdn>.
+		/// Uses API <ms>GetDpiForMonitor</ms>.
 		/// </remarks>
 		/// <seealso cref="screen.Dpi"/>
 		public static int OfScreen(IntPtr hMonitor, bool supportWin81 = false) {
@@ -157,7 +157,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Calls API <msdn>GetSystemMetricsForDpi</msdn> if available, else <msdn>GetSystemMetrics</msdn>.
+		/// Calls API <ms>GetSystemMetricsForDpi</ms> if available, else <ms>GetSystemMetrics</ms>.
 		/// </summary>
 		public static int GetSystemMetrics(int nIndex, DpiOf dpiOf)
 			=> osVersion.minWin10_1607
@@ -165,7 +165,7 @@ namespace Au.More {
 			: Api.GetSystemMetrics(nIndex);
 
 		/// <summary>
-		/// Calls API <msdn>SystemParametersInfoForDpi</msdn> if available, else <msdn>SystemParametersInfo</msdn>.
+		/// Calls API <ms>SystemParametersInfoForDpi</ms> if available, else <ms>SystemParametersInfo</ms>.
 		/// Use only with <i>uiAction</i> = <b>SPI_GETICONTITLELOGFONT</b>, <b>SPI_GETICONMETRICS</b>, <b>SPI_GETNONCLIENTMETRICS</b>.
 		/// </summary>
 		public static unsafe bool SystemParametersInfo(uint uiAction, int uiParam, void* pvParam, DpiOf dpiOf)
@@ -174,7 +174,7 @@ namespace Au.More {
 			: Api.SystemParametersInfo(uiAction, uiParam, pvParam);
 
 		/// <summary>
-		/// Calls API <msdn>AdjustWindowRectExForDpi</msdn> if available, else <msdn>AdjustWindowRectEx</msdn>.
+		/// Calls API <ms>AdjustWindowRectExForDpi</ms> if available, else <ms>AdjustWindowRectEx</ms>.
 		/// </summary>
 		/// <remarks>
 		/// Also adds scrollbar width or/and height if need.
@@ -214,8 +214,8 @@ namespace Au.More {
 		/// <returns><b>Awareness.Invalid</b> if failed.</returns>
 		/// <param name="w">A top-level window or control. Can belong to any process.</param>
 		/// <remarks>
-		/// Works best on Windows 10 1607 and later; uses API <msdn>GetWindowDpiAwarenessContext</msdn>.
-		/// On Windows 8.1 returns <b>Awareness.PerMonitor</b> if <i>w</i> is of this process; else uses API <msdn>GetProcessDpiAwareness</msdn>, which is slower and less reliable.
+		/// Works best on Windows 10 1607 and later; uses API <ms>GetWindowDpiAwarenessContext</ms>.
+		/// On Windows 8.1 returns <b>Awareness.PerMonitor</b> if <i>w</i> is of this process; else uses API <ms>GetProcessDpiAwareness</ms>, which is slower and less reliable.
 		/// On Windows 7 and 8.0 always returns <b>System</b>, because there are no Windows API.
 		/// </remarks>
 		public static Awareness WindowDpiAwareness(wnd w) {
@@ -358,7 +358,7 @@ namespace Au.More {
 		//}
 
 		/// <summary>
-		/// Can be used to temporarily change thread's DPI awareness context with API <msdn>SetThreadDpiAwarenessContext</msdn>.
+		/// Can be used to temporarily change thread's DPI awareness context with API <ms>SetThreadDpiAwarenessContext</ms>.
 		/// Does nothing if the API is unavailable (added in Windows 10 version 1607).
 		/// </summary>
 		/// <remarks>
@@ -373,16 +373,16 @@ namespace Au.More {
 			nint _dac;
 
 			/// <summary>
-			/// If <see cref="Available"/>, calls API <msdn>SetThreadDpiAwarenessContext</msdn>.
+			/// If <see cref="Available"/>, calls API <ms>SetThreadDpiAwarenessContext</ms>.
 			/// </summary>
-			/// <param name="dpiContext">One of <msdn>DPI_AWARENESS_CONTEXT</msdn> constants: -1 <b>unaware</b>, -2 <b>system</b>, -3 <b>per-monitor</b>, -4 <b>per-monitor-v2</b>, -5 <b>unaware-gdiscaled</b>. Or a <b>DPI_AWARENESS_CONTEXT</b> handle.</param>
+			/// <param name="dpiContext">One of <ms>DPI_AWARENESS_CONTEXT</ms> constants: -1 <b>unaware</b>, -2 <b>system</b>, -3 <b>per-monitor</b>, -4 <b>per-monitor-v2</b>, -5 <b>unaware-gdiscaled</b>. Or a <b>DPI_AWARENESS_CONTEXT</b> handle.</param>
 			public AwarenessContext(nint dpiContext) {
 				_dac = osVersion.minWin10_1607 ? Api.SetThreadDpiAwarenessContext(dpiContext) : default;
 			}
 			//rejected: enum dpiContext.
 
 			/// <summary>
-			/// If <see cref="Available"/>, calls API <msdn>GetWindowDpiAwarenessContext</msdn> and <msdn>SetThreadDpiAwarenessContext</msdn>. Sets the awareness context of this thread equal to that of the window.
+			/// If <see cref="Available"/>, calls API <ms>GetWindowDpiAwarenessContext</ms> and <ms>SetThreadDpiAwarenessContext</ms>. Sets the awareness context of this thread equal to that of the window.
 			/// </summary>
 			public AwarenessContext(wnd w) : this(Available ? Api.GetWindowDpiAwarenessContext(w) : 0) { }
 

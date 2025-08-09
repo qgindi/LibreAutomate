@@ -10,7 +10,7 @@ namespace Au;
 /// Web pages and most other windows support UI elements.
 /// </para>
 /// <para>
-/// An <b>elm</b> variable contains a COM interface pointer (<msdn>IAccessible</msdn> or other) and uses methods of that interface or/and related API.
+/// An <b>elm</b> variable contains a COM interface pointer (<ms>IAccessible</ms> or other) and uses methods of that interface or/and related API.
 /// </para>
 /// <para>
 /// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type).
@@ -209,7 +209,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 	/// <exception cref="ArgumentException"><i>objid</i> is <b>QUERYCLASSNAMEIDX</b> or <b>NATIVEOM</b>.</exception>
 	/// <remarks>
-	/// Uses API <msdn>AccessibleObjectFromWindow</msdn>.
+	/// Uses API <ms>AccessibleObjectFromWindow</ms>.
 	/// </remarks>
 	public static elm fromWindow(wnd w, EObjid objid = EObjid.WINDOW, EWFlags flags = 0) {
 		WarnInSendMessage_();
@@ -289,7 +289,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <param name="flags"></param>
 	/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 	/// <remarks>
-	/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
+	/// Uses API <ms>AccessibleObjectFromPoint</ms>.
 	/// </remarks>
 	public static elm fromMouse(EXYFlags flags = 0) {
 		return fromXY(mouse.xy, flags);
@@ -315,7 +315,7 @@ public unsafe sealed partial class elm : IDisposable {
 	}
 	
 	/// <summary>
-	/// Gets the UI element that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="WinEventHook"/>.
+	/// Gets the UI element that generated the event that is currently being processed by the callback function used with API <ms>SetWinEventHook</ms> or <see cref="WinEventHook"/>.
 	/// </summary>
 	/// <returns><c>null</c> if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="w"></param>
@@ -323,7 +323,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <param name="idChild"></param>
 	/// <remarks>
 	/// The parameters are of the callback function.
-	/// Uses API <msdn>AccessibleObjectFromEvent</msdn>.
+	/// Uses API <ms>AccessibleObjectFromEvent</ms>.
 	/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is <b>OBJECT_DESTROY</b>, <b>OBJECT_HIDE</b>, <b>SYSTEM_xEND</b>.
 	/// Returns <c>null</c> if failed. Always check the return value, to avoid <b>NullReferenceException</b>. An exception in the callback function kills this process.
 	/// </remarks>
@@ -342,7 +342,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <returns><c>null</c> if failed.</returns>
 	/// <param name="x">Unmanaged COM object.</param>
 	/// <remarks>
-	/// The COM object type can be <b>IAccessible</b>, <b>IAccessible2</b>, <b>IHTMLElement</b>, <b>ISimpleDOMNode</b> or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
+	/// The COM object type can be <b>IAccessible</b>, <b>IAccessible2</b>, <b>IHTMLElement</b>, <b>ISimpleDOMNode</b> or any other COM interface type that can give <ms>IAccessible</ms> interface pointer through API <ms>IUnknown.QueryInterface</ms> or <ms>IServiceProvider.QueryService</ms>.
 	/// For <b>IHTMLElement</b> and <b>ISimpleDOMNode</b> returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
 	/// </remarks>
 	public static elm fromComObject(IntPtr x)
@@ -360,7 +360,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// </summary>
 	/// <param name="x">Managed COM object.</param>
 	/// <remarks>
-	/// The COM object type can be <b>IAccessible</b>, <b>IAccessible2</b>, <b>IHTMLElement</b>, <b>ISimpleDOMNode</b> or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
+	/// The COM object type can be <b>IAccessible</b>, <b>IAccessible2</b>, <b>IHTMLElement</b>, <b>ISimpleDOMNode</b> or any other COM interface type that can give <ms>IAccessible</ms> interface pointer through API <ms>IUnknown.QueryInterface</ms> or <ms>IServiceProvider.QueryService</ms>.
 	/// For <b>IHTMLElement</b> and <b>ISimpleDOMNode</b> returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
 	/// </remarks>
 	public static elm fromComObject(object x)

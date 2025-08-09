@@ -118,8 +118,8 @@ namespace Au {
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <exception cref="AuException">Failed. For example a handle is invalid.</exception>
 		/// <remarks>
-		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
-		/// Does not use <see cref="WaitLoop"/> and <b>Seconds.Period/MaxPeriod</b>.
+		/// Uses API <ms>WaitForMultipleObjectsEx</ms> or <ms>MsgWaitForMultipleObjectsEx</ms>. Alertable.
+		/// Does not use <see cref="WaitLoop"/>, <see cref="Seconds.Period"/> and <see cref="Seconds.MaxPeriod"/>.
 		/// </remarks>
 		public static int forHandle(Seconds timeout, WHFlags flags, params ReadOnlySpan<IntPtr> handles) {
 			return WaitS_(timeout, flags, handles);
@@ -165,7 +165,7 @@ namespace Au {
 		/// <summary>
 		/// Waits for <i>handles</i>, or/and <i>msgCallback</i> returning <c>true</c>, or/and <i>stopVar</i> becoming <c>true</c>. Or just sleeps, if <i>handles</i> etc are <c>null</c>/empty.
 		/// If flag <b>DoEvents</b>, dispatches received messages etc.
-		/// Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with <b>QS_ALLINPUT</b>. Alertable.
+		/// Calls API <ms>WaitForMultipleObjectsEx</ms> or <ms>MsgWaitForMultipleObjectsEx</ms> with <b>QS_ALLINPUT</b>. Alertable.
 		/// </summary>
 		/// <param name="msgCallback">
 		/// Called when dispatching messages. If returns <c>true</c>, stops waiting and returns <c>handles.Length</c>.
@@ -231,7 +231,7 @@ namespace Au {
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="doEvents(int)"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns <c>true</c>. Does not dispatch the message if the function sets the message field = 0.
-		/// Does not use <see cref="WaitLoop"/> and <b>Seconds.Period/MaxPeriod/DoEvents</b>.
+		/// Does not use <see cref="WaitLoop"/>, <see cref="Seconds.Period"/>, <see cref="Seconds.MaxPeriod"/> and <see cref="Seconds.DoEvents"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -253,7 +253,7 @@ namespace Au {
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="doEvents(int)"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, COM, APC, etc), calls the callback function. Stops waiting when it returns <c>true</c>.
-		/// Similar to <see cref="until"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc. 3. Does not use <see cref="WaitLoop"/> and <b>Seconds.Period/MaxPeriod/DoEvents</b>.
+		/// Similar to <see cref="until"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc. 3. Does not use <see cref="WaitLoop"/>, <see cref="Seconds.Period"/>, <see cref="Seconds.MaxPeriod"/> and <see cref="Seconds.DoEvents"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -304,7 +304,7 @@ namespace Au.Types {
 	/// <summary>
 	/// Delegate type for <see cref="wait.forPostedMessage"/>.
 	/// </summary>
-	/// <param name="m">API <msdn>MSG</msdn>.</param>
+	/// <param name="m">API <ms>MSG</ms>.</param>
 	public delegate bool WPMCallback(ref MSG m);
 	
 	/// <summary>

@@ -427,7 +427,7 @@ namespace Au {
 		/// </summary>
 		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="size">Icon width and height. Default 16.</param>
-		/// <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
+		/// <param name="resourceId">Native resource id. Default <ms>IDI_APPLICATION</ms> (C# compilers add app icon with this id).</param>
 		/// <remarks>
 		/// If role <b>miniProgram</b> (default), at first looks in main assembly (<c>.dll</c>); if not found there, looks in <c>.exe</c> file. Else only in <c>.exe</c> file.
 		/// 
@@ -455,9 +455,9 @@ namespace Au {
 		/// <summary>
 		/// Gets icon of tray icon size from unmanaged resources of this program or system.
 		/// </summary>
-		/// <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
+		/// <param name="resourceId">Native resource id. Default <ms>IDI_APPLICATION</ms> (C# compilers add app icon with this id).</param>
 		/// <remarks>
-		/// Calls API <msdn>LoadIconMetric</msdn>.
+		/// Calls API <ms>LoadIconMetric</ms>.
 		/// 
 		/// The icon can be in main assembly (if role <b>miniProgram</b>) or in the program file (<c>.exe</c>). If not found, loads standard icon, see API <b>LoadIconMetric</b>.
 		/// </remarks>
@@ -480,7 +480,7 @@ namespace Au {
 		/// </summary>
 		/// <returns><c>null</c> if not found.</returns>
 		/// <remarks>
-		/// Calls API <msdn>LoadIconMetric</msdn>.
+		/// Calls API <ms>LoadIconMetric</ms>.
 		/// </remarks>
 		public static unsafe icon trayIcon(string icoFile) {
 			fixed (char* p = icoFile) return 0 == Api.LoadIconMetric(default, (nint)p, 0, out var hi) ? _New(hi) : null;
@@ -531,7 +531,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Sends <msdn>WM_SETICON</msdn> message.
+		/// Sends <ms>WM_SETICON</ms> message.
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="big"><b>ICON_BIG</b>.</param>
@@ -899,7 +899,7 @@ namespace Au.Types {
 	}
 	
 #pragma warning disable 1591 //missing XML documentation
-	/// <summary>See <see cref="icon.stock"/>, <msdn>SHSTOCKICONID</msdn>.</summary>
+	/// <summary>See <see cref="icon.stock"/>, <ms>SHSTOCKICONID</ms>.</summary>
 	public enum StockIcon {
 		DOCNOASSOC,
 		DOCASSOC,

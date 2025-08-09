@@ -16,9 +16,9 @@ namespace Au;
 /// <seealso cref="System.Windows.SystemParameters"/>
 public static class miscInfo {
 	/// <summary>
-	/// Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
+	/// Calls API <ms>GetGUIThreadInfo</ms>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
 	/// </summary>
-	/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
+	/// <param name="g">API <ms>GUITHREADINFO</ms>.</param>
 	/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="process.thisThreadId"/>, <see cref="wnd.ThreadId"/>.</param>
 	public static unsafe bool getGUIThreadInfo(out GUITHREADINFO g, int idThread = 0) {
 		g = new GUITHREADINFO { cbSize = sizeof(GUITHREADINFO) };

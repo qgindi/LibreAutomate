@@ -38,7 +38,7 @@ namespace Au {
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
-		/// Uses API <msdn>ShellExecuteEx</msdn>.
+		/// Uses API <ms>ShellExecuteEx</ms>.
 		/// Similar to <see cref="Process.Start(string, string)"/>.
 		/// 
 		/// The <i>file</i> parameter can be:
@@ -493,13 +493,13 @@ namespace Au.Types {
 		public ProcessWindowStyle WindowState;
 		
 		/// <summary>
-		/// Flags to add to <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
+		/// Flags to add to <ms>SHELLEXECUTEINFO</ms> field <b>fMask</b>.
 		/// Default flags: <b>SEE_MASK_NOZONECHECKS</b>, <b>SEE_MASK_NOASYNC</b>, <b>SEE_MASK_NOCLOSEPROCESS</b>, <b>SEE_MASK_CONNECTNETDRV</b>, <b>SEE_MASK_UNICODE</b>, <b>SEE_MASK_FLAG_NO_UI</b> (if no flag <b>ShowErrorUI</b>), <b>SEE_MASK_NO_CONSOLE</b> (if no flag <b>WaitForExit</b>), <b>SEE_MASK_FLAG_LOG_USAGE</b> (if flag <b>MostUsed</b>); also <b>SEE_MASK_INVOKEIDLIST</b> if need.
 		/// </summary>
 		public uint FlagsAdd;
 		
 		/// <summary>
-		/// Flags to remove from <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
+		/// Flags to remove from <ms>SHELLEXECUTEINFO</ms> field <b>fMask</b>.
 		/// Default flags: see <see cref="FlagsAdd"/>.
 		/// </summary>
 		public uint FlagsRemove;

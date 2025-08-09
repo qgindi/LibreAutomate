@@ -8,7 +8,7 @@ namespace Au {
 		/// <returns><c>default(wnd)</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// All UI elements must support this property, but some have bugs and can fail or return a wrong window.
-		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
+		/// Uses API <ms>WindowFromAccessibleObject</ms>.
 		/// </remarks>
 		public wnd WndContainer {
 			get {
@@ -35,7 +35,7 @@ namespace Au {
 		/// <returns><c>default(wnd)</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
 		/// All UI elements must support this property, but some have bugs and can return <c>default(wnd)</c>.
-		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
+		/// Uses API <ms>WindowFromAccessibleObject</ms> and API <ms>GetAncestor</ms>.
 		/// </remarks>
 		public wnd WndTopLevel => WndContainer.Window;
 		//note: named not WndWindow, to avoid using accidentally instead of WndContainer.
@@ -838,11 +838,11 @@ namespace Au {
 		/// <remarks>
 		/// Can be 2 letters, like <c>"pr"</c> for <c>"previous"</c>.
 		/// A string like <c>"next3"</c> or <c>"next,3"</c> is the same as <c>"next next next"</c>. Except for <c>"child"</c>.
-		/// Use string like <c>"#1000"</c> to specify a custom <i>navDir</i> value to pass to <msdn>IAccessible.accNavigate</msdn>.
+		/// Use string like <c>"#1000"</c> to specify a custom <i>navDir</i> value to pass to <ms>IAccessible.accNavigate</ms>.
 		/// 
-		/// For <c>"child"</c> the function calls API <msdn>AccessibleChildren</msdn>.
-		/// For <c>"parent"</c> the function calls <msdn>IAccessible.get_accParent</msdn>. Few UI elements don't support. Some UI elements return a different parent than in the tree of UI elements.
-		/// For others the function calls <msdn>IAccessible.accNavigate</msdn>. Not all UI elements support it. Some UI elements skip invisible siblings. Instead you can use <c>"parent childN"</c> or <c>"childN"</c>.
+		/// For <c>"child"</c> the function calls API <ms>AccessibleChildren</ms>.
+		/// For <c>"parent"</c> the function calls <ms>IAccessible.get_accParent</ms>. Few UI elements don't support. Some UI elements return a different parent than in the tree of UI elements.
+		/// For others the function calls <ms>IAccessible.accNavigate</ms>. Not all UI elements support it. Some UI elements skip invisible siblings. Instead you can use <c>"parent childN"</c> or <c>"childN"</c>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

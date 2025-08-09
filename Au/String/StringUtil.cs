@@ -101,7 +101,7 @@ public static class StringUtil {
 	
 	/// <summary>
 	/// Parses command line arguments.
-	/// Calls API <msdn>CommandLineToArgvW</msdn>.
+	/// Calls API <ms>CommandLineToArgvW</ms>.
 	/// </summary>
 	/// <returns>Empty array if <i>s</i> is <c>null</c> or <c>""</c>.</returns>
 	public static unsafe string[] CommandLineToArray(string s) {
@@ -135,7 +135,7 @@ public static class StringUtil {
 	}
 	
 	/// <summary>
-	/// Creates <b>int[]</b> from string containing space-separated numbers, like <c>"4 100 -8 0x10"</c>.
+	/// Creates <c>int[]</c> from string containing space-separated numbers, like <c>"4 100 -8 0x10"</c>.
 	/// </summary>
 	/// <param name="s">Decimal or/and hexadecimal numbers separated by single space. If <c>null</c> or <c>""</c>, returns empty array.</param>
 	/// <remarks>

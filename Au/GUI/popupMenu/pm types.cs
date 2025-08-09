@@ -94,7 +94,7 @@ public class PMItem : MTItem {
 /// Flags for <see cref="popupMenu"/> <b>ShowX</b> methods.
 /// </summary>
 /// <remarks>
-/// The <b>AlignX</b> flags are for API <msdn>TrackPopupMenuEx</msdn>.
+/// The <b>AlignX</b> flags are for API <ms>TrackPopupMenuEx</ms>.
 /// </remarks>
 [Flags]
 public enum PMFlags {

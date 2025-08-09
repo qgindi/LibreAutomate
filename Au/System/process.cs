@@ -19,7 +19,7 @@ namespace Au {
 		/// Get full path.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
-		/// <param name="noSlowAPI">When the fast API <msdn>QueryFullProcessImageName</msdn> fails, don't try to use another much slower API <msdn>WTSEnumerateProcesses</msdn>. Not used if <i>fullPath</i> is <c>true</c>.</param>
+		/// <param name="noSlowAPI">When the fast API <ms>QueryFullProcessImageName</ms> fails, don't try to use another much slower API <ms>WTSEnumerateProcesses</ms>. Not used if <i>fullPath</i> is <c>true</c>.</param>
 		/// <remarks>
 		/// This function is much slower than getting window name or class name.
 		/// </remarks>
@@ -338,7 +338,7 @@ namespace Au {
 		public static string getDescription(int processId) => getVersionInfo(processId)?.FileDescription;
 		
 		/// <summary>
-		/// Gets process id from handle (API <msdn>GetProcessId</msdn>).
+		/// Gets process id from handle (API <ms>GetProcessId</ms>).
 		/// </summary>
 		/// <returns>0 if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processHandle">Process handle.</param>
@@ -352,7 +352,7 @@ namespace Au {
 		//}
 		
 		/// <summary>
-		/// Gets user session id of a process (API <msdn>ProcessIdToSessionId</msdn>).
+		/// Gets user session id of a process (API <ms>ProcessIdToSessionId</ms>).
 		/// </summary>
 		/// <returns>Returns -1 if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processId">Process id.</param>
@@ -362,12 +362,12 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Gets process creation and execution times (API <msdn>GetProcessTimes</msdn>).
+		/// Gets process creation and execution times (API <ms>GetProcessTimes</ms>).
 		/// </summary>
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processId">Process id.</param>
-		/// <param name="created">Creation time. As absolute <msdn>FILETIME</msdn>, UTC. If you need <b>DateTime</b>, use <see cref="DateTime.FromFileTimeUtc"/>.</param>
-		/// <param name="executed">Amount of time spent executing code (using CPU). As <msdn>FILETIME</msdn>. If you need <b>TimeSpan</b>, use <see cref="TimeSpan.FromTicks"/>.</param>
+		/// <param name="created">Creation time. As absolute <ms>FILETIME</ms>, UTC. If you need <b>DateTime</b>, use <see cref="DateTime.FromFileTimeUtc"/>.</param>
+		/// <param name="executed">Amount of time spent executing code (using CPU). As <ms>FILETIME</ms>. If you need <b>TimeSpan</b>, use <see cref="TimeSpan.FromTicks"/>.</param>
 		public static bool getTimes(int processId, out long created, out long executed) {
 			created = 0; executed = 0;
 			using var ph = Handle_.OpenProcess(processId);
@@ -455,7 +455,7 @@ namespace Au {
 		/// <param name="processId">Process id.</param>
 		/// <param name="exitCode">Process exit code.</param>
 		/// <remarks>
-		/// Uses API <msdn>WTSTerminateProcess</msdn> or <msdn>TerminateProcess</msdn>. They are async; usually the process ends after 2 - 200 ms, depending on program etc.
+		/// Uses API <ms>WTSTerminateProcess</ms> or <ms>TerminateProcess</ms>. They are async; usually the process ends after 2 - 200 ms, depending on program etc.
 		/// 
 		/// Does not try to end process "softly" (close main window). Unsaved data will be lost.
 		/// 
@@ -657,13 +657,13 @@ namespace Au {
 		
 		/// <summary>
 		/// Gets current process id.
-		/// See API <msdn>GetCurrentProcessId</msdn>.
+		/// See API <ms>GetCurrentProcessId</ms>.
 		/// </summary>
 		public static int thisProcessId => Api.GetCurrentProcessId();
 		
 		/// <summary>
 		/// Returns current process handle.
-		/// See API <msdn>GetCurrentProcess</msdn>.
+		/// See API <ms>GetCurrentProcess</ms>.
 		/// Don't need to close the handle.
 		/// </summary>
 		public static IntPtr thisProcessHandle => Api.GetCurrentProcess();
@@ -808,7 +808,7 @@ namespace Au {
 		#region this thread
 		
 		/// <summary>
-		/// Gets native thread id of this thread (API <msdn>GetCurrentThreadId</msdn>).
+		/// Gets native thread id of this thread (API <ms>GetCurrentThreadId</ms>).
 		/// </summary>
 		/// <remarks>
 		/// It is not the same as <see cref="Environment.CurrentManagedThreadId"/>.
@@ -818,7 +818,7 @@ namespace Au {
 		//speed: fast, but several times slower than Environment.CurrentManagedThreadId. Caching in a ThreadStatic variable makes even slower.
 		
 		/// <summary>
-		/// Returns native thread handle of this thread (API <msdn>GetCurrentThread</msdn>).
+		/// Returns native thread handle of this thread (API <ms>GetCurrentThread</ms>).
 		/// </summary>
 		public static IntPtr thisThreadHandle => Api.GetCurrentThread();
 		

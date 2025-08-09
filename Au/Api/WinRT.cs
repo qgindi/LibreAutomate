@@ -66,7 +66,7 @@ static unsafe partial class WinRT {
 		}
 
 		/// <summary>
-		/// Calls <b>QueryInterface</b>. Throws exception if failed.
+		/// Calls <c>QueryInterface</c>. Throws exception if failed.
 		/// </summary>
 		public T QI<T>() where T : unmanaged {
 			HR(_QI(typeof(T), out var r));
@@ -74,7 +74,7 @@ static unsafe partial class WinRT {
 		}
 		
 		/// <summary>
-		/// Calls <b>QueryInterface</b>. Returns <c>false</c> if failed.
+		/// Calls <c>QueryInterface</c>. Returns <c>false</c> if failed.
 		/// </summary>
 		public bool QI<T>(out T r) where T : unmanaged {
 			bool ok = 0 == _QI(typeof(T), out var v);
@@ -94,7 +94,7 @@ static unsafe partial class WinRT {
 		public override string ToString() => _u.ToString();
 		
 		/// <summary>
-		/// Calls a 0-param function that returns <b>HSTRING</b>.
+		/// Calls a 0-param function that returns <c>HSTRING</c>.
 		/// </summary>
 		/// <param name="i">Interface function index in vtbl.</param>
 		public string GetString(int i) {

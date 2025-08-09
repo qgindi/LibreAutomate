@@ -20,7 +20,7 @@ A script can contain these parts, in this order. All optional.
 - Comments or documentation comments. Example: ```/// File description.```.
 - ```/*/ properties /*/```. You can edit it in the **Properties** dialog.
 - `using` directives. Don't need those specified in file `global.cs`.
-- **script.setup** or/and other code that sets run-time properties.
+- [script.setup]() or/and other code that sets run-time properties.
 - Script code. It can contain local functions anywhere.
 - Classes and other types used in the script.
 
