@@ -1,16 +1,16 @@
 namespace Au.Types;
 
 /// <summary>
-/// Manages an <b>ITEMIDLIST</b> structure that is used to identify files and other shell objects instead of a file-system path.
+/// Manages an <ms>ITEMIDLIST</ms> structure that is used to identify files and other shell objects instead of a file-system path.
 /// </summary>
 /// <remarks>
-/// Wraps an <c>ITEMIDLIST*</c>, also known as <i>PIDL</i> or <b>LPITEMIDLIST</b>.
+/// Wraps an <c>ITEMIDLIST*</c>, also known as <i>PIDL</i> or <c>LPITEMIDLIST</c>.
 /// 
 /// When calling native shell API, virtual objects can be identified only by <c>ITEMIDLIST*</c>. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by <c>ITEMIDLIST*</c>. URLs can be identified by URL as well as by <c>ITEMIDLIST*</c>.
 /// 
-/// The <b>ITEMIDLIST</b> structure is in unmanaged memory. You can dispose <b>Pidl</b> variables, or GC will do it later. Always dispose if creating many.
+/// The <c>ITEMIDLIST</c> structure is in unmanaged memory. You can dispose <c>Pidl</c> variables, or GC will do it later. Always dispose if creating many.
 /// 
-/// This class has only <b>ITEMIDLIST</b> functions that are used in this library. Look for other functions on the Internet. Many of them are named with IL prefix, like <b>ILClone</b>, <b>ILGetSize</b>, <b>ILFindLastID</b>.
+/// This class has only <c>ITEMIDLIST</c> functions that are used in this library. Look for other functions on the Internet. Many of them are named with IL prefix, like <c>ILClone</c>, <c>ILGetSize</c>, <c>ILFindLastID</c>.
 /// </remarks>
 public unsafe class Pidl : IDisposable {
 	IntPtr _pidl;
@@ -19,7 +19,7 @@ public unsafe class Pidl : IDisposable {
 	/// Gets the <c>ITEMIDLIST*</c>.
 	/// </summary>
 	/// <remarks>
-	/// The <b>ITEMIDLIST</b> memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="GC.KeepAlive"/> where need.
+	/// The <c>ITEMIDLIST</c> memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="GC.KeepAlive"/> where need.
 	/// </remarks>
 	public IntPtr UnsafePtr => _pidl;
 	
@@ -27,7 +27,7 @@ public unsafe class Pidl : IDisposable {
 	/// Gets the <c>ITEMIDLIST*</c>.
 	/// </summary>
 	/// <remarks>
-	/// Use to pass to API where the parameter type is <b>HandleRef</b>. It is safer than <see cref="UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
+	/// Use to pass to API where the parameter type is <see cref="System.Runtime.InteropServices.HandleRef"/>. It is safer than <see cref="UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
 	/// </remarks>
 	public HandleRef HandleRef => new HandleRef(this, _pidl);
 	
@@ -37,16 +37,16 @@ public unsafe class Pidl : IDisposable {
 	public bool IsNull => _pidl == default;
 	
 	/// <summary>
-	/// Assigns an <b>ITEMIDLIST</b> to this variable.
+	/// Assigns an <c>ITEMIDLIST</c> to this variable.
 	/// </summary>
 	/// <param name="pidl">
 	/// <c>ITEMIDLIST*</c>.
-	/// It can be created by any API that creates <b>ITEMIDLIST</b>. They allocate the memory with API <b>CoTaskMemAlloc</b>. This variable will finally free it with <b>Marshal.FreeCoTaskMem</b> which calls API <b>CoTaskMemFree</b>.
+	/// It can be created by any API that creates <c>ITEMIDLIST</c>. They allocate the memory with API <ms>CoTaskMemAlloc</ms>. This variable will finally free it with <see cref="Marshal.FreeCoTaskMem"/> which calls API <ms>CoTaskMemFree</ms>.
 	/// </param>
 	public Pidl(IntPtr pidl) => _pidl = pidl;
 	
 	/// <summary>
-	/// Combines two <b>ITEMIDLIST</b> (parent and child) and assigns the result to this variable.
+	/// Combines two <c>ITEMIDLIST</c> (parent and child) and assigns the result to this variable.
 	/// </summary>
 	/// <param name="pidlAbsolute">Absolute <c>ITEMIDLIST*</c> (parent folder).</param>
 	/// <param name="pidlRelative">Relative <c>ITEMIDLIST*</c> (child object).</param>
@@ -56,7 +56,7 @@ public unsafe class Pidl : IDisposable {
 	public Pidl(IntPtr pidlAbsolute, IntPtr pidlRelative) => _pidl = Api.ILCombine(pidlAbsolute, pidlRelative);
 	
 	/// <summary>
-	/// Frees the <b>ITEMIDLIST</b> with <b>Marshal.FreeCoTaskMem</b> and clears this variable.
+	/// Frees the <c>ITEMIDLIST</c> with <see cref="Marshal.FreeCoTaskMem"/> and clears this variable.
 	/// </summary>
 	public void Dispose() {
 		Dispose(true);
@@ -75,7 +75,7 @@ public unsafe class Pidl : IDisposable {
 	~Pidl() { Dispose(false); }
 	
 	/// <summary>
-	/// Gets the <b>ITEMIDLIST</b> and clears this variable so that it cannot be used and will not free the <b>ITEMIDLIST</b> memory. To free it use <see cref="Marshal.FreeCoTaskMem"/>.
+	/// Gets the <c>ITEMIDLIST</c> and clears this variable so that it cannot be used and will not free the <c>ITEMIDLIST</c> memory. To free it use <see cref="Marshal.FreeCoTaskMem"/>.
 	/// </summary>
 	public IntPtr Detach() {
 		var R = _pidl;
@@ -84,7 +84,7 @@ public unsafe class Pidl : IDisposable {
 	}
 	
 	/// <summary>
-	/// Converts string to <b>ITEMIDLIST</b> and creates new <b>Pidl</b> variable that holds it.
+	/// Converts string to <c>ITEMIDLIST</c> and creates new <see cref="Pidl"/> variable that holds it.
 	/// </summary>
 	/// <returns><c>null</c> if failed.</returns>
 	/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="pathname.expand"/>).</param>
@@ -101,10 +101,10 @@ public unsafe class Pidl : IDisposable {
 	
 	/// <summary>
 	/// The same as <see cref="FromString"/>, but returns unmanaged <c>ITEMIDLIST*</c>.
-	/// Later need to free it with <b>Marshal.FreeCoTaskMem</b>.
+	/// Later need to free it with <c>Marshal.FreeCoTaskMem</c>.
 	/// </summary>
 	/// <param name="s"></param>
-	/// <param name="throwIfFailed">If failed: <c>true</c> - throw <b>AuException</b>; <c>false</c> - return 0.</param>
+	/// <param name="throwIfFailed">If failed: <c>true</c> - throw <see cref="AuException"/>; <c>false</c> - return 0.</param>
 	internal static IntPtr FromString_(string s, bool throwIfFailed = false) {
 		IntPtr R;
 		s = _Normalize(s);
@@ -136,18 +136,18 @@ public unsafe class Pidl : IDisposable {
 	}
 	
 	/// <summary>
-	/// Converts the <b>ITEMIDLIST</b> to file path or URL or shell object parsing name or display name, depending on <i>stringType</i>.
+	/// Converts the <c>ITEMIDLIST</c> to file path or URL or shell object parsing name or display name, depending on <i>stringType</i>.
 	/// </summary>
-	/// <returns>Returns <c>null</c> if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached). If failed, returns <c>null</c> or throws exception.</returns>
+	/// <returns>Returns <c>null</c> if this variable does not have an <c>ITEMIDLIST</c> (eg disposed or detached). If failed, returns <c>null</c> or throws exception.</returns>
 	/// <param name="stringType">
 	/// String format. API <ms>SIGDN</ms>.
 	/// Often used:
-	/// <br/>• <b>SIGDN.NORMALDISPLAY</b> - returns object name without path. It is best to display in UI but cannot be parsed to create <b>ITEMIDLIST</b> again.
-	/// <br/>• <b>SIGDN.FILESYSPATH</b> - returns path if the <b>ITEMIDLIST</b> identifies a file system object (file or directory). Else returns <c>null</c>.
-	/// <br/>• <b>SIGDN.URL</b> - if URL, returns URL. If file system object, returns its path like <c>"file:///C:/a/b.txt"</c>. Else returns <c>null</c>.
-	/// <br/>• <b>SIGDN.DESKTOPABSOLUTEPARSING</b> - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create <b>ITEMIDLIST</b> again, therefore usually it's better to use <see cref="ToString"/> instead.
+	/// <br/>• <c>SIGDN.NORMALDISPLAY</c> - returns object name without path. It is best to display in UI but cannot be parsed to create <c>ITEMIDLIST</c> again.
+	/// <br/>• <c>SIGDN.FILESYSPATH</c> - returns path if the <c>ITEMIDLIST</c> identifies a file system object (file or directory). Else returns <c>null</c>.
+	/// <br/>• <c>SIGDN.URL</c> - if URL, returns URL. If file system object, returns its path like <c>"file:///C:/a/b.txt"</c>. Else returns <c>null</c>.
+	/// <br/>• <c>SIGDN.DESKTOPABSOLUTEPARSING</c> - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create <c>ITEMIDLIST</c> again, therefore usually it's better to use <see cref="ToString"/> instead.
 	/// </param>
-	/// <param name="throwIfFailed">If failed, throw <b>AuException</b>.</param>
+	/// <param name="throwIfFailed">If failed, throw <see cref="AuException"/>.</param>
 	/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is <c>true</c>.</exception>
 	/// <remarks>
 	/// Calls <ms>SHGetNameFromIDList</ms>.
@@ -159,7 +159,7 @@ public unsafe class Pidl : IDisposable {
 	}
 	
 	/// <summary>
-	/// Converts an <b>ITEMIDLIST</b> to file path or URL or shell object parsing name or display name, depending on <i>stringType</i>.
+	/// Converts an <c>ITEMIDLIST</c> to file path or URL or shell object parsing name or display name, depending on <i>stringType</i>.
 	/// </summary>
 	/// <returns>Returns <c>null</c> if <i>pidl</i> is <c>default(IntPtr)</c>. If failed, returns <c>null</c> or throws exception.</returns>
 	/// <inheritdoc cref="ToShellString(SIGDN, bool)"/>
@@ -172,10 +172,10 @@ public unsafe class Pidl : IDisposable {
 	}
 	
 	/// <summary>
-	/// Converts the <b>ITEMIDLIST</b> to string.
+	/// Converts the <c>ITEMIDLIST</c> to string.
 	/// If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>).
 	/// </summary>
-	/// <returns><c>null</c> if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached).</returns>
+	/// <returns><c>null</c> if this variable does not have an <c>ITEMIDLIST</c> (eg disposed or detached).</returns>
 	public override string ToString() {
 		var R = ToString(_pidl);
 		GC.KeepAlive(this);
@@ -184,7 +184,7 @@ public unsafe class Pidl : IDisposable {
 	
 #if true
 	/// <summary>
-	/// This overload uses an <c>ITEMIDLIST*</c> that is not stored in a <b>Pidl</b> variable.
+	/// This overload uses an <c>ITEMIDLIST*</c> that is not stored in a <see cref="Pidl"/> variable.
 	/// </summary>
 	public static string ToString(IntPtr pidl) {
 		if (pidl == default) return null;
@@ -238,10 +238,10 @@ public unsafe class Pidl : IDisposable {
 	
 	/// <summary>
 	/// Returns string <c>":: ITEMIDLIST"</c>.
-	/// Returns <c>null</c> if this variable does not have an <b>ITEMIDLIST</b> (eg disposed or detached).
+	/// Returns <c>null</c> if this variable does not have an <c>ITEMIDLIST</c> (eg disposed or detached).
 	/// </summary>
 	/// <remarks>
-	/// The string can be used with some functions of this library, mostly of classes <b>filesystem</b>, <b>Pidl</b> and <b>icon</b>. Cannot be used with native and .NET functions.
+	/// The string can be used with some functions of this library, mostly of classes <see cref="filesystem"/>, <see cref="Pidl"/> and <see cref="icon"/>. Cannot be used with native and .NET functions.
 	/// </remarks>
 	public string ToHexString() {
 		var R = ToHexString(_pidl);
@@ -251,7 +251,7 @@ public unsafe class Pidl : IDisposable {
 	
 	/// <summary>
 	/// Returns string <c>":: ITEMIDLIST"</c>.
-	/// This overload uses an <c>ITEMIDLIST*</c> that is not stored in a <b>Pidl</b> variable.
+	/// This overload uses an <c>ITEMIDLIST*</c> that is not stored in a <see cref="Pidl"/> variable.
 	/// </summary>
 	public static string ToHexString(IntPtr pidl) {
 		if (pidl == default) return null;
@@ -260,7 +260,7 @@ public unsafe class Pidl : IDisposable {
 		if (n == 0) return ":: "; //shell root - Desktop
 		return ":: " + Convert2.HexEncode((void*)pidl, n);
 	}
-	//rejected: use base64 <b>ITEMIDLIST</b>. Shorter, but cannot easily split, for example in folders.UnexpandPath.
+	//rejected: use base64 <c>ITEMIDLIST</c>. Shorter, but cannot easily split, for example in folders.UnexpandPath.
 	
 	/// <summary>
 	/// If <i>s</i> starts with <c>"::{"</c>, converts to <c>":: ITEMIDLIST"</c>. Else returns <i>s</i>.
@@ -274,7 +274,7 @@ public unsafe class Pidl : IDisposable {
 	}
 	
 	/// <summary>
-	/// Returns <c>true</c> if <b>ITEMIDLIST</b> values are equal.
+	/// Returns <c>true</c> if <c>ITEMIDLIST</c> values are equal.
 	/// </summary>
 	public bool ValueEquals(IntPtr pidl) => Api.ILIsEqual(_pidl, pidl);
 }

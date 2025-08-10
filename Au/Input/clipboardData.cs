@@ -9,8 +9,8 @@ namespace Au {
 	/// Sets or gets clipboard data in multiple formats.
 	/// </summary>
 	/// <remarks>
-	/// The <b>AddX</b> functions add data to the variable (not to the clipboard). Then <see cref="SetClipboard"/> copies the added data to the clipboard. Also you can use the variable with <see cref="clipboard.pasteData"/>.
-	/// The static <b>GetX</b> functions get data directly from the clipboard.
+	/// The <c>AddX</c> functions add data to the variable (not to the clipboard). Then <see cref="SetClipboard"/> copies the added data to the clipboard. Also you can use the variable with <see cref="clipboard.pasteData"/>.
+	/// The static <c>GetX</c> functions get data directly from the clipboard.
 	/// </remarks>
 	/// <example>
 	/// Get bitmap image from clipboard.
@@ -63,7 +63,7 @@ namespace Au {
 		/// <returns>this.</returns>
 		/// <param name="text">Text.</param>
 		/// <param name="format">
-		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
+		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<ms>CF_UNICODETEXT</ms>).
 		/// Text encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
@@ -108,15 +108,15 @@ namespace Au {
 
 		/// <summary>
 		/// Adds image.
-		/// Uses clipboard format <see cref="ClipFormats.Png"/> and/or <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
+		/// Uses clipboard format <see cref="ClipFormats.Png"/> and/or <see cref="ClipFormats.Image"/> (<ms>CF_BITMAP</ms>).
 		/// </summary>
 		/// <returns>this.</returns>
 		/// <param name="image">Image. Must be <see cref="Bitmap"/>, else exception.</param>
 		/// <param name="png">
 		/// Use PNG format (it supports transparency):
-		/// <br/>• <c>false</c> - no, only <b>CF_BITMAP</b>.
+		/// <br/>• <c>false</c> - no, only <c>CF_BITMAP</c>.
 		/// <br/>• <c>true</c> - yes, only PNG.
-		/// <br/>• <c>null</c> (default) - add PNG and <b>CF_BITMAP</b>.
+		/// <br/>• <c>null</c> (default) - add PNG and <c>CF_BITMAP</c>.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		public clipboardData AddImage(Image image, bool? png = null) {
@@ -151,7 +151,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Adds list of files to copy/paste. Uses clipboard format <see cref="ClipFormats.Files"/> (<b>CF_HDROP</b>).
+		/// Adds list of files to copy/paste. Uses clipboard format <see cref="ClipFormats.Files"/> (<ms>CF_HDROP</ms>).
 		/// </summary>
 		/// <returns>this.</returns>
 		/// <param name="files">One or more file paths.</param>
@@ -186,7 +186,7 @@ namespace Au {
 		/// <exception cref="OutOfMemoryException">Failed to allocate memory for clipboard data.</exception>
 		/// <exception cref="AuException">Failed to set clipboard data.</exception>
 		/// <remarks>
-		/// This function is similar to <see cref="SetClipboard"/>. It calls API <ms>SetClipboardData</ms> and does not call <b>OpenClipboard</b>, <b>EmptyClipboard</b>, <b>CloseClipboard</b>. The clipboard must be open and owned by a window of this thread.
+		/// This function is similar to <see cref="SetClipboard"/>. It calls API <ms>SetClipboardData</ms> and does not call <ms>OpenClipboard</ms>, <ms>EmptyClipboard</ms>, <ms>CloseClipboard</ms>. The clipboard must be open and owned by a window of this thread.
 		/// </remarks>
 		public void SetOpenClipboard(bool renderLater = false, int format = 0) {
 			for (int i = 0; i < _a.Count; i++) {
@@ -350,7 +350,7 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets clipboard text without open/close.
-		/// If format is 0, tries <b>CF_UNICODETEXT</b> and <b>CF_HDROP</b>.
+		/// If format is 0, tries <c>CF_UNICODETEXT</c> and <c>CF_HDROP</c>.
 		/// </summary>
 		internal static unsafe string GetText_(int format) {
 			IntPtr h = default;
@@ -401,7 +401,7 @@ EndFragment:0000000000
 		/// </summary>
 		/// <returns><c>null</c> if there is no text.</returns>
 		/// <param name="format">
-		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<b>CF_UNICODETEXT</b>).
+		/// Clipboard format id. Default: <see cref="ClipFormats.Text"/> (<ms>CF_UNICODETEXT</ms>).
 		/// If 0, tries to get text (<see cref="ClipFormats.Text"/>) or file paths (<see cref="ClipFormats.Files"/>; returns multiline text).
 		/// Text encoding depends on <i>format</i>; default UTF-16. See <see cref="ClipFormats.Register"/>.
 		/// </param>
@@ -466,14 +466,14 @@ EndFragment:0000000000
 
 		/// <summary>
 		/// Gets image from the clipboard.
-		/// Uses clipboard format <see cref="ClipFormats.Png"/> or <see cref="ClipFormats.Image"/> (<b>CF_BITMAP</b>).
+		/// Uses clipboard format <see cref="ClipFormats.Png"/> or <see cref="ClipFormats.Image"/> (<ms>CF_BITMAP</ms>).
 		/// </summary>
 		/// <returns><c>null</c> if there is no data of this format.</returns>
 		/// <param name="png">
 		/// Use PNG format (it supports transparency):
-		/// <br/>• <c>false</c> - no, only <b>CF_BITMAP</b>.
+		/// <br/>• <c>false</c> - no, only <c>CF_BITMAP</c>.
 		/// <br/>• <c>true</c> - yes, only PNG.
-		/// <br/>• <c>null</c> (default) - yes, but get <b>CF_BITMAP</b> if there is no PNG.
+		/// <br/>• <c>null</c> (default) - yes, but get <c>CF_BITMAP</c> if there is no PNG.
 		/// </param>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Image.FromHbitmap"/> or <see cref="Image.FromStream"/>.</exception>
@@ -547,7 +547,7 @@ EndFragment:0000000000
 		}
 
 		/// <summary>
-		/// Gets file paths from the clipboard. Uses clipboard format <see cref="ClipFormats.Files"/> (<b>CF_HDROP</b>).
+		/// Gets file paths from the clipboard. Uses clipboard format <see cref="ClipFormats.Files"/> (<ms>CF_HDROP</ms>).
 		/// </summary>
 		/// <returns><c>null</c> if there is no data of this format.</returns>
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
@@ -559,7 +559,7 @@ EndFragment:0000000000
 		}
 
 		/// <summary>
-		/// Gets file paths from <b>HDROP</b>.
+		/// Gets file paths from <c>HDROP</c>.
 		/// </summary>
 		/// <returns>Array of zero or more non-<c>null</c> elements.</returns>
 		internal static unsafe string[] HdropToFiles_(IntPtr hdrop) {
@@ -608,13 +608,13 @@ namespace Au.Types {
 	/// These and other standard and registered format ids can be used with <see cref="clipboardData"/> class functions.
 	/// </summary>
 	public static class ClipFormats {
-		/// <summary>The text format. Standard, API constant <b>CF_UNICODETEXT</b>. The default format of <see cref="clipboardData"/> add/get text functions.</summary>
+		/// <summary>The text format. Standard, API constant <ms>CF_UNICODETEXT</ms>. The default format of <see cref="clipboardData"/> add/get text functions.</summary>
 		public const int Text = Api.CF_UNICODETEXT;
 
-		/// <summary>The image format. Standard, API constant <b>CF_BITMAP</b>. Used by <see cref="clipboardData"/> add/get image functions.</summary>
+		/// <summary>The image format. Standard, API constant <ms>CF_BITMAP</ms>. Used by <see cref="clipboardData"/> add/get image functions.</summary>
 		public const int Image = Api.CF_BITMAP;
 
-		/// <summary>The file-list format. Standard, API constant <b>CF_HDROP</b>. Used by <see cref="clipboardData"/> add/get files functions.</summary>
+		/// <summary>The file-list format. Standard, API constant <ms>CF_HDROP</ms>. Used by <see cref="clipboardData"/> add/get files functions.</summary>
 		public const int Files = Api.CF_HDROP;
 
 		/// <summary>The HTML format. Registered, name <c>"HTML Format"</c>. Used by <see cref="clipboardData"/> add/get HTML functions.</summary>
@@ -654,7 +654,7 @@ namespace Au.Types {
 
 		/// <summary>
 		/// Gets text encoding for format.
-		/// Returns <c>null</c> if UTF-16 or if the format is unknown and not in <b>s_textEncoding</b>.
+		/// Returns <c>null</c> if UTF-16 or if the format is unknown and not in <c>s_textEncoding</c>.
 		/// </summary>
 		internal static Encoding GetTextEncoding_(int format, out bool unknown) {
 			unknown = false;

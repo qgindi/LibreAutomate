@@ -42,7 +42,7 @@ namespace Au.More {
 	/// You can be notified about new messages.
 	/// 
 	/// Recommended setup (see example):
-	/// 1. When your application starts, create a <b>PrintServer</b> instance and assign to a static variable. Call <see cref="Start"/>.
+	/// 1. When your application starts, create a <c>PrintServer</c> instance and assign to a static variable. Call <see cref="Start"/>.
 	/// 2. When your application creates its output window, call <see cref="SetNotifications"/> to set window/message for notifications.
 	/// 3. In window procedure, when received the notification message, get/remove/display all new output messages.
 	/// 4. Call <see cref="Stop"/> when closing the window.
@@ -191,7 +191,7 @@ namespace Au.More {
 		}
 		
 		/// <summary>
-		/// Calls <b>Stop</b>.
+		/// Calls <see cref="Stop"/>.
 		/// </summary>
 		~PrintServer() => Stop();
 		
@@ -199,7 +199,7 @@ namespace Au.More {
 		/// Sets window/message to be notified about server events.
 		/// </summary>
 		/// <param name="w">Your window that displays output, or any other window. Its window procedure on <i>message</i> should call <see cref="GetMessage"/> until it returns <c>false</c>. See example in class help.</param>
-		/// <param name="message">Windows message to send to <i>w</i> when one or more output events are available. For example <b>WM_USER</b> or <b>WM_APP</b>.</param>
+		/// <param name="message">Windows message to send to <i>w</i> when one or more output events are available. For example <ms>WM_USER</ms> or <ms>WM_APP</ms>.</param>
 		public void SetNotifications(wnd w, int message) {
 			_notifMsg = message;
 			_notifWnd = w;
@@ -289,7 +289,7 @@ namespace Au.More {
 		//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToS();
 		
 		/// <summary>
-		/// Adds <i>s</i> directly to <b>_messages</b> and sets timer.
+		/// Adds <i>s</i> directly to <c>_messages</c> and sets timer.
 		/// If <i>s</i> is <c>null</c>, it is "Clear" command.
 		/// Else if <c>!NoNewline</c>, appends <c>"\r\n"</c>.
 		/// Used with local server; also with global server when writes the server's process.
@@ -302,7 +302,7 @@ namespace Au.More {
 		}
 		
 		/// <summary>
-		/// Adds action directly to <b>_messages</b> and sets timer.
+		/// Adds action directly to <c>_messages</c> and sets timer.
 		/// Used with local server; also with global server when writes the server's process.
 		/// </summary>
 		internal void LocalAction_(PrintServerMessageType action) {
@@ -440,7 +440,7 @@ namespace Au {
 		internal static PrintServer s_localServer; //null if we don't have a local server
 		
 		/// <summary>
-		/// Logs start/end/fail events of <b>miniProgram</b> trigger actions.
+		/// Logs start/end/fail events of <c>miniProgram</c> trigger actions.
 		/// Editor displays it in the <b>Recent tasks</b> window, not in the output panel.
 		/// Could also log other events. For example at first used for task start/end/fail events, but now it is implemented in editor.
 		/// </summary>
@@ -576,7 +576,7 @@ namespace Au {
 		/// <summary>
 		/// Introduces a class that contain methods designed to write to the output.
 		/// Purpose - when server's <see cref="PrintServer.NeedCallerMethod"/> is <c>true</c>, skip methods of this class when searching for the caller method in the call stack.
-		/// For example, if you created class <b>PrintColored</b> that contains methods <b>PrintRed</b>, <b>PrintGreen</b> and <b>PrintBlue</b>, you should execute this code in its static constructor: <c>print.introduceWriterClass(typeof(PrintColored));</c>.
+		/// For example, if you created class <c>PrintColored</c> that contains methods <c>PrintRed</c>, <c>PrintGreen</c> and <c>PrintBlue</c>, you should execute this code in its static constructor: <c>print.introduceWriterClass(typeof(PrintColored));</c>.
 		/// Also use this if you redirect output using a writer class that calls directly().
 		/// Not used when writing to console or log file.
 		/// </summary>
@@ -636,7 +636,7 @@ namespace Au.Types {
 		public string Text { get; set; }
 		
 		/// <summary>
-		/// Message time in <b>FILETIME</b> format, UTC.
+		/// Message time in <ms>FILETIME</ms> format, UTC.
 		/// Used with <see cref="PrintServerMessageType.Write"/>.
 		/// To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
 		/// </summary>

@@ -36,7 +36,7 @@ namespace Au {
 		/// opt.key.KeySpeed = 100;
 		/// keys.send("Right*10 Ctrl+A");
 		/// ]]></code>
-		/// Use a <b>keys</b> instance.
+		/// Use a <see cref="keys"/> instance.
 		/// <code><![CDATA[
 		/// var k = new keys(opt.key); //create new keys instance and copy options from opt.key to it
 		/// k.Options.KeySpeed = 100; //changes option of k but not of opt.key
@@ -63,7 +63,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Obsolete. Use <see cref="Seconds"/> instead.
-		/// For backward compatibility, wait functions still use <c>opt.wait.DoEvents</c> if <b>Seconds.DoEvents</b> not specified.
+		/// For backward compatibility, wait functions still use <c>opt.wait.DoEvents</c> if <c>Seconds.DoEvents</c> not specified.
 		/// </summary>
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static OWait wait => OWait.Ambient_;
@@ -296,7 +296,7 @@ namespace Au.Types {
 		/// <value>Valid values: 0 - 10000 (10 s).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// The "click" functions also sleep <see cref="ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
+		/// The "click" functions also sleep <see cref="ClickSpeed"/> ms after button down and up. Default <c>ClickSpeed</c> is 20, default <c>ClickSleepFinally</c> is 10, therefore default click time without mouse-move is 20+20+10=50.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -418,9 +418,9 @@ namespace Au.Types {
 		_Fields _f;
 		
 		/// <summary>
-		/// Returns this variable, or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
+		/// Returns this variable, or <c>OKey</c> cloned from this variable and possibly modified by <c>Hook</c>.
 		/// </summary>
-		/// <param name="wFocus">The focused or active window. Use <b>GetWndFocusedOrActive</b>.</param>
+		/// <param name="wFocus">The focused or active window. Use <c>GetWndFocusedOrActive</c>.</param>
 		internal OKey GetHookOptionsOrThis_(wnd wFocus) {
 			var call = this.Hook;
 			if (call == null || wFocus.Is0) return this;
@@ -654,7 +654,7 @@ namespace Au.Types {
 		/// You can use function <see cref="PrintClipboard"/> to see format names and get-data times.
 		/// 
 		/// There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API constant names, like <c>"CF_WAVE"</c>. Private, display and metafile formats are never restored.
-		/// These formats are never restored: <b>CF_METAFILEPICT</b>, <b>CF_ENHMETAFILE</b>, <b>CF_PALETTE</b>, <b>CF_OWNERDISPLAY</b>, <b>CF_DSPx</b> formats, <b>CF_GDIOBJx</b> formats, <b>CF_PRIVATEx</b> formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or > 10 MB.
+		/// These formats are never restored: <c>CF_METAFILEPICT</c>, <c>CF_ENHMETAFILE</c>, <c>CF_PALETTE</c>, <c>CF_OWNERDISPLAY</c>, <c>CF_DSPx</c> formats, <c>CF_GDIOBJx</c> formats, <c>CF_PRIVATEx</c> formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or > 10 MB.
 		/// 
 		/// This property is static, not thread-static. It should be set (if need) at the start of script and not changed later.
 		/// </remarks>
@@ -772,12 +772,12 @@ namespace Au.Types {
 		internal OKeyHookData(OKey optk, wnd w) { this.optk = optk; this.w = w; }
 		
 		/// <summary>
-		/// Options used by the "send keys or text" function. The callback function can modify them, except <b>Hook</b>, <b>NoModOff</b>, <b>NoCapsOff</b>, <b>NoBlockInput</b>.
+		/// Options used by the "send keys or text" function. The callback function can modify them, except <c>Hook</c>, <c>NoModOff</c>, <c>NoCapsOff</c>, <c>NoBlockInput</c>.
 		/// </summary>
 		public readonly OKey optk;
 		
 		/// <summary>
-		/// The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
+		/// The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <c>w</c> is the active window, else the focused control. The callback function is not called if there is no active window.
 		/// </summary>
 		public readonly wnd w;
 	}
@@ -788,7 +788,7 @@ namespace Au.Types {
 	/// </summary>
 	/// <remarks>
 	/// There are three ways to send text to the active app using keys:
-	/// - Characters (default) - use special key code <b>VK_PACKET</b>. Can send most characters.
+	/// - Characters (default) - use special key code <ms>VK_PACKET</ms>. Can send most characters.
 	/// - Keys - use virtual-key codes, with <c>Shift</c> etc where need. Can send only characters that can be simply entered with the keyboard using current keyboard layout.
 	/// - Paste - use the clipboard and <c>Ctrl+V</c>. Can send any text.
 	/// 
@@ -796,10 +796,10 @@ namespace Au.Types {
 	/// </remarks>
 	public enum OKeyText {
 		/// <summary>
-		/// Send most text characters using special key code <b>VK_PACKET</b>.
+		/// Send most text characters using special key code <ms>VK_PACKET</ms>.
 		/// This option is default. Few apps don't support it.
-		/// For newlines, tab and space sends keys (<c>Enter</c>, <c>Tab</c>, <c>Space</c>), because <b>VK_PACKET</b> often does not work well.
-		/// If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as <b>WM_PACKET</b> pairs.
+		/// For newlines, tab and space sends keys (<c>Enter</c>, <c>Tab</c>, <c>Space</c>), because <c>VK_PACKET</c> often does not work well.
+		/// If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as <c>WM_PACKET</c> pairs.
 		/// </summary>
 		Characters,
 		//Tested many apps/controls/frameworks. Works almost everywhere.
@@ -810,7 +810,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Send virtual-key codes, with <c>Shift</c> etc where need.
 		/// All apps support it.
-		/// If a character cannot be simply typed with the keyboard using current keyboard layout, sends it like with the <b>Characters</b> option.
+		/// If a character cannot be simply typed with the keyboard using current keyboard layout, sends it like with the <c>Characters</c> option.
 		/// </summary>
 		KeysOrChar,
 		
@@ -935,7 +935,7 @@ namespace Au.Types {
 	}
 	
 	/// <summary>
-	/// Obsolete. Use <see cref="Seconds"/> instead. Some wait functions may still use some <b>OWait</b> properties for backward compatibility.
+	/// Obsolete. Use <see cref="Seconds"/> instead. Some wait functions may still use some <c>OWait</c> properties for backward compatibility.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public sealed class OWait {

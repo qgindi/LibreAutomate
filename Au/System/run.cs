@@ -34,7 +34,7 @@ namespace Au {
 		/// Allows to specify more parameters: current directory, verb, etc.
 		/// If string, it sets initial current directory for the new process. If <c>""</c>, gets it from <i>file</i>. More info: <see cref="ROptions.CurrentDirectory"/>.
 		/// </param>
-		/// <exception cref="ArgumentException">Used both <b>ROptions.Verb</b> and <b>RFlags.Admin</b> and this process isn't admin.</exception>
+		/// <exception cref="ArgumentException">Used both <see cref="ROptions.Verb"/> and <see cref="RFlags.Admin"/> and this process isn't admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -47,7 +47,7 @@ namespace Au {
 		/// - Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// - URL. Examples: <c>"https://www.example.com"</c>, <c>"file:///path"</c>.
 		/// - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-		/// - Shell object's <b>ITEMIDLIST</b> like <c>":: ITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="folders.shell"/>. Can be used to open virtual folders and items like Control Panel.
+		/// - Shell object's <c>ITEMIDLIST</c> like <c>":: ITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="folders.shell"/>. Can be used to open virtual folders and items like Control Panel.
 		/// - Shell object's parsing name, like <c>@"shell:::{CLSID}"</c> or <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>. Can be used to open virtual folders and items like Control Panel.
 		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Example: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>. To discover the string use hotkey <c>Ctrl+Shift+Q</c> or function <see cref="WndUtil.GetWindowsStoreAppId"/> or Google.
 		/// - To open a Windows Settings page can be used <google>ms-settings</google>, like <c>"ms-settings:display"</c>. To open Settings use <c>"ms-settings:"</c>.
@@ -201,10 +201,10 @@ namespace Au {
 		
 		/// <summary>
 		/// Calls <see cref="it"/> and handles exceptions.
-		/// If <b>it</b> throws exception, writes it to the output as warning and returns <c>null</c>.
+		/// If <see cref="it"/> throws exception, writes it to the output as warning and returns <c>null</c>.
 		/// </summary>
 		/// <remarks>
-		/// This function is useful when you don't care whether <b>it</b> succeeded and don't want to use try/catch.
+		/// This function is useful when you don't care whether <see cref="it"/> succeeded and don't want to use try/catch.
 		/// Handles only exception of type <see cref="AuException"/>. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
 		/// <seealso cref="print.warning"/>
@@ -361,8 +361,8 @@ namespace Au {
 		/// <summary>
 		/// Starts new thread: creates new <see cref="Thread"/> object, sets some properties and calls <see cref="Thread.Start"/>.
 		/// </summary>
-		/// <returns>The <b>Thread</b> variable.</returns>
-		/// <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
+		/// <returns>The <c>Thread</c> variable.</returns>
+		/// <param name="threadProc">Thread procedure. Parameter <i>start</i> of <see cref="Thread"/> constructor.</param>
 		/// <param name="background">
 		/// If <c>true</c> (default), sets <see cref="Thread.IsBackground"/> = <c>true</c>.
 		/// The process ends when the main thread and all foreground threads end; background threads then are terminated.
@@ -381,8 +381,8 @@ namespace Au {
 		/// Starts new thread like <see cref="thread(Action, bool, bool)"/> and gets thread handle and native id.
 		/// </summary>
 		/// <param name="id">Native thread id.</param>
-		/// <param name="thread"><b>Thread</b> object.</param>
-		/// <param name="init">Called in the new thread before <i>threadProc</i>. This function (<b>run.thread</b>) waits until it returns.</param>
+		/// <param name="thread"><c>Thread</c> object.</param>
+		/// <param name="init">Called in the new thread before <i>threadProc</i>. This function (<c>run.thread</c>) waits until it returns.</param>
 		/// <returns>Thread handle. Don't forget to dispose.</returns>
 		/// <inheritdoc cref="thread(Action, bool, bool)"/>
 		public static unsafe SafeWaitHandle thread(out int id, out Thread thread, Action threadProc, bool background = true, bool sta = true, Action init = null) {
@@ -458,7 +458,7 @@ namespace Au.Types {
 	/// More parameters for <see cref="run.it"/>.
 	/// </summary>
 	/// <remarks>
-	/// Implicit conversion from <b>string</b> sets <see cref="CurrentDirectory"/>.
+	/// Implicit conversion from <c>string</c> sets <see cref="CurrentDirectory"/>.
 	/// </remarks>
 	public class ROptions {
 		/// <summary>
@@ -493,13 +493,13 @@ namespace Au.Types {
 		public ProcessWindowStyle WindowState;
 		
 		/// <summary>
-		/// Flags to add to <ms>SHELLEXECUTEINFO</ms> field <b>fMask</b>.
-		/// Default flags: <b>SEE_MASK_NOZONECHECKS</b>, <b>SEE_MASK_NOASYNC</b>, <b>SEE_MASK_NOCLOSEPROCESS</b>, <b>SEE_MASK_CONNECTNETDRV</b>, <b>SEE_MASK_UNICODE</b>, <b>SEE_MASK_FLAG_NO_UI</b> (if no flag <b>ShowErrorUI</b>), <b>SEE_MASK_NO_CONSOLE</b> (if no flag <b>WaitForExit</b>), <b>SEE_MASK_FLAG_LOG_USAGE</b> (if flag <b>MostUsed</b>); also <b>SEE_MASK_INVOKEIDLIST</b> if need.
+		/// Flags to add to <ms>SHELLEXECUTEINFO</ms> field <c>fMask</c>.
+		/// Default flags: <c>SEE_MASK_NOZONECHECKS</c>, <c>SEE_MASK_NOASYNC</c>, <c>SEE_MASK_NOCLOSEPROCESS</c>, <c>SEE_MASK_CONNECTNETDRV</c>, <c>SEE_MASK_UNICODE</c>, <c>SEE_MASK_FLAG_NO_UI</c> (if no flag <c>ShowErrorUI</c>), <c>SEE_MASK_NO_CONSOLE</c> (if no flag <c>WaitForExit</c>), <c>SEE_MASK_FLAG_LOG_USAGE</c> (if flag <c>MostUsed</c>); also <c>SEE_MASK_INVOKEIDLIST</c> if need.
 		/// </summary>
 		public uint FlagsAdd;
 		
 		/// <summary>
-		/// Flags to remove from <ms>SHELLEXECUTEINFO</ms> field <b>fMask</b>.
+		/// Flags to remove from <ms>SHELLEXECUTEINFO</ms> field <c>fMask</c>.
 		/// Default flags: see <see cref="FlagsAdd"/>.
 		/// </summary>
 		public uint FlagsRemove;
@@ -517,7 +517,7 @@ namespace Au.Types {
 		/// <summary>
 		/// The exit code of the process.
 		/// </summary>
-		/// <value>0 if no flag <b>WaitForExit</b> or if cannot wait.</value>
+		/// <value>0 if no flag <c>WaitForExit</c> or if cannot wait.</value>
 		/// <remarks>
 		/// Usually the exit code is 0 or a process-defined error code.
 		/// </remarks>
@@ -526,11 +526,11 @@ namespace Au.Types {
 		/// <summary>
 		/// The process id.
 		/// </summary>
-		/// <value>0 if used flag <b>WaitForExit</b> or if did not start new process (eg opened the document in an existing process) or if cannot get it.</value>
+		/// <value>0 if used flag <c>WaitForExit</c> or if did not start new process (eg opened the document in an existing process) or if cannot get it.</value>
 		public int ProcessId { get; internal set; }
 		
 		/// <summary>
-		/// If used flag <b>NeedProcessHandle</b>, contains process handle. Later the <see cref="WaitHandle"/> variable must be disposed.
+		/// If used flag <c>NeedProcessHandle</c>, contains process handle. Later the <see cref="WaitHandle"/> variable must be disposed.
 		/// </summary>
 		/// <value><c>null</c> if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.</value>
 		/// <example>

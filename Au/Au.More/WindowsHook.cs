@@ -7,13 +7,13 @@ namespace Au.More {
 	/// 
 	/// Threads that use hooks must process Windows messages. For example have a window/dialog/messagebox, or use a "wait-for" function that dispatches messages or has such option (see <see cref="Seconds.DoEvents"/>).
 	/// 
-	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with <c>using</c>. Can do it in hook procedure.</note>
+	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <see cref="Dispose"/> or <see cref="Unhook"/> in same thread) or with <c>using</c>. Can do it in hook procedure.</note>
 	/// 
 	/// <note type="warning">Avoid many hooks. Each low-level keyboard or mouse hook makes the computer slower, even if the hook procedure is fast. On each input event (key down, key up, mouse move, click, wheel) Windows sends a message to your thread.</note>
 	/// 
-	/// To receive hook events is used a callback function, aka hook procedure. Hook procedures of some hook types can block some events (call <b>BlockEvent</b> or return <c>true</c>). Blocked events are not sent to apps and older hooks.
+	/// To receive hook events is used a callback function, aka hook procedure. Hook procedures of some hook types can block some events (call <see cref="HookData.Keyboard.BlockEvent"/> or return <c>true</c>). Blocked events are not sent to apps and older hooks.
 	/// 
-	/// Delegates of hook procedures are protected from GC until called <b>Dispose</b> or until the thread ends, even of unreferenced <b>WindowsHook</b> variables.
+	/// Delegates of hook procedures are protected from GC until called <see cref="Dispose"/> or until the thread ends, even of unreferenced <c>WindowsHook</c> variables.
 	/// 
 	/// UI element functions may fail in hook procedures of low-level keyboard and mouse hooks. Workarounds exist.
 	/// 
@@ -30,7 +30,7 @@ namespace Au.More {
 		[ThreadStatic] static List<WindowsHook> t_antiGC;
 
 		/// <summary>
-		/// Sets a low-level keyboard hook (<b>WH_KEYBOARD_LL</b>).
+		/// Sets a low-level keyboard hook (<ms>WH_KEYBOARD_LL</ms>).
 		/// See API <ms>SetWindowsHookEx</ms>.
 		/// </summary>
 		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -61,7 +61,7 @@ namespace Au.More {
 			=> new(Api.WH_KEYBOARD_LL, hookProc, setNow, 0, ignoreAuInjected);
 
 		/// <summary>
-		/// Sets a low-level mouse hook (<b>WH_MOUSE_LL</b>).
+		/// Sets a low-level mouse hook (<ms>WH_MOUSE_LL</ms>).
 		/// See API <ms>SetWindowsHookEx</ms>.
 		/// </summary>
 		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -95,7 +95,7 @@ namespace Au.More {
 			=> new(Api.WH_MOUSE_LL, hookProc, setNow, 0, ignoreAuInjected, "Mouse");
 
 		/// <summary>
-		/// Sets a <b>WH_CBT</b> hook for a thread of this process.
+		/// Sets a <ms>WH_CBT</ms> hook for a thread of this process.
 		/// See API <ms>SetWindowsHookEx</ms>.
 		/// </summary>
 		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -132,7 +132,7 @@ namespace Au.More {
 			=> new(Api.WH_CBT, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a <b>WH_GETMESSAGE</b> hook for a thread of this process.
+		/// Sets a <ms>WH_GETMESSAGE</ms> hook for a thread of this process.
 		/// See API <ms>SetWindowsHookEx</ms>.
 		/// </summary>
 		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -157,7 +157,7 @@ namespace Au.More {
 			=> new(Api.WH_GETMESSAGE, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a <b>WH_GETMESSAGE</b> hook for a thread of this process.
+		/// Sets a <ms>WH_GETMESSAGE</ms> hook for a thread of this process.
 		/// See API <ms>SetWindowsHookEx</ms>.
 		/// </summary>
 		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -182,7 +182,7 @@ namespace Au.More {
 			=> new(Api.WH_KEYBOARD, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a <b>WH_MOUSE</b> hook for a thread of this process.
+		/// Sets a <ms>WH_MOUSE</ms> hook for a thread of this process.
 		/// See API <ms>SetWindowsHookEx</ms>.
 		/// </summary>
 		/// <returns>New <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -208,7 +208,7 @@ namespace Au.More {
 			=> new(Api.WH_MOUSE, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a <b>WH_CALLWNDPROC</b> hook for a thread of this process.
+		/// Sets a <ms>WH_CALLWNDPROC</ms> hook for a thread of this process.
 		/// See API <ms>SetWindowsHookEx</ms>.
 		/// </summary>
 		/// <returns>A new <see cref="WindowsHook"/> object that manages the hook.</returns>
@@ -235,7 +235,7 @@ namespace Au.More {
 			=> new(Api.WH_CALLWNDPROC, hookProc, setNow, threadId);
 
 		/// <summary>
-		/// Sets a <b>WH_CALLWNDPROCRET</b> hook for a thread of this process.
+		/// Sets a <ms>WH_CALLWNDPROCRET</ms> hook for a thread of this process.
 		/// See API <ms>SetWindowsHookEx</ms>.
 		/// </summary>
 		/// <inheritdoc cref="ThreadCallWndProc"/>
@@ -273,7 +273,7 @@ namespace Au.More {
 		/// <exception cref="InvalidOperationException">The hook is already set.</exception>
 		/// <exception cref="ArgumentException"><i>threadId</i> not 0 and the hook type is not a thread hook.</exception>
 		/// <remarks>
-		/// Usually don't need to call this function, because the <b>WindowsHook</b> static methods that return a new <b>WindowsHook</b> object by default call it.
+		/// Usually don't need to call this function, because the <c>WindowsHook</c> static methods that return a new <c>WindowsHook</c> object by default call it.
 		/// </remarks>
 		public void Hook(int threadId = 0) {
 			if (_proc2 == null) throw new ObjectDisposedException(nameof(WindowsHook));
@@ -345,7 +345,7 @@ namespace Au.More {
 		/// For example when a hotkey control is focused.
 		/// </summary>
 		/// <remarks>
-		/// <b>Restore</b> is disabled when the number of <c>=true</c> calls is greater than the number of <c>=false</c> calls. 
+		/// <c>Restore</c> is disabled when the number of <c>=true</c> calls is greater than the number of <c>=false</c> calls. 
 		/// </remarks>
 		internal static unsafe bool DontRestoreKeyboardHooks_ {
 			get => SharedMemory_.Ptr->winHook.dontRestoreKeyboardHooks > 0;
@@ -656,7 +656,7 @@ namespace Au.Types {
 			public KMod Mod => keys.Internal_.KeyToMod((KKey)_x->vkCode);
 
 			/// <summary>
-			/// If <b>vkCode</b> is a left or right modifier key code (<c>LShift</c>, <c>LCtrl</c>, <c>LAlt</c>, <c>RShift</c>, <c>RCtrl</c>, <c>RAlt</c>, <c>RWin</c>), returns the common modifier key code (<c>Shift</c>, <c>Ctrl</c>, <c>Alt</c>, <c>Win</c>). Else returns <b>vkCode</b>.
+			/// If <see cref="vkCode"/> is a left or right modifier key code (<c>LShift</c>, <c>LCtrl</c>, <c>LAlt</c>, <c>RShift</c>, <c>RCtrl</c>, <c>RAlt</c>, <c>RWin</c>), returns the common modifier key code (<c>Shift</c>, <c>Ctrl</c>, <c>Alt</c>, <c>Win</c>). Else returns <see cref="vkCode"/>.
 			/// </summary>
 			public KKey Key {
 				get {
@@ -672,7 +672,7 @@ namespace Au.Types {
 			}
 
 			/// <summary>
-			/// Returns <c>true</c> if <i>key</i> == <b>vkCode</b> or <i>key</i> is <c>Shift</c>, <c>Ctrl</c>, <c>Alt</c> or <c>Win</c> and <b>vkCode</b> is <c>LShift</c>/<c>RShift</c>, <c>LCtrl</c>/<c>RCtrl</c>, <c>LAlt</c>/<c>RAlt</c> or <c>RWin</c>.
+			/// Returns <c>true</c> if <i>key</i> == <see cref="vkCode"/> or <i>key</i> is <c>Shift</c>, <c>Ctrl</c>, <c>Alt</c> or <c>Win</c> and <see cref="vkCode"/> is <c>LShift</c>/<c>RShift</c>, <c>LCtrl</c>/<c>RCtrl</c>, <c>LAlt</c>/<c>RAlt</c> or <c>RWin</c>.
 			/// </summary>
 			public bool IsKey(KKey key) {
 				var vk = (KKey)_x->vkCode;
@@ -687,7 +687,7 @@ namespace Au.Types {
 			}
 
 			/// <summary>
-			/// Converts flags to API <b>SendInput</b> flags <b>KEYEVENTF_KEYUP</b> and <b>KEYEVENTF_EXTENDEDKEY</b>.
+			/// Converts flags to API <ms>SendInput</ms> flags <c>KEYEVENTF_KEYUP</c> and <c>KEYEVENTF_EXTENDEDKEY</c>.
 			/// </summary>
 			internal byte SendInputFlags_ {
 				get {
@@ -718,7 +718,7 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// Extra info value used by functions of this library that generate keyboard events. Low-level hooks receive it in <b>dwExtraInfo</b>.
+		/// Extra info value used by functions of this library that generate keyboard events. Low-level hooks receive it in <c>dwExtraInfo</c>.
 		/// </summary>
 		public const int AuExtraInfo = Api.AuExtraInfo;
 
@@ -792,7 +792,7 @@ namespace Au.Types {
 			/// <summary>
 			/// Converts <see cref="Event"/> to <see cref="MButton"/>.
 			/// </summary>
-			/// <value><b>Left</b>, <b>Right</b>, <b>Middle</b>, <b>X1</b>, <b>X2</b> or 0. The down/up/double flags not used.</value>
+			/// <value><c>Left</c>, <c>Right</c>, <c>Middle</c>, <c>X1</c>, <c>X2</c> or 0. The down/up/double flags not used.</value>
 			public MButton Button {
 				get {
 					return _event switch {
@@ -896,7 +896,7 @@ namespace Au.Types {
 			/// <summary>
 			/// Gets <see cref="CbtEvent.ACTIVATE"/> event info.
 			/// </summary>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.ACTIVATE</b>.</exception>
+			/// <exception cref="InvalidOperationException"><see cref="code"/> is not <see cref="CbtEvent.ACTIVATE"/>.</exception>
 			public unsafe CBTACTIVATESTRUCT* ActivationInfo => code == CbtEvent.ACTIVATE ? (CBTACTIVATESTRUCT*)lParam : throw new InvalidOperationException();
 
 			/// <summary>
@@ -911,9 +911,9 @@ namespace Au.Types {
 
 			/// <summary>
 			/// Gets <see cref="CbtEvent.CREATEWND"/> event info.
-			/// You can modify <b>x</b>, <b>y</b>, <b>cx</b>, <b>cy</b>, and <b>hwndInsertAfter</b>.
+			/// You can modify <c>x</c>, <c>y</c>, <c>cx</c>, <c>cy</c>, and <c>hwndInsertAfter</c>.
 			/// </summary>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.CREATEWND</b>.</exception>
+			/// <exception cref="InvalidOperationException"><see cref="code"/> is not <see cref="CbtEvent.CREATEWND"/>.</exception>
 			public unsafe CBT_CREATEWND* CreationInfo => code == CbtEvent.CREATEWND ? (CBT_CREATEWND*)lParam : throw new InvalidOperationException();
 
 			/// <summary>
@@ -931,7 +931,7 @@ namespace Au.Types {
 			///// Gets <see cref="CbtEvent.CLICKSKIPPED"/> event info. Returns the mouse message.
 			///// </summary>
 			///// <param name="m"><ms>MOUSEHOOKSTRUCT</ms>.</param>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.CLICKSKIPPED</b>.</exception>
+			///// <exception cref="InvalidOperationException"><see cref="code"/> is not <c>CbtEvent.CLICKSKIPPED</c>.</exception>
 			//public unsafe uint MouseInfo(out MOUSEHOOKSTRUCT* m) {
 			//	if (code != CbtEvent.CLICKSKIPPED) throw new InvalidOperationException();
 			//	m = (MOUSEHOOKSTRUCT*)lParam;
@@ -942,7 +942,7 @@ namespace Au.Types {
 			///// Gets <see cref="CbtEvent.KEYSKIPPED"/> event info. Returns the key code.
 			///// </summary>
 			///// <param name="lParam"><i>lParam</i> of the key message. Specifies the repeat count, scan code, etc. See API <ms>WM_KEYDOWN</ms>.</param>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.KEYSKIPPED</b>.</exception>
+			///// <exception cref="InvalidOperationException"><see cref="code"/> is not <c>CbtEvent.KEYSKIPPED</c>.</exception>
 			//public KKey KeyInfo(out uint lParam) {
 			//	if (code != CbtEvent.KEYSKIPPED) throw new InvalidOperationException();
 			//	lParam = (uint)this.lParam;
@@ -953,7 +953,7 @@ namespace Au.Types {
 			///// Gets <see cref="CbtEvent.SETFOCUS"/> event info. Returns the window handle.
 			///// </summary>
 			///// <param name="wLostFocus">The previously focused window, or <c>default(wnd)</c>.</param>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.SETFOCUS</b>.</exception>
+			///// <exception cref="InvalidOperationException"><see cref="code"/> is not <c>CbtEvent.SETFOCUS</c>.</exception>
 			//public wnd FocusInfo(out wnd wLostFocus) {
 			//	if (code != CbtEvent.SETFOCUS) throw new InvalidOperationException();
 			//	wLostFocus = (wnd)lParam;
@@ -963,14 +963,14 @@ namespace Au.Types {
 			///// <summary>
 			///// Gets <see cref="CbtEvent.MOVESIZE"/> event info.
 			///// </summary>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.MOVESIZE</b>.</exception>
+			///// <exception cref="InvalidOperationException"><see cref="code"/> is not <c>CbtEvent.MOVESIZE</c>.</exception>
 			//public unsafe RECT* MoveSizeInfo => code == CbtEvent.MOVESIZE ? (RECT*)lParam : throw new InvalidOperationException();
 
 			///// <summary>
 			///// Gets <see cref="CbtEvent.MINMAX"/> event info.
 			///// Returns the new show state. See API <ms>ShowWindow</ms>. Minimized 6, maximized 3, restored 9.
 			///// </summary>
-			///// <exception cref="InvalidOperationException"><b>code</b> is not <b>CbtEvent.MINMAX</b>.</exception>
+			///// <exception cref="InvalidOperationException"><see cref="code"/> is not <c>CbtEvent.MINMAX</c>.</exception>
 			//public int MinMaxInfo => code == CbtEvent.MINMAX ? (int)lParam & 0xffff : throw new InvalidOperationException();
 		}
 
@@ -1002,7 +1002,7 @@ namespace Au.Types {
 			public readonly WindowsHook hook;
 
 			/// <summary>
-			/// The message has not been removed from the queue, because called API <ms>PeekMessage</ms> with flag <b>PM_NOREMOVE</b>.
+			/// The message has not been removed from the queue, because called API <ms>PeekMessage</ms> with flag <c>PM_NOREMOVE</c>.
 			/// </summary>
 			public readonly bool PM_NOREMOVE;
 
@@ -1028,7 +1028,7 @@ namespace Au.Types {
 			public readonly WindowsHook hook;
 
 			/// <summary>
-			/// The message has not been removed from the queue, because called API <ms>PeekMessage</ms> with flag <b>PM_NOREMOVE</b>.
+			/// The message has not been removed from the queue, because called API <ms>PeekMessage</ms> with flag <c>PM_NOREMOVE</c>.
 			/// </summary>
 			public readonly bool PM_NOREMOVE;
 
@@ -1064,12 +1064,12 @@ namespace Au.Types {
 			public readonly WindowsHook hook;
 
 			/// <summary>
-			/// The message has not been removed from the queue, because called API <ms>PeekMessage</ms> with flag <b>PM_NOREMOVE</b>.
+			/// The message has not been removed from the queue, because called API <ms>PeekMessage</ms> with flag <c>PM_NOREMOVE</c>.
 			/// </summary>
 			public readonly bool PM_NOREMOVE;
 
 			/// <summary>
-			/// The mouse message, for example <b>WM_MOUSEMOVE</b>.
+			/// The mouse message, for example <ms>WM_MOUSEMOVE</ms>.
 			/// </summary>
 			public readonly uint message;
 

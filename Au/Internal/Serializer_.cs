@@ -1,15 +1,15 @@
 ﻿namespace Au.More;
 
 /// <summary>
-/// Binary-serializes and deserializes multiple values of types <b>int</b>, <b>string</b>, <c>string[]</c>, <c>byte[]</c> and <c>null</c>.
+/// Binary-serializes and deserializes multiple values of types <c>int</c>, <c>string</c>, <c>string[]</c>, <c>byte[]</c> and <c>null</c>.
 /// Used mostly for sending parameters for IPC through pipe etc.
-/// Similar to <b>BinaryWriter</b>, but faster and less garbage. Much faster than <b>BinaryFormatter</b>, CSV, etc.
-/// Serializes all values into a <c>byte[]</c> in single call. If need to append, use <b>BinaryWriter</b> instead.
+/// Similar to <c>BinaryWriter</c>, but faster and less garbage. Much faster than <c>BinaryFormatter</c>, CSV, etc.
+/// Serializes all values into a <c>byte[]</c> in single call. If need to append, use <c>BinaryWriter</c> instead.
 /// </summary>
 internal static unsafe class Serializer_ {
 	/// <summary>
 	/// Type of input and output values of <see cref="Serializer_"/> functions.
-	/// Has implicit conversions from/to <b>int</b> and <b>string</b>.
+	/// Has implicit conversions from/to <c>int</c> and <c>string</c>.
 	/// </summary>
 	public struct Value {
 		public object Obj;
@@ -33,13 +33,13 @@ internal static unsafe class Serializer_ {
 	public enum VType { Null, Int, String, StringArray, ByteArray }
 	
 	/// <summary>
-	/// Serializes multiple values of types <b>int</b>, <b>string</b>, <c>string[]</c> and <c>null</c>.
+	/// Serializes multiple values of types <c>int</c>, <c>string</c>, <c>string[]</c> and <c>null</c>.
 	/// The returned array can be passed to <see cref="Deserialize"/>.
 	/// </summary>
 	public static byte[] Serialize(params Value[] a) => _Serialize(false, a);
 	
 	/// <summary>
-	/// Serializes multiple values of types <b>int</b>, <b>string</b>, <c>string[]</c> and <c>null</c>.
+	/// Serializes multiple values of types <c>int</c>, <c>string</c>, <c>string[]</c> and <c>null</c>.
 	/// Unlike <see cref="Serialize"/>, in the first 4 bytes writes the size of data that follows.
 	/// Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass <c>b</c> to <see cref="Deserialize"/>. 
 	/// </summary>
@@ -108,7 +108,7 @@ internal static unsafe class Serializer_ {
 	
 	/// <summary>
 	/// Deserializes values serialized by <see cref="Serialize"/>.
-	/// Returns array of values passed to <b>Serialize</b>.
+	/// Returns array of values passed to <c>Serialize</c>.
 	/// </summary>
 	public static Value[] Deserialize(RByte serialized) {
 		fixed (byte* b0 = serialized) {

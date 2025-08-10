@@ -114,7 +114,7 @@ public static class StringUtil {
 	}
 	
 	/// <summary>
-	/// If string contains a number at <i>startIndex</i>, gets that number as <b>int</b>, also gets the string part that follows it, and returns <c>true</c>.
+	/// If string contains a number at <i>startIndex</i>, gets that number as <c>int</c>, also gets the string part that follows it, and returns <c>true</c>.
 	/// For example, for string <c>"25text"</c> or <c>"25 text"</c> gets <i>num</i> = <c>25</c>, <i>tail</i> = <c>"text"</c>.
 	/// Everything else is the same as with <see cref="ExtString.ToInt(string, int, out int, STIFlags)"/>.
 	/// </summary>
@@ -262,12 +262,12 @@ public static class StringUtil {
 	
 	internal static JsonSerializerOptions JsonOptions_ => s_jsOptions.Value;
 	
-	/// <summary>Calls <see cref="Encoding.GetEncoding(string)"/>, and <b>Encoding.RegisterProvider</b> if need.</summary>
+	/// <summary>Calls <see cref="Encoding.GetEncoding(string)"/>, and <see cref="Encoding.RegisterProvider"/> if need.</summary>
 	/// <returns><c>null</c> if failed.</returns>
 	public static Encoding GetEncoding(string name) => _GetEncoding(name ?? throw new ArgumentNullException());
 	
-	/// <summary>Calls <see cref="Encoding.GetEncoding(int)"/>, and <b>Encoding.RegisterProvider</b> if need.</summary>
-	/// <param name="codepage">If -1, uses the current Windows ANSI code page (API <b>GetACP</b>).</param>
+	/// <summary>Calls <see cref="Encoding.GetEncoding(int)"/>, and <see cref="Encoding.RegisterProvider"/> if need.</summary>
+	/// <param name="codepage">If -1, uses the current Windows ANSI code page (API <ms>GetACP</ms>).</param>
 	/// <returns><c>null</c> if failed.</returns>
 	public static Encoding GetEncoding(int codepage) => _GetEncoding(null, codepage == -1 ? Api.GetACP() : codepage);
 	

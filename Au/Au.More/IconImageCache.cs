@@ -9,7 +9,7 @@ namespace Au.More;
 /// <remarks>
 /// Uses memory cache and optionally file cache to avoid loading same image multiple times. Getting images from cache is much faster.
 ///
-/// <b>Bitmap</b> objects retrieved by this class are stored in memory cache. Don't dispose them before disposing the <b>IconImageCache</b> object. Usually don't need to dispose these <b>Bitmap</b> objects explicitly (GC will do it).
+/// <c>Bitmap</c> objects retrieved by this class are stored in memory cache. Don't dispose them before disposing the <c>IconImageCache</c> object. Usually don't need to dispose these <c>Bitmap</c> objects explicitly (GC will do it).
 /// 
 /// Thread-safe.
 /// </remarks>
@@ -31,7 +31,7 @@ public sealed class IconImageCache : IDisposable {
 		}
 		
 		/// <summary>
-		/// If the index file for this DPI still not loaded, loads it into <b>dNameHash</b>.
+		/// If the index file for this DPI still not loaded, loads it into <c>dNameHash</c>.
 		/// </summary>
 		public void LoadIndexFile() {
 			if (dNameHash == null && filesystem.exists(indexFile, useRawPath: true)) {
@@ -385,7 +385,7 @@ public sealed class IconImageCache : IDisposable {
 	}
 	
 	/// <summary>
-	/// Clears caches of all <b>IconImageCache</b> instances of this or all processes. Redraws (asynchronously) all visible windows of these processes.
+	/// Clears caches of all <see cref="IconImageCache"/> instances of this or all processes. Redraws (asynchronously) all visible windows of these processes.
 	/// </summary>
 	/// <param name="allProcesses">Clear in all processes of this user session.</param>
 	public static void ClearAll(bool allProcesses = true) {

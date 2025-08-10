@@ -3,13 +3,13 @@ namespace Au;
 public partial struct wnd {
 	/// <summary>
 	/// Gets related windows and controls.
-	/// Use like <c>wnd w2 = w1.Get.Owner;</c> (here <i>w1</i> is a <b>wnd</b> variable).
+	/// Use like <c>wnd w2 = w1.Get.Owner;</c> (here <i>w1</i> is a <see cref="wnd"/> variable).
 	/// </summary>
 	public getwnd Get => new(this);
 
 	/// <summary>
 	/// Static functions of this class are used to get special windows (used like <c>wnd w = wnd.getwnd.top;</c>) and all windows.
-	/// Instances of this class are used to get related windows and controls, like <c>wnd w2 = w1.Get.FirstChild;</c> (here <i>w1</i> is a <b>wnd</b> variable).
+	/// Instances of this class are used to get related windows and controls, like <c>wnd w2 = w1.Get.FirstChild;</c> (here <i>w1</i> is a <see cref="wnd"/> variable).
 	/// </summary>
 	public partial struct getwnd {
 		wnd _w;
@@ -127,7 +127,7 @@ public partial struct wnd {
 		/// <param name="skip">How many next windows to skip.</param>
 		/// <remarks>
 		/// If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
-		/// Calls API <ms>GetWindow</ms>(<b>GW_HWNDNEXT</b>).
+		/// Calls API <ms>GetWindow</ms>(<c>GW_HWNDNEXT</c>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd Next(int skip = 0) => _GetWindow(Api.GW_HWNDNEXT, skip);
@@ -139,7 +139,7 @@ public partial struct wnd {
 		/// <param name="skip">How many previous windows to skip.</param>
 		/// <remarks>
 		/// If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
-		/// Calls API <ms>GetWindow</ms>(<b>GW_HWNDPREV</b>).
+		/// Calls API <ms>GetWindow</ms>(<c>GW_HWNDPREV</c>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd Previous(int skip = 0) => _GetWindow(Api.GW_HWNDPREV, skip);
@@ -150,7 +150,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <remarks>
 		/// If this is a top-level window, gets the first top-level window, else gets the first control of the same direct parent.
-		/// Calls API <ms>GetWindow</ms>(this, <b>GW_HWNDFIRST</b>).
+		/// Calls API <ms>GetWindow</ms>(this, <c>GW_HWNDFIRST</c>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd FirstSibling => Api.GetWindow(_w, Api.GW_HWNDFIRST);
@@ -161,7 +161,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <remarks>
 		/// If this is a top-level window, gets the last top-level window, else gets the last control of the same direct parent.
-		/// Calls API <ms>GetWindow</ms>(this, <b>GW_HWNDLAST</b>).
+		/// Calls API <ms>GetWindow</ms>(this, <c>GW_HWNDLAST</c>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd LastSibling => Api.GetWindow(_w, Api.GW_HWNDLAST);
@@ -171,7 +171,7 @@ public partial struct wnd {
 		/// </summary>
 		/// <returns><c>default(wnd)</c> if no children or if failed.</returns>
 		/// <remarks>
-		/// Calls API <ms>GetWindow</ms>(<b>GW_CHILD</b>).
+		/// Calls API <ms>GetWindow</ms>(<c>GW_CHILD</c>).
 		/// Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd FirstChild => Api.GetWindow(_w, Api.GW_CHILD);
@@ -265,7 +265,7 @@ public partial struct wnd {
 		///// Calls API <ms>GetParent</ms>.
 		///// </summary>
 		///// <remarks>
-		///// The API function is fast but unreliable. It can get parent or owner window, and fails in some cases. Read more in the API documentation. It is reliable only if you know that this window is a child window and has <b>WS_CHILD</b> style.
+		///// The API function is fast but unreliable. It can get parent or owner window, and fails in some cases. Read more in the API documentation. It is reliable only if you know that this window is a child window and has <c>WS_CHILD</c> style.
 		///// Supports <see cref="lastError"/>.
 		///// </remarks>
 		//[Obsolete("Unreliable")]
@@ -278,7 +278,7 @@ public partial struct wnd {
 		/// <remarks>
 		/// This window should be top-level, not child; see <see cref="wnd.Window"/>.
 		/// 
-		/// Calls API <ms>GetWindow</ms>(<b>GW_ENABLEDPOPUP</b>). Supports <see cref="lastError"/>.
+		/// Calls API <ms>GetWindow</ms>(<c>GW_ENABLEDPOPUP</c>). Supports <see cref="lastError"/>.
 		/// </remarks>
 		public wnd EnabledOwned(bool orThis = false) {
 			var r = Api.GetWindow(_w, Api.GW_ENABLEDPOPUP);
@@ -562,7 +562,7 @@ public partial struct wnd {
 		/// <summary>
 		/// Gets main windows, ie those that probably are in the Windows taskbar.
 		/// </summary>
-		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+		/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps if possible; read more: <see cref="allWindows(bool, bool)"/>.</param>
 		/// <remarks>
 		/// Uses <see cref="isMainWindow"/>.
@@ -669,7 +669,7 @@ public partial struct wnd {
 	/// </summary>
 	/// <remarks>
 	/// Supports <see cref="lastError"/>.
-	/// Another way is <c>w.HasStyle(WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have <b>WS_CHILD</b> style and some child windows don't.
+	/// Another way is <c>w.HasStyle(WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have <c>WS_CHILD</c> style and some child windows don't.
 	/// </remarks>
 	/// <seealso cref="getwnd.DirectParent"/>
 	public bool IsChild => !Get.DirectParent.Is0;

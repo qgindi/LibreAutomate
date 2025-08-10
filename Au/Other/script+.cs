@@ -24,7 +24,7 @@ namespace Au.Types {
 	
 	/// <summary>
 	/// Flags for <see cref="script.setup"/> parameter <i>exception</i>. Defines what to do on unhandled exception.
-	/// Default is <b>Print</b>, even if <b>script.setup</b> not called (with default compiler only).
+	/// Default is <c>Print</c>, even if <c>script.setup</c> not called (with default compiler only).
 	/// </summary>
 	[Flags]
 	public enum UExcept {
@@ -35,7 +35,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Show dialog with exception info.
-		/// If editor available, the dialog contains links to functions in the call stack. To close the dialog when a link clicked, add flag <b>Print</b>.
+		/// If editor available, the dialog contains links to functions in the call stack. To close the dialog when a link clicked, add flag <c>Print</c>.
 		/// </summary>
 		Dialog = 2,
 	}
@@ -56,7 +56,7 @@ namespace Au.Types {
 	}
 	
 	/// <summary>
-	/// The default compiler adds this attribute to the main assembly if using non-default references (meta <b>r</b> or <b>nuget</b>). Allows to find them at run time. Only if role <b>miniProgram</b> (default) or <b>editorExtension</b>.
+	/// The default compiler adds this attribute to the main assembly if using non-default references (meta <c>r</c> or <c>nuget</c>). Allows to find them at run time. Only if role <c>miniProgram</c> (default) or <c>editorExtension</c>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	public sealed class RefPathsAttribute : Attribute {
@@ -68,7 +68,7 @@ namespace Au.Types {
 	}
 	
 	/// <summary>
-	/// The default compiler adds this attribute to the main assembly if using NuGet packages with native dlls. Allows to find the dlls at run time. Only if role <b>miniProgram</b> (default) or <b>editorExtension</b>.
+	/// The default compiler adds this attribute to the main assembly if using NuGet packages with native dlls. Allows to find the dlls at run time. Only if role <c>miniProgram</c> (default) or <c>editorExtension</c>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	public sealed class NativePathsAttribute : Attribute {
@@ -101,7 +101,7 @@ namespace Au.Types {
 		PathToIconName,
 		
 		/// <summary>
-		/// Input is a file or folder in current workspace (see <b>PathToIconName</b>).
+		/// Input is a file or folder in current workspace (see <c>PathToIconName</c>).
 		/// Output must be icon XAML.
 		/// </summary>
 		PathToIconXaml,
@@ -138,15 +138,15 @@ namespace Au.Types {
 
 namespace Au.More {
 	/// <summary>
-	/// Contains compilation info passed to current <b>preBuild</b>/<b>postBuild</b> script.
+	/// Contains compilation info passed to current <c>preBuild</c>/<c>postBuild</c> script.
 	/// </summary>
 	/// <param name="outputFile">Full path of the output exe or dll file.</param>
-	/// <param name="outputPath">Meta comment <b>outputPath</b>.</param>
+	/// <param name="outputPath">Meta comment <c>outputPath</c>.</param>
 	/// <param name="source">Path of this C# code file in the workspace.</param>
-	/// <param name="role">Meta comment <b>role</b>.</param>
-	/// <param name="optimize">Meta comment <b>optimize</b>.</param>
-	/// <param name="platform">Meta comment <b>platform</b>.</param>
-	/// <param name="preBuild"><c>true</c> if the script used with meta <b>preBuild</b>, <c>false</c> if with <b>postBuild</b>.</param>
+	/// <param name="role">Meta comment <c>role</c>.</param>
+	/// <param name="optimize">Meta comment <c>optimize</c>.</param>
+	/// <param name="platform">Meta comment <c>platform</c>.</param>
+	/// <param name="preBuild"><c>true</c> if the script used with meta <c>preBuild</c>, <c>false</c> if with <c>postBuild</c>.</param>
 	/// <param name="publish"><c>true</c> when publishing.</param>
 	/// <example>
 	/// <code><![CDATA[
@@ -158,7 +158,7 @@ namespace Au.More {
 	/// </example>
 	public record class PrePostBuild(string outputFile, string outputPath, string source, string role, bool optimize, string platform, bool preBuild, bool publish) {
 		/// <summary>
-		/// Gets compilation info passed to current <b>preBuild</b>/<b>postBuild</b> script.
+		/// Gets compilation info passed to current <c>preBuild</c>/<c>postBuild</c> script.
 		/// </summary>
 		public static PrePostBuild Info { get; internal set; }
 		

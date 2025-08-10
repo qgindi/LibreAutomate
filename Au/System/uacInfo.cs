@@ -3,7 +3,7 @@ namespace Au {
 	/// Gets [](xref:uac) integrity level and other security info of this and other processes.
 	/// </summary>
 	/// <remarks>
-	/// An <b>uacInfo</b> variable contains a process access token handle that is used to get security info. Always dispose <b>uacInfo</b> variables to close the handle.
+	/// An <c>uacInfo</c> variable contains a process access token handle that is used to get security info. Always dispose <c>uacInfo</c> variables to close the handle.
 	/// </remarks>
 	public sealed class uacInfo : IDisposable {
 		///
@@ -59,7 +59,7 @@ namespace Au {
 		/// </summary>
 		/// <remarks>
 		/// Most processes don't have this property. They cannot access/automate windows of higher integrity level (High, System, uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
-		/// Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevel==IL.UIAccess</c> (<see cref="IntegrityLevel"/> returns <b>UIAccess</b> only for Medium+uiAccess processes; for High+uiAccess processes it returns <b>High</b>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
+		/// Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevel==IL.UIAccess</c> (<see cref="IntegrityLevel"/> returns <c>UIAccess</c> only for Medium+uiAccess processes; for High+uiAccess processes it returns <c>High</c>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
 		/// This property is rarely useful. Instead use other properties of this class.
 		/// </remarks>
 		public bool IsUIAccess {
@@ -112,7 +112,7 @@ namespace Au {
 		/// Gets the [](xref:uac) integrity level (IL) of the process.
 		/// </summary>
 		/// <remarks>
-		/// IL from lowest to highest value: <b>Untrusted</b>, <b>Low</b>, <b>Medium</b>, <b>UIAccess</b>, <b>High</b>, <b>System</b>, <b>Protected</b>, <b>Unknown</b>.
+		/// IL from lowest to highest value: <c>Untrusted</c>, <c>Low</c>, <c>Medium</c>, <c>UIAccess</c>, <c>High</c>, <c>System</c>, <c>Protected</c>, <c>Unknown</c>.
 		/// The IL enum member values can be used like <c>if(x.IntegrityLevel > IL.Medium) ...</c> .
 		/// If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
 		/// </remarks>
@@ -157,7 +157,7 @@ namespace Au {
 		/// <returns><c>null</c> if failed. For example fails for services and some other processes if current process is not administrator.</returns>
 		/// <param name="processId">Process id. If you have a window, use <see cref="wnd.ProcessId"/>.</param>
 		/// <remarks>
-		/// To get <b>uacInfo</b> of this process, use <see cref="ofThisProcess"/>.
+		/// To get <see cref="uacInfo"/> of this process, use <see cref="ofThisProcess"/>.
 		/// </remarks>
 		public static uacInfo ofProcess(int processId) {
 			if (processId == 0) return null;
@@ -326,10 +326,10 @@ namespace Au.Types {
 		/// </summary>
 		Default,
 
-		/// <summary>Runs as administrator (<b>High</b> or <b>System</b> integrity level), and UAC is not turned off. Also known as "elevated".</summary>
+		/// <summary>Runs as administrator (<c>High</c> or <c>System</c> integrity level, see <see cref="UacIL"/>), and UAC is not turned off. Also known as "elevated".</summary>
 		Full,
 
-		/// <summary>Runs as standard user (<b>Medium</b>, <b>UIAccess</b> or <b>Low</b> integrity level) in administrator user session (because of UAC).</summary>
+		/// <summary>Runs as standard user (<c>Medium</c>, <c>UIAccess</c> or <c>Low</c> integrity level, see <see cref="UacIL"/>) in administrator user session (because of UAC).</summary>
 		Limited
 	}
 }

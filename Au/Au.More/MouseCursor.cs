@@ -5,7 +5,7 @@ namespace Au.More;
 /// </summary>
 /// <remarks>
 /// To load cursors for winforms can be used <see cref="System.Windows.Forms.Cursor"/> constructors, but they don't support colors, ani cursors and custom size.
-/// Don't use this class to load cursors for WPF. Its <b>Cursor</b> class loads cursors correctly.
+/// Don't use this class to load cursors for WPF. Its <c>Cursor</c> class loads cursors correctly.
 /// </remarks>
 public class MouseCursor {
 	IntPtr _handle;
@@ -76,7 +76,7 @@ public class MouseCursor {
 	/// <summary>
 	/// Creates <see cref="System.Windows.Forms.Cursor"/> object that shares native cursor handle with this object.
 	/// </summary>
-	/// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c>.</returns>
+	/// <returns><c>null</c> if <see cref="Handle"/> is <c>default(IntPtr)</c>.</returns>
 	public System.Windows.Forms.Cursor ToGdipCursor() {
 		if (_handle == default) return null;
 		var R = new System.Windows.Forms.Cursor(_handle);
@@ -87,9 +87,9 @@ public class MouseCursor {
 	
 	//rejected. Don't need. WPF can load from file or stream. Loads correctly.
 	///// <summary>
-	///// Creates WPF <b>Cursor</b> object from this native cursor.
+	///// Creates WPF <c>Cursor</c> object from this native cursor.
 	///// </summary>
-	///// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c>.</returns>
+	///// <returns><c>null</c> if <c>Handle</c> is <c>default(IntPtr)</c>.</returns>
 	///// <param name="destroyCursor">If <c>true</c> (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If <c>false</c>, the returned variable just uses the cursor handle and will not destroy; later will need to dispose this variable.</param>
 	//public System.Windows.Input.Cursor ToWpfCursor(bool destroyCursor = true) {
 	//	if (_handle == default) return null;
@@ -137,8 +137,8 @@ public class MouseCursor {
 	
 	/// <summary>
 	/// Workaround for brief "wait" cursor when mouse enters a window of current thread first time.
-	/// Reason: default thread's cursor is "wait". OS shows it before the first <b>WM_SETCURSOR</b> sets correct cursor.
-	/// Call eg on <b>WM_CREATE</b>.
+	/// Reason: default thread's cursor is "wait". OS shows it before the first <c>WM_SETCURSOR</c> sets correct cursor.
+	/// Call eg on <c>WM_CREATE</c>.
 	/// </summary>
 	internal static void SetArrowCursor_() {
 		var h = Api.LoadCursor(default, MCursor.Arrow);

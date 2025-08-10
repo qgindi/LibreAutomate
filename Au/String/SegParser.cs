@@ -7,7 +7,7 @@ namespace Au.More {
 	/// Splits a string into substrings as start/end offsets or strings.
 	/// </summary>
 	/// <remarks>
-	/// Can be used with <c>foreach</c>. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="ExtString.Segments"/> with <c>foreach</c>.
+	/// Can be used with <c>foreach</c>. Normally you don't create <c>SegParser</c> instances explicitly; instead use <see cref="ExtString.Segments"/> with <c>foreach</c>.
 	/// </remarks>
 	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. See comments in ExtString.Segments.
 	public struct SegParser : IEnumerable<StartEnd>, IEnumerator<StartEnd> {

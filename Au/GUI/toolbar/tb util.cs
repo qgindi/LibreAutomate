@@ -89,12 +89,12 @@ public partial class toolbar {
 	};
 
 	/// <summary>
-	/// Returns DPI-scaled border thickness in client area. Returns 0 if <i>b</i> is not <b>TBBorder.Width1</b> ... <b>TBBorder.Width4</b>.
+	/// Returns DPI-scaled border thickness in client area. Returns 0 if <i>b</i> is not <c>TBBorder.Width1</c> ... <c>TBBorder.Width4</c>.
 	/// </summary>
 	static int _BorderPadding(TBBorder b, int dpi) => b >= TBBorder.Width1 && b <= TBBorder.Width4 ? Dpi.Scale((int)b, dpi) : 0;
 
 	/// <summary>
-	/// Returns DPI-scaled border thickness in client area. Returns 0 if <i>b</i> is not <b>TBBorder.Width1</b> ... <b>TBBorder.Width4</b>.
+	/// Returns DPI-scaled border thickness in client area. Returns 0 if <i>b</i> is not <c>TBBorder.Width1</c> ... <c>TBBorder.Width4</c>.
 	/// </summary>
 	int _BorderPadding(TBBorder? b = null, bool unscaled = false) => _BorderPadding(b ?? Border, unscaled ? 96 : _dpi);
 

@@ -51,7 +51,7 @@ using System.Runtime.Loader;
 namespace Au.More;
 
 /// <summary>
-/// Prepares to quickly start and execute a script with role <b>miniProgram</b> in this preloaded task process. Or starts/executes in this non-preloaded process.
+/// Prepares to quickly start and execute a script with role <c>miniProgram</c> in this preloaded task process. Or starts/executes in this non-preloaded process.
 /// </summary>
 static unsafe class MiniProgram_ {
 	struct _TaskInit {
@@ -219,7 +219,7 @@ static unsafe class MiniProgram_ {
 	}
 	
 	/// <summary>
-	/// Used by <b>exeProgram</b>.
+	/// Used by <c>exeProgram</c>.
 	/// </summary>
 	/// <param name="rootDir">Directory that may contain subdir <c>"runtimes"</c>.</param>
 	internal static void ResolveNugetRuntimes_(string rootDir) {
@@ -297,13 +297,13 @@ static unsafe class MiniProgram_ {
 	
 	[Flags]
 	public enum MPFlags {
-		/// <summary>Has <c>[RefPaths]</c> attribute. It is when using meta <b>r</b> or <b>nuget</b>.</summary>
+		/// <summary>Has <c>[RefPaths]</c> attribute. It is when using meta <c>r</c> or <c>nuget</c>.</summary>
 		RefPaths = 1,
 		
-		/// <summary><b>Main</b> with <c>[MTAThread]</c>.</summary>
+		/// <summary><c>Main</c> with <c>[MTAThread]</c>.</summary>
 		MTA = 2,
 		
-		/// <summary>Has meta <b>console</b> true.</summary>
+		/// <summary>Has meta <c>console</c> true.</summary>
 		Console = 4,
 		
 		/// <summary>Uses <c>System.Console</c> assembly.</summary>

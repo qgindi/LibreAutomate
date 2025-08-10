@@ -48,7 +48,7 @@ public class TriggerOptions {
 	/// Run actions always in the same dedicated thread that does not end when actions end.
 	/// </summary>
 	/// <param name="thread">A number that you want to use to identify the thread. Can be 0-127. Default 0.</param>
-	/// <param name="wait">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queued actions). If > 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
+	/// <param name="wait">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<c>Timeout.Infinite</c>), run when that action ends (and possibly other queued actions). If > 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
 	/// <param name="noWarning">No warning when cannot start an action because an action is running and <i>wait</i> == 0.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <remarks>
@@ -56,7 +56,7 @@ public class TriggerOptions {
 	/// There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => script.runWait("Other Script");</c>.
 	/// There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
 	/// The thread has <see cref="ApartmentState.STA"/>.
-	/// There are several <b>ThreadX</b> functions. Only the last called function is active. If none called, it is the same as called this function without arguments.
+	/// There are several <c>ThreadX</c> functions. Only the last called function is active. If none called, it is the same as called this function without arguments.
 	/// </remarks>
 	public void Thread(int thread = 0, int wait = 0, bool noWarning = false) {
 		_New();
@@ -73,7 +73,7 @@ public class TriggerOptions {
 	/// <remarks>
 	/// This should not be used without a good reason. Trigger actions must be programmed carefully, to not interfere with triggers. They must be as fast as possible, else will block triggers, hooks and user input.
 	///
-	/// Before v0.16 this was named <b>ThreadMain</b> and used in the <c>"Triggers and toolbars"</c> script. Problem: blocks hooks etc when need long time to get file icons. Now the script uses <see cref="ThreadThis"/> instead, and calls <c>Triggers.Run</c> in another thread. Your script possibly still uses the old code. You can replace it with the new version, which can be found in menu <b>File > New > Default > Triggers and toolbars</b>.
+	/// Before v0.16 this was named <see cref="ThreadMain"/> and used in the <c>"Triggers and toolbars"</c> script. Problem: blocks hooks etc when need long time to get file icons. Now the script uses <see cref="ThreadThis"/> instead, and calls <c>Triggers.Run</c> in another thread. Your script possibly still uses the old code. You can replace it with the new version, which can be found in menu <b>File > New > Default > Triggers and toolbars</b>.
 	/// </remarks>
 	public void ThreadOfTriggers() {
 		_New();
@@ -202,7 +202,7 @@ public struct TOBAArgs {
 	
 	/// <summary>
 	/// Trigger event info. The same variable as passed to the trigger action.
-	/// To access the info, cast to <b>HotkeyTriggerArgs</b> etc, depending on trigger type.
+	/// To access the info, cast to <see cref="HotkeyTriggerArgs"/> etc, depending on trigger type.
 	/// </summary>
 	public TriggerArgs ActionArgs { get; }
 	

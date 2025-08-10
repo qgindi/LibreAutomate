@@ -126,6 +126,24 @@ public partial class KScintilla {
 		return Call(SCI_INDICATORALLONFOR, pos);
 	}
 	
+	/// <summary>
+	/// Finds the first range of the specified indicator.
+	/// </summary>
+	/// <param name="indic"></param>
+	/// <param name="r">UTF-8.</param>
+	/// <returns>false if not found.</returns>
+	public bool aaaIndicatorFindFirst(int indic, out StartEnd r) {
+		r = default;
+		int start = Call(SCI_INDICATOREND, indic);
+		if (start <= 0) {
+			if (start < 0 || aaaIndicatorGetValue(indic, 0) == 0) return false;
+		}
+		int end = Call(SCI_INDICATOREND, indic, start);
+		if (end <= start) return false;
+		r = new(start, end);
+		return true;
+	}
+	
 	#endregion
 	
 	#region margins

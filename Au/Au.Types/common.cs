@@ -41,7 +41,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Windows API <b>BOOL</b>, with implicit conversions to/from C# <c>bool</c>.
+		/// Windows API <c>BOOL</c>, with implicit conversions to/from C# <c>bool</c>.
 		/// </summary>
 		public readonly record struct BOOL {
 			public readonly int IntValue;

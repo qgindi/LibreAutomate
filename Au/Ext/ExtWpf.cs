@@ -17,7 +17,7 @@ namespace Au.Types;
 /// </summary>
 public static class ExtWpf {
 	/// <summary>
-	/// Gets native window handle of this <b>Window</b> or <b>Popup</b>, or container window handle of this child object.
+	/// Gets native window handle of this <see cref="Window"/> or <see cref="Popup"/>, or container window handle of this child object.
 	/// </summary>
 	/// <returns><c>default(wnd)</c> if:
 	/// <br/>• called before creating or after closing real window;
@@ -37,11 +37,11 @@ public static class ExtWpf {
 	}
 	//rejected: notPopup. Not useful.
 	///// <summary>
-	///// Gets window handle of this <b>Window</b>, <b>Popup</b> or container window handle of this child object.
+	///// Gets window handle of this <c>Window</c>, <c>Popup</c> or container window handle of this child object.
 	///// Returns <c>default(wnd)</c> if: called before creating real window; failed; <i>t</i> is <c>null</c>.
 	///// </summary>
 	///// <param name="t"></param>
-	///// <param name="notPopup">If this is <b>Popup</b> or in a <b>Popup</b>, get handle of popup's owner <b>Window</b>.</param>
+	///// <param name="notPopup">If this is <c>Popup</c> or in a <c>Popup</c>, get handle of popup's owner <c>Window</c>.</param>
 	//public static wnd Hwnd(this DependencyObject t, bool notPopup = false)
 	//{
 	//	switch(t) {
@@ -58,7 +58,7 @@ public static class ExtWpf {
 	//}
 	
 	/// <summary>
-	/// Gets <b>IWin32Window</b> of this window for <b>System.Windows.Forms</b> functions like <b>Form.ShowDialog</b> and <b>ColorDialog.ShowDialog</b>.
+	/// Gets <c>IWin32Window</c> of this window for <c>System.Windows.Forms</c> functions like <c>Form.ShowDialog</c> and <c>ColorDialog.ShowDialog</c>.
 	/// </summary>
 	public static System.Windows.Forms.IWin32Window FormOwner(this Window t) {
 		var nw = new System.Windows.Forms.NativeWindow();
@@ -161,7 +161,7 @@ public static class ExtWpf {
 	/// <summary>
 	/// Gets rectangle of this element in screen coordinates.
 	/// </summary>
-	/// <returns>default if this is an invisible element (but not <b>Window</b>) or if fails.</returns>
+	/// <returns><c>default(RECT)</c> if this is an invisible element (but not <see cref="Window"/>) or if fails.</returns>
 	public static RECT RectInScreen(this FrameworkElement t) {
 		if (t is Window w) return w.Hwnd().Rect; //else would be incorrect: x/y of client area, width/height of window
 		if (t.IsVisible) {
@@ -175,14 +175,14 @@ public static class ExtWpf {
 	}
 
 	/// <summary>
-	/// Sets <see cref="Visibility"/> = <b>Hidden</b> or <b>Visible</b>.
+	/// Sets <see cref="Visibility"/> = <c>Hidden</c> or <c>Visible</c>.
 	/// </summary>
 	internal static void Hide_(this UIElement t, bool hide) {
 		t.Visibility = hide ? Visibility.Hidden : Visibility.Visible;
 	}
 
 	/// <summary>
-	/// Sets <see cref="Visibility"/> = <b>Collapsed</b> or <b>Visible</b>.
+	/// Sets <see cref="Visibility"/> = <c>Collapsed</c> or <c>Visible</c>.
 	/// </summary>
 	internal static void Collapse_(this UIElement t, bool collapse) {
 		t.Visibility = collapse ? Visibility.Collapsed : Visibility.Visible;
@@ -404,11 +404,11 @@ public static class ExtWpf {
 	/// <param name="x">X coordinate in screen. Physical pixels.</param>
 	/// <param name="y">Y coordinate in screen. Physical pixels.</param>
 	/// <remarks>
-	/// The unit is physical pixels. WPF provides <b>Left</b> and <b>Top</b> properties, but the unit is logical pixels, therefore cannot set exact location on high DPI screens, especially if there are multiple screens with different DPI.
+	/// The unit is physical pixels. WPF provides <c>Left</c> and <c>Top</c> properties, but the unit is logical pixels, therefore cannot set exact location on high DPI screens, especially if there are multiple screens with different DPI.
 	/// 
 	/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="wnd.MoveL"/>.
 	/// 
-	/// Else sets window location for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
+	/// Else sets window location for normal state (not minimized/maximized). Temporarily changes <c>Title</c>. Clears <c>WindowStartupLocation</c>, <c>Left</c>, <c>Top</c>. Clears <c>ShowActivated</c> if minimized. Does not change <c>SizeToContent</c>.
 	/// </remarks>
 	public static void SetXY(this Window t, int x, int y) => _Move(t, x, y, default, false);
 	
@@ -418,11 +418,11 @@ public static class ExtWpf {
 	/// <param name="t"></param>
 	/// <param name="r">Rectangle in screen. Physical pixels.</param>
 	/// <remarks>
-	/// The unit is physical pixels. WPF provides <b>Left</b>, <b>Top</b>, <b>Width</b> and <b>Height</b> properties, but the unit is logical pixels, therefore cannot set exact rectangle on high DPI screens, especially if there are multiple screens with different DPI.
+	/// The unit is physical pixels. WPF provides <c>Left</c>, <c>Top</c>, <c>Width</c> and <c>Height</c> properties, but the unit is logical pixels, therefore cannot set exact rectangle on high DPI screens, especially if there are multiple screens with different DPI.
 	/// 
 	/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="wnd.MoveL"/>.
 	/// 
-	/// Else sets window rectangle for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>Width</b>, <b>Height</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
+	/// Else sets window rectangle for normal state (not minimized/maximized). Temporarily changes <c>Title</c>. Clears <c>WindowStartupLocation</c>, <c>Left</c>, <c>Top</c>, <c>Width</c>, <c>Height</c>. Clears <c>ShowActivated</c> if minimized. Does not change <c>SizeToContent</c>.
 	/// </remarks>
 	public static void SetRect(this Window t, RECT r) => _Move(t, 0, 0, r, true);
 	
@@ -543,19 +543,19 @@ public static class ExtWpf {
 	}
 	
 	/// <summary>
-	/// Gets the <b>Text</b> property. Returns <c>null</c> if it is <c>""</c>.
+	/// Gets the <c>Text</c> property. Returns <c>null</c> if it is <c>""</c>.
 	/// </summary>
 	public static string TextOrNull(this TextBox t) => t.Text.NullIfEmpty_();
 	
 	/// <summary>
 	/// Workaround for WPF bug: on DPI change tries to activate window.
-	/// Call on <b>WM_DPICHANED</b> message or in <b>OnDpiChanged</b> override.
+	/// Call on <c>WM_DPICHANED</c> message or in <c>OnDpiChanged</c> override.
 	/// </summary>
 	public static void DpiChangedWorkaround(this Window t) => _DCW(t.Dispatcher, t.Hwnd());
 	
 	/// <summary>
 	/// Workaround for WPF bug: on DPI change tries to activate window.
-	/// Call on <b>WM_DPICHANED</b> message or in <b>OnDpiChanged</b> override. Only if top-level window.
+	/// Call on <c>WM_DPICHANED</c> message or in <c>OnDpiChanged</c> override. Only if top-level window.
 	/// </summary>
 	public static void DpiChangedWorkaround(this HwndSource t) => _DCW(t.Dispatcher, (wnd)t.Handle);
 	
@@ -567,7 +567,7 @@ public static class ExtWpf {
 		}
 	}
 	
-	/// <returns><c>true</c> if in <b>ShowDialog</b>, <c>false</c> if not, <c>null</c> if failed (uses reflection).</returns>
+	/// <returns><c>true</c> if in <c>ShowDialog</c>, <c>false</c> if not, <c>null</c> if failed (uses reflection).</returns>
 	internal static bool? IsModal_(this Window t) {
 		try {
 			var f = typeof(Window).GetField("_showingAsDialog", BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic);
@@ -584,7 +584,7 @@ public static class ExtWpf {
 	/// Call before the toolbar is loaded.
 	/// </summary>
 	/// <param name="t"></param>
-	/// <param name="hideGrip">Hide grip. Sets <b>SetIsLocked</b> <c>true</c>.</param>
+	/// <param name="hideGrip">Hide grip. Sets <c>SetIsLocked</c> <c>true</c>.</param>
 	/// <param name="hideOverflow">Hides the overflow button while it is disabled.</param>
 	/// <exception cref="InvalidOperationException">Loaded.</exception>
 	public static void HideGripAndOverflow(this ToolBar t, bool hideGrip = true, bool hideOverflow = true) {
@@ -645,9 +645,9 @@ public static class ExtWpf {
 	/// <param name="t"></param>
 	/// <exception cref="InvalidOperationException">Called not in preview mode.</exception>
 	/// <remarks>
-	/// Changes some window properties (owner window, location, activation, etc), terminates previous preview process, calls <b>ShowDialog</b>. If closed, calls <b>Environment.Exit</b>.
+	/// Changes some window properties (owner window, location, activation, etc), terminates previous preview process, calls <see cref="Window.ShowDialog"/>. If closed, calls <see cref="Environment.Exit"/>.
 	/// 
-	/// If called not in preview mode, calls <b>Environment.Exit</b>.
+	/// If called not in preview mode, calls <see cref="Environment.Exit"/>.
 	/// </remarks>
 	public static void Preview(this Window t) {
 		wnd wMain = ScriptEditor.MainWindow(); if (wMain.Is0) Environment.Exit(0);

@@ -28,8 +28,8 @@ namespace Au.More {
 		long _stack; //start of buffer of StackSize size
 
 		/// <summary>
-		/// A <b>FastBuffer</b> variable contains a field of this size. It is a memory buffer on stack.
-		/// It is a byte count and does not depend on <b>T</b>. To get count of <b>T</b> elements on stack: <c>StackSize/sizeof(T)</c>.
+		/// A <see cref="FastBuffer{T}"/> variable contains a field of this size. It is a memory buffer on stack.
+		/// It is a byte count and does not depend on <c>T</c>. To get count of <c>T</c> elements on stack: <c>StackSize/sizeof(T)</c>.
 		/// </summary>
 		public const int StackSize = 2048;
 		//const int StackSize = 16; //test More() and GetString()
@@ -56,12 +56,12 @@ namespace Au.More {
 		public ref T this[int i] => ref _p[i];
 
 		/// <summary>
-		/// Memory buffer length as number of elements of type <b>T</b>.
+		/// Memory buffer length as number of elements of type <c>T</c>.
 		/// </summary>
 		public int n => _n;
 
 		/// <summary>
-		/// Allocates first buffer of default size. It is on stack (in this variable), and its length is <c>StackSize/sizeof(T)</c> elements of type <b>T</b> (2048 bytes or 1024 chars or 512 ints...).
+		/// Allocates first buffer of default size. It is on stack (in this variable), and its length is <c>StackSize/sizeof(T)</c> elements of type <c>T</c> (2048 bytes or 1024 chars or 512 ints...).
 		/// </summary>
 		public FastBuffer() {
 			//With this overload slightly faster. Also, the int overload is confusing when need buffer of default size.
@@ -77,7 +77,7 @@ namespace Au.More {
 		/// Allocates first buffer of specified size.
 		/// </summary>
 		/// <param name="n">
-		/// Buffer length (number of elements of type <b>T</b>).
+		/// Buffer length (number of elements of type <c>T</c>).
 		/// If <c>&lt;= StackSize/sizeof(T)</c>, the buffer contains<c> StackSize/sizeof(T)</c> elements on stack (in this variable); it is 2048 bytes or 1024 chars or 512 ints... Else allocates native memory (much slower).
 		/// </param>
 		public FastBuffer(int n) {
@@ -106,7 +106,7 @@ namespace Au.More {
 		/// <summary>
 		/// Allocates new bigger buffer of specified length. Frees old buffer if need.
 		/// </summary>
-		/// <param name="n">Number of elements of type <b>T</b>.</param>
+		/// <param name="n">Number of elements of type <c>T</c>.</param>
 		/// <param name="preserve">Copy previous buffer contents to the new buffer.</param>
 		/// <exception cref="ArgumentException"><i>n</i> &lt;= current buffer length.</exception>
 		public void More(int n, bool preserve = false) {
@@ -142,7 +142,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Gets API result as string, or allocates bigger buffer if old buffer was too small.
-		/// This function can be used when <b>T</b> is <b>char</b>.
+		/// This function can be used when <c>T</c> is <c>char</c>.
 		/// </summary>
 		/// <param name="r">The return value of the called Windows API function, if it returns string length or required buffer length. Or you can call <see cref="FindStringLength"/>.</param>
 		/// <param name="s">Receives the result string if succeeded, else <i>sDefault</i> (default <c>null</c>).</param>
@@ -154,7 +154,7 @@ namespace Au.More {
 		/// </param>
 		/// <param name="sDefault">Set <i>s</i> = this string if buffer too small or <i>r</i> &lt; 1 or if the retrieved string == this string (avoid creating new string).</param>
 		/// <returns>
-		/// If <i>r</i> > <b>n</b>, calls <c>More(r);</c> and returns <c>false</c>.
+		/// If <i>r</i> > <see cref="n"/>, calls <c>More(r);</c> and returns <c>false</c>.
 		/// Else creates new string of <i>r</i> length and returns <c>true</c>.
 		/// </returns>
 		public bool GetString(int r, out string s, BSFlags flags = 0, string sDefault = null) {
@@ -183,7 +183,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Finds length of <c>'\0'</c>-terminated UTF-16 string in buffer and converts to C# string.
-		/// This function can be used when <b>T</b> is <b>char</b>. Use when length is unknown.
+		/// This function can be used when <c>T</c> is <c>char</c>. Use when length is unknown.
 		/// </summary>
 		/// <remarks>
 		/// If there is no <c>'\0'</c> character, gets whole buffer, and the string probably is truncated.
@@ -193,7 +193,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Finds length of <c>'\0'</c>-terminated <b>char</b> string in buffer.
+		/// Finds length of <c>'\0'</c>-terminated <c>char</c> string in buffer.
 		/// Returns <see cref="n"/> if there is no <c>'\0'</c> character.
 		/// </summary>
 		public int FindStringLength() {
@@ -202,7 +202,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Finds length of <c>'\0'</c>-terminated <b>byte</b> string in buffer.
+		/// Finds length of <c>'\0'</c>-terminated <c>byte</c> string in buffer.
 		/// Returns <see cref="n"/> if there is no <c>'\0'</c> character.
 		/// </summary>
 		public int FindByteStringLength() {

@@ -20,8 +20,8 @@ public enum KMod : byte {
 /// Virtual-key codes.
 /// </summary>
 /// <remarks>
-/// The values are the same as the native <b>VK_</b> constants. Also the same as in the <see cref="System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
-/// Rare and obsolete keys are not included. You can use <b>Keys</b> like <c>(KKey)Keys.Attn</c> or <b>VK_</b> constant values like <c>(KKey)200</c>.
+/// The values are the same as the native <c>VK_</c> constants. Also the same as in the <see cref="System.Windows.Forms.Keys"/> enum, but not as in the WPF <c>Key</c> enum.
+/// Rare and obsolete keys are not included. You can use <c>Keys</c> like <c>(KKey)Keys.Attn</c> or <c>VK_</c> constant values like <c>(KKey)200</c>.
 /// </remarks>
 /// <seealso cref="KMod"/>
 public enum KKey : byte {
@@ -216,7 +216,7 @@ public enum KKey : byte {
 	//VK_OEM_8 ... VK_ICO_00
 	IMEProcessKey = 0xE5,
 	//VK_ICO_CLEAR
-	///<summary><b>VK_PACKET</b>. Not a key.</summary>
+	///<summary><ms>VK_PACKET</ms>. Not a key.</summary>
 	Packet = 0xE7,
 	//VK_OEM_RESET ... VK_OEM_BACKTAB
 	//Attn = 0xF6,
@@ -256,7 +256,7 @@ public struct KKeyScan {
 
 /// <summary>
 /// Parameter type of <see cref="keys.send"/> and similar functions.
-/// Has implicit conversions from <b>string</b>, <b>clipboardData</b>, <b>KKey</b>, <b>KKeyScan</b>, <b>char</b>, <b>int</b> (sleep time) and <b>Action</b>.
+/// Has implicit conversions from <c>string</c>, <see cref="clipboardData"/>, <see cref="KKey"/>, <see cref="KKeyScan"/>, <c>char</c>, <c>int</c> (sleep time) and <see cref="Action"/>.
 /// </summary>
 public struct KKeysEtc {
 	readonly object _o;
@@ -291,7 +291,7 @@ public class PastingEventArgs : EventArgs {
 
 /// <summary>
 /// Defines a hotkey as <see cref="KMod"/> and <see cref="KKey"/>.
-/// Has implicit conversion operators from string like <c>"Ctrl+Shift+K"</c>, tuple <c>(KMod, KKey)</c>, enum <b>KKey</b>, enum <b>Keys</b>.
+/// Has implicit conversion operators from string like <c>"Ctrl+Shift+K"</c>, tuple <c>(KMod, KKey)</c>, enum <see cref="KKey"/>, enum <c>Keys</c>.
 /// </summary>
 public struct KHotkey {
 	/// <summary>
@@ -326,7 +326,7 @@ public struct KHotkey {
 	/// <summary>Explicit conversion to <see cref="System.Windows.Forms.Keys"/>.</summary>
 	public static explicit operator System.Windows.Forms.Keys(KHotkey hk) => keys.more.KModToWinforms(hk.Mod) | (System.Windows.Forms.Keys)hk.Key;
 
-	/// <summary>Allows to split a <b>KHotkey</b> variable like <c>var (mod, key) = hotkey;</c></summary>
+	/// <summary>Allows to get properties of a <see cref="KHotkey"/> variable like <c>var (mod, key) = hotkey;</c></summary>
 	public void Deconstruct(out KMod mod, out KKey key) { mod = Mod; key = Key; }
 
 	///

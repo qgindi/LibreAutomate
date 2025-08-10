@@ -6,15 +6,15 @@ namespace Au.Triggers;
 [Flags]
 public enum TWFlags : byte {
 	/// <summary>
-	/// Run the action when <see cref="ActionTriggers.Run"/> called, if the window then is active (for <b>ActiveOnce</b> etc triggers) or visible (for <b>VisibleOnce</b> etc triggers).
+	/// Run the action when <see cref="ActionTriggers.Run"/> called, if the window then is active (for <c>ActiveOnce</c> etc triggers) or visible (for <c>VisibleOnce</c> etc triggers).
 	/// </summary>
 	RunAtStartup = 1,
 	
 	/// <summary>
-	/// When using the <i>later</i> parameter, call the currently active <b>Triggers.FuncOf</b> functions on "later" events too.
+	/// When using the <i>later</i> parameter, call the currently active <c>Triggers.FuncOf</c> (see <see cref="ActionTriggers.FuncOf"/>) functions on "later" events too.
 	/// If the function returns <c>false</c>, the action will not run.
 	/// The function runs synchronously in the same thread that called <see cref="ActionTriggers.Run"/>. The action runs asynchronously in another thread, which is slower to start.
-	/// As always, <b>Triggers.FuncOf</b> functions must not contain slow code; should take less than 10 ms.
+	/// As always, <c>Triggers.FuncOf</c> functions must not contain slow code; should take less than 10 ms.
 	/// </summary>
 	LaterCallFunc = 2,
 }
@@ -207,7 +207,7 @@ public class WindowTrigger : ActionTrigger {
 /// Window triggers.
 /// </summary>
 /// <example>
-/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+/// Note: the <c>Triggers</c> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 /// <code><![CDATA[
 /// var wt = Triggers.Window; //wt is a WindowTriggers instance
 /// wt[TWEvent.ActiveNew, "Window name"] = o => print.it(o.Window);
@@ -473,7 +473,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 	
 	/// <summary>
-	/// Callback of <b>EnumWindows</b> used by <b>Timer_</b> to get visible windows.
+	/// Callback of <c>EnumWindows</c> used by <c>Timer_</c> to get visible windows.
 	/// </summary>
 	Api.WNDENUMPROC _enumWinProc;
 	unsafe int _EnumWinProc(wnd w, void* _) {
@@ -482,8 +482,8 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 	
 	/// <summary>
-	/// Called by <b>Timer_</b> when it swaps <b>_aVisible</b> with <b>_aVisibleOld</b> and calls <b>EnumWindows</b> to populate <b>_aVisible</b> with visible windows.
-	/// Finds what windows became visible or invisible and runs <b>Visible</b>/<b>Invisible</b> triggers for them.
+	/// Called by <c>Timer_</c> when it swaps <c>_aVisible</c> with <c>_aVisibleOld</c> and calls <c>EnumWindows</c> to populate <c>_aVisible</c> with visible windows.
+	/// Finds what windows became visible or invisible and runs <c>Visible</c>/<c>Invisible</c> triggers for them.
 	/// </summary>
 	void _VisibleAddedRemoved() {
 		//perf.first();
@@ -536,7 +536,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 	
 	/// <summary>
-	/// <b>WinEventHook</b> hook procedure.
+	/// <c>WinEventHook</c> hook procedure.
 	/// </summary>
 	/// <param name="k"></param>
 	void _HookProc(HookData.WinEvent k) {
@@ -607,7 +607,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	
 	/// <summary>
 	/// Processes events for main triggers (active, visible) and most "later" triggers.
-	/// Called from hook (<b>_HookProc</b>), timer (<b>Timer_</b>), at startup (<b>StartStop</b>) and <b>SimulateActiveNew</b>/<b>SimulateVisibleNew</b>.
+	/// Called from hook (<c>_HookProc</c>), timer (<c>Timer_</c>), at startup (<c>StartStop</c>) and <c>SimulateActiveNew</c>/<c>SimulateVisibleNew</c>.
 	/// </summary>
 	void _Proc(TWLater e, wnd w, _ProcCaller caller = _ProcCaller.Timer, string name = null) {
 		//e can be:
@@ -750,8 +750,8 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 	
 	/// <summary>
-	/// Called to process "later" events from <b>_Proc</b> and timer.
-	/// <i>iTriggered</i> is <i>w</i> index in <b>_aTriggered</b>, or -1 if not found, or -2 (default) to let this func find.
+	/// Called to process "later" events from <c>_Proc</c> and timer.
+	/// <i>iTriggered</i> is <i>w</i> index in <c>_aTriggered</c>, or -1 if not found, or -2 (default) to let this func find.
 	/// </summary>
 	void _ProcLater(TWLater e, wnd w, int iTriggered = -2, string name = null) {
 		if (0 == (_laterEvents & e)) return;
@@ -789,12 +789,12 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// </summary>
 	/// <exception cref="InvalidOperationException">Called before or after <see cref="ActionTriggers.Run"/>.</exception>
 	/// <remarks>
-	/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before calling <see cref="ActionTriggers.Run"/>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like <b>ActiveNew</b> and <b>ActiveOnce</b> will run once, as usually.
+	/// This function usually is used to run <c>ActiveNew</c> triggers for a window created before calling <see cref="ActionTriggers.Run"/>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like <c>ActiveNew</c> and <c>ActiveOnce</c> will run once, as usually.
 	/// This function must be called while the main triggers thread is in <see cref="ActionTriggers.Run"/>, for example from another trigger action. It is asynchronous (does not wait).
 	/// If called from a trigger action (hotkey etc), make sure the window trigger action runs in another thread or can be queued. Else both actions cannot run simultaneously. See example.
 	/// </remarks>
 	/// <example>
-	/// Note: the <b>Triggers</b> in examples is a field or property of type <b>ActionTriggers</b>.
+	/// Note: the <c>Triggers</c> in examples is a field or property of type <see cref="ActionTriggers"/>.
 	/// <code><![CDATA[
 	/// Triggers.Options.ThreadNew(true);
 	/// Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
@@ -859,7 +859,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 	
 	/// <summary>
-	/// Called by <b>_Proc</b>.
+	/// Called by <c>_Proc</c>.
 	/// </summary>
 	void _LogEvent(TWLater e, wnd w, _ProcCaller caller, bool oldWindow) {
 		string col = "0";
@@ -877,8 +877,8 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	}
 	
 	/// <summary>
-	/// For <b>_aTriggered</b>, <b>_aVisible</b> and <b>_aVisibleOld</b> we use resizable array, not <b>List</b>.
-	/// We access elements by index in time-critical code. With <b>List</b> it is much slower.
+	/// For <c>_aTriggered</c>, <c>_aVisible</c> and <c>_aVisibleOld</c> we use resizable array, not <c>List</c>.
+	/// We access elements by index in time-critical code. With <c>List</c> it is much slower.
 	/// </summary>
 	struct _WndArray {
 		public wnd[] a;
@@ -942,10 +942,10 @@ public class WindowTriggerArgs : TriggerArgs {
 	public wnd Window { get; }
 	
 	/// <summary>
-	/// The "later" event, or 0 if it is the primary trigger (<b>ActiveNew</b> etc). See example.
+	/// The "later" event, or 0 if it is the primary trigger (<c>ActiveNew</c> etc). See example.
 	/// </summary>
 	/// <example>
-	/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+	/// Note: the <c>Triggers</c> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*- Notepad", later: TWLater.Active | TWLater.Inactive] = o => print.it(o.Later, o.Window);
 	/// Triggers.Run();
@@ -974,12 +974,12 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// The trigger must have argument <c>, later: TWLater.Name</c> (see <see cref="TWLater"/>) and match the window with any name.
 	/// </remarks>
 	/// <example>
-	/// Show toolbar <b>Toolbar_Chrome1</b> on a Chrome window when window name starts with <c>"NuGet"</c>.
+	/// Show toolbar <c>Toolbar_Chrome1</c> on a Chrome window when window name starts with <c>"NuGet"</c>.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] =
 	/// 	ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome1, "NuGet*");
 	/// ]]></code>
-	/// Toolbar <b>Toolbar_Chrome1</b> for the above example.
+	/// Toolbar <c>Toolbar_Chrome1</c> for the above example.
 	/// <code><![CDATA[
 	/// toolbar Toolbar_Chrome1(WindowTriggerArgs ta) { var t = new toolbar(); /* add buttons */ t.Show(ta); return t; }
 	/// ]]></code>
@@ -1007,7 +1007,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// <param name="tbFunc">Toolbar function. Let it create a window-attached toolbar and returns the <see cref="toolbar"/> object.</param>
 	/// <param name="windowName">Callback function that returns <c>true</c> if the toolbar should be visible.</param>
 	/// <example>
-	/// Show toolbar <b>Toolbar_Chrome2</b> on a Chrome window when web page URL starts with <c>"https://www.youtube.com/"</c>.
+	/// Show toolbar <c>Toolbar_Chrome2</c> on a Chrome window when web page URL starts with <c>"https://www.youtube.com/"</c>.
 	/// <code><![CDATA[
 	/// Triggers.Window[TWEvent.ActiveOnce, "*Google Chrome", "Chrome_WidgetWin_1", later: TWLater.Name] = ta => ta.ShowToolbarWhenWindowName(Toolbar_Chrome2, w => {
 	/// 	var e = w.Elm["web:DOCUMENT"].Find(-1);

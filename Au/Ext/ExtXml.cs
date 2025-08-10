@@ -36,7 +36,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets attribute value converted to <b>int</b> number.
+		/// Gets attribute value converted to <c>int</c> number.
 		/// If the attribute does not exist, returns <i>defaultValue</i>.
 		/// If the attribute value is empty or does not begin with a valid number, returns 0.
 		/// </summary>
@@ -46,7 +46,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets attribute value converted to <b>int</b> number.
+		/// Gets attribute value converted to <c>int</c> number.
 		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
 		/// If the attribute value is empty or does not begin with a valid number, sets <i>value</i> = 0 and returns <c>true</c>.
 		/// </summary>
@@ -58,7 +58,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets attribute value converted to <b>long</b> number.
+		/// Gets attribute value converted to <c>long</c> number.
 		/// If the attribute does not exist, sets <i>value</i> = 0 and returns <c>false</c>.
 		/// If the attribute value is empty or does not begin with a valid number, sets <i>value</i> = 0 and returns <c>true</c>.
 		/// </summary>
@@ -94,7 +94,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Gets attribute value as enum type <b>T</b>.
+		/// Gets attribute value as enum type <c>T</c>.
 		/// If the attribute does not exist, sets <i>value</i> = <c>default</c> and returns <c>false</c>.
 		/// If the attribute value is not a valid enum member name, sets <i>value</i> = <i>default</i> and returns <c>true</c>.
 		/// </summary>
@@ -126,8 +126,8 @@ namespace Au.Types {
 		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If <c>null</c>, can be any name.</param>
-		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <b>Value</b> property of the element.</param>
-		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If <c>null</c>, can be any value.</param>
+		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <c>Value</c> property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or <c>Value</c>). If <c>null</c>, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive <i>attributeValue</i>.</param>
 		public static XElement Desc(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			foreach (var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
@@ -144,8 +144,8 @@ namespace Au.Types {
 		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If <c>null</c>, can be any name.</param>
-		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <b>Value</b> property of the element.</param>
-		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If <c>null</c>, can be any value.</param>
+		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <c>Value</c> property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or <c>Value</c>). If <c>null</c>, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive <i>attributeValue</i>.</param>
 		public static IEnumerable<XElement> Descs(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			foreach (var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
@@ -159,8 +159,8 @@ namespace Au.Types {
 		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If <c>null</c>, can be any name.</param>
-		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <b>Value</b> property of the element.</param>
-		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If <c>null</c>, can be any value.</param>
+		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <c>Value</c> property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or <c>Value</c>). If <c>null</c>, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive <i>attributeValue</i>.</param>
 		public static XElement Elem(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			foreach (var el in (name != null) ? t.Elements(name) : t.Elements()) {
@@ -175,8 +175,8 @@ namespace Au.Types {
 		/// <returns><c>null</c> if not found.</returns>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If <c>null</c>, can be any name.</param>
-		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <b>Value</b> property of the element.</param>
-		/// <param name="attributeValue">Attribute value (or <b>Value</b>). If <c>null</c>, can be any value.</param>
+		/// <param name="attributeName">Attribute name. If <c>null</c>, uses the <c>Value</c> property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or <c>Value</c>). If <c>null</c>, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive <i>attributeValue</i>.</param>
 		public static IEnumerable<XElement> Elems(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false) {
 			foreach (var el in (name != null) ? t.Elements(name) : t.Elements()) {
@@ -261,7 +261,7 @@ namespace Au.Types {
 
 namespace Au.More {
 	/// <summary>
-	/// Loads <b>XElement</b> and <b>XDocument</b> in a safer way.
+	/// Loads <see cref="XElement"/> and <see cref="XDocument"/> in a safer way.
 	/// </summary>
 	public static class XmlUtil {
 		/// <summary>

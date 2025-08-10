@@ -108,22 +108,22 @@ public unsafe class uiimageFinder {
 	/// <exception cref="ArgumentException">An argument of this function or of constructor is invalid.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
 	/// <remarks>
-	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+	/// Functions <c>Find</c> and <see cref="Exists"/> differ only in their return types.
 	/// </remarks>
 	/// <inheritdoc cref="uiimage.find" path="/param"/>
 	public uiimage Find(IFArea area) => Exists(area) ? Result : null;
 
 	/// <summary>
-	/// Finds the first image displayed in the specified window or other area. Can wait and throw <b>NotFoundException</b>.
+	/// Finds the first image displayed in the specified window or other area. Can wait and throw <see cref="NotFoundException"/>.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>null</c> (if <i>wait</i> negative).</returns>
-	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw <b>NotFoundException</b>.</param>
+	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw <see cref="NotFoundException"/>.</param>
 	/// <exception cref="AuWndException">Invalid window handle.</exception>
 	/// <exception cref="ArgumentException">An argument of this function or of constructor is invalid.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
 	/// <exception cref="NotFoundException" />
 	/// <remarks>
-	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+	/// Functions <c>Find</c> and <see cref="Exists"/> differ only in their return types.
 	/// </remarks>
 	/// <inheritdoc cref="uiimage.find" path="/param"/>
 	public uiimage Find(IFArea area, Seconds wait) => Exists(area, wait) ? Result : null;
@@ -150,7 +150,7 @@ public unsafe class uiimageFinder {
 	/// <remarks>
 	/// Same as <see cref="Find(IFArea, Seconds)"/>, except:
 	/// - 0 timeout means infinite.
-	/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
+	/// - on timeout throws <see cref="TimeoutException"/>, not <see cref="NotFoundException"/>.
 	/// </remarks>
 	/// <inheritdoc cref="Find(IFArea, Seconds)" path="/param"/>
 	public uiimage Wait(Seconds timeout, IFArea area)

@@ -126,18 +126,18 @@ public class wndFinder {
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>, else <c>default(wnd)</c>.</returns>
 	/// <remarks>
-	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+	/// Functions <c>Find</c> and <see cref="Exists"/> differ only in their return types.
 	/// </remarks>
 	public wnd Find() => Exists() ? Result : default;
 
 	/// <summary>
-	/// Finds the specified window, like <see cref="wnd.find"/>. Can wait and throw <b>NotFoundException</b>.
+	/// Finds the specified window, like <see cref="wnd.find"/>. Can wait and throw <see cref="NotFoundException"/>.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
 	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
 	/// <exception cref="NotFoundException" />
 	/// <remarks>
-	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+	/// Functions <c>Find</c> and <see cref="Exists"/> differ only in their return types.
 	/// </remarks>
 	public wnd Find(Seconds wait) => Exists(wait) ? Result : default;
 
@@ -165,7 +165,7 @@ public class wndFinder {
 	/// <remarks>
 	/// Same as <see cref="Find(Seconds)"/>, except:
 	/// - 0 timeout means infinite.
-	/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
+	/// - on timeout throws <see cref="TimeoutException"/>, not <see cref="NotFoundException"/>.
 	/// - has parameter <i>active</i>.
 	/// </remarks>
 	public wnd Wait(Seconds timeout, bool active) {
@@ -203,7 +203,7 @@ public class wndFinder {
 	/// <summary>
 	/// Finds all matching windows, like <see cref="wnd.findAll"/>.
 	/// </summary>
-	/// <returns>Array containing 0 or more window handles as <b>wnd</b>.</returns>
+	/// <returns>Array containing 0 or more window handles as <see cref="wnd"/>.</returns>
 	public wnd[] FindAll() {
 		return _FindAll(new WndList_(_AllWindows()));
 	}
@@ -211,7 +211,7 @@ public class wndFinder {
 	/// <summary>
 	/// Finds all matching windows in a list of windows.
 	/// </summary>
-	/// <returns>Array containing 0 or more window handles as <b>wnd</b>.</returns>
+	/// <returns>Array containing 0 or more window handles as <see cref="wnd"/>.</returns>
 	/// <param name="a">Array or list of windows, for example returned by <see cref="wnd.getwnd.allWindows"/>.</param>
 	public wnd[] FindAllInList(IEnumerable<wnd> a) {
 		return _FindAll(new WndList_(a));
@@ -229,7 +229,7 @@ public class wndFinder {
 	/// Returns index of matching element or -1.
 	/// Returns -1 if using <i>getAll</i>.
 	/// </summary>
-	/// <param name="a">List of <b>wnd</b>. Does not dispose it.</param>
+	/// <param name="a">List of <see cref="wnd"/>. Does not dispose it.</param>
 	/// <param name="getAll">If not <c>null</c>, calls it for all matching and returns -1.</param>
 	/// <param name="cache"></param>
 	int _FindOrMatch(WndList_ a, Action<wnd> getAll = null, WFCache cache = null) {
@@ -393,7 +393,7 @@ public class wndFinder {
 	/// Returns <c>true</c> if window <i>w</i> properties match the specified properties.
 	/// </summary>
 	/// <param name="w">A top-level window. If 0 or invalid, returns <c>false</c>.</param>
-	/// <param name="cache">Can be used to make faster when multiple <b>wndFinder</b> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>
+	/// <param name="cache">Can be used to make faster when multiple <see cref="wndFinder"/> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>
 	/// <seealso cref="wnd.IsMatch"/>
 	public bool IsMatch(wnd w, WFCache cache = null) {
 		return 0 == _FindOrMatch(new WndList_(w), cache: cache);

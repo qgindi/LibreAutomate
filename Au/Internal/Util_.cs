@@ -8,7 +8,7 @@ static unsafe class Not_ {
 	//}
 	
 	/// <summary>
-	/// Same as <b>ArgumentNullException.ThrowIfNull</b>.
+	/// Same as <c>ArgumentNullException.ThrowIfNull</c>.
 	/// It's pity, they removed operator <c>!!</c> from C# 11.
 	/// </summary>
 	internal static void Null(object o,
@@ -52,7 +52,7 @@ static unsafe class Not_ {
 
 static class WpfUtil_ {
 	/// <summary>
-	/// <c>true</c> if <b>SystemParameters.HighContrast</b> and <c>ColorInt.GetPerceivedBrightness(SystemColors.ControlColor)&lt;=0.5</c>.
+	/// <c>true</c> if <c>SystemParameters.HighContrast</c> and <c>ColorInt.GetPerceivedBrightness(SystemColors.ControlColor)&lt;=0.5</c>.
 	/// </summary>
 	public static bool IsHighContrastDark {
 		get {

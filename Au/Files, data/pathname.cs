@@ -22,7 +22,7 @@ namespace Au {
 		/// <param name="path">Any string. Can be <c>null</c>.</param>
 		/// <param name="strict">
 		/// What to do if <i>path</i> looks like starts with and environment variable or known folder but the variable/folder does not exist:
-		/// <br/>• <c>true</c> - throw <b>ArgumentException</b>;
+		/// <br/>• <c>true</c> - throw <see cref="ArgumentException"/>;
 		/// <br/>• <c>false</c> - return unexpanded path;
 		/// <br/>• <c>null</c> (default) - call <see cref="print.warning"/> and return unexpanded path.
 		/// </param>
@@ -33,7 +33,7 @@ namespace Au {
 		/// Usually known folders are used like <c>string path = folders.Documents + "file.txt"</c>. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
 		/// To get known folder path, this function calls <see cref="folders.getFolder"/>.
 		/// 
-		/// This function is called by many functions of classes <b>pathname</b>, <b>filesystem</b>, <b>icon</b>, some others, therefore all they support environment variables and known folders in path string.
+		/// This function is called by many functions of classes <see cref="pathname"/>, <see cref="filesystem"/>, <see cref="icon"/>, some others, therefore all they support environment variables and known folders in path string.
 		/// </remarks>
 		/// <seealso cref="Environment.ExpandEnvironmentVariables"/>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>
@@ -155,8 +155,8 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Calls <b>Path.GetPathRoot</b>. If no <c>'\\'</c> or <c>'/'</c> at the end, appends <c>"\\"</c>.
-		/// Tested: <b>Path.GetPathRoot</b> returns network path like <c>@"\\server\share"</c>. API <b>PathSkipRoot</b> returns with <c>'\\'</c>.
+		/// Calls <c>Path.GetPathRoot</c>. If no <c>'\\'</c> or <c>'/'</c> at the end, appends <c>"\\"</c>.
+		/// Tested: <c>Path.GetPathRoot</c> returns network path like <c>@"\\server\share"</c>. API <c>PathSkipRoot</c> returns with <c>'\\'</c>.
 		/// </summary>
 		internal static string GetRootBS_(string s) {
 			s = Path.GetPathRoot(s);
@@ -303,14 +303,14 @@ namespace Au {
 		/// <remarks>
 		/// The sequence of actions:
 		/// 1. If <i>path</i> starts with <c>'%'</c> character, expands environment variables and special folder names. See <see cref="expand"/>.
-		/// 2. If <i>path</i> is not full path but looks like URL, and used flag <b>CanBeUrl</b>, returns <i>path</i>.
+		/// 2. If <i>path</i> is not full path but looks like URL, and used flag <c>CanBeUrl</c>, returns <i>path</i>.
 		/// 3. If <i>path</i> is not full path, and <i>defaultParentDirectory</i> is not <c>null</c>/<c>""</c>, combines <i>path</i> with <c>expand(defaultParentDirectory)</c>.
 		/// 4. If <i>path</i> is not full path, throws exception.
 		/// 5. If <i>path</i> is like <c>"C:"</c> makes like <c>"C:\"</c>.
 		/// 6. Calls API <ms>GetFullPathName</ms>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
-		/// 7. If no flag <b>DontExpandDosPath</b>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <ms>GetLongPathName</ms>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
-		/// 8. If no flag <b>DontRemoveEndSeparator</b>, and string ends with <c>'\\'</c> character, and length > 4, removes the <c>'\\'</c>, unless then it would be a path to an existing file (not directory).
-		/// 9. If no flag <b>DontPrefixLongPath</b>, calls <see cref="prefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
+		/// 7. If no flag <c>DontExpandDosPath</c>, if <i>path</i> looks like a short DOS path version (contains <c>'~'</c> etc), calls API <ms>GetLongPathName</ms>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
+		/// 8. If no flag <c>DontRemoveEndSeparator</c>, and string ends with <c>'\\'</c> character, and length > 4, removes the <c>'\\'</c>, unless then it would be a path to an existing file (not directory).
+		/// 9. If no flag <c>DontPrefixLongPath</c>, calls <see cref="prefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
 		/// 
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths (unless used <i>defaultParentDirectory</i>), trims <c>'\\'</c> at the end if need.
 		/// </remarks>
@@ -358,7 +358,7 @@ namespace Au {
 
 		/// <summary>
 		/// Prepares path for passing to API and .NET functions that support <c>".."</c>, DOS path etc.
-		/// Calls expand, <b>_AddSepToDrive</b>, <b>prefixLongPathIfNeed</b>. By default throws exception if <c>!isFullPath(path)</c>.
+		/// Calls expand, <c>_AddSepToDrive</c>, <see cref="prefixLongPathIfNeed"/>. By default throws exception if <c>!isFullPath(path)</c>.
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path (only if <i>throwIfNotFullPath</i> is <c>true</c>).</exception>
 		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath = true) {
@@ -371,7 +371,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Calls API <b>GetLongPathName</b>.
+		/// Calls API <c>GetLongPathName</c>.
 		/// Does not check whether <i>s</i> contains <c>'~'</c> character etc. Note: the API is slow.
 		/// </summary>
 		/// <param name="s">Can be <c>null</c>.</param>

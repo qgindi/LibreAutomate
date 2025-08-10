@@ -52,7 +52,7 @@ public class timer {
 	/// </summary>
 	/// <param name="milliseconds">Time interval after which to call the callback function. The actual minimal interval is 10-20 ms.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
-	/// <exception cref="InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
+	/// <exception cref="InvalidOperationException">Called not in the same thread as previously.</exception>
 	/// <exception cref="Win32Exception">API <ms>SetTimer</ms> returned 0. Unlikely.</exception>
 	/// <remarks>
 	/// The timer will be stopped before calling the callback function. The callback function can start it again.
@@ -65,7 +65,7 @@ public class timer {
 	/// </summary>
 	/// <param name="milliseconds">Time interval (period) of calling the callback function. The actual minimal period is 10-20 ms.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
-	/// <exception cref="InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
+	/// <exception cref="InvalidOperationException">Called not in the same thread as previously.</exception>
 	/// <exception cref="Win32Exception">API <ms>SetTimer</ms> returned 0. Unlikely.</exception>
 	/// <remarks>
 	/// The callback function can stop the timer or restart with different period.
@@ -110,12 +110,12 @@ public class timer {
 	/// <summary>
 	/// Stops the timer.
 	/// </summary>
-	/// <exception cref="InvalidOperationException">Called not in the same thread as <b>Start</b>.</exception>
+	/// <exception cref="InvalidOperationException">Called not in the same thread as previously.</exception>
 	/// <remarks>
 	/// The callback function will not be called after this.
-	/// Later you can start the timer again (call <see cref="After(int)"/> or <see cref="Every(int)"/>).
+	/// Later you can start the timer again (call <see cref="After"/> or <see cref="Every"/>).
 	/// Don't need to call this function for single-period timers. For periodic timers it is optional; the timer stops when the thread ends.
-	/// This function must be called in the same thread as <b>Start</b>.
+	/// This function must be called in the same thread as <see cref="After"/> or <see cref="Every"/>.
 	/// </remarks>
 	public void Stop() {
 		if (_id != 0) {
@@ -163,7 +163,7 @@ public class timer {
 	/// <remarks>
 	/// The timer will be stopped before calling the callback function. The callback function can start it again.
 	/// The callback function will be called in this thread.
-	/// This thread must get/dispatch posted messages, eg call <b>Application.Run</b> or <b>Form.ShowModal</b> or <b>dialog.show</b>. The callback function is not called while this thread does not do it.
+	/// This thread must get/dispatch posted messages, eg call <c>Application.Run</c> or <see cref="dialog.show"/>. The callback function is not called while this thread does not do it.
 	/// </remarks>
 	public static timer after(int milliseconds, Action<timer> timerAction, object tag = null)
 		=> _StartNew(true, milliseconds, timerAction, tag);
@@ -180,7 +180,7 @@ public class timer {
 	/// <remarks>
 	/// The callback function can stop the timer or restart with different period.
 	/// The callback function will be called in this thread.
-	/// This thread must get/dispatch posted messages, eg call <b>Application.Run</b> or <b>Form.ShowModal</b> or <b>dialog.show</b>. The callback function is not called while this thread does not do it.
+	/// This thread must get/dispatch posted messages, eg call <c>Application.Run</c> or <see cref="dialog.show"/>. The callback function is not called while this thread does not do it.
 	/// </remarks>
 	public static timer every(int milliseconds, Action<timer> timerAction, object tag = null)
 		=> _StartNew(false, milliseconds, timerAction, tag);

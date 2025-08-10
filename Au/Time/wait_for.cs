@@ -18,12 +18,12 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Obsolete. Use <b>wait.until</b>.
+		/// Obsolete. Use <c>wait.until</c>.
 		/// Waits for a user-defined condition. Until the callback function returns a value other than <c>default(T)</c>, for example <c>true</c>.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. The calling period depends on <i>options</i>.</param>
-		/// <param name="options">Options. If <c>null</c>, uses <b>opt.wait</b>.</param>
+		/// <param name="options">Options. If <c>null</c>, uses <c>opt.wait</c>.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
 #if DEBUG
 		[Obsolete]
@@ -49,7 +49,7 @@ namespace Au {
 		/// <returns>Returns <c>true</c> when <i>action</i> succeeded. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"></exception>
 		/// <example>
-		/// This example uses both <b>wait.retry</b> overloads - with parameter <c>Func func</c> and with parameter <c>Action action</c>.
+		/// This example uses both <c>wait.retry</c> overloads - with parameter <c>Func func</c> and with parameter <c>Action action</c>.
 		/// <code><![CDATA[
 		/// string file = @"C:\Test\test.txt";
 		/// string s = wait.retry(5, () => File.ReadAllText(file));
@@ -164,8 +164,8 @@ namespace Au {
 		
 		/// <summary>
 		/// Waits for <i>handles</i>, or/and <i>msgCallback</i> returning <c>true</c>, or/and <i>stopVar</i> becoming <c>true</c>. Or just sleeps, if <i>handles</i> etc are <c>null</c>/empty.
-		/// If flag <b>DoEvents</b>, dispatches received messages etc.
-		/// Calls API <ms>WaitForMultipleObjectsEx</ms> or <ms>MsgWaitForMultipleObjectsEx</ms> with <b>QS_ALLINPUT</b>. Alertable.
+		/// If flag <c>DoEvents</c>, dispatches received messages etc.
+		/// Calls API <ms>WaitForMultipleObjectsEx</ms> or <ms>MsgWaitForMultipleObjectsEx</ms> with <c>QS_ALLINPUT</c>. Alertable.
 		/// </summary>
 		/// <param name="msgCallback">
 		/// Called when dispatching messages. If returns <c>true</c>, stops waiting and returns <c>handles.Length</c>.
@@ -174,8 +174,8 @@ namespace Au {
 		/// </param>
 		/// <param name="stopVar">When becomes <c>true</c>, stops waiting and returns <c>handles.Length + 1</c>.</param>
 		/// <returns>
-		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + <b>Api.WAIT_ABANDONED_0</b> (0x80).
-		/// If <c>timeMS>0</c>, waits max <i>timeMS</i> and on timeout returns <b>Api.WAIT_TIMEOUT</b>.
+		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + <c>WAIT_ABANDONED_0</c> (0x80).
+		/// If <c>timeMS>0</c>, waits max <i>timeMS</i> and on timeout returns <c>WAIT_TIMEOUT</c>.
 		/// If failed, returns -1. Supports <see cref="lastError"/>.
 		/// </returns>
 		internal static unsafe int Wait_(long timeMS, WHFlags flags, ReadOnlySpan<IntPtr> handles = default, Delegate msgCallback = null, WaitVariable_ stopVar = null, CancellationToken cancel = default) {
@@ -268,7 +268,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Obsolete. Use <b>wait.doEventsUntil</b>.
+		/// Obsolete. Use <c>wait.doEventsUntil</c>.
 		/// </summary>
 		/// <inheritdoc cref="doEventsUntil"/>
 #if DEBUG
@@ -308,7 +308,7 @@ namespace Au.Types {
 	public delegate bool WPMCallback(ref MSG m);
 	
 	/// <summary>
-	/// Used with <b>Wait_</b> etc instead of <c>ref bool</c>.
+	/// Used with <c>Wait_</c> etc instead of <c>ref bool</c>.
 	/// </summary>
 	internal class WaitVariable_ {
 		public bool waitVar;

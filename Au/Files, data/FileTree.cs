@@ -47,7 +47,7 @@ public class FileTree : TreeBase<FileTree> {
 	/// <param name="recurseNtfsLinks">Enumerate target directories of NTFS links, such as symbolic links and mount points.</param>
 	/// <param name="dirFilter">Called for each descendant directory. If returns <c>false</c>, that directory with descendants is not included. But its size contributes to ancestor sizes anyway.</param>
 	/// <param name="fileFilter">Called for each descendant file. If returns <c>false</c>, that file is not included. But its size contributes to ancestor sizes anyway.</param>
-	/// <returns>The root of the tree. You can use its descendants and <see cref="Size"/>. Don't use <b>Info</b>, <b>Name</b>, <b>Path</b> and <b>IsDirectory</b>.</returns>
+	/// <returns>The root of the tree. You can use its descendants and <see cref="Size"/>. Don't use <see cref="Info"/>, <see cref="Name"/>, <see cref="Path"/> and <see cref="IsDirectory"/>.</returns>
 	/// <exception cref="Exception">Exceptions of <see cref="filesystem.enumerate"/>.</exception>
 	public static FileTree Create(string path, bool onlyDirectories = false, long minSize = 0, bool ignoreInaccessible = true, bool recurseNtfsLinks = false, Func<FEFile, bool> dirFilter = null, Func<FEFile, bool> fileFilter = null) {
 		var flags = ignoreInaccessible ? FEFlags.IgnoreInaccessible : 0;
@@ -76,7 +76,7 @@ public class FileTree : TreeBase<FileTree> {
 	}
 	
 	/// <summary>
-	/// Appends to a <b>StringBuilder</b> a list of sizes and names of descendants, formatted for <see cref="print.it(string)"/>, without a header.
+	/// Appends to a <see cref="StringBuilder"/> a list of sizes and names of descendants, formatted for <see cref="print.it(string)"/>, without a header.
 	/// </summary>
 	public void PrintSizes(StringBuilder b) {
 		_Dir(this, 0);

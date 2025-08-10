@@ -32,18 +32,18 @@ public enum TKFlags {
 	/// <summary>
 	/// Don't release modifier keys.
 	/// <br/>Without this flag, for example if trigger is <c>["Ctrl+K"]</c>, when the user presses <c>Ctrl</c> and <c>K</c> down, the trigger sends <c>Ctrl</c> key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfere with the action. However functions like <see cref="keys.getMod"/> and <see cref="keys.waitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
-	/// <br/>Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
-	/// <br/>Note: Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>opt.key.NoModOff</b> is <c>true</c>. Will not interfere with functions that send text, unless <b>opt.key.NoModOff</b> is <c>true</c> and <b>opt.key.TextHow</b> is <b>OKeyText.KeysX</b>.
+	/// <br/>Other flags that prevent releasing modifier keys: <c>KeyUp</c>, <c>ShareEvent</c>. Then don't need this flag.
+	/// <br/>Note: Unreleased modifier keys will interfere with mouse functions like <see cref="mouse.click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <c>opt.key.NoModOff</c> is <c>true</c>. Will not interfere with functions that send text, unless <c>opt.key.NoModOff</c> is <c>true</c> and <c>opt.key.TextHow</c> is <c>OKeyText.KeysX</c>.
 	/// </summary>
 	NoModOff = 16,
 	
 	/// <summary>
-	/// The key must be an "extended key". See <see cref="KKeyScan"/> example code. Don't use this flag with <b>NumpadX</b> flags.
+	/// The key must be an "extended key". See <see cref="KKeyScan"/> example code. Don't use this flag with <c>NumpadX</c> flags.
 	/// </summary>
 	ExtendedYes = 32,
 	
 	/// <summary>
-	/// The key must not be an "extended key". See <see cref="KKeyScan"/> example code. Don't use this flag with <b>NumpadX</b> flags.
+	/// The key must not be an "extended key". See <see cref="KKeyScan"/> example code. Don't use this flag with <c>NumpadX</c> flags.
 	/// </summary>
 	ExtendedNo = 64,
 	

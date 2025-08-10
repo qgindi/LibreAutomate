@@ -5,7 +5,7 @@ namespace Au.More;
 /// </summary>
 /// <remarks>
 /// To record user input, can be used <see cref="WindowsHook.Keyboard(Action{HookData.Keyboard}, bool, bool)"/>.
-/// When recording user input, use same <b>KeyToTextConverter</b> variable for all keys.
+/// When recording user input, use same <c>KeyToTextConverter</c> variable for all keys.
 /// </remarks>
 public class KeyToTextConverter
 {

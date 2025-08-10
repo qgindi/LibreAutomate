@@ -2,7 +2,7 @@ namespace Au.Triggers;
 
 static class TrigUtil {
 	/// <summary>
-	/// Gets left and right modifiers. Uses <b>keys.isPressed</b>.
+	/// Gets left and right modifiers. Uses <see cref="keys.isPressed"/>.
 	/// Returns <c>modL | modR</c>.
 	/// </summary>
 	public static KMod GetModLR(out KMod modL, out KMod modR) {

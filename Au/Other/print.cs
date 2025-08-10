@@ -1,3 +1,5 @@
+using COL = System.Collections;
+
 namespace Au;
 
 /// <summary>
@@ -111,10 +113,10 @@ public static partial class print {
 	/// </summary>
 	/// <param name="value">Value of any type. If <c>null</c>, writes <c>"null"</c>.</param>
 	/// <remarks>
-	/// If the type is unsigned integer (<b>uint</b>, <b>ulong</b>, <b>ushort</b>, <b>byte</b>, <b>nuint</b>), writes in hexadecimal format with prefix <c>"0x"</c>, unless <see cref="noHex"/> <c>true</c>.
+	/// If the type is unsigned integer (<c>uint</c>, <c>ulong</c>, <c>ushort</c>, <c>byte</c>, <c>nuint</c>), writes in hexadecimal format with prefix <c>"0x"</c>, unless <see cref="noHex"/> <c>true</c>.
 	/// 
 	/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
-	/// For <b>Span</b> and other ref struct types use <c>print.it(x.ToString());</c>.
+	/// For <see cref="Span{T}"/> and other ref struct types use <c>print.it(x.ToString());</c>.
 	/// </remarks>
 	public static void it(object value) {
 		it(util.toString(value));
@@ -174,7 +176,7 @@ public static partial class print {
 	/// </summary>
 	/// <remarks>
 	/// If a value is <c>null</c>, writes <c>"null"</c>.
-	/// If a value is unsigned integer (<b>uint</b>, <b>ulong</b>, <b>ushort</b>, <b>byte</b>, <b>nuint</b>), writes in hexadecimal format with prefix <c>"0x"</c>.
+	/// If a value is unsigned integer (<c>uint</c>, <c>ulong</c>, <c>ushort</c>, <c>byte</c>, <c>nuint</c>), writes in hexadecimal format with prefix <c>"0x"</c>.
 	/// </remarks>
 	public static void it(object value1, object value2, params object[] more) {
 		it(util.toList(", ", value1, value2, more));
@@ -204,7 +206,7 @@ public static partial class print {
 	/// If you want to redirect or modify or just monitor output text, use code like in the example. It is known as "output redirection".
 	/// Redirection is applied to whole process, not just this thread.
 	/// Redirection affects <see cref="it"/>, <see cref="redirectConsoleOutput"/> and <see cref="redirectDebugOutput"/>. It does not affect <see cref="directly"/> and <see cref="clear"/>.
-	/// Don't call <see cref="it"/> in method <b>WriteLine</b> of your writer class. It would call itself and create stack overflow. Call <see cref="directly"/>, like in the example.
+	/// Don't call <see cref="it"/> in method <c>WriteLine</c> of your writer class. It would call itself and create stack overflow. Call <see cref="directly"/>, like in the example.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -254,7 +256,7 @@ public static partial class print {
 	/// <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
 	/// <remarks>
 	/// Calls <see cref="print.it"/>.
-	/// Does not show more than 1 warning/second, unless <b>opt.warnings.Verbose</b> == <c>true</c> (see <see cref="OWarnings.Verbose"/>).
+	/// Does not show more than 1 warning/second, unless <c>opt.warnings.Verbose == true</c> (see <see cref="OWarnings.Verbose"/>).
 	/// To disable some warnings, use code <c>opt.warnings.Disable("warning text wildcard");</c> (see <see cref="OWarnings.Disable"/>).
 	/// </remarks>
 	/// <seealso cref="OWarnings"/>
@@ -289,14 +291,14 @@ public static partial class print {
 	}
 	
 	/// <summary>
-	/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="it"/>.
+	/// Let <c>Console.WriteX</c> methods in non-console process write to the same destination as <see cref="it"/>.
 	/// </summary>
 	/// <remarks>
-	/// The default value is <c>true</c> in non-console scripts that use class <see cref="Console"/> and have role <b>miniProgram</b> (default); also <b>exeProgram</b> if started from the script editor. Also in these scripts <b>Console.ReadLine</b> uses <see cref="dialog.showInput"/>.
+	/// The default value is <c>true</c> in non-console scripts that use class <see cref="Console"/> and have role <c>miniProgram</c> (default); also <c>exeProgram</c> if started from the script editor. Also in these scripts <c>Console.ReadLine</c> uses <see cref="dialog.showInput"/>.
 	/// 
-	/// If <b>Console.Write</b> text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <b>Console.WriteLine</b>.
+	/// If <c>Console.Write</c> text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <c>Console.WriteLine</c>.
 	/// 
-	/// <b>Console.Clear</b> will not clear output; it will throw exception.
+	/// <c>Console.Clear</c> will not clear output; it will throw exception.
 	/// </remarks>
 	public static bool redirectConsoleOutput {
 		set {
@@ -318,9 +320,9 @@ public static partial class print {
 	/// Let <see cref="Debug.Write"/>, <see cref="Trace.Write"/> and similar methods also write to the same destination as <see cref="it"/>.
 	/// </summary>
 	/// <remarks>
-	/// Does not replace existing <b>Debug.Write</b> etc destinations, just add new destination.
+	/// Does not replace existing <c>Debug.Write</c> etc destinations, just add new destination.
 	/// 
-	/// If <b>Debug.Write</b> etc argument text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <b>Debug.WriteLine</b> etc.
+	/// If <c>Debug.Write</c> etc argument text does not end with <c>'\n'</c> character, it is buffered and not displayed until called again with text ending with <c>'\n'</c> character or until called <c>Debug.WriteLine</c> etc.
 	/// 
 	/// Tip: To write to the output window even in console process, set <c>print.ignoreConsole=true;</c> before calling this method first time.
 	/// </remarks>
@@ -348,7 +350,7 @@ public static partial class print {
 	/// <remarks>
 	/// The first <see cref="it"/> etc call (in this process) creates or opens the file and deletes old content if the file already exists.
 	/// 
-	/// Also supports mailslots. For <b>LogFile</b> use mailslot name, as documented in <ms>CreateMailslot</ms>. Multiple processes can use the same mailslot.
+	/// Also supports mailslots. Use mailslot name, as documented in <ms>CreateMailslot</ms>. Multiple processes can use the same mailslot.
 	/// </remarks>
 	/// <exception cref="ArgumentException">The <c>set</c> function throws this exception if the value is not full path and not <c>null</c>.</exception>
 	public static string logFile {
@@ -416,8 +418,8 @@ public static partial class print {
 		string _name;
 		
 		/// <summary>
-		/// Opens <b>LogFile</b> file handle for writing.
-		/// Uses <b>CREATE_ALWAYS</b>, <b>GENERIC_WRITE</b>, <b>FILE_SHARE_READ</b>.
+		/// Opens <c>logFile</c> file handle for writing.
+		/// Uses <c>CREATE_ALWAYS</c>, <c>GENERIC_WRITE</c>, <c>FILE_SHARE_READ</c>.
 		/// </summary>
 		public static _LogFile Open() {
 			var path = logFile;
@@ -430,7 +432,7 @@ public static partial class print {
 		/// Writes <c>s + "\r\n"</c> and optionally timestamp.
 		/// </summary>
 		/// <remarks>
-		/// If fails to write to file: Sets <b>LogFile</b>=<c>null</c>, which closes file handle. Writes a warning and <i>s</i> to the output window or console.
+		/// If fails to write to file: Sets <c>logFile</c>=<c>null</c>, which closes file handle. Writes a warning and <i>s</i> to the output window or console.
 		/// </remarks>
 		[SkipLocalsInit]
 		public bool WriteLine(string s) {
@@ -480,10 +482,10 @@ public static partial class print {
 	}
 	
 	/// <summary>
-	/// Calls <b>Api.CreateFile</b> to open file or mailslot.
+	/// Calls <c>Api.CreateFile</c> to open file or mailslot.
 	/// </summary>
 	/// <param name="name">File path or mailslot name.</param>
-	/// <param name="openExisting">Use <b>OPEN_EXISTING</b>. If <c>false</c>, uses <b>CREATE_ALWAYS</b>.</param>
+	/// <param name="openExisting">Use <c>OPEN_EXISTING</c>. If <c>false</c>, uses <c>CREATE_ALWAYS</c>.</param>
 	internal static Handle_ CreateFile_(string name, bool openExisting) {
 		return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
 		
@@ -515,7 +517,7 @@ public static partial class print {
 		/// </summary>
 		/// <remarks>
 		/// If a value is <c>null</c>, writes <c>"null"</c>.
-		/// If a value is unsigned integer (<b>uint</b>, <b>ulong</b>, <b>ushort</b>, <b>byte</b>, <b>nuint</b>), writes in hexadecimal format with prefix <c>"0x"</c>.
+		/// If a value is unsigned integer (<c>uint</c>, <c>ulong</c>, <c>ushort</c>, <c>byte</c>, <c>nuint</c>), writes in hexadecimal format with prefix <c>"0x"</c>.
 		/// </remarks>
 		public static void write(object value1, object value2, params object[] more) {
 			write(util.toList(", ", value1, value2, more));
@@ -546,21 +548,21 @@ public static partial class print {
 	public static bool noHex { get; set; }
 	
 	/// <summary>
-	/// Some functions used by the <b>print</b> class.
+	/// Some functions used by the <see cref="print"/> class.
 	/// </summary>
 	public static class util {
 		/// <summary>
-		/// Converts value of any type to <b>string</b>. Formats it like <see cref="it(object)"/>.
+		/// Converts value of any type to <c>string</c>. Formats it like <see cref="it(object)"/>.
 		/// </summary>
 		/// <param name="value">Value of any type. If <c>null</c>, returns <c>"null"</c>.</param>
-		/// <param name="compact">If <i>value</i> is <b>IEnumerable</b>, format it like <c>"{ item1, item2 }"</c>.</param>
+		/// <param name="compact">If <i>value</i> is <see cref="COL.IEnumerable"/> or <see cref="COL.DictionaryEntry"/>, format it like <c>"{ item1, item2 }"</c>.</param>
 		public static string toString(object value, bool compact = false) {
 			switch (value) {
 			case null: return "null";
 			case string t: return t;
 			case ulong or uint or ushort or byte or nuint when !noHex:
-			case System.Collections.IEnumerable when !value.GetType().IsCOMObject: //info: eg Excel.Range and many other Excel interfaces are IEnumerable, and this process crashes, sometimes Excel too
-			case System.Collections.DictionaryEntry:
+			case COL.IEnumerable when !value.GetType().IsCOMObject: //info: eg Excel.Range and many other Excel interfaces are IEnumerable, and this process crashes, sometimes Excel too
+			case COL.DictionaryEntry:
 				using (new StringBuilder_(out var b)) {
 					toString(b, value, compact);
 					return b.ToString();
@@ -570,7 +572,7 @@ public static partial class print {
 		}
 		
 		/// <summary>
-		/// Appends value of any type to <b>StringBuilder</b>. Formats it like <see cref="it(object)"/>.
+		/// Appends value of any type to <c>StringBuilder</c>. Formats it like <see cref="it(object)"/>.
 		/// </summary>
 		/// <inheritdoc cref="toString(object, bool)"/>
 		public static void toString(StringBuilder b, object value, bool compact) {
@@ -587,7 +589,7 @@ public static partial class print {
 				if (noHex) b.AppendJoin('-', a);
 				else b.Append(BitConverter.ToString(a));
 				break;
-			case System.Collections.IEnumerable e when !value.GetType().IsCOMObject:
+			case COL.IEnumerable e when !value.GetType().IsCOMObject:
 				if (compact) b.Append("{ ");
 				string sep = null;
 				foreach (var v in e) {
@@ -596,7 +598,7 @@ public static partial class print {
 				}
 				if (compact) b.Append(" }");
 				break;
-			case System.Collections.DictionaryEntry de:
+			case COL.DictionaryEntry de:
 				b.AppendFormat("[{0}, {1}]", de.Key, de.Value);
 				break;
 			default: b.Append(value); break;
@@ -609,7 +611,7 @@ public static partial class print {
 		}
 		
 		/// <summary>
-		/// Converts multiple values of any type to <b>string</b> like <see cref="list(string, object, object, object[])"/>.
+		/// Converts multiple values of any type to <c>string</c> like <see cref="list(string, object, object, object[])"/>.
 		/// </summary>
 		public static string toList(string sep, object value1, object value2, params object[] more) {
 			if (more == null) more = s_oaNull; //workaround for: if the third argument is null, we receive null and not object[] { null }

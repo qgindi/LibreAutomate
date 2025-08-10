@@ -9,13 +9,13 @@ namespace Au.Types;
 /// Used with <see cref="ExtMisc.Resize"/>
 /// </summary>
 public enum BRFilter {
-	/// <summary>Produces sharper image (less blurry) than <b>Graphics.DrawImage</b> with <b>InterpolationMode.HighQualityBicubic</b>.</summary>
+	/// <summary>Produces sharper image (less blurry) than <c>Graphics.DrawImage</c> with <c>InterpolationMode.HighQualityBicubic</c>.</summary>
 	Lanczos3,
 
-	/// <summary>Produces slightly sharper image (less blurry) than <b>Graphics.DrawImage</b> with <b>InterpolationMode.HighQualityBicubic</b>.</summary>
+	/// <summary>Produces slightly sharper image (less blurry) than <c>Graphics.DrawImage</c> with <c>InterpolationMode.HighQualityBicubic</c>.</summary>
 	CatmullRom,
 
-	/// <summary>Produces image similar to <b>Graphics.DrawImage</b> with <b>InterpolationMode.HighQualityBicubic</b>.</summary>
+	/// <summary>Produces image similar to <c>Graphics.DrawImage</c> with <c>InterpolationMode.HighQualityBicubic</c>.</summary>
 	Bicubic
 }
 
@@ -28,12 +28,12 @@ public static partial class ExtMisc {
 	/// <param name="width">New width.</param>
 	/// <param name="height">New height. If <i>width</i> or <i>height</i> is 0, calculates it (preserves aspect ratio).</param>
 	/// <param name="filter"></param>
-	/// <param name="dispose">When resized, call <b>Dispose</b> for this object.</param>
+	/// <param name="dispose">When resized, call <c>Dispose</c> for this object.</param>
 	/// <param name="premultiplied">
-	/// Let the resized bitmap have <b>PixelFormat</b> = <b>Format32bppPArgb</b>. It prevents distortions at transparent-opaque boundaries.
-	/// If <c>false</c>: if this bitmap has <b>Format32bppArgb</b> or <b>Format32bppPArgb</b>, does not change, else <b>PixelFormat.Format32bppArgb</b>.
+	/// Let the resized bitmap have <c>PixelFormat</c> = <c>Format32bppPArgb</c>. It prevents distortions at transparent-opaque boundaries.
+	/// If <c>false</c>: if this bitmap has <c>Format32bppArgb</c> or <c>Format32bppPArgb</c>, does not change, else <c>PixelFormat.Format32bppArgb</c>.
 	/// </param>
-	/// <exception cref="ArgumentException">Unsupported <b>PixelFormat</b>.</exception>
+	/// <exception cref="ArgumentException">Unsupported <c>PixelFormat</c>.</exception>
 	public static unsafe Bitmap Resize(this Bitmap b, int width, int height, BRFilter filter, bool dispose, bool premultiplied = false) {
 		int wid1 = b.Width, hei1 = b.Height;
 		if (width < 1) width = Math.Max(1, Math2.MulDiv(wid1, height, hei1));

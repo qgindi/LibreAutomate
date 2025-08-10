@@ -9,9 +9,9 @@ namespace Au;
 /// File and directory functions. Copy, move, delete, find, get properties, enumerate, create directory, load/save, etc.
 /// </summary>
 /// <remarks>
-/// Also you can use .NET file system classes, such as <see cref="File"/> and <see cref="Directory"/> in <b>System.IO</b> namespace. In the past they were too limited and unsafe to use, for example no long paths, too many exceptions, difficult to recursively enumerate directories containing protected items. Later improved, but this class still has something they don't, for example environment variables in path, safe load/save. This class does not have low-level functions to open/read/write files.
+/// Also you can use .NET file system classes, such as <see cref="File"/> and <see cref="Directory"/> in <c>System.IO</c> namespace. In the past they were too limited and unsafe to use, for example no long paths, too many exceptions, difficult to recursively enumerate directories containing protected items. Later improved, but this class still has something they don't, for example environment variables in path, safe load/save. This class does not have low-level functions to open/read/write files.
 /// 
-/// Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
+/// Most functions support only full path. Most of them throw <see cref="ArgumentException"/> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
 /// Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="pathname.prefixLongPath"/>, <see cref="pathname.prefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
 /// 
 /// Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
@@ -21,7 +21,7 @@ public static partial class filesystem {
 	
 	/// <summary>
 	/// Contains the write/create times, size and attributes of a file or directory.
-	/// The equality method and operators compare only <b>time</b>, <b>size</b> and attributes <b>Directory</b> and <b>ReparsePoint</b>; not <b>timeCreated</b>.
+	/// The equality method and operators compare only <see cref="time"/>, <see cref="size"/> and attributes <c>Directory</c> and <c>ReparsePoint</c>; not <see cref="timeCreated"/>.
 	/// </summary>
 	/// <param name="time">The last write time UTC as FILETIME.</param>
 	/// <param name="size">0 if directory.</param>
@@ -38,7 +38,7 @@ public static partial class filesystem {
 	/// <summary>
 	/// Gets the last write time, size and attributes of a file or directory.
 	/// </summary>
-	/// <param name="path">Full path. The function just asserts full path and calls <b>prefixLongPathIfNeed</b>.</param>
+	/// <param name="path">Full path. The function just asserts full path and calls <see cref="pathname.prefixLongPathIfNeed"/>.</param>
 	/// <param name="prop"></param>
 	/// <returns><c>false</c> if does not exist or access denied. No exceptions.</returns>
 	internal static unsafe bool GetProp_(string path, out Prop_ prop) {
@@ -55,8 +55,8 @@ public static partial class filesystem {
 	/// <summary>
 	/// Gets the last write time of a file or directory.
 	/// </summary>
-	/// <param name="path">Full path. The function just asserts full path and calls <b>prefixLongPathIfNeed</b>.</param>
-	/// <param name="time">Time UTC as <b>FILETIME</b>.</param>
+	/// <param name="path">Full path. The function just asserts full path and calls <see cref="pathname.prefixLongPathIfNeed"/>.</param>
+	/// <param name="time">Time UTC as <c>FILETIME</c>.</param>
 	/// <returns><c>false</c> if does not exist or access denied. No exceptions.</returns>
 	internal static bool GetTime_(string path, out long time) {
 		bool ok = GetProp_(path, out var p);
@@ -68,13 +68,13 @@ public static partial class filesystem {
 	/// Gets file or directory attributes, size and times.
 	/// </summary>
 	/// <returns><c>false</c> if the file/directory does not exist.</returns>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <b>UseRawPath</b> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
 	/// <param name="properties">Receives properties.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
-	/// <exception cref="AuException">The file/directory exists but failed to get its properties. Not thrown if used flag <b>DontThrow</b>.</exception>
+	/// <exception cref="ArgumentException">Not full path (when not used flag <c>UseRawPath</c>).</exception>
+	/// <exception cref="AuException">The file/directory exists but failed to get its properties. Not thrown if used flag <c>DontThrow</c>.</exception>
 	/// <remarks>
-	/// Calls API <ms>GetFileAttributesEx</ms>. Supports <see cref="lastError"/> (useful with flag <b>DontThrow</b>).
+	/// Calls API <ms>GetFileAttributesEx</ms>. Supports <see cref="lastError"/> (useful with flag <c>DontThrow</c>).
 	/// For NTFS links, gets properties of the link, not of its target.
 	/// You can also get most of these properties with <see cref="enumerate"/>.
 	/// </remarks>
@@ -97,13 +97,13 @@ public static partial class filesystem {
 	/// Gets file or directory attributes.
 	/// </summary>
 	/// <returns><c>false</c> if the file/directory does not exist.</returns>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <b>UseRawPath</b> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
 	/// <param name="attributes">Receives attributes, or 0 if failed.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
-	/// <exception cref="AuException">Failed. Not thrown if used flag <b>DontThrow</b>.</exception>
+	/// <exception cref="ArgumentException">Not full path (when not used flag <c>UseRawPath</c>).</exception>
+	/// <exception cref="AuException">Failed. Not thrown if used flag <c>DontThrow</c>.</exception>
 	/// <remarks>
-	/// Calls API <ms>GetFileAttributes</ms>. Supports <see cref="lastError"/> (useful with flag <b>DontThrow</b>).
+	/// Calls API <ms>GetFileAttributes</ms>. Supports <see cref="lastError"/> (useful with flag <c>DontThrow</c>).
 	/// For NTFS links, gets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
@@ -169,12 +169,12 @@ public static partial class filesystem {
 	/// Sets file or directory attributes.
 	/// </summary>
 	/// <returns><c>false</c> if the file/directory does not exist.</returns>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <b>UseRawPath</b> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
 	/// <param name="attributes">Attributes to set, add or remove.</param>
 	/// <param name="add"><c>null</c> (default) - set; <c>true</c> - add; <c>false</c> - remove.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="ArgumentException">Not full path (when not used flag <b>UseRawPath</b>).</exception>
-	/// <exception cref="AuException">Failed. Not thrown if used flag <b>DontThrow</b>.</exception>
+	/// <exception cref="ArgumentException">Not full path (when not used flag <c>UseRawPath</c>).</exception>
+	/// <exception cref="AuException">Failed. Not thrown if used flag <c>DontThrow</c>.</exception>
 	/// <remarks>
 	/// Calls API <ms>SetFileAttributes</ms>.
 	/// For NTFS links, sets attributes of the link, not of its target.
@@ -193,7 +193,7 @@ public static partial class filesystem {
 	}
 	
 	/// <summary>
-	/// Calls API <b>FindFirstFile</b> to determine whether <i>path</i> is a NTFS link, such as symbolic link or mount point.
+	/// Calls API <c>FindFirstFile</c> to determine whether <i>path</i> is a NTFS link, such as symbolic link or mount point.
 	/// </summary>
 	/// <param name="path">Raw path (does not normalize).</param>
 	/// <returns>-1 failed, 0 no, 1 symlink, 2 mount, 3 other.</returns>
@@ -236,14 +236,14 @@ public static partial class filesystem {
 	
 	/// <summary>
 	/// Gets file system entry type - file, directory, NTFS link, whether it exists and is accessible.
-	/// Returns <b>NotFound</b> (0) if does not exist. Returns <b>AccessDenied</b> (&lt; 0) if exists but this process cannot access it and get attributes.
+	/// Returns <c>NotFound</c> (0) if does not exist. Returns <c>AccessDenied</c> (&lt; 0) if exists but this process cannot access it and get attributes.
 	/// Calls API <ms>GetFileAttributes</ms>.
 	/// </summary>
 	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is <c>false</c> (default), supports environment variables (see <see cref="pathname.expand"/>). Can be <c>null</c>.</param>
 	/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 	/// <remarks>
 	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/>.
-	/// Always use full path. If path is not full: if <i>useRawPath</i> is <c>false</c> (default) returns <b>NotFound</b>; if <i>useRawPath</i> is <c>true</c>, searches in "current directory".
+	/// Always use full path. If path is not full: if <i>useRawPath</i> is <c>false</c> (default) returns <c>NotFound</c>; if <i>useRawPath</i> is <c>true</c>, searches in "current directory".
 	/// </remarks>
 	internal static unsafe FileIs_ ExistsAs_(string path, bool useRawPath = false) {
 		if (!_GetAttributes(path, out var a, out bool ntfsLink, useRawPath)) {
@@ -332,7 +332,7 @@ public static partial class filesystem {
 	/// <param name="errorHandler">
 	/// Callback function that is called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AllDescendants"/>.
 	/// Receives the subdirectory path. Can call <see cref="lastError.code"/> and throw an exception. If does not throw, the enumeration continues as if the directory is empty.
-	/// If <i>errorHandler</i> not used, then <b>enumerate</b> throws exception. See also: flag <see cref="FEFlags.IgnoreInaccessible"/>.
+	/// If <i>errorHandler</i> not used, then <see cref="enumerate"/> throws exception. See also: flag <see cref="FEFlags.IgnoreInaccessible"/>.
 	/// </param>
 	/// <exception cref="ArgumentException"><i>directoryPath</i> is invalid path or not full path.</exception>
 	/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
@@ -513,7 +513,7 @@ public static partial class filesystem {
 	/// <br/>• <c>"**nm *.png||*.bmp"</c> (all files except png and bmp),
 	/// <br/>• <c>@"**r \.html?$"</c> (regular expression that matches <c>.htm</c> and <c>.html</c> files).
 	/// </param>
-	/// <param name="flags">Flags. The function also adds flag <b>OnlyFiles</b>.</param>
+	/// <param name="flags">Flags. The function also adds flag <c>OnlyFiles</c>.</param>
 	/// <exception cref="ArgumentException">
 	/// <i>directoryPath</i> is invalid path or not full path.
 	/// Invalid <i>pattern</i> (<c>"**options "</c> or regular expression).
@@ -903,7 +903,7 @@ public static partial class filesystem {
 	/// <summary>
 	/// Deletes file or directory if exists.
 	/// </summary>
-	/// <returns><c>true</c> if deleted, <c>false</c> if failed (with flag <b>CanFail</b>), <c>null</c> if did not exist.</returns>
+	/// <returns><c>true</c> if deleted, <c>false</c> if failed (with flag <c>CanFail</c>), <c>null</c> if did not exist.</returns>
 	/// <param name="path">Full path.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
@@ -925,11 +925,11 @@ public static partial class filesystem {
 	/// <summary>
 	/// Deletes multiple files or/and directories.
 	/// </summary>
-	/// <returns><c>true</c> if deleted all, <c>false</c> if failed to delete all or some (with flag <b>CanFail</b>), <c>null</c> if none existed.</returns>
-	/// <param name="paths">string array, <b>List</b> or other collection. Full paths.</param>
+	/// <returns><c>true</c> if deleted all, <c>false</c> if failed to delete all or some (with flag <c>CanFail</c>), <c>null</c> if none existed.</returns>
+	/// <param name="paths">string array, <c>List</c> or other collection. Full paths.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
-	/// <exception cref="AggregateException">Failed to delete all or some items. The <b>AggregateException</b> object contains <b>AuException</b> for each failed-to-delete item.</exception>
+	/// <exception cref="AggregateException">Failed to delete all or some items. The <see cref="AggregateException"/> object contains <see cref="AuException"/> for each failed-to-delete item.</exception>
 	/// <remarks>
 	/// This overload is faster when using Recycle Bin.
 	/// If fails to delete some items specified in the list, deletes as many as possible.
@@ -1118,7 +1118,7 @@ public static partial class filesystem {
 	}
 	
 	/// <summary>
-	/// Same as <b>createDirectoryFor</b>, but <i>filePath</i> must be prepared (<b>_PreparePath</b> or normalize).
+	/// Same as <see cref="createDirectoryFor"/>, but <i>filePath</i> must be prepared (<c>_PreparePath</c> or normalize).
 	/// </summary>
 	static bool _createDirectoryForPrepared(string filePath) {
 		var path = _RemoveFilename(filePath);
@@ -1163,7 +1163,7 @@ public static partial class filesystem {
 	
 	/// <summary>
 	/// The same as <c>pathname.normalize(path)</c>.
-	/// Expands environment variables, throws <b>ArgumentException</b> if not full path, normalizes, etc.
+	/// Expands environment variables, throws <c>ArgumentException</c> if not full path, normalizes, etc.
 	/// </summary>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	static string _PreparePath(string path) {
@@ -1214,7 +1214,7 @@ public static partial class filesystem {
 	/// <exception cref="ArgumentOutOfRangeException"><i>millisecondsTimeout</i> less than -1.</exception>
 	/// <exception cref="Exception">Exceptions thrown by the called function.</exception>
 	/// <remarks>
-	/// Calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
+	/// Calls the lambda and handles <see cref="IOException"/>. If the exception indicates that the file is locked, waits and retries in loop.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -1350,7 +1350,7 @@ public static partial class filesystem {
 	/// </param>
 	/// <param name="writer">
 	/// Callback function (lambda etc) that creates/writes/closes a temporary file. Its parameter is the full path of the temporary file, which normally does not exist.
-	/// May be called multiple times, because this function retries if the file is locked or if the directory does not exist (if <i>writer</i> throws <b>DirectoryNotFoundException</b> exception).
+	/// May be called multiple times, because this function retries if the file is locked or if the directory does not exist (if <i>writer</i> throws <see cref="DirectoryNotFoundException"/> exception).
 	/// </param>
 	/// <param name="backup">Create backup file named <i>file</i> + <c>"~backup"</c>.</param>
 	/// <param name="tempDirectory">

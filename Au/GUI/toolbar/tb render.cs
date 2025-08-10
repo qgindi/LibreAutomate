@@ -100,7 +100,7 @@ public partial class toolbar {
 	/// <summary>
 	/// Background color or brush.
 	/// </summary>
-	/// <value>Can be <see cref="Color"/>, <see cref="ColorInt"/>, <b>int</b> (color 0xRRGGBB) or <see cref="Brush"/>. If <c>null</c> (default), uses system color.</value>
+	/// <value>Can be <see cref="Color"/>, <see cref="ColorInt"/>, <c>int</c> (color <c>0xRRGGBB</c>) or <see cref="Brush"/>. If <c>null</c> (default), uses system color.</value>
 	public object Background {
 		get => _background;
 		set {
@@ -112,7 +112,7 @@ public partial class toolbar {
 	object _background;
 	
 	/// <summary>
-	/// Border color when <see cref="Border"/> is <b>TBBorder.Width1</b> ... <b>TBBorder.Width4</b>.
+	/// Border color when <see cref="Border"/> is <see cref="TBBorder.Width1"/> ... <see cref="TBBorder.Width4"/>.
 	/// If <c>default</c>, uses system color.
 	/// </summary>
 	public ColorInt BorderColor {

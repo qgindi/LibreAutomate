@@ -115,7 +115,7 @@ internal /*abstract*/ class NativeScrollbar_ {
 	
 	/// <summary>
 	/// When scrollbar position changed.
-	/// The <b>int</b> parameter is event source: if scrollbar, it is one of <b>Api.SB_</b> constants; if <see cref="Pos"/>, it is -1; if wheel, it is -2 if down, -3 if up.
+	/// The <c>int</c> parameter is event source: if scrollbar, it is one of <c>Api.SB_</c> constants; if <see cref="Pos"/>, it is -1; if wheel, it is -2 if down, -3 if up.
 	/// </summary>
 	public event Action<NativeScrollbar_, int> PosChanged;
 	

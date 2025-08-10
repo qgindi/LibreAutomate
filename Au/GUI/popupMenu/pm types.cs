@@ -5,7 +5,7 @@ namespace Au.Types;
 /// Represents a menu item in <see cref="popupMenu"/>.
 /// </summary>
 /// <remarks>
-/// Most properties cannot be changed while the menu is open. Can be changed <b>Tag</b>, <b>Tooltip</b>, <b>IsChecked</b> and <b>IsDisabled</b>.
+/// Most properties cannot be changed while the menu is open. Can be changed <see cref="MTItem.Tag"/>, <see cref="MTItem.Tooltip"/>, <see cref="IsChecked"/> and <see cref="IsDisabled"/>.
 /// </remarks>
 public class PMItem : MTItem {
 	readonly popupMenu _m;
@@ -91,14 +91,14 @@ public class PMItem : MTItem {
 }
 
 /// <summary>
-/// Flags for <see cref="popupMenu"/> <b>ShowX</b> methods.
+/// Flags for <see cref="popupMenu"/> <c>ShowX</c> methods.
 /// </summary>
 /// <remarks>
-/// The <b>AlignX</b> flags are for API <ms>TrackPopupMenuEx</ms>.
+/// The <c>AlignX</c> flags are for API <ms>TrackPopupMenuEx</ms>.
 /// </remarks>
 [Flags]
 public enum PMFlags {
-	/// <summary>Show by the caret (text cursor) position. If not possible, use flag <b>WindowCenter</b> or <b>ScreenCenter</b> or <i>xy</i> or mouse position.</summary>
+	/// <summary>Show by the caret (text cursor) position. If not possible, use flag <c>WindowCenter</c> or <c>ScreenCenter</c> or <i>xy</i> or mouse position.</summary>
 	ByCaret = 0x1000000,
 	
 	/// <summary>Show in the center of the screen that contains the mouse pointer.</summary>

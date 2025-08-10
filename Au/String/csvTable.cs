@@ -1,13 +1,13 @@
 namespace Au;
 
 /// <summary>
-/// Parses and composes CSV text. CSV table data in memory as a <b>List</b> of string arrays.
+/// Parses and composes CSV text. CSV table data in memory as a <c>List</c> of string arrays.
 /// </summary>
 /// <remarks>
 /// CSV is a text format used to store a single table of data in human-readable/editable way.
 /// It is a list of lines (called rows or records) containing one or more values (called fields or cells) separated by a separator character.
 /// 
-/// There is no strictly defined CSV standard. <b>csvTable</b> uses these rules:
+/// There is no strictly defined CSV standard. This class uses these rules:
 /// <br/>• Fields containing separator characters (default <c>','</c>), quote characters (default <c>'"'</c>) and multiple lines are enclosed in quote characters. Example: <c>"ab, cd"</c>.
 /// <br/>• Each quote character in such fields is escaped (replaced) with two quote characters. Example: <c>"ab ""cd"" ef"</c>.
 /// <br/>• If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: <c>" ab "</c>. Or use parameter <i>trimSpaces</i> <c>false</c> when parsing.
@@ -39,12 +39,12 @@ public class csvTable {
 	csvTable(List<string[]> a, int columnCount) { _a = a; _columnCount = columnCount; }
 	
 	/// <summary>
-	/// Gets the internal <b>List</b> containing rows as string arrays.
+	/// Gets the internal <c>List</c> containing rows as string arrays.
 	/// </summary>
 	/// <remarks>
 	/// It's not a copy; changing its content will change content of this <see cref="csvTable"/> variable.
-	/// You can do anything with the <b>List</b>. For example, sort it, find rows containing certain field values, get/set field values directly, add/remove rows directly.
-	/// All row arrays have <b>Length</b> equal to <see cref="ColumnCount"/>, and it must remain so; you can change <b>Length</b>, but then need to call <c>ColumnCount=newLength</c>.
+	/// You can do anything with the <c>List</c>. For example, sort it, find rows containing certain field values, get/set field values directly, add/remove rows directly.
+	/// All row arrays have <c>Length</c> equal to <see cref="ColumnCount"/>, and it must remain so; you can change <c>Length</c>, but then need to call <c>ColumnCount=newLength</c>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -66,7 +66,7 @@ public class csvTable {
 	public char Quote { get; set; } = '"';
 	
 	/// <summary>
-	/// Parses CSV string and creates new <see cref="csvTable"/> variable that contains data in internal <b>List</b> of string arrays.
+	/// Parses CSV string and creates new <see cref="csvTable"/> variable that contains data in internal <c>List</c> of string arrays.
 	/// </summary>
 	/// <param name="csv">
 	/// CSV text.
@@ -149,7 +149,7 @@ public class csvTable {
 	}
 	
 	/// <summary>
-	/// Composes CSV text from the internal <b>List</b> of string arrays.
+	/// Composes CSV text from the internal <c>List</c> of string arrays.
 	/// </summary>
 	/// <remarks>
 	/// Depends on these properties: <see cref="Separator"/> (initially <c>','</c>), <see cref="Quote"/> (initially <c>'"'</c>).
@@ -184,7 +184,7 @@ public class csvTable {
 	
 	/// <summary>
 	/// Gets or sets row count.
-	/// The <c>get</c> function returns the <b>Count</b> property of the internal <b>List</b> of string arrays.
+	/// The <c>get</c> function returns the <c>Count</c> property of the internal <c>List</c> of string arrays.
 	/// The <c>set</c> function can add new rows or remove rows at the end.
 	/// </summary>
 	public int RowCount {
@@ -201,7 +201,7 @@ public class csvTable {
 	
 	/// <summary>
 	/// Gets or sets column count.
-	/// The <c>get</c> function returns the length of all string arrays in the internal <b>List</b>.
+	/// The <c>get</c> function returns the length of all string arrays in the internal <c>List</c>.
 	/// The <c>set</c> function can add new columns or remove columns at the right.
 	/// </summary>
 	public int ColumnCount {
@@ -288,7 +288,7 @@ public class csvTable {
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <remarks>
 	/// The <c>get</c> function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
-	/// The <c>set</c> function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
+	/// The <c>set</c> function sets the row array. Does not copy the array, unless its <c>Length</c> is less than <see cref="ColumnCount"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -336,7 +336,7 @@ public class csvTable {
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <remarks>
 	/// The <c>get</c> function gets the row array. It's not a copy; changing its elements will change content of this <see cref="csvTable"/> variable.
-	/// The <c>set</c> function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
+	/// The <c>set</c> function sets the row array. Does not copy the array, unless its <c>Length</c> is less than <see cref="ColumnCount"/>.
 	/// </remarks>
 	public string[] this[Index row] {
 		get => this[row.GetOffset(_a.Count)];
@@ -346,7 +346,7 @@ public class csvTable {
 	/// <summary>
 	/// Adds new row and sets its fields.
 	/// </summary>
-	/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>. Adds new columns if array <b>Length</b> (or the number of string arguments) is greater than <b>ColumnCount</b>.</param>
+	/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <c>Length</c> is less than <see cref="ColumnCount"/>. Adds new columns if array <c>Length</c> (or the number of string arguments) is greater than <c>ColumnCount</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public void AddRow(params string[] fields) => InsertRow(-1, fields);
 	
@@ -354,7 +354,7 @@ public class csvTable {
 	/// Inserts new row and sets its fields.
 	/// </summary>
 	/// <param name="index">0-based row index. If negative or equal to <see cref="RowCount"/>, adds to the end.</param>
-	/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>. Adds new columns if array <b>Length</b> (or the number of string arguments) is greater than <b>ColumnCount</b>.</param>
+	/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <c>Length</c> is less than <see cref="ColumnCount"/>. Adds new columns if array <c>Length</c> (or the number of string arguments) is greater than <c>ColumnCount</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public void InsertRow(int index, params string[] fields) {
 		if (index < 0) index = RowCount;
@@ -433,7 +433,7 @@ public class csvTable {
 	}
 	
 	/// <summary>
-	/// Creates 2-column CSV table from dictionary keys and values of type <b>string</b>.
+	/// Creates 2-column CSV table from dictionary keys and values of type <c>string</c>.
 	/// </summary>
 	/// <param name="d"></param>
 	/// <exception cref="ArgumentNullException"></exception>
@@ -445,10 +445,10 @@ public class csvTable {
 	}
 	
 	/// <summary>
-	/// Creates 2-column CSV table from dictionary keys and values of any type, using a callback function to convert values to <b>string</b>.
+	/// Creates 2-column CSV table from dictionary keys and values of any type, using a callback function to convert values to <c>string</c>.
 	/// </summary>
 	/// <param name="d"></param>
-	/// <param name="valueToString">Callback function that converts value of type <b>T</b> to <b>string</b>.</param>
+	/// <param name="valueToString">Callback function that converts value of type <c>T</c> to <c>string</c>.</param>
 	/// <exception cref="ArgumentNullException"></exception>
 	public static csvTable fromDictionary<T>(Dictionary<string, T> d, Func<T, string> valueToString) {
 		Not_.Null(d, valueToString);
@@ -465,7 +465,7 @@ public class csvTable {
 	/// </summary>
 	/// <param name="d"></param>
 	/// <param name="columnCount">CSV column count. Must be 2 or more.</param>
-	/// <param name="valueToCells">Callback function that converts value of type <b>T</b> to one or more strings and puts them in row array elements starting from index 1. At index 0 is key.</param>
+	/// <param name="valueToCells">Callback function that converts value of type <c>T</c> to one or more strings and puts them in row array elements starting from index 1. At index 0 is key.</param>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentOutOfRangeException"><i>columnCount</i> less than 2.</exception>
 	public static csvTable fromDictionary<T>(Dictionary<string, T> d, int columnCount, Action<T, string[]> valueToCells) {
@@ -486,7 +486,7 @@ public class csvTable {
 	/// </summary>
 	/// <param name="ignoreCase">Case-insensitive dictionary keys.</param>
 	/// <param name="ignoreDuplicates">Don't throw exception if column 0 contains duplicate strings. Replace old value with new value.</param>
-	/// <exception cref="InvalidOperationException"><b>ColumnCount</b> not 2.</exception>
+	/// <exception cref="InvalidOperationException"><see cref="ColumnCount"/> not 2.</exception>
 	/// <exception cref="ArgumentException">Column 0 contains duplicate strings.</exception>
 	public Dictionary<string, string> ToDictionary(bool ignoreCase, bool ignoreDuplicates) {
 		if (_columnCount != 2) throw new InvalidOperationException("ColumnCount must be 2");
@@ -503,9 +503,9 @@ public class csvTable {
 	/// </summary>
 	/// <param name="ignoreCase">Case-insensitive dictionary keys.</param>
 	/// <param name="ignoreDuplicates">Don't throw exception if column 0 contains duplicate strings. Replace old value with new value.</param>
-	/// <param name="rowToValue">Callback function that converts one or more cell strings to single value of type <b>T</b>. The array is whole row; element 0 is key, and usually is not used.</param>
+	/// <param name="rowToValue">Callback function that converts one or more cell strings to single value of type <c>T</c>. The array is whole row; element 0 is key, and usually is not used.</param>
 	/// <exception cref="ArgumentNullException"></exception>
-	/// <exception cref="InvalidOperationException"><b>ColumnCount</b> less than 2.</exception>
+	/// <exception cref="InvalidOperationException"><see cref="ColumnCount"/> less than 2.</exception>
 	/// <exception cref="ArgumentException">Column 0 contains duplicate strings.</exception>
 	public Dictionary<string, T> ToDictionary<T>(bool ignoreCase, bool ignoreDuplicates, Func<string[], T> rowToValue) {
 		Not_.Null(rowToValue);
@@ -524,9 +524,9 @@ public class csvTable {
 	///// Creates dictionary from this 2-column CSV table, using a callback function to convert cell strings to dictionary values of any type.
 	///// </summary>
 	///// <param name="ignoreCase">Case-insensitive dictionary keys.</param>
-	///// <param name="stringToValue">Callback function that converts cell string to value of type <b>T</b>.</param>
+	///// <param name="stringToValue">Callback function that converts cell string to value of type <c>T</c>.</param>
 	///// <exception cref="ArgumentNullException"></exception>
-	///// <exception cref="InvalidOperationException"><b>ColumnCount</b> not 2.</exception>
+	///// <exception cref="InvalidOperationException"><see cref="ColumnCount"/> not 2.</exception>
 	///// <exception cref="ArgumentException">Column 0 contains duplicate values.</exception>
 	//public Dictionary<string, T> ToDictionary<T>(bool ignoreCase, Func<string, T> stringToValue)
 	//{
@@ -598,7 +598,7 @@ public class csvTable {
 	public void Set(Index row, int column, float value) { this[row, column] = value.ToS(); }
 	
 	/// <summary>
-	/// Converts a <b>bool</b> to string <c>"true"</c> or <c>"false"</c> and sets a field.
+	/// Converts a <c>bool</c> to string <c>"true"</c> or <c>"false"</c> and sets a field.
 	/// </summary>
 	/// <inheritdoc cref="Set(Index, int, int)"/>
 	public void Set(Index row, int column, bool value) { this[row, column] = value ? "true" : "false"; }
@@ -614,19 +614,19 @@ public class csvTable {
 	public bool Get(Index row, int column, out int value) => this[row, column].ToInt(out value);
 	
 	/// <summary>
-	/// Gets a field value converted to <b>uint</b>. See <see cref="ExtString.ToInt(string, out uint, int, STIFlags)"/>.
+	/// Gets a field value converted to <c>uint</c>. See <see cref="ExtString.ToInt(string, out uint, int, STIFlags)"/>.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out uint value) => this[row, column].ToInt(out value);
 	
 	/// <summary>
-	/// Gets a field value converted to <b>long</b>. See <see cref="ExtString.ToInt(string, out long, int, STIFlags)"/>.
+	/// Gets a field value converted to <c>long</c>. See <see cref="ExtString.ToInt(string, out long, int, STIFlags)"/>.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out long value) => this[row, column].ToInt(out value);
 	
 	/// <summary>
-	/// Gets a field value converted to <b>ulong</b>. See <see cref="ExtString.ToInt(string, out ulong, int, STIFlags)"/>.
+	/// Gets a field value converted to <c>ulong</c>. See <see cref="ExtString.ToInt(string, out ulong, int, STIFlags)"/>.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out ulong value) => this[row, column].ToInt(out value);
@@ -644,7 +644,7 @@ public class csvTable {
 	public bool Get(Index row, int column, out float value) => this[row, column].ToNumber(out value);
 	
 	/// <summary>
-	/// Gets a field value like <c>"true"</c> or <c>"false"</c> converted to <b>bool</b>. Case-insensitive.
+	/// Gets a field value like <c>"true"</c> or <c>"false"</c> converted to <c>bool</c>. Case-insensitive.
 	/// </summary>
 	/// <inheritdoc cref="Get(Index, int, out int)"/>
 	public bool Get(Index row, int column, out bool value) => Boolean.TryParse(this[row, column], out value);

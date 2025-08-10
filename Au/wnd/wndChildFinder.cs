@@ -83,12 +83,12 @@ public class wndChildFinder {
 	/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 	/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
 	/// <remarks>
-	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+	/// Functions <c>Find</c> and <see cref="Exists"/> differ only in their return types.
 	/// </remarks>
 	public wnd Find(wnd wParent) => Exists(wParent) ? Result : default;
 	
 	/// <summary>
-	/// Finds the specified child control, like <see cref="wnd.Child"/>. Can wait and throw <b>NotFoundException</b>.
+	/// Finds the specified child control, like <see cref="wnd.Child"/>. Can wait and throw <see cref="NotFoundException"/>.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
 	/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
@@ -96,7 +96,7 @@ public class wndChildFinder {
 	/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
 	/// <exception cref="NotFoundException" />
 	/// <remarks>
-	/// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+	/// Functions <c>Find</c> and <see cref="Exists"/> differ only in their return types.
 	/// </remarks>
 	public wnd Find(wnd wParent, Seconds wait) => Exists(wParent, wait) ? Result : default;
 	
@@ -129,7 +129,7 @@ public class wndChildFinder {
 	/// </summary>
 	/// <returns>0-based index, or -1 if not found.</returns>
 	/// <param name="a">List of controls, for example returned by <see cref="wnd.getwnd.Children"/>.</param>
-	/// <param name="wParent">Direct or indirect parent window. Used only for flag <b>DirectChild</b>.</param>
+	/// <param name="wParent">Direct or indirect parent window. Used only for flag <c>DirectChild</c>.</param>
 	public int FindInList(IEnumerable<wnd> a, wnd wParent = default) {
 		using var k = new WndList_(a);
 		return _FindInList(wParent, k);
@@ -138,7 +138,7 @@ public class wndChildFinder {
 	/// <summary>
 	/// Finds all matching child controls, like <see cref="wnd.ChildAll"/>.
 	/// </summary>
-	/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+	/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 	/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 	/// <exception cref="AuWndException">Invalid <i>wParent</i>.</exception>
 	public wnd[] FindAll(wnd wParent) {
@@ -148,9 +148,9 @@ public class wndChildFinder {
 	/// <summary>
 	/// Finds all matching controls in a list of controls.
 	/// </summary>
-	/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+	/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 	/// <param name="a">List of controls, for example returned by <see cref="wnd.getwnd.Children"/>.</param>
-	/// <param name="wParent">Direct or indirect parent window. Used only for flag <b>DirectChild</b>.</param>
+	/// <param name="wParent">Direct or indirect parent window. Used only for flag <c>DirectChild</c>.</param>
 	public wnd[] FindAllInList(IEnumerable<wnd> a, wnd wParent = default) {
 		return _FindAll(new WndList_(a), wParent);
 	}
@@ -166,8 +166,8 @@ public class wndChildFinder {
 	/// <summary>
 	/// Returns index of matching element or -1.
 	/// </summary>
-	/// <param name="wParent">Parent window. Can be <c>default(wnd)</c> if <i>inList</i> and no <b>DirectChild</b> flag and not using winforms name.</param>
-	/// <param name="a">List of <b>wnd</b>. Does not dispose it.</param>
+	/// <param name="wParent">Parent window. Can be <c>default(wnd)</c> if <i>inList</i> and no <c>DirectChild</c> flag and not using winforms name.</param>
+	/// <param name="a">List of <see cref="wnd"/>. Does not dispose it.</param>
 	/// <param name="getAll">If not <c>null</c>, calls it for all matching and returns -1.</param>
 	int _FindInList(wnd wParent, WndList_ a, Action<wnd> getAll = null) {
 		Result = default;
@@ -256,7 +256,7 @@ public class wndChildFinder {
 	/// Returns <c>true</c> if control <c>c</c> properties match the specified properties.
 	/// </summary>
 	/// <param name="c">A control. Can be 0/invalid, then returns <c>false</c>.</param>
-	/// <param name="wParent">Direct or indirect parent window. If used, returns <c>false</c> if it isn't parent (also depends on flag <b>DirectChild</b>).</param>
+	/// <param name="wParent">Direct or indirect parent window. If used, returns <c>false</c> if it isn't parent (also depends on flag <c>DirectChild</c>).</param>
 	public bool IsMatch(wnd c, wnd wParent = default) {
 		if (!wParent.Is0 && !c.IsChildOf(wParent)) {
 			Result = default;

@@ -47,7 +47,7 @@ namespace Au {
 			) => new wndChildFinder(name, cn, flags, id, also, skip).Find(this);
 
 		/// <summary>
-		/// Finds a child control and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
+		/// Finds a child control and returns its handle as <see cref="wnd"/>. Can wait and throw <see cref="NotFoundException"/>.
 		/// </summary>
 		/// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
 		/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
@@ -64,7 +64,7 @@ namespace Au {
 		/// <summary>
 		/// Finds all matching child controls.
 		/// </summary>
-		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+		/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 		/// <remarks>
 		/// Everything except the return type is the same as with <see cref="Child"/>.
 		/// 
@@ -150,7 +150,7 @@ namespace Au {
 		///// </summary>
 		///// <returns>Child control handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		///// <param name="id">Control id.</param>
-		///// <param name="flags">This function supports flags <b>DirectChild</b> and <b>HiddenToo</b>. If both are set, it is much faster because uses API <ms>GetDlgItem</ms>. Else uses API <ms>EnumChildWindows</ms>, like <see cref="Child"/>.</param>
+		///// <param name="flags">This function supports flags <c>DirectChild</c> and <c>HiddenToo</c>. If both are set, it is much faster because uses API <ms>GetDlgItem</ms>. Else uses API <ms>EnumChildWindows</ms>, like <see cref="Child"/>.</param>
 		///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		///// <remarks>
 		///// To create code for this function, use tool <b>Find window</b>.
@@ -176,7 +176,7 @@ namespace Au {
 		//}
 
 		///// <summary>
-		///// Finds a child control by its id and returns its handle as <see cref="wnd"/>. Can wait and throw <b>NotFoundException</b>.
+		///// Finds a child control by its id and returns its handle as <see cref="wnd"/>. Can wait and throw <see cref="NotFoundException"/>.
 		///// </summary>
 		///// <returns>Child control handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
 		///// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
@@ -253,7 +253,7 @@ namespace Au {
 			/// <summary>
 			/// Gets child controls, including all descendants.
 			/// </summary>
-			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+			/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 			/// <param name="onlyVisible">Need only visible controls.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
 			/// <param name="directChild">Need only direct children, not all descendants.</param>
@@ -271,13 +271,13 @@ namespace Au {
 			///// <summary>
 			///// Gets child controls, including all descendants.
 			///// </summary>
-			///// <param name="a">Receives results. If <c>null</c>, this function creates new <b>List</b>, else clears before adding items.</param>
+			///// <param name="a">Receives results. If <c>null</c>, this function creates new <c>List</c>, else clears before adding items.</param>
 			///// <param name="onlyVisible">Need only visible controls.</param>
 			///// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
 			///// <param name="directChild">Need only direct children, not all descendants.</param>
 			///// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			///// <remarks>
-			///// Use this overload to avoid much garbage when calling frequently with the same <b>List</b> variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
+			///// Use this overload to avoid much garbage when calling frequently with the same <c>List</c> variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
 			///// </remarks>
 			//public void Children(ref List<wnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false) {
 			//	_w.ThrowIfInvalid();
@@ -287,7 +287,7 @@ namespace Au {
 			//rejected: unreliable.
 			///// <summary>
 			///// Gets list of direct child controls.
-			///// Faster than API <b>EnumChildWindows</b>.
+			///// Faster than API <c>EnumChildWindows</c>.
 			///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
 			///// </summary>
 			//public wnd[] DirectChildrenFastUnsafe(string cn = null)
@@ -363,7 +363,7 @@ namespace Au {
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>itemId</i>.</exception>
 		/// <remarks>
 		/// Works only with classic menus. The drop-down menu window class name must be <c>"#32768"</c>. Works with menu items in window menu bar, system menu and some context menus.
-		/// Does not use the menu itself. Just posts <b>WM_COMMAND</b> or <b>WM_SYSCOMMAND</b> message. Even if a menu item with this id does not exist.
+		/// Does not use the menu itself. Just posts <c>WM_COMMAND</c> or <c>WM_SYSCOMMAND</c> message. Even if a menu item with this id does not exist.
 		/// This variable is the window that contains the menu bar or system menu. Or the drop-down menu window (class <c>"#32768"</c>) that contains the menu item.
 		/// </remarks>
 		public void MenuClick(int itemId, bool systemMenu = false) {
@@ -416,7 +416,7 @@ namespace Au.Types {
 
 #if !true //rejected. Nobody would use this when there is elm. Eg BM_CLICK is the same as elm.Invoke or elm.PostClick. For Check can use code if(!e.IsChecked) e.Invoke();.
 	/// <summary>
-	/// Like <see cref="wnd"/>, but has only button, check box and radio button functions - <b>Click</b>, <b>Check</b> etc.
+	/// Like <see cref="wnd"/>, but has only button, check box and radio button functions - <c>Click</c>, <c>Check</c> etc.
 	/// See also <see cref="wnd.AsButton"/>.
 	/// </summary>
 	/// <example>
@@ -427,7 +427,7 @@ namespace Au.Types {
 	public struct WButton
 	{
 		/// <summary>
-		/// Button handle as <b>wnd</b>.
+		/// Button handle as <see cref="wnd"/>.
 		/// </summary>
 		public wnd W { get; }
 
@@ -497,7 +497,7 @@ namespace Au.Types {
 		/// Sets checkbox state. Does not use the mouse.
 		/// </summary>
 		/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <ms>BM_SETCHECK</ms> message and also <b>BN_CLICKED</b> notification to the parent window; if that is not possible, instead uses <ms>BM_CLICK</ms> message.</param>
+		/// <param name="useElm">Use <see cref="elm.Invoke"/>. If <c>false</c> (default), posts <ms>BM_SETCHECK</ms> message and also <c>BN_CLICKED</c> notification to the parent window; if that is not possible, instead uses <ms>BM_CLICK</ms> message.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
 		/// <exception cref="AuWndException">This window is invalid.</exception>
 		/// <exception cref="AuException">Failed.</exception>

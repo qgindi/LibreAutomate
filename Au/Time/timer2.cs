@@ -56,7 +56,7 @@ public class timer2 {
 	/// <summary>
 	/// Starts one-time timer or changes timeout/period.
 	/// </summary>
-	/// <param name="milliseconds">Time interval after which to call the callback function. Valid values are 0 - <b>uint.MaxValue</b> - 2. If -1, stops without disposing.</param>
+	/// <param name="milliseconds">Time interval after which to call the callback function. Valid values are 0 - <see cref="uint.MaxValue"/> - 2. If -1, stops without disposing.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ObjectDisposedException">Called <see cref="Stop"/> (unless <i>canReuse</i> true).</exception>
 	/// <remarks>
@@ -69,8 +69,8 @@ public class timer2 {
 	/// <summary>
 	/// Starts periodic timer or changes timeout/period.
 	/// </summary>
-	/// <param name="milliseconds">Time interval (period) of calling the callback function. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
-	/// <param name="firstAfter"><c>null</c> (default) or time interval after which to call the callback function first time. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
+	/// <param name="milliseconds">Time interval (period) of calling the callback function. Valid values are 0 - <see cref="uint.MaxValue"/> - 2.</param>
+	/// <param name="firstAfter"><c>null</c> (default) or time interval after which to call the callback function first time. Valid values are 0 - <see cref="uint.MaxValue"/> - 2.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ObjectDisposedException">Called <see cref="Stop"/> (unless <i>canReuse</i> true).</exception>
 	/// <remarks>
@@ -88,7 +88,7 @@ public class timer2 {
 	/// <summary>
 	/// Creates and starts new one-time timer.
 	/// </summary>
-	/// <param name="milliseconds">Time interval after which to call the callback function. Valid values are 0 - <b>uint.MaxValue</b> - 2. If -1, stops without disposing.</param>
+	/// <param name="milliseconds">Time interval after which to call the callback function. Valid values are 0 - <see cref="uint.MaxValue"/> - 2. If -1, stops without disposing.</param>
 	/// <param name="timerAction">Callback function.</param>
 	/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -104,10 +104,10 @@ public class timer2 {
 	/// <summary>
 	/// Creates and starts new periodic timer.
 	/// </summary>
-	/// <param name="milliseconds">Time interval (period) of calling the callback function. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
+	/// <param name="milliseconds">Time interval (period) of calling the callback function. Valid values are 0 - <see cref="uint.MaxValue"/> - 2.</param>
 	/// <param name="timerAction">Callback function.</param>
 	/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
-	/// <param name="firstAfter"><c>null</c> (default) or time interval after which to call the callback function first time. Valid values are 0 - <b>uint.MaxValue</b> - 2.</param>
+	/// <param name="firstAfter"><c>null</c> (default) or time interval after which to call the callback function first time. Valid values are 0 - <see cref="uint.MaxValue"/> - 2.</param>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <remarks>
 	/// Calls <see cref="Timer.Change(long, long)"/>.

@@ -11,7 +11,7 @@
 		/// <param name="recorded">
 		/// List of x y distances from previous.
 		/// The first distance is from mouse position before the first movement; at run time it will be distance from <see cref="mouse.lastXY"/>.
-		/// To create <b>uint</b> value from distance <i>dx</i> <i>dy</i> use <see cref="Math2.MakeLparam"/> and cast to <b>uint</b>.
+		/// To create <c>uint</c> value from distance <i>dx</i> <i>dy</i> use <see cref="Math2.MakeLparam"/> and cast to <c>uint</c>.
 		/// </param>
 		/// <param name="withSleepTimes">
 		/// <i>recorded</i> also contains sleep times (milliseconds) alternating with distances.

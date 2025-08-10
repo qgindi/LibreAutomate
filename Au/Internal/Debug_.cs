@@ -4,9 +4,9 @@ namespace Au.More;
 /// Functions useful to debug code.
 /// </summary>
 /// <remarks>
-/// The <b>Debug_.PrintX</b> functions write to the same output as <see cref="print.it"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
-/// Functions <b>Print</b>, <b>PrintIf</b>, <b>PrintFunc</b> and <b>Dialog</b> work only if <b>DEBUG</b> is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have <c>[ConditionalAttribute("DEBUG")]</c>.
-/// Note: when used in a library, the above functions depend on <b>DEBUG</b> of the library project and not on <b>DEBUG</b> of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(opt.warnings.Verbose) print.warning("text");</c>; see <see cref="print.warning"/>, <see cref="OWarnings.Verbose"/>.
+/// The <c>Debug_.PrintX</c> functions write to the same output as <see cref="print.it"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
+/// Functions <c>Print</c>, <c>PrintIf</c>, <c>PrintFunc</c> and <c>Dialog</c> work only if <c>DEBUG</c> is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have <c>[ConditionalAttribute("DEBUG")]</c>.
+/// Note: when used in a library, the above functions depend on <c>DEBUG</c> of the library project and not on <c>DEBUG</c> of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(opt.warnings.Verbose) print.warning("text");</c>; see <see cref="print.warning"/>, <see cref="OWarnings.Verbose"/>.
 /// </remarks>
 internal static class Debug_ {
 	static void _Print(object text, string f_, int l_, string m_) {
@@ -26,7 +26,7 @@ internal static class Debug_ {
 	
 	/// <summary>
 	/// Calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
-	/// Works only if <b>DEBUG</b> is defined. Read more in class help.
+	/// Works only if <c>DEBUG</c> is defined. Read more in class help.
 	/// The 3 optional arguments are not used explicitly.
 	/// Text can contain output tags.
 	/// </summary>
@@ -36,7 +36,7 @@ internal static class Debug_ {
 	
 	/// <summary>
 	/// If condition is <c>true</c>, calls <see cref="print.it"/> to show some debug info. Also shows current function name/file/line.
-	/// Works only if <b>DEBUG</b> is defined. Read more in class help.
+	/// Works only if <c>DEBUG</c> is defined. Read more in class help.
 	/// If <i>text</i> <c>null</c>, uses <c>[CallerArgumentExpression("condition")]</c>. Other optional parameters are not used explicitly.
 	/// If text starts with <c>"&lt;&gt;"</c>, it can contain output tags.
 	/// </summary>
@@ -47,7 +47,7 @@ internal static class Debug_ {
 	
 	/// <summary>
 	/// Calls <see cref="print.it"/> with current function name.
-	/// Works only if <b>DEBUG</b> is defined. Read more in class help.
+	/// Works only if <c>DEBUG</c> is defined. Read more in class help.
 	/// The optional argument is not used explicitly.
 	/// </summary>
 	[Conditional("DEBUG")]
@@ -55,7 +55,7 @@ internal static class Debug_ {
 		=> _Print2(m_);
 	
 	/// <summary>
-	/// If <b>DEBUG</b> defined, prints <c>lastError.message</c>. Only if condition <c>true</c> (default).
+	/// If <c>DEBUG</c> defined, prints <c>lastError.message</c>. Only if condition <c>true</c> (default).
 	/// </summary>
 	[Conditional("DEBUG")]
 	public static void PrintNativeError(bool condition = true, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
@@ -63,7 +63,7 @@ internal static class Debug_ {
 	}
 	
 	/// <summary>
-	/// If <b>DEBUG</b> defined, prints <c>lastError.messageFor(code)</c>.
+	/// If <c>DEBUG</c> defined, prints <c>lastError.messageFor(code)</c>.
 	/// </summary>
 	[Conditional("DEBUG")]
 	public static void PrintNativeError(int code, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
@@ -71,7 +71,7 @@ internal static class Debug_ {
 	
 	/// <summary>
 	/// Calls <see cref="dialog.show"/> to show some debug info.
-	/// Works only if <b>DEBUG</b> is defined. Read more in class help.
+	/// Works only if <c>DEBUG</c> is defined. Read more in class help.
 	/// The 3 optional arguments are not used explicitly.
 	/// </summary>
 	[Conditional("DEBUG")]
@@ -115,7 +115,7 @@ internal static class Debug_ {
 	//}
 	
 	/// <summary>
-	/// Checks flags and throws <b>ArgumentException</b> if some flags are invalid. The error message includes valid flag names.
+	/// Checks flags and throws <see cref="ArgumentException"/> if some flags are invalid. The error message includes valid flag names.
 	/// </summary>
 	/// <param name="flags">Flags to check.</param>
 	/// <param name="goodFlags">Valid flags.</param>
@@ -172,9 +172,9 @@ internal static class Debug_ {
 	}
 	
 	/// <summary>
-	/// Returns managed memory size as formatted string. Uses <b>GC.GetTotalMemory</b>.
+	/// Returns managed memory size as formatted string. Uses <c>GC.GetTotalMemory</c>.
 	/// </summary>
-	/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
+	/// <param name="fromAnchor">Get the difference from previous call to <c>MemorySetAnchor_</c>.</param>
 	public static string MemoryGet(bool fromAnchor = true) {
 		var mem = GC.GetTotalMemory(false);
 		//if(s_mem0 == 0) s_mem0 = mem;
@@ -184,18 +184,18 @@ internal static class Debug_ {
 	static long s_mem0;
 	
 	/// <summary>
-	/// Prints managed memory size. Uses <b>GC.GetTotalMemory</b>.
+	/// Prints managed memory size. Uses <c>GC.GetTotalMemory</c>.
 	/// </summary>
-	/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
+	/// <param name="fromAnchor">Get the difference from previous call to <c>MemorySetAnchor_</c>.</param>
 	public static void MemoryPrint(bool fromAnchor = true) => _Print2(MemoryGet(fromAnchor));
 	
 	/// <summary>
-	/// Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with <i>fromAnchor</i>=<c>true</c> (default) will get memory size difference from current memory size.
+	/// Memorizes current managed memory size, so that next call to another <c>MemoryX</c> function with <i>fromAnchor</i>=<c>true</c> (default) will get memory size difference from current memory size.
 	/// </summary>
 	public static void MemorySetAnchor() { s_mem0 = GC.GetTotalMemory(false); }
 	
 	///// <summary>
-	///// Temporarily suspends GC collections if possible. Restores in <b>Dispose</b>.
+	///// Temporarily suspends GC collections if possible. Restores in <c>Dispose</c>.
 	///// </summary>
 	//public struct NoGcRegion : IDisposable {
 	//	bool _restore, _print;
@@ -205,7 +205,7 @@ internal static class Debug_ {
 	//	/// Does nothing in 32-bit process.
 	//	/// </summary>
 	//	/// <param name="memSize">Recommended 100_000_000. Still works if 200_000_000, but fails if 300_000_000. Not tested in 32-bit process.</param>
-	//	/// <param name="print">Let <b>Dispose</b> print size of managed memory added since ctor.</param>
+	//	/// <param name="print">Let <c>Dispose</c> print size of managed memory added since ctor.</param>
 	//	public NoGcRegion(long memSize, bool print = true) {
 	//		_restore = false;
 	//		_print = print;

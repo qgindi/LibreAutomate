@@ -51,19 +51,19 @@ namespace Au {
 		/// Gets a static <see cref="HttpClient"/> instance that can be used in scripts to download web pages, post web form data, etc.
 		/// </summary>
 		/// <remarks>
-		/// Creates <b>HttpClient</b> only the first time; later just returns it.
+		/// Creates <see cref="HttpClient"/> only the first time; later just returns it.
 		/// 
 		/// Sets these properties and default headers:
-		/// - <see cref="SocketsHttpHandler.AutomaticDecompression"/> = <b>All</b>.
+		/// - <see cref="SocketsHttpHandler.AutomaticDecompression"/> = <c>All</c>.
 		/// - <c>User-Agent: Au</c>.
 		/// 
-		/// <b>internet.http</b> makes easier to discover and use internet get/post/etc functions when using this library. You can instead create an <b>HttpClient</b> instance and use its functions in the same way. See the second example. Use the same <b>HttpClient</b> instance when making multiple get/post/etc requests.
+		/// <c>internet.http</c> makes easier to discover and use internet get/post/etc functions when using this library. You can instead create an <see cref="HttpClient"/> instance and use its functions in the same way. See the second example. Use the same <c>HttpClient</c> instance when making multiple get/post/etc requests.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = internet.http.Get("https://httpbin.org/anything").Text();
 		/// ]]></code>
-		/// Without <b>internet.http</b>.
+		/// Without <c>internet.http</c>.
 		/// <code><![CDATA[
 		/// using var http = new HttpClient();
 		/// http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");
@@ -106,7 +106,7 @@ namespace Au {
 		static Lazy<HttpClient> _lazyHC_ = new(_CreateHttpClient);
 		
 		/// <summary>
-		/// Creates an <b>HttpContent</b> for posting web form fields with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
+		/// Creates an <see cref="HttpContent"/> for posting web form fields with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
 		/// </summary>
 		/// <param name="fields">One or more web form field names and values. See example.</param>
 		/// <exception cref="ArgumentException">An empty name.</exception>
@@ -128,9 +128,9 @@ namespace Au {
 		//	=> new(fields.Select(o=>new KeyValuePair<string, string>(o.Item1, o.Item2)));
 		
 		/// <summary>
-		/// Creates an <b>HttpContent</b> for posting an object serialized as JSON. It can be used with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
+		/// Creates an <see cref="HttpContent"/> for posting an object serialized as JSON. It can be used with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
 		/// </summary>
-		/// <param name="x">An object of any type that can be serialized to JSON with a <b>JsonSerializer</b>.</param>
+		/// <param name="x">An object of any type that can be serialized to JSON with a <see cref="JsonSerializer"/>.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonContent.Create{T}(T, MediaTypeHeaderValue?, JsonSerializerOptions?)"/>.</exception>
 		/// <remarks>
 		/// Just calls <see cref="JsonContent.Create{T}(T, MediaTypeHeaderValue?, JsonSerializerOptions?)"/>. You can instead call it directly if want to specify media type or JSON serializer parameters.
@@ -145,7 +145,7 @@ namespace Au {
 			=> JsonContent.Create(x);
 		
 		/// <summary>
-		/// Creates an <b>HttpContent</b> for posting a JSON string. It can be used with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
+		/// Creates an <see cref="HttpContent"/> for posting a JSON string. It can be used with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
 		/// </summary>
 		/// <param name="json">JSON string.</param>
 		/// <example>
@@ -157,7 +157,7 @@ namespace Au {
 		public static StringContent jsonContent(string json) => new(json, null, "application/json");
 		
 		/// <summary>
-		/// Creates an <b>HttpContent</b> for posting JSON. It can be used with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
+		/// Creates an <see cref="HttpContent"/> for posting JSON. It can be used with functions like <see cref="HttpClient.PostAsync(string?, HttpContent?)"/> and <see cref="ExtInternet.Post"/>.
 		/// </summary>
 		public static StringContent jsonContent(JsonNode json) => jsonContent(json.ToJsonString());
 		
@@ -213,7 +213,7 @@ namespace Au.Types {
 		/// <param name="fileName">Filename. If <c>null</c>, gets from <i>file</i>.</param>
 		/// <returns>This.</returns>
 		/// <remarks>
-		/// Opens the file and stores the stream in this <b>MultipartFormDataContent</b> object. Won't auto-close it after uploading. To close files, dispose this <b>MultipartFormDataContent</b> object, for example with <c>using</c> like in the example. Else the file will remain opened/locked until this process exits or until next garbage collection.
+		/// Opens the file and stores the stream in this <see cref="MultipartFormDataContent"/> object. Won't auto-close it after uploading. To close files, dispose this <c>MultipartFormDataContent</c> object, for example with <c>using</c> like in the example. Else the file will remain opened/locked until this process exits or until next garbage collection.
 		/// </remarks>
 		/// <exception cref="ArgumentException">See <see cref="MultipartFormDataContent.Add(HttpContent, string, string)"/>.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="filesystem.loadStream"/>.</exception>
@@ -265,7 +265,7 @@ namespace Au.Types {
 		/// </param>
 		/// <param name="auth">String like <c>"username:password"</c> for basic authentication. Adds <c>Authorization</c> header.</param>
 		/// <param name="also">Can set more properties for the request.</param>
-		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
+		/// <returns>An <c>HttpResponseMessage</c> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
 		/// <exception cref="Exception">
 		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/>.
 		/// If <i>headers</i> used, exceptions of <see cref="AddMany"/>.
@@ -310,7 +310,7 @@ namespace Au.Types {
 		/// Sends a GET request to the specified URL, and gets the response. Handles HTTP errors and exceptions.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="r">Receives <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be <c>null</c> if failed because of an exception.</param>
+		/// <param name="r">Receives <c>HttpResponseMessage</c> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be <c>null</c> if failed because of an exception.</param>
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <param name="printError">If failed, call <see cref="print.warning"/>.</param>
@@ -345,7 +345,7 @@ namespace Au.Types {
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
 		/// <param name="resultFile">File path. The function uses <see cref="pathname.normalize"/>. Creates parent directory if need.</param>
 		/// <inheritdoc cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})" path="/param"/>
-		/// <returns>An <b>HttpResponseMessage</b> object that contains response headers etc. Rarely used.</returns>
+		/// <returns>An <c>HttpResponseMessage</c> object that contains response headers etc. Rarely used.</returns>
 		/// <exception cref="Exception">
 		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/> and <see cref="Save"/>.
 		/// If <i>headers</i> used, exceptions of <see cref="AddMany"/>.
@@ -365,7 +365,7 @@ namespace Au.Types {
 		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be <c>null</c>.</param>
 		/// <param name="dontWait">Use <see cref="HttpCompletionOption.ResponseHeadersRead"/>.</param>
 		/// <inheritdoc cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})" path="/param"/>
-		/// <returns>An <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
+		/// <returns>An <c>HttpResponseMessage</c> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
 		/// <exception cref="Exception">
 		/// Exceptions of <see cref="HttpClient.Send(HttpRequestMessage, HttpCompletionOption)"/>.
 		/// If <i>headers</i> used, exceptions of <see cref="AddMany"/>.
@@ -396,7 +396,7 @@ namespace Au.Types {
 		/// Sends a POST request to the specified URL, and gets the response. Handles HTTP errors and exceptions.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="r">Receives <b>HttpResponseMessage</b> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be <c>null</c> if failed because of an exception.</param>
+		/// <param name="r">Receives <c>HttpResponseMessage</c> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. See example. Will be <c>null</c> if failed because of an exception.</param>
 		/// <param name="url">URL.</param>
 		/// <param name="content">Data to post. Usually web form data (see <see cref="internet.formContent"/>) or JSON (see <see cref="internet.jsonContent"/>). Can be <c>null</c>.</param>
 		/// <param name="printError">If failed, call <see cref="print.warning"/>.</param>
@@ -479,7 +479,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="t"></param>
 		/// <exception cref="HttpRequestException">Failed HTTP request.</exception>
-		/// <exception cref="Exception">Exceptions of <b>ReadFromJsonAsync</b>.</exception>
+		/// <exception cref="Exception">Exceptions of <c>ReadFromJsonAsync</c>.</exception>
 		public static T Json<T>(this HttpResponseMessage t)
 			=> t.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<T>().Result;
 		
@@ -493,7 +493,7 @@ namespace Au.Types {
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="HttpContent.ReadAsStream()"/>, <see cref="File.Create(string)"/> and other used functions.</exception>
 		/// <remarks>
-		/// By default <b>HttpClient</b> and similar functions download content to a memory buffer before returning. To avoid it, use <i>completionOption</i> <see cref="HttpCompletionOption.ResponseHeadersRead"/>, or <see cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})"/> with <i>dontWait</i> <c>true</c>. Then call this function (it will download the file), and finally dispose the <b>HttpResponseMessage</b>.
+		/// By default <see cref="HttpClient"/> downloads content to a memory buffer before returning. To avoid it, use <i>completionOption</i> <see cref="HttpCompletionOption.ResponseHeadersRead"/>, or <see cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})"/> with <i>dontWait</i> <c>true</c>. Then call this function (it will download the file), and finally dispose the <see cref="HttpResponseMessage"/>.
 		/// </remarks>
 		/// <seealso cref="Get(HttpClient, string, string, IEnumerable{string}, string, Action{HttpRequestMessage})"/>
 		public static HttpResponseMessage Save(this HttpResponseMessage t, string file) {
@@ -530,11 +530,11 @@ namespace Au.Types {
 		/// <exception cref="HttpRequestException">Failed HTTP request.</exception>
 		/// <exception cref="Exception">Other exceptions.</exception>
 		/// <remarks>
-		/// By default <b>HttpClient</b> and similar functions download content to a memory buffer before returning. To avoid it, use <i>completionOption</i> <see cref="HttpCompletionOption.ResponseHeadersRead"/>, or <see cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})"/> with <i>dontWait</i> <c>true</c>. Then call this function (it will download the file), and finally dispose the <b>HttpResponseMessage</b>.
+		/// By default <see cref="HttpClient"/> downloads content to a memory buffer before returning. To avoid it, use <i>completionOption</i> <see cref="HttpCompletionOption.ResponseHeadersRead"/>, or <see cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})"/> with <i>dontWait</i> <c>true</c>. Then call this function (it will download the file), and finally dispose the <see cref="HttpResponseMessage"/>.
 		/// 
 		/// Cannot provide the progress percentage if the content length is unknown. Top reasons:
 		/// - The HTTP server uses chunked transfer encoding.
-		/// - The HTTP server uses content compression and the <b>HttpClient</b> is configured to automatically decompress (for example <see cref="internet.http"/>). Instead of <b>internet.http</b> create a <b>HttpClient</b> and optionally set header <c>"Accept-Encoding: br, gzip, deflate"</c>. This function will decompress.
+		/// - The HTTP server uses content compression and the <see cref="HttpClient"/> is configured to automatically decompress (for example <see cref="internet.http"/>). Instead of <c>internet.http</c> create a <see cref="HttpClient"/> and optionally set header <c>"Accept-Encoding: br, gzip, deflate"</c>. This function will decompress.
 		/// </remarks>
 		public static bool Download(this HttpResponseMessage t, Stream stream, Action<ProgressArgs> progress = null, CancellationToken cancel = default, bool disposeStream = false) {
 			dialog pd = null;

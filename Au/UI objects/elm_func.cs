@@ -19,9 +19,9 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Low-level version of <see cref="WndContainer"/>. Does not call <b>ThrowIfDisposed_</b> and <b>_Hresult</b> (<b>lastError</b>).
+		/// Low-level version of <see cref="WndContainer"/>. Does not call <c>ThrowIfDisposed_</c> and <c>_Hresult</c> (<c>lastError</c>).
 		/// </summary>
-		/// <returns><b>HRESULT</b></returns>
+		/// <returns><c>HRESULT</c></returns>
 		int _GetWnd(out wnd w) {
 			int hr = Cpp.Cpp_AccGetInt(this, 'w', out var i);
 			GC.KeepAlive(this);
@@ -107,10 +107,10 @@ namespace Au {
 		/// <summary>
 		/// Gets role as enum <see cref="ERole"/>.
 		/// </summary>
-		/// <returns>0 (<b>ERole.None</b>) if failed. Supports <see cref="lastError"/>.</returns>
+		/// <returns>0 (<c>ERole.None</c>) if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string; then returns <b>ERole.Custom</b>.
-		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
+		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <c>None</c> and <c>Custom</c>). Some UI elements have a custom role, usually as string; then returns <c>ERole.Custom</c>.
+		/// All UI elements must support this property. If failed, probably the <see cref="elm"/> is invalid, for example the window is closed.
 		/// </remarks>
 		public ERole RoleInt {
 			get {
@@ -127,9 +127,9 @@ namespace Au {
 		/// </summary>
 		/// <returns><c>""</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <b>None</b> and <b>Custom</b>). Some UI elements have a custom role, usually as string.
-		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the <b>int</b> value like <c>"0"</c> or <c>"500"</c>.
-		/// All UI elements must support this property. If failed, probably the <b>elm</b> is invalid, for example the window is closed.
+		/// Most UI elements have a standard role, defined in enum <see cref="ERole"/> (except <c>None</c> and <c>Custom</c>). Some UI elements have a custom role, usually as string.
+		/// For standard roles this function returns enum <see cref="ERole"/> member name. For string roles - the string. For unknown non-string roles - the <c>int</c> value like <c>"0"</c> or <c>"500"</c>.
+		/// All UI elements must support this property. If failed, probably the <see cref="elm"/> is invalid, for example the window is closed.
 		/// </remarks>
 		public string Role {
 			get {
@@ -186,22 +186,22 @@ namespace Au {
 			}
 		}
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>CHECKED</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>CHECKED</c>.</summary>
 		public bool IsChecked => State.Has(EState.CHECKED);
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>CHECKED</b>, <c>null</c> if has state <b>MIXED</b>, else <c>false</c>. Use this function with 3-state checkboxes.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>CHECKED</c>, <c>null</c> if has state <c>MIXED</c>, else <c>false</c>. Use this function with 3-state checkboxes.</summary>
 		public bool? IsChecked2 => (State & (EState.CHECKED | EState.MIXED)) switch { EState.CHECKED => true, 0 => false, _ => null };
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>UNAVAILABLE</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>UNAVAILABLE</c>.</summary>
 		/// <remarks>Does not check whether this UI element is in a disabled parent/ancestor UI element.</remarks>
 		public bool IsDisabled => State.Has(EState.DISABLED);
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>FOCUSED</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>FOCUSED</c>.</summary>
 		public bool IsFocused => State.Has(EState.FOCUSED);
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>INVISIBLE</b> and does not have state <b>OFFSCREEN</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>INVISIBLE</c> and does not have state <c>OFFSCREEN</c>.</summary>
 		/// <remarks>
-		/// If the UI element has both <b>INVISIBLE</b> and <b>OFFSCREEN</b> states, it is either invisible or just offscreen, depending on application etc. Then this function works like <b>Find</b> and similar functions: for most UI elements returns <c>false</c> (is visible), but for UI elements that have these roles returns <c>true</c> (invisible): <b>WINDOW</b>, <b>DOCUMENT</b>, <b>PROPERTYPAGE</b>, <b>GROUPING</b>, <b>ALERT</b>, <b>MENUPOPUP</b>.
+		/// If the UI element has both <c>INVISIBLE</c> and <c>OFFSCREEN</c> states, it is either invisible or just offscreen, depending on application etc. Then this function works like <see cref="elmFinder.Find"/> and similar functions: for most UI elements returns <c>false</c> (is visible), but for UI elements that have these roles returns <c>true</c> (invisible): <c>WINDOW</c>, <c>DOCUMENT</c>, <c>PROPERTYPAGE</c>, <c>GROUPING</c>, <c>ALERT</c>, <c>MENUPOPUP</c>.
 		/// Does not check whether this UI element is in an invisible parent/ancestor UI element.
 		/// </remarks>
 		public bool IsInvisible => IsInvisible_(State);
@@ -222,24 +222,24 @@ namespace Au {
 			return false;
 		}
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>OFFSCREEN</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>OFFSCREEN</c>.</summary>
 		public bool IsOffscreen => State.Has(EState.OFFSCREEN);
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>PROTECTED</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>PROTECTED</c>.</summary>
 		/// <remarks>This state is used for password fields.</remarks>
 		public bool IsPassword => State.Has(EState.PROTECTED);
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>PRESSED</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>PRESSED</c>.</summary>
 		public bool IsPressed => State.Has(EState.PRESSED);
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>READONLY</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>READONLY</c>.</summary>
 		public bool IsReadonly => State.Has(EState.READONLY);
 		
-		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <b>SELECTED</b>.</summary>
+		/// <summary>Calls <see cref="State"/> and returns <c>true</c> if has state <c>SELECTED</c>.</summary>
 		public bool IsSelected => State.Has(EState.SELECTED);
 		
 		/// <summary>
-		/// Converts <b>BSTR</b> to string and disposes the <b>BSTR</b>.
+		/// Converts <c>BSTR</c> to string and disposes the <c>BSTR</c>.
 		/// If hr is not 0, returns <c>""</c> (never <c>null</c>).
 		/// </summary>
 		static string _BstrToString(int hr, BSTR b) {
@@ -323,7 +323,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Gets the UI Automation <b>AutomationId</b> property.
+		/// Gets the UI Automation <c>AutomationId</c> property.
 		/// </summary>
 		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
@@ -334,7 +334,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Gets the UI Automation <b>ClassName</b> property.
+		/// Gets the UI Automation <c>ClassName</c> property.
 		/// </summary>
 		/// <returns><c>""</c> if this property is unavailable or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
@@ -370,7 +370,7 @@ namespace Au {
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Fails if the UI element does not have a default action. Then you can use <see cref="MouseClick"/>, or try <see cref="PostClick"/>, <see cref="Check"/>, <see cref="SendKeys"/>, other functions.
-		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="JavaInvoke"/> or one of the above functions (<b>MouseClick</b> etc).
+		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="JavaInvoke"/> or one of the above functions (<see cref="MouseClick"/> etc).
 		/// </remarks>
 		public void Invoke() {
 			ThrowIfDisposed_();
@@ -378,7 +378,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Calls <b>_InvokeL</b>, with <b>ButtonPostClickWorkaround_</b> if need. Exception if failed.
+		/// Calls <c>_InvokeL</c>, with <c>ButtonPostClickWorkaround_</c> if need. Exception if failed.
 		/// </summary>
 		void _Invoke(char action = 'a', string param = null, string errMsg = null) {
 			int hr;
@@ -395,7 +395,7 @@ namespace Au {
 		/// <summary>
 		/// Calls <c>EnableActivate(-1)</c> and <c>Cpp_AccAction</c>.
 		/// </summary>
-		/// <returns><b>HRESULT</b></returns>
+		/// <returns><c>HRESULT</c></returns>
 		int _InvokeL(char action = 'a', string param = null) {
 			//UIA bug: if window inactive, in some cases tries to activate, and waits ~10 s if failed.
 			//	Eg ExpandCollapse pattern (always) and Invoke/Toggle patterns (buttons/checkboxes, not always).
@@ -423,7 +423,7 @@ namespace Au {
 		/// <remarks>
 		/// Read more about Java UI elements in <see cref="elm"/> topic.
 		/// 
-		/// Problem: if the action opens a dialog, <b>Invoke</b>/<b>JavaInvoke</b> do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is <c>null</c> and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts <c>Space</c> key message, which should press the button; then this function does not wait.
+		/// Problem: if the action opens a dialog, <see cref="Invoke"/>/<see cref="JavaInvoke"/> do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is <c>null</c> and the UI element is focusable, this function tries a workaround: it makes the UI element (button etc) focused and posts <c>Space</c> key message, which should press the button; then this function does not wait.
 		/// </remarks>
 		public void JavaInvoke(string action = null) {
 			//problem: if the button click action opens a modal dialog, doAccessibleActions waits until closed.
@@ -613,12 +613,12 @@ namespace Au {
 		/// <summary>
 		/// Selects or deselects.
 		/// </summary>
-		/// <param name="how">Specifies whether to select, focus, add to selection etc. Can be two flags, for example <c>ESelect.TAKEFOCUS | ESelect.TAKESELECTION</c>. With flag <b>TAKEFOCUS</b> activates the window like <see cref="Focus(bool)"/>.</param>
+		/// <param name="how">Specifies whether to select, focus, add to selection etc. Can be two flags, for example <c>ESelect.TAKEFOCUS | ESelect.TAKESELECTION</c>. With flag <c>TAKEFOCUS</c> activates the window like <see cref="Focus(bool)"/>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="AuWndException">Failed to activate the window (<see cref="wnd.Activate"/>) or focus the control (<see cref="wnd.Focus"/>).</exception>
 		/// <remarks>
-		/// Not all UI elements support it. Most UI elements support not all flags. It depends on <see cref="EState"/> <b>FOCUSABLE</b>, <b>SELECTABLE</b>, <b>MULTISELECTABLE</b>, <b>EXTSELECTABLE</b>, <b>DISABLED</b>.
-		/// Many UI elements have bugs, especially with flag <b>TAKEFOCUS</b>. More bugs when the UI element has been found with flag <see cref="EFFlags.NotInProc"/>.
+		/// Not all UI elements support it. Most UI elements support not all flags. It depends on <see cref="EState"/> <c>FOCUSABLE</c>, <c>SELECTABLE</c>, <c>MULTISELECTABLE</c>, <c>EXTSELECTABLE</c>, <c>DISABLED</c>.
+		/// Many UI elements have bugs, especially with flag <c>TAKEFOCUS</c>. More bugs when the UI element has been found with flag <see cref="EFFlags.NotInProc"/>.
 		/// </remarks>
 		public void Select(ESelect how = ESelect.TAKESELECTION) {
 			ThrowIfDisposed_();
@@ -679,12 +679,12 @@ namespace Au {
 		/// <summary>
 		/// Makes this UI element focused for keyboard input.
 		/// </summary>
-		/// <param name="andSelect">Add flag <b>TAKESELECTION</b>. Note: it is for selecting a list item, not for selecting text in a text box.</param>
+		/// <param name="andSelect">Add flag <c>TAKESELECTION</c>. Note: it is for selecting a list item, not for selecting text in a text box.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="AuWndException">Failed to activate the window (<see cref="wnd.Activate"/>) or focus the control (<see cref="wnd.Focus"/>).</exception>
 		/// <remarks>
-		/// Calls <see cref="Select"/> with flag <b>TAKEFOCUS</b> and optionally <b>TAKESELECTION</b>.
-		/// Not all UI elements support this action and not all work correctly. More info in <b>Select</b> documentation.
+		/// Calls <see cref="Select"/> with flag <c>TAKEFOCUS</c> and optionally <c>TAKESELECTION</c>.
+		/// Not all UI elements support this action and not all work correctly. More info in <c>Select</c> documentation.
 		/// </remarks>
 		public void Focus(bool andSelect = false) {
 			var how = ESelect.TAKEFOCUS;
@@ -883,8 +883,8 @@ namespace Au {
 		/// <returns><c>""</c> if this is not a HTML element or if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="outer">If <c>true</c>, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
-		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
-		/// If this is the root of web page (role <b>DOCUMENT</b> or <b>PANE</b>), gets web page body HTML.
+		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <c>NotInProc</c>.
+		/// If this is the root of web page (role <c>DOCUMENT</c> or <c>PANE</c>), gets web page body HTML.
 		/// </remarks>
 		public string Html(bool outer) {
 			ThrowIfDisposed_();
@@ -899,7 +899,7 @@ namespace Au {
 		/// <returns><c>""</c> if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="name">Attribute name, for example <c>"href"</c>, <c>"id"</c>, <c>"class"</c>. Full, case-sensitive.</param>
 		/// <remarks>
-		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
+		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <c>NotInProc</c>.
 		/// </remarks>
 		/// <exception cref="ArgumentException"><i>name</i> is <c>null</c>/<c>""</c>/invalid.</exception>
 		public string HtmlAttribute(string name) {
@@ -915,7 +915,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>Empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="lastError"/>.</returns>
 		/// <remarks>
-		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <b>NotInProc</b>.
+		/// Works with Chrome, Internet Explorer and apps that use their code (Edge, Opera, web browser controls...). This UI element must be found without flag <c>NotInProc</c>.
 		/// </remarks>
 		public Dictionary<string, string> HtmlAttributes() {
 			ThrowIfDisposed_();
@@ -936,7 +936,7 @@ namespace Au {
 		/// - Standard treeview, listview and listbox controls.
 		/// - Some other controls if found with flag <see cref="EFFlags.UIA"/>.
 		/// 
-		/// Some apps after scrolling update <see cref="Rect"/> with a delay. Some apps never update it for existing <b>elm</b> variables. This function does not wait.
+		/// Some apps after scrolling update <see cref="Rect"/> with a delay. Some apps never update it for existing <see cref="elm"/> variables. This function does not wait.
 		/// </remarks>
 		public void ScrollTo() {
 			ThrowIfDisposed_();
@@ -1012,7 +1012,7 @@ namespace Au {
 		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
-		/// <param name="scroll">If not 0, the function at first calls <see cref="ScrollTo"/>. If it succeeds, waits <i>scroll</i> number of milliseconds (let the target app update the UI element rectangle etc). Valid values are 0-5000. Tip: if does not scroll, try to find the UI element with flag <b>UIA</b>.</param>
+		/// <param name="scroll">If not 0, the function at first calls <see cref="ScrollTo"/>. If it succeeds, waits <i>scroll</i> number of milliseconds (let the target app update the UI element rectangle etc). Valid values are 0-5000. Tip: if does not scroll, try to find the UI element with flag <c>UIA</c>.</param>
 		/// <exception cref="AuException">Failed to get UI element rectangle in container window (<see cref="elm.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
 		/// <remarks>
@@ -1121,7 +1121,7 @@ namespace Au {
 		/// <param name="x">X coordinate in the bounding rectangle of this UI element. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate in the bounding rectangle of this UI element. Default - center.</param>
 		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
-		/// <param name="scroll">If not 0, the function calls <see cref="ScrollTo"/>. If it succeeds, waits <i>scroll</i> number of milliseconds (let the target app update the UI element rectangle etc). Valid values are 0-5000. Tip: if does not scroll, try to find the UI element with flag <b>UIA</b>.</param>
+		/// <param name="scroll">If not 0, the function calls <see cref="ScrollTo"/>. If it succeeds, waits <i>scroll</i> number of milliseconds (let the target app update the UI element rectangle etc). Valid values are 0-5000. Tip: if does not scroll, try to find the UI element with flag <c>UIA</c>.</param>
 		/// <exception cref="AuException">
 		/// - Failed to get rectangle or container window.
 		/// - The element is invisible/offscreen.
@@ -1203,7 +1203,7 @@ namespace Au {
 		/// <remarks>
 		/// Does nothing if the UI element already has the requested checked/unchecked state. Else tries to change the state and does not verify whether it actually worked.
 		/// 
-		/// Does not work with 3-state checkboxes and with elements that never have <b>CHECKED</b> state.
+		/// Does not work with 3-state checkboxes and with elements that never have <c>CHECKED</c> state.
 		/// </remarks>
 		public void Check(bool check = true, [ParamString(PSFormat.Keys)] string keys = null) {
 			if (!_CheckNeedToggle(check)) return;
@@ -1233,15 +1233,15 @@ namespace Au {
 		/// Expands or collapse this expandable UI element (tree item, combo box, expander, dropdown button).
 		/// </summary>
 		/// <param name="expand"><c>true</c> to expand, <c>false</c> to collapse.</param>
-		/// <param name="keys">If not <c>null</c>, makes this element focused and presses these keys. See <see cref="keys.send"/>. If <c>""</c>, uses keys commonly used for that UI element type, for example <c>Right</c>/<c>Left</c> for <b>TREEITEM</b>, <c>Alt+Down</c> for <b>COMBOBOX</b>. If <c>null</c>, uses <see cref="Invoke"/> or similar functions, which often are available only if the element was found with flag <b>UIA</b>; if unavailable or fails, works like with <i>keys</i> <c>""</c>.</param>
+		/// <param name="keys">If not <c>null</c>, makes this element focused and presses these keys. See <see cref="keys.send"/>. If <c>""</c>, uses keys commonly used for that UI element type, for example <c>Right</c>/<c>Left</c> for <c>TREEITEM</c>, <c>Alt+Down</c> for <c>COMBOBOX</c>. If <c>null</c>, uses <see cref="Invoke"/> or similar functions, which often are available only if the element was found with flag <c>UIA</c>; if unavailable or fails, works like with <i>keys</i> <c>""</c>.</param>
 		/// <param name="waitS">If not 0, waits for new expanded/collapsed state max this number of seconds; on timeout throws exception, unless negative.</param>
-		/// <param name="ignoreState">Ignore initial <b>EXPANDED</b>/<b>COLLAPSED</b> state and always perform the expand/collapse action. Can be useful when <see cref="State"/> <b>EXPANDED</b>/<b>COLLAPSED</b> is incorrect. To ignore final state, use negative <i>waitS</i> instead, for example -0.001.</param>
+		/// <param name="ignoreState">Ignore initial <c>EXPANDED</c>/<c>COLLAPSED</c> state and always perform the expand/collapse action. Can be useful when <see cref="State"/> <c>EXPANDED</c>/<c>COLLAPSED</c> is incorrect. To ignore final state, use negative <i>waitS</i> instead, for example -0.001.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
 		/// <exception cref="TimeoutException">The state didn't change in <i>waitS</i> seconds (if > 0).</exception>
 		/// <remarks>
 		/// Does nothing if the UI element already has the requested expanded/collapsed state.
 		/// 
-		/// Works with UI elements that have <see cref="State"/> <b>EXPANDED</b> when expanded and <b>COLLAPSED</b> when collapsed. Also with UI elements that have state <b>CHECKED</b> or <b>PRESSED</b> when expanded and don't have this state when collapsed.
+		/// Works with UI elements that have <see cref="State"/> <c>EXPANDED</c> when expanded and <c>COLLAPSED</c> when collapsed. Also with UI elements that have state <c>CHECKED</c> or <c>PRESSED</c> when expanded and don't have this state when collapsed.
 		/// </remarks>
 		public void Expand(bool expand = true, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 1, bool ignoreState = false) {
 			_Expand(expand, keys, null, waitS, ignoreState);
@@ -1351,13 +1351,13 @@ namespace Au {
 		/// Expands multiple treeview control items using a path string.
 		/// </summary>
 		/// <param name="path">
-		/// String or array consisting of names (<see cref="Name"/>) of <b>TREEITEM</b> elements, like <c>"One|Two|Three"</c> or <c>["One", "Two", "Three"]</c>.
+		/// String or array consisting of names (<see cref="Name"/>) of <c>TREEITEM</c> elements, like <c>"One|Two|Three"</c> or <c>["One", "Two", "Three"]</c>.
 		/// Name string format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="keys"><c>null</c> or keys to use to expand each element specified in <i>path</i>. See <see cref="Expand(bool, string, double, bool)"/>.</param>
 		/// <param name="waitS">If not 0, after expanding each element waits for expanded state max this number of seconds; on timeout throws exception, unless negative. Also waits for each element this number of seconds; always exception if not found.</param>
 		/// <param name="notLast">Find but don't expand the last element specified in <i>path</i>. For example if it's not a folder, and therefore can't expand it, but you need to find it (this function returns it).</param>
-		/// <returns><b>elm</b> of the last element specified in <i>path</i>.</returns>
+		/// <returns><see cref="elm"/> of the last element specified in <i>path</i>.</returns>
 		/// <exception cref="ArgumentException"><i>path</i> contains an invalid wildcard expression (<c>"**options "</c> or regular expression).</exception>
 		/// <exception cref="NotFoundException">Failed to find an element specified in <i>path</i>.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -1365,9 +1365,9 @@ namespace Au {
 		/// <exception cref="NotSupportedException">The treeview control type is not supported when this is a 32-bit process running on 64-bit OS (unlikely).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="SendKeys"/>.</exception>
 		/// <remarks>
-		/// This element can be a <b>TREE</b> or <b>TREEITEM</b>. If it is a collapsed <b>TREEITEM</b>, expands it. Then finds and expands elements specified in <i>path</i>.
+		/// This element can be a <c>TREE</c> or <c>TREEITEM</c>. If it is a collapsed <c>TREEITEM</c>, expands it. Then finds and expands elements specified in <i>path</i>.
 		/// 
-		/// Does not work if all <b>TREEITEM</b> elements in the <b>TREE</b> control are its direct children, unless it's the standard Windows treeview control.
+		/// Does not work if all <c>TREEITEM</c> elements in the <c>TREE</c> control are its direct children, unless it's the standard Windows treeview control.
 		/// </remarks>
 		public elm Expand(Strings path, [ParamString(PSFormat.Keys)] string keys = null, double waitS = 3, bool notLast = false) {
 			return _ExpandPath(path, keys, null, waitS, notLast);

@@ -351,7 +351,7 @@ public static class clipboard {
 	/// Used by <see cref="clipboard"/> and <see cref="keys"/>.
 	/// The caller should block user input (if need), release modifier keys, get <i>optk</i>/<i>wFocus</i>, sleep finally (if need).
 	/// </summary>
-	/// <param name="data">string or <b>clipboardData</b>.</param>
+	/// <param name="data">string or <see cref="clipboardData"/>.</param>
 	internal static void Paste_(object data, OKey optk, wnd wFocus, KHotkey hotkey = default, int timeoutMS = 0) {
 		bool isConsole = wFocus.IsConsole;
 		List<KKey> andKeys = null;
@@ -457,7 +457,7 @@ public static class clipboard {
 		
 		/// <summary>
 		/// The clipboard message has been received. Probably the target window responded to the <c>Ctrl+C</c> or <c>Ctrl+V</c>.
-		/// When pasting, it is unreliable because of clipboard viewers/managers/etc. The caller also must check <b>IsBadWindow</b>.
+		/// When pasting, it is unreliable because of clipboard viewers/managers/etc. The caller also must check <c>IsBadWindow</c>.
 		/// </summary>
 		public bool Success => waitVar;
 		
@@ -476,7 +476,7 @@ public static class clipboard {
 		/// Subclasses <i>clipOwner</i>.
 		/// </summary>
 		/// <param name="paste"><c>true</c> if used for paste, <c>false</c> if for copy.</param>
-		/// <param name="data">If used for paste, can be string containing Unicode text or <b>int</b>/<b>string</b> dictionary containing clipboard format/data.</param>
+		/// <param name="data">If used for paste, can be string containing Unicode text or <c>int</c>/<c>string</c> dictionary containing clipboard format/data.</param>
 		/// <param name="clipOwner">Our clipboard owner window.</param>
 		/// <param name="wFocus">The target control or window.</param>
 		public _ClipboardListener(bool paste, object data, wnd clipOwner, wnd wFocus) {
@@ -497,9 +497,9 @@ public static class clipboard {
 		
 		/// <summary>
 		/// Waits until the target app gets (when pasting) or sets (when copying) clipboard text.
-		/// Throws <b>AuException</b> on timeout (default 3 s normally, 28 s if the target window is hung).
+		/// Throws <see cref="AuException"/> on timeout (default 3 s normally, 28 s if the target window is hung).
 		/// </summary>
-		/// <param name="ctrlKey">The variable that was used to send <c>Ctrl+V</c> or <c>Ctrl+C</c>. This function may call <b>Release</b> to avoid too long <c>Ctrl</c> down.</param>
+		/// <param name="ctrlKey">The variable that was used to send <c>Ctrl+V</c> or <c>Ctrl+C</c>. This function may call <c>Release</c> to avoid too long <c>Ctrl</c> down.</param>
 		public void Wait(ref keys.Internal_.SendCopyPaste ctrlKey, int timeoutMS = 0) {
 			//print.it(Success); //on Paste often already true, because SendInput dispatches sent messages
 			int n = 6, t = 500; //max 3 s (6*500 ms). If hung, max 28 s.
@@ -579,11 +579,11 @@ public static class clipboard {
 	}
 	
 	/// <summary>
-	/// Opens and closes clipboard using API <b>OpenClipboard</b> and <b>CloseClipboard</b>.
-	/// Constructor tries to open for 10 s, then throws <b>AuException</b>.
+	/// Opens and closes clipboard using API <c>OpenClipboard</c> and <c>CloseClipboard</c>.
+	/// Constructor tries to open for 10 s, then throws <see cref="AuException"/>.
 	/// If the <i>createOwner</i> parameter is <c>true</c>, creates temporary message-only clipboard owner window.
 	/// If the <i>noOpenNow</i> parameter is <c>true</c>, does not open, only creates owner if need.
-	/// Dispose() closes clipboard and destroys the owner window.
+	/// <c>Dispose</c> closes clipboard and destroys the owner window.
 	/// </summary>
 	internal struct OpenClipboard_ : IDisposable {
 		bool _isOpen;
@@ -639,7 +639,7 @@ public static class clipboard {
 	
 	/// <summary>
 	/// Saves and restores clipboard data.
-	/// Clipboard must be open. Don't need to call <b>EmptyClipboard</b> before <b>Restore</b>.
+	/// Clipboard must be open. Don't need to call <c>EmptyClipboard</c> before <c>Restore</c>.
 	/// </summary>
 	struct _SaveRestore {
 		Dictionary<int, byte[]> _data;

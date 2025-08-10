@@ -51,7 +51,7 @@ public struct WndSavedRect {
 	}
 
 	/// <summary>
-	/// Creates <b>WndSavedRect</b> from string created by <see cref="ToString"/>.
+	/// Creates <see cref="WndSavedRect"/> from string created by <see cref="ToString"/>.
 	/// </summary>
 	/// <returns><c>false</c> if the string is <c>null</c> or invalid.</returns>
 	/// <param name="saved">String created by <see cref="ToString"/>.</param>
@@ -147,7 +147,7 @@ public struct WndSavedRect {
 	}
 
 	/// <summary>
-	/// Calls <see cref="FromString"/>. If it returns <c>true</c>, sets <i>form</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, sets <b>StartPosition</b> = <b>Manual</b>, and returns <c>true</c>.
+	/// Calls <see cref="FromString"/>. If it returns <c>true</c>, sets <i>form</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, sets <c>StartPosition</c> = <c>Manual</c>, and returns <c>true</c>.
 	/// Call this function before showing window.
 	/// </summary>
 	/// <param name="form"></param>

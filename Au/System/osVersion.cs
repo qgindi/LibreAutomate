@@ -48,7 +48,7 @@ public static unsafe class osVersion {
 	public static int winBuild => _winbuild;
 
 	/// <summary>
-	/// Gets Windows major and minor version in single <b>int</b>: Win7 - 0x601; Win8 - 0x602; Win8.1 - 0x603; Win10/11 - 0xA00.
+	/// Gets Windows major and minor version in single <c>int</c>: Win7 - 0x601; Win8 - 0x602; Win8.1 - 0x603; Win10/11 - 0xA00.
 	/// Example: <c>if (osVersion.winVer >= osVersion.win8) ...</c>
 	/// </summary>
 	public static int winVer => _winver;

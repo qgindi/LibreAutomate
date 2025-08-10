@@ -2,7 +2,7 @@ namespace Au;
 
 /// <summary>
 /// Script task functions. Run, get properties, set options, etc.
-/// A script task is a running script, except if role <b>editorExtension</b>. Each script task is a separate process.
+/// A script task is a running script, except if role <c>editorExtension</c>. Each script task is a separate process.
 /// </summary>
 /// <seealso cref="process"/>
 public static class script {
@@ -12,7 +12,7 @@ public static class script {
 	/// Gets the script name, like <c>"Script123"</c>.
 	/// </summary>
 	/// <remarks>
-	/// If role <b>miniProgram</b> (default), returns the script file name without extension.
+	/// If role <c>miniProgram</c> (default), returns the script file name without extension.
 	/// Else returns <see cref="AppDomain.FriendlyName"/>, like <c>"MainAssemblyName"</c>.
 	/// </remarks>
 	public static string name {
@@ -22,7 +22,7 @@ public static class script {
 	static string s_name;
 	
 	/// <summary>
-	/// Gets the script role (<b>miniProgram</b>, <b>exeProgram</b> or <b>editorExtension</b>).
+	/// Gets the script role (<c>miniProgram</c>, <c>exeProgram</c> or <c>editorExtension</c>).
 	/// </summary>
 	public static SRole role { get; internal set; }
 	
@@ -59,7 +59,7 @@ public static class script {
 	
 	/// <summary>
 	/// Returns <c>true</c> if this script task was started from editor with the <b>Run</b> button or menu command.
-	/// Always <c>false</c> if role <b>editorExtension</b>.
+	/// Always <c>false</c> if role <c>editorExtension</c>.
 	/// </summary>
 	public static bool testing { get; internal set; }
 	
@@ -92,9 +92,9 @@ public static class script {
 	#region AppModuleInit_, setup
 	
 	/// <summary>
-	/// If role <b>miniProgram</b> or <b>exeProgram</b>, default compiler adds module initializer that calls this with <i>auCompiler</i> <c>true</c>.
-	/// When compiling single-file exe with <b>dotnet publish</b>, adds module initializer that calls this with <i>auCompiler</i> <c>false</c>.
-	/// If using other compiler, called from <b>script.setup</b> with <i>auCompiler</i> <c>false</c>.
+	/// If role <c>miniProgram</c> or <c>exeProgram</c>, default compiler adds module initializer that calls this with <i>auCompiler</i> <c>true</c>.
+	/// When compiling single-file exe with <c>dotnet publish</c>, adds module initializer that calls this with <i>auCompiler</i> <c>false</c>.
+	/// If using other compiler, called from <c>script.setup</c> with <i>auCompiler</i> <c>false</c>.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static unsafe void AppModuleInit_(bool auCompiler) {
@@ -266,9 +266,9 @@ public static class script {
 	/// <remarks>
 	/// Tip: in <b>Options > Templates</b> you can set default code for new scripts.
 	/// 
-	/// If your program was compiled not in LibreAutomate, call this function (maybe with zero arguments) if you want the program behave like if it was compiled with LibreAutomate (invariant culture, <b>STAThread</b>, unhandled exception action).
+	/// If your program was compiled not in LibreAutomate, call this function (maybe with zero arguments) if you want the program behave like if it was compiled with LibreAutomate (invariant culture, <c>STAThread</c>, unhandled exception action).
 	/// 
-	/// Does nothing if role <b>editorExtension</b> or if running in WPF preview mode.
+	/// Does nothing if role <c>editorExtension</c> or if running in WPF preview mode.
 	/// </remarks>
 	public static void setup(bool trayIcon = false, bool sleepExit = false, bool lockExit = false, bool debug = false, UExcept exception = UExcept.Print, KKey exitKey = 0, KKey pauseKey = KKey.ScrollLock, [CallerFilePath] string f_ = null) {
 		if (role == SRole.EditorExtension || isWpfPreview) return;
@@ -343,7 +343,7 @@ public static class script {
 	/// <param name="ifCantRun">Called if this process cannot run.</param>
 	/// <exception cref="InvalidOperationException">This function already called.</exception>
 	/// <remarks>
-	/// This function is useful when this script has role <b>exeProgram</b> and the compiled program is launched not from the script editor, because then the <c>/*/ ifRunning /*/</c> property is ignored.
+	/// This function is useful when this script has role <c>exeProgram</c> and the compiled program is launched not from the script editor, because then the <c>/*/ ifRunning /*/</c> property is ignored.
 	/// </remarks>
 	/// <seealso cref="AppSingleInstance"/>
 	public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false, Action ifCantRun = null) {
@@ -365,7 +365,7 @@ public static class script {
 	static IntPtr s_singleMutex;
 	
 	/// <summary>
-	/// Low-level version of <see cref="single"/>. No <b>Environment.Exit</b>, no exception, no print. Just <b>CreateMutex</b> and <b>WaitForSingleObject</b>.
+	/// Low-level version of <see cref="single"/>. No <c>Environment.Exit</c>, no exception, no print. Just <c>CreateMutex</c> and <c>WaitForSingleObject</c>.
 	/// </summary>
 	/// <returns>false if another process owns the mutex.</returns>
 	internal static bool TrySingle_(string mutex, int wait = 0) => Api.WaitForSingleObject(Api.CreateMutex(null, false, mutex), wait) is 0 or Api.WAIT_ABANDONED;
@@ -382,7 +382,7 @@ public static class script {
 	/// <remarks>
 	/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
 	/// 
-	/// Does nothing if role <b>editorExtension</b>.
+	/// Does nothing if role <c>editorExtension</c>.
 	/// </remarks>
 	/// <example>
 	/// How to change icon and tooltip.
@@ -440,7 +440,7 @@ public static class script {
 	static NativeThread_ s_auxThread;
 	
 	/// <summary>
-	/// Gets the aux thread object. Auto-creates (starts thread and does not wait) if used in an app that does not call <b>Starting_</b> at startup (compiled not by LA).
+	/// Gets the aux thread object. Auto-creates (starts thread and does not wait) if used in an app that does not call <c>Starting_</c> at startup (compiled not by LA).
 	/// Thread-safe.
 	/// </summary>
 	internal static NativeThread_ GetAuxThread_() {
@@ -577,8 +577,8 @@ public static class script {
 	/// <returns>
 	/// Native process id of the task process.
 	/// Returns -1 if failed, for example if the script contains errors or cannot run second task instance.
-	/// Returns 0 if task start is deferred because the script is running (<b>ifRunning</b> <b>wait</b>/<b>wait_restart</b>).
-	/// If role <b>editorExtension</b>, waits until the script ends, then returns 0.
+	/// Returns 0 if task start is deferred because the script is running (<c>ifRunning</c> <c>wait</c>/<c>wait_restart</c>).
+	/// If role <c>editorExtension</c>, waits until the script ends, then returns 0.
 	/// </returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
 	/// <exception cref="AuException">Script editor not running.</exception>
@@ -782,7 +782,7 @@ public static class script {
 	/// <see cref="runWait(out string, string, string[])"/> gets all strings joined when the task ends.
 	/// The program that started this task using command line like <c>"Au.Editor.exe *Script5.cs"</c> can read the string from the redirected standard output in real time, or the string is displayed to its console in real time. The string encoding is UTF-8; if you use a <c>.bat</c> file or <c>cmd.exe</c> and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
 	/// 
-	/// Does not work if script role is <b>editorExtension</b>.
+	/// Does not work if script role is <c>editorExtension</c>.
 	/// </remarks>
 #if true
 	public static unsafe bool writeResult(string s) {
@@ -833,7 +833,7 @@ public static class script {
 	/// Native process id of the new process. Returns -1 if failed.
 	/// </returns>
 	/// <exception cref="FileNotFoundException">Script file not found.</exception>
-	/// <exception cref="InvalidOperationException">This script has role <b>editorExtension</b>.</exception>
+	/// <exception cref="InvalidOperationException">This script has role <c>editorExtension</c>.</exception>
 	/// <remarks>
 	///	Does not end this process. The new process runs simultaneously, like with <c>/*/ ifRunning run; /*/</c>. Let this process exit as it wants, for example return from the main script code.
 	///
@@ -1025,7 +1025,7 @@ public static class script {
 	/// <param name="text">Text to display in the "Paused script" UI.</param>
 	/// <param name="doEvents">Process Windows messages and other events while waiting. For example, windows of this thread can respond, and timers of this thread can run.</param>
 	/// <remarks>
-	/// The default pause key is <c>ScrollLock</c> (<c>Fn+S</c>, <c>Fn+K</c> or similar). To change, use <see cref="setup"/> parameter <i>pauseKey</i>. If <b>script.setup</b> not called, this function uses <c>ScrollLock</c> but does not pause when called the first time.
+	/// The default pause key is <c>ScrollLock</c> (<c>Fn+S</c>, <c>Fn+K</c> or similar). To change, use <see cref="setup"/> parameter <i>pauseKey</i>. If <c>script.setup</c> not called, this function uses <c>ScrollLock</c> but does not pause when called the first time.
 	///
 	/// A script can be paused only if it calls this function. Pausing at a random place would be dangerous and is not supported. Call this function in places where it is safe to pause, and where it makes sense, for example in a loop that preses keys or mouse buttons. To pause/resume, let the user press the pause key.
 	///

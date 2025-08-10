@@ -8,7 +8,7 @@ public class ExplorerFolder {
 	wnd _w, _cTab;
 	
 	/// <summary>
-	/// Creates <b>ExplorerFolder</b> for a folder window.
+	/// Creates <see cref="ExplorerFolder"/> for a folder window.
 	/// </summary>
 	/// <returns><c>null</c> if failed.</returns>
 	/// <param name="w">A folder window.</param>
@@ -53,7 +53,7 @@ public class ExplorerFolder {
 	static bool _GetIShellBrowser(api.IWebBrowser2 b, out api.IShellBrowser sb) => Api.QueryService(b, api.SID_STopLevelBrowser, out sb);
 	
 	/// <summary>
-	/// Creates <b>ExplorerFolder</b> for all folder windows.
+	/// Creates <see cref="ExplorerFolder"/> for all folder windows.
 	/// </summary>
 	/// <param name="onlyFilesystem">Skip folders that don't have a filesystem path, such as Control Panel and Recycle Bin.</param>
 	/// <param name="tabsOf">Need only tabs of this window.</param>
@@ -163,7 +163,7 @@ public class ExplorerFolder {
 	/// </summary>
 	/// <param name="w">A folder window.</param>
 	/// <param name="folder">If not null, calls <see cref="Open"/>.</param>
-	/// <returns><b>ExplorerFolder</b> for the new tab.</returns>
+	/// <returns><see cref="ExplorerFolder"/> for the new tab.</returns>
 	/// <exception cref="Exception">Failed.</exception>
 	/// <remarks>
 	/// To create new tab, activates the window and sends keys <c>Ctrl+T</c>.

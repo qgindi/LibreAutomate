@@ -7,7 +7,7 @@ namespace Au;
 /// </summary>
 /// <remarks>
 /// An image is any visible rectangular part of a window. A color is any visible pixel (the same as image of size 1x1).
-/// A <b>uiimage</b> variable holds results of <see cref="find"/> and similar functions (rectangle etc).
+/// A <c>uiimage</c> variable holds results of <see cref="find"/> and similar functions (rectangle etc).
 /// </remarks>
 public class uiimage {
 	#region results
@@ -27,7 +27,7 @@ public class uiimage {
 	/// Gets location of the found image, relative to the search area.
 	/// </summary>
 	/// <remarks>
-	/// Relative to the window/control client area (if area type is <b>wnd</b>), UI element (if <b>elm</b>), image (if <b>Bitmap</b>) or screen (if <b>RECT</b>).
+	/// Relative to the window/control client area (if area type is <see cref="wnd"/>), UI element (if <see cref="elm"/>), image (if <see cref="Bitmap"/>) or screen (if <see cref="RECT"/>).
 	/// More info: <see cref="find"/>.
 	/// </remarks>
 	public RECT Rect { get; init; }
@@ -61,7 +61,7 @@ public class uiimage {
 	/// </summary>
 	/// <remarks>
 	/// Can be useful in <i>also</i> callback functions.
-	/// When the <i>image</i> argument is a list of images, <b>MatchIndex</b> starts from 0 for each list image.
+	/// When the <i>image</i> argument is a list of images, <c>MatchIndex</c> starts from 0 for each list image.
 	/// </remarks>
 	public int MatchIndex { get; init; }
 
@@ -81,7 +81,7 @@ public class uiimage {
 	/// </summary>
 	/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 	/// <param name="y">Y coordinate in the found image. Default - center.</param>
-	/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b>.</exception>
+	/// <exception cref="InvalidOperationException"><i>area</i> is <c>Bitmap</c>.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
 	/// <remarks>
 	/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
@@ -94,7 +94,7 @@ public class uiimage {
 	/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 	/// <param name="y">Y coordinate in the found image. Default - center.</param>
 	/// <param name="button">Which button and how to use it.</param>
-	/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b>.</exception>
+	/// <exception cref="InvalidOperationException"><i>area</i> is <c>Bitmap</c>.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
 	/// <remarks>
 	/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
@@ -170,7 +170,7 @@ public class uiimage {
 	/// </summary>
 	/// <param name="x">X coordinate in the found image. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 	/// <param name="y">Y coordinate in the found image. Default - center.</param>
-	/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b> or <b>Screen</b>.</exception>
+	/// <exception cref="InvalidOperationException"><i>area</i> is <c>Bitmap</c> or <c>screen</c>.</exception>
 	/// <exception cref="AuException">Failed to get UI element rectangle (when searched in a UI element).</exception>
 	/// <remarks>
 	/// Does not move the mouse.
@@ -203,7 +203,7 @@ public class uiimage {
 	/// <br/>• <see cref="elm"/> - UI element.
 	/// <br/>• <see cref="Bitmap"/> - image.
 	/// <br/>• <see cref="RECT"/> - a rectangle area in screen.
-	/// <br/>• <see cref="IFArea"/> - can contain <b>wnd</b>, <b>elm</b> or <b>Bitmap</b>. Also allows to specify a rectangle in it, which makes the area smaller and the function faster. Example: <c>new(w, (left, top, width, height))</c>.
+	/// <br/>• <see cref="IFArea"/> - can contain <see cref="wnd"/>, <see cref="elm"/> or <see cref="Bitmap"/>. Also allows to specify a rectangle in it, which makes the area smaller and the function faster. Example: <c>new(w, (left, top, width, height))</c>.
 	/// </param>
 	/// <param name="image">Image or color to find. Or array of them. More info: <see cref="IFImage"/>.</param>
 	/// <param name="flags"></param>
@@ -238,7 +238,7 @@ public class uiimage {
 	/// 
 	/// This function is not the best way to find objects when the script is intended for long use or for use on multiple computers or must be very reliable. Because it may fail to find the image after changing some settings - system theme, application theme, text size (DPI), font smoothing (if the image contains text), etc. Also are possible various unexpected temporary conditions that may distort or hide the image, for example adjacent window shadow, a tooltip or some temporary window. If possible, in such scripts instead use other functions, eg find control or UI element.
 	/// 
-	/// Flags <see cref="IFFlags.WindowDC"/> and <see cref="IFFlags.PrintWindow"/> cannot be used if <i>area</i> is <b>Bitmap</b> or <b>RECT</b>.
+	/// Flags <see cref="IFFlags.WindowDC"/> and <see cref="IFFlags.PrintWindow"/> cannot be used if <i>area</i> is <c>Bitmap</c> or <see cref="RECT"/>.
 	/// </remarks>
 	/// <example>
 	/// Code created with tool <b>Find image or color in window</b>.
@@ -253,7 +253,7 @@ public class uiimage {
 		=> new uiimageFinder(image, flags, diff, also).Find(area);
 
 	/// <summary>
-	/// Finds image(s) or color(s) displayed in a window or other area. Can wait and throw <b>NotFoundException</b>.
+	/// Finds image(s) or color(s) displayed in a window or other area. Can wait and throw <see cref="NotFoundException"/>.
 	/// </summary>
 	/// <returns>
 	/// Returns a <see cref="uiimage"/> object that contains the rectangle of the found image and can click it etc.

@@ -269,6 +269,18 @@ static class Menus {
 			
 			[Command(keys = "F2", image = "*PicolIcons.Edit" + blue, separator = true)]
 			public static void Rename_symbol() { CiFind.RenameSymbol(); }
+			
+			[Command(keys = "F3", target = "", separator = true)]
+			public static void Find_next() { Panels.Find.FindNextInEditor(false); }
+			
+			[Command(keys = "Shift+F3", target = "")]
+			public static void Find_previous() { Panels.Find.FindNextInEditor(true); }
+			
+			[Command(keys = "F4", target = "")]
+			public static void Next_found() { Panels.Found.NextFound(false); }
+			
+			[Command(keys = "Shift+F4", target = "")]
+			public static void Previous_found() { Panels.Found.NextFound(true); }
 		}
 		
 		[Command]

@@ -4,7 +4,7 @@ namespace Au.Types;
 /// Represents a button or separator in <see cref="toolbar"/>.
 /// </summary>
 /// <remarks>
-/// Most properties cannot be changed while the toolbar is open. Can be changed <b>Tag</b>, <b>Tooltip</b>.
+/// Most properties cannot be changed while the toolbar is open. Can be changed <see cref="MTItem.Tag"/>, <see cref="MTItem.Tooltip"/>.
 /// </remarks>
 public class TBItem : MTItem {
 	readonly toolbar _tb;
@@ -172,14 +172,14 @@ public enum TBAnchor {
 	/// <summary>
 	/// Use owner's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
 	/// This flag is for toolbars that normally are outside of the owner rectangle (at the left or right).
-	/// This flag cannot be used with <b>TopLR</b>, <b>BottomLR</b>, <b>All</b>.
+	/// This flag cannot be used with <c>TopLR</c>, <c>BottomLR</c>, <c>All</c>.
 	/// </summary>
 	OppositeEdgeX = 32,
 	
 	/// <summary>
 	/// Use owner's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
 	/// This flag is for toolbars that normally are outside of the owner rectangle (above or below).
-	/// This flag cannot be used with <b>LeftTB</b>, <b>RightTB</b>, <b>All</b>.
+	/// This flag cannot be used with <c>LeftTB</c>, <c>RightTB</c>, <c>All</c>.
 	/// </summary>
 	OppositeEdgeY = 64,
 	

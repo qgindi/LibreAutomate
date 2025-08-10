@@ -30,13 +30,13 @@ namespace Au.Types {
 	public enum WBAdd {
 		/// <summary>
 		/// Add as child of <see cref="wpfBuilder.Last"/>, which can be of type (or base type):
-		/// <br/>• <see cref="ContentControl"/>. Adds as its <see cref="ContentControl.Content"/> property. For example you can add a <b>CheckBox</b> in a <b>Button</b>.
+		/// <br/>• <see cref="ContentControl"/>. Adds as its <see cref="ContentControl.Content"/> property. For example you can add a <c>CheckBox</c> in a <c>Button</c>.
 		/// <br/>• <see cref="Decorator"/>, for example <see cref="Border"/>. Adds as its <see cref="Decorator.Child"/> property.
 		/// </summary>
 		ChildOfLast = 1,
 		
 		/// <summary>
-		/// Don't adjust some properties (padding, aligning, specified in <see cref="wpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <b>ChildOfLast</b>.
+		/// Don't adjust some properties (padding, aligning, specified in <see cref="wpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <c>ChildOfLast</c>.
 		/// </summary>
 		DontSetProperties = 2,
 	}
@@ -45,8 +45,8 @@ namespace Au.Types {
 	/// Used with <see cref="wpfBuilder"/> functions for width/height parameters. Allows to specify minimal and/or maximal values too.
 	/// </summary>
 	/// <remarks>
-	/// Has implicit conversions from <b>double</b>, <b>Range</b> and tuple <c>(double length, Range minMax)</c>.
-	/// To specify width or height, pass an <b>int</b> or <b>double</b> value, like <c>100</c> or <c>15.25</c>.
+	/// Has implicit conversions from <c>double</c>, <see cref="Range"/> and tuple <c>(double length, Range minMax)</c>.
+	/// To specify width or height, pass an <c>int</c> or <c>double</c> value, like <c>100</c> or <c>15.25</c>.
 	/// To specify minimal value, pass a range like <c>100..</c>.
 	/// To specify maximal value, pass a range like <c>..100</c>.
 	/// To specify minimal and maximal values, pass a range like <c>100..500</c>.
@@ -95,10 +95,10 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Sets <b>Width</b> or <b>Height</b> or/and <b>MinWidth</b>/<b>MinHeight</b> or/and <b>MaxWidth</b>/<b>MaxHeight</b> of the element.
+		/// Sets <c>Width</c> or <c>Height</c> or/and <c>MinWidth</c>/<c>MinHeight</c> or/and <c>MaxWidth</c>/<c>MaxHeight</c> of the <see cref="FrameworkElement"/>.
 		/// </summary>
 		/// <param name="e">Element.</param>
-		/// <param name="height">Set <b>Height</b>. If <c>false</c>, sets <b>Width</b>.</param>
+		/// <param name="height">Set <c>Height</c>. If <c>false</c>, sets <c>Width</c>.</param>
 		public void ApplyTo(FrameworkElement e, bool height) {
 			if (GetLength(out double d)) { if (height) e.Height = d; else e.Width = d; }
 			if (GetMin(out int i)) { if (height) e.MinHeight = i; else e.MinWidth = i; }
@@ -252,7 +252,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="text">Link text.</param>
 		/// <param name="urlOrPath">URL or path for <see cref="run.itSafe"/>. If <c>null</c>, uses <i>text</i>.</param>
-		/// <param name="args"><i>args</i> for <b>run.itSafe</b>.</param>
+		/// <param name="args"><i>args</i> for <see cref="run.itSafe"/>.</param>
 		/// <param name="bold">Bold font.</param>
 		public WBLink(string text, string urlOrPath = null, string args = null, bool bold = false) : this(text, _ => run.itSafe(urlOrPath ?? text, args)) { }
 	}
@@ -286,10 +286,10 @@ namespace Au.More {
 	/// Try this class when <see cref="GridSplitter"/> does not work as you want.
 	/// 
 	/// Limitations (bad or good):
-	/// - Splitters must be on own rows/columns. Throws exception if <b>ResizeBehavior</b> is not <b>PreviousAndNext</b> (which is default).
+	/// - Splitters must be on own rows/columns. Throws exception if <c>ResizeBehavior</c> is not <c>PreviousAndNext</c> (which is default).
 	/// - Throws exception is there are star-sized splitter rows.
 	/// - Does not resize auto-sized rows/columns. Only pixel-sized and star-sized.
-	/// - With <b>UseLayoutRounding</b> may flicker when resizing, especially when high DPI.
+	/// - With <c>UseLayoutRounding</c> may flicker when resizing, especially when high DPI.
 	/// </remarks>
 	public class GridSplitter2 : GridSplitter {
 		static GridSplitter2() {
@@ -525,7 +525,7 @@ namespace Au.More {
 	}
 	
 	/// <summary>
-	/// Adorner that draws watermark/hint/cue text over the adorned control (<b>TextBox</b> etc).
+	/// Adorner that draws watermark/hint/cue text over the adorned control (<see cref="TextBox"/> etc).
 	/// </summary>
 	public class WatermarkAdorner : Adorner {
 		string _text;
@@ -533,11 +533,11 @@ namespace Au.More {
 		TextBox _tCB;
 		
 		/// <summary>
-		/// Initializes and adds this adorner to the <b>AdornerLayer</b> of the control.
+		/// Initializes and adds this adorner to the <see cref="AdornerLayer"/> of the control.
 		/// </summary>
-		/// <param name="c">The adorned control. Must be a child/descendant of an <b>AdornerDecorator</b>.</param>
+		/// <param name="c">The adorned control. Must be a child/descendant of an <see cref="AdornerDecorator"/>.</param>
 		/// <param name="text">Watermark text.</param>
-		/// <exception cref="InvalidOperationException">The control isn't in an <b>AdornerDecorator</b>.</exception>
+		/// <exception cref="InvalidOperationException">The control isn't in an <see cref="AdornerDecorator"/>.</exception>
 		public WatermarkAdorner(Control c, string text) : base(c) {
 			_c = c;
 			_text = text;
@@ -561,7 +561,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Sets events to show/hide the adorner depending on control text.
-		/// The control must be <b>TextBox</b> or editable <b>ComboBox</b>.
+		/// The control must be <see cref="TextBox"/> or editable <see cref="ComboBox"/>.
 		/// </summary>
 		public void SetAdornerVisibility() {
 			if (_c is TextBox t) {

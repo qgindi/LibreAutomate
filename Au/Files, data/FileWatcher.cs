@@ -86,7 +86,7 @@ public sealed class FileWatcher : IDisposable {
 	}
 	
 	/// <summary>
-	/// When your app writes, creates, deletes, moves or renames the file, it must set this property = <b>true</b> during the file operation. It helps to distinguish internal and external changes. Example: <see cref="FileWatcher"/>.
+	/// When your app writes, creates, deletes, moves or renames the file, it must set this property = <c>true</c> during the file operation. It helps to distinguish internal and external changes. Example: <see cref="FileWatcher"/>.
 	/// </summary>
 	public bool Paused {
 		get => field;

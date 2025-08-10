@@ -108,7 +108,7 @@ public class ocr {
 	/// </returns>
 	/// <inheritdoc cref="find(IFArea, string, OcrFlags, double, IOcrEngine, int)"/>
 	/// <remarks>
-	/// Captures image from screen or window (unless <i>area</i> is <b>Bitmap</b>) and passes it to the OCR engine (calls <see cref="IOcrEngine.Recognize"/>). Then creates and returns an <b>ocr</b> object that contains results.
+	/// Captures image from screen or window (unless <i>area</i> is <see cref="Bitmap"/>) and passes it to the OCR engine (calls <see cref="IOcrEngine.Recognize"/>). Then creates and returns an <see cref="ocr"/> object that contains results.
 	///
 	/// The speed depends on engine, area size and amount of text.
 	/// </remarks>
@@ -136,7 +136,7 @@ public class ocr {
 	/// <br/>• <see cref="elm"/> - UI element.
 	/// <br/>• <see cref="Bitmap"/> - image.
 	/// <br/>• <see cref="RECT"/> - a rectangle area in screen.
-	/// <br/>• <see cref="IFArea"/> - can contain <b>wnd</b>, <b>elm</b> or <b>Bitmap</b>. Also allows to specify a rectangle in it, which makes the area smaller and the function faster. Example: <c>new(w, (left, top, width, height))</c>.
+	/// <br/>• <see cref="IFArea"/> - can contain <see cref="wnd"/>, <see cref="elm"/> or <see cref="Bitmap"/>. Also allows to specify a rectangle in it, which makes the area smaller and the function faster. Example: <c>new(w, (left, top, width, height))</c>.
 	/// </param>
 	/// <param name="text">
 	/// Text to find in <see cref="TextForFind"/>. Can have prefix:
@@ -157,7 +157,7 @@ public class ocr {
 	/// <exception cref="ArgumentException">An argument is/contains a <c>null</c>/invalid value.</exception>
 	/// <exception cref="AuException">Something failed.</exception>
 	/// <remarks>
-	/// The function captures image from screen or window (unless area is <b>Bitmap</b>) and passes it to the OCR engine (calls <see cref="IOcrEngine.Recognize"/>). Then finds the specified text in results. If found, creates and returns an <b>ocr</b> object that contains results.
+	/// The function captures image from screen or window (unless area is <see cref="Bitmap"/>) and passes it to the OCR engine (calls <see cref="IOcrEngine.Recognize"/>). Then finds the specified text in results. If found, creates and returns an <see cref="ocr"/> object that contains results.
 	///
 	/// The speed depends on engine, area size and amount of text.
 	/// </remarks>
@@ -165,7 +165,7 @@ public class ocr {
 		=> new ocrFinder(text, flags, scale, engine, skip).Find(area);
 
 	/// <summary>
-	/// Performs OCR (text recognition) and finds text in results. Can wait and throw <b>NotFoundException</b>.
+	/// Performs OCR (text recognition) and finds text in results. Can wait and throw <see cref="NotFoundException"/>.
 	/// </summary>
 	/// <returns>
 	/// Returns an <see cref="ocr"/> object that contains the word index and can click it etc.
@@ -223,7 +223,7 @@ public class ocr {
 	/// <param name="x">X coordinate in the word. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 	/// <param name="y">Y coordinate in the word. Default - center.</param>
 	/// <param name="word">Word index offset from <see cref="FoundWordIndex"/>.</param>
-	/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b>.</exception>
+	/// <exception cref="InvalidOperationException"><i>area</i> is <c>Bitmap</c>.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.</exception>
 	/// <remarks>
 	/// Calls <see cref="mouse.move(wnd, Coord, Coord, bool)"/>.
@@ -237,7 +237,7 @@ public class ocr {
 	/// <param name="y">Y coordinate in the word. Default - center.</param>
 	/// <param name="button">Which button and how to use it.</param>
 	/// <param name="word">Word index offset from <see cref="FoundWordIndex"/>.</param>
-	/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b>.</exception>
+	/// <exception cref="InvalidOperationException"><i>area</i> is <c>Bitmap</c>.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.</exception>
 	/// <remarks>
 	/// Calls <see cref="mouse.clickEx(MButton, wnd, Coord, Coord, bool)"/>.
@@ -288,7 +288,7 @@ public class ocr {
 	/// <param name="y">Y coordinate in the word. Default - center.</param>
 	/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
 	/// <param name="word">Word index offset from <see cref="FoundWordIndex"/>.</param>
-	/// <exception cref="InvalidOperationException"><i>area</i> is <b>Bitmap</b> or <b>Screen</b>.</exception>
+	/// <exception cref="InvalidOperationException"><i>area</i> is <c>Bitmap</c> or <c>screen</c>.</exception>
 	/// <exception cref="AuException">Failed to get UI element rectangle (when searched in a UI element).</exception>
 	/// <remarks>
 	/// Does not move the mouse.

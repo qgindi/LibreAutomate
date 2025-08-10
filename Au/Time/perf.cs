@@ -146,7 +146,7 @@ namespace Au {
 			/// Calls <see cref="NW"/>, which calls <see cref="Next"/> and <see cref="Write"/>.
 			/// </summary>
 			/// <remarks>
-			/// Don't need to dispose variables of this type. This function just allows to use <c>using</c> instead of <b>NW</b>. See example.
+			/// Don't need to dispose variables of this type. This function just allows to use <c>using</c> instead of <see cref="NW"/>. See example.
 			/// 
 			/// If <see cref="Incremental"/>, calls just <see cref="Write"/>.
 			/// </remarks>
@@ -167,7 +167,7 @@ namespace Au {
 			
 			/// <summary>
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.
-			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+			/// The string contains the number of microseconds of each code execution between calling <c>First</c> and each <c>Next</c>.
 			/// </summary>
 			public void Write() {
 #if !PREPAREMETHOD
@@ -178,7 +178,7 @@ namespace Au {
 			
 			/// <summary>
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
-			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+			/// The string contains the number of microseconds of each code execution between calling <c>First</c> and each <c>Next</c>.
 			/// </summary>
 			public override string ToString() {
 				using (new StringBuilder_(out var b)) {
@@ -190,7 +190,7 @@ namespace Au {
 			
 			/// <summary>
 			/// Return array of time values collected by calling <see cref="First"/> and <see cref="Next"/>.
-			/// Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+			/// Each element is the number of microseconds of each code execution between calling <c>First</c> and each <c>Next</c>.
 			/// </summary>
 			public long[] ToArray() {
 				int n = Math.Min(_counter, _nElem);
@@ -263,7 +263,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// If <c>true</c>, times of each new <b>First</b>/<b>Next</b>/<b>Next</b>... measurement are added to previous measurement times.
+		/// If <c>true</c>, times of each new <c>first next next...</c> measurement are added to previous measurement times.
 		/// Finally you can call <see cref="write"/> or <see cref="toString"/> to get the sums.
 		/// Usually used to measure code in loops. See example.
 		/// </summary>
@@ -303,7 +303,7 @@ namespace Au {
 		/// Stores current time in next element of an internal array.
 		/// </summary>
 		/// <remarks>
-		/// Don't call <b>Next</b> more than 16 times after <b>First</b>, because the array size is fixed.
+		/// Don't call <c>next</c> more than 16 times after <see cref="first"/>, because the array size is fixed.
 		/// </remarks>
 		/// <param name="cMark">A character to mark this time in the results string, like <c>"A=150"</c>.</param>
 		public static void next(char cMark = '\0') => s_static.Next(cMark);
@@ -316,7 +316,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Formats a string from time values collected by calling <see cref="first"/> and <see cref="next"/>, and shows it in the output.
-		/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+		/// The string contains the number of microseconds of each code execution between calling <see cref="first"/> and each <see cref="next"/>.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -332,13 +332,13 @@ namespace Au {
 		
 		/// <summary>
 		/// Formats a string from time values collected by calling <see cref="first"/> and <see cref="next"/>.
-		/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+		/// The string contains the number of microseconds of each code execution between calling <see cref="first"/> and each <see cref="next"/>.
 		/// </summary>
 		public static string toString() => s_static.ToString();
 		
 		/// <summary>
 		/// Return array of time values collected by calling <see cref="first"/> and <see cref="next"/>.
-		/// Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+		/// Each element is the number of microseconds of each code execution between calling <see cref="first"/> and each <see cref="next"/>.
 		/// </summary>
 		public static long[] toArray() => s_static.ToArray();
 		

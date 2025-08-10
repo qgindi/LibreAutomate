@@ -5,7 +5,7 @@ namespace Au.More {
 	/// <remarks>
 	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a "wait-for" function that dispatches messages or has such option (see <see cref="Seconds.DoEvents"/>).
 	/// 
-	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with <c>using</c>. Can do it in hook procedure.</note>
+	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <see cref="Dispose"/> or <see cref="Unhook"/> in same thread) or with <c>using</c>. Can do it in hook procedure.</note>
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -32,8 +32,8 @@ namespace Au.More {
 		/// <summary>
 		/// Sets a hook for an event or a range of events.
 		/// </summary>
-		/// <param name="eventMin">The lowest event constant value in the range of events. Can be <b>EEvent.MIN</b> to indicate the lowest possible event value. Events reference: <ms>SetWinEventHook</ms>. Value 0 is ignored.</param>
-		/// <param name="eventMax">The highest event constant value in the range of events. Can be <b>EEvent.MAX</b> to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
+		/// <param name="eventMin">The lowest event constant value in the range of events. Can be <see cref="EEvent.MIN"/> to indicate the lowest possible event value. Events reference: <ms>SetWinEventHook</ms>. Value 0 is ignored.</param>
+		/// <param name="eventMax">The highest event constant value in the range of events. Can be <see cref="EEvent.MAX"/> to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
 		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
@@ -97,11 +97,11 @@ namespace Au.More {
 		/// <summary>
 		/// Adds a hook for an event or a range of events.
 		/// </summary>
-		/// <returns>An <b>int</b> value greater than 0 that can be used with <see cref="Remove"/>.</returns>
+		/// <returns>An <c>int</c> value greater than 0 that can be used with <see cref="Remove"/>.</returns>
 		/// <remarks>
 		/// Parameters are the same as of the constructor, but values can be different.
 		/// 
-		/// This function together with <see cref="Remove"/> can be used to temporarily add/remove one or more hooks while using the same <b>WinEventHook</b> variable and hook procedure. Don't need to call <b>Unhook</b> before.
+		/// This function together with <see cref="Remove"/> can be used to temporarily add/remove one or more hooks while using the same <see cref="WinEventHook"/> variable and hook procedure. Don't need to call <see cref="Unhook"/> before.
 		/// </remarks>
 		/// <inheritdoc cref="WinEventHook(EEvent, EEvent, Action{HookData.WinEvent}, int, int, EHookFlags)"/>
 		public int Add(EEvent eventMin, EEvent eventMax = 0, int idProcess = 0, int idThread = 0, EHookFlags flags = 0) {

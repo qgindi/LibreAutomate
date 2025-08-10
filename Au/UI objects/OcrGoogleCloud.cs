@@ -21,13 +21,13 @@ public class OcrGoogleCloud : IOcrEngine {
 	}
 	
 	/// <summary>
-	/// Feature type, like <c>"TEXT_DETECTION"</c>. Or JSON of <b>features</b> array content, like <c>"""{ "type": "TEXT_DETECTION", "model": "builtin/latest" }"""</c>.
+	/// Feature type, like <c>"TEXT_DETECTION"</c>. Or JSON of <c>features</c> array content, like <c>"""{ "type": "TEXT_DETECTION", "model": "builtin/latest" }"""</c>.
 	/// If <c>null</c>, uses <c>"DOCUMENT_TEXT_DETECTION"</c>.
 	/// </summary>
 	public string Features { get; set; }
 	
 	/// <summary>
-	/// JSON of <b>imageContext</b>, like <c>"""{ "languageHints": [ "ja" ] }"""</c>. Optional.
+	/// JSON of <c>imageContext</c>, like <c>"""{ "languageHints": [ "ja" ] }"""</c>. Optional.
 	/// </summary>
 	public string ImageContext { get; set; }
 	

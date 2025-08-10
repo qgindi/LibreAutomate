@@ -8,7 +8,7 @@ static class Jit_ {
 	
 	/// <summary>
 	/// JIT-compiles method.
-	/// Uses <b>RuntimeHelpers.PrepareMethod</b>.
+	/// Uses <see cref="RuntimeHelpers.PrepareMethod"/>.
 	/// </summary>
 	/// <param name="type">Type containing the method.</param>
 	/// <param name="method">Method name.</param>
@@ -26,7 +26,7 @@ static class Jit_ {
 	//rejected. Don't JIT-compile overloads.
 	///// <summary>
 	///// JIT-compiles a method overload.
-	///// Uses <b>RuntimeHelpers.PrepareMethod</b>.
+	///// Uses <c>RuntimeHelpers.PrepareMethod</c>.
 	///// </summary>
 	///// <param name="type">Type containing the method.</param>
 	///// <param name="method">Method name.</param>
@@ -44,7 +44,7 @@ static class Jit_ {
 	
 	/// <summary>
 	/// JIT-compiles multiple methods of same type.
-	/// Uses <b>RuntimeHelpers.PrepareMethod</b>.
+	/// Uses <see cref="RuntimeHelpers.PrepareMethod"/>.
 	/// </summary>
 	/// <param name="type">Type containing the methods.</param>
 	/// <param name="methods">Method names.</param>

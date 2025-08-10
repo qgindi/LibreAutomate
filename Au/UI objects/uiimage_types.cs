@@ -8,7 +8,7 @@ namespace Au.Types;
 /// </summary>
 /// <remarks>
 /// It can be a window/control, UI element, image or a rectangle in screen.
-/// Has implicit conversions from <b>wnd</b>, <b>elm</b>, <b>Bitmap</b> and <b>RECT</b> (rectangle in screen).
+/// Has implicit conversions from <see cref="wnd"/>, <see cref="elm"/>, <see cref="Bitmap"/> and <see cref="RECT"/> (rectangle in screen).
 /// Constructors can be used to specify a rectangle in window or UI element, which makes the area smaller and the function faster.
 /// Example: <c>uiimage.find(new(w, (left, top, width, height)), image);</c>.
 /// </remarks>
@@ -151,9 +151,9 @@ public class IFArea {
 	}
 
 	/// <summary>
-	/// Calls <b>GetRect_</b>, and <b>CaptureScreen.Image</b> if need.
+	/// Calls <c>GetRect_</c>, and <c>CaptureScreen.Image</c> if need.
 	/// </summary>
-	/// <returns><c>false</c> if <b>GetRect_</b> returns <c>false</c> (empty rectangle).</returns>
+	/// <returns><c>false</c> if <c>GetRect_</c> returns <c>false</c> (empty rectangle).</returns>
 	internal bool GetOcrData_(OcrFlags flags, out Bitmap b, out POINT resultOffset) {
 		if (Type == AreaType.Bitmap) { b = B; resultOffset = default; return true; }
 		if (!GetRect_(out RECT r, out resultOffset, (IFFlags)flags)) { b = null; return false; }
@@ -186,8 +186,8 @@ public class IFArea {
 /// - string - path of <c>.png</c> or <c>.bmp</c> file. If not full path, uses <see cref="folders.ThisAppImages"/>.
 /// - string that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - resource name; see <see cref="ResourceUtil.GetGdipBitmap"/>.
 /// - string with prefix <c>"image:"</c> - Base64 encoded <c>.png</c> image.\
-///   Can be created with tool <b>Find image or color in window</b> or with function <b>Au.Controls.KImageUtil.ImageToString</b> (in <c>Au.Controls.dll</c>).
-/// - <see cref="ColorInt"/>, <b>int</b> or <b>uint</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.
+///   Can be created with tool <b>Find image or color in window</b> or with function <c>Au.Controls.KImageUtil.ImageToString</c> (in <c>Au.Controls.dll</c>).
+/// - <see cref="ColorInt"/>, <c>int</c> or <c>uint</c> in <c>0xRRGGBB</c> color format, <see cref="Color"/> - color. Alpha isn't used.
 /// - <see cref="Bitmap"/> - image object.
 /// - <c>IFImage[]</c> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
 /// 
@@ -209,7 +209,7 @@ public struct IFImage {
 	//public static implicit operator IFImage(List<IFImage> list) => new(list); //rare, can use ToArray()
 
 	/// <summary>
-	/// Gets the raw value stored in this variable. Can be <b>string</b>, <b>Bitmap</b>, <b>ColorInt</b>, <c>IFImage[]</c>, <c>null</c>.
+	/// Gets the raw value stored in this variable. Can be <c>string</c>, <see cref="Bitmap"/>, <see cref="ColorInt"/>, <see cref="IFImage"/><c>[]</c>, <c>null</c>.
 	/// </summary>
 	public object Value => _o;
 }
@@ -232,8 +232,8 @@ public enum IFFlags {
 
 	/// <summary>
 	/// Use API <ms>PrintWindow</ms> to get window pixels.
-	/// Like <b>WindowDC</b>, works with background windows, etc. Differences:
-	/// <br/>• On Windows 8.1 and later works with windows where <b>WindowDC</b> doesn't.
+	/// Like <c>WindowDC</c>, works with background windows, etc. Differences:
+	/// <br/>• On Windows 8.1 and later works with windows where <c>WindowDC</c> doesn't.
 	/// <br/>• Works without Aero theme too.
 	/// <br/>• Slower.
 	/// <br/>• Some windows flicker.
@@ -242,12 +242,12 @@ public enum IFFlags {
 	/// <br/>• Unreliable with DPI-scaled windows; the window image slightly changes when resizing etc.
 	/// </summary>
 	PrintWindow = 2,
-	//rejected, makes no sense: /// <br/>• If used together with flag <b>WindowDC</b>, calls <b>PrintWindow</b> without flag <b>PW_RENDERFULLCONTENT</b>. Faster, less flickering, no bugs, but has the <b>WindowDC</b> problem: can't get pixels from some windows or window parts.
+	//rejected, makes no sense: /// <br/>• If used together with flag <c>WindowDC</c>, calls <c>PrintWindow</c> without flag <c>PW_RENDERFULLCONTENT</c>. Faster, less flickering, no bugs, but has the <c>WindowDC</c> problem: can't get pixels from some windows or window parts.
 
 	///// <summary>
 	///// Use DWM thumbnail API to get window pixels.
-	///// Like <b>WindowDC</b>, works with background windows, etc. Differences:
-	///// <br/>• Works with windows where <b>WindowDC</b> doesn't.
+	///// Like <c>WindowDC</c>, works with background windows, etc. Differences:
+	///// <br/>• Works with windows where <c>WindowDC</c> doesn't.
 	///// <br/>• Requires Windows 10 or later. Exception if used on older OS.
 	///// <br/>• Slower.
 	///// <br/>• May not work with some windows (rare).
@@ -257,7 +257,7 @@ public enum IFFlags {
 	//note: the above values must be the same in CIFlags, CIUFlags, IFFlags, OcrFlags.
 
 	/// <summary>
-	/// This flag can make the function faster when <i>image</i> is a list of images. To search for each image, the function will use <see cref="Parallel.For"/> instead of <b>for</b>. For example, if the CPU has 4 cores (8 threads), can search for max 8 images simultaneously. However it does not mean it will be 8 times faster. Can be max 2 or 3 times faster, depending on the number of images, flag <b>WindowDC</b>, <i>diff</i>, <i>also</i>, CPU, RAM, area size, finds or not, image position, etc. Can be even slower. To measure speed, use <see cref="perf"/>.
+	/// This flag can make the function faster when <i>image</i> is a list of images. To search for each image, the function will use <see cref="Parallel.For"/> instead of <c>for</c>. For example, if the CPU has 4 cores (8 threads), can search for max 8 images simultaneously. However it does not mean it will be 8 times faster. Can be max 2 or 3 times faster, depending on the number of images, flag <c>WindowDC</c>, <i>diff</i>, <i>also</i>, CPU, RAM, area size, finds or not, image position, etc. Can be even slower. To measure speed, use <see cref="perf"/>.
 	/// If used <i>also</i> callback function, it runs in any thread and any order, but one at a time (inside <c>lock() { }</c>).
 	/// </summary>
 	Parallel = 0x100
@@ -299,25 +299,25 @@ public enum IFAlso {
 
 	/// <summary>
 	/// Stop searching.
-	/// Let the main function return <c>null</c> or throw exception or continue waiting. But if a <b>OkFindX</b> value used previously, return that result.
+	/// Let the main function return <c>null</c> or throw exception or continue waiting. But if a <c>OkFindX</c> value used previously, return that result.
 	/// </summary>
 	NotFound,
 
 	/// <summary>
 	/// Find more instances of current image. If used list of images, also search for other images.
-	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
+	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <c>OkFindX</c> value used previously, return that result.
 	/// </summary>
 	FindOther,
 
 	/// <summary>
 	/// Find more instances of current image. When used list of images, don't search for other images.
-	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
+	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <c>OkFindX</c> value used previously, return that result.
 	/// </summary>
 	FindOtherOfThis,
 
 	/// <summary>
 	/// If used list of images, search for other images. Don't search for more instances of current image.
-	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <b>OkFindX</b> value used previously, return that result.
+	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <c>OkFindX</c> value used previously, return that result.
 	/// </summary>
 	FindOtherOfList,
 }

@@ -14,21 +14,21 @@ public static unsafe partial class ExtMisc {
 	#region value types
 	
 	/// <summary>
-	/// Converts to <b>int</b> with rounding.
+	/// Converts to <c>int</c> with rounding.
 	/// Calls <see cref="Convert.ToInt32(double)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
 	public static int ToInt(this double t) => Convert.ToInt32(t);
 	
 	/// <summary>
-	/// Converts to <b>int</b> with rounding.
+	/// Converts to <c>int</c> with rounding.
 	/// Calls <see cref="Convert.ToInt32(float)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
 	public static int ToInt(this float t) => Convert.ToInt32(t);
 	
 	/// <summary>
-	/// Converts to <b>int</b> with rounding.
+	/// Converts to <c>int</c> with rounding.
 	/// Calls <see cref="Convert.ToInt32(decimal)"/>.
 	/// </summary>
 	/// <exception cref="OverflowException"></exception>
@@ -36,13 +36,13 @@ public static unsafe partial class ExtMisc {
 	
 	//rejected. Too simple, and nobody would find and use.
 	///// <summary>
-	///// Converts to <b>int</b>.
+	///// Converts to <c>int</c>.
 	///// Can be used like <c>0xff123456.ToInt()</c> instead of <c>unchecked((int)0xff123456)</c>.
 	///// </summary>
 	//public static int ToInt(this uint t) => unchecked((int)t);
 	
 	///// <summary>
-	///// Converts to <b>Color</b>.
+	///// Converts to <c>Color</c>.
 	///// Can be used like <c>0xff123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
 	///// </summary>
 	///// <param name="t"></param>
@@ -51,7 +51,7 @@ public static unsafe partial class ExtMisc {
 	//	=> Color.FromArgb(unchecked((int)(t | (makeOpaque ? 0xff000000 : 0))));
 	
 	/// <summary>
-	/// Converts to <b>Color</b>. Makes opaque (alpha 0xff).
+	/// Converts to <c>Color</c>. Makes opaque (alpha 0xff).
 	/// Can be used like <c>0x123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
 	/// </summary>
 	internal static Color ToColor_(this int t, bool bgr = false) {
@@ -60,7 +60,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts <b>double</b> to <b>string</b>.
+	/// Converts <c>double</c> to <c>string</c>.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -69,7 +69,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts <b>float</b> to <b>string</b>.
+	/// Converts <c>float</c> to <c>string</c>.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="float.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -78,7 +78,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts <b>decimal</b> to <b>string</b>.
+	/// Converts <c>decimal</c> to <c>string</c>.
 	/// Uses invariant culture, therefore decimal point is always <c>'.'</c>, not <c>','</c> etc.
 	/// Calls <see cref="decimal.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -87,7 +87,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts <b>int</b> to <b>string</b>.
+	/// Converts <c>int</c> to <c>string</c>.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-',</c> not <c>'−'</c> etc.
 	/// Calls <see cref="int.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -96,7 +96,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts <b>long</b> to <b>string</b>.
+	/// Converts <c>long</c> to <c>string</c>.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-'</c>, not <c>'−'</c> etc.
 	/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -105,7 +105,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Converts <b>nint</b> to <b>string</b>.
+	/// Converts <c>nint</c> to <c>string</c>.
 	/// Uses invariant culture, therefore minus sign is always ASCII <c>'-'</c>, not <c>'−'</c> etc.
 	/// Calls <see cref="IntPtr.ToString(string, IFormatProvider)"/>.
 	/// </summary>
@@ -117,7 +117,7 @@ public static unsafe partial class ExtMisc {
 	//rare
 	///// <summary>
 	///// Returns <c>true</c> if <c>t.Width &lt;= 0 || t.Height &lt;= 0</c>.
-	///// Note: <b>Rectangle.IsEmpty</b> returns <c>true</c> only when all fields are 0.
+	///// Note: <c>Rectangle.IsEmpty</c> returns <c>true</c> only when all fields are 0.
 	///// </summary>
 	//[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	//public static bool NoArea(this Rectangle t) {
@@ -164,13 +164,13 @@ public static unsafe partial class ExtMisc {
 	
 	//currently not used. Creates shorter string than ToString.
 	///// <summary>
-	///// Converts this <b>Guid</b> to Base64 string.
+	///// Converts this <c>Guid</c> to Base64 string.
 	///// </summary>
 	//public static string ToBase64(this Guid t) => Convert.ToBase64String(new RByte((byte*)&t, sizeof(Guid)));
 	
 	//rejected: too simple. We have print.it(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 	///// <summary>
-	///// Converts <b>int</b> to hexadecimal string like <c>"0x3A"</c>.
+	///// Converts <c>int</c> to hexadecimal string like <c>"0x3A"</c>.
 	///// </summary>
 	//public static string ToHex(this int t)
 	//{
@@ -207,7 +207,7 @@ public static unsafe partial class ExtMisc {
 	/// <param name="t"></param>
 	/// <param name="flag">One or more flags.</param>
 	/// <remarks>
-	/// The same as code <c>(t &amp; flag) == flag</c> or <b>Enum.HasFlag</b>.
+	/// The same as code <c>(t &amp; flag) == flag</c> or <see cref="Enum.HasFlag"/>.
 	/// </remarks>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool Has<T>(this T t, T flag) where T : unmanaged, Enum {
@@ -399,7 +399,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Gets a reference to a <b>TValue</b> in this dictionary, adding a new entry with a default value if the key does not exist.
+	/// Gets a reference to a <c>TValue</c> in this dictionary, adding a new entry with a default value if the key does not exist.
 	/// This extension method just calls <see cref="CollectionsMarshal.GetValueRefOrAddDefault"/>.
 	/// </summary>
 	/// <inheritdoc cref="CollectionsMarshal.GetValueRefOrAddDefault"/>
@@ -420,7 +420,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Gets a reference to a <b>TValue</b> in this dictionary. If the key does not exist, sets <i>exists</i> = <c>false</c> and returns a reference <c>null</c>.
+	/// Gets a reference to a <c>TValue</c> in this dictionary. If the key does not exist, sets <i>exists</i> = <c>false</c> and returns a reference <c>null</c>.
 	/// This extension method just calls <see cref="CollectionsMarshal.GetValueRefOrNullRef"/> and <see cref="Unsafe.IsNullRef"/>.
 	/// </summary>
 	/// <param name="exists">Receives <c>true</c> if the key exists.</param>
@@ -445,7 +445,7 @@ public static unsafe partial class ExtMisc {
 		=> ref CollectionsMarshal.AsSpan(t)[i];
 	
 	/// <summary>
-	/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <b>List</b> item and returns the <b>List</b>; else returns <c>null</c>.
+	/// Adds key/value to dictionary. If the key already exists, adds the value to the same key as <c>List</c> item and returns the <c>List</c>; else returns <c>null</c>.
 	/// </summary>
 	/// <exception cref="ArgumentException">key/value already exists.</exception>
 	internal static List<TValue> MultiAdd_<TKey, TValue>(this Dictionary<TKey, object> t, TKey k, TValue v) where TValue : class {
@@ -462,7 +462,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// If dictionary contains key <i>k</i> that contains value <i>v</i> (as single value or in <b>List</b>), removes the value (and key if it was single value) and returns <c>true</c>.
+	/// If dictionary contains key <i>k</i> that contains value <i>v</i> (as single value or in <c>List</c>), removes the value (and key if it was single value) and returns <c>true</c>.
 	/// </summary>
 	internal static bool MultiRemove_<TKey, TValue>(this Dictionary<TKey, object> t, TKey k, TValue v) where TValue : class {
 		if (!t.TryGetValue(k, out var o)) return false;
@@ -495,46 +495,46 @@ public static unsafe partial class ExtMisc {
 
 #if true
 	/// <summary>
-	/// Returns <b>Length</b>, or 0 if <c>null</c>.
+	/// Returns <c>Length</c>, or 0 if <c>null</c>.
 	/// </summary>
 	internal static int Lenn_<T>(this T[] t) => t?.Length ?? 0;
 	//internal static int Lenn_(this System.Collections.ICollection t) => t?.Count ?? 0; //slower, as well as Array
 	
 	/// <summary>
-	/// Returns <b>Count</b>, or 0 if <c>null</c>.
+	/// Returns <c>Count</c>, or 0 if <c>null</c>.
 	/// </summary>
 	internal static int Lenn_<T>(this List<T> t) => t?.Count ?? 0;
 	
 	/// <summary>
-	/// Returns <c>true</c> if <c>null</c> or <b>Length</b> == 0.
+	/// Returns <c>true</c> if <c>null</c> or <c>Length</c> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this T[] t) => (t?.Length ?? 0) == 0;
 	
 	/// <summary>
-	/// Returns <c>true</c> if <c>null</c> or <b>Count</b> == 0.
+	/// Returns <c>true</c> if <c>null</c> or <c>Count</c> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
 #else //still too early to use `extension` in this library. Eg then the XML file contains duplicate names (then exception in _DocumentationProvider.Create). Probably DocFX would not get it too.
 	extension<T>(T[] t) { //with System.Collections.ICollection slower, as well as Array
 		/// <summary>
-		/// Returns <b>Length</b>, or 0 if <c>null</c>.
+		/// Returns <c>Length</c>, or 0 if <c>null</c>.
 		/// </summary>
 		internal int Lenn_ => t?.Length ?? 0;
 		
 		/// <summary>
-		/// Returns <c>true</c> if <c>null</c> or <b>Length</b> == 0.
+		/// Returns <c>true</c> if <c>null</c> or <c>Length</c> == 0.
 		/// </summary>
 		internal bool NE_ => (t?.Length ?? 0) == 0;
 	}
 	
 	extension<T>(List<T> t) {
 		/// <summary>
-		/// Returns <b>Count</b>, or 0 if <c>null</c>.
+		/// Returns <c>Count</c>, or 0 if <c>null</c>.
 		/// </summary>
 		internal int Lenn_ => t?.Count ?? 0;
 		
 		/// <summary>
-		/// Returns <c>true</c> if <c>null</c> or <b>Count</b> == 0.
+		/// Returns <c>true</c> if <c>null</c> or <c>Count</c> == 0.
 		/// </summary>
 		internal bool NE_ => (t?.Count ?? 0) == 0;
 	}
@@ -649,7 +649,7 @@ public static unsafe partial class ExtMisc {
 	/// <summary>
 	/// Gets window handle as <see cref="wnd"/>.
 	/// </summary>
-	/// <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be <c>null</c>.</param>
+	/// <param name="t">A <c>Control</c> or <c>Form</c> etc. Cannot be <c>null</c>.</param>
 	/// <param name="create">
 	/// Create handle if still not created. Default <c>false</c> (return <c>default(wnd)</c>).
 	/// Unlike <see cref="System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible. Does not create child control handles.
@@ -710,7 +710,7 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <b>Dispose</b>.
+	/// Calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <c>Dispose</c>.
 	/// </summary>
 	internal struct BitmapData_ : IDisposable {
 		Bitmap _b;
@@ -740,14 +740,14 @@ public static unsafe partial class ExtMisc {
 	}
 	
 	/// <summary>
-	/// Creates a <b>BitmapData_</b> object that calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <b>Dispose</b>.
+	/// Creates a <c>BitmapData_</c> object that calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <c>Dispose</c>.
 	/// </summary>
 	/// <param name="pf">If <c>null</c>, uses <c>b.PixelFormat</c>.</param>
 	internal static BitmapData_ Data(this Bitmap b, ImageLockMode mode, PixelFormat? pf = null)
 		=> new BitmapData_(b, mode, pf);
 	
 	/// <summary>
-	/// Creates a <b>BitmapData_</b> object that calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <b>Dispose</b>.
+	/// Creates a <c>BitmapData_</c> object that calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <c>Dispose</c>.
 	/// </summary>
 	/// <param name="pf">If <c>null</c>, uses <c>b.PixelFormat</c>.</param>
 	internal static BitmapData_ Data(this Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null)

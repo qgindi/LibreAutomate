@@ -50,14 +50,14 @@ public abstract record class JSettings : IDisposable {
 	static int s_loadedOnce;
 	
 	/// <summary>
-	/// Loads a JSON file and deserializes to an object of type <b>T</b>, or creates a new object of type <b>T</b>.
+	/// Loads a JSON file and deserializes to an object of type <c>T</c>, or creates a new object of type <c>T</c>.
 	/// </summary>
-	/// <returns>An object of type <b>T</b>. Just creates a new object if the file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> <c>true</c>.</returns>
+	/// <returns>An object of type <c>T</c>. Just creates a new object if the file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> <c>true</c>.</returns>
 	/// <param name="file">Full path of <c>.json</c> file. If <c>null</c>, does not load and will not save.</param>
 	/// <param name="useDefault">Use default settings, don't load from <i>file</i>. Delete <i>file</i> if exists.</param>
-	/// <param name="useDefaultOnError">What to do if failed to load or parse the file: <c>true</c> (default) - backup (rename) the file and use default settings; <c>false</c> - throw exception (for example <b>JsonException</b> if invalid JSON); <c>null</c> - show dialog with options to exit or use default settings.</param>
+	/// <param name="useDefaultOnError">What to do if failed to load or parse the file: <c>true</c> (default) - backup (rename) the file and use default settings; <c>false</c> - throw exception (for example <see cref="JsonException"/> if invalid JSON); <c>null</c> - show dialog with options to exit or use default settings.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
-	/// <exception cref="NotSupportedException">Field type not supported by <b>JsonSerializer</b>.</exception>
+	/// <exception cref="NotSupportedException">Field type not supported by <see cref="JsonSerializer"/>.</exception>
 	protected static T Load<T>(string file, bool useDefault = false, bool? useDefaultOnError = true) where T : JSettings
 		=> (T)_Load(file, typeof(T), useDefault, useDefaultOnError);
 	
@@ -186,7 +186,7 @@ public abstract record class JSettings : IDisposable {
 	/// <c>true</c> if settings were loaded from file.
 	/// </summary>
 	/// <remarks>
-	/// Returns <c>false</c> if <b>Load</b> did not find the file (the settings were not saved) or failed to load/parse or parameter <i>useDefault</i> = <c>true</c> or parameter <i>file</i> = <c>null</c>.
+	/// Returns <c>false</c> if <see cref="Load"/> did not find the file (the settings were not saved) or failed to load/parse or parameter <i>useDefault</i> = <c>true</c> or parameter <i>file</i> = <c>null</c>.
 	/// </remarks>
 	[JsonIgnore]
 	public bool LoadedFile => _loadedFile;
@@ -235,7 +235,7 @@ public abstract record class JSettings : IDisposable {
 	/// 
 	/// Runs in a thread pool thread.
 	/// </remarks>
-	/// <exception cref="NotSupportedException">Multiple <b>JSettings</b> objects in this process use the same file.</exception>
+	/// <exception cref="NotSupportedException">Multiple <see cref="JSettings"/> objects in this process use the same file.</exception>
 	public event Action ModifiedExternally {
 		add {
 			lock (_lock) {

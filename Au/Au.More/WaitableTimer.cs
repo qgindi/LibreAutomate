@@ -10,7 +10,7 @@ public class WaitableTimer : WaitHandle {
 	WaitableTimer(IntPtr h) => SafeWaitHandle = new Microsoft.Win32.SafeHandles.SafeWaitHandle(h, true);
 
 	/// <summary>
-	/// Calls API <ms>CreateWaitableTimer</ms> and creates a <b>WaitableTimer</b> object that wraps the timer handle.
+	/// Calls API <ms>CreateWaitableTimer</ms> and creates a <see cref="WaitableTimer"/> object that wraps the timer handle.
 	/// </summary>
 	/// <param name="manualReset"></param>
 	/// <param name="timerName">Timer name. If a timer with this name already exists, opens it if possible. If <c>null</c>, creates unnamed timer.</param>
@@ -22,7 +22,7 @@ public class WaitableTimer : WaitHandle {
 	}
 
 	/// <summary>
-	/// Calls API <ms>OpenWaitableTimer</ms> and creates a <b>WaitableTimer</b> object that wraps the timer handle.
+	/// Calls API <ms>OpenWaitableTimer</ms> and creates a <see cref="WaitableTimer"/> object that wraps the timer handle.
 	/// </summary>
 	/// <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="Create"/>.</param>
 	/// <param name="access">See <ms>Synchronization Object Security and Access Rights</ms>. The default value <c>TIMER_MODIFY_STATE|SYNCHRONIZE</c> allows to set and wait.</param>
@@ -51,7 +51,7 @@ public class WaitableTimer : WaitHandle {
 	/// If positive, in milliseconds. If negative, in 100 nanosecond intervals (microseconds <c>*</c> 10), see <ms>FILETIME</ms>.
 	/// Also can be 0, to set minimal time.</param>
 	/// <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
-	/// <exception cref="OverflowException"><c>dueTime*10000</c> is greater than <b>long.MaxValue</b>.</exception>
+	/// <exception cref="OverflowException"><c>dueTime*10000</c> is greater than <see cref="long.MaxValue"/>.</exception>
 	public bool Set(long dueTime, int period = 0) {
 		if (dueTime > 0) dueTime = -checked(dueTime * 10000);
 		return Api.SetWaitableTimer(this.SafeWaitHandle.DangerousGetHandle(), ref dueTime, period, default, default, false);

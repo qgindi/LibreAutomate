@@ -22,13 +22,13 @@ public enum TAFlags : byte {
 	
 	/// <summary>
 	/// Let <see cref="AutotextTriggerArgs.Replace"/> don't erase the user-typed text.
-	/// Without this flag it erases text with the <c>Backspace</c> key or selects with <c>Shift+Left</c>. If <b>Replace</b> not called, text is not erased/selected regardless of this flag.
+	/// Without this flag it erases text with the <c>Backspace</c> key or selects with <c>Shift+Left</c>. If <c>Replace</c> not called, text is not erased/selected regardless of this flag.
 	/// </summary>
 	DontErase = 2,
 	
 	/// <summary>
 	/// Let <see cref="AutotextTriggerArgs.Replace"/> don't modify the replacement text.
-	/// <br/>Without <b>ReplaceRaw</b> or <b>MatchCase</b> it:
+	/// <br/>Without <c>ReplaceRaw</c> or <c>MatchCase</c> it:
 	/// <br/>• If the first character of the typed text is uppercase, makes the first character of the replacement text uppercase.
 	/// <br/>• If all typed text is uppercase, makes the replacement text uppercase.
 	/// </summary>
@@ -53,11 +53,11 @@ public enum TAFlags : byte {
 
 /// <summary>
 /// Postfix type of autotext triggers.
-/// The trigger action runs only when the user ends the autotext with a postfix character or key, unless postfix type is <b>None</b>.
-/// Default: <b>CharOrKey</b>.
+/// The trigger action runs only when the user ends the autotext with a postfix character or key, unless postfix type is <c>None</c>.
+/// Default: <c>CharOrKey</c>.
 /// </summary>
 public enum TAPostfix : byte {
-	/// <summary>A postfix character (see <b>Char</b>) or key (see <b>Key</b>).</summary>
+	/// <summary>A postfix character (see <c>Char</c>) or key (see <c>Key</c>).</summary>
 	CharOrKey,
 	
 	/// <summary>A postfix character specified in the <i>postfixChars</i> parameter or <see cref="AutotextTriggers.DefaultPostfixChars"/> property. If not specified - any non-word character.</summary>
@@ -149,7 +149,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	/// <param name="text">The action runs when the user types this text and a postfix character or key. By default case-insensitive.</param>
 	/// <param name="flags">Options. If omitted or <c>null</c>, uses <see cref="DefaultFlags"/>. Some flags are used by <see cref="AutotextTriggerArgs.Replace"/>.</param>
 	/// <param name="postfixType">Postfix type (character, key, any or none). If omitted or <c>null</c>, uses <see cref="DefaultPostfixType"/>; default - a non-word character or the <c>Ctrl</c> key.</param>
-	/// <param name="postfixChars">Postfix characters used when postfix type is <b>Char</b> or <b>CharOrKey</b> (default). If omitted or <c>null</c>, uses <see cref="DefaultPostfixChars"/>; default - non-word characters.</param>
+	/// <param name="postfixChars">Postfix characters used when postfix type is <c>Char</c> or <c>CharOrKey</c> (default). If omitted or <c>null</c>, uses <see cref="DefaultPostfixChars"/>; default - non-word characters.</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <exception cref="ArgumentException">
@@ -993,7 +993,7 @@ public class TAMenuItem {
 	/// <summary>
 	/// Sets menu item label and replacement text.
 	/// </summary>
-	/// <param name="label">Menu item label. If <c>null</c>, uses <b>Text</b>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
+	/// <param name="label">Menu item label. If <c>null</c>, uses <see cref="Text"/>. Can contain tooltip like <c>"Label\0 Tooltip"</c>.</param>
 	/// <param name="text">The replacement text. Can be <c>null</c>. Can contain caret placeholder <c>[[|]]</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="html">The replacement HTML. Can be <c>null</c>. See <see cref="AutotextTriggerArgs.Replace(string, string)"/>.</param>
 	/// <param name="l_">[](xref:caller_info)</param>
@@ -1005,7 +1005,7 @@ public class TAMenuItem {
 	}
 	
 	/// <summary>
-	/// Creates <b>TAMenuItem</b> with only <b>Text</b>.
+	/// Creates <c>TAMenuItem</c> with only <see cref="Text"/>.
 	/// </summary>
 	public static implicit operator TAMenuItem(string text) => new(null, text, null, 0);
 }

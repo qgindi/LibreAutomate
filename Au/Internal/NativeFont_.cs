@@ -76,7 +76,7 @@ internal sealed class NativeFont_ : IDisposable {
 ///// Per-monitor DPI-aware.
 ///// </summary>
 ///// <remarks>
-///// The properties return non-cached <b>Font</b> objects. It's safe to dispose them. It's OK to not dispose (GC will do; GDI+ fonts don't use much unmanaged memory).
+///// The properties return non-cached <c>Font</c> objects. It's safe to dispose them. It's OK to not dispose (GC will do; GDI+ fonts don't use much unmanaged memory).
 ///// </remarks>
 //internal static class Fonts_
 //{

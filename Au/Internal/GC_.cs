@@ -9,7 +9,7 @@
 		/// Calls <see cref="GC.AddMemoryPressure"/>. Later, when object <i>obj</i> is garbage-collected, will call <see cref="GC.RemoveMemoryPressure"/>.
 		/// </summary>
 		/// <param name="obj">An object of any type.</param>
-		/// <param name="size">Unmanaged memory size. It is passed to <b>GC.AddMemoryPressure</b> and <b>GC.RemoveMemoryPressure</b>.</param>
+		/// <param name="size">Unmanaged memory size. It is passed to <c>GC.AddMemoryPressure</c> and <c>GC.RemoveMemoryPressure</c>.</param>
 		public static void AddObjectMemoryPressure(object obj, long size) {
 			GC.AddMemoryPressure(size);
 			s_table.Add(obj, new _Remover(size));

@@ -49,8 +49,8 @@ namespace Au {
 		/// Initiates computer shutdown or restart operation.
 		/// </summary>
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
-		/// <param name="flags"><b>ExitWindowsEx</b> parameter <i>uFlags</i>.</param>
-		/// <param name="reason"><b>ExitWindowsEx</b> parameter <i>dwReason</i>.</param>
+		/// <param name="flags"><ms>ExitWindowsEx</ms> parameter <i>uFlags</i>.</param>
+		/// <param name="reason"><ms>ExitWindowsEx</ms> parameter <i>dwReason</i>.</param>
 		/// <remarks>
 		/// Calls API <ms>ExitWindowsEx</ms>.
 		/// </remarks>
@@ -77,7 +77,7 @@ namespace Au {
 		/// <remarks>
 		/// To sleep or hibernate uses API <ms>SetSuspendState</ms>. To turn off display uses <ms>WM_SYSCOMMAND</ms>.
 		/// 
-		/// The <b>SetSuspendState</b> behavior is undefined if the system does not support S1-S3 sleep or S4 hibernate power states. It may fail or use hibernation instead of sleep. About power states: <ms>System Power States</ms>. Available sleep states: <c>run.console("powercfg.exe", "/A");</c>
+		/// The <ms>SetSuspendState</ms> behavior is undefined if the system does not support S1-S3 sleep or S4 hibernate power states. It may fail or use hibernation instead of sleep. About power states: <ms>System Power States</ms>. Available sleep states: <c>run.console("powercfg.exe", "/A");</c>
 		/// </remarks>
 		public static bool suspend(CSuspend how) {
 			if (how == CSuspend.SleepOrDisplay) how = 0 != Api.IsPwrSuspendAllowed() ? CSuspend.Sleep : CSuspend.Display;
@@ -138,7 +138,7 @@ namespace Au {
 		/// <remarks>
 		/// Many system events are available in <see cref="SystemEvents"/> class. For suspend/resume notifications could be used <see cref="SystemEvents.PowerModeChanged"/>, but it does not work on most computers. Use this event instead.
 		///
-		/// The event handler is executed in other thread. The parameter can be only <b>Resume</b> or <b>Suspend</b>. See API <ms>PBT_APMSUSPEND</ms> and <ms>PBT_APMRESUMESUSPEND</ms>.
+		/// The event handler is executed in other thread. The parameter can be only <c>Resume</c> or <c>Suspend</c>. See API <ms>PBT_APMSUSPEND</ms> and <ms>PBT_APMRESUMESUSPEND</ms>.
 		/// </remarks>
 		public static event Action<PowerModes> suspendResumeEvent {
 			add {

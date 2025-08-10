@@ -4,20 +4,20 @@ namespace Au {
 	/// </summary>
 	/// <remarks>
 	/// A computer can have one or more screens (aka display devices, monitors). One of them is the <i>primary</i> screen; its top-left coordinate is 0 0.
-	/// To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique integer identifier, known as screen handle or <b>HMONITOR</b>. But it is a random variable value and therefore cannot be specified directly in script etc. Instead can be used screen index or some object on that screen (window, point, rectangle).
+	/// To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique integer identifier, known as screen handle or <ms>HMONITOR</ms>. But it is a random variable value and therefore cannot be specified directly in script etc. Instead can be used screen index or some object on that screen (window, point, rectangle).
 	/// 
-	/// A <b>screen</b> variable can contain either a screen handle or a callback function that returns a screen handle. If empty, most functions interpret it as the primary screen.
+	/// A <c>screen</c> variable can contain either a screen handle or a callback function that returns a screen handle. If empty, most functions interpret it as the primary screen.
 	/// 
-	/// To create <b>screen</b> variables use static functions (like <c>screen.index(1)</c> or <c>screen.primary</c>) or constructors (like <c>new screen(()=>screen.index(1))</c>) or <see cref="at"/>. Then call non-static functions to get screen properties.
+	/// To create <c>screen</c> variables use static functions (like <c>screen.index(1)</c> or <c>screen.primary</c>) or constructors (like <c>new screen(()=>screen.index(1))</c>) or <see cref="at"/>. Then call non-static functions to get screen properties.
 	/// 
-	/// A screen handle cannot be reliably used for a long time. Screen handles may change when changing the configuration of multiple screens. Consider a "lazy" variable, ie with callback function <see cref="LazyFunc"/>. Then, whenever a function needs a screen handle, it calls the callback function which returns a <b>screen</b> with fresh handle.
+	/// A screen handle cannot be reliably used for a long time. Screen handles may change when changing the configuration of multiple screens. Consider a "lazy" variable, ie with callback function <see cref="LazyFunc"/>. Then, whenever a function needs a screen handle, it calls the callback function which returns a <c>screen</c> with fresh handle.
 	/// </remarks>
 	public struct screen : IEquatable<screen> {
 		readonly IntPtr _h;
 		readonly Func<screen> _func;
 		
 		/// <summary>
-		/// Creates variable with screen handle, aka <b>HMONITOR</b>.
+		/// Creates variable with screen handle, aka <ms>HMONITOR</ms>.
 		/// </summary>
 		public screen(IntPtr handle) { _h = handle; _func = null; }
 		
@@ -27,12 +27,12 @@ namespace Au {
 		public screen(Func<screen> f) { _h = default; _func = f; }
 		
 		/// <summary>
-		/// Gets the screen handle, aka <b>HMONITOR</b>. Returns <c>default(IntPtr)</c> if it wasn't set; see <see cref="Now"/>.
+		/// Gets the screen handle, aka <ms>HMONITOR</ms>. Returns <c>default(IntPtr)</c> if it wasn't set; see <see cref="Now"/>.
 		/// </summary>
 		public IntPtr Handle => _h;
 		
 		/// <summary>
-		/// Gets the callback function that returns <b>screen</b> when need. Returns <c>null</c> if it wasn't set.
+		/// Gets the callback function that returns <see cref="screen"/> when need. Returns <c>null</c> if it wasn't set.
 		/// </summary>
 		public Func<screen> LazyFunc => _func;
 		
@@ -64,7 +64,7 @@ namespace Au {
 		public static screen primary => new(Api.MonitorFromWindow(default, SODefault.Primary)); //fast
 		
 		/// <summary>
-		/// Returns a lazy <b>screen</b> variable that later will get the screen from the mouse cursor position at that time.
+		/// Returns a lazy <see cref="screen"/> variable that later will get the screen from the mouse cursor position at that time.
 		/// </summary>
 		/// <remarks>
 		/// If need non-lazy: <c>screen.of(mouse.xy)</c> or <c>screen.ofMouse.Now</c>.
@@ -72,7 +72,7 @@ namespace Au {
 		public static screen ofMouse => new(s_ofMouse);
 		
 		/// <summary>
-		/// Returns a lazy <b>screen</b> variable that later will get the screen of the active window at that time.
+		/// Returns a lazy <see cref="screen"/> variable that later will get the screen of the active window at that time.
 		/// </summary>
 		/// <remarks>
 		/// If need non-lazy: <c>screen.of(wnd.active)</c> or <c>screen.ofActiveWindow.Now</c>.
@@ -93,7 +93,7 @@ namespace Au {
 		/// <param name="lazy">
 		/// Create variable with <see cref="LazyFunc"/> that later will get screen handle.
 		/// Other ways to create lazy:
-		/// <br/>• use <b>wndFinder</b>. Example: <c>screen.of(new wndFinder("* Notepad"))</c>.
+		/// <br/>• use <see cref="wndFinder"/>. Example: <c>screen.of(new wndFinder("* Notepad"))</c>.
 		/// <br/>• use constructor. Example: <c>new screen(() => screen.of(wnd.findFast(cn: "Notepad")))</c>.
 		/// </param>
 		public static screen of(wnd w, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
@@ -308,10 +308,10 @@ namespace Au {
 		/// </summary>
 		/// <returns>
 		/// Tuple containing:
-		/// <br/>• <b>rect</b> - screen rectangle.
-		/// <br/>• <b>workArea</b> - work area rectangle.
-		/// <br/>• <b>isPrimary</b> - <c>true</c> if it is the primary screen.
-		/// <br/>• <b>isAlive</b> - <c>false</c> if the screen handle is invalid; then the function gets info of the primary screen.
+		/// <br/>• <c>rect</c> - screen rectangle.
+		/// <br/>• <c>workArea</c> - work area rectangle.
+		/// <br/>• <c>isPrimary</c> - <c>true</c> if it is the primary screen.
+		/// <br/>• <c>isAlive</c> - <c>false</c> if the screen handle is invalid; then the function gets info of the primary screen.
 		/// </returns>
 		/// <remarks>
 		/// If this variable holds a callback function, this function calls it to get screen handle. See also <see cref="Now"/>.

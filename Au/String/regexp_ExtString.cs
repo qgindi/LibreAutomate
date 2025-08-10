@@ -81,7 +81,7 @@ public static partial class ExtString {
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <b>PARTIAL_</b> flag.</exception>
+	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <c>PARTIAL_</c> flag.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
 	/// <remarks>More info and examples: <see cref="regexp"/>.</remarks>
 	/// <example></example>
@@ -100,7 +100,7 @@ public static partial class ExtString {
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <b>PARTIAL_</b> flag.</exception>
+	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <c>PARTIAL_</c> flag.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
 	/// <remarks>More info and examples: <see cref="regexp"/>.</remarks>
 	/// <example></example>
@@ -119,7 +119,7 @@ public static partial class ExtString {
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <b>PARTIAL_</b> flag.</exception>
+	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <c>PARTIAL_</c> flag.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
 	/// <remarks>More info and examples: <see cref="regexp"/>.</remarks>
 	/// <example></example>
@@ -138,7 +138,7 @@ public static partial class ExtString {
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <b>PARTIAL_</b> flag.</exception>
+	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <c>PARTIAL_</c> flag.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
 	/// <remarks>More info and examples: <see cref="regexp"/>.</remarks>
 	/// <example></example>
@@ -158,7 +158,7 @@ public static partial class ExtString {
 	///// </summary>
 	///// <param name="t">This string.</param>
 	///// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-	///// <exception cref="ArgumentException">Invalid regular expression. Or used a <b>PARTIAL_</b> flag.</exception>
+	///// <exception cref="ArgumentException">Invalid regular expression. Or used a <c>PARTIAL_</c> flag.</exception>
 	///// <exception cref="AuException">Failed (unlikely).</exception>
 	///// <remarks>More info and examples: <see cref="regexp"/>.</remarks>
 	///// <example></example>
@@ -180,7 +180,7 @@ public static partial class ExtString {
 	/// <exception cref="ArgumentException">
 	/// - Invalid regular expression.
 	/// - Invalid <c>$replacement</c>.
-	/// - Used a <b>PARTIAL_</b> flag.
+	/// - Used a <c>PARTIAL_</c> flag.
 	/// - The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
@@ -205,7 +205,7 @@ public static partial class ExtString {
 	/// <exception cref="ArgumentException">
 	/// - Invalid regular expression.
 	/// - Invalid <c>$replacement</c>.
-	/// - Used a <b>PARTIAL_</b> flag.
+	/// - Used a <c>PARTIAL_</c> flag.
 	/// - The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
@@ -230,7 +230,7 @@ public static partial class ExtString {
 	/// <exception cref="ArgumentException">
 	/// - Invalid regular expression.
 	/// - Invalid <c>$replacement</c>.
-	/// - Used a <b>PARTIAL_</b> flag.
+	/// - Used a <c>PARTIAL_</c> flag.
 	/// - The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
@@ -254,7 +254,7 @@ public static partial class ExtString {
 	/// <exception cref="ArgumentException">
 	/// - Invalid regular expression.
 	/// - Invalid <c>$replacement</c>.
-	/// - Used a <b>PARTIAL_</b> flag.
+	/// - Used a <c>PARTIAL_</c> flag.
 	/// - The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
@@ -275,7 +275,7 @@ public static partial class ExtString {
 	/// </summary>
 	/// <param name="t">This string.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <b>PARTIAL_</b> flag.</exception>
+	/// <exception cref="ArgumentException">Invalid regular expression. Or used a <c>PARTIAL_</c> flag.</exception>
 	/// <exception cref="AuException">Failed (unlikely).</exception>
 	/// <remarks>More info and examples: <see cref="regexp"/>.</remarks>
 	/// <example></example>

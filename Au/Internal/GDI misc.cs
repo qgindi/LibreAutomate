@@ -80,7 +80,7 @@ sealed class FontDC_ : MemoryDC_ {
 
 	/// <summary>
 	/// Selects specified font.
-	/// The <b>Dispose</b> method will select it out but will not destroy it.
+	/// The <c>Dispose</c> method will select it out but will not destroy it.
 	/// </summary>
 	/// <param name="font"></param>
 	public FontDC_(IntPtr font) {
@@ -140,18 +140,18 @@ struct GdiObject_ : IDisposable {
 	public static implicit operator IntPtr(GdiObject_ g) => g._h;
 
 	/// <summary>
-	/// Calls API <b>CreateSolidBrush</b>.
+	/// Calls API <c>CreateSolidBrush</c>.
 	/// </summary>
-	/// <param name="color">0xRRGGBB.</param>
+	/// <param name="color"><c>0xRRGGBB</c>.</param>
 	public static GdiObject_ ColorBrush(ColorInt color) {
 		return new(Api.CreateSolidBrush(color.ToBGR()));
 	}
 
 	/// <summary>
-	/// Calls API <b>GetThemeSysColorBrush</b>.
+	/// Calls API <c>GetThemeSysColorBrush</c>.
 	/// </summary>
 	/// <param name="hTheme">Theme handle. If default, gets non-themed color.</param>
-	/// <param name="colorIndex">API <b>COLOR_x</b>.</param>
+	/// <param name="colorIndex">API <c>COLOR_x</c>.</param>
 	public static GdiObject_ SysColorBrush(IntPtr hTheme, int colorIndex) {
 		return new(Api.GetThemeSysColorBrush(hTheme, colorIndex));
 	}

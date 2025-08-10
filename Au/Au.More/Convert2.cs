@@ -124,7 +124,7 @@ public static unsafe class Convert2 {
 	/// Compresses data. Uses <see cref="DeflateStream"/>.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="DeflateStream"/>.</exception>
 	public static byte[] DeflateCompress(RByte data) {
 		using var m = new MemoryStream();
 		using (var x = new DeflateStream(m, CompressionLevel.Optimal)) x.Write(data); //note: must dispose before ToArray
@@ -138,7 +138,7 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <returns>Decompressed data.</returns>
 	/// <param name="compressed">Compressed data.</param>
-	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="DeflateStream"/>.</exception>
 	public static byte[] DeflateDecompress(RByte compressed) {
 		using var m = new MemoryStream();
 		DeflateDecompress(compressed, m);
@@ -150,7 +150,7 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <param name="compressed">Compressed data.</param>
 	/// <param name="decompressed">Stream for decompressed data.</param>
-	/// <exception cref="Exception">Exceptions of <b>DeflateStream</b>.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="DeflateStream"/>.</exception>
 	public static void DeflateDecompress(RByte compressed, Stream decompressed) {
 		fixed (byte* p = compressed) {
 			using var m = new UnmanagedMemoryStream(p, compressed.Length);
@@ -166,7 +166,7 @@ public static unsafe class Convert2 {
 	/// Compresses data. Uses <see cref="GZipStream"/>.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="GZipStream"/>.</exception>
 	public static byte[] GzipCompress(RByte data) {
 		using var m = new MemoryStream();
 		using (var x = new GZipStream(m, CompressionLevel.Optimal)) x.Write(data);
@@ -178,7 +178,7 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <returns>Decompressed data.</returns>
 	/// <param name="compressed">Compressed data.</param>
-	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="GZipStream"/>.</exception>
 	public static byte[] GzipDecompress(RByte compressed) {
 		using var m = new MemoryStream();
 		GzipDecompress(compressed, m);
@@ -190,7 +190,7 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <param name="compressed">Compressed data.</param>
 	/// <param name="decompressed">Stream for decompressed data.</param>
-	/// <exception cref="Exception">Exceptions of <b>GZipStream</b>.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="GZipStream"/>.</exception>
 	public static void GzipDecompress(RByte compressed, Stream decompressed) {
 		fixed (byte* p = compressed) {
 			using var m = new UnmanagedMemoryStream(p, compressed.Length);
@@ -313,7 +313,7 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <param name="data">Encryped data as <c>byte[]</c> or Base64 string.</param>
 	/// <param name="key">Encryption key. Can be non-empty string (eg a password) or <c>byte[]</c> of length 16 (eg a password hash).</param>
-	/// <param name="IV">If used <b>AesEncryptX</b> that returns an initialization vector, pass it here.</param>
+	/// <param name="IV">If used <c>AesEncryptX</c> that returns an initialization vector, pass it here.</param>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="CryptographicException"></exception>
 	public static byte[] AesDecryptB(object data, object key, byte[] IV = null) {
@@ -388,8 +388,8 @@ public static unsafe class Convert2 {
 	/// </summary>
 	/// <returns>
 	/// Tuple:
-	/// <br/>• <b>text</b> - <c>Encoding.UTF8.GetBytes(s)</c>.
-	/// <br/>• <b>offsets</b> - <c>null</c> if <i>s</i> is ASCII. Else UTF-8 character offsets for each <i>s</i> character plus at <c>s.Length</c>.
+	/// <br/>• <c>text</c> - <c>Encoding.UTF8.GetBytes(s)</c>.
+	/// <br/>• <c>offsets</c> - <c>null</c> if <i>s</i> is ASCII. Else UTF-8 character offsets for each <i>s</i> character plus at <c>s.Length</c>.
 	/// </returns>
 	internal static (byte[] text, int[] offsets) Utf8EncodeAndGetOffsets_(RStr s, bool append0 = false) {
 		var s2 = Utf8Encode(s, append0 ? "\0" : ""); //always creates valid UTF-8. Replaces invalid UTF-16 chars.
@@ -530,7 +530,7 @@ public static unsafe class Convert2 {
 	//}
 
 	///// <summary>
-	///// Converts string containing Base64 encoded data to bytes and stores in memory of a <b>Span</b> variable. Supports standard encoding and URL-safe encoding.
+	///// Converts string containing Base64 encoded data to bytes and stores in memory of a <c>Span</c> variable. Supports standard encoding and URL-safe encoding.
 	///// Returns <c>false</c> if the encoded string is invalid or the buffer is too small.
 	///// </summary>
 	///// <param name="encoded">String or <c>char[]</c> or span of string/array/memory containing Base64 encoded data.</param>

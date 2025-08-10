@@ -38,7 +38,7 @@ namespace Au.More {
 		/// <exception cref="ArgumentException">The rectangle is empty or does not intersect with the window's client area.</exception>
 		/// <exception cref="AuException">Failed. For example there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <remarks>
-		/// If <i>flags</i> contains <b>WindowDC</b> (default) or <b>PrintWindow</b>:
+		/// If <i>flags</i> contains <c>WindowDC</c> (default) or <c>PrintWindow</c>:
 		/// - If the window is partially or completely transparent, captures its non-transparent view.
 		/// - If the window is DPI-scaled, captures its non-scaled view. However <i>r</i> must contain scaled coordinates.
 		/// </remarks>
@@ -83,7 +83,7 @@ namespace Au.More {
 		/// Gets color of a screen pixel.
 		/// </summary>
 		/// <param name="p">x y in screen.</param>
-		/// <returns>Pixel color in 0xAARRGGBB format. Alpha 0xFF. Returns 0 if fails, eg if x y is not in screen.</returns>
+		/// <returns>Pixel color in <c>0xAARRGGBB</c> format. Alpha 0xFF. Returns 0 if fails, eg if x y is not in screen.</returns>
 		public static unsafe uint Pixel(POINT p) {
 			using var dc = new ScreenDC_();
 			uint R = Api.GetPixel(dc, p.x, p.y);
@@ -95,7 +95,7 @@ namespace Au.More {
 		/// Gets color of a window pixel.
 		/// </summary>
 		/// <param name="p">x y in <i>w</i> client area.</param>
-		/// <returns>Pixel color in 0xAARRGGBB format. Alpha 0xFF.</returns>
+		/// <returns>Pixel color in <c>0xAARRGGBB</c> format. Alpha 0xFF.</returns>
 		/// <inheritdoc cref="Image(wnd, RECT?, CIFlags)"/>
 		public static unsafe uint Pixel(wnd w, POINT p, CIFlags flags = CIFlags.WindowDC) {
 			using var c = new CaptureScreenImage();
@@ -596,16 +596,16 @@ namespace Au.More {
 	/// Captures image pixels from screen or window.
 	/// </summary>
 	/// <remarks>
-	/// This class is used by <see cref="CaptureScreen"/>, <see cref="uiimage"/> and <see cref="uiimageFinder"/>. Also you can use it directly. For example it can get pixels directly without copying to a <b>Bitmap</b> or array.
+	/// This class is used by <see cref="CaptureScreen"/>, <see cref="uiimage"/> and <see cref="uiimageFinder"/>. Also you can use it directly. For example it can get pixels directly without copying to a <see cref="Bitmap"/> or array.
 	/// 
 	/// How to use:
 	/// 1. Create variable.
-	/// 2. Call <b>Capture</b>.
+	/// 2. Call <see cref="Capture"/>.
 	/// 3. Call other functions to get result in various formats.
 	/// 4. If need, repeat 2-3 (for example when waiting for image).
 	/// 5. Dispose (important).
 	/// 
-	/// Pixel format: <b>Format32bppArgb</b>, alpha 0xff.
+	/// Pixel format: <c>Format32bppArgb</c>, alpha 0xff.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -644,7 +644,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Let <b>Capture</b> don't set alpha = 0xff. Slightly faster. Then pixelformat will be Rgb instead of Argb.
+		/// Let <c>Capture</c> don't set alpha = 0xff. Slightly faster. Then pixelformat will be Rgb instead of Argb.
 		/// Default <c>false</c>.
 		/// </summary>
 		internal bool DontSetAlpha_ { get; set; }
@@ -654,7 +654,7 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="r">Rectangle in <i>w</i> client area coordinates. If <c>null</c>, uses <c>w.ClientRect</c>.</param>
-		/// <returns><c>false</c> if <i>r</i> empty or not in the client area and used flag <b>Relaxed</b> (else exception).</returns>
+		/// <returns><c>false</c> if <i>r</i> empty or not in the client area and used flag <c>Relaxed</c> (else exception).</returns>
 		public bool Capture(wnd w, RECT? r = null, CIFlags flags = CIFlags.WindowDC) => _Capture(w.ThrowIf0(), r, flags);
 
 		/// <summary>
@@ -792,7 +792,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Creates new <b>Bitmap</b> from pixels of the captured image.
+		/// Creates new <c>Bitmap</c> from pixels of the captured image.
 		/// </summary>
 		public Bitmap ToBitmap() {
 			var b = new Bitmap(_width, _height, _alphaOk ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb);
@@ -848,7 +848,7 @@ namespace Au.Types {
 
 		//rejected. Or would need a tool to capture rect/pont in logical coord.
 		///// <summary>
-		///// Flag: the specified rectangle or point uses logical (non-scaled) coordinates when the window is DPI-scaled. Used only with flags <b>WindowDC</b> (default) or <b>PrintWindow</b>.
+		///// Flag: the specified rectangle or point uses logical (non-scaled) coordinates when the window is DPI-scaled. Used only with flags <c>WindowDC</c> (default) or <c>PrintWindow</c>.
 		///// </summary>
 		//RectLogical = 0x200,
 	}
@@ -863,7 +863,7 @@ namespace Au.Types {
 	/// Flags for <see cref="CaptureScreen.ImageColorRectUI"/>.
 	/// </summary>
 	/// <remarks>
-	/// Only one of flags <b>Image</b>, <b>Color</b> and <b>Rectangle</b> can be used. If none, can capture image or color.
+	/// Only one of flags <c>Image</c>, <c>Color</c> and <c>Rectangle</c> can be used. If none, can capture image or color.
 	/// </remarks>
 	[Flags]
 	public enum CIUFlags {
@@ -914,7 +914,7 @@ namespace Au.Types {
 		public Bitmap image;
 
 		/// <summary>
-		/// Captured color in 0xAARRGGBB format. Alpha 0xFF.
+		/// Captured color in <c>0xAARRGGBB</c> format. Alpha 0xFF.
 		/// </summary>
 		public uint color;
 
@@ -935,8 +935,8 @@ namespace Au.Types {
 		public double dpiScale;
 
 		/// <summary>
-		/// If <c>true</c>, most likely <b>w</b> is incorrect window, because the window that was there before capturing disappeared while capturing, for example it was a popup menu.
-		/// If captured from screen (without flags like <b>WindowDC</b>), <b>w</b> may be correct even if this is <c>true</c> (can't detect reliably), else certainly incorrect.
+		/// If <c>true</c>, most likely <see cref="w"/> is incorrect window, because the window that was there before capturing disappeared while capturing, for example it was a popup menu.
+		/// If captured from screen (without flags like <c>WindowDC</c>), <see cref="w"/> may be correct even if this is <c>true</c> (can't detect reliably), else certainly incorrect.
 		/// </summary>
 		public bool possiblyWrongWindow;
 	}

@@ -3,7 +3,7 @@ namespace Au {
 		/// <summary>
 		/// Sets window transparency attributes (opacity and/or transparent color).
 		/// </summary>
-		/// <param name="allowTransparency">Set or remove <b>WS_EX_LAYERED</b> style that is required for transparency. If <c>false</c>, other parameters are not used.</param>
+		/// <param name="allowTransparency">Set or remove <ms>WS_EX_LAYERED</ms> style that is required for transparency. If <c>false</c>, other parameters are not used.</param>
 		/// <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if <c>null</c>. If less than 0 or greater than 255, makes 0 or 255.</param>
 		/// <param name="colorKey">Make pixels of this color completely transparent. Does not change if <c>null</c>. The alpha byte is not used.</param>
 		/// <param name="noException">Don't throw exception when fails.</param>
@@ -88,14 +88,14 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Returns <c>true</c> if this belongs to <b>GetShellWindow</b>'s thread (usually it is the desktop window).
+		/// Returns <c>true</c> if this belongs to <c>GetShellWindow</c>'s thread (usually it is the desktop window).
 		/// </summary>
 		internal bool IsOfShellThread_ {
 			get => 1 == s_isShellWindow.IsShellWindow(this);
 		}
 		
 		/// <summary>
-		/// Returns <c>true</c> if this belongs to <b>GetShellWindow</b>'s process (eg a folder window, desktop, taskbar).
+		/// Returns <c>true</c> if this belongs to <c>GetShellWindow</c>'s process (eg a folder window, desktop, taskbar).
 		/// </summary>
 		internal bool IsOfShellProcess_ {
 			get => 0 != s_isShellWindow.IsShellWindow(this);
@@ -165,16 +165,37 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// If this control is (or is based on) a standard control provided by Windows, such as button or treeview, returns the control type. Else returns <b>None</b>.
+		/// If this control is (or is based on) a standard control provided by Windows, such as button or treeview, returns the control type. Else returns <c>None</c>.
 		/// </summary>
 		/// <remarks>
-		/// Sends message <b>WM_GETOBJECT</b> <ms>QUERYCLASSNAMEIDX</ms>. Slower than <see cref="ClassName"/> or <see cref="ClassNameIs(string)"/>, but can detect the base type of controls based on standard Windows controls but with a different class name.
+		/// Sends message <c>WM_GETOBJECT</c> <ms>QUERYCLASSNAMEIDX</ms>. Slower than <see cref="ClassName"/> or <see cref="ClassNameIs(string)"/>, but can detect the base type of controls based on standard Windows controls but with a different class name.
 		/// </remarks>
 		public WControlType CommonControlType => (WControlType)Send(Api.WM_GETOBJECT, 0, (nint)EObjid.QUERYCLASSNAMEIDX);
 	}
 }
 
 namespace Au.Types {
+	/// <summary>
+	/// Flags for <see cref="wnd.SetStyle"/> and <see cref="wnd.SetExStyle"/>.
+	/// </summary>
+	[Flags]
+	public enum WSFlags {
+		/// <summary>Add the specified styles and don't change others.</summary>
+		Add = 1,
+		
+		/// <summary>Remove the specified styles and don't change others.</summary>
+		Remove = 2,
+		
+		/// <summary>Update non-client area (frame, title bar).</summary>
+		UpdateNonclient = 4,
+		
+		/// <summary>Update client area.</summary>
+		UpdateClient = 8,
+		
+		/// <summary>Don't throw exception when fails.</summary>
+		NoException = 16,
+	}
+	
 	/// <summary>
 	/// <see cref="wnd.CommonControlType"/>
 	/// </summary>

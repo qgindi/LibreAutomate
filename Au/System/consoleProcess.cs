@@ -167,9 +167,9 @@ public sealed unsafe class consoleProcess : IDisposable {
 	/// <remarks>
 	/// Waits for new text from console, reads it into an internal buffer, and then returns it one line at a time.
 	/// 
-	/// Sets <see cref="IsLine"/> = <c>true</c> if the line text in the buffer is terminated with newline characters. Else sets <b>IsLine</b> = <c>false</c>.
+	/// Sets <see cref="IsLine"/> = <c>true</c> if the line text in the buffer is terminated with newline characters. Else sets <c>IsLine</c> = <c>false</c>.
 	///
-	/// When <b>IsLine</b> is <c>false</c>, <i>s</i> text can be either a prompt (incomplete line that asks for user input) or an incomplete line/prompt text (the remainder will be retrieved later). Your script should somehow distinguish it. If it's a known prompt, let it call <see cref="Write"/>. Else call <see cref="Wait"/>. See example.
+	/// When <c>IsLine</c> is <c>false</c>, <i>s</i> text can be either a prompt (incomplete line that asks for user input) or an incomplete line/prompt text (the remainder will be retrieved later). Your script should somehow distinguish it. If it's a known prompt, let it call <see cref="Write"/>. Else call <see cref="Wait"/>. See example.
 	///
 	/// It's impossible to automatically distinguish a prompt from a partial line or partial prompt. The console program can write line text in parts, possibly with delays in between. Or it can write a prompt text and wait for user input. Also this function may receive line text in parts because of limited buffer size etc.
 	/// </remarks>
@@ -288,9 +288,9 @@ public sealed unsafe class consoleProcess : IDisposable {
 	/// </summary>
 	/// <param name="timeout">Timeout, ms. The function returns <c>false</c> if did not receive more text during that time. If -1, returns <c>true</c> without waiting (next <see cref="Read"/> will wait).</param>
 	/// <returns><c>true</c> if received more text or if <i>timeout</i> is -1.</returns>
-	/// <exception cref="InvalidOperationException"><see cref="IsLine"/> <c>true</c>. Or multiple <b>Wait</b> without <b>Read</b>.</exception>
+	/// <exception cref="InvalidOperationException"><see cref="IsLine"/> <c>true</c>. Or multiple <see cref="Wait"/> without <see cref="Read"/>.</exception>
 	/// <remarks>
-	/// If returns <c>true</c>, next <see cref="Read"/> will get the old text + new text. If the console process ends while waiting, next <b>Read</b> will get the old text, and <see cref="IsLine"/> will be <c>true</c>.
+	/// If returns <c>true</c>, next <see cref="Read"/> will get the old text + new text. If the console process ends while waiting, next <c>Read</c> will get the old text, and <see cref="IsLine"/> will be <c>true</c>.
 	/// </remarks>
 	public bool Wait(int timeout = -1) {
 		if (IsLine) throw new InvalidOperationException("IsLine true");
@@ -365,17 +365,17 @@ public sealed unsafe class consoleProcess : IDisposable {
 	/// <see cref="Read"/> sets this property = <c>true</c> if in console output the line text ended with newline characters; <c>false</c> if not.
 	/// </summary>
 	/// <remarks>
-	/// If returns <c>false</c>, the text returned by the last <b>Read</b> is either a prompt (incomplete line that asks for user input) or an incomplete line. You can use <see cref="Wait"/> to wait for more text.
+	/// If returns <c>false</c>, the text returned by the last <see cref="Read"/> is either a prompt (incomplete line that asks for user input) or an incomplete line. You can use <see cref="Wait"/> to wait for more text.
 	/// </remarks>
 	public bool IsLine { get; private set; }
 	
 	///// <summary>
-	///// Returns <c>true</c> if the last <b>ReadX</b> function retrieved text from the standard error stream; <c>false</c> if from the standard output stream.
+	///// Returns <c>true</c> if the last <c>ReadX</c> function retrieved text from the standard error stream; <c>false</c> if from the standard output stream.
 	///// </summary>
 	//public bool IsError { get; private set; }
 	
 	/// <summary>
-	/// Returns <c>true</c> if a <b>ReadX</b> function detected that the console output stream is closed. The process is ended or ending.
+	/// Returns <c>true</c> if a <c>ReadX</c> function detected that the console output stream is closed. The process is ended or ending.
 	/// </summary>
 	public bool Ended { get; private set; }
 	

@@ -69,7 +69,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Same as <b>GetName</b>, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
+		/// Same as <c>GetName</c>, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
 		/// </summary>
 		internal static string GetNameCached_(wnd w, int processId, bool fullPath = false) {
 			if (processId == 0) return null;
@@ -366,8 +366,8 @@ namespace Au {
 		/// </summary>
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="processId">Process id.</param>
-		/// <param name="created">Creation time. As absolute <ms>FILETIME</ms>, UTC. If you need <b>DateTime</b>, use <see cref="DateTime.FromFileTimeUtc"/>.</param>
-		/// <param name="executed">Amount of time spent executing code (using CPU). As <ms>FILETIME</ms>. If you need <b>TimeSpan</b>, use <see cref="TimeSpan.FromTicks"/>.</param>
+		/// <param name="created">Creation time. As absolute <ms>FILETIME</ms>, UTC. If you need <see cref="DateTime"/>, use <see cref="DateTime.FromFileTimeUtc"/>.</param>
+		/// <param name="executed">Amount of time spent executing code (using CPU). As <ms>FILETIME</ms>. If you need <see cref="TimeSpan"/>, use <see cref="TimeSpan.FromTicks"/>.</param>
 		public static bool getTimes(int processId, out long created, out long executed) {
 			created = 0; executed = 0;
 			using var ph = Handle_.OpenProcess(processId);
@@ -730,7 +730,7 @@ namespace Au {
 		internal static bool IsLaProcess_;
 		
 		/// <summary>
-		/// After <i>afterMS</i> milliseconds invokes GC and calls API <b>SetProcessWorkingSetSize</b>.
+		/// After <i>afterMS</i> milliseconds invokes GC and calls API <c>SetProcessWorkingSetSize</c>.
 		/// </summary>
 		internal static void ThisProcessMinimizePhysicalMemory_(int afterMS) {
 			Task.Delay(afterMS).ContinueWith(_ => {
@@ -751,7 +751,9 @@ namespace Au {
 		/// Before this process exits, either normally or on unhandled exception.
 		/// </summary>
 		/// <remarks>
-		/// The event handler is called on <see cref="AppDomain.ProcessExit"/> (then the parameter is <c>null</c>) and <see cref="AppDomain.UnhandledException"/> (then the parameter is <b>Exception</b>).
+		/// The event handler is called on:
+		/// <br/>• <see cref="AppDomain.ProcessExit"/>, with parameter = <c>null</c>.
+		/// <br/>• <see cref="AppDomain.UnhandledException"/>, with parameter = the <see cref="Exception"/>.
 		/// </remarks>
 		public static event Action<Exception> thisProcessExit {
 			add {
@@ -796,7 +798,7 @@ namespace Au {
 		/// Calls and removes all <see cref="thisProcessExit"/> event handlers.
 		/// </summary>
 		/// <remarks>
-		/// Call this if <b>thisProcessExit</b> event handlers don't run because this process is terminated before it. For example when current session is ending (shutdown, restart, logoff); to detect it can be used <b>Application.SessionEnding</b>, <b>Application.OnSessionEnding</b> or <b>WM_QUERYENDSESSION</b>.
+		/// Call this if <see cref="thisProcessExit"/> event handlers don't run because this process is terminated before it. For example when current session is ending (shutdown, restart, logoff); to detect it can be used <c>Application.SessionEnding</c>, <c>Application.OnSessionEnding</c> or <ms>WM_QUERYENDSESSION</ms>.
 		/// </remarks>
 		public static void thisProcessExitInvoke() {
 			var k = _eventExit;

@@ -6,7 +6,7 @@ namespace Au {
 	/// Gets icons from/of files etc. Contains native icon handle.
 	/// </summary>
 	/// <remarks>
-	/// Native icons must be destroyed. An <b>icon</b> variable destroys its native icon when disposing. To dispose, call <b>Dispose</b> or use <c>using</c> statement. Or use functions like <see cref="ToGdipBitmap"/>, <see cref="ToWpfImage"/>; by default they dispose the <b>icon</b> variable. It's OK to not dispose if you use few icons; GC will do it.
+	/// Native icons must be destroyed. An <c>icon</c> variable destroys its native icon when disposing. To dispose, call <see cref="Dispose"/> or use <c>using</c> statement. Or use functions like <see cref="ToGdipBitmap"/>, <see cref="ToWpfImage"/>; by default they dispose the <see cref="icon"/> variable. It's OK to not dispose if you use few icons; GC will do it.
 	/// </remarks>
 	public class icon : IDisposable { //rejected: base SafeHandle.
 		IntPtr _handle;
@@ -85,7 +85,7 @@ namespace Au {
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="flags"></param>
 		/// <remarks>
-		/// <b>ITEMIDLIST</b> can be of any file, folder, URL or a non-filesystem shell object. See <see cref="Pidl.ToHexString"/>.
+		/// <c>ITEMIDLIST</c> can be of any file, folder, URL or a non-filesystem shell object. See <see cref="Pidl.ToHexString"/>.
 		/// </remarks>
 		public static icon of(string file, int size = 16, IconGetFlags flags = 0) {
 			using var ds = new _DebugSpeed(file);
@@ -99,10 +99,10 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Gets icon of a file or other shell object specified as <b>ITEMIDLIST</b>.
+		/// Gets icon of a file or other shell object specified as <c>ITEMIDLIST</c>.
 		/// </summary>
 		/// <returns><c>null</c> if failed.</returns>
-		/// <param name="pidl"><b>ITEMIDLIST</b>.</param>
+		/// <param name="pidl"><c>ITEMIDLIST</c>.</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		public static icon ofPidl(Pidl pidl, int size = 16) {
 			using var ds = new _DebugSpeed(pidl);
@@ -429,7 +429,7 @@ namespace Au {
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="resourceId">Native resource id. Default <ms>IDI_APPLICATION</ms> (C# compilers add app icon with this id).</param>
 		/// <remarks>
-		/// If role <b>miniProgram</b> (default), at first looks in main assembly (<c>.dll</c>); if not found there, looks in <c>.exe</c> file. Else only in <c>.exe</c> file.
+		/// If role <c>miniProgram</c> (default), at first looks in main assembly (<c>.dll</c>); if not found there, looks in <c>.exe</c> file. Else only in <c>.exe</c> file.
 		/// 
 		/// The icon is cached and protected from destroying. Don't need to destroy it, and not error to do it.
 		/// </remarks>
@@ -459,7 +459,7 @@ namespace Au {
 		/// <remarks>
 		/// Calls API <ms>LoadIconMetric</ms>.
 		/// 
-		/// The icon can be in main assembly (if role <b>miniProgram</b>) or in the program file (<c>.exe</c>). If not found, loads standard icon, see API <b>LoadIconMetric</b>.
+		/// The icon can be in main assembly (if role <c>miniProgram</c>) or in the program file (<c>.exe</c>). If not found, loads standard icon, see API <ms>LoadIconMetric</ms>.
 		/// </remarks>
 		public static icon trayIcon(int resourceId = Api.IDI_APPLICATION/*, bool big = false*/) {
 #if true
@@ -489,7 +489,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Gets native module handle of exe or dll that contains specified icon. Returns default if no icon.
-		/// If role <b>miniProgram</b>, at first looks in main assembly (<c>.dll</c>).
+		/// If role <c>miniProgram</c>, at first looks in main assembly (<c>.dll</c>).
 		/// </summary>
 		internal static IntPtr GetAppIconModuleHandle_(int resourceId) {
 			if (script.role == SRole.MiniProgram) {
@@ -534,7 +534,7 @@ namespace Au {
 		/// Sends <ms>WM_SETICON</ms> message.
 		/// </summary>
 		/// <param name="w"></param>
-		/// <param name="big"><b>ICON_BIG</b>.</param>
+		/// <param name="big"><c>ICON_BIG</c>.</param>
 		public void SetWindowIcon(wnd w, bool big) {
 			w.Send(Api.WM_SETICON, big ? 1 : 0, _handle);
 		}
@@ -567,7 +567,7 @@ namespace Au {
 		/// <summary>
 		/// Creates <see cref="System.Drawing.Icon"/> object that shares native icon handle with this object.
 		/// </summary>
-		/// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c>.</returns>
+		/// <returns><c>null</c> if <see cref="Handle"/> is <c>default(IntPtr)</c>.</returns>
 		public Icon ToGdipIcon() {
 			if (_handle == default) return null;
 			var R = Icon.FromHandle(_handle);
@@ -579,7 +579,7 @@ namespace Au {
 		/// <summary>
 		/// Converts native icon to GDI+ bitmap object.
 		/// </summary>
-		/// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c> or if fails to convert.</returns>
+		/// <returns><c>null</c> if <see cref="Handle"/> is <c>default(IntPtr)</c> or if fails to convert.</returns>
 		/// <param name="destroyIcon">
 		/// If <c>true</c> (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If <c>false</c>, later will need to dispose this variable.
@@ -599,7 +599,7 @@ namespace Au {
 		/// <summary>
 		/// Converts native icon to WPF image object.
 		/// </summary>
-		/// <returns><c>null</c> if <b>Handle</b> is <c>default(IntPtr)</c> or if fails to convert.</returns>
+		/// <returns><c>null</c> if <see cref="Handle"/> is <c>default(IntPtr)</c> or if fails to convert.</returns>
 		/// <param name="destroyIcon">
 		/// If <c>true</c> (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If <c>false</c>, later will need to dispose this variable.
@@ -794,7 +794,7 @@ namespace Au {
 		/// <summary>
 		/// Gets image of a Windows Store App.
 		/// </summary>
-		/// <returns><b>Bitmap</b> object, or <c>null</c> if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
+		/// <returns><c>Bitmap</c> object, or <c>null</c> if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
 		/// <param name="shellString">String like <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.</param>
 		/// <param name="size">Desired width and height.</param>
 		public static Bitmap winStoreAppImage(string shellString, int size = 16) {
@@ -803,9 +803,9 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Gets image of a Windows Store App. This overload accepts a <b>Pidl</b> instead of a shell string.
+		/// Gets image of a Windows Store App. This overload accepts a <see cref="Pidl"/> instead of a shell string.
 		/// </summary>
-		/// <returns><b>Bitmap</b> object, or <c>null</c> if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
+		/// <returns><c>Bitmap</c> object, or <c>null</c> if failed. Its size may be != <i>size</i>; let the caller scale it when drawing.</returns>
 		public static Bitmap winStoreAppImage(Pidl pidl, int size = 16) {
 			var path = _GetWinStoreAppImagePath(pidl, size); if (path == null) return null;
 			//var r = Image.FromFile(path) as Bitmap; //no, locks file

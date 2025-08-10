@@ -56,7 +56,7 @@ public class CheckListDialog {
 	/// <summary>
 	/// Adds multiple checkboxes.
 	/// </summary>
-	/// <param name="items">Array, <b>List</b>, etc containing text strings for checkboxes.</param>
+	/// <param name="items">Array, <c>List</c>, etc containing text strings for checkboxes.</param>
 	/// <param name="check">Whether to check all checkboxes.</param>
 	public void Add(IEnumerable<string> items, bool check = false) {
 		foreach (var v in items) Add(v, check);
@@ -86,7 +86,7 @@ public class CheckListDialog {
 	string _ok, _cancel;
 	
 	/// <summary>
-	/// Gets the <b>wpfBuilder</b> that builds the dialog.
+	/// Gets the <see cref="wpfBuilder"/> that builds the dialog.
 	/// You can use it to add more controls, change window properties, etc; see example.
 	/// </summary>
 	/// <example>
@@ -107,7 +107,7 @@ public class CheckListDialog {
 	/// </summary>
 	/// <param name="owner">
 	/// Owner window, or an element in it.
-	/// If used, sets <b>ShowInTaskbar</b> = <c>false</c>. Else sets <b>Topmost</b> = <c>true</c>, unless <see cref="dialog.options.topmostIfNoOwnerWindow"/> is <c>false</c> or the active window belongs to this process.
+	/// If used, sets <see cref="Window.ShowInTaskbar"/> = <c>false</c>. Else sets <see cref="Window.Topmost"/> = <c>true</c>, unless <see cref="dialog.options.topmostIfNoOwnerWindow"/> is <c>false</c> or the active window belongs to this process.
 	/// </param>
 	/// <returns><c>true</c> if pressed <b>OK</b>.</returns>
 	public bool ShowDialog(DependencyObject owner = null) {
@@ -134,19 +134,19 @@ public class CheckListDialog {
 	
 	/// <summary>
 	/// Gets a bit array where elements represent checkbox states (<c>true</c> if checked).
-	/// This property is set by <b>ShowDialog</b>.
+	/// This property is set by <see cref="ShowDialog"/>.
 	/// </summary>
 	public BitArray ResultBits { get; private set; }
 	
 	/// <summary>
 	/// Gets 0-based indices of checked items.
-	/// This property is set by <b>ShowDialog</b>.
+	/// This property is set by <see cref="ShowDialog"/>.
 	/// </summary>
 	public int[] ResultIndices { get; private set; }
 	
 	/// <summary>
 	/// Gets strings of checked items.
-	/// This property is set by <b>ShowDialog</b>.
+	/// This property is set by <see cref="ShowDialog"/>.
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[

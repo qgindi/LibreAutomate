@@ -36,16 +36,16 @@ public unsafe class elmFinder {
 
 	/// <summary>
 	/// The requested property of the found UI element, depending on <see cref="ResultGetProperty"/>.
-	/// <c>null</c> if: 1. UI element not found. 2. <b>ResultGetProperty</b> not used or is <c>'-'</c>. 3. Failed to get the property.
+	/// <c>null</c> if: 1. UI element not found. 2. <c>ResultGetProperty</c> not used or is <c>'-'</c>. 3. Failed to get the property.
 	/// </summary>
 	/// <remarks>
-	/// The type depends on the property. Most properties are <b>String</b>. Others: <see cref="elm.Rect"/>, <see cref="elm.State"/>, <see cref="elm.WndContainer"/>, <see cref="elm.HtmlAttributes"/>.
+	/// The type depends on the property. Most properties are of type <c>String</c>. Others: <see cref="elm.Rect"/>, <see cref="elm.State"/>, <see cref="elm.WndContainer"/>, <see cref="elm.HtmlAttributes"/>.
 	/// </remarks>
 	public object ResultProperty { get; private set; }
 
 	/// <summary>
 	/// Set this when you need only some property of the UI element (name, etc) and not the UI element itself.
-	/// The value is a character like with <see cref="elm.GetProperties"/>, for example <c>'n'</c> for <b>Name</b>. Use <c>'-'</c> if you don't need any property.
+	/// The value is a character like with <see cref="elm.GetProperties"/>, for example <c>'n'</c> for <c>Name</c>. Use <c>'-'</c> if you don't need any property.
 	/// </summary>
 	/// <exception cref="ArgumentException">Used parameter <i>also</i>, <i>navig</i> or <i>next</i>.</exception>
 	public char ResultGetProperty {
@@ -119,7 +119,7 @@ public unsafe class elmFinder {
 	/// Cannot be used with <see cref="FindAll"/>, unless it is not in the last part of path.
 	/// </param>
 	/// <param name="navig">If not <c>null</c>, after finding the specified UI element will call <see cref="elm.Navigate"/> with this string and use its result instead of the found element.</param>
-	/// <exception cref="ArgumentException"><i>flags</i> contains <b>UIA</b> or <b>ClientArea</b> when appending (only the first finder can have these flags).</exception>
+	/// <exception cref="ArgumentException"><i>flags</i> contains <c>UIA</c> or <c>ClientArea</c> when appending (only the first finder can have these flags).</exception>
 	/// <remarks>
 	/// To create code for this function, use tool <b>Find UI element</b>.
 	/// 
@@ -135,7 +135,7 @@ public unsafe class elmFinder {
 	/// 
 	/// Can have a prefix:
 	/// - <c>"web:"</c> - search only in the visible web page, not in whole window. Example: <c>"web:LINK"</c>.\
-	///   Supports Chrome, Firefox, Internet Explorer (IE) and apps that use same code (Edge, Opera...). With other windows, searches in the first found visible UI element that has <b>DOCUMENT</b> role.\
+	///   Supports Chrome, Firefox, Internet Explorer (IE) and apps that use same code (Edge, Opera...). With other windows, searches in the first found visible UI element that has <c>DOCUMENT</c> role.\
 	///   Tip: To search only NOT in web pages, use <i>prop</i> <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
 	/// - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If <i>w</i> window class name starts with <c>"Mozilla"</c>, can be used <c>"web:"</c> instead.
 	/// - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If <i>w</i> window class name starts with <c>"Chrome"</c>, can be used <c>"web:"</c> instead.
@@ -144,8 +144,8 @@ public unsafe class elmFinder {
 	/// 
 	/// Prefix cannot be used:
 	/// - if <i>prop</i> contains <c>"id"</c> or <c>"class"</c>;
-	/// - with flags <b>UIA</b>, <b>ClientArea</b>;
-	/// - when searching in <b>elm</b>.
+	/// - with flags <c>UIA</c>, <c>ClientArea</c>;
+	/// - when searching in <see cref="elm"/>.
 	/// 
 	/// <h5>About the <i>prop</i> parameter</h5>
 	/// 
@@ -175,7 +175,7 @@ public unsafe class elmFinder {
 	/// - <c>"uiacn"</c> - <see cref="elm.UiaCN"/>.
 	/// - <c>"url"</c> - URL of the container DOCUMENT in Chromium-based web browser. Used together with role prefix <c>"web:"</c> or <c>"chrome:"</c>. Use when the document is a side panel or developer tools or a special page like Settings. Don't need (but can be used too) when the document is a web page (URL starts with <c>"https:"</c>, <c>"http:"</c> or <c>"file:"</c>).
 	/// - <c>"maxcc"</c> - when searching, skip children of UI elements that have more than this number of direct children. Default 10000, min 1, max 1000000.\
-	///   It can make faster. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc <b>TABLE</b> has one billion children.
+	///   It can make faster. It also prevents hanging or crashing when a UI element in the UI element tree has large number of children. For example OpenOffice Calc <c>TABLE</c> has one billion children.
 	/// - <c>"notin"</c> - when searching, skip children of UI elements that have these roles. It can make faster.\
 	///   Example: <c>"notin=TREE,LIST,TOOLBAR"</c>.\
 	///   Roles in the list must be separated with <c>","</c> or <c>", "</c>. Case-sensitive, not wildcard. See also: <see cref="EFFlags.MenuToo"/>.
@@ -202,7 +202,7 @@ public unsafe class elmFinder {
 	/// <summary>
 	/// Gets or sets next finder in path (immediately after this finder).
 	/// </summary>
-	/// <exception cref="ArgumentException"><i>flags</i> contains <b>UIA</b> or <b>ClientArea</b>.</exception>
+	/// <exception cref="ArgumentException"><i>flags</i> contains <c>UIA</c> or <c>ClientArea</c>.</exception>
 	/// <remarks>
 	/// The setter creates or modifies a path (a chain of linked finders). Unlike <see cref="this"/>, which appends to the last finder in path, this function appends to this finder.
 	/// </remarks>
@@ -256,9 +256,9 @@ public unsafe class elmFinder {
 	/// - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
 	/// - <i>prop</i> contains unknown property names or errors in wildcard expressions.
 	/// - <i>navig</i> string is invalid.
-	/// - <i>flags</i> has <b>UIA</b> or <b>ClientArea</b> when searching in web page (role prefix <c>"web:"</c> etc) or <b>elm</b>.
-	/// - <i>role</i> has a prefix (<c>"web:"</c> etc) when searching in <b>elm</b>.
-	/// - <see cref="elm.Item"/> not 0 when searching in <b>elm</b>.
+	/// - <i>flags</i> has <c>UIA</c> or <c>ClientArea</c> when searching in web page (role prefix <c>"web:"</c> etc) or <see cref="elm"/>.
+	/// - <i>role</i> has a prefix (<c>"web:"</c> etc) when searching in <see cref="elm"/>.
+	/// - <see cref="elm.Item"/> not 0 when searching in <see cref="elm"/>.
 	/// </exception>
 	/// <exception cref="AuWndException">Invalid window handle (0 or closed). See also <see cref="In(wnd)"/>.</exception>
 	/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
@@ -268,7 +268,7 @@ public unsafe class elmFinder {
 	/// More info in <see cref="elm"/> topic.
 	/// </remarks>
 	/// <example>
-	/// Find link <c>"Example"</c> in web page, and click. Wait max 5 s. Throw <b>NotFoundException</b> if not found.
+	/// Find link <c>"Example"</c> in web page, and click. Wait max 5 s. Throw <see cref="NotFoundException"/> if not found.
 	/// <code><![CDATA[
 	/// var w = wnd.find(0, "* Chrome");
 	/// w.Elm["web:LINK", "Example"].Find(5).Invoke();
@@ -285,7 +285,7 @@ public unsafe class elmFinder {
 	public elm Find() => Exists() ? Result : null;
 
 	/// <summary>
-	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>.
+	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <see cref="NotFoundException"/>.
 	/// </summary>
 	/// <returns>If found, returns <see cref="Result"/>. Else throws exception or returns <c>null</c> (if <i>wait</i> negative).</returns>
 	/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
@@ -301,7 +301,7 @@ public unsafe class elmFinder {
 	public bool Exists() => Find_(_elm != null, _wnd, _elm);
 
 	/// <summary>
-	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <b>NotFoundException</b>. Like <see cref="Find(Seconds)"/>, just different return type.
+	/// Finds the first matching descendant UI element in the window or UI element. Can wait and throw <see cref="NotFoundException"/>. Like <see cref="Find(Seconds)"/>, just different return type.
 	/// </summary>
 	/// <returns>If found, sets <see cref="Result"/> and returns <c>true</c>. Else throws exception or returns <c>false</c> (if <i>wait</i> negative).</returns>
 	/// <inheritdoc cref="Find(Seconds)" path="//param|//exception"/>
@@ -319,7 +319,7 @@ public unsafe class elmFinder {
 	/// <remarks>
 	/// Same as <see cref="Find(Seconds)"/>, except:
 	/// - 0 timeout means infinite.
-	/// - on timeout throws <b>TimeoutException</b>, not <b>NotFoundException</b>.
+	/// - on timeout throws <see cref="TimeoutException"/>, not <see cref="NotFoundException"/>.
 	/// </remarks>
 	/// <inheritdoc cref="Find()" path="/exception"/>
 	public elm Wait(Seconds timeout) => Find_(_elm != null, _wnd, _elm, timeout) ? Result : null;
@@ -557,7 +557,7 @@ public unsafe class elmFinder {
 	///// <param name="controls">Control properties. This functions searches in all matching controls.</param>
 	///// <exception cref="Exception">Exceptions of <see cref="Find(wnd)"/>.</exception>
 	///// <remarks>
-	///// Functions <b>Find</b> and <b>Exists</b> differ only in their return types.
+	///// Functions <c>Find</c> and <c>Exists</c> differ only in their return types.
 	///// 
 	///// Alternatively you can specify control class name or id in role. How this function is different: 1. Allows to specify more control properties. 2. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
 	///// </remarks>

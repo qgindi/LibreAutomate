@@ -393,8 +393,13 @@ partial class CiStyling {
 		return false;
 	}
 	
-	public static int SkipProtected(KScintilla sci, int pos8) {
-		while (IsProtected(sci, pos8)) pos8++;
+	public static int SkipProtected(KScintilla sci, int pos8, bool back) {
+		if (back) {
+			while (pos8 >= 0 && IsProtected(sci, pos8)) pos8--;
+			if (pos8 < 0) return SkipProtected(sci, 0, false);
+		} else {
+			while (IsProtected(sci, pos8)) pos8++;
+		}
 		return pos8;
 	}
 }

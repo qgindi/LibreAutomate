@@ -8,7 +8,7 @@ namespace Au.More;
 /// </remarks>
 public static class ScriptEditor {
 	/// <summary>
-	/// Finds editor's message-only window used with <b>WM_COPYDATA</b> etc.
+	/// Finds editor's message-only window used with <c>WM_COPYDATA</c> etc.
 	/// Uses <see cref="script.s_wndEditorMsg"/> or <see cref="wnd.Cached_"/>.
 	/// </summary>
 	internal static wnd WndMsg_ {
@@ -62,7 +62,7 @@ public static class ScriptEditor {
 	/// <param name="dontWait">Don't wait until the command finishes executing. For example, if it shows a modal dialog, don't wait until it is closed.</param>
 	/// <param name="activateWindow">Activate the main window. Default <c>true</c>. Some commands may not work correctly if the window isn't active.</param>
 	/// <remarks>
-	/// Shows the main window, regardless of <i>activateWindow</i>. Waits while it is disabled or not finished loading, unless script role is <b>editorExtension</b> and it runs in the editor's main thread (then not invoke the command).
+	/// Shows the main window, regardless of <i>activateWindow</i>. Waits while it is disabled or not finished loading, unless script role is <c>editorExtension</c> and it runs in the editor's main thread (then not invoke the command).
 	/// Does not invoke the command if the menu item is disabled or if it's a submenu-item.
 	/// </remarks>
 	public static void InvokeCommand(string command, bool? check = null, bool dontWait = false, bool activateWindow = true) {
@@ -84,7 +84,7 @@ public static class ScriptEditor {
 	/// </summary>
 	/// <param name="command">Command name. If <c>""</c> or invalid, prints all names.</param>
 	/// <remarks>
-	/// Shows the main window. Waits while it is disabled or not finished loading, unless script role is <b>editorExtension</b> and it runs in the editor's main thread (then returns <b>Disabled</b>).
+	/// Shows the main window. Waits while it is disabled or not finished loading, unless script role is <c>editorExtension</c> and it runs in the editor's main thread (then returns <c>Disabled</c>).
 	/// </remarks>
 	public static ECommandState GetCommandState(string command) {
 		var w = WndMsg_; if (w.Is0) return 0;
@@ -138,7 +138,7 @@ public static class ScriptEditor {
 	}
 	
 	/// <summary>
-	/// Editor sets this. Library uses it to avoid sendmessage when role <b>editorExtension</b>.
+	/// Editor sets this. Library uses it to avoid sendmessage when role <c>editorExtension</c>.
 	/// </summary>
 	internal static Func<string, EGetIcon, string> IconNameToXaml_;
 	
@@ -186,8 +186,8 @@ public static class ScriptEditor {
 	/// </summary>
 	/// <param name="files">
 	/// List of tuples <c>(string file, Action action)</c>:
-	/// <br/>• <b>file</b> - a class file from current project; must be filename without ".cs" and path.
-	/// <br/>• <b>action</b> - a callback function to call if that file is the active file in editor.
+	/// <br/>• <c>file</c> - a class file from current project; must be filename without ".cs" and path.
+	/// <br/>• <c>action</c> - a callback function to call if that file is the active file in editor.
 	/// </param>
 	/// <remarks>
 	/// A script project folder can contain one script file at the top, and any number of class files. When you click <b>Run</b>, the code execution starts from the script, even if a class file is currently active in editor. But sometimes you may want to execute just a function in the current class file, and skip script code. The example shows how to do it easily.
@@ -234,9 +234,9 @@ public static class ScriptEditor {
 	///// </summary>
 	///// <remarks>
 	///// Default folders are:
-	///// <b>ThisAppDocuments</b> - <c>folders.Documents + "LibreAutomate"</c>.
-	///// <b>ThisAppDataLocal</b> - <c>folders.LocalAppData + "LibreAutomate"</c>.
-	///// <b>ThisAppTemp</b> - <c>folders.Temp + "LibreAutomate"</c>.
+	///// <c>ThisAppDocuments</c> - <c>folders.Documents + "LibreAutomate"</c>.
+	///// <c>ThisAppDataLocal</c> - <c>folders.LocalAppData + "LibreAutomate"</c>.
+	///// <c>ThisAppTemp</c> - <c>folders.Temp + "LibreAutomate"</c>.
 	///// 
 	///// Here <i>path</i> is either full path (like <c>C:\folder</c> or <c>%folders.Documents%\folder</c>) or path relative to the program's folder (like <c>ChildFolder</c> or <c>..\SiblingFolder</c>).
 	///// </remarks>

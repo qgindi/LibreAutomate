@@ -425,9 +425,9 @@ namespace Au {
 		/// </summary>
 		/// <param name="rects">Rectangles.</param>
 		/// <param name="indexLabels">Draw labels. The label text is the rectangle index in <i>rects</i>.</param>
-		/// <param name="labelOptions">Label options. If <b>char</b> - label placement relative to rectangle: <c>'L'</c> (left), <c>'R'</c> (right), <c>'T'</c> (top), <c>'B'</c> (bottom) or <c>'I'</c> (inside). Default: <c>'L'</c>.</param>
+		/// <param name="labelOptions">Label options. If <c>char</c> - label placement relative to rectangle: <c>'L'</c> (left), <c>'R'</c> (right), <c>'T'</c> (top), <c>'B'</c> (bottom) or <c>'I'</c> (inside). Default: <c>'L'</c>.</param>
 		/// <remarks>
-		/// If this function called, will draw multiple rectangles instead of single (unless <i>rects</i> is <c>null</c>). <b>Opacity</b> should be 0 (default).
+		/// If this function called, will draw multiple rectangles instead of single (unless <i>rects</i> is <c>null</c>). <c>Opacity</c> should be 0 (default).
 		/// </remarks>
 		public void SetRects(IEnumerable<RECT> rects, bool indexLabels = false, ORLabelOptions labelOptions = null) {
 			SetRects(indexLabels ? rects?.Select((r, i) => (r, i.ToS())) : rects?.Select(r => (r, (string)null)), labelOptions);
@@ -576,7 +576,7 @@ namespace Au {
 		/// </summary>
 		/// <remarks>
 		/// This property can be changed after creating OSD window.
-		/// No border if <see cref="OsdWindow.Opacity"/>==0 or <b>BorderColor</b>==<see cref="BackColor"/>.
+		/// No border if <see cref="OsdWindow.Opacity"/>==0 or <c>BorderColor</c>==<see cref="BackColor"/>.
 		/// </remarks>
 		public ColorInt BorderColor {
 			get => _borderColor;
@@ -622,8 +622,8 @@ namespace Au {
 		public TFFlags TextFormatFlags { get; set; } = TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS;
 		
 		/// <summary>
-		/// Icon or image at the left. Can be <see cref="icon"/>, <b>System.Drawing.Icon</b> or <b>System.Drawing.Image</b>. Any size.
-		/// For example <b>System.Drawing.SystemIcons.Information</b> or <c>icon.stock(StockIcon.INFO)</c> or <c>ImageUtil.LoadGdipBitmapFromXaml("XAML copied from the Icons tool. You can edit, Width, Height and Fill (color).", screen.primary.Dpi)</c>.
+		/// Icon or image at the left. Can be <see cref="icon"/>, <see cref="System.Drawing.Icon"/> or <see cref="System.Drawing.Image"/>. Any size.
+		/// For example <c>System.Drawing.SystemIcons.Information</c> or <c>icon.stock(StockIcon.INFO)</c> or <c>ImageUtil.LoadGdipBitmapFromXaml("XAML copied from the Icons tool. You can edit, Width, Height and Fill (color).", screen.primary.Dpi)</c>.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
@@ -869,7 +869,7 @@ namespace Au {
 		/// <param name="font"><inheritdoc cref="Font" path="/summary/node()"/>Sets <see cref="Font"/>.</param>
 		/// <param name="name">OSD window name.<br/>Sets <see cref="OsdWindow.Name"/>.</param>
 		/// <param name="showMode">Sets <see cref="ShowMode"/>.</param>
-		/// <param name="dontShow">Don't call <see cref="Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
+		/// <param name="dontShow">Don't call <see cref="Show"/>. The caller can use the return value to set some other properties and call <c>Show</c>.</param>
 		/// <returns>Returns an <see cref="osdText"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
 		/// Also sets these properties: <see cref="ClickToClose"/>=<c>true</c>, <see cref="Shadow"/>=<c>true</c>.
@@ -951,7 +951,7 @@ namespace Au {
 			return o;
 		}
 		
-		/// <summary>Default font for <see cref="showText"/> and <b>osdText</b>. Default: standard GUI font (usually <c>Segoe UI</c>), size 12.</summary>
+		/// <summary>Default font for <see cref="showText"/> and <see cref="osdText"/>. Default: standard GUI font (usually <c>Segoe UI</c>), size 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static FontNSS defaultSmallFont { get => s_smallFont; set => s_smallFont = value ?? throw new ArgumentNullException(); }
 		static FontNSS s_smallFont = new(12);
@@ -961,23 +961,23 @@ namespace Au {
 		public static FontNSS defaultBigFont { get => s_bigFont; set => s_bigFont = value ?? throw new ArgumentNullException(); }
 		static FontNSS s_bigFont = new(24);
 		
-		/// <summary>Default text color for <see cref="showText"/> and <b>osdText</b>. Default: 0x(dark gray).</summary>
+		/// <summary>Default text color for <see cref="showText"/> and <see cref="osdText"/>. Default: 0x(dark gray).</summary>
 		public static ColorInt defaultTextColor { get; set; } = 0x404040;
 		
-		/// <summary>Default border color for <see cref="showText"/> and <b>osdText</b>. Default: 0x404040 (dark gray).</summary>
+		/// <summary>Default border color for <see cref="showText"/> and <see cref="osdText"/>. Default: 0x404040 (dark gray).</summary>
 		public static ColorInt defaultBorderColor { get; set; } = 0x404040;
 		
-		/// <summary>Default background color for <see cref="showText"/> and <b>osdText</b>. Default: 0xFFFFF0 (light yellow).</summary>
+		/// <summary>Default background color for <see cref="showText"/> and <see cref="osdText"/>. Default: 0xFFFFF0 (light yellow).</summary>
 		public static ColorInt defaultBackColor { get; set; } = 0xFFFFF0;
 		
-		/// <summary>Default text color for <see cref="showTransparentText"/>. Default: 0x8A2BE2 (<b>Color.BlueViolet</b>).</summary>
+		/// <summary>Default text color for <see cref="showTransparentText"/>. Default: <c>0x8A2BE2</c> (<c>Color.BlueViolet</c>).</summary>
 		public static ColorInt defaultTransparentTextColor { get; set; } = 0x8A2BE2;
 		
 		/// <summary>
 		/// Default screen when <see cref="XY"/> is not set.
-		/// The <b>screen</b> must be lazy or empty.
+		/// The <see cref="screen"/> must be lazy or empty.
 		/// </summary>
-		/// <exception cref="ArgumentException"><b>screen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
+		/// <exception cref="ArgumentException"><see cref="screen"/> with <c>Handle</c>. Must be lazy (with <see cref="screen.LazyFunc"/>) or empty.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// osdText.defaultScreen = screen.index(1, lazy: true);
@@ -998,10 +998,10 @@ namespace Au.Types {
 	/// Whether <see cref="osdText.Show"/> waits or shows the OSD window in this or new thread.
 	/// </summary>
 	/// <remarks>
-	/// If this thread has windows, any value can be used, but usually <b>Auto</b> (default) or <b>ThisThread</b> is the best.
+	/// If this thread has windows, any value can be used, but usually <c>Auto</c> (default) or <c>ThisThread</c> is the best.
 	/// </remarks>
 	public enum OsdMode {
-		/// <summary>Depends on <see cref="process.thisThreadHasMessageLoop"/>. If it is <c>true</c>, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
+		/// <summary>Depends on <see cref="process.thisThreadHasMessageLoop"/>. If it is <c>true</c>, uses <c>ThisThread</c>, else <c>StrongThread</c>. Does not wait.</summary>
 		Auto,
 		
 		/// <summary>

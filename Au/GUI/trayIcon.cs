@@ -287,7 +287,7 @@ namespace Au {
 		/// When received any message from the tray icon.
 		/// </summary>
 		/// <remarks>
-		/// Receives mouse messages, <b>NIN_</b> messages and some other. See <ms>Shell_NotifyIconW</ms>.
+		/// Receives mouse messages, <c>NIN_</c> messages and some other. See <ms>Shell_NotifyIconW</ms>.
 		/// </remarks>
 		public event Action<TIEventArgs> Message;
 		
@@ -295,8 +295,8 @@ namespace Au {
 		/// When default action should be invoked (on click, <c>Space</c>/<c>Enter</c>, automation/accessibility API).
 		/// </summary>
 		/// <remarks>
-		/// If clicked, the parameter contains message <b>NIN_SELECT</b> (1024) and mouse coordinates. Else <b>NIN_KEYSELECT</b> (1025) and top-left of the tray icon.
-		/// On double click there are two <b>Click</b> events. To distinguish click and double click events, use <see cref="Message"/> instead.
+		/// If clicked, the parameter contains message <c>NIN_SELECT</c> (1024) and mouse coordinates. Else <c>NIN_KEYSELECT</c> (1025) and top-left of the tray icon.
+		/// On double click there are two <c>Click</c> events. To distinguish click and double click events, use <see cref="Message"/> instead.
 		/// </remarks>
 		public event Action<TIEventArgs> Click;
 		
@@ -365,7 +365,7 @@ namespace Au {
 
 namespace Au.Types {
 	/// <summary>
-	/// Flags for <see cref="trayIcon.ShowNotification"/>. See <b>NIIF_</b> flags of API <ms>NOTIFYICONDATAW</ms>.
+	/// Flags for <see cref="trayIcon.ShowNotification"/>. See <c>NIIF_</c> flags of API <ms>NOTIFYICONDATAW</ms>.
 	/// </summary>
 	[Flags]
 	public enum TINFlags {
@@ -380,7 +380,7 @@ namespace Au.Types {
 #pragma warning restore
 		
 		/// <summary>
-		/// Flag <b>NIF_REALTIME</b>.
+		/// Flag <c>NIF_REALTIME</c>.
 		/// </summary>
 		Realtime = 0x10000000,
 	}

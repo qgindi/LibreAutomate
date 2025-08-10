@@ -115,7 +115,7 @@ class PanelFound {
 		b.Apply(_sci);
 	}
 	
-	public void SetFindInFilesResults(in WorkingState ws, SciTextBuilder b, PanelFind._TextToFind ttf, List<FileNode> files) {
+	public void SetFindInFilesResults(in WorkingState ws, SciTextBuilder b, PanelFind.TextToFind_ ttf, List<FileNode> files) {
 		if (!_IsSciOk(ws)) return;
 		b.Apply(_sci);
 		_sci.ttf = ttf;
@@ -203,10 +203,14 @@ class PanelFound {
 		foreach (var v in a) _CloseSci(v.sci);
 	}
 	
+	public void NextFound(bool previous) {
+		_sci?.NextFound(previous);
+	}
+	
 	class _KScintilla : KScintilla {
 		public readonly Found kind;
 		public bool isLocked, once;
-		public PanelFind._TextToFind ttf;
+		public PanelFind.TextToFind_ ttf;
 		public List<FileNode> files;
 		HashSet<FileNode> _openedFiles;
 		
@@ -302,10 +306,10 @@ class PanelFound {
 			if (AaRangeDataGet(false, pos8, out object o)) {
 				switch (o) {
 				case FileNode f:
-					_OpenLinkClicked(f);
+					_OpenLinkClicked(pos8, f);
 					break;
 				case CodeLink k:
-					if (_OpenLinkClicked(k.file)) {
+					if (_OpenLinkClicked(pos8, k.file)) {
 						timer.after(10, _ => {
 							var doc = Panels.Editor.ActiveDoc;
 							if (doc?.EFile != k.file || k.start >= doc.aaaLen16) return;
@@ -321,7 +325,7 @@ class PanelFound {
 					}
 					break;
 				case ReplaceInFileLink k:
-					if (_OpenLinkClicked(k.file, replaceAll: true)) {
+					if (_OpenLinkClicked(pos8, k.file, replaceAll: true)) {
 						timer.after(10, _ => {
 							if (Panels.Editor.ActiveDoc?.EFile != k.file) return;
 							Panels.Find.ReplaceAllInEditorFromFoundPanel_(ttf);
@@ -342,7 +346,7 @@ class PanelFound {
 			} else Debug_.Print(pos8);
 		}
 		
-		bool _OpenLinkClicked(FileNode f, bool replaceAll = false) {
+		bool _OpenLinkClicked(int pos8, FileNode f, bool replaceAll = false) {
 			if (App.Model.IsAlien(f)) return false;
 			if (f.IsFolder) f.SelectSingle();
 			else {
@@ -354,9 +358,20 @@ class PanelFound {
 			}
 			//add indicator to help the user to find this line later
 			aaaIndicatorClear(Indicators.FocusRect);
-			var v = aaaLineStartEndFromPos(false, aaaCurrentPos8);
+			var v = aaaLineStartEndFromPos(false, pos8);
 			aaaIndicatorAdd(Indicators.FocusRect, false, v.start..v.end);
 			return true;
+		}
+		
+		public void NextFound(bool previous) {
+			for (int line = aaaIndicatorFindFirst(Indicators.FocusRect, out var r1) ? aaaLineFromPos(false, r1.start) : -1; ;) {
+				line += (previous ? -1 : 1);
+				if ((uint)line >= aaaLineCount) break;
+				int pos = aaaLineStart(false, line);
+				if (!AaRangeDataGet(false, pos, out CodeLink k) || k.isHeading) continue;
+				_OnClickIndicLink(pos);
+				break;
+			}
 		}
 	}
 	
@@ -408,10 +423,12 @@ class PanelFound {
 		
 		public FileNode file => _file;
 		public int start => _start;
+		public bool isHeading { get; private set; }
 		
-		public CodeLink(FileNode file, int start) {
+		public CodeLink(FileNode file, int start, bool isHeading = false) {
 			_file = file;
 			_start = start;
+			this.isHeading = isHeading;
 			_deletedAt = -1;
 		}
 		

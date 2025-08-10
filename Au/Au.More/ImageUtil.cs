@@ -130,12 +130,12 @@ public static partial class ImageUtil {
 	/// <br/>• XAML icon name like <c>"*Pack.Icon color"</c> or <c>"*Pack.Icon color @size"</c> or <c>"*Pack1.Icon1 color1; *Pack2.Icon2 color2 %8,8,,"</c>. More info in Remarks.
 	/// </param>
 	/// <returns>
-	/// If <i>image</i> is XAML icon name or starts with <c>"&lt;"</c> or ends with <c>".xaml"</c> (case-insensitive), returns new WPF element of type specified by the XAML root element (uses <see cref="XamlReader"/>). Else returns <see cref="Image"/> with <b>Source</b> = <b>BitmapFrame</b> (uses <see cref="LoadWpfImage"/>).
+	/// If <i>image</i> is XAML icon name or starts with <c>"&lt;"</c> or ends with <c>".xaml"</c> (case-insensitive), returns new WPF element of type specified by the XAML root element (uses <see cref="XamlReader"/>). Else returns <see cref="Image"/> with <c>Source</c> = <see cref="BitmapFrame"/> (uses <see cref="LoadWpfImage"/>).
 	/// </returns>
 	/// <remarks>
 	/// <i>image</i> can be an XAML icon name from the <b>Icons</b> tool of LibreAutomate (LA), like <c>"*Pack.Icon color"</c>. Full format: <c>"[*&lt;library&gt;]*pack.name[ color][ @size][ %margin][;more icons]"</c>. Here parts enclosed in <c>[]</c> are optional. The color, size and margin parts can be in any order.
 	/// <br/>• color - <c>#RRGGBB</c> or color name (WPF). If 2 colors like <c>"#008000|#00FF00"</c>, the second color is for high contrast dark theme. If omitted, will use the system color of control text. Also can be like <c>"#008000|"</c> to use control text only for dark contrast theme, or <c>"|#00FF00"</c> for vice versa.
-	/// <br/>• size - icon size 1 to 16, like <c>"*Pack.Icon blue @12"</c>. Can be used to make the displayed icon smaller or in some cases less blurry. It is the logical width and height of the icon rendered at the center of a box of logical size 16x16. To make icon bigger, instead set properties <b>Width</b> and <b>Height</b> of the returned element; or <see cref="MTBase.ImageSize"/> for a toolbar or menu.
+	/// <br/>• size - icon size 1 to 16, like <c>"*Pack.Icon blue @12"</c>. Can be used to make the displayed icon smaller or in some cases less blurry. It is the logical width and height of the icon rendered at the center of a box of logical size 16x16. To make icon bigger, instead set properties <c>Width</c> and <c>Height</c> of the returned element; or <see cref="MTBase.ImageSize"/> for a toolbar or menu.
 	/// <br/>• margin - icon margins inside a box of logical size 16x16. Format: <c>%left,top,right,bottom,stretch,snap</c>. All parts are optional. Examples: <c>"*Pack.Icon blue %,,8,8"</c>, <c>"*Pack.Icon blue %8,8"</c>, <c>"*Pack.Icon blue %4,,4,,f"</c>. The stretch part can be <c>f</c> (fill) or <c>m</c> (move); default is uniform. The snap part can be <c>p</c> (sets <c>SnapsToDevicePixels=True</c>). Can be used either margin or size, not both.
 	/// <br/>• more icons - can be specified multiple icons separated by semicolon, like <c>"*Pack1.Icon1 color1; *Pack2.Icon2 color2"</c>. It allows to create multi-color icons (for example a "filled" icon of one color + an "outline" icon of another color) or to add a small overlay icon (eg to indicate disabled state) at a corner (use margin).
 	/// <br/>• library - name of assembly containing the resource. If omitted, uses <see cref="Assembly.GetEntryAssembly"/>.
@@ -165,12 +165,12 @@ public static partial class ImageUtil {
 	/// </summary>
 	/// <param name="image">XAML file, resource or string. See <see cref="LoadWpfImageElement"/>.</param>
 	/// <param name="dpi">DPI of window that will display the image.</param>
-	/// <param name="size">Final image size in logical pixels (not DPI-scaled). If <c>null</c>, uses element's <b>DesiredSize</b> property, max 1024x1024.</param>
-	/// <returns>New <b>Bitmap</b>. Note: its pixel format is <b>Format32bppPArgb</b> (premultiplied ARGB).</returns>
+	/// <param name="size">Final image size in logical pixels (not DPI-scaled). If <c>null</c>, uses element's <c>DesiredSize</c> property, max 1024x1024.</param>
+	/// <returns>New <c>Bitmap</c>. Note: its pixel format is <c>Format32bppPArgb</c> (premultiplied ARGB).</returns>
 	/// <exception cref="Exception"></exception>
 	/// <remarks>
 	/// Calls <see cref="LoadWpfImageElement"/> and <see cref="ConvertWpfImageElementToGdipBitmap"/>.
-	/// Don't use the <b>Tag</b> property of the bitmap. It keeps bitmap data.
+	/// Don't use the <c>Tag</c> property of the bitmap. It keeps bitmap data.
 	/// </remarks>
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static System.Drawing.Bitmap LoadGdipBitmapFromXaml(string image, int dpi, SIZE? size = null) {
@@ -251,14 +251,14 @@ public static partial class ImageUtil {
 	/// <summary>
 	/// Converts WPF image element to GDI+ image.
 	/// </summary>
-	/// <param name="e">For example <b>Viewbox</b>.</param>
+	/// <param name="e">For example <see cref="Viewbox"/>.</param>
 	/// <param name="dpi">DPI of window that will display the image.</param>
 	/// <param name="size">
 	/// Final image size in logical pixels (not DPI-scaled).
-	/// If <c>null</c>, uses element's <b>DesiredSize</b> property, max 1024x1024.
-	/// If not <c>null</c>, sets element's <b>Width</b> and <b>Height</b>; the element should not be used in UI.
+	/// If <c>null</c>, uses element's <c>DesiredSize</c> property, max 1024x1024.
+	/// If not <c>null</c>, sets element's <c>Width</c> and <c>Height</c>; the element should not be used in UI.
 	/// </param>
-	/// <returns>New <b>Bitmap</b>. Note: its pixel format is <b>Format32bppPArgb</b> (premultiplied ARGB).</returns>
+	/// <returns>New <c>Bitmap</c>. Note: its pixel format is <c>Format32bppPArgb</c> (premultiplied ARGB).</returns>
 	public static unsafe System.Drawing.Bitmap ConvertWpfImageElementToGdipBitmap(FrameworkElement e, int dpi, SIZE? size = null) {
 		bool measured = e.IsMeasureValid;
 		if (size != null) {

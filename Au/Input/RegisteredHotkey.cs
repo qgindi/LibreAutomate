@@ -6,7 +6,7 @@ namespace Au.More;
 /// <remarks>
 /// Can be used as a lightweight alternative to hotkey triggers.
 /// 
-/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unregister</b>) or with <c>using</c>.
+/// The variable must be disposed, either explicitly (call <see cref="Dispose"/> or <see cref="Unregister"/>) or with <c>using</c>.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -61,9 +61,9 @@ public struct RegisteredHotkey : IDisposable {
 	/// </summary>
 	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <ms>GlobalAddAtom</ms>. It will be <i>wParam</i> of the <ms>WM_HOTKEY</ms> message.</param>
-	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <c>(KMod, KKey)</c>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
+	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <c>(KMod, KKey)</c>, enum <see cref="KKey"/>, enum <c>Keys</c>, struct <see cref="KHotkey"/>.</param>
 	/// <param name="window">Window/form that will receive the <ms>WM_HOTKEY</ms> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>
-	///	<param name="noRepeat">Add flag <b>MOD_NOREPEAT</b>.</param>
+	///	<param name="noRepeat">Add flag <ms>MOD_NOREPEAT</ms>.</param>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 	/// <exception cref="InvalidOperationException">This variable already registered a hotkey.</exception>
 	/// <remarks>

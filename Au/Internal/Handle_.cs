@@ -25,7 +25,7 @@ internal struct Handle_ : IDisposable {
 	
 	/// <summary>
 	/// <c>_h == default</c>.
-	/// Info: <b>_h</b> never is -1.
+	/// Info: <c>_h</c> never is -1.
 	/// </summary>
 	public bool Is0 => _h == default;
 	
@@ -38,11 +38,11 @@ internal struct Handle_ : IDisposable {
 	
 	/// <summary>
 	/// Opens process handle.
-	/// Calls API <b>OpenProcess</b>.
+	/// Calls API <c>OpenProcess</c>.
 	/// </summary>
 	/// <returns>default if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="processId">Process id.</param>
-	/// <param name="desiredAccess">Desired access (<b>Api.PROCESS_</b>), as in API <b>OpenProcess</b> documentation.</param>
+	/// <param name="desiredAccess">Desired access (<c>Api.PROCESS_</c>), as in API <c>OpenProcess</c> documentation.</param>
 	public static Handle_ OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) {
 		if (processId == 0) { lastError.code = Api.ERROR_INVALID_PARAMETER; return default; }
 		return _OpenProcess(processId, desiredAccess);
@@ -50,11 +50,11 @@ internal struct Handle_ : IDisposable {
 	
 	/// <summary>
 	/// Opens window's process handle.
-	/// This overload is more powerful: if API <b>OpenProcess</b> fails, it tries API <b>GetProcessHandleFromHwnd</b>, which can open higher integrity level processes, but only if current process is uiAccess and <i>desiredAccess</i> includes only <b>PROCESS_DUP_HANDLE</b>, <b>PROCESS_VM_OPERATION</b>, <b>PROCESS_VM_READ</b>, <b>PROCESS_VM_WRITE</b>, <b>SYNCHRONIZE</b>.
+	/// This overload is more powerful: if API <c>OpenProcess</c> fails, it tries API <c>GetProcessHandleFromHwnd</c>, which can open higher integrity level processes, but only if current process is uiAccess and <i>desiredAccess</i> includes only <c>PROCESS_DUP_HANDLE</c>, <c>PROCESS_VM_OPERATION</c>, <c>PROCESS_VM_READ</c>, <c>PROCESS_VM_WRITE</c>, <c>SYNCHRONIZE</c>.
 	/// </summary>
 	/// <returns>default if failed. Supports <see cref="lastError"/>.</returns>
 	/// <param name="w"></param>
-	/// <param name="desiredAccess">Desired access (<b>Api.PROCESS_</b>), as in API <b>OpenProcess</b> documentation.</param>
+	/// <param name="desiredAccess">Desired access (<c>Api.PROCESS_</c>), as in API <c>OpenProcess</c> documentation.</param>
 	public static Handle_ OpenProcess(wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) {
 		int pid = w.ProcessId; if (pid == 0) return default;
 		return _OpenProcess(pid, desiredAccess, w);
@@ -72,7 +72,7 @@ internal struct Handle_ : IDisposable {
 }
 
 /// <summary>
-/// Kernel handle that is derived from <b>WaitHandle</b>.
+/// Kernel handle that is derived from <c>WaitHandle</c>.
 /// When don't need to wait, use <see cref="Handle_"/>, it's more lightweight and has more creation methods.
 /// </summary>
 internal class WaitHandle_ : WaitHandle {

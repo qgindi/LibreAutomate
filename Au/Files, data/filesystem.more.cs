@@ -27,7 +27,7 @@ partial class filesystem {
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 		/// <param name="path">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
 		/// <param name="fileId"></param>
-		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get <b>FileId</b> of the link, not of its target.</param>
+		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get <see cref="FileId"/> of the link, not of its target.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
 		/// Calls API <ms>GetFileInformationByHandle</ms>.
@@ -115,7 +115,7 @@ partial class filesystem {
 		/// With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
 		/// </summary>
 		/// <param name="path">Full path.</param>
-		/// <param name="flags"><b>Enumerate</b> flags.</param>
+		/// <param name="flags"><see cref="enumerate"/> flags.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="enumerate"/>. By default no exceptions if used full path and the directory exists.</exception>
 		/// <remarks>
 		/// This function is slow if the directory is large.
@@ -138,14 +138,14 @@ partial class filesystem {
 		/// Creates a NTFS symbolic link or junction.
 		/// </summary>
 		/// <param name="linkPath">Full path of the link. Supports environment variables etc.</param>
-		/// <param name="targetPath">If <i>type</i> is <b>Junction</b>, must be full path. Else can be either full path or path relative to the parent directory of the link. If starts with an environment variable, the function expands it before creating the link.</param>
+		/// <param name="targetPath">If <i>type</i> is <c>Junction</c>, must be full path. Else can be either full path or path relative to the parent directory of the link. If starts with an environment variable, the function expands it before creating the link.</param>
 		/// <param name="type"></param>
-		/// <param name="elevate">If fails to create symbolic link because this process does not have admin rights, run <c>cmd.exe mklink</c> as administrator. Will show a dialog and UAC consent. Not used if type is <b>Junction</b>, because don't need admin rights to create junctions.</param>
+		/// <param name="elevate">If fails to create symbolic link because this process does not have admin rights, run <c>cmd.exe mklink</c> as administrator. Will show a dialog and UAC consent. Not used if type is <c>Junction</c>, because don't need admin rights to create junctions.</param>
 		/// <param name="deleteOld">If <i>linkPath</i> already exists as a symbolic link or junction or empty directory, replace it.</param>
 		/// <remarks>
 		/// Some reasons why this function can fail:
 		/// - The link already exists. Solution: use <c>deleteOld: true</c>.
-		/// - This process is running not as administrator. Solution: use <i>type</i> <b>Junction</b> or <c>elevate: true</c>. To create symbolic links without admin rights, in Windows Settings enable developer mode.
+		/// - This process is running not as administrator. Solution: use <i>type</i> <c>Junction</c> or <c>elevate: true</c>. To create symbolic links without admin rights, in Windows Settings enable developer mode.
 		/// - The file system format is not NTFS. For example FAT32 in USB drive.
 		/// 
 		/// More info: <google>CreateSymbolicLink, mklink, NTFS symbolic links, junctions</google>.

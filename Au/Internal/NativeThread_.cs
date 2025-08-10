@@ -1,7 +1,7 @@
 namespace Au.More;
 
 /// <summary>
-/// Represents a thread created using API <b>CreateThread</b>.
+/// Represents a thread created using API <c>CreateThread</c>.
 /// Use when need thread handle/id ASAP, or to call APC easier.
 /// </summary>
 unsafe class NativeThread_ {
@@ -17,11 +17,11 @@ unsafe class NativeThread_ {
 	}
 
 	/// <summary>
-	/// Starts new background thread using API <b>CreateThread</b>.
+	/// Starts new background thread using API <c>CreateThread</c>.
 	/// <para>Note: in thread proc use <see cref="OfThisThread"/>, not a static field inited like <c>s_thread = new NativeThread_(...);</c>, because <i>s_thread</i> may be still null.</para>
 	/// </summary>
 	/// <param name="proc">Thread procedure.</param>
-	/// <param name="sta">Set <b>ApartmentState.STA</b>.</param>
+	/// <param name="sta">Set <c>ApartmentState.STA</c>.</param>
 	/// <param name="waitInited">Wait now until the thread procedure calls <see cref="ThreadInited"/>.</param>
 	public NativeThread_(Action proc, bool sta = true, bool waitInited = false) {
 		_proc = proc;

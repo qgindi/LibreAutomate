@@ -12,7 +12,7 @@ public partial struct wnd {
 	/// <remarks>
 	/// Parameters etc are the same as <see cref="find"/>.
 	/// By default ignores invisible and cloaked windows. Use <i>flags</i> if need.
-	/// If you have a window's <b>wnd</b> variable, to wait until it is active/visible/etc use <see cref="WaitFor"/> instead.
+	/// If you have a window's <see cref="wnd"/> variable, to wait until it is active/visible/etc use <see cref="WaitFor"/> instead.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -48,7 +48,7 @@ public partial struct wnd {
 	/// <returns>1-based index and window handle. On timeout returns <c>(0, default(wnd))</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 	/// <remarks>
-	/// By default ignores invisible and cloaked windows. Use <b>wndFinder</b> flags if need.
+	/// By default ignores invisible and cloaked windows. Use <see cref="wndFinder"/> flags if need.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[

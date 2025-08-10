@@ -9,7 +9,7 @@ namespace Au.More
 	sealed class StaTaskScheduler_ : TaskScheduler, IDisposable
 	{
 		/// <summary>
-		/// Static auto-created <b>StaTaskScheduler_</b> instance with 4 threads.
+		/// Static auto-created <c>StaTaskScheduler_</c> instance with 4 threads.
 		/// </summary>
 		public static new StaTaskScheduler_ Default => _default.Value;
 		readonly static Lazy<StaTaskScheduler_> _default = new Lazy<StaTaskScheduler_>(() => new StaTaskScheduler_(4)); //info: 3-4 is optimal for getting icons
@@ -19,7 +19,7 @@ namespace Au.More
 		/// <summary>The STA threads used by the scheduler.</summary>
 		private readonly List<Thread> _threads;
 
-		/// <summary>Initializes a new instance of the <b>StaTaskScheduler</b> class with the specified concurrency level.</summary>
+		/// <summary>Initializes a new instance of the <c>StaTaskScheduler</c> class with the specified concurrency level.</summary>
 		/// <param name="numberOfThreads">The number of threads that should be created and used by this scheduler.</param>
 		public StaTaskScheduler_(int numberOfThreads) {
 			// Validate arguments

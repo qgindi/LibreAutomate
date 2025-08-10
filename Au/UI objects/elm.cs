@@ -10,21 +10,21 @@ namespace Au;
 /// Web pages and most other windows support UI elements.
 /// </para>
 /// <para>
-/// An <b>elm</b> variable contains a COM interface pointer (<ms>IAccessible</ms> or other) and uses methods of that interface or/and related API.
+/// An <c>elm</c> variable contains a COM interface pointer (<ms>IAccessible</ms> or other) and uses methods of that interface or/and related API.
 /// </para>
 /// <para>
-/// <b>elm</b> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <b>HRESULT</b> type).
+/// <c>elm</c> functions that get properties don't throw exception when the COM etc method failed (returned an error code of <ms>HRESULT</ms> type).
 /// Then they return <c>""</c> (string properties), 0, <c>false</c>, <c>null</c> or empty collection, depending on return type.
 /// Applications implement UI elements differently, often with bugs, and their COM interface functions return a variety of error codes.
 /// It's impossible to reliably detect whether the error code means an error or the property is merely unavailable.
-/// These <b>elm</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the COM function, and callers can use <see cref="lastError"/> to get it.
-/// If <b>lastError.code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+/// These <c>elm</c> functions also set the last error code of this thread = the return value (<c>HRESULT</c>) of the COM function, and callers can use <see cref="lastError"/> to get it.
+/// If <see cref="lastError.code"/> returns 1 (<c>S_FALSE</c>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
 /// </para>
 /// <para>
-/// You can dispose <b>elm</b> variables to release the COM object, but it is not necessary (GC will do it later).
+/// You can dispose <c>elm</c> variables to release the COM object, but it is not necessary (GC will do it later).
 /// </para>
 /// <para>
-/// An <b>elm</b> variable cannot be used in multiple threads. Only <b>Dispose</b> can be called in any thread.
+/// An <c>elm</c> variable cannot be used in multiple threads. Only <see cref="Dispose"/> can be called in any thread.
 /// </para>
 /// <para>
 /// UI elements are implemented and live in their applications. This class just communicates with them.
@@ -68,8 +68,8 @@ public unsafe sealed partial class elm : IDisposable {
 	//We don't use RCW<IAccessible>, which would add another 32 bytes.
 	
 	/// <summary>
-	/// Creates elm from <b>IAccessible</b> and child id.
-	/// By default does not <b>AddRef</b>.
+	/// Creates elm from <c>IAccessible</c> and child id.
+	/// By default does not <c>AddRef</c>.
 	/// <i>iacc</i> must not be 0.
 	/// </summary>
 	internal elm(IntPtr iacc, int elem = 0, bool addRef = false) {
@@ -77,8 +77,8 @@ public unsafe sealed partial class elm : IDisposable {
 	}
 	
 	/// <summary>
-	/// Creates <b>elm</b> from <b>Cpp_Acc</b>.
-	/// By default does not <b>AddRef</b>.
+	/// Creates <see cref="elm"/> from <c>Cpp_Acc</c>.
+	/// By default does not <c>AddRef</c>.
 	/// <c>x.acc</c> must not be 0.
 	/// </summary>
 	internal elm(Cpp.Cpp_Acc x, bool addRef = false) {
@@ -87,7 +87,7 @@ public unsafe sealed partial class elm : IDisposable {
 	
 	/// <summary>
 	/// Sets fields.
-	/// <b>_iacc</b> must be 0, <i>iacc</i> not 0.
+	/// <c>_iacc</c> must be 0, <i>iacc</i> not 0.
 	/// </summary>
 	void _Set(IntPtr iacc, int elem = 0, Misc_ misc = default, bool addRef = false) {
 		Debug.Assert(_iacc == default);
@@ -158,7 +158,7 @@ public unsafe sealed partial class elm : IDisposable {
 	/// </summary>
 	/// <remarks>
 	/// Most UI elements are not simple elements. Then this property is 0.
-	/// Often (but not always) this property is the 1-based item index in parent. For example <b>LISTITEM</b> in <b>LIST</b>.
+	/// Often (but not always) this property is the 1-based item index in parent. For example <c>LISTITEM</c> in <c>LIST</c>.
 	/// The <c>set</c> function sometimes can be used as a fast alternative to <see cref="Navigate"/>. It modifies only this variable. It does not check whether the value is valid.
 	/// Simple elements cannot have child elements.
 	/// </remarks>
@@ -173,8 +173,8 @@ public unsafe sealed partial class elm : IDisposable {
 	/// Gets or sets indentation level for <see cref="ToString"/>.
 	/// </summary>
 	/// <remarks>
-	/// When <b>find</b> or similar function finds a UI element, it sets this property of the <b>elm</b> variable. If <b>fromXY</b> etc, it is 0 (unknown).
-	/// When searching in a window, at level 0 are direct children of the <b>WINDOW</b>. When searching in controls (specified class or id), at level 0 is the control. When searching in <b>elm</b>, at level 0 are its direct children. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page (role <b>DOCUMENT</b> or <b>PANE</b>).
+	/// When <see cref="elmFinder.Find"/> or similar function finds a UI element, it sets this property of the <see cref="elm"/> variable. If <see cref="fromXY"/> etc, it is 0 (unknown).
+	/// When searching in a window, at level 0 are direct children of the <c>WINDOW</c>. When searching in controls (specified class or id), at level 0 is the control. When searching in <see cref="elm"/>, at level 0 are its direct children. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page (role <c>DOCUMENT</c> or <c>PANE</c>).
 	/// </remarks>
 	public int Level { get => _misc.level; set => _misc.SetLevel(value); }
 	
@@ -203,11 +203,11 @@ public unsafe sealed partial class elm : IDisposable {
 	/// Gets UI element of window or control. Or some its standard part - client area, titlebar etc.
 	/// </summary>
 	/// <param name="w">Window or control.</param>
-	/// <param name="objid">Window part id. Default <b>EObjid.WINDOW</b>. Also can be a custom id supported by that window, cast <b>int</b> to <b>EObjid</b>.</param>
+	/// <param name="objid">Window part id. Default <c>EObjid.WINDOW</c>. Also can be a custom id supported by that window, cast <c>int</c> to <c>EObjid</c>.</param>
 	/// <param name="flags">Flags.</param>
 	/// <exception cref="AuWndException">Invalid window.</exception>
 	/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
-	/// <exception cref="ArgumentException"><i>objid</i> is <b>QUERYCLASSNAMEIDX</b> or <b>NATIVEOM</b>.</exception>
+	/// <exception cref="ArgumentException"><i>objid</i> is <c>QUERYCLASSNAMEIDX</c> or <c>NATIVEOM</c>.</exception>
 	/// <remarks>
 	/// Uses API <ms>AccessibleObjectFromWindow</ms>.
 	/// </remarks>
@@ -324,8 +324,8 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <remarks>
 	/// The parameters are of the callback function.
 	/// Uses API <ms>AccessibleObjectFromEvent</ms>.
-	/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is <b>OBJECT_DESTROY</b>, <b>OBJECT_HIDE</b>, <b>SYSTEM_xEND</b>.
-	/// Returns <c>null</c> if failed. Always check the return value, to avoid <b>NullReferenceException</b>. An exception in the callback function kills this process.
+	/// Often fails because the UI element already does not exist, because the callback function is called asynchronously, especially when the event is <c>OBJECT_DESTROY</c>, <c>OBJECT_HIDE</c>, <c>SYSTEM_xEND</c>.
+	/// Returns <c>null</c> if failed. Always check the return value, to avoid <see cref="NullReferenceException"/>. An exception in the callback function kills this process.
 	/// </remarks>
 	public static elm fromEvent(wnd w, EObjid idObject, int idChild) {
 		int hr = Api.AccessibleObjectFromEvent(w, idObject, idChild, out var iacc, out var v);
@@ -342,8 +342,8 @@ public unsafe sealed partial class elm : IDisposable {
 	/// <returns><c>null</c> if failed.</returns>
 	/// <param name="x">Unmanaged COM object.</param>
 	/// <remarks>
-	/// The COM object type can be <b>IAccessible</b>, <b>IAccessible2</b>, <b>IHTMLElement</b>, <b>ISimpleDOMNode</b> or any other COM interface type that can give <ms>IAccessible</ms> interface pointer through API <ms>IUnknown.QueryInterface</ms> or <ms>IServiceProvider.QueryService</ms>.
-	/// For <b>IHTMLElement</b> and <b>ISimpleDOMNode</b> returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
+	/// The COM object type can be <c>IAccessible</c>, <c>IAccessible2</c>, <c>IHTMLElement</c>, <c>ISimpleDOMNode</c> or any other COM interface type that can give <ms>IAccessible</ms> interface pointer through API <ms>IUnknown.QueryInterface</ms> or <ms>IServiceProvider.QueryService</ms>.
+	/// For <c>IHTMLElement</c> and <c>ISimpleDOMNode</c> returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
 	/// </remarks>
 	public static elm fromComObject(IntPtr x)
 	{
@@ -360,8 +360,8 @@ public unsafe sealed partial class elm : IDisposable {
 	/// </summary>
 	/// <param name="x">Managed COM object.</param>
 	/// <remarks>
-	/// The COM object type can be <b>IAccessible</b>, <b>IAccessible2</b>, <b>IHTMLElement</b>, <b>ISimpleDOMNode</b> or any other COM interface type that can give <ms>IAccessible</ms> interface pointer through API <ms>IUnknown.QueryInterface</ms> or <ms>IServiceProvider.QueryService</ms>.
-	/// For <b>IHTMLElement</b> and <b>ISimpleDOMNode</b> returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
+	/// The COM object type can be <c>IAccessible</c>, <c>IAccessible2</c>, <c>IHTMLElement</c>, <c>ISimpleDOMNode</c> or any other COM interface type that can give <ms>IAccessible</ms> interface pointer through API <ms>IUnknown.QueryInterface</ms> or <ms>IServiceProvider.QueryService</ms>.
+	/// For <c>IHTMLElement</c> and <c>ISimpleDOMNode</c> returns <c>null</c> if the HTML element is not an accessible object. Then you can try to get UI element of its parent HTML element, parent's parent and so on, until succeeds.
 	/// </remarks>
 	public static elm fromComObject(object x)
 	{
@@ -387,10 +387,10 @@ public unsafe sealed partial class elm : IDisposable {
 	enum _FuncId { name = 1, value, description, default_action, role, state, rectangle, parent_object, child_object, container_window, child_count, child_objects, help_text, keyboard_shortcut, html, selection, uiaid, uiacn }
 	
 	/// <summary>
-	/// Calls <b>SetLastError</b> and returns <i>hr</i>.
+	/// Calls <c>SetLastError</c> and returns <i>hr</i>.
 	/// In Debug config also outputs error in red.
-	/// If hr looks like not an error but just the property or action is unavailable, changes it to <b>S_FALSE</b> and does not show error. These are: <b>S_FALSE</b>, <b>DISP_E_MEMBERNOTFOUND</b>, <b>E_NOTIMPL</b>.
-	/// <b>_FuncId</b> also can be <b>char</b>, like <c>(_FuncId)'n'</c> for name.
+	/// If hr looks like not an error but just the property or action is unavailable, changes it to <c>S_FALSE</c> and does not show error. These are: <c>S_FALSE</c>, <c>DISP_E_MEMBERNOTFOUND</c>, <c>E_NOTIMPL</c>.
+	/// <c>_FuncId</c> also can be <c>char</c>, like <c>(_FuncId)'n'</c> for name.
 	/// </summary>
 	int _Hresult(_FuncId funcId, int hr) {
 		if (hr != 0) {

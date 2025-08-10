@@ -74,12 +74,12 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	/// <summary>
 	/// Adds members of a <c>[Flags]</c> enum as checkboxes to a WPF panel.
 	/// </summary>
-	/// <param name="container"><b>StackPanel</b>, <b>WrapPanel</b> or <b>Grid</b>. If <b>Grid</b> without columns, adds 2 columns.</param>
+	/// <param name="container"><see cref="StackPanel"/>, <see cref="WrapPanel"/> or <see cref="Grid"/>. If <c>Grid</c> without columns, adds 2 columns.</param>
 	/// <param name="init">Initial value.</param>
 	/// <param name="items">Enum members and their text/tooltip. Optional. Text can be: <c>null</c>, <c>"text"</c>, <c>"text|tooltip"</c>, <c>"|tooltip"</c>.</param>
 	/// <param name="sort">Sort by name.</param>
 	/// <example>
-	/// With <b>wpfBuilder</b>.
+	/// With <see cref="wpfBuilder"/>.
 	/// <code><![CDATA[
 	/// b.R.StartStack(vertical: true);
 	/// var e = new EnumUI<KMod>(b.Panel, KMod.Ctrl|KMod.Alt);
@@ -126,7 +126,7 @@ public class EnumUI<TEnum> where TEnum : unmanaged, Enum {
 	}
 	
 	/// <summary>
-	/// Adds members of a non-<c>[Flags]</c> enum to a WPF <b>ComboBox</b> or other <b>Selector</b> control.
+	/// Adds members of a non-<c>[Flags]</c> enum to a WPF <see cref="Selector"/> control, for example <see cref="ComboBox"/>.
 	/// </summary>
 	/// <param name="container"></param>
 	/// <param name="init">Initial value.</param>

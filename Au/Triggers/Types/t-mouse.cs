@@ -415,7 +415,7 @@ public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger> {
 	}
 	
 	/// <summary>
-	/// Detects trigger events of types <b>Edge</b> and <b>Move</b>.
+	/// Detects trigger events of types <c>Edge</c> and <c>Move</c>.
 	/// </summary>
 	/// <remarks>
 	/// Used in the hook server, to avoid sending all mouse move events to clients, which would use 2 or more times more CPU, eg 0.9% instead of 0.45%. Tested: raw input uses slightly less CPU.
@@ -658,7 +658,7 @@ public class MouseTriggerArgs : TriggerArgs {
 	public override ActionTrigger TriggerBase => Trigger;
 	
 	/// <summary>
-	/// The active window (<b>Edge</b> and <b>Move</b> triggers) or the mouse window (<b>Click</b> and <b>Wheel</b> triggers).
+	/// The active window (<c>Edge</c> and <c>Move</c> triggers) or the mouse window (<c>Click</c> and <c>Wheel</c> triggers).
 	/// </summary>
 	public wnd Window { get; }
 	
@@ -702,7 +702,7 @@ public enum TMWheel : byte { Forward = 1, Backward, Left, Right }
 /// </summary>
 /// <remarks>
 /// To activate a screen edge trigger, the user touches a screen edge with the mouse pointer.
-/// Each screen edge is divided into 3 parts: 1 - center 50%; 2 - left or top 25%; 3 - right or bottom 25%. Constants like <b>TopInCenter50</b> specify an edge and part; the trigger works only in that part of that edge. Constants like <b>Top</b> specify just an edge; the trigger works in all parts of that edge.
+/// Each screen edge is divided into 3 parts: 1 - center 50%; 2 - left or top 25%; 3 - right or bottom 25%. Constants like <c>TopInCenter50</c> specify an edge and part; the trigger works only in that part of that edge. Constants like <c>Top</c> specify just an edge; the trigger works in all parts of that edge.
 /// </remarks>
 public enum TMEdge : byte {
 	Top = 1, TopInCenter50, TopInLeft25, TopInRight25,
@@ -716,7 +716,7 @@ public enum TMEdge : byte {
 /// </summary>
 /// <remarks>
 /// To activate a mouse move trigger, the user quickly moves the mouse pointer to the specified direction and back.
-/// The screen is divided into 3 parts: 1 - center 50%; 2 - left or top 25%; 3 - right or bottom 25%. Constants like <b>UpDownInCenter50</b> specify a direction and screen part; the trigger works only in that screen part. Constants like <b>UpDown</b> specify just a direction; the trigger works in whole screen.
+/// The screen is divided into 3 parts: 1 - center 50%; 2 - left or top 25%; 3 - right or bottom 25%. Constants like <c>UpDownInCenter50</c> specify a direction and screen part; the trigger works only in that screen part. Constants like <c>UpDown</c> specify just a direction; the trigger works in whole screen.
 /// </remarks>
 public enum TMMove : byte {
 	RightLeft = 1, RightLeftInCenter50, RightLeftInTop25, RightLeftInBottom25,

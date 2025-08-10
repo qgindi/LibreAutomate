@@ -1,58 +1,56 @@
 #pragma warning disable 1591 //missing XML documentation
 
-using System.Security.Cryptography;
-
 namespace Au {
 	/// <summary>
 	/// Gets known/special folder paths (Desktop, Temp, etc).
 	/// </summary>
 	/// <remarks>
-	/// Most functions return <see cref="FolderPath"/>, not <b>string</b>. It is implicitly convertible to <b>string</b>. Its operator <b>+</b> appends a filename or relative path string, with <c>\</c> separator if need. Example:
+	/// Most functions return <see cref="FolderPath"/>, not <c>string</c>. It is implicitly convertible to <c>string</c>. Its operator <c>+</c> appends a filename or relative path string, with <c>\</c> separator if need. Example:
 	/// 
 	/// <code><![CDATA[string s = folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt]]></code>
 	/// 
-	/// If a function cannot get folder path, the return value contains <c>null</c> string. Then the <c>+</c> operator would throw <b>ArgumentException</b>.
+	/// If a function cannot get folder path, the return value contains <c>null</c> string. Then the <c>+</c> operator would throw <see cref="ArgumentException"/>.
 	///
 	/// Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <c>_Win8</c> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registered, may be still not created.
 	/// 
-	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure <b>ITEMIDLIST</b>. Functions of the nested class <see cref="shell"/> return it as <see cref="Pidl"/> or string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (<see cref="run.it"/>, <see cref="icon.of"/>, <see cref="icon.ofPidl(Pidl, int)"/>) but not with .NET functions.
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure <ms>ITEMIDLIST</ms>. Functions of the nested class <see cref="shell"/> return it as <see cref="Pidl"/> or string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (<see cref="run.it"/>, <see cref="icon.of"/>, <see cref="icon.ofPidl(Pidl, int)"/>) but not with .NET functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <ms>SHGetKnownFolderPath</ms>.
 	/// The list of Windows predefined known folders: <ms>KNOWNFOLDERID</ms>.
-	/// Names of folders specific to current process have prefix <b>This</b>, like <b>ThisApp</b>.
+	/// Names of folders specific to current process have prefix <c>This</c>, like <c>ThisApp</c>.
 	/// 
 	/// Some paths depend on the bitness (32 or 64 bit) of the OS and this process.
 	/// <table>
 	/// <tr>
 	/// <td>32-bit Windows</td>
 	/// <td>
-	/// <b>System</b>, <b>SystemX86</b>, <b>SystemX64</b>: <c>@"C:\WINDOWS\system32"</c>
-	/// <br/><b>ProgramFiles</b>, <b>ProgramFilesX86</b>, <b>ProgramFilesX64</b>: <c>@"C:\Program Files"</c>
-	/// <br/><b>ProgramFilesCommon</b>, <b>ProgramFilesCommonX86</b>, <b>ProgramFilesCommonX64</b>: <c>@"C:\Program Files\Common Files"</c>
+	/// <c>System</c>, <c>SystemX86</c>, <c>SystemX64</c>: <c>@"C:\WINDOWS\system32"</c>
+	/// <br/><c>ProgramFiles</c>, <c>ProgramFilesX86</c>, <c>ProgramFilesX64</c>: <c>@"C:\Program Files"</c>
+	/// <br/><c>ProgramFilesCommon</c>, <c>ProgramFilesCommonX86</c>, <c>ProgramFilesCommonX64</c>: <c>@"C:\Program Files\Common Files"</c>
 	/// </td>
 	/// </tr>
 	/// <tr>
 	/// <td>64-bit Windows, 64-bit process</td>
 	/// <td>
-	/// <b>System</b>, <b>SystemX64</b>: <c>@"C:\WINDOWS\system32"</c>
-	/// <br/><b>SystemX86</b>: <c>@"C:\WINDOWS\SysWOW64"</c>
-	/// <br/><b>ProgramFiles</b>, <b>ProgramFilesX64</b>: <c>@"C:\Program Files"</c>
-	/// <br/><b>ProgramFilesX86</b>: <c>@"C:\Program Files (x86)"</c>
-	/// <br/><b>ProgramFilesCommon</b>, <b>ProgramFilesCommonX64</b>: <c>@"C:\Program Files\Common Files"</c>
-	/// <br/><b>ProgramFilesCommonX86</b>: <c>@"C:\Program Files (x86)\Common Files"</c>
+	/// <c>System</c>, <c>SystemX64</c>: <c>@"C:\WINDOWS\system32"</c>
+	/// <br/><c>SystemX86</c>: <c>@"C:\WINDOWS\SysWOW64"</c>
+	/// <br/><c>ProgramFiles</c>, <c>ProgramFilesX64</c>: <c>@"C:\Program Files"</c>
+	/// <br/><c>ProgramFilesX86</c>: <c>@"C:\Program Files (x86)"</c>
+	/// <br/><c>ProgramFilesCommon</c>, <c>ProgramFilesCommonX64</c>: <c>@"C:\Program Files\Common Files"</c>
+	/// <br/><c>ProgramFilesCommonX86</c>: <c>@"C:\Program Files (x86)\Common Files"</c>
 	/// </td>
 	/// </tr>
 	/// <tr>
 	/// <td>64-bit Windows, 32-bit process</td>
 	/// <td>
-	/// <b>System</b>: <c>@"C:\WINDOWS\system32"</c>. However the OS in most cases redirects this path to <c>@"C:\WINDOWS\SysWOW64"</c>.
-	/// <br/><b>SystemX86</b>: <c>@"C:\WINDOWS\SysWOW64"</c>
-	/// <br/><b>SystemX64</b>: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path, not in Explorer.
-	/// <br/><b>ProgramFiles</b>, <b>ProgramFilesX86</b>: <c>@"C:\Program Files (x86)"</c>
-	/// <br/><b>ProgramFilesX64</b>: <c>@"C:\Program Files"</c>
-	/// <br/><b>ProgramFilesCommon</b>, <b>ProgramFilesCommonX86</b>: <c>@"C:\Program Files (x86)\Common Files"</c>
-	/// <br/><b>ProgramFilesCommonX64</b>: <c>@"C:\Program Files\Common Files"</c>
+	/// <c>System</c>: <c>@"C:\WINDOWS\system32"</c>. However the OS in most cases redirects this path to <c>@"C:\WINDOWS\SysWOW64"</c>.
+	/// <br/><c>SystemX86</c>: <c>@"C:\WINDOWS\SysWOW64"</c>
+	/// <br/><c>SystemX64</c>: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path, not in Explorer.
+	/// <br/><c>ProgramFiles</c>, <c>ProgramFilesX86</c>: <c>@"C:\Program Files (x86)"</c>
+	/// <br/><c>ProgramFilesX64</c>: <c>@"C:\Program Files"</c>
+	/// <br/><c>ProgramFilesCommon</c>, <c>ProgramFilesCommonX86</c>: <c>@"C:\Program Files (x86)\Common Files"</c>
+	/// <br/><c>ProgramFilesCommonX64</c>: <c>@"C:\Program Files\Common Files"</c>
 	/// </td>
 	/// </tr>
 	/// </table>
@@ -172,7 +170,7 @@ namespace Au {
 		static FolderPath _Windows => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23);
 		
 		/// <summary>
-		/// Gets <b>ITEMIDLIST</b> of known/special virtual folders (eg Control Panel), as string like <c>":: 12345678..."</c> or as <see cref="Pidl"/>.
+		/// Gets <ms>ITEMIDLIST</ms> of known/special virtual folders (eg Control Panel), as string like <c>":: 12345678..."</c> or as <see cref="Pidl"/>.
 		/// </summary>
 		public static class shell {
 			public static FolderPath AddNewPrograms => _GetV(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04);
@@ -318,10 +316,10 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.Temp + @"LibreAutomate\_script"</c>. Or <c>folders.Temp + "Au"</c>, if exists (for backward compatibility).
-		/// - <b>editorExtension</b> - <c>folders.Temp + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\temp\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
-		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\temp"</c>. Cannot be changed.
+		/// - <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.Temp + @"LibreAutomate\_script"</c>. Or <c>folders.Temp + "Au"</c>, if exists (for backward compatibility).
+		/// - <c>editorExtension</c> - <c>folders.Temp + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.ThisApp + @"data\temp\_script"</c>. Note: <c>exeProgram</c> launched not from editor isn't portable.
+		/// - Portable <c>editorExtension</c> - <c>folders.ThisApp + @"data\temp"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
@@ -338,10 +336,10 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/>) and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.Documents + @"LibreAutomate\_script"</c>. Or <c>folders.Documents + "Au"</c>, if exists (for backward compatibility).
-		/// - <b>editorExtension</b> - <c>folders.Documents + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\doc\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
-		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\doc"</c>. Cannot be changed.
+		/// - <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.Documents + @"LibreAutomate\_script"</c>. Or <c>folders.Documents + "Au"</c>, if exists (for backward compatibility).
+		/// - <c>editorExtension</c> - <c>folders.Documents + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.ThisApp + @"data\doc\_script"</c>. Note: <c>exeProgram</c> launched not from editor isn't portable.
+		/// - Portable <c>editorExtension</c> - <c>folders.ThisApp + @"data\doc"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
@@ -358,10 +356,10 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.LocalAppData + @"LibreAutomate\_script"</c>. Or <c>folders.LocalAppData + "Au"</c>, if exists (for backward compatibility).
-		/// - <b>editorExtension</b> - <c>folders.LocalAppData + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\appLocal\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
-		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\appLocal"</c>. Cannot be changed.
+		/// - <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.LocalAppData + @"LibreAutomate\_script"</c>. Or <c>folders.LocalAppData + "Au"</c>, if exists (for backward compatibility).
+		/// - <c>editorExtension</c> - <c>folders.LocalAppData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.ThisApp + @"data\appLocal\_script"</c>. Note: <c>exeProgram</c> launched not from editor isn't portable.
+		/// - Portable <c>editorExtension</c> - <c>folders.ThisApp + @"data\appLocal"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
@@ -378,10 +376,10 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.RoamingAppData + @"LibreAutomate\_script"</c>. Or <c>folders.RoamingAppData + "Au"</c>, if exists (for backward compatibility).
-		/// - <b>editorExtension</b> - <c>folders.RoamingAppData + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\appRoaming\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
-		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\appRoaming"</c>. Cannot be changed.
+		/// - <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.RoamingAppData + @"LibreAutomate\_script"</c>. Or <c>folders.RoamingAppData + "Au"</c>, if exists (for backward compatibility).
+		/// - <c>editorExtension</c> - <c>folders.RoamingAppData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.ThisApp + @"data\appRoaming\_script"</c>. Note: <c>exeProgram</c> launched not from editor isn't portable.
+		/// - Portable <c>editorExtension</c> - <c>folders.ThisApp + @"data\appRoaming"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// Creates the folder if does not exist when <c>set</c> or <c>get</c> function called first time in this process, unless <see cref="noAutoCreate"/> <c>true</c>.
@@ -404,14 +402,14 @@ namespace Au {
 		/// <exception cref="InvalidOperationException">Thrown by the <c>set</c> function if this property is already set.</exception>
 		/// <remarks>
 		/// Default path depends on script role (<see cref="script.role"/> and portable mode (<see cref="ScriptEditor.IsPortable"/>):
-		/// - <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ProgramData + @"LibreAutomate\_script"</c>. Or <c>folders.ProgramData + "Au"</c>, if exists (for backward compatibility).
-		/// - <b>editorExtension</b> - <c>folders.ProgramData + "LibreAutomate"</c>. Cannot be changed.
-		/// - Portable <b>miniProgram</b> and <b>exeProgram</b> - <c>folders.ThisApp + @"data\appCommon\_script"</c>. Note: <b>exeProgram</b> launched not from editor isn't portable.
-		/// - Portable <b>editorExtension</b> - <c>folders.ThisApp + @"data\appCommon"</c>. Cannot be changed.
+		/// - <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.ProgramData + @"LibreAutomate\_script"</c>. Or <c>folders.ProgramData + "Au"</c>, if exists (for backward compatibility).
+		/// - <c>editorExtension</c> - <c>folders.ProgramData + "LibreAutomate"</c>. Cannot be changed.
+		/// - Portable <c>miniProgram</c> and <c>exeProgram</c> - <c>folders.ThisApp + @"data\appCommon\_script"</c>. Note: <c>exeProgram</c> launched not from editor isn't portable.
+		/// - Portable <c>editorExtension</c> - <c>folders.ThisApp + @"data\appCommon"</c>. Cannot be changed.
 		/// 
 		/// The <c>set</c> function does not change system settings. It just remembers a string that will be later returned by the <c>get</c> function in this process.
 		/// This function does not auto-create the folder; usually it is created when installing the application; the script editor does not use and does not install it.
-		/// Note: the <b>ProgramData</b> folder has special security permissions. Programs running not as administrator usually cannot write there, unless your installer changed folder security permissions.
+		/// Note: the <c>ProgramData</c> folder has special security permissions. Programs running not as administrator usually cannot write there, unless your installer changed folder security permissions.
 		/// </remarks>
 		public static FolderPath ThisAppDataCommon {
 			get => new(__thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, _DefThisApp(ProgramData, "appCommon"), create: false));
@@ -426,7 +424,7 @@ namespace Au {
 		/// <remarks>
 		/// Default is <c>ThisAppBS + "Images"</c>.
 		/// 
-		/// Used by functions of these classes: <b>icon</b>, <b>popupMenu</b>, <b>toolbar</b>, <b>uiimage</b>, possibly some other.
+		/// Used by functions of these classes: <see cref="icon"/>, <see cref="popupMenu"/>, <see cref="toolbar"/>, <see cref="uiimage"/>, possibly some other.
 		/// This function does not auto-create the folder; usually it is created when installing the application; the script editor does not use and does not install it.
 		/// </remarks>
 		public static FolderPath ThisAppImages {
@@ -819,7 +817,7 @@ namespace Au {
 		/// <returns><c>null</c> if unavailable.</returns>
 		/// <param name="folderName">
 		/// Can be:
-		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b> or <b>string</b>.
+		/// <br/>• name of a property of this class, like <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <see cref="FolderPath"/> or <c>string</c>.
 		/// <br/>• name of a property of the nested class <see cref="shell"/>, like <c>"shell.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
 		/// <br/>• known folder canonical name. See <see cref="getKnownFolders"/>. If has prefix <c>"shell."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
 		/// </param>
@@ -1001,7 +999,7 @@ namespace Au {
 namespace Au.Types {
 	/// <summary>
 	/// Most functions of <see cref="folders"/> class return a value of this type.
-	/// Contains folder path (string) and has operator <b>+</b> to append a string with backslash if need. Has implicit conversions from/to string.
+	/// Contains folder path (string) and has operator <c>+</c> to append a string with backslash if need. Has implicit conversions from/to string.
 	/// </summary>
 	public struct FolderPath {
 		readonly string _path;
@@ -1021,7 +1019,7 @@ namespace Au.Types {
 		public string Path => _path;
 		
 		/// <summary>
-		/// Returns the path string. If it is <c>null</c>, throws <b>InvalidOperationException</b>.
+		/// Returns the path string. If it is <c>null</c>, throws <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException"></exception>
 		public string PathOrThrow => _path ?? throw new InvalidOperationException("the special folder path is null");

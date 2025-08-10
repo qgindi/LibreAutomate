@@ -13,7 +13,7 @@ namespace Au;
 /// <remarks>
 /// To create toolbar code can be used menu <b>TT > New toolbar</b>.
 /// 
-/// Not thread-safe. All functions must be called from the same thread that created the <b>toolbar</b> object, except where documented otherwise. Note: item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
+/// Not thread-safe. All functions must be called from the same thread that created the <see cref="toolbar"/> object, except where documented otherwise. Note: item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
 /// </remarks>
 public partial class toolbar : MTBase {
 	record class _Settings : JSettings {
@@ -229,7 +229,7 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="menu">Func that returns the menu. Called whenever the button clicked.</param>
 	/// <remarks>
-	/// The caller creates the menu (creates the <see cref="popupMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>popupMenu</b> and reuse same object.
+	/// The caller creates the menu (creates the <see cref="popupMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <see cref="popupMenu"/> and reuse same object.
 	/// The submenu does not inherit properties of this toolbar.
 	/// </remarks>
 	/// <example>
@@ -299,8 +299,8 @@ public partial class toolbar : MTBase {
 	/// If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.
 	/// Don't use this parameter if this toolbar was created by <see cref="AutoHideScreenEdge"/>, because then screen is already known.
 	/// </param>
-	/// <exception cref="ArgumentException">The toolbar was created by <b>AutoHideScreenEdge</b>, and now screen specified again.</exception>
-	/// <exception cref="InvalidOperationException"><b>Show</b> already called.</exception>
+	/// <exception cref="ArgumentException">The toolbar was created by <see cref="AutoHideScreenEdge"/>, and now screen specified again.</exception>
+	/// <exception cref="InvalidOperationException"><c>Show</c> already called.</exception>
 	/// <remarks>
 	/// The toolbar will be moved when the screen moved or resized.
 	/// </remarks>
@@ -314,8 +314,8 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="ownerWindow">Window or control. Can belong to any process.</param>
 	/// <param name="clientArea">Let the toolbar position be relative to the client area of the window.</param>
-	/// <exception cref="InvalidOperationException"><b>Show</b> already called.</exception>
-	/// <exception cref="ArgumentException"><b>ownerWindow</b> is 0.</exception>
+	/// <exception cref="InvalidOperationException"><c>Show</c> already called.</exception>
+	/// <exception cref="ArgumentException"><i>ownerWindow</i> is 0.</exception>
 	/// <remarks>
 	/// The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
 	/// </remarks>
@@ -329,8 +329,8 @@ public partial class toolbar : MTBase {
 	/// </summary>
 	/// <param name="ownerWindow">Window that contains the object. Can be control. Can belong to any process.</param>
 	/// <param name="oo">A variable of a user-defined class that implements <see cref="ITBOwnerObject"/> interface. It provides object location, visibility, etc.</param>
-	/// <exception cref="InvalidOperationException"><b>Show</b> already called.</exception>
-	/// <exception cref="ArgumentException"><b>ownerWindow</b> is 0.</exception>
+	/// <exception cref="InvalidOperationException"><c>Show</c> already called.</exception>
+	/// <exception cref="ArgumentException"><i>ownerWindow</i> is 0.</exception>
 	/// <remarks>
 	/// The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
 	/// </remarks>
@@ -338,7 +338,7 @@ public partial class toolbar : MTBase {
 	
 	/// <summary>
 	/// Shows the toolbar.
-	/// If <i>ta</i> is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
+	/// If <i>ta</i> is <see cref="WindowTriggerArgs"/>, attaches the toolbar to the trigger window.
 	/// Else if <i>ta</i> != <c>null</c>, calls <see cref="TriggerArgs.DisableTriggerUntilClosed(toolbar)"/>.
 	/// </summary>
 	public void Show(TriggerArgs ta) {
@@ -895,7 +895,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 	/// Toolbar width and height without non-client area when <see cref="AutoSize"/> <c>false</c>.
 	/// </summary>
 	/// <remarks>
-	/// Non-client area is border and caption when <see cref="Border"/> is <b>ThreeD</b>, <b>Thick</b>, <b>Caption</b> or <b>CaptionX</b>.
+	/// Non-client area is border and caption when <see cref="Border"/> is <c>ThreeD</c>, <c>Thick</c>, <c>Caption</c> or <c>CaptionX</c>.
 	/// 
 	/// The unit of measurement depends on <see cref="DpiScaling"/>.
 	/// 
@@ -1007,7 +1007,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 	/// <remarks>
 	/// Owner is specified when calling <see cref="Show"/>. It can be a window, screen, control or other object.
 	/// 
-	/// The <see cref="TBOffsets"/> type has 4 properties - <b>Top</b>, <b>Bottom</b>, <b>Left</b> and <b>Right</b>, but used are only those included in <see cref="Anchor"/>. For example, if <b>Anchor</b> is <b>TopLeft</b>, used are only <b>Top</b> and <b>Left</b>.
+	/// The <see cref="TBOffsets"/> type has 4 properties - <c>Top</c>, <c>Bottom</c>, <c>Left</c> and <c>Right</c>, but used are only those included in <see cref="Anchor"/>. For example, if <c>Anchor</c> is <c>TopLeft</c>, used are only <c>Top</c> and <c>Left</c>.
 	/// 
 	/// The unit of measurement depends on <see cref="DpiScaling"/> and whether anchor is screen.
 	/// 

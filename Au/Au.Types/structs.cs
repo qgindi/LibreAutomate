@@ -111,8 +111,8 @@ namespace Au.Types {
 	/// Rectangle coordinates left top right bottom.
 	/// </summary>
 	/// <remarks>
-	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b> etc can't, because their fields are different.
-	/// Has conversions from/to <b>Rectangle</b>.
+	/// This type can be used with Windows API functions. The .NET <c>Rectangle</c> etc can't, because their fields are different.
+	/// Has conversions from/to <see cref="Rectangle"/>.
 	/// </remarks>
 	public record struct RECT {
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
@@ -133,7 +133,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Creates <b>RECT</b> with specified <b>left</b>, <b>top</b>, <b>right</b> and <b>bottom</b>.
+		/// Creates <see cref="RECT"/> with specified <c>left</c>, <c>top</c>, <c>right</c> and <c>bottom</c>.
 		/// </summary>
 		public static RECT FromLTRB(int left, int top, int right, int bottom)
 			=> new() { left = left, top = top, right = right, bottom = bottom };
@@ -265,14 +265,14 @@ namespace Au.Types {
 		public void Offset(int dx, int dy) { left += dx; right += dx; top += dy; bottom += dy; }
 		
 		/// <summary>
-		/// Moves this rectangle so that <b>left</b>=<i>x</i> and <b>right</b>=<i>y</i>. Does not change <b>Width</b> and <b>Height</b>.
+		/// Moves this rectangle so that <c>left</c>=<i>x</i> and <c>right</c>=<i>y</i>. Does not change <see cref="Width"/> and <see cref="Height"/>.
 		/// </summary>
 		public void Move(int x, int y) => Offset(x - left, y - top);
 		
 		/// <summary>
 		/// Replaces this rectangle with the union of itself and the specified rectangle.
 		/// Union is the smallest rectangle that contains two full rectangles.
-		/// If either rectangle is empty (<b>Width</b> or <b>Height</b> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+		/// If either rectangle is empty (<see cref="Width"/> or <see cref="Height"/> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
 		/// <returns><c>true</c> if finally this rectangle is not empty.</returns>
 		public bool Union(RECT r2) => Api.UnionRect(out this, this, r2);
@@ -280,14 +280,14 @@ namespace Au.Types {
 		/// <summary>
 		/// Returns the union of two rectangles.
 		/// Union is the smallest rectangle that contains two full rectangles.
-		/// If either rectangle is empty (<b>Width</b> or <b>Height</b> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+		/// If either rectangle is empty (<see cref="Width"/> or <see cref="Height"/> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
 		public static RECT Union(RECT r1, RECT r2) { Api.UnionRect(out RECT r, r1, r2); return r; }
 		
 		/// <summary>
-		/// If <b>width</b> or <b>height</b> are negative, modifies this rectangle so that they would not be negative.
+		/// If <c>width</c> or <c>height</c> are negative, modifies this rectangle so that they would not be negative.
 		/// </summary>
-		/// <param name="swap"><c>true</c> - swap <b>right</b>/<b>left</b>, <b>bottom</b>/<b>top</b>; <c>false</c> - set <b>right</b> = <b>left</b>, <b>bottom</b> = <b>top</b>.</param>
+		/// <param name="swap"><c>true</c> - swap <c>right</c>/<c>left</c>, <c>bottom</c>/<c>top</c>; <c>false</c> - set <c>right</c> = <c>left</c>, <c>bottom</c> = <c>top</c>.</param>
 		public void Normalize(bool swap) {
 			if (right < left) { if (swap) Math2.Swap(ref left, ref right); else right = left; }
 			if (bottom < top) { if (swap) Math2.Swap(ref top, ref bottom); else bottom = top; }
@@ -365,11 +365,11 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Formats string from <b>RECT</b> main fields and properties.
+		/// Formats string from <see cref="RECT"/> main fields and properties.
 		/// </summary>
 		/// <param name="format">
 		/// <see cref="StringBuilder.AppendFormat"/> format string. Example: <c>"({0}, {1}, {4}, {5})"</c>.
-		/// This function passes to <b>AppendFormat</b> 6 values in this order: <b>left</b>, <b>top</b>, <b>right</b>, <b>bottom</b>, <b>Width</b>, <b>Height</b>.
+		/// This function passes to <c>AppendFormat</c> 6 values in this order: <c>left</c>, <c>top</c>, <c>right</c>, <c>bottom</c>, <c>Width</c>, <c>Height</c>.
 		/// </param>
 		public string ToStringFormat(string format) {
 			using (new StringBuilder_(out var b)) {
@@ -379,7 +379,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Converts string to <b>RECT</b>.
+		/// Converts string to <see cref="RECT"/>.
 		/// </summary>
 		/// <returns><c>false</c> if invalid string format.</returns>
 		/// <param name="s">String in format <c>"{L=left T=top W=width H=height}"</c> (<see cref="ToString"/>) or <c>"left top width height"</c> (<see cref="ToStringSimple"/>).</param>
@@ -429,11 +429,19 @@ namespace Au.Types {
 		/// </summary>
 		public Range Range => start..end;
 
-		//public static implicit operator Range(StartEnd s) => s.start..s.end; //could be used to get substring like s[se], but error
+		///
+		public static implicit operator Range(StartEnd s) => s.start..s.end;
+		
+		/// <exception cref="ArgumentException">The start or end of the range is from the end.</exception>
+		public static implicit operator StartEnd(Range r) {
+			if (r.Start.IsFromEnd || r.End.IsFromEnd) throw new ArgumentException();
+			return new(r.Start.Value, r.End.Value);
+		}
 
 		/// <summary>
 		/// Gets string span.
 		/// </summary>
+		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)] //rarely used; easy with string.AsSpan; precedes `start` in intellisense.
 		public RStr Span(string s) => s.AsSpan(start, end - start);
 
 		///
@@ -458,7 +466,7 @@ namespace Au.Types {
 		public BSTR ValueBstr { get { Debug.Assert(vt == Api.VARENUM.VT_BSTR); return BSTR.AttachBSTR((char*)value); } }
 		
 		/// <summary>
-		/// Calls <b>VariantClear</b>.
+		/// Calls <ms>VariantClear</ms>.
 		/// </summary>
 		public void Dispose() {
 			_Clear();
@@ -491,7 +499,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Converts to string.
-		/// Disposes this <b>VARIANT</b>.
+		/// Disposes this <c>VARIANT</c>.
 		/// </summary>
 		public string ToStringAndDispose() {
 			var r = _ToString();

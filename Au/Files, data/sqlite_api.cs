@@ -67,7 +67,7 @@ public enum SLError {
 	/// </summary>
 	ReadOnly /* 8 */,
 	/// <summary>
-	/// Operation terminated by <b>sqlite3_interrupt</b>
+	/// Operation terminated by <c>sqlite3_interrupt</c>
 	/// </summary>
 	Interrupt /* 9 */,
 	/// <summary>
@@ -79,7 +79,7 @@ public enum SLError {
 	/// </summary>
 	Corrupt /* 11 */,
 	/// <summary>
-	/// Unknown opcode in <b>sqlite3_file_control</b>
+	/// Unknown opcode in <c>sqlite3_file_control</c>
 	/// </summary>
 	NotFound /* 12 */,
 	/// <summary>
@@ -131,7 +131,7 @@ public enum SLError {
 	/// </summary>
 	Format /* 24 */,
 	/// <summary>
-	/// 2nd parameter to <b>sqlite3_bind</b> out of range
+	/// 2nd parameter to <c>sqlite3_bind</c> out of range
 	/// </summary>
 	Range /* 25 */,
 	/// <summary>
@@ -139,19 +139,19 @@ public enum SLError {
 	/// </summary>
 	NotADb /* 26 */,
 	/// <summary>
-	/// Notifications from <b>sqlite3_log</b>
+	/// Notifications from <c>sqlite3_log</c>
 	/// </summary>
 	Notice /* 27 */,
 	/// <summary>
-	/// Warnings from <b>sqlite3_log</b>
+	/// Warnings from <c>sqlite3_log</c>
 	/// </summary>
 	Warning /* 28 */,
 	/// <summary>
-	/// <b>sqlite3_step</b> has another row ready
+	/// <c>sqlite3_step</c> has another row ready
 	/// </summary>
 	Row = 100,
 	/// <summary>
-	/// <b>sqlite3_step</b> has finished executing
+	/// <c>sqlite3_step</c> has finished executing
 	/// </summary>
 	Done /* 101 */,
 	///// <summary>
@@ -499,7 +499,7 @@ internal enum ConfigDb
 
 	/// <summary>
 	/// This option is used to enable or disable the two-argument version
-	/// of the <b>fts3_tokenizer</b> function which is part of the FTS3 full-text
+	/// of the <c>fts3_tokenizer</c> function which is part of the FTS3 full-text
 	/// search engine extension.
 	/// </summary>
 	SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER = 1004, // int int*

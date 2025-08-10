@@ -23,7 +23,7 @@ namespace Au.More {
 		/// </param>
 		/// <param name="etc">
 		/// Can be used to specify API <ms>WNDCLASSEX</ms> fields.
-		/// To set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).
+		/// To set cursor use field <c>mCursor</c> (standard cursor) or <c>hCursor</c> (native handle of a custom cursor).
 		/// If <c>null</c>, this function sets arrow cursor and style <c>CS_VREDRAW | CS_HREDRAW</c>.
 		/// </param>
 		/// <exception cref="ArgumentException"><i>wndProc</i> is an instance method. Must be static method or <c>null</c>. If need instance method, use <c>null</c> here and pass <i>wndProc</i> to <see cref="CreateWindow"/>.</exception>
@@ -116,11 +116,11 @@ namespace Au.More {
 		/// <param name="wndProc">Window procedure.</param>
 		/// <param name="keepAlive">
 		/// Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <ms>WM_NCDESTROY</ms> received or thread ended).
-		/// <para>IMPORTANT: In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy <b>HwndHost</b>-ed controls. Then let <i>keepAlive</i>=<c>false</c> and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</para>
+		/// <para>IMPORTANT: In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy <c>HwndHost</c>-ed controls. Then let <i>keepAlive</i>=<c>false</c> and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</para>
 		/// </param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
-		/// If the class was registered with <see cref="RegisterWindowClass"/> with <c>null</c> <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (<b>WM_CREATE</b> etc).
+		/// If the class was registered with <see cref="RegisterWindowClass"/> with <c>null</c> <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <c>CreateWindowEx</c> returns (<c>WM_CREATE</c> etc).
 		/// 
 		/// To destroy the window can be used any function, including API <ms>DestroyWindow</ms>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <ms>WM_CLOSE</ms>.
 		/// </remarks>
@@ -174,7 +174,7 @@ namespace Au.More {
 		/// <param name="name">Window name or <c>null</c>.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
-		/// Styles: <b>WS_POPUP</b>, <b>WS_EX_NOACTIVATE</b>.
+		/// Styles: <ms>WS_POPUP</ms>, <c>WS_EX_NOACTIVATE</c>.
 		/// To destroy the window can be used any function, including API <ms>DestroyWindow</ms>, <see cref="DestroyWindow"/>, <see cref="wnd.Close"/>, API <ms>WM_CLOSE</ms>.
 		/// </remarks>
 		public static wnd CreateMessageOnlyWindow(string className, string name = null) {
@@ -190,7 +190,7 @@ namespace Au.More {
 		/// <param name="name">Window name or <c>null</c>.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		/// <remarks>
-		/// Styles: <b>WS_POPUP</b>, <b>WS_EX_NOACTIVATE</b>.
+		/// Styles: <ms>WS_POPUP</ms>, <c>WS_EX_NOACTIVATE</c>.
 		/// Calls <see cref="CreateWindow(WNDPROC, bool, string, string, WS, WSE, int, int, int, int, wnd, nint, IntPtr, nint)"/> with <i>keepAlive</i>=<c>true</c>.
 		/// </remarks>
 		public static wnd CreateMessageOnlyWindow(WNDPROC wndProc, string className, string name = null) {
@@ -202,7 +202,7 @@ namespace Au.More {
 		/// Auto-registers window class <c>"Au.DWP"</c> with <c>wndproc = DefWindowProc</c> and creates hidden window.
 		/// </summary>
 		/// <param name="messageOnly"></param>
-		/// <param name="wndProcUnsafe">If not <c>null</c>, replaces window procedure (<b>SetWindowLongPtr</b>). The caller must protect the delegate from GC.</param>
+		/// <param name="wndProcUnsafe">If not <c>null</c>, replaces window procedure (<c>SetWindowLongPtr</c>). The caller must protect the delegate from GC.</param>
 		/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 		internal static wnd CreateWindowDWP_(bool messageOnly, WNDPROC wndProcUnsafe = null) {
 			var cn = WindowClassDWP_;
@@ -231,7 +231,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Replaces window procedure (<b>SetWindowLongPtr</b>). Returns previous window procedure.
+		/// Replaces window procedure (<c>SetWindowLongPtr</c>). Returns previous window procedure.
 		/// The caller must protect the delegate from GC.
 		/// </summary>
 		internal static IntPtr SubclassUnsafe_(wnd w, WNDPROC wndProc) {
@@ -337,7 +337,7 @@ namespace Au.More {
 		/// <remarks>
 		/// Supports <see cref="lastError"/>.
 		/// For <i>index</i> can be used constants from <see cref="GCL"/>. All values are the same in 32-bit and 64-bit process.
-		/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
+		/// In 32-bit process actually calls <c>GetClassLong</c>, because <c>GetClassLongPtr</c> is unavailable.
 		/// </remarks>
 		public static nint GetClassLong(wnd w, int index) => Api.GetClassLongPtr(w, index);
 
@@ -364,7 +364,7 @@ namespace Au.More {
 
 		//probably not useful. Dangerous.
 		///// <summary>
-		///// Calls API <ms>SetClassLongPtr</ms> (<b>SetClassLong</b> in 32-bit process).
+		///// Calls API <ms>SetClassLongPtr</ms> (<c>SetClassLong</c> in 32-bit process).
 		///// </summary>
 		///// <exception cref="AuWndException"/>
 		//public static nint SetClassLong(wnd w, int index, nint newValue)
@@ -381,7 +381,7 @@ namespace Au.More {
 		///// To get class atom when you have a window <i>w</i>, use <c>WndUtil.GetClassLong(w, GCL.ATOM)</c>.
 		///// </summary>
 		///// <param name="className">Class name.</param>
-		///// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (<b>CS_GLOBALCLASS</b> style).</param>
+		///// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (<c>CS_GLOBALCLASS</c> style).</param>
 		//public static ushort GetClassAtom(string className, IntPtr moduleHandle = default)
 		//{
 		//	var x = new Api.WNDCLASSEX();
@@ -760,7 +760,7 @@ print.it(s2);
 		/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns <c>false</c>.
 		/// </summary>
 		/// <remarks>
-		/// The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
+		/// The <i>m</i> parameter also accepts <see cref="System.Windows.Interop.MSG"/> (WPF) and <see cref="System.Windows.Forms.Message"/>.
 		/// </remarks>
 		public static bool PrintMsg(out string s, in MSG m, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
 			return PrintMsg(out s, m.hwnd, m.message, m.wParam, m.lParam, options, m_);
@@ -770,7 +770,7 @@ print.it(s2);
 		/// Writes a Windows message to the output, unless it is specified in <i>options</i>.
 		/// </summary>
 		/// <remarks>
-		/// The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
+		/// The <i>m</i> parameter also accepts <see cref="System.Windows.Interop.MSG"/> (WPF) and <see cref="System.Windows.Forms.Message"/>.
 		/// </remarks>
 		public static void PrintMsg(in MSG m, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
 			PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, options, m_);
@@ -783,7 +783,7 @@ print.it(s2);
 		/// </summary>
 		/// <returns><c>true</c> if dropped, <c>false</c> if canceled.</returns>
 		/// <param name="window">Window or control that owns the drag operation. Must be of this thread.</param>
-		/// <param name="mouseButton">Mouse button that is used for the drag operation: <b>Left</b>, <b>Right</b>, <b>Middle</b>.</param>
+		/// <param name="mouseButton">Mouse button that is used for the drag operation: <c>Left</c>, <c>Right</c>, <c>Middle</c>.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
 		public static bool DragLoop(AnyWnd window, MButtons mouseButton = MButtons.Left, Action<WDLArgs> onMouseKeyMessage = null) {
 			wnd w = window.Hwnd;
@@ -860,8 +860,8 @@ print.it(s2);
 		/// <returns><c>false</c> if failed.</returns>
 		/// <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
 		/// <remarks>
-		/// In some cases you may need this function because Windows often disables API <ms>SetForegroundWindow</ms> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
-		/// Usually you don't call <b>SetForegroundWindow</b> directly. It is called by some other functions.
+		/// In some cases you may need this function because Windows often disables API <ms>SetForegroundWindow</ms> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <c>SetForegroundWindow</c> usually just makes the window's taskbar button flash.
+		/// Usually you don't call <c>SetForegroundWindow</c> directly. It is called by some other functions.
 		/// Don't need to call this function before calling <see cref="wnd.Activate"/> and other functions of this library that activate windows.
 		/// </remarks>
 		public static bool EnableActivate(int processId = 0) {
@@ -906,7 +906,7 @@ print.it(s2);
 		/// Unsubclasses window subclassed by <see cref="Subclass"/>.
 		/// Unsubclassing is optional; the window is implicitly unsubclassed when closed.
 		/// </summary>
-		/// <param name="cookie">The return value of <b>Subclass</b>.</param>
+		/// <param name="cookie">The return value of <see cref="Subclass"/>.</param>
 		public static void Unsubclass(object cookie) {
 			if (cookie == null) return;
 			if (cookie is not _SubclassCookie c) throw new ArgumentException();

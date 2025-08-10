@@ -4,7 +4,7 @@ namespace Au.More;
 /// Creates unique name for a temporary file and later auto-deletes the file.
 /// </summary>
 /// <remarks>
-/// Use code like in the example to auto-delete the temporary file if exists. Or call <b>Dispose</b>. Else this class does not delete the file.
+/// Use code like in the example to auto-delete the temporary file if exists. Or call <see cref="Dispose"/>. Else this class does not delete the file.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[

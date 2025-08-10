@@ -11,16 +11,16 @@ public partial class keys {
 	/// 
 	/// In Windows there are two API to get key state - <ms>GetKeyState</ms> and <ms>GetAsyncKeyState</ms>.
 	/// 
-	/// API <b>GetAsyncKeyState</b> is used by class <see cref="keys"/> and not by this class (<b>keys.gui</b>). When physical key state changes (pressed/released), <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
+	/// API <ms>GetAsyncKeyState</ms> is used by class <see cref="keys"/> and not by this class (<c>keys.gui</c>). When physical key state changes (pressed/released), <c>GetAsyncKeyState</c> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
 	/// 
-	/// This class (<b>keys.gui</b>) uses API <ms>GetKeyState</ms>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <ms>AttachThreadInput</ms> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
+	/// This class (<c>keys.gui</c>) uses API <ms>GetKeyState</ms>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <c>GetAsyncKeyState</c>, but it depends on API <ms>AttachThreadInput</ms> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
 	/// 
 	/// The key state returned by these API is not always the same as of the physical keyboard. There is no API to get real physical state. Some cases when it is different:
 	/// 1. The key is pressed or released by software, such as the <see cref="send"/> function of this library.
 	/// 2. The key is blocked by a low-level hook. For example, hotkey triggers of this library use hooks.
 	/// 3. The foreground window belongs to a process with higher UAC integrity level.
 	/// 
-	/// Also there is API <ms>GetKeyboardState</ms>. It gets states of all keys in single call. Works like <b>GetKeyState</b>.
+	/// Also there is API <ms>GetKeyboardState</ms>. It gets states of all keys in single call. Works like <ms>GetKeyState</ms>.
 	/// </remarks>
 	public static class gui {
 		//rejected: instead of class keys.gui add property keys.isUIThread. If true, let its functions work like now keys.gui.
@@ -381,7 +381,7 @@ public partial class keys {
 	/// Registers a temporary hotkey and waits for it.
 	/// </summary>
 	/// <param name="timeout">Timeout, seconds. Can be 0 (infinite), >0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <c>(KMod, KKey)</c>, enum <b>KKey</b>, enum <b>Keys</b>, struct <b>KHotkey</b>.</param>
+	/// <param name="hotkey">Hotkey. Can be: string like <c>"Ctrl+Shift+Alt+Win+K"</c>, tuple <c>(KMod, KKey)</c>, enum <see cref="KKey"/>, enum <c>Keys</c>, struct <see cref="KHotkey"/>.</param>
 	/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 	/// <returns>Returns <c>true</c>. On timeout returns <c>false</c> if <i>timeout</i> is negative; else exception.</returns>
 	/// <exception cref="ArgumentException">Error in hotkey string.</exception>
@@ -470,14 +470,14 @@ public partial class keys {
 	/// <br/>• <see cref="clipboardData"/> - clipboard data to paste.
 	/// <br/>• <see cref="KKey"/> - a single key.\
 	/// Example: <c>keys.send("Shift+", KKey.Left, "*3");</c> is the same as <c>keys.send("Shift+Left*3");</c>
-	/// <br/>• <b>int</b> - sleep milliseconds. Max 10000.\
+	/// <br/>• <c>int</c> - sleep milliseconds. Max 10000.\
 	/// Example: <c>keys.send("Left", 500, "Right");</c>
 	/// <br/>• <see cref="Action"/> - callback function.\
 	/// Example: <c>Action click = () => mouse.click(); keys.send("Shift+", click);</c>
 	/// <br/>• <see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.\
 	/// Example: <c>keys.send(new KKeyScan(0x3B, false)); //key F1</c>\
 	/// Example: <c>keys.send(new KKeyScan(KKey.Enter, true)); //numpad Enter</c>
-	/// <br/>• <b>char</b> - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator <c>^</c>.
+	/// <br/>• <c>char</c> - a single character. Like text with <see cref="OKeyText.KeysOrChar"/> or operator <c>^</c>.
 	/// </param>
 	/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
 	/// <exception cref="AuException">Failed. When sending text, fails if there is no focused window.</exception>
@@ -506,7 +506,7 @@ public partial class keys {
 	/// If the <c>CapsLock</c> key is toggled, untoggles it temporarily (presses it before and after).</td>
 	/// <td><c>true</c>.
 	/// Does not touch the <c>CapsLock</c> key.
-	/// <br/>Alphabetic keys of "keys" arguments can depend on <c>CapsLock</c>. Text of "text" arguments doesn't depend on <c>CapsLock</c>, unless <see cref="OKey.TextHow"/> is <b>KeysX</b>.</td>
+	/// <br/>Alphabetic keys of "keys" arguments can depend on <c>CapsLock</c>. Text of "text" arguments doesn't depend on <c>CapsLock</c>, unless <see cref="OKey.TextHow"/> is <c>KeysX</c>.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.NoModOff"/></td>
@@ -543,7 +543,7 @@ public partial class keys {
 	/// <tr>
 	/// <td><see cref="OKey.TextHow"/></td>
 	/// <td><see cref="OKeyText.Characters"/>.</td>
-	/// <td><b>KeysOrChar</b>, <b>KeysOrPaste</b> or <b>Paste</b>.</td>
+	/// <td><c>KeysOrChar</c>, <c>KeysOrPaste</c> or <c>Paste</c>.</td>
 	/// </tr>
 	/// <tr>
 	/// <td><see cref="OKey.TextShiftEnter"/></td>
@@ -668,12 +668,12 @@ public partial class keys {
 	/// Generates virtual keystrokes. Like <see cref="send"/>, but without reliability features: delays, user input blocking, resetting modifiers/<c>CapsLock</c>.
 	/// </summary>
 	/// <remarks>
-	/// Ignores <b>opt.key</b> and instead uses default options with these changes:
-	/// - <b>SleepFinally</b> = 0.
-	/// - <b>KeySpeed</b> = 0.
-	/// - <b>NoBlockInput</b> = <c>true</c>.
-	/// - <b>NoCapsOff</b> = <c>true</c>.
-	/// - <b>NoModOff</b> = <c>true</c>.
+	/// Ignores <see cref="opt.key"/> and instead uses default options with these changes:
+	/// - <c>SleepFinally</c> = 0.
+	/// - <c>KeySpeed</c> = 0.
+	/// - <c>NoBlockInput</c> = <c>true</c>.
+	/// - <c>NoCapsOff</c> = <c>true</c>.
+	/// - <c>NoModOff</c> = <c>true</c>.
 	/// </remarks>
 	/// <seealso cref="more.sendKey"/>
 	/// <inheritdoc cref="keys.send" path="//param|//exception"/>

@@ -41,11 +41,11 @@ public class NormalClass {
 /// Used for parameters of functions like <see cref="mouse.move"/>, <see cref="wnd.Move"/>.
 /// </summary>
 /// <remarks>
-/// To specify a normal coordinate (the origin is the left or top edge), assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>).
+/// To specify a normal coordinate (the origin is the left or top edge), assign an <c>int</c> value (implicit conversion from <c>int</c> to <c>Coord</c>).
 /// To specify a reverse coordinate (the origin is the right or bottom edge), use <see cref="Reverse"/> or a "from end" index like <c>^1</c>. It is towards the left or top edge, unless negative. Or use <see cref="Max"/> or <see cref="MaxInside"/>.
 /// To specify a "fraction of the rectangle" coordinate, use <see cref="Fraction"/> or a value of type float like <c>.5f</c>. Or use <see cref="Center"/>.
 /// The meaning of <c>default(Coord)</c> depends on function where used. Many functions interpret it as center (same as <c>Coord.Center</c> or <c>.5f</c>).
-/// Also there are functions to convert <b>Coord</b> to normal coordinates.
+/// Also there are functions to convert <c>Coord</c> to normal coordinates.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -91,18 +91,18 @@ public record struct Coord {
 	//info: if type and value are constants, compiler knows the final value and does not use the << and | operators in the compiled code.
 	
 	/// <summary>
-	/// Creates <b>Coord</b> of <b>Normal</b> type.
+	/// Creates <see cref="Coord"/> of <c>Normal</c> type.
 	/// </summary>
 	//[MethodImpl(MethodImplOptions.NoInlining)] //makes bigger/slower
 	public static implicit operator Coord(int v) => new(CoordType.Normal, v);
 	
 	/// <summary>
-	/// Creates <b>Coord</b> of <b>Normal</b> or <b>Reverse</b> type. Reverse if the index is from end, like <c>^1</c>.
+	/// Creates <see cref="Coord"/> of <c>Normal</c> or <c>Reverse</c> type. Reverse if the index is from end, like <c>^1</c>.
 	/// </summary>
 	public static implicit operator Coord(Index v) => new(v.IsFromEnd ? CoordType.Reverse : CoordType.Normal, v.Value);
 	
 	/// <summary>
-	/// Creates <b>Coord</b> of <b>Fraction</b> type.
+	/// Creates <see cref="Coord"/> of <c>Fraction</c> type.
 	/// </summary>
 	public static implicit operator Coord(float v) => new(CoordType.Fraction, BitConverter.SingleToInt32Bits(v));
 	
@@ -119,14 +119,14 @@ public record struct Coord {
 	//tested: compiler does not allow to assign nint.
 	
 	/// <summary>
-	/// Creates <b>Coord</b> of <b>Reverse</b> type.
+	/// Creates <see cref="Coord"/> of <c>Reverse</c> type.
 	/// Value 0 is at the right or bottom, and does not belong to the rectangle. Positive values are towards left or top.
 	/// Instead can be use "from end" index, for example argument <c>Coord.Reverse(1)</c> can be replaced with <c>^1</c>.
 	/// </summary>
 	public static Coord Reverse(int v) => new(CoordType.Reverse, v);
 	
 	/// <summary>
-	/// Creates <b>Coord</b> of <b>Fraction</b> type.
+	/// Creates <see cref="Coord"/> of <c>Fraction</c> type.
 	/// Value 0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0 and >=1.0 are outside of the rectangle.
 	/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(.5)</c> can be replaced with <c>.5f</c>.
 	/// </summary>
@@ -180,7 +180,7 @@ public record struct Coord {
 	/// <param name="y">Y coordinate relative to <i>r</i>.</param>
 	/// <param name="r">The rectangle.</param>
 	/// <param name="widthHeight">Use only width and height of <i>r</i>. If <c>false</c> (default), the function adds <i>r</i> offset (left and top).</param>
-	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>. Not used with <i>widthHeight</i>.</param>
+	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <see cref="Coord.Center"/>. Not used with <i>widthHeight</i>.</param>
 	public static POINT NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false) {
 		if (widthHeight) r.Move(0, 0);
 		else if (centerIfEmpty) {
@@ -197,7 +197,7 @@ public record struct Coord {
 	/// <param name="y">Y coordinate relative to the client area of <i>w</i>.</param>
 	/// <param name="w">The window.</param>
 	/// <param name="nonClient"><i>x</i> <i>y</i> are relative to the entire <i>w</i> rectangle, not to its client area.</param>
-	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>.</param>
+	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <see cref="Coord.Center"/>.</param>
 	public static POINT NormalizeInWindow(Coord x, Coord y, wnd w, bool nonClient = false, bool centerIfEmpty = false) {
 		//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
 		
@@ -227,7 +227,7 @@ public record struct Coord {
 	/// <param name="workArea"><i>x</i> <i>y</i> are relative to the work area.</param>
 	/// <param name="screen">If used, <i>x</i> <i>y</i> are relative to this screen. Default - primary screen. Example: <c>screen.index(1)</c>.</param>
 	/// <param name="widthHeight">Use only width and height of the screen rectangle. If <c>false</c>, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
-	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <b>Coord.Center</b>.</param>
+	/// <param name="centerIfEmpty">If <i>x</i> or <i>y</i> is <c>default</c>, use <see cref="Coord.Center"/>.</param>
 	public static POINT Normalize(Coord x, Coord y, bool workArea = false, screen screen = default, bool widthHeight = false, bool centerIfEmpty = false) {
 		if (centerIfEmpty) {
 			if (x.IsEmpty) x = Center;
@@ -302,14 +302,14 @@ public class PopupXY {
 	/// <param name="workArea"><i>x y</i> are relative to the work area of the screen.</param>
 	/// <param name="screen">Can be used to specify a screen. Default - primary. Example: <c>screen.index(1)</c>.</param>
 	/// <remarks>
-	/// Also there is are implicit conversions from tuple (x, y) and <b>POINT</b>. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
+	/// Also there is are implicit conversions from tuple (x, y) and <see cref="POINT"/>. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
 	/// </remarks>
 	public PopupXY(Coord x = default, Coord y = default, bool workArea = true, screen screen = default) {
 		this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
 	}
 	
 	/// <summary>
-	/// Creates new <b>PopupXY</b> that specifies position in a rectangle. For example of the owner window.
+	/// Creates new <see cref="PopupXY"/> that specifies position in a rectangle. For example of the owner window.
 	/// </summary>
 	/// <param name="r">Rectangle relative to the primary screen.</param>
 	/// <param name="x">X relative to the rectangle. Default - center.</param>
@@ -317,11 +317,11 @@ public class PopupXY {
 	public static PopupXY In(RECT r, Coord x = default, Coord y = default) => new(x, y) { inRect = true, rect = r };
 	
 	/// <summary>
-	/// Creates new <b>PopupXY</b> that specifies position relative to the work area of the primary screen.
+	/// Creates new <see cref="PopupXY"/> that specifies position relative to the work area of the primary screen.
 	/// </summary>
 	public static implicit operator PopupXY((Coord x, Coord y) p) => new(p.x, p.y, true);
 	
-	/// <summary>Creates new <b>PopupXY</b> that specifies position relative to the primary screen (not to the work area).</summary>
+	/// <summary>Creates new <see cref="PopupXY"/> that specifies position relative to the primary screen (not to the work area).</summary>
 	public static implicit operator PopupXY(POINT p) => new(p.x, p.y, false);
 	//info: this conversion can be used with PopupXY.Mouse.
 	
@@ -364,26 +364,26 @@ public class PopupXY {
 
 /// <summary>
 /// A window handle.
-/// Used for function parameters where the function needs a window handle as <see cref="wnd"/> but also allows to pass a variable of any of these types: <b>System.Windows.DependencyObject</b> (WPF window or control), <b>System.Windows.Forms.Control</b> (<b>Form</b> or control), <b>IntPtr</b> (window handle).
+/// Used for function parameters where the function needs a window handle as <see cref="wnd"/> but also allows to pass a variable of any of these types: <see cref="System.Windows.DependencyObject"/> (WPF window or control), <see cref="System.Windows.Forms.Control"/> (<c>Form</c> or control), <c>IntPtr</c> (window handle).
 /// </summary>
 public struct AnyWnd {
 	readonly object _o;
 	AnyWnd(object o) { _o = o; }
 	
-	/// <summary>Assignment of a value of type <b>wnd</b>.</summary>
+	/// <summary>Assignment of a value of type <see cref="wnd"/>.</summary>
 	public static implicit operator AnyWnd(wnd w) => new(w);
 	
-	/// <summary>Assignment of a window handle as <b>IntPtr</b>.</summary>
+	/// <summary>Assignment of a window handle as <c>IntPtr</c>.</summary>
 	public static implicit operator AnyWnd(IntPtr hwnd) => new((wnd)hwnd);
 	
-	/// <summary>Assignment of a value of type <b>System.Windows.Forms.Control</b> (<b>Form</b> or any control class).</summary>
+	/// <summary>Assignment of a value of type <see cref="System.Windows.Forms.Control"/> (<c>Form</c> or any control class).</summary>
 	public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new(c);
 	
-	/// <summary>Assignment of a value of type <b>System.Windows.DependencyObject</b> (WPF window or control).</summary>
+	/// <summary>Assignment of a value of type <c>System.Windows.DependencyObject</c> (WPF window or control).</summary>
 	public static implicit operator AnyWnd(System.Windows.DependencyObject c) => c != null ? new AnyWnd(new object[] { c }) : default;
 	
 	/// <summary>
-	/// Gets the window or control handle as <b>wnd</b>.
+	/// Gets the window or control handle as <see cref="wnd"/>.
 	/// </summary>
 	/// <value><c>default(wnd)</c> if not assigned.</value>
 	public wnd Hwnd => wnd.Internal_.FromObject(_o);
@@ -453,7 +453,7 @@ public struct Strings : IEnumerable<string> {
 
 /// <summary>
 /// Font name, size and style.
-/// If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
+/// If <c>Name</c> not set, will be used standard GUI font; then <c>Size</c> can be 0 to use size of standard GUI font.
 /// On high-DPI screen the font size will be scaled.
 /// </summary>
 public record class FontNSS(int Size = 0, string Name = null, bool Bold = false, bool Italic = false) {

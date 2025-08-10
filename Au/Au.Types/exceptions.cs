@@ -9,14 +9,14 @@ namespace Au.Types {
 	/// </remarks>
 	public class AuException : Exception {
 		/// <summary>
-		/// Sets <b>Message</b> = <i>message</i> (default <c>"Failed."</c>).
-		/// Sets <b>NativeErrorCode</b> = 0.
+		/// Sets <see cref="Message"/> = <i>message</i> (default <c>"Failed."</c>).
+		/// Sets <see cref="NativeErrorCode"/> = 0.
 		/// </summary>
 		public AuException(string message = "Failed.", Exception innerException = null) : base(message, innerException) { }
 
 		/// <summary>
-		/// Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : lastError.code</c>.
-		/// Sets <b>Message</b> = <c>message + " " + lastError.messageFor(NativeErrorCode)</c>.
+		/// Sets <see cref="NativeErrorCode"/> = <c>(errorCode != 0) ? errorCode : lastError.code</c>.
+		/// Sets <see cref="Message"/> = <c>message + " " + lastError.messageFor(NativeErrorCode)</c>.
 		/// </summary>
 		public AuException(int errorCode, string message = "Failed.", Exception innerException = null) : base(message, innerException) {
 			NativeErrorCode = (errorCode != 0) ? errorCode : lastError.code;
@@ -28,20 +28,20 @@ namespace Au.Types {
 		/// <summary>Gets error message.</summary>
 		public override string Message => FormattedMessage ?? FormatMessage();
 
-		/// <summary>String created by <b>FormatMessage</b>, which should be called by the <b>Message</b> override if <c>null</c>. Initially <c>null</c>.</summary>
+		/// <summary>String created by <see cref="FormatMessage"/>, which should be called by the <see cref="Message"/> override if <c>null</c>. Initially <c>null</c>.</summary>
 		protected string FormattedMessage;
 
 		/// <summary>
-		/// Formats error message. Sets and returns <b>FormattedMessage</b>.
+		/// Formats error message. Sets and returns <see cref="FormattedMessage"/>.
 		/// </summary>
 		/// <remarks>
 		/// As base text, uses the text passed to the constructor (default <c>"Failed."</c>).
 		/// If it starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>.
 		/// If it ends with <c>"*"</c>, replaces the <c>"*"</c> with <i>commonPostfix</i> if it is not empty.
 		/// If then the message does not end with <c>"."</c>, appends <c>"."</c>.
-		/// If <i>appendMessage</i> is <c>null</c>, uses <c>lastError.messageFor(NativeErrorCode)</c> if <b>NativeErrorCode</b> not 0.
+		/// If <i>appendMessage</i> is <c>null</c>, uses <c>lastError.messageFor(NativeErrorCode)</c> if <see cref="NativeErrorCode"/> not 0.
 		/// If then <i>appendMessage</i> is not empty, appends <c>" " + appendMessage</c>.
-		/// Also appends <b>InnerException.Message</b> in new tab-indented line if <b>InnerException</b> is not <c>null</c>.
+		/// Also appends <c>InnerException.Message</c> in new tab-indented line if <see cref="Exception.InnerException"/> is not <c>null</c>.
 		/// </remarks>
 		protected string FormatMessage(string appendMessage = null, string commonPostfix = null) {
 			var m = base.Message;
@@ -62,20 +62,20 @@ namespace Au.Types {
 		}
 
 		/// <summary>
-		/// If <i>errorCode</i> is not 0, throws <b>AuException</b> that includes the code and its message.
+		/// If <i>errorCode</i> is not 0, throws <see cref="AuException"/> that includes the code and its message.
 		/// More info: <see cref="FormatMessage"/>.
 		/// </summary>
-		/// <param name="errorCode">Windows API error code or <b>HRESULT</b>.</param>
+		/// <param name="errorCode">Windows API error code or <c>HRESULT</c>.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
 		public static void ThrowIfHresultNot0(int errorCode, string message = null) {
 			if (errorCode != 0) throw new AuException(errorCode, message);
 		}
 
 		/// <summary>
-		/// If <i>errorCode</i> is less than 0, throws <b>AuException</b> that includes the code and its message.
+		/// If <i>errorCode</i> is less than 0, throws <see cref="AuException"/> that includes the code and its message.
 		/// More info: <see cref="FormatMessage"/>.
 		/// </summary>
-		/// <param name="errorCode">Windows API error code or <b>HRESULT</b>.</param>
+		/// <param name="errorCode">Windows API error code or <c>HRESULT</c>.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
 		public static void ThrowIfHresultNegative(int errorCode, string message = null) {
 			if (errorCode < 0) throw new AuException(errorCode, message);
@@ -86,9 +86,9 @@ namespace Au.Types {
 	/// Exception thrown mostly by <see cref="wnd"/> functions.
 	/// </summary>
 	/// <remarks>
-	/// Some constructors support Windows API error code. Then <b>Message</b> also will contain its error description.
-	/// If error code <b>ERROR_INVALID_WINDOW_HANDLE</b>, <b>Message</b> also depends on whether the window handle is 0.
-	/// If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses <b>ERROR_INVALID_WINDOW_HANDLE</b>.
+	/// Some constructors support Windows API error code. Then <see cref="Message"/> also will contain its error description.
+	/// If error code <c>ERROR_INVALID_WINDOW_HANDLE</c>, <see cref="Message"/> also depends on whether the window handle is 0.
+	/// If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses <c>ERROR_INVALID_WINDOW_HANDLE</c>.
 	/// If the string passed to the constructor starts with <c>"*"</c>, replaces the <c>"*"</c> with <c>"Failed to "</c>. If ends with <c>"*"</c>, replaces the <c>"*"</c> with <c>" window."</c>. If does not end with <c>"."</c>, appends <c>"."</c>.
 	/// </remarks>
 	public class AuWndException : AuException {
@@ -96,15 +96,15 @@ namespace Au.Types {
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
 
 		/// <summary>
-		/// Sets <b>Message</b> = <i>message</i> (default <c>"Failed."</c>).
-		/// Sets <b>NativeErrorCode</b> = <c>w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE</c>.
+		/// Sets <see cref="Message"/> = <i>message</i> (default <c>"Failed."</c>).
+		/// Sets <see cref="AuException.NativeErrorCode"/> = <c>w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE</c>.
 		/// </summary>
 		public AuWndException(wnd w, string message = "Failed.", Exception innerException = null)
 			: base(message, innerException) { Window = w; NativeErrorCode = _Code(0, w); }
 
 		/// <summary>
-		/// Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : (w.IsAlive ? lastError.code : ERROR_INVALID_WINDOW_HANDLE)</c>.
-		/// Sets <b>Message</b> = <c>message + " " + lastError.messageFor(NativeErrorCode)</c>.
+		/// Sets <see cref="AuException.NativeErrorCode"/> = <c>(errorCode != 0) ? errorCode : (w.IsAlive ? lastError.code : ERROR_INVALID_WINDOW_HANDLE)</c>.
+		/// Sets <see cref="Message"/> = <c>message + " " + lastError.messageFor(NativeErrorCode)</c>.
 		/// </summary>
 		public AuWndException(wnd w, int errorCode, string message = "Failed.", Exception innerException = null)
 			: base(_Code(errorCode, w), message, innerException) { Window = w; }
@@ -175,7 +175,7 @@ namespace Au.Types {
 		const string c_message = "The main input desktop is inactive; mouse, keyboard, clipboard and UI functions are disabled.";
 
 		/// <summary>
-		/// Calls <see cref="miscInfo.isInputDesktop"/>. If it returns <c>false</c>, throws <b>InputDesktopException</b>.
+		/// Calls <see cref="miscInfo.isInputDesktop"/>. If it returns <c>false</c>, throws <see cref="InputDesktopException"/>.
 		/// </summary>
 		/// <param name="message">Message text before the standard message text of this exception.</param>
 		/// <exception cref="InputDesktopException"></exception>

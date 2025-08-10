@@ -4,7 +4,7 @@ namespace Au.More;
 /// Gets CPU usage.
 /// </summary>
 /// <remarks>
-/// You can use the static functions (easier) or a <b>CpuUsage</b> instance. A <b>CpuUsage</b> instance must be disposed (use <c>using</c>).
+/// You can use the static functions (easier) or a <c>CpuUsage</c> instance. A <c>CpuUsage</c> instance must be disposed (use <c>using</c>).
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -74,7 +74,7 @@ public sealed class CpuUsage : IDisposable {
 	
 	/// <summary>
 	/// Ends measuring CPU usage, and gets result.
-	/// Call this after calling <see cref="Start"/> and waiting at least 1 ms. Don't call if <b>Start</b> returned <c>false</c>.
+	/// Call this after calling <see cref="Start"/> and waiting at least 1 ms. Don't call if <c>Start</c> returned <c>false</c>.
 	/// </summary>
 	/// <returns>CPU usage 0 to 100 %.</returns>
 	/// <exception cref="InvalidOperationException">Called without successful <see cref="Start"/>.</exception>

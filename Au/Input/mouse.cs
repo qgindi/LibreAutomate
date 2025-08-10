@@ -32,12 +32,12 @@ namespace Au {
 		public static POINT xy { get { Api.GetCursorPos(out var p); return p; } }
 		
 		///// <summary>
-		///// Gets cursor (mouse pointer) X coordinate (<b>mouse.xy.x</b>).
+		///// Gets cursor (mouse pointer) X coordinate (<c>mouse.xy.x</c>).
 		///// </summary>
 		//public static int x => xy.x;
 		
 		///// <summary>
-		///// Gets cursor (mouse pointer) Y coordinate (<b>mouse.xy.y</b>).
+		///// Gets cursor (mouse pointer) Y coordinate (<c>mouse.xy.y</c>).
 		///// </summary>
 		//public static int y => xy.y;
 		
@@ -168,7 +168,7 @@ namespace Au {
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the position <i>x y</i> relative to UI object <i>obj</i>.
 		/// </summary>
-		/// <param name="obj">Can be <b>wnd</b>, <b>elm</b>, <b>uiimage</b>, <b>screen</b>, <b>RECT</b> in screen, <b>RECT</b> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>)</param>
+		/// <param name="obj">Can be <see cref="wnd"/>, <see cref="elm"/>, <see cref="uiimage"/>, <see cref="screen"/>, <see cref="RECT"/> in screen, <see cref="RECT"/> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>)</param>
 		/// <param name="x">X coordinate relative to <i>obj</i>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to <i>obj</i>. Default - center.</param>
 		/// <inheritdoc cref="move(POINT)" path="//exception|//remarks"/>
@@ -235,12 +235,12 @@ namespace Au {
 		/// Coordinates.
 		/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
 		/// </param>
-		/// <exception cref="ArgumentOutOfRangeException">The position is not in screen. No exception if option <b>Relaxed</b> is <c>true</c> (then moves to a screen edge).</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The position is not in screen. No exception if option <c>Relaxed</c> is <c>true</c> (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">
 		/// Failed to move the cursor to that position. Some reasons:
 		/// - The active window belongs to a process of higher [](xref:uac) integrity level.
-		/// - Another thread blocks or modifies mouse input (API <b>BlockInput</b>, mouse hooks, frequent API <b>SendInput</b> etc).
-		/// - Some application called API <b>ClipCursor</b>. No exception if option <b>Relaxed</b> is <c>true</c> (then final cursor position is undefined).
+		/// - Another thread blocks or modifies mouse input (API <ms>BlockInput</ms>, mouse hooks, frequent API <ms>SendInput</ms> etc).
+		/// - Some application called API <ms>ClipCursor</ms>. No exception if option <c>Relaxed</c> is <c>true</c> (then final cursor position is undefined).
 		/// </exception>
 		/// <exception cref="InputDesktopException"></exception>
 		/// <remarks>
@@ -309,8 +309,8 @@ namespace Au {
 		/// Moves the cursor (mouse pointer) relative to <see cref="lastXY"/> or <see cref="xy"/>.
 		/// </summary>
 		/// <returns>Final cursor position in screen.</returns>
-		/// <param name="dx">X offset from <b>lastXY.x</b> or <b>xy.x</b>.</param>
-		/// <param name="dy">Y offset from <b>lastXY.y</b> or <b>xy.y</b>.</param>
+		/// <param name="dx">X offset from <c>lastXY.x</c> or <c>xy.x</c>.</param>
+		/// <param name="dy">Y offset from <c>lastXY.y</c> or <c>xy.y</c>.</param>
 		/// <param name="useLastXY">If <c>true</c> (default), moves relative to <see cref="lastXY"/>, else relative to <see cref="xy"/>.</param>
 		/// <inheritdoc cref="move(POINT)" path="//exception|//remarks"/>
 		public static POINT moveBy(int dx, int dy, bool useLastXY = true) {
@@ -388,8 +388,8 @@ namespace Au {
 		/// <summary>
 		/// Sends single mouse button down or up event.
 		/// Does not use the action flags of button.
-		/// Applies <b>SM_SWAPBUTTON</b>.
-		/// Also moves to <i>p</i> in the same API <b>SendInput</b> call.
+		/// Applies <c>SM_SWAPBUTTON</c>.
+		/// Also moves to <i>p</i> in the same API <c>SendInput</c> call.
 		/// </summary>
 		internal static void SendButton_(MButton button, bool down, POINT p) {
 			//CONSIDER: release user-pressed modifier keys, like keys class does.
@@ -425,10 +425,10 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Calls <b>Api.SendInput</b> to send single mouse movement or/and button down or up or wheel event.
-		/// Converts <i>x</i>, <i>y</i> as need for <b>MOUSEINPUT</b>.
+		/// Calls <c>Api.SendInput</c> to send single mouse movement or/and button down or up or wheel event.
+		/// Converts <i>x</i>, <i>y</i> as need for <c>MOUSEINPUT</c>.
 		/// For X buttons use <c>Api.IMFlag.XDown|Api.IMFlag.X1</c> etc.
-		/// If <b>Api.IMFlag.Move</b>, adds <b>Api.IMFlag.Absolute</b>.
+		/// If <c>Api.IMFlag.Move</c>, adds <c>Api.IMFlag.Absolute</c>.
 		/// </summary>
 		static unsafe void _SendRaw(Api.IMFlags flags, int x = 0, int y = 0, int wheel = 0) {
 			if (0 != (flags & Api.IMFlags.Move)) {
@@ -573,7 +573,7 @@ namespace Au {
 		/// Clicks, double-clicks, presses or releases a mouse button at position <i>x y</i> relative to UI object <i>obj</i>.
 		/// </summary>
 		/// <param name="button">Button and action. Default: left click.</param>
-		/// <param name="obj">Can be <b>wnd</b>, <b>elm</b> (<see cref="elm.MouseClick"/>), <b>uiimage</b> (<see cref="uiimage.MouseClick"/>), <b>screen</b>, <b>RECT</b> in screen, <b>RECT</b> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>).</param>
+		/// <param name="obj">Can be <see cref="wnd"/>, <see cref="elm"/> (<see cref="elm.MouseClick"/>), <see cref="uiimage"/> (<see cref="uiimage.MouseClick"/>), <see cref="screen"/>, <see cref="RECT"/> in screen, <see cref="RECT"/> in window, <see cref="lastXY"/> (<c>true</c>), <see cref="xy"/> (<c>false</c>).</param>
 		/// <param name="x">X coordinate relative to <i>obj</i>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
 		/// <param name="y">Y coordinate relative to <i>obj</i>. Default - center.</param>
 		/// <example></example>
@@ -647,7 +647,7 @@ namespace Au {
 		/// <param name="button">Button and action. Default: left click.</param>
 		/// <param name="useLastXY">
 		/// Use <see cref="lastXY"/>. It is the mouse cursor position set by the most recent "mouse move" or "mouse click" function. Use this option for reliability.
-		/// Example: <c>mouse.move(100, 100); mouse.clickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>mouse.move</c> sets it and <c>mouse.clickEx</c> uses it. In such case this option atomically moves the cursor to <b>lastXY</b>. This movement is instant and does not use <see cref="opt"/>.
+		/// Example: <c>mouse.move(100, 100); mouse.clickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>mouse.move</c> sets it and <c>mouse.clickEx</c> uses it. In such case this option atomically moves the cursor to <see cref="lastXY"/>. This movement is instant and does not use <see cref="opt"/>.
 		/// If <c>false</c> (default), clicks at the current cursor position (does not move it).
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid <i>button</i> flags (multiple buttons or actions specified).</exception>
@@ -683,7 +683,7 @@ namespace Au {
 		/// <inheritdoc cref="move(POINT)" path="/exception"/>
 		/// <remarks>
 		/// To move the mouse cursor, calls <see cref="move(wnd, Coord, Coord, bool)"/>.
-		/// If after moving the cursor it is not in the window (or a window of its thread), activates the window (or its top-level parent window). Throws exception if then <i>x y</i> is still not in the window. Skips all this when just releasing button or if option <b>Relaxed</b> is <c>true</c>. If <i>w</i> is a control, <i>x y</i> can be somewhere else in its top-level parent window.
+		/// If after moving the cursor it is not in the window (or a window of its thread), activates the window (or its top-level parent window). Throws exception if then <i>x y</i> is still not in the window. Skips all this when just releasing button or if option <c>Relaxed</c> is <c>true</c>. If <i>w</i> is a control, <i>x y</i> can be somewhere else in its top-level parent window.
 		/// 
 		/// Uses <see cref="opt.mouse"/>: <see cref="OMouse.MoveSpeed"/>, <see cref="OMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="OMouse.ClickSpeed"/>, <see cref="OMouse.ClickSleepFinally"/>, <see cref="OMouse.Relaxed"/>.
 		/// </remarks>
@@ -998,7 +998,7 @@ namespace Au {
 		
 		//not used
 		///// <summary>
-		///// Releases mouse buttons pressed by this thread (<b>t_pressedButtons</b>).
+		///// Releases mouse buttons pressed by this thread (<c>t_pressedButtons</c>).
 		///// </summary>
 		///// <param name="p">If not <c>null</c>, and XY is different, moves to this point. Used for reliability.</param>
 		//static void _ReleaseButtons(POINT? p = null)
@@ -1075,7 +1075,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Waits while some buttons are pressed, except those pressed by a <see cref="mouse"/> class function in this thread.
-		/// Does nothing if option <b>Relaxed</b> is <c>true</c>.
+		/// Does nothing if option <c>Relaxed</c> is <c>true</c>.
 		/// </summary>
 		internal static void WaitForNoButtonsPressed_() {
 			//not public, because we have WaitForNoButtonsPressed, which is unaware about script-pressed buttons, and don't need this awareness because the script author knows what is pressed by that script
@@ -1197,10 +1197,10 @@ namespace Au {
 		/// Posts mouse-click messages to the window.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate in <b>w</b> client area or <b>rect</b>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
-		/// <param name="y">Y coordinate in <b>w</b> client area or <b>rect</b>. Default - center.</param>
+		/// <param name="x">X coordinate in <i>w</i> client area or <i>rect</i>. Default - center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
+		/// <param name="y">Y coordinate in <i>w</i> client area or <i>rect</i>. Default - center.</param>
 		/// <param name="button">Can specify the left (default), right or middle button. Also flag for double-click, press or release.</param>
-		/// <param name="rect">A rectangle in <b>w</b> client area. If <c>null</c> (default), <i>x y</i> are relative to the client area.</param>
+		/// <param name="rect">A rectangle in <i>w</i> client area. If <c>null</c> (default), <i>x y</i> are relative to the client area.</param>
 		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="ArgumentException">Unsupported button specified.</exception>
 		/// <remarks>
@@ -1259,8 +1259,8 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Workaround for the documented <b>BM_CLICK</b>/<b>WM_LBUTTONDOWN</b> bug of classic button controls: randomly fails if inactive window.
-		/// If <i>c</i> is a button in a dialog box, posts <b>WM_ACTIVATE</b> messages to the dialog box.
+		/// Workaround for the documented <c>BM_CLICK</c>/<c>WM_LBUTTONDOWN</c> bug of classic button controls: randomly fails if inactive window.
+		/// If <i>c</i> is a button in a dialog box, posts <c>WM_ACTIVATE</c> messages to the dialog box.
 		/// </summary>
 		internal ref struct ButtonPostClickWorkaround_ {
 			readonly wnd _w;
@@ -1315,7 +1315,7 @@ namespace Au {
 			}
 
 			/// <summary>
-			/// Sends a mouse wheel message (<b>WM_MOUSEWHEEL</b>) directly to window or control.
+			/// Sends a mouse wheel message (<c>WM_MOUSEWHEEL</c>) directly to window or control.
 			/// </summary>
 			/// <param name="w">Window or control.</param>
 			/// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
@@ -1336,8 +1336,8 @@ namespace Au {
 			///// <param name="waitMS">
 			///// Maximal time to wait, milliseconds. Also which API to use.
 			///// If 0 (default), calls API <ms>PostMessage</ms> (it does not wait) and waits <c>opt.mouse.ClickSpeed</c> ms.
-			///// If less than 0 (eg <b>Timeout.Infinite</b>), calls API <ms>SendMessage</ms> which usually waits until the window finishes to process the message.
-			///// Else calls API <ms>SendMessageTimeout</ms> which waits max <i>waitMS</i> milliseconds, then throws <b>AuException</b>.
+			///// If less than 0 (eg <c>Timeout.Infinite</c>), calls API <ms>SendMessage</ms> which usually waits until the window finishes to process the message.
+			///// Else calls API <ms>SendMessageTimeout</ms> which waits max <i>waitMS</i> milliseconds, then throws <see cref="AuException"/>.
 			///// The SendX functions are not natural and less likely to work.
 			///// If the window shows a dialog, the SendX functions usually wait until the dialog is closed.
 			///// </param>
@@ -1367,8 +1367,8 @@ namespace Au.Types {
 	/// </summary>
 	/// <remarks>
 	/// There are two groups of values:
-	/// 1. Button (<b>Left</b>, <b>Right</b>, <b>Middle</b>, <b>X1</b>, <b>X2</b>). Default or 0: <b>Left</b>.
-	/// 2. Action (<b>Down</b>, <b>Up</b>, <b>DoubleClick</b>). Default: click.
+	/// 1. Button (<c>Left</c>, <c>Right</c>, <c>Middle</c>, <c>X1</c>, <c>X2</c>). Default or 0: <c>Left</c>.
+	/// 2. Action (<c>Down</c>, <c>Up</c>, <c>DoubleClick</c>). Default: click.
 	/// 
 	/// Multiple values from the same group cannot be combined. For example <c>Left|Right</c> is invalid.
 	/// Values from different groups can be combined. For example <c>Right|Down</c>.
@@ -1509,7 +1509,7 @@ namespace Au.Types {
 	
 	/// <summary>
 	/// This type is used for parameters of <see cref="mouse"/> functions that accept multiple types of UI objects (window, UI element, screen, etc).
-	/// Has implicit conversions from <b>wnd</b>, <b>elm</b>, <b>uiimage</b>, <b>screen</b>, <b>RECT</b> and <b>bool</b> (relative coordinates). Also has static functions to specify more parameters.
+	/// Has implicit conversions from <see cref="wnd"/>, <see cref="elm"/>, <see cref="uiimage"/>, <see cref="screen"/>, <see cref="RECT"/> and <c>bool</c> (relative coordinates). Also has static functions to specify more parameters.
 	/// </summary>
 	public struct MObject {
 		object _o;

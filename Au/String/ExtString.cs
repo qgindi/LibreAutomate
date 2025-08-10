@@ -10,7 +10,7 @@ namespace Au.Types;
 /// <remarks>
 /// Some .NET <see cref="String"/> methods use <see cref="StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
 /// Microsoft recommends to specify <see cref="StringComparison.Ordinal"/> <see cref="StringComparison.OrdinalIgnoreCase"/>. See <google>Best practices for comparing strings in .NET</google>.
-/// This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
+/// This class adds ordinal comparison versions of these methods. Same or similar name, for example <c>Ends</c> for <c>EndsWith</c>.
 /// See also <see cref="process.thisProcessCultureIsInvariant"/>.
 /// 
 /// This class also adds more methods.
@@ -437,7 +437,7 @@ public static unsafe partial class ExtString {
 	/// If <i>s</i> ends with a word character, finds substring that is not followed by a word character.
 	/// Word characters are those for which <i>isWordChar</i> or <see cref="char.IsLetterOrDigit"/> returns <c>true</c> plus those specified in <i>otherWordChars</i>.
 	/// Uses ordinal comparison (does not depend on current culture/locale).
-	/// For Unicode surrogates (2-<b>char</b> characters) calls <see cref="char.IsLetterOrDigit(string, int)"/> and ignores <i>isWordChar</i> and <i>otherWordChars</i>.
+	/// For Unicode surrogates (2-<c>char</c> characters) calls <see cref="char.IsLetterOrDigit(string, int)"/> and ignores <i>isWordChar</i> and <i>otherWordChars</i>.
 	/// </remarks>
 	public static int FindWord(this string t, string s, Range? range = null, bool ignoreCase = false, string otherWordChars = null, Func<char, bool> isWordChar = null) {
 		Not_.Null(s);
@@ -527,7 +527,7 @@ public static unsafe partial class ExtString {
 	}
 	
 #if !DEBUG
-	/// <summary>Alias of <b>SplitSE</b>.</summary>
+	/// <summary>Alias of <c>SplitSE</c>.</summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] Split(this string t, Range range, char separator, StringSplitOptions flags = 0) => SplitSE(t, range, separator, flags);
 #endif
@@ -542,7 +542,7 @@ public static unsafe partial class ExtString {
 	}
 	
 #if !DEBUG
-	/// <summary>Alias of <b>SplitSE</b>.</summary>
+	/// <summary>Alias of <c>SplitSE</c>.</summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] Split(this string t, Range range, string separator, StringSplitOptions flags = 0) => SplitSE(t, range, separator, flags);
 #endif
@@ -557,7 +557,7 @@ public static unsafe partial class ExtString {
 	}
 	
 #if !DEBUG
-	/// <summary>Alias of <b>SplitAnySE</b>.</summary>
+	/// <summary>Alias of <c>SplitAnySE</c>.</summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, RStr separators) => SplitAnySE(t, range, separators, flags);
 #endif
@@ -572,7 +572,7 @@ public static unsafe partial class ExtString {
 	}
 	
 #if !DEBUG
-	/// <summary>Alias of <b>SplitAnySE</b>.</summary>
+	/// <summary>Alias of <c>SplitAnySE</c>.</summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, ReadOnlySpan<string> separators) => SplitAnySE(t, range, separators, flags);
 #endif
@@ -584,7 +584,7 @@ public static unsafe partial class ExtString {
 		=> _Split(t, flags, false, 1, separator).a1;
 	
 #if !DEBUG
-	/// <summary>Alias of <b>SplitSE</b>.</summary>
+	/// <summary>Alias of <c>SplitSE</c>.</summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] Split(this RStr t, char separator, StringSplitOptions flags = 0) => SplitSE(t, separator, flags);
 #endif
@@ -596,7 +596,7 @@ public static unsafe partial class ExtString {
 		=> _Split(t, flags, false, 2, sep23: separator).a1;
 	
 #if !DEBUG
-	/// <summary>Alias of <b>SplitSE</b>.</summary>
+	/// <summary>Alias of <c>SplitSE</c>.</summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] Split(this RStr t, string separator, StringSplitOptions flags = 0) => SplitSE(t, separator, flags);
 #endif
@@ -608,7 +608,7 @@ public static unsafe partial class ExtString {
 		=> _Split(t, flags, false, 3, sep23: separators).a1;
 	
 #if !DEBUG
-	/// <summary>Alias of <b>SplitAnySE</b>.</summary>
+	/// <summary>Alias of <c>SplitAnySE</c>.</summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] SplitAny(this RStr t, RStr separators, StringSplitOptions flags = 0) => SplitAnySE(t, separators, flags);
 #endif
@@ -620,7 +620,7 @@ public static unsafe partial class ExtString {
 		=> _Split(t, flags, false, 4, sep4: separators).a1;
 	
 #if !DEBUG
-	/// <summary>Alias of <b>SplitAnySE</b>.</summary>
+	/// <summary>Alias of <c>SplitAnySE</c>.</summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] SplitAny(this RStr t, ReadOnlySpan<string> separators, StringSplitOptions flags = 0) => SplitAnySE(t, separators, flags);
 #endif
@@ -942,7 +942,7 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts part of this string to <b>int</b> number and gets the number end index.
+	/// Converts part of this string to <c>int</c> number and gets the number end index.
 	/// </summary>
 	/// <returns>The number, or 0 if failed to convert.</returns>
 	/// <param name="t">This string. Can be <c>null</c>.</param>
@@ -953,7 +953,7 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Fails to convert when string is <c>null</c>, <c>""</c>, does not start with a number or the number is too big.
 	/// 
-	/// Unlike <b>int.Parse</b> and <b>Convert.ToInt32</b>:
+	/// Unlike <see cref="int.Parse"/> and <see cref="Convert.ToInt32"/>:
 	/// - The number in string can be followed by more text, like <c>"123text"</c>.
 	/// - Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
 	/// - Gets the end of the number part.
@@ -964,8 +964,8 @@ public static unsafe partial class ExtString {
 	/// 
 	/// The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
 	/// The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
-	/// Fails if the number is greater than +- <b>uint.MaxValue</b> (0xffffffff).
-	/// The return value becomes negative if the number is greater than <b>int.MaxValue</b>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to <b>uint</b> (need cast).
+	/// Fails if the number is greater than +- <see cref="uint.MaxValue"/> (0xffffffff).
+	/// The return value becomes negative if the number is greater than <see cref="int.MaxValue"/>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to <c>uint</c> (need cast).
 	/// Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
 	/// </remarks>
 	public static int ToInt(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
@@ -973,7 +973,7 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts part of this string to <b>int</b> number.
+	/// Converts part of this string to <c>int</c> number.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, int, out int, STIFlags)"/>
@@ -998,7 +998,7 @@ public static unsafe partial class ExtString {
 		=> ToInt(t, out result, startIndex, out _, flags);
 
 	/// <summary>
-	/// Converts part of this string to <b>uint</b> number and gets the number end index.
+	/// Converts part of this string to <c>uint</c> number and gets the number end index.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
@@ -1008,7 +1008,7 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts part of this string to <b>uint</b> number.
+	/// Converts part of this string to <c>uint</c> number.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
@@ -1016,7 +1016,7 @@ public static unsafe partial class ExtString {
 		=> ToInt(t, out result, startIndex, out _, flags);
 
 	/// <summary>
-	/// Converts part of this string to <b>long</b> number and gets the number end index.
+	/// Converts part of this string to <c>long</c> number and gets the number end index.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
@@ -1026,7 +1026,7 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts part of this string to <b>long</b> number.
+	/// Converts part of this string to <c>long</c> number.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
@@ -1034,7 +1034,7 @@ public static unsafe partial class ExtString {
 		=> ToInt(t, out result, startIndex, out _, flags);
 
 	/// <summary>
-	/// Converts part of this string to <b>ulong</b> number and gets the number end index.
+	/// Converts part of this string to <c>ulong</c> number and gets the number end index.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, out int, STIFlags)"/>
@@ -1044,7 +1044,7 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts part of this string to <b>ulong</b> number.
+	/// Converts part of this string to <c>ulong</c> number.
 	/// </summary>
 	/// <remarks></remarks>
 	/// <inheritdoc cref="ToInt(string, out int, int, STIFlags)"/>
@@ -1070,7 +1070,7 @@ public static unsafe partial class ExtString {
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
-	/// Calls <see cref="double.TryParse(RStr, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
+	/// Calls <see cref="double.TryParse(RStr, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
 	/// Fails if the string is <c>null</c> or <c>""</c> or isn't a valid floating-point number.
 	/// Examples of valid numbers: <c>"12"</c>, <c>" -12.3 "</c>, <c>".12"</c>, <c>"12."</c>, <c>"12E3"</c>, <c>"12.3e-45"</c>, <c>"1,234.5"</c> (with <i>style</i> <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like <c>"2text"</c> is invalid, unless <i>range</i> is <c>0..1</c>.
 	/// </remarks>
@@ -1090,7 +1090,7 @@ public static unsafe partial class ExtString {
 	/// Converts this string or its part to float number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="float.TryParse(RStr, NumberStyles, IFormatProvider, out float)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
+	/// Calls <see cref="float.TryParse(RStr, NumberStyles, IFormatProvider, out float)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out float result, Range? range = null, NumberStyles style = NumberStyles.Float) {
@@ -1098,10 +1098,10 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts this string or its part to <b>int</b> number.
+	/// Converts this string or its part to <c>int</c> number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="int.TryParse(RStr, NumberStyles, IFormatProvider, out int)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
+	/// Calls <see cref="int.TryParse(RStr, NumberStyles, IFormatProvider, out int)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out int result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
@@ -1113,10 +1113,10 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts this string or its part to <b>uint</b> number.
+	/// Converts this string or its part to <c>uint</c> number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="uint.TryParse(RStr, NumberStyles, IFormatProvider, out uint)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
+	/// Calls <see cref="uint.TryParse(RStr, NumberStyles, IFormatProvider, out uint)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out uint result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
@@ -1124,10 +1124,10 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts this string or its part to <b>long</b> number.
+	/// Converts this string or its part to <c>long</c> number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="long.TryParse(RStr, NumberStyles, IFormatProvider, out long)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
+	/// Calls <see cref="long.TryParse(RStr, NumberStyles, IFormatProvider, out long)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out long result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
@@ -1135,7 +1135,7 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Converts this string or its part to <b>ulong</b> number.
+	/// Converts this string or its part to <c>ulong</c> number.
 	/// </summary>
 	/// <remarks>
 	/// Calls <see cref="ulong.TryParse(RStr, NumberStyles, IFormatProvider, out ulong)"/>. Uses <see cref="CultureInfo.InvariantCulture"/> if the string range contains only ASCII characters, else uses current culture.
@@ -1424,7 +1424,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <returns>The result string.</returns>
 	/// <param name="t"></param>
-	/// <param name="raw">Ignore <b>char</b> sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
+	/// <param name="raw">Ignore <c>char</c> sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
 	public static unsafe string ReverseString(this string t, bool raw) {
 		if (t.Length < 2) return t;
 		var r = new string('\0', t.Length);
@@ -1601,13 +1601,13 @@ public static unsafe partial class ExtString {
 
 #if !DEBUG
 	/// <summary>
-	/// Alias of <b>IndexOfAnyExcept</b>.
+	/// Alias of <c>IndexOfAnyExcept</c>.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //.NET now has IndexOfAnyExcept
 	public static int IndexOfNot(this RStr t, string chars) => t.IndexOfAnyExcept(chars);
 	
 	/// <summary>
-	/// Alias of <b>LastIndexOfAnyExcept</b>.
+	/// Alias of <c>LastIndexOfAnyExcept</c>.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)] //.NET now has LastIndexOfAnyExcept
 	public static int LastIndexOfNot(this RStr t, string chars) => t.LastIndexOfAnyExcept(chars);
@@ -1663,16 +1663,16 @@ public static unsafe partial class ExtString {
 	}
 
 	/// <summary>
-	/// Splits this string and creates <b>HashSet</b>. Trims, and removes empty.
+	/// Splits this string and creates <c>HashSet</c>. Trims, and removes empty.
 	/// </summary>
-	/// <returns><b>HashSet</b> containing 0 or more strings.</returns>
+	/// <returns><c>HashSet</c> containing 0 or more strings.</returns>
 	internal static HashSet<string> SplitHS_(this string t, char c, bool ignoreCase) {
 		return t.Split_(c).ToHashSet(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 	}
 
 	/// <summary>
 	/// Splits string <i>s</i> into 2 strings.
-	/// Tip: there are 2 overloads: for string and for <b>RStr</b>.
+	/// Tip: there are 2 overloads: for string and for <c>RStr</c>.
 	/// </summary>
 	/// <param name="t"></param>
 	/// <param name="c">Separator character.</param>

@@ -231,7 +231,7 @@ public partial class keys {
 		internal static int LimitSleepTime(int t) => t <= 10 ? t : (t / 4 + 8);
 		
 		/// <summary>
-		/// If <i>k</i> is <c>Shift</c>, <c>Ctrl</c>, <c>Alt</c> or <c>Win</c> or their left/right versions, returns it as modifier flag, eg <b>KMod.Shift</b>.
+		/// If <i>k</i> is <c>Shift</c>, <c>Ctrl</c>, <c>Alt</c> or <c>Win</c> or their left/right versions, returns it as modifier flag, eg <c>KMod.Shift</c>.
 		/// Else returns 0.
 		/// </summary>
 		internal static KMod KeyToMod(KKey k) {
@@ -269,7 +269,7 @@ public partial class keys {
 		
 		/// <summary>
 		/// Sends one key event.
-		/// Just calls API <b>SendInput</b> with raw parameters.
+		/// Just calls API <c>SendInput</c> with raw parameters.
 		/// </summary>
 		/// <exception cref="InputDesktopException"></exception>
 		internal static unsafe void SendKeyEventRaw(KKey vk, ushort scan, uint flags, int? extra = null, bool dontThrow = false) {
@@ -372,8 +372,8 @@ public partial class keys {
 		
 		/// <summary>
 		/// Sends <c>Ctrl+V</c> or <c>Ctrl+C</c> or <c>Ctrl+X</c>, and/or optionally one or more keys.
-		/// Caller gets <i>optk</i> and <i>wFocus</i> with <b>GetOptionsAndWndFocused_</b> (it may want to know some options too).
-		/// Caller calls <b>Press</b>, waits until the target app gets clipboard data, then calls <b>Release</b>.
+		/// Caller gets <i>optk</i> and <i>wFocus</i> with <c>GetOptionsAndWndFocused_</c> (it may want to know some options too).
+		/// Caller calls <c>Press</c>, waits until the target app gets clipboard data, then calls <c>Release</c>.
 		/// </summary>
 		internal unsafe struct SendCopyPaste {
 			KHotkey _hk;
@@ -383,7 +383,7 @@ public partial class keys {
 			
 			/// <summary>
 			/// Presses <c>Ctrl+key</c>. Does not release.
-			/// If <i>andKeys</i> used, <b>Release</b> will press/release them.
+			/// If <i>andKeys</i> used, <c>Release</c> will press/release them.
 			/// </summary>
 			/// <exception cref="InputDesktopException"></exception>
 			public void Press(KHotkey hk, OKey optk, wnd wFocus, List<KKey> andKeys = null) {
@@ -459,10 +459,10 @@ public partial class keys {
 	
 	/// <summary>
 	/// Returns:
-	/// - <i>optk</i> - <b>OKey</b> of this variable or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
+	/// - <i>optk</i> - <c>OKey</c> of this variable or <c>OKey</c> cloned from this variable and possibly modified by <c>Hook</c>.
 	/// - <i>wFocus</i> - the focused or active window.
 	/// </summary>
-	/// <param name="getWndAlways">if <c>false</c>, the caller does not need <i>wFocus</i>. Then <i>wFocus</i> will be <c>default(wnd)</c> if <b>Hook</b> is <c>null</c>.</param>
+	/// <param name="getWndAlways">if <c>false</c>, the caller does not need <i>wFocus</i>. Then <i>wFocus</i> will be <c>default(wnd)</c> if <c>Hook</c> is <c>null</c>.</param>
 	/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
 	/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
 	/// <exception cref="InputDesktopException"></exception>
@@ -473,9 +473,9 @@ public partial class keys {
 	}
 	
 	/// <summary>
-	/// Returns <b>OKey</b> of this variable or <b>OKey</b> cloned from this variable and possibly modified by <b>Hook</b>.
+	/// Returns <c>OKey</c> of this variable or <c>OKey</c> cloned from this variable and possibly modified by <c>Hook</c>.
 	/// </summary>
-	/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of <b>Hook</b>. If you don't have it, use <b>GetOptionsAndWndFocused_</b> instead.</param>
+	/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of <c>Hook</c>. If you don't have it, use <c>GetOptionsAndWndFocused_</c> instead.</param>
 	internal OKey GetOptions_(wnd wFocus) {
 		var call = Options.Hook;
 		if (call == null || wFocus.Is0) return Options;
@@ -510,7 +510,7 @@ public partial class keys {
 		public static bool IsMouse(KKey vk) => 0 != (_b[(byte)vk] & _KT.Mouse);
 		
 		/// <summary>
-		/// API <b>GetKeyState</b> always works.
+		/// API <c>GetKeyState</c> always works.
 		/// For other keys returns 0 if pressed or toggled before starting current thread.
 		/// Modifiers (left/right too), lock keys, mouse, some other.
 		/// </summary>

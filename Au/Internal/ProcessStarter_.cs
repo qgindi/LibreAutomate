@@ -15,7 +15,7 @@ unsafe struct ProcessStarter_ {
 	/// </summary>
 	/// <param name="exe">
 	/// Full path of program file. If not full path, uses <see cref="folders.ThisApp"/>. Uses <see cref="pathname.normalize"/>.
-	/// If <i>rawExe</i> <c>true</c>, does not use <b>Normalize</b>/<b>ThisApp</b>.
+	/// If <i>rawExe</i> <c>true</c>, does not use <c>Normalize</c>/<c>ThisApp</c>.
 	/// </param>
 	/// <param name="args"><c>null</c> or command line arguments.</param>
 	/// <param name="curDir">
@@ -55,9 +55,9 @@ unsafe struct ProcessStarter_ {
 	}
 	
 	/// <summary>
-	/// Starts process using API <b>CreateProcess</b> or <b>CreateProcessAsUser</b>, without the feedback hourglass cursor.
+	/// Starts process using API <c>CreateProcess</c> or <c>CreateProcessAsUser</c>, without the feedback hourglass cursor.
 	/// </summary>
-	/// <param name="pi">Receives <b>CreateProcessX</b> results. Will need to close handles in <i>pi</i>, eg <c>pi.Dispose</c>.</param>
+	/// <param name="pi">Receives <c>CreateProcessX</c> results. Will need to close handles in <i>pi</i>, eg <c>pi.Dispose</c>.</param>
 	/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
 	/// <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
 	public bool StartL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false) {
@@ -69,9 +69,9 @@ unsafe struct ProcessStarter_ {
 	}
 	
 	/// <summary>
-	/// Starts process using API <b>CreateProcess</b> or <b>CreateProcessAsUser</b>, without the feedback hourglass cursor.
+	/// Starts process using API <c>CreateProcess</c> or <c>CreateProcessAsUser</c>, without the feedback hourglass cursor.
 	/// </summary>
-	/// <param name="need">Which field to set in <b>Result</b>.</param>
+	/// <param name="need">Which field to set in <c>Result</c>.</param>
 	/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
 	/// <exception cref="AuException">Failed.</exception>
 	public Result Start(Result.Need need = 0, bool inheritUiaccess = false) {
@@ -86,11 +86,11 @@ unsafe struct ProcessStarter_ {
 	/// <summary>
 	/// Starts UAC Medium integrity level (IL) process from this admin process.
 	/// </summary>
-	/// <param name="need">Which field to set in <b>Result</b>.</param>
+	/// <param name="need">Which field to set in <c>Result</c>.</param>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
 	/// Actually the process will have the same IL and user session as the shell process (normally explorer).
-	/// Fails if there is no shell process (API <b>GetShellWindow</b> fails) for more than 2 s from calling this func.
+	/// Fails if there is no shell process (API <c>GetShellWindow</c> fails) for more than 2 s from calling this func.
 	/// Asserts and fails if this is not admin/system process. Caller should at first call <see cref="uacInfo.isAdmin"/> or <see cref="uacInfo.IntegrityLevel"/>.
 	/// </remarks>
 	public Result StartUserIL(Result.Need need = 0) {
@@ -197,7 +197,7 @@ unsafe struct ProcessStarter_ {
 	static class _NetProcessObject //FUTURE: remove if unused
 	{
 		/// <summary>
-		/// Returns <c>true</c> if can create such object in a fast/reliable way. Else <see cref="Create"/> will use <b>Process.GetProcessById</b>.
+		/// Returns <c>true</c> if can create such object in a fast/reliable way. Else <see cref="Create"/> will use <c>Process.GetProcessById</c>.
 		/// It depends on .NET framework version, because uses private methods of Process class through reflection.
 		/// </summary>
 		public static bool IsFast { get; } = _CanSetHandleId();

@@ -58,7 +58,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Calls API <ms>ChangeWindowMessageFilter</ms>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
+		/// Calls API <ms>ChangeWindowMessageFilter</ms>(<c>WM_COPYDATA</c>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
 		/// </summary>
 		public static void EnableReceivingWM_COPYDATA() {
 			Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
@@ -71,12 +71,12 @@ namespace Au.More {
 		/// <summary>
 		/// Sends string or other data to a window of any process. Uses API <ms>SendMessage</ms> <ms>WM_COPYDATA</ms>.
 		/// </summary>
-		/// <typeparam name="T">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <c>byte[]</c>.</typeparam>
+		/// <typeparam name="T">Type of data elements. For example, <c>char</c> for string, <c>byte</c> for <c>byte[]</c>.</typeparam>
 		/// <param name="w">The window.</param>
 		/// <param name="dataId">Data id. It is <ms>COPYDATASTRUCT.dwData</ms>.</param>
 		/// <param name="data">Data. For example string or <c>byte[]</c>. String can contain <c>'\0'</c> characters.</param>
 		/// <param name="wParam">Can be any value. Optional.</param>
-		/// <returns><b>SendMessage</b>'s return value.</returns>
+		/// <returns><c>SendMessage</c>'s return value.</returns>
 		public static unsafe nint Send<T>(wnd w, int dataId, ReadOnlySpan<T> data, nint wParam = 0) where T : unmanaged {
 			fixed (T* p = data) {
 				var c = new WndCopyData { _dwData = dataId, _cbData = data.Length * sizeof(T), _lpData = (byte*)p };
@@ -98,8 +98,8 @@ namespace Au.More {
 		/// Sends string or other data to a window of any process. Uses API <ms>SendMessage</ms> <ms>WM_COPYDATA</ms>.
 		/// Receives string or other data returned by that window with <see cref="Return"/>.
 		/// </summary>
-		/// <typeparam name="TSend">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <c>byte[]</c></typeparam>
-		/// <typeparam name="TReceive">Type of received data elements. For example, <b>char</b> for string, <b>byte</b> for <c>byte[]</c>.</typeparam>
+		/// <typeparam name="TSend">Type of data elements. For example, <c>char</c> for string, <c>byte</c> for <c>byte[]</c></typeparam>
+		/// <typeparam name="TReceive">Type of received data elements. For example, <c>char</c> for string, <c>byte</c> for <c>byte[]</c>.</typeparam>
 		/// <param name="w">The window.</param>
 		/// <param name="dataId">Data id. It is <ms>COPYDATASTRUCT.dwData</ms>.</param>
 		/// <param name="send">Data to send. For example string or <c>byte[]</c>. String can contain <c>'\0'</c> characters.</param>
@@ -159,7 +159,7 @@ namespace Au.More {
 		/// </summary>
 		/// <param name="data"></param>
 		/// <param name="length"></param>
-		/// <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
+		/// <param name="wParam"><i>wParam</i> of the received <c>WM_COPYDATA</c> message. Important, pass unchanged.</param>
 		/// <returns>Your window procedure must return this value.</returns>
 		public static unsafe int Return(void* data, int length, nint wParam) {
 			var sm = SharedMemory_.ReturnDataPtr;
@@ -204,9 +204,9 @@ namespace Au.More {
 		/// <summary>
 		/// Returns string or other data to <see cref="SendReceive"/>.
 		/// </summary>
-		/// <typeparam name="T">Type of data elements. For example, <b>char</b> for string, <b>byte</b> for <c>byte[]</c></typeparam>
+		/// <typeparam name="T">Type of data elements. For example, <c>char</c> for string, <c>byte</c> for <c>byte[]</c></typeparam>
 		/// <param name="data"></param>
-		/// <param name="wParam"><i>wParam</i> of the received <b>WM_COPYDATA</b> message. Important, pass unchanged.</param>
+		/// <param name="wParam"><i>wParam</i> of the received <c>WM_COPYDATA</c> message. Important, pass unchanged.</param>
 		/// <returns>Your window procedure must return this value.</returns>
 		public static unsafe int Return<T>(ReadOnlySpan<T> data, nint wParam) where T : unmanaged {
 			fixed (T* f = data) return Return(f, data.Length * sizeof(T), wParam);

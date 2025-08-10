@@ -126,7 +126,7 @@ public static class ComUtil {
 	}
 
 	/// <summary>
-	/// Default value for optional parameters of type <b>VARIANT</b> (<b>object</b> in C#) of COM functions.
+	/// Default value for optional parameters of type <ms>VARIANT</ms> (<c>object</c> in C#) of COM functions.
 	/// The same as <see cref="System.Reflection.Missing.Value"/>.
 	/// </summary>
 	public static readonly System.Reflection.Missing Missing = System.Reflection.Missing.Value;

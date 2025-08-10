@@ -127,7 +127,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
-	/// This function is the same as the indexer. The difference is, <b>Add</b> returns <b>PMItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
+	/// This function is the same as the indexer. The difference is, <c>Add</c> returns <see cref="PMItem"/> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 	/// </remarks>
 	public PMItem Add(string text, Action<PMItem> click, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable), text, image, l_, f_, click);
@@ -142,7 +142,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <value>Action executed on click. Can be <c>null</c>.</value>
 	/// <remarks>
-	/// This function is the same as <see cref="Add(string, Action{PMItem}, MTImage, bool, int, string)"/>. The difference is, <b>Add</b> returns <b>PMItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
+	/// This function is the same as <see cref="Add(string, Action{PMItem}, MTImage, bool, int, string)"/>. The difference is, <c>Add</c> returns <see cref="PMItem"/> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 	/// </remarks>
 	public Action<PMItem> this[string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null] {
 		set { Add(text, value, image, disable, l_, f_); }
@@ -175,7 +175,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
-	/// When clicked an unchecked radio item, its <see cref="PMItem.IsChecked"/> state becomes <c>true</c>; <b>IsChecked</b> of other group items become <c>false</c>.
+	/// When clicked an unchecked radio item, its <see cref="PMItem.IsChecked"/> state becomes <c>true</c>; <c>IsChecked</c> of other group items become <c>false</c>.
 	/// </remarks>
 	public PMItem AddRadio(string text, bool check = false, Action<PMItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0, [CallerFilePath] string f_ = null)
 		=> _Add(new PMItem(this, disable, check) { checkType = 2 }, text, image, l_, f_, click);
@@ -191,7 +191,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
-	/// The submenu is other <b>popupMenu</b> object. It inherits many properties of this menu; see property documentation.
+	/// The submenu is other <see cref="popupMenu"/> object. It inherits many properties of this menu; see property documentation.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -232,7 +232,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="l_">[](xref:caller_info)</param>
 	/// <param name="f_">[](xref:caller_info)</param>
 	/// <remarks>
-	/// The caller creates the submenu (creates the <see cref="popupMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>popupMenu</b> and reuse same object.
+	/// The caller creates the submenu (creates the <see cref="popupMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <see cref="popupMenu"/> and reuse same object.
 	/// The submenu does not inherit properties of this menu.
 	/// </remarks>
 	/// <example>
@@ -261,7 +261,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <remarks>
 	/// Allows to set properties of multiple items in single place instead of after each "add item" code line.
 	/// 
-	/// Does not get items in submenus. Submenus are separate <b>popupMenu</b> objects and you can use their <b>Items</b> property.
+	/// Does not get items in submenus. Submenus are separate <see cref="popupMenu"/> objects and you can use their <c>Items</c> property.
 	/// </remarks>
 	public IEnumerable<PMItem> Items {
 		get {
@@ -982,7 +982,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </summary>
 	/// <returns>id of the selected item when closed, or 0 if canceled.</returns>
 	/// <param name="items">
-	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>.
+	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <c>List</c>.
 	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>, unless <i>rawText</i> <c>true</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four"</c> (1|2|100|101).
 	/// For separators use <c>null</c> or empty strings: <c>"One|Two||Three|Four"</c>.
 	/// </param>
@@ -992,7 +992,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// <param name="owner">Owner window. The menu will be automatically closed when destroying its owner window.</param>
 	/// <param name="rawText">Don't parse id from text.</param>
 	/// <remarks>
-	/// The function adds menu items and calls <see cref="Show"/>. Returns when menu closed. All parameters except <i>items</i> are same as of <b>Show</b>.
+	/// Adds menu items and calls <see cref="Show"/>. Returns when the menu closes. All parameters except <i>items</i> are the same as in <see cref="Show"/>.
 	/// </remarks>
 	/// <seealso cref="dialog.showList"/>
 	public static int showSimple(Strings items, PMFlags flags = 0, POINT? xy = null, RECT? excludeRect = null, AnyWnd owner = default, bool rawText = false) {

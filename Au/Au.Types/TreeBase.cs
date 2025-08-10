@@ -10,7 +10,7 @@ namespace Au.Types;
 /// Implemented in the same way as <see cref="System.Xml.Linq.XContainer"/>.
 /// </remarks>
 /// <example>
-/// Shows how to declare a <b>TreeBase</b>-derived class, load tree of nodes from an XML file, find descendant nodes, save the tree to an XML file.
+/// Shows how to declare a <c>TreeBase</c>-derived class, load tree of nodes from an XML file, find descendant nodes, save the tree to an XML file.
 /// <code><![CDATA[
 /// using System.Xml;
 /// 
@@ -108,7 +108,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 
 	/// <summary>
 	/// Returns the root ancestor node. Its <see cref="Parent"/> is <c>null</c>.
-	/// Returns this node if its <b>Parent</b> is <c>null</c>.
+	/// Returns this node if its <c>Parent</c> is <c>null</c>.
 	/// </summary>
 	public T RootAncestor {
 		get {
@@ -276,7 +276,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// </summary>
 	/// <remarks>
 	/// After removing, the <see cref="Parent"/> property is <c>null</c>.
-	/// Does nothing if <b>Parent</b> is <c>null</c>.
+	/// Does nothing if <c>Parent</c> is <c>null</c>.
 	/// </remarks>
 	public void Remove() => _parent?._Remove(this as T);
 
@@ -448,7 +448,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <param name="sett">XML formatting settings. Optional.</param>
 	/// <param name="children">If not <c>null</c>, writes these nodes as if they were children of this node.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
-	/// <exception cref="Exception">Exceptions of <see cref="XmlWriter.Create(string)"/> and other <b>XmlWriter</b> methods.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="XmlWriter.Create(string)"/> and other <see cref="XmlWriter"/> methods.</exception>
 	/// <remarks>
 	/// Uses <see cref="filesystem.save"/>. It ensures that existing file data is not damaged on exception etc.
 	/// </remarks>
@@ -465,7 +465,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <summary>
 	/// Writes tree of nodes (this and descendants) to an <see cref="XmlWriter"/>.
 	/// </summary>
-	/// <exception cref="Exception">Exceptions of <b>XmlWriter</b> methods.</exception>
+	/// <exception cref="Exception">Exceptions of <see cref="XmlWriter"/> methods.</exception>
 	/// <example><see cref="TreeBase{T}"/></example>
 	/// <inheritdoc cref="XmlSave(string, XmlNodeWriter, XmlWriterSettings, IEnumerable{T})" path="/param"/>
 	protected void XmlSave(XmlWriter x, XmlNodeWriter nodeWriter, IEnumerable<T> children = null) {

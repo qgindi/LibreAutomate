@@ -5,10 +5,10 @@ namespace Au.More {
 	/// <remarks>
 	/// This class exists because the similar .NET classes have these problems:
 	/// - May disable the <see cref="AppDomain.UnhandledException"/> event.
-	/// - As owner window they support only <b>Window</b> or <b>Form</b>. This class also supports window handles.
+	/// - As owner window they support only <c>Window</c> or <c>Form</c>. This class also supports window handles.
 	/// - They support only filesystem items.
 	/// - There is no option to not add the selected file to recent files that are displayed in the context menu of the taskbar button etc.
-	/// - The WPF class does not have a <b>ClientGuid</b> property.
+	/// - The WPF class does not have a client GUID property.
 	/// 
 	/// There are 2 main dialog types - open (<see cref="ShowOpen"/>) and save (<see cref="ShowSave"/>). All other functions of this class (properties, etc) are common to opening and saving.
 	/// </remarks>

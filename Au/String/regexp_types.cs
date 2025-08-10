@@ -4,7 +4,7 @@ using System.Text.RegularExpressions; //for XML doc links
 namespace Au.Types {
 	/// <summary>
 	/// Regular expression match info.
-	/// Used with <see cref="regexp"/> class functions and <b>String</b> extension methods like <see cref="ExtString.RxMatch"/>.
+	/// Used with <see cref="regexp"/> class functions and <see cref="String"/> extension methods like <see cref="ExtString.RxMatch"/>.
 	/// </summary>
 	/// <remarks>
 	/// Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -25,7 +25,7 @@ namespace Au.Types {
 	/// 		m[2].Value //"45"
 	/// 		);
 	/// ]]></code>
-	/// A group in the subject string may not exist even if whole match found. Then its <b>Exists</b> property is <c>false</c>, <b>Index</b> -1, <b>Length</b> 0, <b>Value</b> <c>null</c>.
+	/// A group in the subject string may not exist even if whole match found. Then its <see cref="Exists"/> property is <c>false</c>, <see cref="Start"/> -1, <see cref="Length"/> 0, <see cref="Value"/> <c>null</c>.
 	/// <code><![CDATA[
 	/// var s = "ab cd--ef gh";
 	/// if(s.RxMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
@@ -106,18 +106,18 @@ namespace Au.Types {
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.GetValue_"/>).
 		/// </summary>
 		/// <remarks>
-		/// Use this function instead of <see cref="Value"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+		/// Use this function instead of <see cref="Value"/> with results of <see cref="regexp"/> functions where subject is <c>ReadOnlySpan</c>.
 		/// </remarks>
-		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+		/// <param name="subject">Must be the same subject string as passed to the <see cref="regexp"/> function that returned this result.</param>
 		internal string GetValue_(RStr subject) => _groups[0].GetValue_(subject);
 		
 		/// <summary>
 		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.GetSpan_"/>).
 		/// </summary>
 		/// <remarks>
-		/// Use this function instead of <see cref="Span"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+		/// Use this function instead of <see cref="Span"/> with results of <see cref="regexp"/> functions where subject is <c>ReadOnlySpan</c>.
 		/// </remarks>
-		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+		/// <param name="subject">Must be the same subject string as passed to the <see cref="regexp"/> function that returned this result.</param>
 		internal RStr GetSpan_(RStr subject) => _groups[0].GetSpan_(subject);
 		
 		/// <summary>
@@ -139,14 +139,14 @@ namespace Au.Types {
 		/// Gets the return value of the <see cref="regexp.Match(string, out RXMatch, Range?, RXMatchFlags)"/> call.
 		/// </summary>
 		/// <remarks>
-		/// Can be <c>false</c> only when the function returned <c>false</c> but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns <c>false</c>, it returns <c>null</c> instead of a <b>RXMatch</b> object.
-		/// When <c>false</c>, all properties except <b>Exists</b> and <b>Mark</b> have undefined values or throw exception.
+		/// Can be <c>false</c> only when the function returned <c>false</c> but a mark is available (see <see cref="Mark"/>). Otherwise, when the function returns <c>false</c>, it returns <c>null</c> instead of a <see cref="RXMatch"/> object.
+		/// When <c>false</c>, all properties except <see cref="Exists"/> and <see cref="Mark"/> have undefined values or throw exception.
 		/// </remarks>
 		public bool Exists { get; private set; }
 		
 		/// <summary>
 		/// Returns <c>true</c> if this match is partial.
-		/// Partial match is possible if used a <b>PARTIAL_</b> flag.
+		/// Partial match is possible if used a <c>PARTIAL_</c> flag.
 		/// </summary>
 		public bool IsPartial { get; private set; }
 		
@@ -244,7 +244,7 @@ namespace Au.Types {
 		/// </param>
 		/// <exception cref="ArgumentException">
 		/// - Invalid <c>$replacement</c>.
-		/// - Used a <b>PARTIAL_</b> flag.
+		/// - Used a <c>PARTIAL_</c> flag.
 		/// - The regular expression contains <c>(?=...\K)</c>.
 		/// </exception>
 		/// <remarks>
@@ -262,14 +262,14 @@ namespace Au.Types {
 	
 	/// <summary>
 	/// Regular expression group match info.
-	/// Used with <see cref="RXMatch"/>, <see cref="regexp"/> and some <b>String</b> extension methods.
+	/// Used with <see cref="RXMatch"/>, <see cref="regexp"/> and some <see cref="String"/> extension methods.
 	/// </summary>
 	/// <remarks>
-	/// Groups are regular expression parts enclosed in <c>()</c>. Except non-capturing parts, like <c>(?:...)</c> and <c>(?options)</c>. A <b>RXGroup</b> variable contains info about a group found in the subject string: index, length, substring.
+	/// Groups are regular expression parts enclosed in <c>()</c>. Except non-capturing parts, like <c>(?:...)</c> and <c>(?options)</c>. A <c>RXGroup</c> variable contains info about a group found in the subject string: index, length, substring.
 	/// 
 	/// Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression <c>"A(\d+)?B"</c> matches string <c>"AB"</c>, but group <c>(\d+)</c> does not exist. Then <see cref="Exists"/> is <c>false</c>, <see cref="Start"/> -1, <see cref="Length"/> 0, <see cref="Value"/> <c>null</c>.
 	/// 
-	/// When a group matches multiple times, the <b>RXGroup</b> variable contains only the last instance. For example, if subject is <c>"begin 12 345 67 end"</c> and regular expression is <c>(\d+ )+</c>, value of group 1 is <c>"67"</c>. If you need all instances (<c>"12"</c>, <c>"345"</c>, <c>"67"</c>), instead use .NET <see cref="Regex"/> and <see cref="Group.Captures"/>. Also you can get all instances with <see cref="regexp.Callout"/>.
+	/// When a group matches multiple times, the <c>RXGroup</c> variable contains only the last instance. For example, if subject is <c>"begin 12 345 67 end"</c> and regular expression is <c>(\d+ )+</c>, value of group 1 is <c>"67"</c>. If you need all instances (<c>"12"</c>, <c>"345"</c>, <c>"67"</c>), instead use .NET <see cref="Regex"/> and <see cref="Group.Captures"/>. Also you can get all instances with <see cref="regexp.Callout"/>.
 	/// 
 	/// Examples and more info: <see cref="RXMatch"/>, <see cref="regexp"/>.
 	/// </remarks>
@@ -312,7 +312,7 @@ namespace Au.Types {
 		/// More info in <see cref="RXGroup"/> topic. Example in <see cref="RXMatch"/> topic.
 		/// </summary>
 		/// <remarks>
-		/// Other ways to detect it: if a group does not exist, its <b>Index</b> is -1 and <b>Value</b> is <c>null</c>.
+		/// Other ways to detect it: if a group does not exist, its <see cref="Start"/> is -1 and <see cref="Value"/> is <c>null</c>.
 		/// </remarks>
 		public bool Exists => _index >= 0;
 		
@@ -345,9 +345,9 @@ namespace Au.Types {
 		/// Returns <c>null</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
 		/// </summary>
 		/// <remarks>
-		/// Use this function instead of <see cref="Value"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+		/// Use this function instead of <see cref="Value"/> with results of <see cref="regexp"/> functions where subject is <c>ReadOnlySpan</c>.
 		/// </remarks>
-		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+		/// <param name="subject">Must be the same subject string as passed to the <see cref="regexp"/> function that returned this result.</param>
 		internal string GetValue_(RStr subject) => _len > 0 ? subject[_index..End].ToString() : (_index < 0 ? null : "");
 		
 		/// <summary>
@@ -355,9 +355,9 @@ namespace Au.Types {
 		/// Returns <c>null</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
 		/// </summary>
 		/// <remarks>
-		/// Use this function instead of <see cref="Span"/> with results of <b>regexp</b> functions where subject is <b>ReadOnlySpan</b>.
+		/// Use this function instead of <see cref="Span"/> with results of <see cref="regexp"/> functions where subject is <c>ReadOnlySpan</c>.
 		/// </remarks>
-		/// <param name="subject">Must be the same subject string as passed to the <b>regexp</b> function that returned this result.</param>
+		/// <param name="subject">Must be the same subject string as passed to the <see cref="regexp"/> function that returned this result.</param>
 		internal RStr GetSpan_(RStr subject) => _len > 0 ? subject.Slice(_index, _len) : (_index < 0 ? default : "");
 		
 		///
@@ -368,10 +368,10 @@ namespace Au.Types {
 	#region callout
 	
 	/// <summary>
-	/// Managed version of PCRE API struct <b>pcre2_callout_block</b>.
+	/// Managed version of PCRE API struct <c>pcre2_callout_block</c>.
 	/// When you set <see cref="regexp.Callout"/>, your callout function's parameter is of this type.
 	/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
-	/// Most properties are <b>pcre2_callout_block</b> fields as documented in PCRE help. Other properties and methods are easier/safer versions of unsafe fields like <b>offset_vector</b>.
+	/// Most properties are <c>pcre2_callout_block</c> fields as documented in PCRE help. Other properties and methods are easier/safer versions of unsafe fields like <c>offset_vector</c>.
 	/// </summary>
 	public unsafe struct RXCalloutData {
 #pragma warning disable 649 //field never assigned
@@ -401,7 +401,7 @@ namespace Au.Types {
 		/// Sets the return value of the callout function, as documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// Default 0.
 		/// If 1, matching fails at the current point, but the testing of other matching possibilities goes ahead, just as if a lookahead assertion had failed.
-		/// If -1 (<b>PCRE2_ERROR_NOMATCH</b>), the match function returns <c>false</c> (no match). Values less tan -2 are PCRE error codes and cause exception.
+		/// If -1 (<c>PCRE2_ERROR_NOMATCH</c>), the match function returns <c>false</c> (no match). Values less tan -2 are PCRE error codes and cause exception.
 		/// </summary>
 		public int Result { set => _p->version = value; internal get => _p->version; }
 		
@@ -430,7 +430,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Flags.
-		/// 1 <b>PCRE2_CALLOUT_STARTMATCH</b>, 2 <b>PCRE2_CALLOUT_BACKTRACK</b>.
+		/// 1 <c>PCRE2_CALLOUT_STARTMATCH</c>, 2 <c>PCRE2_CALLOUT_BACKTRACK</c>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int callout_flags => _p->callout_flags;
@@ -479,7 +479,7 @@ namespace Au.Types {
 		/// Gets the start index and length of the specified group in the subject string.
 		/// </summary>
 		/// <param name="group">Group number (1-based index).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be > 0 and &lt; <b>capture_top</b>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be > 0 and &lt; <see cref="capture_top"/>.</exception>
 		public (int index, int length) Group(int group) {
 			if (group <= 0 || group >= _p->capture_top) throw new ArgumentOutOfRangeException(nameof(group), "Must be > 0 and < capture_top.");
 			var v = _p->vec;
@@ -491,7 +491,7 @@ namespace Au.Types {
 		/// Gets the value (substring) of the specified group.
 		/// </summary>
 		/// <param name="group">Group number (1-based index).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be > 0 and &lt; <b>capture_top</b>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be > 0 and &lt; <see cref="capture_top"/>.</exception>
 		public string GroupValue(int group) {
 			var (i, len) = Group(group);
 			if (i < 0) return null;
@@ -519,14 +519,14 @@ namespace Au.Types {
 	/// </summary>
 	/// <remarks>
 	/// Many options also can be specified in regular expression (RE):
-	/// - These can be anywhere in RE: <c>(?i)</c> <b>CASELESS</b>, <c>(?m)</c> <b>MULTILINE</b>, <c>(?s)</c> <b>DOTALL</b>, <c>(?n)</c> <b>NO_AUTO_CAPTURE</b>, <c>(?x)</c> <b>EXTENDED</b>, <c>(?xx)</c> <b>EXTENDED_MORE</b>, <c>(?J)</c> <b>DUPNAMES</b>, <c>(?U)</c> <b>UNGREEDY</b>. Can be multiple, like <c>(?ms)</c>. Can be unset, like <c>(?-i)</c>. RE <c>"\Qtext\E"</c> is like RE <c>"text"</c> with flag <b>LITERAL</b>.
-	/// - Instead of <b>ANCHORED</b> can be used <c>\G</c> at the start of RE. Or <c>^</c>, except in multiline mode.
-	/// - Instead of <b>ENDANCHORED</b> can be used <c>\z</c> at the end of RE. Or <c>$</c>, except in multiline mode.
-	/// - Flag UTF is implicitly added if RE contains non-ASCII characters and there is no flag <b>NEVER_UTF</b>.
+	/// - These can be anywhere in RE: <c>(?i)</c> <c>CASELESS</c>, <c>(?m)</c> <c>MULTILINE</c>, <c>(?s)</c> <c>DOTALL</c>, <c>(?n)</c> <c>NO_AUTO_CAPTURE</c>, <c>(?x)</c> <c>EXTENDED</c>, <c>(?xx)</c> <c>EXTENDED_MORE</c>, <c>(?J)</c> <c>DUPNAMES</c>, <c>(?U)</c> <c>UNGREEDY</c>. Can be multiple, like <c>(?ms)</c>. Can be unset, like <c>(?-i)</c>. RE <c>"\Qtext\E"</c> is like RE <c>"text"</c> with flag <c>LITERAL</c>.
+	/// - Instead of <c>ANCHORED</c> can be used <c>\G</c> at the start of RE. Or <c>^</c>, except in multiline mode.
+	/// - Instead of <c>ENDANCHORED</c> can be used <c>\z</c> at the end of RE. Or <c>$</c>, except in multiline mode.
+	/// - Flag UTF is implicitly added if RE contains non-ASCII characters and there is no flag <c>NEVER_UTF</c>.
 	/// - These must be at the very start and are named like flags: <c>(*UTF)</c>, <c>(*UCP)</c>, <c>(*NOTEMPTY)</c>, <c>(*NOTEMPTY_ATSTART)</c>, <c>(*NO_AUTO_POSSESS)</c>, <c>(*NO_DOTSTAR_ANCHOR)</c>, <c>(*NO_START_OPT)</c>.
 	/// - More info in <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">PCRE syntax reference</see>.
 	/// 
-	/// Some of <b>RXFlags</b> flags also exist in <see cref="RXMatchFlags"/>. You can set them either when calling <b>regexp</b> constructor or when calling <b>regexp</b> functions that have parameter <i>more</i>. You can use different flags for each function call with the same <b>regexp</b> variable.
+	/// Some of <c>RXFlags</c> flags also exist in <see cref="RXMatchFlags"/>. You can set them either when calling <see cref="regexp"/> constructor or when calling <see cref="regexp"/> functions that have parameter <i>more</i>. You can use different flags for each function call with the same <see cref="regexp"/> variable.
 	/// </remarks>
 	[Flags]
 	public enum RXFlags : ulong {
@@ -556,7 +556,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Fully support Unicode text (case-insensitivity etc). More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2unicode.html">pcre2unicode</see>.
-		/// This flag is implicitly added if regular expression contains non-ASCII characters and there is no flag <b>NEVER_UTF</b>.
+		/// This flag is implicitly added if regular expression contains non-ASCII characters and there is no flag <c>NEVER_UTF</c>.
 		/// </summary>
 		UTF = 0x00080000,
 		
@@ -589,7 +589,7 @@ namespace Au.Types {
 	/// Documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>.
 	/// </summary>
 	/// <remarks>
-	/// These flags also exist in <see cref="RXFlags"/> (<b>regexp</b> constructor flags). You can set them either when calling constructor or when calling other functions.
+	/// These flags also exist in <see cref="RXFlags"/> (<see cref="regexp"/> constructor flags). You can set them either when calling constructor or when calling other functions.
 	/// </remarks>
 	[Flags]
 	public enum RXMatchFlags : uint {

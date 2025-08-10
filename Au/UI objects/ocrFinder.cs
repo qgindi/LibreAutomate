@@ -101,7 +101,7 @@ public class ocrFinder {
 	}
 
 	/// <summary>
-	/// If <b>testing</b> <c>true</c>, the finder after OCR sets <b>result</b>. Then you can access it when text not found (or found).
+	/// If <c>testing</c> <c>true</c>, the finder after OCR sets <c>result</c>. Then you can access it when text not found (or found).
 	/// </summary>
 	[ThreadStatic] internal static (bool testing, ocr result) testing_;
 

@@ -6,7 +6,7 @@ namespace Au;
 /// Keyboard functions. Send virtual keystrokes and text to the active window, get key state, wait for key.
 /// </summary>
 /// <remarks>
-/// The main function is <see cref="send"/>. Most documentation is there. See also <see cref="sendt"/>. These functions use <see cref="opt.key"/>. Alternatively can be used <b>keys</b> variables, see <see cref="keys(OKey)"/>.
+/// The main function is <see cref="send"/>. Most documentation is there. See also <see cref="sendt"/>. These functions use <see cref="opt.key"/>. Alternatively can be used <c>keys</c> variables, see <see cref="keys(OKey)"/>.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -300,15 +300,15 @@ public partial class keys {
 	/// </summary>
 	/// <param name="vk"></param>
 	/// <param name="scan"></param>
-	/// <param name="siFlags"><b>SendInput</b> flags.</param>
+	/// <param name="siFlags"><c>SendInput</c> flags.</param>
 	internal keys AddRaw_(KKey vk, ushort scan, byte siFlags) {
 		_ThrowIfSending();
 		return _AddKEvent(new _KEvent(false, vk, (_KFlags)(siFlags & 0xf), scan));
 	}
 
 	/// <summary>
-	/// Sends key events added by <b>AddRaw_</b> (called by <b>inputBlocker</b>).
-	/// Simply calls <b>Api.SendInput</b>. No options, no sleep, etc. No exceptions.
+	/// Sends key events added by <c>AddRaw_</c> (called by <see cref="inputBlocker"/>).
+	/// Simply calls <c>Api.SendInput</c>. No options, no sleep, etc. No exceptions.
 	/// If new events added while sending, sends them too, until there are no new events added.
 	/// </summary>
 	/// <param name="onlyUp">Send only "up" events.</param>
@@ -489,9 +489,9 @@ public partial class keys {
 	}
 
 	/// <summary>
-	/// Sends keys, text and executes other events added with the <b>AddX</b> functions.
+	/// Sends keys, text and executes other events added with the <c>AddX</c> functions.
 	/// </summary>
-	/// <param name="canSendAgain">Don't clear the internal collection. If <c>true</c>, this function then can be called again (eg in loop) to send/execute the same keys etc. If <c>false</c> (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
+	/// <param name="canSendAgain">Don't clear the internal collection. If <c>true</c>, this function then can be called again (eg in loop) to send/execute the same keys etc. If <c>false</c> (default), clears the added keys etc; then you can call <c>AddX</c> functions and <see cref="Send"/> again.</param>
 	/// <exception cref="ArgumentException"><i>canSendAgain</i> is <c>true</c> and <i>keys_</i> end with <c>+</c> or <c>(</c>.</exception>
 	/// <exception cref="AuException">Failed. For example there is no focused window when sending text.</exception>
 	/// <exception cref="InputDesktopException"></exception>

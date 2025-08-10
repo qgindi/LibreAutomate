@@ -43,9 +43,10 @@ class PanelFind {
 		_tReplace = _AddTextbox("Replace_text");
 		
 		b.R.StartGrid().Columns((-1, ..80), (-1, ..80), (-1, ..80), 0).Margin(top: 3);
-		b.R.AddButton("Find", _bFind_Click).Tooltip("Find next in editor");
-		b.AddButton(out var bReplace, "Replace", _bReplace_Click).Tooltip("Replace current found text in editor and find next.\nRight click - find next.");
-		bReplace.MouseRightButtonUp += (_, _) => _bFind_Click(null);
+		b.R.AddButton(out var bFind, "Find", _ => _FindNextInEditor()).Tooltip("Find next in editor.\nRight click - find previous.");
+		bFind.MouseRightButtonUp += (_, _) => FindNextInEditor(true);
+		b.AddButton(out var bReplace, "Replace", _ => _FindNextInEditor(replace: true)).Tooltip("Replace current found text in editor and find next.\nRight click - find next.");
+		bReplace.MouseRightButtonUp += (_, _) => _FindNextInEditor();
 		b.AddButton("Repl. all", _bReplaceAll_Click).Tooltip("Replace all in editor");
 		
 		b.R.AddButton("In files", _FindAllInFiles).Tooltip("Find text in files");
@@ -216,16 +217,6 @@ class PanelFind {
 		UpdateQuickResults();
 	}
 	
-	void _bFind_Click(WBButtonClickArgs e) {
-		if (!_GetTextToFind(out var ttf)) return;
-		_FindNextInEditor(ttf, false);
-	}
-	
-	void _bReplace_Click(WBButtonClickArgs e) {
-		if (!_GetTextToFind(out var ttf, forReplace: true)) return;
-		_FindNextInEditor(ttf, true);
-	}
-	
 	void _Options() {
 		var b = new wpfBuilder("Find text options").WinSize(420);
 		b.R.StartGrid<KGroupBox>("Find in files");
@@ -333,7 +324,7 @@ This setting also is used by 'Find references' etc.
 	}
 	timer _timerUQR;
 	
-	internal class _TextToFind {
+	internal class TextToFind_ {
 		public string findText;
 		public string replaceText;
 		public regexp rx;
@@ -341,7 +332,7 @@ This setting also is used by 'Find references' etc.
 		public bool matchCase;
 		public int filter;
 		
-		public bool IsSameFindTextAndOptions(_TextToFind ttf)
+		public bool IsSameFindTextAndOptions(TextToFind_ ttf)
 			=> ttf.findText == findText
 			&& ttf.matchCase == matchCase
 			&& ttf.wholeWord == wholeWord
@@ -357,7 +348,7 @@ This setting also is used by 'Find references' etc.
 		}
 	}
 	
-	bool _GetTextToFind(out _TextToFind ttf, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false) {
+	bool _GetTextToFind(out TextToFind_ ttf, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false) {
 		_ttRegex?.Close();
 		string text = _tFind.aaaText; if (text.NE()) { ttf = null; return false; }
 		ttf = new() { findText = text, matchCase = _cCase.IsChecked, filter = _filter };
@@ -382,7 +373,7 @@ This setting also is used by 'Find references' etc.
 		return true;
 	}
 	
-	static void _FindAllInString(string text, _TextToFind ttf, Action<int, int> found) {
+	static void _FindAllInString(string text, TextToFind_ ttf, Action<int, int> found) {
 		_SkipImages si = new(text);
 		
 		if (ttf.rx != null) {
@@ -442,7 +433,32 @@ This setting also is used by 'Find references' etc.
 	
 	#region in editor
 	
-	void _FindNextInEditor(_TextToFind ttf, bool replace) {
+	public void FindNextInEditor(bool back) {
+		if (back) {
+			//this was added later. Since PCRE can't search backward, let's use _FindAllInEditor.
+			_ttNext?.Close();
+			var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
+			var a = _FindAllInEditor();
+			int pos = doc.aaaSelectionStart8;
+			for (int i = a.Count; --i >= 0;) {
+				if (a[i].End.Value <= pos) {
+					_SelectFound(true, doc, a[i].Start.Value, a[i].End.Value);
+					_rxReplPos = default;
+					return;
+				}
+			}
+			SystemSounds.Asterisk.Play();
+		} else {
+			_FindNextInEditor();
+		}
+	}
+	
+	void _FindNextInEditor(bool replace = false) {
+		if (!_GetTextToFind(out var ttf, forReplace: replace)) return;
+		_FindNextInEditor2(ttf, replace);
+	}
+	
+	void _FindNextInEditor2(TextToFind_ ttf, bool replace) {
 		_ttNext?.Close();
 		var doc = Panels.Editor.ActiveDoc; if (doc == null) return;
 		var text = doc.aaaText; if (text.Length == 0) return;
@@ -451,9 +467,9 @@ This setting also is used by 'Find references' etc.
 		bool retryFromStart = false, retryRx = false;
 		g1:
 		if (ttf.rx != null) {
-			//this code solves this problem: now will not match if the regex contains \K etc, because 'from' is different
-			if (replace && _lastFind.doc == doc && _lastFind.from8 == from8 && _lastFind.to8 == to8 && _lastFind.text == text && ttf.IsSameFindTextAndOptions(_lastFind.ttf)) {
-				i = from8; to = to8; rm = _lastFind.rm;
+			//this code solves this problem: now would not match if the regex contains \K etc, because 'from' is different
+			if (replace && _rxReplPos.doc == doc && _rxReplPos.from8 == from8 && _rxReplPos.to8 == to8 && _rxReplPos.text == text && ttf.IsSameFindTextAndOptions(_rxReplPos.ttf)) {
+				i = from8; to = to8; rm = _rxReplPos.rm;
 				goto g2;
 			}
 			
@@ -475,7 +491,7 @@ This setting also is used by 'Find references' etc.
 		}
 		if (i < 0) {
 			SystemSounds.Asterisk.Play();
-			_lastFind.ttf = null;
+			_rxReplPos = default;
 			if (retryFromStart || from8 == 0) return;
 			from = 0; retryFromStart = true; replace = false;
 			goto g1;
@@ -489,29 +505,25 @@ This setting also is used by 'Find references' etc.
 			if (rm != null) if (!_TryExpandRegexReplacement(rm, repl, out repl)) return;
 			//doc.aaaReplaceRange(i, to, repl); //also would need to set caret pos = to
 			doc.aaaReplaceSel(repl);
-			_FindNextInEditor(ttf, false);
-		} else {
-			if (CiStyling.IsProtected(doc, i, to)) {
-				//print.it("hidden");
-				//if (1 != dialog.show("Select hidden text?", "The found text is in a hidden text range. Do you want to select it?", "Yes|No", owner: Base, defaultButton: 2)) {
-				doc.aaaGoToPos(false, CiStyling.SkipProtected(doc, to));
-				return;
-				//}
-			}
-			
-			App.Model.EditGoBack.RecordNext();
-			doc.aaaSelect(false, i, to, true);
-			
-			_lastFind.ttf = ttf;
-			_lastFind.doc = doc;
-			_lastFind.text = text;
-			_lastFind.from8 = i;
-			_lastFind.to8 = to;
-			_lastFind.rm = rm;
+			_FindNextInEditor2(ttf, false);
+		} else if (_SelectFound(false, doc, i, to)) {
+			_rxReplPos = (ttf, doc, text, i, to, rm);
 		}
 	}
 	
-	(_TextToFind ttf, SciCode doc, string text, int from8, int to8, RXMatch rm) _lastFind;
+	bool _SelectFound(bool back, SciCode doc, int start, int end) {
+		if (CiStyling.IsProtected(doc, start, end)) {
+			int skip = back ? CiStyling.SkipProtected(doc, start, true) : CiStyling.SkipProtected(doc, end, false);
+			doc.aaaGoToPos(false, skip);
+			return false;
+		}
+		
+		App.Model.EditGoBack.RecordNext();
+		doc.aaaSelect(false, start, end, true);
+		return true;
+	}
+	
+	(TextToFind_ ttf, SciCode doc, string text, int from8, int to8, RXMatch rm) _rxReplPos;
 	
 	void _bReplaceAll_Click(WBButtonClickArgs e) {
 		if (!_GetTextToFind(out var ttf, forReplace: true)) return;
@@ -519,7 +531,7 @@ This setting also is used by 'Find references' etc.
 	}
 	
 	//Can replace in inactive SciCode too.
-	void _ReplaceAllInEditor(_TextToFind ttf, SciCode doc = null, SciUndo undoInFiles = null) {
+	void _ReplaceAllInEditor(TextToFind_ ttf, SciCode doc = null, SciUndo undoInFiles = null) {
 		doc ??= Panels.Editor.ActiveDoc;
 		if (doc.aaaIsReadonly) return;
 		var text = doc.aaaText;
@@ -528,14 +540,14 @@ This setting also is used by 'Find references' etc.
 			undoInFiles?.RifAddFile(doc, text, text2, a);
 	}
 	
-	void _ReplaceAllInClosedFile(_TextToFind ttf, FileNode f, SciUndo undoInFiles) {
+	void _ReplaceAllInClosedFile(TextToFind_ ttf, FileNode f, SciUndo undoInFiles) {
 		if (!f.GetCurrentText(out string text, silent: null)) return;
 		var a = _FindReplacements(ttf, text);
 		if (f.ReplaceAllInText(text, a, out var text2))
 			undoInFiles?.RifAddFile(f, text, text2, a);
 	}
 	
-	List<StartEndText> _FindReplacements(_TextToFind ttf, string text) {
+	List<StartEndText> _FindReplacements(TextToFind_ ttf, string text) {
 		List<StartEndText> a = new();
 		var repl = ttf.replaceText;
 		if (ttf.rx != null) {
@@ -565,7 +577,7 @@ This setting also is used by 'Find references' etc.
 		}
 	}
 	
-	internal bool ValidateReplacement_(_TextToFind ttf/*, FileNode file*/) {
+	internal bool ValidateReplacement_(TextToFind_ ttf/*, FileNode file*/) {
 		//FUTURE: add regexp.IsValidReplacement and use it here.
 		//if (ttf.rx != null
 		//	&& file.GetCurrentText(out var s, silent: true)
@@ -698,7 +710,7 @@ This setting also is used by 'Find references' etc.
 				//file
 				var path = f.ItemPath;
 				b.Marker(c_markerFile)
-					.Link2(new PanelFound.CodeLink(f, ar[0].Start.Value))
+					.Link2(new PanelFound.CodeLink(f, ar[0].Start.Value, isHeading: true))
 					.Gray(path.AsSpan(0..^f.Name.Length))
 					.B(f.Name);
 				int ns = 120 - path.Length * 7 / 4; if (ns > 0) b.Text(new string(' ', ns));
@@ -752,12 +764,12 @@ This setting also is used by 'Find references' etc.
 	}
 	CancellationTokenSource _cancelTS;
 	
-	internal void ReplaceAllInEditorFromFoundPanel_(_TextToFind ttf) {
+	internal void ReplaceAllInEditorFromFoundPanel_(TextToFind_ ttf) {
 		if (!_CanReplaceFromFoundPanel(ttf)) return;
 		_ReplaceAllInEditor(ttf);
 	}
 	
-	bool _CanReplaceFromFoundPanel(_TextToFind ttf) {
+	bool _CanReplaceFromFoundPanel(TextToFind_ ttf) {
 		bool ok = ttf.findText == _tFind.aaaText
 			&& ttf.matchCase == _cCase.IsChecked
 			&& ttf.wholeWord == _cWord.IsChecked
@@ -772,7 +784,7 @@ This setting also is used by 'Find references' etc.
 		return true;
 	}
 	
-	internal void ReplaceAllInFilesFromFoundPanel_(_TextToFind ttf, List<FileNode> files) {
+	internal void ReplaceAllInFilesFromFoundPanel_(TextToFind_ ttf, List<FileNode> files) {
 		if (!ValidateReplacement_(ttf)) return; //avoid opening files in editor when invalid regex replacement
 		if (!_CanReplaceFromFoundPanel(ttf)) return;
 		
@@ -826,7 +838,7 @@ This setting also is used by 'Find references' etc.
 	int _recentPrevOptions;
 	
 	//temp is false when clicked a button, true when changed the find text or a checkbox.
-	void _AddToRecent(_TextToFind ttf, bool onlyRepl = false) {
+	void _AddToRecent(TextToFind_ ttf, bool onlyRepl = false) {
 		if (!onlyRepl) {
 			int options = ttf.OptionsInt;
 			if (ttf.findText != _recentPrevFind || options != _recentPrevOptions) _Add(false, _recentPrevFind = ttf.findText, _recentPrevOptions = options);

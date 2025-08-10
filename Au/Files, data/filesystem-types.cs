@@ -65,7 +65,7 @@ public struct FAttr {
 	public bool Exists => _exists;
 
 	/// <summary>
-	/// Exists but this process cannot access it and get attributes (error "access denied"). Then other <b>bool</b> properties return <c>false</c>.
+	/// Exists but this process cannot access it and get attributes (error "access denied"). Then other <c>bool</c> properties return <c>false</c>.
 	/// </summary>
 	public bool Unknown => _unknown;
 
@@ -116,8 +116,8 @@ public enum FAFlags {
 
 	///<summary>
 	///If failed, return <c>false</c> and don't throw exception.
-	///Then, if you need error info, you can use <see cref="lastError"/>. If the file/directory does not exist, it will return <b>ERROR_FILE_NOT_FOUND</b> or <b>ERROR_PATH_NOT_FOUND</b> or <b>ERROR_NOT_READY</b>.
-	///If failed and the native error code is <b>ERROR_ACCESS_DENIED</b> or <b>ERROR_SHARING_VIOLATION</b>, the returned attributes will be <c>(FileAttributes)(-1)</c>. The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
+	///Then, if you need error info, you can use <see cref="lastError"/>. If the file/directory does not exist, it will return <ms>ERROR_FILE_NOT_FOUND</ms> or <c>ERROR_PATH_NOT_FOUND</c> or <c>ERROR_NOT_READY</c>.
+	///If failed and the native error code is <c>ERROR_ACCESS_DENIED</c> or <c>ERROR_SHARING_VIOLATION</c>, the returned attributes will be <c>(FileAttributes)(-1)</c>. The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
 	///</summary>
 	DontThrow = 2,
 }
@@ -158,17 +158,17 @@ public enum FEFlags {
 	AllDescendants = 1,
 
 	/// <summary>
-	/// Also enumerate target directories of NTFS links, such as symbolic links and mount points. Use with <b>AllDescendants</b>.
+	/// Also enumerate target directories of NTFS links, such as symbolic links and mount points. Use with <c>AllDescendants</c>.
 	/// </summary>
 	RecurseNtfsLinks = 2,
 
 	/// <summary>
-	/// Skip files and subdirectories that have <b>Hidden</b> attribute.
+	/// Skip files and subdirectories that have <c>Hidden</c> attribute.
 	/// </summary>
 	SkipHidden = 4,
 
 	/// <summary>
-	/// Skip files and subdirectories that have <b>Hidden</b> and <b>System</b> attributes (both).
+	/// Skip files and subdirectories that have <c>Hidden</c> and <c>System</c> attributes (both).
 	/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
 	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for <c>D</c> drive.
 	/// </summary>
@@ -201,7 +201,7 @@ public enum FEFlags {
 	///// Temporarily disable file system redirection in this thread of this 32-bit process running on 64-bit Windows.
 	///// Then you can enumerate the 64-bit System32 folder in your 32-bit process.
 	///// Uses API <ms>Wow64DisableWow64FsRedirection</ms>.
-	///// For vice versa (in 64-bit process enumerate the 32-bit System folder), instead use path <b>folders.SystemX86</b>.
+	///// For vice versa (in 64-bit process enumerate the 32-bit System folder), instead use path <c>folders.SystemX86</c>.
 	///// </summary>
 	//DisableRedirection = 0x100,
 }
@@ -215,7 +215,7 @@ public enum FCFlags {
 	//note: these values must match the corresponding FEFlags values.
 
 	/// <summary>
-	/// Skip descendant files and directories that have <b>Hidden</b> and <b>System</b> attributes (both).
+	/// Skip descendant files and directories that have <c>Hidden</c> and <c>System</c> attributes (both).
 	/// They usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
 	/// They often are protected and would fail to copy, ruining whole copy operation.
 	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>.
@@ -239,7 +239,7 @@ public enum FCFlags {
 [Flags]
 public enum FDFlags {
 	/// <summary>
-	/// Send to the Recycle Bin. If not possible, delete anyway, unless used <b>CanFail</b>.
+	/// Send to the Recycle Bin. If not possible, delete anyway, unless used <c>CanFail</c>.
 	/// Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
 	/// Note: it is much slower. To delete multiple, use <see cref="filesystem.delete(IEnumerable{string}, FDFlags)"/>.
 	/// </summary>
@@ -333,7 +333,7 @@ public class FEFile {
 
 	//This could be more dangerous than useful.
 	///// <summary>
-	///// Returns <b>FullPath</b>.
+	///// Returns <c>FullPath</c>.
 	///// </summary>
 	//public static implicit operator string(FEFile f) { return f?.FullPath; }
 }
@@ -389,8 +389,8 @@ public enum FPFormat {
 	PrefixNever,
 
 	/// <summary>
-	/// With volume GUID (API <ms>GetFinalPathNameByHandle</ms> flag <b>VOLUME_NAME_GUID</b>).
-	/// If it fails (eg network path), gets path with prefix, like <b>PrefixAlways</b>.
+	/// With volume GUID (API <ms>GetFinalPathNameByHandle</ms> flag <c>VOLUME_NAME_GUID</c>).
+	/// If it fails (eg network path), gets path with prefix, like <c>PrefixAlways</c>.
 	/// </summary>
 	VolumeGuid
 }

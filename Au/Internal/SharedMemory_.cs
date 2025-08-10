@@ -81,14 +81,14 @@ unsafe struct SharedMemory_ {
 		
 		/// <summary>
 		/// Creates named shared memory of specified size. Opens if already exists.
-		/// Returns <b>Mapping</b> variable that contains shared memory address in this process.
+		/// Returns <c>Mapping</c> variable that contains shared memory address in this process.
 		/// </summary>
 		/// <param name="name">Shared memory name. Case-insensitive.</param>
 		/// <param name="size">Shared memory size. Ignored if the shared memory already exists.</param>
 		/// <exception cref="AuException">The API failed.</exception>
 		/// <remarks>
 		/// Calls API <ms>CreateFileMapping</ms> and API <ms>MapViewOfFile</ms>.
-		/// The shared memory is alive at least until this process ends or the returned <b>Mapping</b> variable disposed. Other processes can keep the memory alive even after that.
+		/// The shared memory is alive at least until this process ends or the returned <c>Mapping</c> variable disposed. Other processes can keep the memory alive even after that.
 		/// </remarks>
 		public static Mapping CreateOrOpen(string name, int size) {
 			//CONSIDER: don't use Api.SECURITY_ATTRIBUTES.ForLowIL. Speed with it 2.7 ms, without 1.7 ms.

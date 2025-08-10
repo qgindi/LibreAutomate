@@ -8,7 +8,7 @@ namespace Au;
 /// 
 /// All "wait for" functions have a timeout parameter. It is the maximal time to wait, in seconds. If 0, waits indefinitely. If <c>></c> 0, throws <see cref="TimeoutException"/> when timed out. If &lt; 0, then stops waiting and returns default value of that type (<c>false</c>, etc).
 /// 
-/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a <b>Window</b>/<b>Form</b>/<b>Control</b> event handler, the window would stop responding. Use another thread, for example async/await/<b>Task</b>, like in the example. Or <see cref="Seconds.DoEvents"/>.
+/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a <c>Window</c>/<c>Form</c>/<c>Control</c> event handler, the window would stop responding. Use another thread, for example <c>async</c>/<c>await</c>/<c>Task</c>, like in the example. Or <see cref="Seconds.DoEvents"/>.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -39,7 +39,7 @@ public static partial class wait {
 	/// 
 	/// Tip: the script editor replaces code like <c>100ms</c> with <c>100.ms();</c> when typing.
 	/// </remarks>
-	/// <exception cref="ArgumentOutOfRangeException"><i>timeMilliseconds</i> is negative and not -1 (<b>Timeout.Infinite</b>).</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><i>timeMilliseconds</i> is negative and not -1 (<c>Timeout.Infinite</c>).</exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// wait.ms(500);
@@ -65,7 +65,7 @@ public static partial class wait {
 	/// The same as <see cref="ms"/>, but the time is specified in seconds, not milliseconds.
 	/// </summary>
 	/// <param name="timeSeconds">Time to wait, seconds.</param>
-	/// <exception cref="ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (<b>int.MaxValue</b> / 1000, 24.8 days).</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (<see cref="int.MaxValue"/> / 1000, 24.8 days).</exception>
 	/// <remarks>
 	/// Tip: the script editor replaces code like <c>100ms</c> with <c>100.ms();</c> when typing.
 	/// </remarks>
@@ -86,7 +86,7 @@ public static partial class wait {
 	/// The same as <see cref="ms"/>, but the time is specified in seconds, not milliseconds.
 	/// </summary>
 	/// <param name="timeSeconds">Time to wait, seconds. The smallest value is 0.001 (1 ms).</param>
-	/// <exception cref="ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (<b>int.MaxValue</b> / 1000, 24.8 days).</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (<see cref="int.MaxValue"/> / 1000, 24.8 days).</exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// wait.s(2.5);
@@ -108,10 +108,10 @@ public static partial class wait {
 	/// <param name="timeMS">Time to wait, milliseconds. Or <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <remarks>
 	/// Unlike <see cref="ms"/>, this function retrieves and dispatches Windows messages, calls .NET event handlers, hook procedures, timer functions, COM, etc.
-	/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/<b>Task</b>.
+	/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, <c>async</c>/<c>await</c>/<c>Task</c>.
 	/// If <i>timeMS</i> is -1, returns when receives <ms>WM_QUIT</ms> message.
 	/// </remarks>
-	/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> is negative and not -1 (<b>Timeout.Infinite</b>).</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> is negative and not -1 (<c>Timeout.Infinite</c>).</exception>
 	public static unsafe void doEvents(int timeMS) {
 		if (timeMS < -1) throw new ArgumentOutOfRangeException();
 		if (timeMS == 0) {
@@ -141,7 +141,7 @@ public static partial class wait {
 		int? _quit;
 		
 		/// <summary>
-		/// If <see cref="Pump"/> received <b>WM_QUIT</b>, calls <b>PostQuitMessage</b>, unless detects that it could cause infinite loop.
+		/// If <see cref="Pump"/> received <c>WM_QUIT</c>, calls <c>PostQuitMessage</c>, unless detects that it could cause infinite loop.
 		/// </summary>
 		public void Dispose() {
 			if (_quit != null) {
@@ -159,9 +159,9 @@ public static partial class wait {
 		[ThreadStatic] static int t_doeventsStack;
 		
 		/// <summary>
-		/// Calls <b>PeekMessage</b>/<b>TranslateMessage</b>/<b>DispatchMessage</b> while there are messages.
+		/// Calls <c>PeekMessage</c>/<c>TranslateMessage</c>/<c>DispatchMessage</c> while there are messages.
 		/// </summary>
-		/// <returns><c>false</c> if received <b>WM_QUIT</b>.</returns>
+		/// <returns><c>false</c> if received <c>WM_QUIT</c>.</returns>
 		public bool Pump() {
 			while (Api.PeekMessage(out var m)) {
 				if (m.message == Api.WM_QUIT) { _quit = (int)m.wParam; return false; }
@@ -172,11 +172,11 @@ public static partial class wait {
 		}
 		
 		/// <summary>
-		/// Like <b>Pump</b>, but can call a callback function. Used by <see cref="Wait_"/>.
+		/// Like <see cref="Pump"/>, but can call a callback function. Used by <see cref="Wait_"/>.
 		/// </summary>
 		/// <param name="msgCallback">
 		/// <c>null</c> or callback function of type:
-		/// <br/>• <b>WPMCallback</b> - called before dispatching a message. If returns <c>true</c>, not called for other messages. Can modify the <b>MSG</b>. Can set <b>MSG.message</b> = 0 to prevent dispatching it.
+		/// <br/>• <see cref="WPMCallback"/> - called before dispatching a message. If returns <c>true</c>, not called for other messages. Can modify the <c>MSG</c>. Can set <c>MSG.message</c> = 0 to prevent dispatching it.
 		/// <br/>• <c>Func&lt;bool&gt;</c> - called after dispatching all messages.
 		/// </param>
 		/// <returns><c>true</c> if <i>msgCallback</i> returned <c>true</c>.</returns>
@@ -206,7 +206,7 @@ public static partial class wait {
 	/// <summary>
 	/// Retrieves and dispatches events and Windows messages from the message queue of this thread.
 	/// </summary>
-	/// <returns><c>false</c> if received <b>WM_QUIT</b> message.</returns>
+	/// <returns><c>false</c> if received <c>WM_QUIT</c> message.</returns>
 	/// <remarks>
 	/// Similar to <see cref="System.Windows.Forms.Application.DoEvents"/>, but more lightweight. Uses API functions <ms>PeekMessage</ms>, <ms>TranslateMessage</ms> and <ms>DispatchMessage</ms>.
 	/// </remarks>
@@ -224,12 +224,12 @@ public static partial class wait {
 	}
 	
 	/// <summary>
-	/// Temporarily changes the time resolution/precision of <b>Thread.Sleep</b> and some other functions.
+	/// Temporarily changes the time resolution/precision of <c>Thread.Sleep</c> and some other functions.
 	/// </summary>
 	/// <remarks>
 	/// Uses API <ms>timeBeginPeriod</ms>, which requests a time resolution for various system timers and wait functions. Actually it is the system thread scheduling timer period.
 	/// Normal resolution on Windows 7-10 is 15.625 ms. It means that, for example, <c>Thread.Sleep(1);</c> sleeps not 1 but 1-15 ms. If you set resolution 1, it sleeps 1-2 ms.
-	/// The new resolution is revoked (<ms>timeEndPeriod</ms>) when disposing the <b>SleepPrecision_</b> variable or when this process ends. See example. See also <see cref="TempSet1"/>.
+	/// The new resolution is revoked (<ms>timeEndPeriod</ms>) when disposing the <c>SleepPrecision_</c> variable or when this process ends. See example. See also <see cref="TempSet1"/>.
 	/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
 	/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 	/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>

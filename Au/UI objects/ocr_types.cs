@@ -60,7 +60,7 @@ public interface IOcrEngine {
 	/// <summary>
 	/// Gets image pixels.
 	/// </summary>
-	/// <remarks>The pixel format is either <b>Format32bppRgb</b> (if it's <i>b</i> format) or <b>Format32bppArgb</b>.</remarks>
+	/// <remarks>The pixel format is either <c>Format32bppRgb</c> (if it's <i>b</i> format) or <c>Format32bppArgb</c>.</remarks>
 	protected static unsafe byte[] GetBitmapData(Bitmap b) {
 		using var d = b.Data(ImageLockMode.ReadOnly, b.PixelFormat == PixelFormat.Format32bppRgb ? PixelFormat.Format32bppRgb : PixelFormat.Format32bppArgb);
 		return new Span<byte>((void*)d.Scan0, d.Width * d.Height * 4).ToArray();
@@ -77,7 +77,7 @@ public interface IOcrEngine {
 	}
 
 	/// <summary>
-	/// Converts word polygon JSON nodes to <b>RECT</b>.
+	/// Converts word polygon JSON nodes to <see cref="RECT"/>.
 	/// </summary>
 	protected static RECT PolyToRect(JsonNode xTL, JsonNode yTL, JsonNode xTR, JsonNode yTR, JsonNode xBR, JsonNode yBR, JsonNode xBL, JsonNode yBL) {
 		return RECT.FromLTRB((i(xTL) + i(xBL) + 1) / 2, (i(yTL) + i(yTR) + 1) / 2, (i(xTR) + i(xBR)) / 2, (i(yBR) + i(yBL)) / 2);

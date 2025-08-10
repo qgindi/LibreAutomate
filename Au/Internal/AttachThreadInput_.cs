@@ -2,7 +2,7 @@ namespace Au.More;
 
 /// <summary>
 /// Calls API <ms>AttachThreadInput</ms> to attach/detach thread input.
-/// Constructor attaches thread input of this thread to that of the specified thread. <b>Dispose</b> detaches.
+/// Constructor attaches thread input of this thread to that of the specified thread. <c>Dispose</c> detaches.
 /// </summary>
 internal struct AttachThreadInput_ : IDisposable {
 	int _tidThis, _tidAttach;
@@ -27,7 +27,7 @@ internal struct AttachThreadInput_ : IDisposable {
 	}
 	
 	/// <summary>
-	/// Returns <c>true</c> if <b>AttachThreadInput</b> succeeded and this variable is not disposed.
+	/// Returns <c>true</c> if <c>AttachThreadInput</c> succeeded and this variable is not disposed.
 	/// </summary>
 	public bool IsAttached => _tidAttach != 0;
 }

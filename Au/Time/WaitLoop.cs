@@ -16,7 +16,7 @@ namespace Au.More {
 	/// 	}
 	/// }
 	/// ]]></code>
-	/// The same with <b>wait.until</b>.
+	/// The same with <see cref="wait.until"/>.
 	/// <code><![CDATA[
 	/// static bool WaitForMouseLeftButtonDown2(Seconds timeout) {
 	/// 	return wait.until(timeout, () => mouse.isPressed(MButtons.Left));
@@ -31,7 +31,7 @@ namespace Au.More {
 		/// <summary>
 		/// Sets timeout and possibly more wait parameters.
 		/// </summary>
-		/// <param name="timeout">Timeout in seconds, like <c>3</c> or <c>0.5</c>. Or a <b>Seconds</b> variable containing timeout etc, like <c>new(3, period: 5)</c>. If timeout is 0, will wait indefinitely. If <c>></c> 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns <c>false</c> instead.</param>
+		/// <param name="timeout">Timeout in seconds, like <c>3</c> or <c>0.5</c>. Or a <c>Seconds</c> variable containing timeout etc, like <c>new(3, period: 5)</c>. If timeout is 0, will wait indefinitely. If <c>></c> 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <c>Sleep</c> then returns <c>false</c> instead.</param>
 		public WaitLoop(Seconds timeout) {
 			Period = timeout.Period ?? 10;
 			_step = Period / 10f;
@@ -47,8 +47,8 @@ namespace Au.More {
 			}
 		}
 		
-		/// <param name="secondsTimeout">Timeout in seconds. If 0, will wait indefinitely. If <c>></c> 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <b>Sleep</b> then returns <c>false</c> instead.</param>
-		/// <param name="options">Options. If <c>null</c>, uses <b>opt.wait</b>.</param>
+		/// <param name="secondsTimeout">Timeout in seconds. If 0, will wait indefinitely. If <c>></c> 0, <see cref="Sleep"/> throws <see cref="TimeoutException"/> when timed out. If &lt; 0, <c>Sleep</c> then returns <c>false</c> instead.</param>
+		/// <param name="options">Options. If <c>null</c>, uses <see cref="opt.wait"/>.</param>
 		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
 		public WaitLoop(double secondsTimeout, OWait options) : this(new(secondsTimeout) { Period = (options ?? opt.wait).Period, DoEvents = (options ?? opt.wait).DoEvents }) { }
 		
@@ -71,7 +71,7 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Calls <see cref="IsTimeout"/>. If it returns <c>true</c>, returns <c>false</c>.
-		/// Else sleeps <see cref="Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="MaxPeriod"/>, and returns <c>true</c>.
+		/// Else sleeps <see cref="Period"/> milliseconds, increments <c>Period</c> if it is less than <see cref="MaxPeriod"/>, and returns <c>true</c>.
 		/// </summary>
 		/// <exception cref="TimeoutException">The timeout time has expired (if > 0).</exception>
 		public unsafe bool Sleep() {
@@ -130,9 +130,9 @@ namespace Au.Types {
 	/// Used with wait functions. Contains a wait timeout in seconds, and possibly wait options.
 	/// </summary>
 	/// <remarks>
-	/// Many wait functions of this library internally use <see cref="WaitLoop"/>. They have a timeout parameter of <b>Seconds</b> type which allows to pass timeout and more options to <b>WaitLoop</b> in single parameter. You can pass a <b>Seconds</b> variable, like <c>new(3, period: 5)</c>. If don't need options etc, you can pass just timeout, like <c>3</c> or <c>0.5</c>.
+	/// Many wait functions of this library internally use <see cref="WaitLoop"/>. They have a timeout parameter of <c>Seconds</c> type which allows to pass timeout and more options to <c>WaitLoop</c> in single parameter. You can pass a <c>Seconds</c> variable, like <c>new(3, period: 5)</c>. If don't need options etc, you can pass just timeout, like <c>3</c> or <c>0.5</c>.
 	///
-	/// Other wait functions have a timeout parameter of <b>Seconds</b> type but instead of <b>WaitLoop</b> use various hooks, events, Windows wait API, etc. They support only these <b>Seconds</b> properties: <b>Time</b>, <b>Cancel</b>, maybe <b>DoEvents</b>. Some always work like with <b>DoEvents</b> <c>true</c>.
+	/// Other wait functions have a timeout parameter of <c>Seconds</c> type but instead of <c>WaitLoop</c> use various hooks, events, Windows wait API, etc. They support only these <c>Seconds</c> properties: <c>Time</c>, <c>Cancel</c>, maybe <c>DoEvents</c>. Some always work like with <c>DoEvents</c> <c>true</c>.
 	///
 	/// More info: [](xref:wait_timeout).
 	/// </remarks>
@@ -162,7 +162,7 @@ namespace Au.Types {
 		/// <param name="time">
 		/// Timeout, in seconds.
 		/// Negative value means "don't throw exception when timed out".
-		/// Value 0 means "wait indefinitely" when used with <b>WaitX</b> functions; with <b>FindX</b> functions it means "don't wait".
+		/// Value 0 means "wait indefinitely" when used with <c>WaitX</c> functions; with <c>FindX</c> functions it means "don't wait".
 		/// More info: [](xref:wait_timeout).
 		/// </param>
 		public Seconds(double time) {
@@ -176,7 +176,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Timeout, in seconds.
 		/// Negative value means "don't throw exception when timed out".
-		/// Value 0 means "wait indefinitely" when used with <b>WaitX</b> functions; with <b>FindX</b> functions it means "don't wait".
+		/// Value 0 means "wait indefinitely" when used with <c>WaitX</c> functions; with <c>FindX</c> functions it means "don't wait".
 		/// More info: [](xref:wait_timeout).
 		/// </summary>
 		public double Time {
@@ -234,7 +234,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// If <c>Time &lt; 0</c>, returns <c>false</c>, else throws <b>NotFoundException</b>.
+		/// If <c>Time &lt; 0</c>, returns <c>false</c>, else throws <see cref="NotFoundException"/>.
 		/// </summary>
 		internal bool ReturnFalseOrThrowNotFound_() => Time < 0 ? false : throw new NotFoundException();
 		//internal T ReturnOrThrowNotFound_<T>(T def) => Time < 0 ? def : throw new NotFoundException();

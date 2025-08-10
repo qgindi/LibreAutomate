@@ -7,8 +7,8 @@ namespace Au.More
 	public static class Math2
 	{
 		/// <summary>
-		/// Creates <b>uint</b> by placing <c>(ushort)loWord</c> in bits 1-16 and <c>(ushort)hiWord</c> in bits 17-32. Returns it as <b>nint</b>, ready to use with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.
-		/// Like C macro <b>MAKELONG</b>, <b>MAKEWPARAM</b>, <b>MAKELPARAM</b>, <b>MAKELRESULT</b>.
+		/// Creates <c>uint</c> by placing <c>(ushort)loWord</c> in bits 1-16 and <c>(ushort)hiWord</c> in bits 17-32. Returns it as <c>nint</c>, ready to use with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.
+		/// Like C macro <c>MAKELONG</c>, <c>MAKEWPARAM</c>, <c>MAKELPARAM</c>, <c>MAKELRESULT</c>.
 		/// </summary>
 		public static nint MakeLparam(int loWord, int hiWord) => MakeLparam((uint)loWord, (uint)hiWord);
 		//Returns nint, because usually used as sendmessage etc parameter. If uint, would need to explicitly cast to nint. If somebody casts to int, the result may be incorrect, ie negative.
@@ -21,14 +21,14 @@ namespace Au.More
 		public static nint MakeLparam(uint loWord, uint hiWord) => (nint)(((hiWord & 0xffff) << 16) | (loWord & 0xffff));
 
 		/// <summary>
-		/// Creates <b>uint</b> by placing <c>(ushort)p.x</c> in bits 1-16 and <c>(ushort)p.y</c> in bits 17-32. Returns it as <b>nint</b>, ready to use with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.
-		/// Like C macro <b>MAKELONG</b>, <b>MAKEWPARAM</b>, <b>MAKELPARAM</b>, <b>MAKELRESULT</b>.
+		/// Creates <c>uint</c> by placing <c>(ushort)p.x</c> in bits 1-16 and <c>(ushort)p.y</c> in bits 17-32. Returns it as <c>nint</c>, ready to use with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.
+		/// Like C macro <c>MAKELONG</c>, <c>MAKEWPARAM</c>, <c>MAKELPARAM</c>, <c>MAKELRESULT</c>.
 		/// </summary>
 		public static nint MakeLparam(POINT p) => MakeLparam((uint)p.x, (uint)p.y);
 
 		/// <summary>
-		/// Creates <b>ushort</b> by placing <c>(byte)loByte</c> in bits 1-8 and <c>(byte)hiByte</c> in bits 9-16.
-		/// Like C macro <b>MAKEWORD</b>.
+		/// Creates <c>ushort</c> by placing <c>(byte)loByte</c> in bits 1-8 and <c>(byte)hiByte</c> in bits 9-16.
+		/// Like C macro <c>MAKEWORD</c>.
 		/// </summary>
 		public static ushort MakeWord(int loByte, int hiByte) => MakeWord((uint)loByte, (uint)hiByte);
 
@@ -36,49 +36,49 @@ namespace Au.More
 		public static ushort MakeWord(uint loByte, uint hiByte) => (ushort)(((hiByte & 0xff) << 8) | (loByte & 0xff));
 
 		/// <summary>
-		/// Gets bits 1-16 as <b>ushort</b>.
-		/// Like C macro <b>LOWORD</b>.
+		/// Gets bits 1-16 as <c>ushort</c>.
+		/// Like C macro <c>LOWORD</c>.
 		/// </summary>
 		/// <remarks>
-		/// The parameter is interpreted as <b>uint</b>. The parameter type <b>nint</b> allows to avoid explicit cast from <b>int</b> and <b>IntPtr</b>.
+		/// The parameter is interpreted as <c>uint</c>. The parameter type <c>nint</c> allows to avoid explicit cast from <c>int</c> and <c>IntPtr</c>.
 		/// </remarks>
 		public static ushort LoWord(nint x) => (ushort)((uint)x & 0xFFFF);
 
 		/// <summary>
-		/// Gets bits 17-32 as <b>ushort</b>.
-		/// Like C macro <b>HIWORD</b>.
+		/// Gets bits 17-32 as <c>ushort</c>.
+		/// Like C macro <c>HIWORD</c>.
 		/// </summary>
 		/// <inheritdoc cref="LoWord(nint)"/>
 		public static ushort HiWord(nint x) => (ushort)((uint)x >> 16);
 
 		/// <summary>
-		/// Gets bits 1-16 as <b>short</b>.
-		/// Like C macro <b>GET_X_LPARAM</b>.
+		/// Gets bits 1-16 as <c>short</c>.
+		/// Like C macro <c>GET_X_LPARAM</c>.
 		/// </summary>
 		/// <inheritdoc cref="LoWord(nint)"/>
 		public static short LoShort(nint x) => (short)((uint)x & 0xFFFF);
 
 		/// <summary>
-		/// Gets bits 17-32 as <b>short</b>.
-		/// Like C macro <b>GET_Y_LPARAM</b>.
+		/// Gets bits 17-32 as <c>short</c>.
+		/// Like C macro <c>GET_Y_LPARAM</c>.
 		/// </summary>
 		/// <inheritdoc cref="LoWord(nint)"/>
 		public static short HiShort(nint x) => (short)((uint)x >> 16);
 
 		/// <summary>
-		/// Gets bits 1-8 as <b>byte</b>.
-		/// Like C macro <b>LOBYTE</b>.
+		/// Gets bits 1-8 as <c>byte</c>.
+		/// Like C macro <c>LOBYTE</c>.
 		/// </summary>
 		public static byte LoByte(ushort x) => (byte)((uint)x & 0xFF);
 
 		/// <summary>
-		/// Gets bits 9-16 as <b>byte</b>.
-		/// Like C macro <b>HIBYTE</b>.
+		/// Gets bits 9-16 as <c>byte</c>.
+		/// Like C macro <c>HIBYTE</c>.
 		/// </summary>
 		public static byte HiByte(ushort x) => (byte)((uint)x >> 8);
 
 		/// <summary>
-		/// Converts <b>nint</b> containing x and y coordinates to <b>POINT</b>.
+		/// Converts <c>nint</c> containing x and y coordinates to <see cref="POINT"/>.
 		/// </summary>
 		public static POINT NintToPOINT(nint xy) => new(LoShort(xy), HiShort(xy));
 

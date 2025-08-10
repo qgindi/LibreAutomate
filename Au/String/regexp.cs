@@ -20,11 +20,11 @@ namespace Au;
 /// - <i>groups</i> - regular expression parts enclosed in <c>()</c>. Except non-capturing parts, like <c>(?:...)</c> and <c>(?options)</c>. Also known as <i>capturing group</i>, <i>capturing subpattern</i>. Often term <i>group</i> also is used for group matches.
 /// - <i>group match</i> - the part (substring) of the subject string that matches the group. Also known as <i>captured substring</i>.
 /// 
-/// This library uses an unmanaged code dll <c>AuCpp.dll</c> that contains PCRE code. This class is a managed wrapper for it. The main PCRE API functions used by this class are <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2_compile and pcre2_match</see>. The <b>regexp</b> constructor calls <b>pcre2_compile</b> and stores the compiled code in the variable. Other <b>regexp</b> functions call <b>pcre2_match</b>. Compiling to native code (JIT) is not supported.
+/// This library uses an unmanaged code dll <c>AuCpp.dll</c> that contains PCRE code. This class is a managed wrapper for it. The main PCRE API functions used by this class are <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2_compile and pcre2_match</see>. The <c>regexp</c> constructor calls <c>pcre2_compile</c> and stores the compiled code in the variable. Other <c>regexp</c> functions call <c>pcre2_match</c>. Compiling to native code (JIT) is not supported.
 /// 
-/// A <b>regexp</b> variable can be used by multiple threads simultaneously.
+/// A <c>regexp</c> variable can be used by multiple threads simultaneously.
 /// 
-/// Also there are several <b>String</b> extension methods that use this class. The string variable is the subject string. These methods create and use cached <b>regexp</b> instances for speed. The <b>regexp</b> constructor does not use caching.
+/// Also there are several <see cref="String"/> extension methods that use this class. The string variable is the subject string. These methods create and use cached <c>regexp</c> instances for speed. The <c>regexp</c> constructor does not use caching.
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
@@ -52,7 +52,7 @@ namespace Au;
 ///  print.it("//Split:");
 /// print.it(new regexp(@" *, *").Split(s));
 /// ]]></code>
-///  Examples with <b>String</b> extension methods. 
+///  Examples with <see cref="String"/> extension methods. 
 /// <code><![CDATA[
 /// var s = "one two22, three333,four"; //subject string
 /// var rx = @"\b(\w+?)(\d+)\b"; //regular expression
@@ -114,7 +114,7 @@ public unsafe class regexp {
 	/// <param name="rx">Regular expression. Cannot be <c>null</c>.</param>
 	/// <param name="flags">
 	/// Options.
-	/// Default 0. Flag UTF is implicitly added if <i>rx</i> contains non-ASCII characters and there is no flag <b>NEVER_UTF</b>.
+	/// Default 0. Flag UTF is implicitly added if <i>rx</i> contains non-ASCII characters and not used flag <c>NEVER_UTF</c>.
 	/// </param>
 	/// <exception cref="ArgumentNullException"></exception>
 	/// <exception cref="ArgumentException">Invalid regular expression. Or failed to compile it for some other reason (unlikely).</exception>
@@ -151,7 +151,7 @@ public unsafe class regexp {
 	/// <br/>• Get all instances of a group that can match multiple times.
 	/// <br/>• Evaluate and reject some matches or match parts.
 	/// <br/>• Etc.
-	/// The callback function is called by <b>IsMatch</b>, <b>Match</b>, <b>FindAll</b>, <b>Replace</b>, <b>Split</b> and similar functions, when they reach callout points in regular expression. To insert callout points use <c>(?C)</c>, <c>(?C1)</c>, <c>(?C2)</c>, <c>(?C'name')</c> etc or pass flag <b>AUTO_CALLOUT</b> to the constructor.
+	/// The callback function is called by <see cref="IsMatch"/>, <see cref="Match"/>, <see cref="FindAll"/>, <see cref="Replace"/>, <see cref="Split"/> and similar functions, when they reach callout points in regular expression. To insert callout points use <c>(?C)</c>, <c>(?C1)</c>, <c>(?C2)</c>, <c>(?C'name')</c> etc or pass flag <c>AUTO_CALLOUT</c> to the constructor.
 	/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 	/// See also: <see href="https://www.rexegg.com/pcre-callouts.html"/>
 	/// </remarks>
@@ -164,7 +164,7 @@ public unsafe class regexp {
 	/// x.Callout = o => { print.it(o.callout_number, o.start_match, o.current_position, s[o.start_match..o.current_position], rx.Substring(o.pattern_position, o.next_item_length)); };
 	/// print.it(x.IsMatch(s));
 	/// ]]></code>
-	/// Track the matching progress with flag <b>AUTO_CALLOUT</b>.
+	/// Track the matching progress with flag <c>AUTO_CALLOUT</c>.
 	/// <code><![CDATA[
 	/// var s = "one 'two' three";
 	/// var rx = @"'(.+?)'";
@@ -290,7 +290,7 @@ public unsafe class regexp {
 	/// <summary>
 	/// Returns <c>true</c> if string <i>s</i> matches this regular expression.
 	/// </summary>
-	/// <returns><c>true</c> if full or partial match. Partial match is possible if used a <b>PARTIAL_</b> flag.</returns>
+	/// <returns><c>true</c> if full or partial match. Partial match is possible if used a <c>PARTIAL_</c> flag.</returns>
 	/// <param name="s">
 	/// Subject string.
 	/// If <c>null</c>, returns <c>false</c>, even if the regular expression matches empty string.
@@ -298,14 +298,14 @@ public unsafe class regexp {
 	/// <param name="range">
 	/// Start and end offsets in the subject string. If <c>null</c> (default), uses whole string.
 	/// Examples: <c>i..j</c> (from <c>i</c> to <c>j</c>), <c>i..</c> (from <c>i </c>to the end), <c>..j</c> (from 0 to <c>j</c>).
-	/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c> or flag <b>RXFlags.ANCHORED</b>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
+	/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c> or flag <c>RXFlags.ANCHORED</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
 	/// The subject part after the end index is always ignored.
 	/// </param>
 	/// <param name="matchFlags">Options.
-	/// The same options also can be set in <b>regexp</b> constructor's <i>flags</i>. Constructor's flags and <i>matchFlags</i> are added, which means that <i>matchFlags</i> cannot unset flags set by constructor.
+	/// The same options also can be set in <see cref="regexp"/> constructor's <i>flags</i>. Constructor's flags and <i>matchFlags</i> are added, which means that <i>matchFlags</i> cannot unset flags set by constructor.
 	/// </param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+	/// <exception cref="AuException">The PCRE API function <c>pcre2_match</c> failed. Unlikely.</exception>
 	/// <remarks>
 	/// This function is similar to <see cref="Regex.IsMatch(string)"/>.
 	/// </remarks>
@@ -333,7 +333,7 @@ public unsafe class regexp {
 	/// </summary>
 	/// <returns>
 	/// <br/>• If full match, returns <c>true</c>, and <i>result</i> contains the match and all groups that exist in the regular expressions.
-	/// <br/>• If partial match, returns <c>true</c>, and <i>result</i> contains the match without groups. Partial match is possible if used a <b>PARTIAL_</b> flag.
+	/// <br/>• If partial match, returns <c>true</c>, and <i>result</i> contains the match without groups. Partial match is possible if used a <c>PARTIAL_</c> flag.
 	/// <br/>• If no match, returns <c>false</c>, and <i>result</i> normally is <c>null</c>. But if a mark is available, <i>result</i> is an object with two valid properties - <see cref="RXMatch.Exists"/> (<c>false</c>) and <see cref="RXMatch.Mark"/>; other properties have undefined values or throw exception.
 	/// </returns>
 	/// <param name="result">Receives match info.</param>
@@ -364,7 +364,7 @@ public unsafe class regexp {
 	/// </summary>
 	/// <returns>
 	/// <br/>• If full match, returns <c>true</c>, and <i>result</i> contains the match or the specified group.
-	/// <br/>• If partial match, returns <c>true</c>. Partial match is possible if used a <b>PARTIAL_</b> flag. Then cannot get groups, therefore <i>group</i> should be 0.
+	/// <br/>• If partial match, returns <c>true</c>. Partial match is possible if used a <c>PARTIAL_</c> flag. Then cannot get groups, therefore <i>group</i> should be 0.
 	/// <br/>• If no match, returns <c>false</c>, and <i>result</i> is empty.
 	/// </returns>
 	/// <param name="s">
@@ -376,7 +376,7 @@ public unsafe class regexp {
 	/// See also <see cref="GetGroupNumberOf"/>.
 	/// </param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
-	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+	/// <exception cref="AuException">The PCRE API function <c>pcre2_match</c> failed. Unlikely.</exception>
 	/// <remarks>
 	/// This function is a simplified version of <see cref="Match(string, out RXMatch, Range?, RXMatchFlags)"/>.
 	/// </remarks>
@@ -405,7 +405,7 @@ public unsafe class regexp {
 	/// </summary>
 	/// <returns>
 	/// <br/>• If full match, returns <c>true</c>, and <i>result</i> contains the value of the match or of the specifed group.
-	/// <br/>• If partial match, returns <c>true</c>. Partial match is possible if used a <b>PARTIAL_</b> flag. Then cannot get groups, therefore <i>group</i> should be 0.
+	/// <br/>• If partial match, returns <c>true</c>. Partial match is possible if used a <c>PARTIAL_</c> flag. Then cannot get groups, therefore <i>group</i> should be 0.
 	/// <br/>• If no match, returns <c>false</c>, and <i>result</i> is <c>null</c>.
 	/// </returns>
 	/// <param name="s">
@@ -448,9 +448,9 @@ public unsafe class regexp {
 	/// Returns <c>true</c> if string span <i>s</i> matches this regular expression.
 	/// Writes match info to caller-allocated memory (array, stackalloc array, etc).
 	/// </summary>
-	/// <param name="result">Receives match info: main match in <c>result[0]</c> and group matches in other elements. <b>Length</b> must be equal to the number of groups + 1. If a group does not exists, the element's <b>start</b> and <b>end</b> are <c>-1</c>.</param>
+	/// <param name="result">Receives match info: main match in <c>result[0]</c> and group matches in other elements. <c>result.Length</c> must be equal to the number of groups + 1. If a group does not exists, the element's <c>start</c> and <c>end</c> are <c>-1</c>.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
-	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+	/// <exception cref="AuException">The PCRE API function <c>pcre2_match</c> failed. Unlikely.</exception>
 	/// <exception cref="ArgumentException"><i>result</i> array too short.</exception>
 	/// <inheritdoc cref="Match(string, out RXMatch, Range?, RXMatchFlags)" path="/param"/>
 	public bool Match(RStr s, Span<StartEnd> result, Range? range = null, RXMatchFlags matchFlags = 0) {
@@ -545,10 +545,10 @@ public unsafe class regexp {
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
-	/// <br/>• Used a <b>PARTIAL_</b> flag.
+	/// <br/>• Used a <c>PARTIAL_</c> flag.
 	/// <br/>• The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
-	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+	/// <exception cref="AuException">The PCRE API function <c>pcre2_match</c> failed. Unlikely.</exception>
 	/// <remarks>
 	/// This function is similar to <see cref="Regex.Matches(string)"/>.
 	/// </remarks>
@@ -573,10 +573,10 @@ public unsafe class regexp {
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
-	/// <br/>• Used a <b>PARTIAL_</b> flag.
+	/// <br/>• Used a <c>PARTIAL_</c> flag.
 	/// <br/>• The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
-	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+	/// <exception cref="AuException">The PCRE API function <c>pcre2_match</c> failed. Unlikely.</exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// var s = "one two three";
@@ -715,10 +715,10 @@ public unsafe class regexp {
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
 	/// - Invalid <c>$replacement</c>.
-	/// - Used a <b>PARTIAL_</b> flag.
+	/// - Used a <c>PARTIAL_</c> flag.
 	/// - The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
-	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+	/// <exception cref="AuException">The PCRE API function <c>pcre2_match</c> failed. Unlikely.</exception>
 	/// <remarks>
 	/// This function is similar to <see cref="Regex.Replace(string, string, int)"/>.
 	/// </remarks>
@@ -803,7 +803,7 @@ public unsafe class regexp {
 	}
 	
 	/// <summary>
-	/// Used by <b>_ReplaceAll</b> and <b>RXMatch.ExpandReplacement</b>.
+	/// Used by <c>_ReplaceAll</c> and <c>RXMatch.ExpandReplacement</c>.
 	/// Fully supports .NET regular expression substitution syntax. Also: replaces <c>$*</c> with the name of the last encountered mark; replaces <c>${+func}</c> etc with the return value of a function registered with <see cref="addReplaceFunc"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -920,10 +920,10 @@ public unsafe class regexp {
 	/// </para>
 	/// </param>
 	/// <remarks>
-	/// Useful when there is no way to use <b>Replace</b> overloads with a <i>replFunc</i> parameter. For example in Find/Replace UI.
+	/// Useful when there is no way to use <see cref="Replace"/> overloads with a <i>replFunc</i> parameter. For example in Find/Replace UI.
 	/// </remarks>
 	/// <example>
-	/// Create new script in editor and add this code. In <b>Properties</b> set role <b>editorExtension</b>. Run.
+	/// Create new script in editor and add this code. In <b>Properties</b> set role <c>editorExtension</c>. Run.
 	/// Then in the <b>Find</b> panel in the replacement field you can use <c>${+Lower}</c>, <c>${+Lower(1)}</c>, <c>${+Lower(2)}</c> etc.
 	/// <code><![CDATA[
 	/// regexp.addReplaceFunc("Lower", (m, g, v) => m[g].Value.Lower()); //make lowercase
@@ -948,10 +948,10 @@ public unsafe class regexp {
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">
-	/// <br/>• Used a <b>PARTIAL_</b> flag.
+	/// <br/>• Used a <c>PARTIAL_</c> flag.
 	/// <br/>• The regular expression contains <c>(?=...\K)</c>.
 	/// </exception>
-	/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+	/// <exception cref="AuException">The PCRE API function <c>pcre2_match</c> failed. Unlikely.</exception>
 	/// <remarks>
 	/// Element 0 of the returned array is <i>s</i> substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is <i>s</i>.
 	/// 

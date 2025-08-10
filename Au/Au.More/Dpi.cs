@@ -77,7 +77,7 @@ namespace Au.More {
 		/// Gets DPI of a screen.
 		/// </summary>
 		/// <returns><see cref="System"/> if fails or if not supported on this Windows version.</returns>
-		/// <param name="hMonitor">Native screen handle (<b>HMONITOR</b>).</param>
+		/// <param name="hMonitor">Native screen handle (<c>HMONITOR</c>).</param>
 		/// <param name="supportWin81">Support Windows 8.1 and later. If <c>false</c> (default), supports Windows 10 1607 and later.</param>
 		/// <remarks>
 		/// Uses API <ms>GetDpiForMonitor</ms>.
@@ -92,24 +92,24 @@ namespace Au.More {
 		//public static int OfScreen(screen s, bool supportWin81 = false) => OfScreen(s.Now, supportWin81);
 
 		/// <summary>
-		/// Scales <b>int</b> if the specified DPI isn't 96 (100%).
+		/// Scales <c>int</c> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static int Scale(int i, DpiOf dpiOf) => Math2.MulDiv(i, dpiOf, 96);
 
 		//no. Eg also would be used for uint, long... Or name eg ScaleD. Or add double extension method.
 		///// <summary>
-		///// Scales <b>int</b> if the specified DPI isn't 96 (100%).
+		///// Scales <c>int</c> if the specified DPI isn't 96 (100%).
 		///// </summary>
 		//public static int Scale(double i, DpiOf dpiOf) => (i*(int)dpiOf/96).ToInt();
 
 		/// <summary>
-		/// Unscales <b>int</b> if the specified DPI isn't 96 (100%).
+		/// Unscales <c>int</c> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static double Unscale(int i, DpiOf dpiOf) => i * (96d / dpiOf);
 		//Unscaling sometimes useful with WPF. Unscale to double, not int, else result often incorrect.
 
 		/// <summary>
-		/// Scales <b>SIZE</b> if the specified DPI isn't 96 (100%).
+		/// Scales <see cref="SIZE"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static SIZE Scale(SIZE z, DpiOf dpiOf) {
 			int dpi = dpiOf;
@@ -119,7 +119,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Scales <b>System.Windows.Size</b> if the specified DPI isn't 96 (100%).
+		/// Scales <see cref="System.Windows.Size"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static SIZE Scale(System.Windows.Size z, DpiOf dpiOf) {
 			double f = (int)dpiOf / 96d;
@@ -129,7 +129,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Unscales <b>SIZE</b> if the specified DPI isn't 96 (100%).
+		/// Unscales <see cref="SIZE"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static System.Windows.Size Unscale(SIZE z, DpiOf dpiOf) {
 			double f = 96d / dpiOf;
@@ -137,7 +137,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Scales <b>RECT</b> if the specified DPI isn't 96 (100%).
+		/// Scales <see cref="RECT"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static RECT Scale(RECT r, DpiOf dpiOf) {
 			int dpi = dpiOf;
@@ -149,7 +149,7 @@ namespace Au.More {
 		}
 
 		/// <summary>
-		/// Unscales <b>RECT</b> if the specified DPI isn't 96 (100%).
+		/// Unscales <see cref="RECT"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static System.Windows.Rect Unscale(RECT r, DpiOf dpiOf) {
 			double f = 96d / dpiOf;
@@ -166,7 +166,7 @@ namespace Au.More {
 
 		/// <summary>
 		/// Calls API <ms>SystemParametersInfoForDpi</ms> if available, else <ms>SystemParametersInfo</ms>.
-		/// Use only with <i>uiAction</i> = <b>SPI_GETICONTITLELOGFONT</b>, <b>SPI_GETICONMETRICS</b>, <b>SPI_GETNONCLIENTMETRICS</b>.
+		/// Use only with <i>uiAction</i> = <ms>SPI_GETICONTITLELOGFONT</ms>, <ms>SPI_GETICONMETRICS</ms>, <ms>SPI_GETNONCLIENTMETRICS</ms>.
 		/// </summary>
 		public static unsafe bool SystemParametersInfo(uint uiAction, int uiParam, void* pvParam, DpiOf dpiOf)
 			=> osVersion.minWin10_1607
@@ -211,12 +211,12 @@ namespace Au.More {
 		/// <summary>
 		/// Gets DPI awareness of a window.
 		/// </summary>
-		/// <returns><b>Awareness.Invalid</b> if failed.</returns>
+		/// <returns><see cref="Awareness.Invalid"/> if failed.</returns>
 		/// <param name="w">A top-level window or control. Can belong to any process.</param>
 		/// <remarks>
 		/// Works best on Windows 10 1607 and later; uses API <ms>GetWindowDpiAwarenessContext</ms>.
-		/// On Windows 8.1 returns <b>Awareness.PerMonitor</b> if <i>w</i> is of this process; else uses API <ms>GetProcessDpiAwareness</ms>, which is slower and less reliable.
-		/// On Windows 7 and 8.0 always returns <b>System</b>, because there are no Windows API.
+		/// On Windows 8.1 returns <see cref="Awareness.PerMonitor"/> if <i>w</i> is of this process; else uses API <ms>GetProcessDpiAwareness</ms>, which is slower and less reliable.
+		/// On Windows 7 and 8.0 always returns <see cref="Awareness.System"/>, because there are no Windows API.
 		/// </remarks>
 		public static Awareness WindowDpiAwareness(wnd w) {
 			if (osVersion.minWin10_1607) {
@@ -362,7 +362,7 @@ namespace Au.More {
 		/// Does nothing if the API is unavailable (added in Windows 10 version 1607).
 		/// </summary>
 		/// <remarks>
-		/// Programs that use this library should use manifest with <c>dpiAwareness = PerMonitorV2</c> and <c>dpiAware = True/PM</c>. Then default DPI awareness context is <b>DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2</b>.
+		/// Programs that use this library should use manifest with <c>dpiAwareness = PerMonitorV2</c> and <c>dpiAware = True/PM</c>. Then default DPI awareness context is <ms>DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2</ms>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -375,7 +375,7 @@ namespace Au.More {
 			/// <summary>
 			/// If <see cref="Available"/>, calls API <ms>SetThreadDpiAwarenessContext</ms>.
 			/// </summary>
-			/// <param name="dpiContext">One of <ms>DPI_AWARENESS_CONTEXT</ms> constants: -1 <b>unaware</b>, -2 <b>system</b>, -3 <b>per-monitor</b>, -4 <b>per-monitor-v2</b>, -5 <b>unaware-gdiscaled</b>. Or a <b>DPI_AWARENESS_CONTEXT</b> handle.</param>
+			/// <param name="dpiContext">One of <ms>DPI_AWARENESS_CONTEXT</ms> constants: -1 <c>unaware</c>, -2 <c>system</c>, -3 <c>per-monitor</c>, -4 <c>per-monitor-v2</c>, -5 <c>unaware-gdiscaled</c>. Or a <ms>DPI_AWARENESS_CONTEXT</ms> handle.</param>
 			public AwarenessContext(nint dpiContext) {
 				_dac = osVersion.minWin10_1607 ? Api.SetThreadDpiAwarenessContext(dpiContext) : default;
 			}
@@ -420,7 +420,7 @@ namespace Au.More {
 namespace Au.Types {
 	/// <summary>
 	/// Used for <i>dpiOf</i> parameter of functions.
-	/// Has implicit conversions from <b>int</b> (DPI), <b>wnd</b> (DPI of window), <b>IntPtr</b> (DPI of screen handle), <b>POINT</b> (DPI of screen containing point), <b>RECT</b> (DPI of screen containing rectangle), forms <b>Control</b>, WPF <b>DependencyObject</b>. The conversion operators set the <see cref="Dpi"/> property and the function can use it.
+	/// Has implicit conversions from <c>int</c> (DPI), <see cref="wnd"/> (DPI of window), <c>IntPtr</c> (DPI of screen handle), <see cref="POINT"/> (DPI of screen containing point), <see cref="RECT"/> (DPI of screen containing rectangle), forms <see cref="System.Windows.Forms.Control"/>, WPF <see cref="System.Windows.DependencyObject"/>. The conversion operators set the <see cref="Dpi"/> property and the function can use it.
 	/// </summary>
 	public struct DpiOf {
 		readonly int _dpi;

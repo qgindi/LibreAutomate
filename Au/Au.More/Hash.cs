@@ -142,7 +142,7 @@ public static unsafe class Hash {
 	
 	/// <summary>
 	/// Computes MD5 hash of data.
-	/// Call <b>Add</b> one or more times. Finally use <see cref="Hash"/> to get result.
+	/// Call an <see cref="Add"/> method one or more times. Finally use <see cref="Hash"/> to get result.
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
 	public struct MD5Context //MD5_CTX + _state
@@ -200,11 +200,11 @@ public static unsafe class Hash {
 		//}
 		
 		/// <summary>
-		/// Computes final hash of datas added with <b>Add</b>.
+		/// Computes final hash of datas added with an <see cref="Add"/> method.
 		/// </summary>
-		/// <exception cref="InvalidOperationException"><b>Add</b> was not called.</exception>
+		/// <exception cref="InvalidOperationException"><c>Add</c> was not called.</exception>
 		/// <remarks>
-		/// Resets state, so that if <b>Add</b> called again, it will start adding new datas.
+		/// Resets state, so that if <c>Add</c> called again, it will start adding new datas.
 		/// </remarks>
 		public MD5Result Hash {
 			get {
@@ -220,7 +220,7 @@ public static unsafe class Hash {
 	
 	/// <summary>
 	/// Result of <see cref="MD5Context.Hash"/>.
-	/// It is 16 bytes stored in 2 <c>long</c> fields <b>r1</b> and <b>r2</b>.
+	/// It is 16 bytes stored in 2 <c>long</c> fields <c>r1</c> and <c>r2</c>.
 	/// If need, can be converted to <c>byte[]</c> with <see cref="MD5Result.ToArray"/> or to hex string with <see cref="MD5Result.ToString"/>.
 	/// </summary>
 	public record struct MD5Result {
@@ -251,7 +251,7 @@ public static unsafe class Hash {
 		}
 		
 		/// <summary>
-		/// Creates <b>MD5Result</b> from hex string returned by <see cref="ToString"/>.
+		/// Creates <see cref="MD5Result"/> from hex string returned by <see cref="ToString"/>.
 		/// </summary>
 		/// <returns><c>false</c> if <i>encoded</i> is invalid.</returns>
 		public static bool FromString(RStr encoded, out MD5Result r) => Convert2.HexDecode(encoded, out r);

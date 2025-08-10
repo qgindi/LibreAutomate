@@ -7,7 +7,7 @@ namespace Au.More {
 	/// Simple HTTP 1.1 server. Can be used for communicating between two scripts or apps on local network, internet or same computer. Also can receive requests from web browsers etc.
 	/// </summary>
 	/// <remarks>
-	/// To receive HTTP messages, create a class with base <b>HttpServerSession</b> and add function <see cref="MessageReceived"/>. Example in <see cref="Listen"/>.
+	/// To receive HTTP messages, create a class with base <c>HttpServerSession</c> and add function <see cref="MessageReceived"/>. Example in <see cref="Listen"/>.
 	/// </remarks>
 	public abstract class HttpServerSession {
 		/// <summary>
@@ -18,7 +18,7 @@ namespace Au.More {
 		/// <param name="started">Called when the server started (after <see cref="TcpListener.Start()"/>).</param>
 		/// <exception cref="Exception">Exceptions of <see cref="TcpListener"/> functions. Unlikely.</exception>
 		/// <remarks>
-		/// Runs all the time and listens for new TCP client connections. For each connected client starts new thread, creates new object of your <b>HttpServerSession</b>-based type, and calls <see cref="Run"/>, which calls <see cref="MessageReceived"/>. Supports keep-alive. Multiple sessions can run simultaneously.
+		/// Runs all the time and listens for new TCP client connections. For each connected client starts new thread, creates new object of your <see cref="HttpServerSession"/>-based type, and calls <see cref="Run"/>, which calls <see cref="MessageReceived"/>. Supports keep-alive. Multiple sessions can run simultaneously.
 		///
 		///	Uses <see cref="TcpListener"/>, not <see cref="HttpListener"/>, therefore don't need administrator privileges, <c>netsh</c> and opening ports in firewall. Just the standard firewall dialog first time.
 		///
@@ -88,7 +88,7 @@ namespace Au.More {
 		HSMessage _message; //current message
 		
 		/// <summary>
-		/// Gets the <b>TcpClient</b> object of this session.
+		/// Gets the <see cref="TcpClient"/> object of this session.
 		/// </summary>
 		protected TcpClient Client => _client;
 		
@@ -115,7 +115,7 @@ namespace Au.More {
 		/// <remarks>
 		///	Not called if failed to read the message.
 		/// 
-		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> <c>true</c>. On unhandled exception sends error 500 (<b>InternalServerError</b>) and closes the connection.
+		/// The server uses try/catch when calling this. Prints unhandled exceptions if <see cref="Verbose"/> <c>true</c>. On unhandled exception sends error 500 (<c>InternalServerError</c>) and closes the connection.
 		/// </remarks>
 		protected abstract void MessageReceived(HSMessage m, HSResponse r);
 		
@@ -289,8 +289,8 @@ namespace Au.More {
 	
 	/// <summary>
 	/// Reads an HTTP request or response message.
-	/// All functions may throw <see cref="HttpReadException_"/> and exceptions of <b>NetworkStream.Read</b>.
-	/// The class was designed to read request, therefore throws exceptions such as <b>BadRequest</b>, but can be used to read response too.
+	/// All functions may throw <see cref="HttpReadException_"/> and exceptions of <c>NetworkStream.Read</c>.
+	/// The class was designed to read request, therefore throws exceptions such as <c>BadRequest</c>, but can be used to read response too.
 	/// Uses 16 KB of stack. Consider <c>[SkipLocalsInit]</c>.
 	/// </summary>
 	unsafe ref struct HttpReader_ {
@@ -519,7 +519,7 @@ namespace Au.Types {
 		string _contentText;
 		
 		/// <summary>
-		/// JSON-deserializes <see cref="Content"/> to object of type <b>T</b>.
+		/// JSON-deserializes <see cref="Content"/> to object of type <c>T</c>.
 		/// </summary>
 		/// <returns><c>default(T)</c> if the request does not have body data.</returns>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.Deserialize{TValue}(Stream, JsonSerializerOptions?)"/>.</exception>
@@ -721,9 +721,9 @@ namespace Au.Types {
 		/// Gets text encoding.
 		/// </summary>
 		/// <value>Returns:
-		/// <br/>• <c>null</c> if multipart content (<b>Boundary</b> not <c>null</c>).
+		/// <br/>• <c>null</c> if multipart content (<see cref="Boundary"/> not <c>null</c>).
 		/// <br/>• UTF-8 if <c>charset</c> is <c>utf-8</c> or not specified.
-		/// <br/>• <b>Encoding</b> that matches <c>charset</c>.
+		/// <br/>• <c>Encoding</c> that matches <c>charset</c>.
 		/// <br/>• ASCII if <c>charset</c> is invalid.
 		/// </value>
 		public Encoding Encoding { get; }
@@ -782,9 +782,9 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// JSON-serializes object of type <b>T</b>, and sets <see cref="Content"/>. Also sets <c>Content-Type</c> header.
+		/// JSON-serializes object of type <c>T</c>, and sets <see cref="Content"/>. Also sets <c>Content-Type</c> header.
 		/// </summary>
-		/// <param name="obj">Object of type <b>T</b>.</param>
+		/// <param name="obj">Object of type <c>T</c>.</param>
 		/// <param name="contentType">If not <c>null</c>, sets <c>Content-Type</c> header.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="JsonSerializer.SerializeToUtf8Bytes{TValue}(TValue, JsonSerializerOptions?)"/>.</exception>
 		public void SetContentJson<T>(T obj, string contentType = "application/json; charset=utf-8") {

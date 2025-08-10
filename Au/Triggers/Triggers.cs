@@ -28,7 +28,7 @@ namespace Au.Triggers;
 /// 
 /// Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="script.run"/> to run other scripts in new process; see example.
 /// 
-/// Trigger actions may not inherit <b>opt</b> options that are set before adding triggers. The example shows how to correctly set <b>opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>opt</b> options set by previous action.
+/// Trigger actions may not inherit <see cref="opt"/> options that are set before adding triggers. The example shows how to correctly set <see cref="opt"/> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <see cref="opt"/> options set by previous action.
 /// </remarks>
 /// <example>
 /// This is a single script with many action triggers.
@@ -439,7 +439,7 @@ public partial class ActionTriggers {
 	/// Does not abort threads of trigger actions that are still running.
 	/// </remarks>
 	/// <example>
-	/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+	/// Note: the <c>Triggers</c> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// Triggers.Hotkey["Ctrl+T"] = o => print.it("Ctrl+T");
 	/// Triggers.Hotkey["Ctrl+Q"] = o => { print.it("Ctrl+Q (stop)"); Triggers.Stop(); };
@@ -464,21 +464,21 @@ public partial class ActionTriggers {
 	internal bool Running_ => !_evStop.Is0;
 	
 	/// <summary>
-	/// Throws <b>InvalidOperationException</b> if executing <see cref="Run"/>.
+	/// Throws <see cref="InvalidOperationException"/> if executing <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfRunning_() {
 		if (Running_) throw new InvalidOperationException("Must be before or after Run.");
 	}
 	
 	/// <summary>
-	/// Throws <b>InvalidOperationException</b> if not executing <see cref="Run"/>.
+	/// Throws <see cref="InvalidOperationException"/> if not executing <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfNotRunning_() {
 		if (!Running_) throw new InvalidOperationException("Cannot be before or after Run.");
 	}
 	
 	/// <summary>
-	/// Throws <b>InvalidOperationException</b> if not thread of <see cref="Run"/>.
+	/// Throws <see cref="InvalidOperationException"/> if not thread of <see cref="Run"/>.
 	/// </summary>
 	internal void ThrowIfNotMainThread_() {
 		if (!IsMainThread) throw new InvalidOperationException("Must be in thread of Run (for example in a FuncOf function).");
@@ -499,7 +499,7 @@ public partial class ActionTriggers {
 	/// <seealso cref="ActionTrigger.EnabledAlways"/>
 	/// <seealso cref="TriggerOptions.EnabledAlways"/>
 	/// <example>
-	/// Note: the <b>Triggers</b> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
+	/// Note: the <c>Triggers</c> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// Triggers.Hotkey["Ctrl+T"] = o => print.it("Ctrl+T");
 	/// Triggers.Hotkey["Ctrl+D"] = o => { print.it("Ctrl+D (disable/enable)"); Triggers.Disabled ^= true; }; //toggle
@@ -640,7 +640,7 @@ class TriggerHookContext : WFCache {
 	
 	/// <summary>
 	/// Used with <see cref="trigger"/>.
-	/// Can be 0 or one of <b>TriggerActionThreads.c_</b> constants.
+	/// Can be 0 or one of <c>TriggerActionThreads.c_</c> constants.
 	/// </summary>
 	public int muteMod;
 	
@@ -744,7 +744,7 @@ class TriggerHookContext : WFCache {
 	
 	/// <summary>
 	/// Called before processing each keyboard hook event.
-	/// Updates <b>Mod</b>, <b>ModL</b>, <b>ModR</b>, <b>IsThisKeyMod</b>. They are used by hotkey and autotext triggers.
+	/// Updates <see cref="Mod"/>, <see cref="ModL"/>, <see cref="ModR"/>, <see cref="ModThis"/>. They are used by hotkey and autotext triggers.
 	/// </summary>
 	public void InitMod(HookData.Keyboard k) {
 		KMod modL = 0, modR = 0;

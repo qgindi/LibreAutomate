@@ -16,7 +16,7 @@ partial class keys {
 		}
 		
 		/// <summary>
-		/// Calls <see cref="parseKeyName"/> and throws <b>ArgumentException</b> if invalid key string.
+		/// Calls <see cref="parseKeyName"/> and throws <see cref="ArgumentException"/> if invalid key string.
 		/// </summary>
 		internal static KKey ParseKeyNameThrow_(string keyName) {
 			var k = parseKeyName(keyName);
@@ -161,7 +161,7 @@ partial class keys {
 		/// <summary>
 		/// Formats hotkey string like <c>"Ctrl+Shift+K"</c>.
 		/// </summary>
-		/// <param name="b">Append to this <b>StringBuilder</b>.</param>
+		/// <param name="b">Append to this <c>StringBuilder</c>.</param>
 		/// <param name="mod"></param>
 		/// <param name="key"></param>
 		public static void hotkeyToString(StringBuilder b, KMod mod, KKey key) {
@@ -490,7 +490,7 @@ print.it(b.ToString());
 		*/
 		
 		/// <summary>
-		/// Converts modifier key flags from <b>KMod</b> to winforms <b>Keys</b>.
+		/// Converts modifier key flags from <c>KMod</c> to winforms <c>Keys</c>.
 		/// </summary>
 		/// <remarks>
 		/// For <c>Win</c> returns flag <c>(Keys)0x80000</c>.
@@ -498,7 +498,7 @@ print.it(b.ToString());
 		public static System.Windows.Forms.Keys KModToWinforms(KMod mod) => (System.Windows.Forms.Keys)((int)mod << 16);
 		
 		/// <summary>
-		/// Converts modifier key flags from winforms <b>Keys</b> to <b>KMod</b>.
+		/// Converts modifier key flags from winforms <c>Keys</c> to <c>KMod</c>.
 		/// </summary>
 		/// <remarks>
 		/// For <c>Win</c> can be used flag <c>(Keys)0x80000</c>.
@@ -506,24 +506,24 @@ print.it(b.ToString());
 		public static KMod KModFromWinforms(System.Windows.Forms.Keys mod) => (KMod)((int)mod >> 16);
 		
 		/// <summary>
-		/// Converts modifier key flags from <b>KMod</b> to WPF <b>ModifierKeys</b>.
+		/// Converts modifier key flags from <c>KMod</c> to WPF <c>ModifierKeys</c>.
 		/// </summary>
 		public static System.Windows.Input.ModifierKeys KModToWpf(KMod mod) => (System.Windows.Input.ModifierKeys)_SwapMod((int)mod);
 		
 		/// <summary>
-		/// Converts modifier key flags from WPF <b>ModifierKeys</b> to <b>KMod</b>.
+		/// Converts modifier key flags from WPF <c>ModifierKeys</c> to <c>KMod</c>.
 		/// </summary>
 		public static KMod KModFromWpf(System.Windows.Input.ModifierKeys mod) => (KMod)_SwapMod((int)mod);
 		
 		static int _SwapMod(int m) => (m & 0b1010) | (m << 2 & 4) | (m >> 2 & 1);
 		
 		/// <summary>
-		/// Converts key from <b>KKey</b> to WPF <b>Key</b>.
+		/// Converts key from <c>KKey</c> to WPF <c>Key</c>.
 		/// </summary>
 		public static System.Windows.Input.Key KKeyToWpf(KKey k) => System.Windows.Input.KeyInterop.KeyFromVirtualKey((int)k);
 		
 		/// <summary>
-		/// Converts key from WPF <b>Key</b> to <b>KKey</b>.
+		/// Converts key from WPF <c>Key</c> to <c>KKey</c>.
 		/// </summary>
 		public static KKey KKeyFromWpf(System.Windows.Input.Key k) => (KKey)System.Windows.Input.KeyInterop.VirtualKeyFromKey(k);
 		
@@ -540,7 +540,7 @@ print.it(b.ToString());
 		/// <param name="extra">An "extra info" value that can be used for example by keyboard hooks to recognize the key sender. If <c>null</c> (default), uses the same value as other functions of this library.</param>
 		/// <param name="dontThrow">Don't throw exception.</param>
 		/// <remarks>
-		/// This is a low-level function. Does nothing more (sleep, block input, etc). Does not use <b>opt</b> options. Just gets missing info (scan code etc) and calls API <ms>SendInput</ms>.
+		/// This is a low-level function. Does nothing more (sleep, block input, etc). Does not use <see cref="opt"/> options. Just gets missing info (scan code etc) and calls API <ms>SendInput</ms>.
 		/// </remarks>
 		/// <exception cref="InputDesktopException"></exception>
 		public static void sendKey(KKey k, bool? down = null, nint hkl = 0, int? extra = null, bool dontThrow = false)

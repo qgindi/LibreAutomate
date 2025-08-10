@@ -16,7 +16,7 @@ namespace Au {
 	/// 
 	/// Uses task dialog API <ms>TaskDialogIndirect</ms>.
 	/// 
-	/// Cannot be used in services. Instead use <b>MessageBox.Show</b> with option <b>ServiceNotification</b> or <b>DefaultDesktopOnly</b>, or API <ms>MessageBox</ms> with corresponding flags.
+	/// Cannot be used in services. Instead use <see cref="System.Windows.Forms.MessageBox.Show"/> with option <c>ServiceNotification</c> or <c>DefaultDesktopOnly</c>, or API <ms>MessageBox</ms> with corresponding flags.
 	/// </remarks>
 	/// <example>
 	/// Simple examples.
@@ -175,9 +175,9 @@ namespace Au {
 			
 			/// <summary>
 			/// Show dialogs on this screen when screen is not explicitly specified (property <see cref="Screen"/> or parameter <i>screen</i>) and there is no owner window.
-			/// The <b>screen</b> must be lazy or empty.
+			/// The <see cref="screen"/> must be lazy or empty.
 			/// </summary>
-			/// <exception cref="ArgumentException"><b>screen</b> with <b>Handle</b>. Must be lazy or empty.</exception>
+			/// <exception cref="ArgumentException"><see cref="screen"/> with <c>Handle</c>. Must be lazy or empty.</exception>
 			/// <example>
 			/// <code><![CDATA[
 			/// dialog.options.defaultScreen = screen.ofActiveWindow;
@@ -299,7 +299,7 @@ namespace Au {
 		/// <summary>
 		/// Sets custom icon.
 		/// </summary>
-		/// <param name="icon">Icon of size 32 or 16 (or more if high DPI). Can be <see cref="icon"/>, <b>Icon</b>, <b>IntPtr</b> (native icon handle), <b>Bitmap</b>.</param>
+		/// <param name="icon">Icon of size 32 or 16 (or more if high DPI). Can be <see cref="icon"/>, <see cref="Icon"/>, <c>IntPtr</c> (native icon handle), <see cref="Bitmap"/>.</param>
 		public void SetIcon(object icon) {
 			_iconGC = icon; //GC
 			_c.hMainIcon = _IconHandle(icon);
@@ -330,7 +330,7 @@ namespace Au {
 		const int c_idTimeout = int.MinValue;
 		
 		/// <summary>
-		/// The return value of <b>ShowX</b> functions on timeout.
+		/// The return value of <c>ShowX</c> functions on timeout.
 		/// </summary>
 		public const int Timeout = int.MinValue;
 		
@@ -444,7 +444,7 @@ namespace Au {
 			
 			/// <summary>
 			/// Sets <c>c.pButtons</c>, <c>c.cButtons</c>, <c>c.pRadioButtons</c> and <c>c.cRadioButtons</c>.
-			/// Later call <b>MarshalFreeButtons</b>.
+			/// Later call <c>MarshalFreeButtons</c>.
 			/// </summary>
 			public unsafe void MarshalButtons(ref _Api.TASKDIALOGCONFIG c) {
 				c.pButtons = _MarshalButtons(false, out c.cButtons);
@@ -454,7 +454,7 @@ namespace Au {
 			}
 			
 			/// <summary>
-			/// Frees memory allocated by <b>MarshalButtons</b> and sets the <i>c</i> members to <c>null</c>/0.
+			/// Frees memory allocated by <c>MarshalButtons</c> and sets the <i>c</i> members to <c>null</c>/0.
 			/// </summary>
 			public unsafe void MarshalFreeButtons(ref _Api.TASKDIALOGCONFIG c) {
 				MemoryUtil.Free(c.pButtons);
@@ -592,7 +592,7 @@ namespace Au {
 		/// Adds text and custom icon at the bottom of the dialog.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon">Icon of size 16 (or more if high DPI). Can be <see cref="icon"/>, <b>Icon</b>, <b>IntPtr</b> (native icon handle), <b>Bitmap</b>.</param>
+		/// <param name="icon">Icon of size 16 (or more if high DPI). Can be <see cref="icon"/>, <see cref="Icon"/>, <c>IntPtr</c> (native icon handle), <see cref="Bitmap"/>.</param>
 		public void SetFooter(string text, object icon) {
 			_c.pszFooter = text;
 			_iconFooterGC = icon; //GC
@@ -602,11 +602,11 @@ namespace Au {
 		object _iconFooterGC; //GC
 		
 		/// <summary>
-		/// Adds <b>Edit</b> or <b>Combo</b> control.
+		/// Adds Edit or ComboBox control.
 		/// </summary>
 		/// <param name="editType">Control type/style.</param>
 		/// <param name="editText">Initial edit field text.</param>
-		/// <param name="comboItems">Combo box items used when <i>editType</i> is <b>Combo</b>.</param>
+		/// <param name="comboItems">Combo box items used when <i>editType</i> is <see cref="DEdit.Combo"/>.</param>
 		/// <remarks>
 		/// To get control text after closing the dialog, use <see cref="Controls"/>.
 		/// 
@@ -633,7 +633,7 @@ namespace Au {
 		/// <summary>
 		/// Sets owner window.
 		/// </summary>
-		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be <b>wnd</b>, WPF window or element, winforms window or control. Can be <c>null</c>.</param>
+		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be <see cref="wnd"/>, WPF window or element, winforms window or control. Can be <c>null</c>.</param>
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
 		/// <param name="dontDisable">Don't disable the owner window. If <c>false</c>, disables if it belongs to this thread.</param>
 		/// <remarks>
@@ -1141,7 +1141,7 @@ namespace Au {
 		#region send messages
 		
 		/// <summary>
-		/// Gets dialog window handle as <b>wnd</b>.
+		/// Gets dialog window handle as <see cref="wnd"/>.
 		/// </summary>
 		/// <returns><c>default(wnd)</c> if the dialog is not open.</returns>
 		public wnd DialogWindow => _dlg;
@@ -1331,7 +1331,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Gets edit control handle as <b>wnd</b>.
+		/// Gets edit control handle as <see cref="wnd"/>.
 		/// </summary>
 		public wnd EditControl => _editWnd;
 		wnd _editWnd, _editParent;
@@ -1399,7 +1399,7 @@ namespace Au {
 		/// <remarks>
 		/// Tip: Use named arguments. Example: <c>dialog.show("Text", icon: DIcon.Info, title: "Title")</c> .
 		/// 
-		/// This function allows you to use many dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <b>ShowDialog</b>. Example in <see cref="dialog"/> class help.
+		/// This function allows you to use many dialog features, but not all. Alternatively you can create a <see cref="dialog"/> class instance, set properties and call <see cref="ShowDialog"/>. Example in <see cref="dialog"/> class help.
 		/// 
 		/// <h5>More info about the <i>buttons</i> parameter</h5>
 		/// 
@@ -1524,7 +1524,7 @@ namespace Au {
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
 		/// <param name="editType">Edit field type. It can be simple text (default), multiline, number, password or combo box.</param>
 		/// <param name="editText">Initial edit field text.</param>
-		/// <param name="comboItems">Combo box items used when <i>editType</i> is <b>DEdit.Combo</b>.</param>
+		/// <param name="comboItems">Combo box items used when <i>editType</i> is <see cref="DEdit.Combo"/>.</param>
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
@@ -1543,7 +1543,7 @@ namespace Au {
 		/// </param>
 		/// <param name="onButtonClick">A button-clicked event handler function. See examples.</param>
 		/// <remarks>
-		/// This function allows you to use many dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, call <see cref="SetEditControl"/> or use the <i>controls</i> parameter, set other properties and call <b>ShowDialog</b>.
+		/// This function allows you to use many dialog features, but not all. Alternatively you can create a <see cref="dialog"/> class instance, call <see cref="SetEditControl"/> or use the <i>controls</i> parameter, set other properties and call <see cref="ShowDialog"/>.
 		/// </remarks>
 		/// <example>
 		/// Simple.
@@ -1617,7 +1617,7 @@ namespace Au {
 		/// <param name="flags"></param>
 		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <remarks>
-		/// Calls <see cref="showInput"/> and converts string to <b>int</b>.
+		/// Calls <see cref="showInput"/> and converts string to <c>int</c>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1645,7 +1645,7 @@ namespace Au {
 		/// Shows dialog with a list of command-link buttons, and returns 1-based button index or 0.
 		/// </summary>
 		/// <returns>1-based index of the selected button. Returns 0 if clicked the <b>X</b> (close window) button or pressed <c>Esc</c>.</returns>
-		/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <b>List</b>. See <see cref="SetButtons"/>.</param>
+		/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <c>List</c>. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>
@@ -1661,7 +1661,7 @@ namespace Au {
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="show"/>.</param>
 		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <b>ShowDialog</b>. Example in <see cref="dialog"/> class help.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <see cref="dialog"/> class instance, set properties and call <see cref="ShowDialog"/>. Example in <see cref="dialog"/> class help.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1696,10 +1696,10 @@ namespace Au {
 		/// Shows dialog with progress bar.
 		/// Creates dialog in new thread and returns without waiting until it is closed.
 		/// </summary>
-		/// <returns>Variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the <b>Send</b> property you can set progress, modify controls and close the dialog (see example).</returns>
+		/// <returns>Variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the <c>Send</c> property you can set progress, modify controls and close the dialog (see example).</returns>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
 		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <see cref="ShowDialogNoWait"/>.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <see cref="dialog"/> class instance, set properties and call <see cref="ShowDialogNoWait"/>.
 		/// 
 		/// More info: <see cref="show"/>.
 		/// </remarks>
@@ -1743,9 +1743,9 @@ namespace Au {
 		/// Shows dialog like <see cref="show"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
 		/// </summary>
-		/// <returns>Variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the <b>Send</b> property you can modify controls and close the dialog (see example).</returns>
+		/// <returns>Variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the <c>Send</c> property you can modify controls and close the dialog (see example).</returns>
 		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <b>dialog</b> class instance, set properties and call <see cref="ShowDialogNoWait"/>.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a <see cref="dialog"/> class instance, set properties and call <see cref="ShowDialogNoWait"/>.
 		/// 
 		/// More info: <see cref="show"/>.
 		/// </remarks>
@@ -1799,8 +1799,8 @@ namespace Au.Types {
 		/// <summary>
 		/// Use <ms>IDI_APPLICATION</ms> icon from unmanaged resources of this program file or main assembly.
 		/// If there are no icons - default program icon.
-		/// C# compilers add app icon with this id. The <b>DIcon.App</b> value is = <b>IDI_APPLICATION</b> (32512).
-		/// If this program file contains multiple native icons in range <b>DIcon.App</b> to 0xf000, you can specify them like <c>DIcon.App+1</c>.
+		/// C# compilers add app icon with this id. The <see cref="DIcon.App"/> value is = <ms>IDI_APPLICATION</ms> (32512).
+		/// If this program file contains multiple native icons in range <c>DIcon.App</c> to 0xf000, you can specify them like <c>DIcon.App+1</c>.
 		/// </summary>
 		App = Api.IDI_APPLICATION
 	}
@@ -1924,7 +1924,7 @@ namespace Au.Types {
 		public string EditText { get; set; }
 		
 		/// <summary>
-		/// Sets combo box list items used when <see cref="EditType"/> is <b>Combo</b>.
+		/// Sets combo box list items used when <see cref="EditType"/> is <see cref="DEdit.Combo"/>.
 		/// </summary>
 		public Strings ComboItems { get; set; }
 	}
@@ -1933,7 +1933,7 @@ namespace Au.Types {
 	/// Arguments for <see cref="dialog"/> event handlers.
 	/// </summary>
 	/// <remarks>
-	/// To return a non-zero value from the callback function, assign the value to the <b>returnValue</b> field.
+	/// To return a non-zero value from the callback function, assign the value to the <c>returnValue</c> field.
 	/// More info: <ms>TaskDialogCallbackProc</ms>.
 	/// </remarks>
 	public class DEventArgs : EventArgs {
@@ -1963,7 +1963,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Dialog timer time in milliseconds. Use in <see cref="dialog.Timer"/> event handler.
-		/// The event handler can set <b>returnValue</b>=1 to reset this.
+		/// The event handler can set <c>returnValue</c>=1 to reset this.
 		/// </summary>
 		public int TimerTimeMS => (int)wParam;
 		
@@ -2001,7 +2001,7 @@ namespace Au.Types {
 		/// Example (in an event handler): <c>e.d.Send.Message(DNative.TDM.CLICK_VERIFICATION, 1);</c>
 		/// Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, update progress.
 		/// Reference: <ms>task dialog messages</ms>.
-		/// <b>NAVIGATE_PAGE</b> currently not supported.
+		/// <c>NAVIGATE_PAGE</c> not supported.
 		/// </remarks>
 		public int Message(DNative.TDM message, nint wParam = 0, nint lParam = 0) {
 			return _tdo?.SendMessage_(message, wParam, lParam) ?? 0;
@@ -2055,7 +2055,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Applies new properties to the dialog while it is already open.
 		/// Call this method while the dialog is open, eg in an event handler, after setting new properties.
-		/// Sends message <b>DNative.TDM.NAVIGATE_PAGE</b>.
+		/// Sends message <c>DNative.TDM.NAVIGATE_PAGE</c>.
 		/// </summary>
 		public void Reconstruct()
 		{
@@ -2069,10 +2069,10 @@ namespace Au.Types {
 		/// <summary>
 		/// Clicks a button. Normally it closes the dialog.
 		/// </summary>
-		/// <param name="buttonId">A button id or some other number that will be returned by <b>ShowDialog</b>.</param>
+		/// <param name="buttonId">A button id or some other number that will be returned by <see cref="dialog.ShowDialog"/>.</param>
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
-		/// Sends message <b>DNative.TDM.CLICK_BUTTON</b>.
+		/// Sends message <see cref="DNative.TDM.CLICK_BUTTON"/>.
 		/// </remarks>
 		public bool Close(int buttonId = 0) {
 			return 0 != Message(DNative.TDM.CLICK_BUTTON, buttonId);
@@ -2084,7 +2084,7 @@ namespace Au.Types {
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// Example: <c>d.Created += e => { e.d.Send.EnableButton(4, false); };</c>
-		/// Sends message <b>DNative.TDM.ENABLE_BUTTON</b>.
+		/// Sends message <see cref="DNative.TDM.ENABLE_BUTTON"/>.
 		/// </remarks>
 		public void EnableButton(int buttonId, bool enable) {
 			Message(DNative.TDM.ENABLE_BUTTON, buttonId, enable ? 1 : 0);
@@ -2095,7 +2095,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
-		/// Sends message <b>DNative.TDM.SET_PROGRESS_BAR_POS</b>.
+		/// Sends message <see cref="DNative.TDM.SET_PROGRESS_BAR_POS"/>.
 		/// </remarks>
 		public int Progress(int percent) {
 			if (percent < 100) Message(DNative.TDM.SET_PROGRESS_BAR_POS, percent + 1); //workaround for the progress bar control lag. https://stackoverflow.com/questions/5332616/disabling-net-progressbar-animation-when-changing-value
@@ -2109,7 +2109,7 @@ namespace Au.Types {
 	/// Rarely used constants for Windows API used by <see cref="dialog"/>.
 	/// </summary>
 	/// <remarks>
-	/// Constants are in enums. Enum name is constant prefix. Enum members are without prefix. For example for <b>TDM_CLICK_BUTTON</b> use <c>DNative.TDM.CLICK_BUTTON</c>.
+	/// Constants are in enums. Enum name is constant prefix. Enum members are without prefix. For example for <c>TDM_CLICK_BUTTON</c> use <c>DNative.TDM.CLICK_BUTTON</c>.
 	/// </remarks>
 	public static class DNative {
 		/// <summary>
@@ -2151,7 +2151,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Constants for <b>DNative.TDM.SET_ELEMENT_TEXT</b> and <b>DNative.TDM.UPDATE_ELEMENT_TEXT</b> messages used with <see cref="dialog"/>.
+		/// Constants for <see cref="DNative.TDM.SET_ELEMENT_TEXT"/> and <see cref="DNative.TDM.UPDATE_ELEMENT_TEXT"/> messages used with <see cref="dialog"/>.
 		/// </summary>
 		public enum TDE {
 			CONTENT,
@@ -2161,7 +2161,7 @@ namespace Au.Types {
 		}
 		
 		/// <summary>
-		/// Constants for <b>DNative.TDM.UPDATE_ICON</b> message used with <see cref="dialog"/>.
+		/// Constants for <see cref="DNative.TDM.UPDATE_ICON"/> message used with <see cref="dialog"/>.
 		/// </summary>
 		public enum TDIE {
 			ICON_MAIN,

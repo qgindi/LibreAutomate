@@ -1,7 +1,7 @@
 namespace Au {
 	public unsafe partial struct wnd {
 		/// <summary>
-		/// Finds a top-level window and returns its handle as <b>wnd</b>.
+		/// Finds a top-level window and returns its handle as <see cref="wnd"/>.
 		/// </summary>
 		/// <returns>Window handle, or <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		/// <param name="name">
@@ -16,9 +16,9 @@ namespace Au {
 		/// </param>
 		/// <param name="of">
 		/// Owner window, program or thread. Depends on argument type:
-		/// <br/>• <b>wnd</b> - owner window. Will use <see cref="IsOwnedBy(wnd, int)"/> with level 2.
-		/// <br/>• <b>string</b> - program file name, like <c>"notepad.exe"</c>. String format: [wildcard expression](xref:wildcard_expression). Cannot be <c>""</c> or path.
-		/// <br/>• <b>WOwner</b> - <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id).
+		/// <br/>• <see cref="wnd"/> - owner window. Will use <see cref="IsOwnedBy(wnd, int)"/> with level 2.
+		/// <br/>• <c>string</c> - program file name, like <c>"notepad.exe"</c>. String format: [wildcard expression](xref:wildcard_expression). Cannot be <c>""</c> or path.
+		/// <br/>• <see cref="WOwner"/> - <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id).
 		/// 
 		/// <para>
 		/// See <see cref="getwnd.Owner"/>, <see cref="ProcessId"/>, <see cref="process.thisProcessId"/>, <see cref="ThreadId"/>, <see cref="process.thisThreadId"/>.
@@ -35,8 +35,8 @@ namespace Au {
 		/// Defines an object that must be in the client area of the window:
 		/// <br/>• UI element: <see cref="elmFinder"/> or string like <c>"name"</c> or <c>"e 'role' name"</c> or <c>"e 'role'"</c>.
 		/// <br/>• Child control: <see cref="wndChildFinder"/> or string like <c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c>.
-		/// <br/>• Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses a <b>uiimageFinder</b> with flag <see cref="IFFlags.WindowDC"/>).
-		/// <br/>• OCR text: <see cref="ocrFinder"/> or string <c>"ocr:..."</c> (uses an <b>ocrFinder</b> with flag <see cref="OcrFlags.WindowDC"/>).
+		/// <br/>• Image(s) or color(s): <see cref="uiimageFinder"/> or string <c>"image:..."</c> (uses a <see cref="uiimageFinder"/> with flag <see cref="IFFlags.WindowDC"/>).
+		/// <br/>• OCR text: <see cref="ocrFinder"/> or string <c>"ocr:..."</c> (uses an <see cref="ocrFinder"/> with flag <see cref="OcrFlags.WindowDC"/>).
 		/// </param>
 		/// <exception cref="ArgumentException">
 		/// - <i>cn</i> is <c>""</c>. To match any, use <c>null</c>.
@@ -58,11 +58,11 @@ namespace Au {
 		/// wnd w = wnd.find("* Notepad");
 		/// if(w.Is0) { print.it("not found"); return; }
 		/// ]]></code>
-		/// Try to find Notepad window. Throw <b>NotFoundException</b> if not found.
+		/// Try to find Notepad window. Throw <see cref="NotFoundException"/> if not found.
 		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(0, "* Notepad");
 		/// ]]></code>
-		/// Wait for Notepad window max 3 seconds. Throw <b>NotFoundException</b> if not found during that time.
+		/// Wait for Notepad window max 3 seconds. Throw <see cref="NotFoundException"/> if not found during that time.
 		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(3, "* Notepad");
 		/// ]]></code>
@@ -71,7 +71,7 @@ namespace Au {
 		/// wnd w1 = wnd.find(-3, "* Notepad");
 		/// if(w.Is0) { print.it("not found"); return; }
 		/// ]]></code>
-		/// Wait for Notepad window max 3 seconds. Throw <b>NotFoundException</b> if not found during that time. When found, wait max 1 s until becomes active, then activate.
+		/// Wait for Notepad window max 3 seconds. Throw <see cref="NotFoundException"/> if not found during that time. When found, wait max 1 s until becomes active, then activate.
 		/// <code><![CDATA[
 		/// wnd w1 = wnd.find(3, "* Notepad").Activate(1);
 		/// ]]></code>
@@ -87,7 +87,7 @@ namespace Au {
 		//	Then in scripts almost always would need eg ' , wait: 1'. Or would need ', wait: 0' just for 'exception if not found'.
 		
 		/// <summary>
-		/// Finds a top-level window and returns its handle as <b>wnd</b>. Can wait and throw <b>NotFoundException</b>.
+		/// Finds a top-level window and returns its handle as <see cref="wnd"/>. Can wait and throw <see cref="NotFoundException"/>.
 		/// </summary>
 		/// <returns>Window handle. If not found, throws exception or returns <c>default(wnd)</c> (if <i>wait</i> negative).</returns>
 		/// <param name="wait">The wait timeout, seconds. If 0, does not wait. If negative, does not throw exception when not found.</param>
@@ -106,7 +106,7 @@ namespace Au {
 		///// Gets arguments and result of this thread's last call to <see cref="Find"/> or <see cref="FindAll"/>.
 		///// </summary>
 		///// <remarks>
-		///// <b>wnd.wait</b> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
+		///// <c>wnd.wait</c> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
 		///// </remarks>
 		///// <example>
 		///// This example is similar to what <see cref="FindOrRun"/> does.
@@ -123,7 +123,7 @@ namespace Au {
 		/// <summary>
 		/// Finds all matching windows.
 		/// </summary>
-		/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+		/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 		/// <remarks>
 		/// The list is sorted to match the Z order, however hidden windows (when using <see cref="WFlags.HiddenToo"/>) and IME windows are always after visible windows.
 		/// </remarks>
@@ -143,7 +143,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Finds a top-level window and returns its handle as <b>wnd</b>.
+		/// Finds a top-level window and returns its handle as <see cref="wnd"/>.
 		/// </summary>
 		/// <returns>Returns <c>default(wnd)</c> if not found. See also: <see cref="Is0"/>.</returns>
 		/// <param name="name">
@@ -163,7 +163,7 @@ namespace Au {
 		/// Faster than <see cref="find"/>, which uses API <ms>EnumWindows</ms>.
 		/// Finds hidden windows too.
 		/// Supports <see cref="lastError"/>.
-		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
+		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <see cref="find"/> and <see cref="findAll"/>.
 		/// </remarks>
 		public static wnd findFast(string name = null, string cn = null, bool messageOnly = false, wnd wAfter = default) {
 			return Api.FindWindowEx(messageOnly ? SpecHWND.MESSAGE : default, wAfter, cn, name);
@@ -174,7 +174,7 @@ namespace Au {
 			long _time;
 			
 			/// <summary>
-			/// Calls/returns <see cref="findFast"/> and stores found <b>wnd</b> and time. Returns the cached <b>wnd</b> if called frequently and it's still valid.
+			/// Calls/returns <see cref="findFast"/> and stores found <see cref="wnd"/> and time. Returns the cached <see cref="wnd"/> if called frequently and it's still valid.
 			/// </summary>
 			public wnd FindFast(string name, string cn, bool messageOnly) {
 				long t = Environment.TickCount64;
@@ -190,7 +190,7 @@ namespace Au {
 			}
 			
 			/// <summary>
-			/// Calls/returns callback <i>f</i> and stores found <b>wnd</b> and time. Returns the cached <b>wnd</b> if called frequently and it's still valid.
+			/// Calls/returns callback <i>f</i> and stores found <see cref="wnd"/> and time. Returns the cached <see cref="wnd"/> if called frequently and it's still valid.
 			/// </summary>
 			public wnd Get(Func<wnd> f) {
 				long t = Environment.TickCount64;
@@ -209,7 +209,7 @@ namespace Au {
 		/// <summary>
 		/// Finds a top-level window, like <see cref="find"/>. If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="run.it"/>.
 		/// </summary>
-		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>wait</i> &lt; 0 (else exception).</returns>
+		/// <returns>Window handle as <see cref="wnd"/>. On timeout returns <c>default(wnd)</c> if <i>wait</i> &lt; 0 (else exception).</returns>
 		/// <param name="run">Callback function. See example.</param>
 		/// <param name="wait">How long to wait for the window after calling the callback function. Seconds. Default 60.</param>
 		/// <param name="activate">Activate the window. Default: <c>true</c>.</param>
@@ -263,14 +263,14 @@ namespace Au {
 		/// <summary>
 		/// Opens and finds new window. Ignores old windows. Activates.
 		/// </summary>
-		/// <returns>Window handle as <b>wnd</b>. On timeout returns <c>default(wnd)</c> if <i>timeout</i> &lt; 0 (else exception).</returns>
+		/// <returns>Window handle as <see cref="wnd"/>. On timeout returns <c>default(wnd)</c> if <i>timeout</i> &lt; 0 (else exception).</returns>
 		/// <param name="timeout">How long to wait for the window. Seconds. Can be 0 (infinite), >0 (exception on timeout) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="run">Callback function. Should open the window. See example.</param>
 		/// <param name="activate">Activate the window. Default: <c>true</c>.</param>
 		/// <exception cref="TimeoutException"><i>timeout</i> time has expired (if > 0).</exception>
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <remarks>
-		/// This function isn't the same as just two statements <b>run.it</b> and <b>wnd.find</b>. It never returns a window that already existed before calling it.
+		/// This function isn't the same as just two statements <see cref="run.it"/> and <see cref="wnd.find"/>. It never returns a window that already existed before calling it.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -362,7 +362,7 @@ namespace Au {
 			/// <summary>
 			/// Gets top-level windows.
 			/// </summary>
-			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+			/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 			/// <param name="onlyVisible">
 			/// Need only visible windows.
 			/// Note: this function does not check whether windows are cloaked, as it is rather slow. Use <see cref="IsCloaked"/> if need.
@@ -387,7 +387,7 @@ namespace Au {
 			/// <summary>
 			/// Gets top-level windows ordered as in the Z order.
 			/// </summary>
-			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+			/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 			/// <remarks>
 			/// Uses API <ms>GetWindow</ms> and ensures it is reliable.
 			/// </remarks>
@@ -438,7 +438,7 @@ namespace Au {
 			/// <summary>
 			/// Gets top-level windows of a thread.
 			/// </summary>
-			/// <returns>Array containing zero or more <b>wnd</b>.</returns>
+			/// <returns>Array containing zero or more <see cref="wnd"/>.</returns>
 			/// <param name="threadId">
 			/// Unmanaged thread id.
 			/// See <see cref="process.thisThreadId"/>, <see cref="ThreadId"/>.
@@ -457,7 +457,7 @@ namespace Au {
 			}
 			
 			//rejected
-			///// <param name="a">Receives results. If <c>null</c>, this function creates new <b>List</b>, else clears before adding items.</param>
+			///// <param name="a">Receives results. If <c>null</c>, this function creates new <c>List</c>, else clears before adding items.</param>
 			///// <remarks>This overload can be used to avoid much garbage when calling frequently.</remarks>
 			///// <inheritdoc cref="threadWindows(int, bool, bool)"/>
 			//public static void threadWindows(ref List<wnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false) {
@@ -469,7 +469,7 @@ namespace Au {
 			/// Gets the first in Z order window of this thread.
 			/// </summary>
 			/// <param name="onlyVisible"></param>
-			/// <param name="nonPopup">Skip <b>WS.POPUP</b> without <b>WS.CAPTION</b>.</param>
+			/// <param name="nonPopup">Skip <c>WS_POPUP</c> without <c>WS_CAPTION</c>.</param>
 			internal static wnd TopThreadWindow_(bool onlyVisible, bool nonPopup) {
 				wnd r = default;
 				Api.EnumThreadWindows(Api.GetCurrentThreadId(), (w, _) => {
@@ -496,7 +496,7 @@ namespace Au {
 			
 			/// <summary>
 			/// This version creates much less garbage.
-			/// The caller must dispose the returned <b>ArrayBuilder_</b>, unless list is not <c>null</c>.
+			/// The caller must dispose the returned <c>ArrayBuilder_</c>, unless list is not <c>null</c>.
 			/// If list is not <c>null</c>, adds windows there (clears at first) and returns <c>default(ArrayBuilder_)</c>.
 			/// </summary>
 			internal static ArrayBuilder_<wnd> EnumWindows2(EnumAPI api,

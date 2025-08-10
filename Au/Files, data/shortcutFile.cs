@@ -10,7 +10,7 @@ namespace Au {
 		bool _changedHotkey;
 
 		/// <summary>
-		/// Releases internally used COM objects (<b>IShellLink</b>, <b>IPersistFile</b>).
+		/// Releases internally used COM objects (<c>IShellLink</c>, <c>IPersistFile</c>).
 		/// </summary>
 		public void Dispose() {
 			if (_isl != null) {
@@ -20,7 +20,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Returns the internally used <b>IShellLink</b> COM interface.
+		/// Returns the internally used <c>IShellLink</c> COM interface.
 		/// </summary>
 		internal Api.IShellLink IShellLink => _isl;
 		//This could be public, but then need to make IShellLink public. It is defined in a non-standard way. Never mind, it is not important.
@@ -52,7 +52,7 @@ namespace Au {
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
 		/// You can set properties and finally call <see cref="Save"/>.
-		/// If the shortcut file already exists, <b>Save</b> replaces it.
+		/// If the shortcut file already exists, <c>Save</c> replaces it.
 		/// </remarks>
 		public static shortcutFile create(string lnkPath) {
 			return new shortcutFile(lnkPath, Api.STGM_WRITE);
@@ -67,7 +67,7 @@ namespace Au {
 		/// <remarks>
 		/// Exception if file exists but cannot open it for read-write access.
 		/// You can get and set properties and finally call <see cref="Save"/>.
-		/// If the shortcut file already exists, <b>Save</b> updates it.
+		/// If the shortcut file already exists, <c>Save</c> updates it.
 		/// </remarks>
 		public static shortcutFile openOrCreate(string lnkPath) {
 			return new shortcutFile(lnkPath, Api.STGM_READWRITE);
@@ -91,7 +91,7 @@ namespace Au {
 		/// Gets or sets shortcut target path.
 		/// </summary>
 		/// <value><c>null</c> if target isn't a file system object, eg Control Panel or URL.</value>
-		/// <remarks>The <c>get</c> function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where <b>IShellLink.GetPath</b> lies.</remarks>
+		/// <remarks>The <c>get</c> function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where <c>IShellLink.GetPath</c> lies.</remarks>
 		/// <exception cref="AuException">The <c>set</c> function failed.</exception>
 		/// <exception cref="ArgumentException">The <c>set</c> function allows max length 259.</exception>
 		public string TargetPath {
@@ -107,7 +107,7 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets or sets a non-file-system target (eg Control Panel) through its <b>ITEMIDLIST</b>.
+		/// Gets or sets a non-file-system target (eg Control Panel) through its <ms>ITEMIDLIST</ms>.
 		/// </summary>
 		/// <remarks>
 		/// Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
@@ -188,7 +188,7 @@ namespace Au {
 
 		/// <summary>
 		/// Throws if <i>s</i> longer than 259.
-		/// <b>SetPath</b> then would throw without error description. <b>SetIconLocation</b> would limit to 260. <b>SetWorkingDirectory</b> and <b>SetDescription</b> succeed but corrupt the <c>.lnk</c> file. <b>SetArguments</b> OK. Others not tested, rare, never mind.
+		/// <c>SetPath</c> then would throw without error description. <c>SetIconLocation</c> would limit to 260. <c>SetWorkingDirectory</c> and <c>SetDescription</c> succeed but corrupt the <c>.lnk</c> file. <c>SetArguments</c> OK. Others not tested, rare, never mind.
 		/// </summary>
 		static string _Max259(string s) => s.Lenn() <= 259 ? s : throw new ArgumentException("max length 259");
 
@@ -248,7 +248,7 @@ namespace Au {
 		#region public static
 
 		/// <summary>
-		/// Gets shortcut target path or URL or virtual shell object <b>ITEMIDLIST</b>.
+		/// Gets shortcut target path. It also can be a URL or a <ms>ITEMIDLIST</ms> string (see <see cref="Pidl"/>) of a virtual shell object.
 		/// Uses <see cref="open"/> and <see cref="TargetAnyType"/>.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (<c>.lnk</c>) path.</param>
