@@ -661,10 +661,13 @@ public class wpfBuilder {
 	public static bool winTopmost { get; set; }
 	
 	/// <summary>
-	/// If <c>true</c>, constructor does not change the background color of windows created afterwards; then the color depends on theme.
-	/// If <c>false</c> constructor sets standard color of dialog windows, usually light gray.
-	/// Default value depends on application's theme and usually is <c>true</c> if using a theme.
+	/// If <c>true</c>, <c>wpfBuilder</c> constructors used afterwards will not change the window background color.
 	/// </summary>
+	/// <remarks>
+	/// If <c>true</c>, <c>wpfBuilder</c> constructors don't change the background color; then the color depends on theme.
+	/// If <c>false</c> constructors set standard color of dialog windows, usually light gray.
+	/// Default value depends on application's theme and usually is <c>true</c> if using a custom theme.
+	/// </remarks>
 	public static bool winWhite { get => s_winWhite ?? (_GetThemed() != _Themed.None); set { s_winWhite = value; } }
 	static bool? s_winWhite;
 	
@@ -1645,19 +1648,19 @@ public class wpfBuilder {
 	/// print.it(tName.Text, tCount.Text.ToInt());
 	/// ]]></code>
 	/// </example>
-	public wpfBuilder Validation(Func<FrameworkElement, string> func, Action<FrameworkElement> linkClick = null/*, DependencyProperty property=null*/) {
-		var c = Last;
+	public wpfBuilder Validation(Func<FrameworkElement, string> func, Action<FrameworkElement> linkClick = null/*, DependencyProperty property=null*/)
+		=> Validation(Last, func, linkClick);
+	
+	/// <summary>
+	/// Sets a validation callback function for an element.
+	/// </summary>
+	/// <inheritdoc cref="Validation(Func{FrameworkElement, string}, Action{FrameworkElement})"/>
+	/// <example/>
+	public wpfBuilder Validation(FrameworkElement e, Func<FrameworkElement, string> func, Action<FrameworkElement> linkClick = null/*, DependencyProperty property=null*/) {
 		//validate on click of OK or some other button. Often eg text fields initially are empty and must be filled.
-		(_validations ??= new List<_Validation>()).Add(new(c, func, linkClick));
-		
-		//rejected: also validate on lost focus or changed property value. Maybe in the future.
-		//		if(property==null) {
-		//			c.LostFocus+=(o,e)=> { print.it(func(o as FrameworkElement)); };
-		//		} else {
-		//			var pd = DependencyPropertyDescriptor.FromProperty(property, c.GetType());
-		//			pd.AddValueChanged(c, (o,e)=> { print.it(func(o as FrameworkElement)); });
-		//		}
+		(_validations ??= new List<_Validation>()).Add(new(e, func, linkClick));
 		return this;
+		//rejected: also validate on lost focus or changed property value.
 	}
 	
 	record class _Validation(FrameworkElement e, Func<FrameworkElement, string> func, Action<FrameworkElement> linkClick);
@@ -1785,15 +1788,14 @@ public class wpfBuilder {
 	public wpfBuilder LabeledBy(bool? bindVisibility = null) => LabeledBy(Last2, bindVisibility);
 	
 	/// <summary>
-	/// Sets watermark/hint/cue text of the last added <see cref="TextBox"/> or editable <see cref="ComboBox"/> control.
+	/// Sets watermark/hint/cue text of the last added <see cref="TextBox"/>, <see cref="PasswordBox"/> or editable <see cref="ComboBox"/> control.
 	/// The text is visible only when the control text is empty.
 	/// </summary>
 	/// <param name="text">Watermark text.</param>
 	/// <remarks>
-	/// The control must be a child/descendant of an <see cref="AdornerDecorator"/>. See example.
+	/// In some kinds of windows it may not work unless a parent or ancestor of the control is an <see cref="AdornerDecorator"/> (like in the example).
 	/// </remarks>
-	/// <exception cref="NotSupportedException">The last added element isn't <see cref="TextBox"/> or editable <see cref="ComboBox"/> control.</exception>
-	/// <exception cref="InvalidOperationException">The control isn't in an <see cref="AdornerDecorator"/>.</exception>
+	/// <exception cref="NotSupportedException">The last added element isn't <see cref="TextBox"/>, <see cref="PasswordBox"/> or editable <see cref="ComboBox"/> control.</exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// b.R.Add<AdornerDecorator>().Add(out TextBox text1, WBAdd.ChildOfLast).Watermark("Water");
@@ -1806,7 +1808,7 @@ public class wpfBuilder {
 	/// <inheritdoc cref="Watermark(string)"/>
 	public wpfBuilder Watermark(out WatermarkAdorner adorner, string text) {
 		var c = Last as Control;
-		if (c is not TextBox && !(c is ComboBox k && k.IsEditable)) throw new NotSupportedException("Watermark(): Last added must be TextBox or editable ComboBox");
+		if (!(c is TextBox or PasswordBox or ComboBox { IsEditable: true })) throw new NotSupportedException("Watermark(): Last added must be TextBox, PasswordBox or editable ComboBox");
 		adorner = new WatermarkAdorner(c, text);
 		adorner.SetAdornerVisibility();
 		return this;

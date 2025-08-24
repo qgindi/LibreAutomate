@@ -340,9 +340,11 @@ public class FEFile {
 
 /// <summary>
 /// What to do if the destination directory contains a file or directory with the same name as the source file or directory when copying, moving or renaming.
+/// </summary>
+/// <remarks>
 /// Used with <see cref="filesystem.copy"/>, <see cref="filesystem.move"/> and similar functions.
 /// When renaming or moving, if the destination is the same as the source, these options are ignored and the destination is simply renamed. For example when renaming <c>"file.txt"</c> to <c>"FILE.TXT"</c>.
-/// </summary>
+/// </remarks>
 public enum FIfExists {
 	/// <summary>Throw exception. Default.</summary>
 	Fail,

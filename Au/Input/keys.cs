@@ -491,7 +491,7 @@ public partial class keys {
 	/// <summary>
 	/// Sends keys, text and executes other events added with the <c>AddX</c> functions.
 	/// </summary>
-	/// <param name="canSendAgain">Don't clear the internal collection. If <c>true</c>, this function then can be called again (eg in loop) to send/execute the same keys etc. If <c>false</c> (default), clears the added keys etc; then you can call <c>AddX</c> functions and <see cref="Send"/> again.</param>
+	/// <param name="canSendAgain">Don't clear the internal collection. If <c>true</c>, this function then can be called again (eg in loop) to send/execute the same keys etc. If <c>false</c> (default), clears the added keys etc; then you can call <c>AddX</c> functions and <c>SendNow</c> again.</param>
 	/// <exception cref="ArgumentException"><i>canSendAgain</i> is <c>true</c> and <i>keys_</i> end with <c>+</c> or <c>(</c>.</exception>
 	/// <exception cref="AuException">Failed. For example there is no focused window when sending text.</exception>
 	/// <exception cref="InputDesktopException"></exception>
@@ -578,11 +578,13 @@ public partial class keys {
 		//Better add a Sync function (keys.sync) or/and special key name, let users do it explicitly where need.
 	}
 
+#if !DEBUG
 	/// <summary>
 	/// Deprecated. Use <see cref="SendNow"/>.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public void Send(bool canSendAgain = false) => SendNow(canSendAgain);
+#endif
 
 	unsafe void _SendKey(_KEvent k, int i) {
 		bool needScanCode = k.scan == 0 && !k.SIFlags.HasAny(_KFlags.Scancode | _KFlags.Unicode);

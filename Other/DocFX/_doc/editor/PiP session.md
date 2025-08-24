@@ -3,6 +3,7 @@ uid: pip_session
 ---
 
 # PiP session
+
 A PiP session, also known as child session, is a separate session of the same user in a Picture-in-Picture window, where UI automation scripts can run in the background without interfering with the mouse, keyboard, clipboard and windows in the main desktop.
 
 This feature is available on Windows 8.1 and later, except on Windows Home editions.

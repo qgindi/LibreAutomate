@@ -123,10 +123,12 @@ namespace Au {
 		
 		/// <summary>
 		/// Returns <c>true</c> if this window has Metro style, ie is not a classic desktop window.
+		/// </summary>
+		/// <remarks>
 		/// On Windows 8/8.1 most Windows Store app windows and many shell windows have Metro style.
 		/// On Windows 10 few windows have Metro style.
 		/// On Windows 7 there are no Metro style windows.
-		/// </summary>
+		/// </remarks>
 		/// <seealso cref="WndUtil.GetWindowsStoreAppId"/>
 		public bool IsWindows8MetroStyle {
 			get {

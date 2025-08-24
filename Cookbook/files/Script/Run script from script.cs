@@ -37,7 +37,8 @@ return 2;
 
 /// Restart this script.
 
-script.run(script.sourcePath(true), "[[ifRunning=wait]]");
+if (!dialog.showYesNo("Restart")) return;
+script.restart();
 return;
 
 /// Scripts don't have a "trigger" property, but you can use <.x>script.run<> in hotkey/autotext/mouse/window trigger actions.

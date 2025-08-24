@@ -419,9 +419,20 @@ namespace Au.More {
 
 namespace Au.Types {
 	/// <summary>
-	/// Used for <i>dpiOf</i> parameter of functions.
-	/// Has implicit conversions from <c>int</c> (DPI), <see cref="wnd"/> (DPI of window), <c>IntPtr</c> (DPI of screen handle), <see cref="POINT"/> (DPI of screen containing point), <see cref="RECT"/> (DPI of screen containing rectangle), forms <see cref="System.Windows.Forms.Control"/>, WPF <see cref="System.Windows.DependencyObject"/>. The conversion operators set the <see cref="Dpi"/> property and the function can use it.
+	/// Used for <i>dpiOf</i> parameter of functions. Allows to pass either a DPI value or an object from which gets DPI (window, screen etc).
 	/// </summary>
+	/// <remarks>
+	/// Has implicit conversions from:
+	/// <br/>• <c>int</c> - DPI.
+	/// <br/>• <see cref="wnd"/> - gets DPI of the window.
+	/// <br/>• <c>IntPtr</c> or <c>nint</c> - (screen handle) gets DPI of the screen.
+	/// <br/>• <see cref="POINT"/> - gets DPI of the screen that contains the point.
+	/// <br/>• <see cref="RECT"/> - gets DPI of screen that contains the rectangle.
+	/// <br/>• <see cref="System.Windows.Forms.Control"/> - gets DPI of the winforms control.
+	/// <br/>• <see cref="System.Windows.DependencyObject"/> - gets DPI of the WPF element.
+	/// 
+	/// The conversion operators set the <see cref="Dpi"/> property and the function can use it.
+	/// </remarks>
 	public struct DpiOf {
 		readonly int _dpi;
 

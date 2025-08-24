@@ -20,6 +20,7 @@ public static class HelpUtil {
 		if (topic.Ends(".this[]")) topic = topic.ReplaceAt(^7.., ".Item");
 		else if (topic.Ends(".this")) topic = topic.ReplaceAt(^5.., ".Item");
 		else if (topic.Ends("[]")) topic = topic.ReplaceAt(^2.., ".Item");
+		else if (topic.Starts("Au.timer") && topic.Ends(false, "after", "every") > 0) topic += "_1"; //the filename has this suffix because of the instance method After/Every
 		
 		var url = AuHelpBaseUrl;
 		if (!url.Ends('/')) url += "/";

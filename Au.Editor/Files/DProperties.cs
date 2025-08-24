@@ -26,7 +26,7 @@ class DProperties : KDialogWindow {
 	readonly KCheckBox xmlDoc, console, optimize, cMultiline;
 	readonly KGroupBoxSeparator gAssembly, gCompile;
 	readonly Panel pRun;
-	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, addFile, bVersion;
+	readonly Button addNuget, addLibrary, addComRegistry, addComBrowse, addProject, addClassFile, addResource, addFile;
 	
 	DProperties(FileNode f) {
 		_f = f;
@@ -37,7 +37,7 @@ class DProperties : KDialogWindow {
 		
 		var b = new wpfBuilder(this).WinSize(800).Columns(-1, 20, -1, 20, 0);
 		b.Options(bindLabelVisibility: true);
-		b.R.Add(out info).Height(80).Margin("B8");
+		b.R.Add(out info).Height(60).Margin("B8");
 		
 		//. left column
 		b.R.StartGrid();
@@ -83,7 +83,6 @@ class DProperties : KDialogWindow {
 		sign.DropDownOpened += _IconManifestSign_DropDownOpened;
 		b.R.Add(out console, "console")
 			.And(0).Add(out xmlDoc, "xmlDoc");
-		b.AddButton(out bVersion, "Version", _ => _VersionInfo()).SpanRows(2).Align("R", "C");
 		b.R.Add("platform", out platform).Width(100, "L");
 		b.End();
 		
@@ -115,10 +114,11 @@ class DProperties : KDialogWindow {
 		
 		b.R.AddSeparator();
 		
-		b.R.StartGrid().Columns(-1, 0);
+		b.R.StartGrid().Columns(-1, 0, 0);
 		b.Add(out cMultiline, "/*/ multiple lines /*/").Checked(_meta.Multiline);
 		b.Options(modifyPadding: false); //workaround for: OK/Cancel text incorrectly vcentered. Only on Win11, only in this dialog, only when this dialog is not in the secondary screen with DPI 125%.
 		b.AddOkCancel();
+		b.xAddDialogHelpButtonAndF1("editor/File properties"); //TODO: test
 		b.End();
 		
 		b.End();
@@ -189,7 +189,7 @@ class DProperties : KDialogWindow {
 			_ShowCollapse(testScript, ts != false);
 			if (ts == null) { testScript.IsEnabled = false; testScript.Text = "<the first C# file of this project>"; }
 			_ShowCollapse(_role is MCRole.miniProgram or MCRole.exeProgram, pRun, console, icon);
-			_ShowCollapse(_role is MCRole.exeProgram or MCRole.classLibrary, outputPath, bVersion);
+			_ShowCollapse(_role is MCRole.exeProgram or MCRole.classLibrary, outputPath);
 			_ShowCollapse(_role is MCRole.exeProgram, manifest, platform);
 			_ShowCollapse(_role == MCRole.classLibrary, xmlDoc);
 			_ShowCollapse(_role != MCRole.classFile, gAssembly, gCompile);
@@ -553,9 +553,8 @@ class Class1 {
 	
 	#region info
 	
-	//TODO3: make a web copy of these and maybe some other infos and tooltips. Maybe not for humans, but for search engines and AI.
-	
 	void _InitInfo() {
+		info.AaTags.AddStyleTag(".c", new() { backColor = 0xF0F0F0, monospace = true }); //inline code
 		info.AaTags.AddLinkTag("+changeFileType", _ => {
 			if (!dialog.showOkCancel($"Change file type to: {(_f.IsScript ? "class" : "script")}", "This also will close the Properties dialog as if clicked Cancel.", owner: this)) return;
 			_f.FileType = _f.IsScript ? FNType.Class : FNType.Script;
@@ -565,298 +564,188 @@ class Class1 {
 		var dialogInfo = $"""
 File type: <help editor/{(_isClass ? "Class files, projects>C# class file" : "Scripts>C# script")}<>  (<+changeFileType>change...<>)
 File path: <explore>{_f.FilePath}<>
-
-C# file properties here are similar to C# project properties in Visual Studio.
-Saved in <c green>/*/ meta comments /*/<> at the start of code, and can be edited there too.
 """;
 		info.aaaText = dialogInfo;
 		info.AaAddElem(this, dialogInfo);
 		
 		info.AaAddElem(role, """
-<b>role</b> - the purpose of this C# code file. What type of assembly to create and how to execute.
- • <i>miniProgram</i> - execute in a separate host process started from editor.
- • <i>exeProgram</i> - create/execute .exe file, which can run on any computer, without editor installed.
- • <i>editorExtension</i> - execute in the editor's UI thread. Rarely used. Incorrect code can kill editor.
- • <i>classLibrary</i> - create .dll file, which can be used in C# scripts and other .NET-based programs.
- • <i>classFile</i> - don't create/execute. The C# code file can be compiled together with other C# code files in the project or using meta comment c. Inherits meta comments of the main file of the compilation.
-
-Default role for scripts is miniProgram; cannot be the last two. Default for class files is classFile.
-
-Read more in Cookbook > Script (classes, .exe) and online help > Editor (scripts, class files).
-""");
-		info.AaAddElem(testScript, """
-<b>testScript</b> - a script to run when you click the Run button.
-Usually it is used to test this class file or class library. It can contain meta comment <c green>c this file<> that adds this file to the compilation, or <c green>pr this file<> that adds the output dll file as a reference assembly. The recommended way to add this option correctly and easily is to try to run this file and click a link that is then printed in the output.
-
-Can be:
- • Path in the workspace. Examples: \Script5.cs, \Folder\Script5.cs.
- • Path relative to this file. Examples: Folder\Script5.cs, .\Script5.cs, ..\Folder\Script5.cs.
- • Filename. Error if multiple exist, unless single exists in the same folder.
-
-This option is saved not in meta comments.
-""");
-		info.AaAddElem(ifRunning, """
-<b>ifRunning</b> - when trying to start this script, what to do if it is already running.
- • <i>warn</i> - print warning and don't run.
- • <i>cancel</i> - don't run.
- • <i>wait</i> - run later, when it ends.
- • <i>run</i> - run simultaneously.
- • <i>restart</i> - end it and run.
- • <i>end</i> - end it and don't run.
-
-Suffix _restart means restart if starting the script with the Run button/menu.
-Default is warn_restart.
-
-This option is ignored when the task runs as .exe program started not from editor; instead use code: script.single("unique string");.
-""");
-		info.AaAddElem(uac, """
-<b>uac</b> - <help articles/UAC>UAC<> integrity level (IL) of the task process.
- • <i>inherit</i> (default) - the same as of the editor process. Normally High IL if installed on admin account, else Medium IL.
- • <i>user</i> - Medium IL, like most applications. The task cannot automate high IL process windows, write some files, change some settings, etc.
- • <i>admin</i> - High IL, aka "administrator", "elevated". The task has many rights, but cannot automate some apps through COM, etc.
-
-This option is ignored when the task runs as .exe program started not from editor.
-""");
-		info.AaAddElem(outputPath, """
-<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
-Full path. Can start with %environmentVariable% or %folders.SomeFolder%. Can be path relative to this file or workspace, like with other options.
-
-Default if role exeProgram: <link>%folders.Workspace%\exe<>\filename. Default if role classLibrary: <link>%folders.Workspace%\dll<>. The compiler creates the folder if does not exist.
-""");
-		info.AaAddElem(icon, """
-<b>icon</b> - icon of the output exe file.
-
-The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add all .ico and .xaml icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with icon.ofThisApp etc and dialog functions.
-
-The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
-Can be:
- • Path in the workspace. Examples: \App.ico, \Folder\App.ico.
- • Path relative to this file. Examples: Folder\App.ico, .\App.ico, ..\Folder\App.ico.
- • Filename. Error if multiple exist, unless single exists in the same folder.
-
-If not specified, uses custom icon of the main C# file. See menu Tools > Icons.
-""");
-		info.AaAddElem(manifest, """
-<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe file.
-
-The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
-Can be:
- • Path in the workspace. Examples: \App.manifest, \Folder\App.manifest.
- • Path relative to this file. Examples: Folder\App.manifest, .\App.manifest, ..\Folder\App.manifest.
- • Filename. Error if multiple exist, unless single exists in the same folder.
-
-The manifest will be added as a native resource.
-""");
-		info.AaAddElem(sign, """
-<b>sign</b> - strong-name signing key file, to sign the output assembly.
-
-The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
-Can be:
- • Path in the workspace. Examples: \App.snk, \Folder\App.snk.
- • Path relative to this file. Examples: Folder\App.snk, .\App.snk, ..\Folder\App.snk.
- • Filename. Error if multiple exist, unless single exists in the same folder.
-""");
-		info.AaAddElem(console, """
-<b>console</b> - let the program run with console.
-""");
-		info.AaAddElem(platform, $"""
-<b>platform</b> - CPU instruction set.
- • <i>x64</i> - runs on all modern Windows computers (x64, Windows11+ ARM64).
- • <i>arm64</i> - runs only on Windows ARM64. Used because x64 and x86 programs are slow there.
- • <i>x86</i> - runs on almost all Windows computers (x64, x86, all ARM64), as 32-bit process.
- • <i>Default</i> - as LibreAutomate (x64 or arm64). On this computer {(osVersion.isArm64Process ? "arm64" : "x64")}.
- 
-Creates program files for this platform. If optimize true and platform not x86, creates for both x64 and arm64. In any case, the process uses this platform when launched from editor.
-
-Most .NET dlls can be used by programs of any platform. But native dlls can be used only in programs of the same platform as of the dll. Usually libraries that use native dlls have dll files for multiple platforms. If a dll for some platform is missing, you can't use that platform for your script/program that will use that library. Workaround: use role exeProgram and platform of an available dll.
+<b>role<> - the purpose of this C# code file. What type of assembly to create and how to execute.
+ • <.c>miniProgram<> - execute in a separate host process started from editor.
+ • <.c>exeProgram<> - create/execute .exe file, which can run on any computer, without editor installed.
+ • <.c>editorExtension<> - execute in the editor's UI thread. Rarely used. Incorrect code can kill editor.
+ • <.c>classLibrary<> - create .dll file, which can be used in C# scripts and other .NET-based programs.
+ • <.c>classFile<> - don't create/execute. The file can be used by other C# files, either as part of the project or added explicitly.
 """);
 		
-		info.AaAddElem(xmlDoc, """
-<b>xmlDoc</b> - create XML documentation file from /// comments. And print errors in /// comments.
+		#region Run
+		info.AaAddElem(testScript, """
+<b>testScript<> - a script to run when you click the <b>Run<> button.
 
-XML documentation files are used by code editors to display class/function/parameter info. Also can be used to create HTML documentation.
+Press F1 for more info.
 """);
+		info.AaAddElem(ifRunning, """
+<b>ifRunning<> - when trying to start this script, what to do if it is already running.
+ • <.c>warn<> - print warning and don't run.
+ • <.c>cancel<> - don't run.
+ • <.c>wait<> - run later, when it ends.
+ • <.c>run<> - run simultaneously.
+ • <.c>restart<> - end it and run.
+ • <.c>end<> - end it and don't run.
+
+Suffix <.c>_restart<> means restart if starting the script with the <b>Run<> button.
+""");
+		info.AaAddElem(uac, """
+<b>uac<> - <help articles/UAC>UAC<> integrity level (IL) of the task process.
+ • <.c>inherit<> (default) - the same as of the editor process.
+ • <.c>user<> - Medium IL, like most applications. The task cannot automate some windows etc.
+ • <.c>admin<> - High IL, aka "administrator", "elevated".
+""");
+		#endregion
+		
+		#region Compile
 		info.AaAddElem(optimize, """
-<b>optimize</b> - whether to make the compiled code as fast as possible.
- • <i>false</i> (default) - don't optimize. Define DEBUG and TRACE. Aka "Debug configuration".
- • <i>true</i> (checked) - optimize. Aka "Release configuration".
-
-Default is false, because optimization makes difficult to debug. It makes noticeably faster only some types of code, for example processing of text and byte arrays. Before deploying class libraries and exe programs always compile with optimize true.
-
-This option is also applied to class files compiled together, eg as part of project. Use true (checked) if they contain code that must be as fast as possible.
+<b>optimize<> - whether to make the compiled code as fast as possible.
+ • <.c>false<> (default) - don't optimize. Define <.c>DEBUG<> and <.c>TRACE<>. Aka "Debug configuration".
+ • <.c>true<> (checked) - optimize. Aka "Release configuration".
 """);
 		info.AaAddElem(define, """
-<b>define</b> - symbols that can be used with #if.
-Example: ONE,TWO,d:THREE,r:FOUR
-Can be used prefix r: or d: to define the symbol only if optimize true (checked) or false (unchecked).
-If no optimize true, DEBUG and TRACE are added implicitly.
-These symbols also are visible in class files compiled together, eg as part of project.
+<b>define<> - symbols that can be used with <.c>#if<>.
+
+Example: <.c>ONE,TWO,r:THREE,d:FOUR<>
+Prefix <.c>r:<> - if <.c>optimize true<>. Prefix <.c>d:<> - if no <.c>optimize true<>.
+
 See also <google C# #define>#define<>.
 """);
 		info.AaAddElem(warningLevel, $"""
-<b>warningLevel</b> - <google C# Compiler Options, WarningLevel>warning level<>. Default: {MetaComments.DefaultWarningLevel}.
+<b>warningLevel<> - <google C# Compiler Options, WarningLevel>warning level<>.
 0 - no warnings.
 1 - only severe warnings.
 2 - level 1 plus some less-severe warnings.
 3 - most warnings.
-4 - all warnings added in C# 1-8.
+4 - all warnings of C# 1-8.
 5-9999 - level 4 plus warnings added in C# 9+.
-
-This option is also applied to class files compiled together, eg as part of project.
 """);
 		info.AaAddElem(noWarnings, $"""
-<b>noWarnings</b> - don't show these warnings.
-Example: 151,3001,120
-Always added: {string.Join(',', MetaComments.DefaultNoWarnings)}.
+<b>noWarnings<> - don't show these warnings.
 
-This option is also applied to class files compiled together, eg as part of project.
+Example: <.c>151,3001,CS1234<>
+
 See also <google C# #pragma warning>#pragma warning<>.
 """);
 		info.AaAddElem(nullable, """
-<b>nullable</b> - <google C# Nullable reference types>nullable context<>.
-disable - no warnings; code does not use nullable syntax (Type? variable).
+<b>nullable<> - <google C# Nullable reference types>nullable context<>.
+disable - no warnings; code does not use nullable syntax (<.c>Type? variable<>).
 enable - print warnings; code uses nullable syntax.
 warnings - print warnings; code does not use nullable syntax.
 annotations - no warnings; code uses nullable syntax.
-
-This option is also applied to class files compiled together, eg as part of project. Alternatively use #nullable directive.
 """);
 		info.AaAddElem(testInternal, """
-<b>testInternal</b> - access internal symbols of these assemblies, like with InternalsVisibleToAttribute.
-Example: Assembly1,Assembly2
+<b>testInternal<> - can use internal members of these assemblies, like with <.c>InternalsVisibleToAttribute<>.
 
-This option is also applied to class files compiled together, eg as part of project.
+Example: <.c>Assembly1,Assembly2<>
 """);
 		info.AaAddElem(preBuild, """
-<b>preBuild</b> - a script to run before compiling this code file.
+<b>preBuild<> - a script to run before compiling.
 
-The script must have role editorExtension. It runs in the editor's main thread.
-To get compilation info: var c = PrePostBuild.Info;
-To specify command line arguments: <c green>preBuild Script5.cs /arguments<>
-To stop the compilation, let the script throw an exception.
-To create new preBuild/postBuild script: menu File > New > More.
-
-Can be:
- • Path in the workspace. Examples: \Script5.cs, \Folder\Script5.cs.
- • Path relative to this file. Examples: Folder\Script5.cs, .\Script5.cs, ..\Folder\Script5.cs.
- • Filename. Error if multiple exist, unless single exists in the same folder.
+To create new preBuild script: menu <b>File > New > More<>.
+Press F1 for more info.
 """);
 		info.AaAddElem(postBuild, """
-<b>postBuild</b> - a script to run after compiling this code file successfully.
-Everything is like with preBuild.
+<b>postBuild<> - a script to run after compiling successfully.
+
+To create new postBuild script: menu <b>File > New > More<>.
+Press F1 for more info.
 """);
+		#endregion
+		
+		#region Assembly
+		info.AaAddElem(outputPath, """
+<b>outputPath<> - directory for the output files (exe, dll etc).
+
+Press F1 for more info.
+""");
+		info.AaAddElem(icon, """
+<b>icon<> - icon(s) of the output exe file.
+
+Press F1 for more info.
+""");
+		info.AaAddElem(manifest, """
+<b>manifest<> - <google manifest file site:microsoft.com>manifest<> of the output exe file.
+
+Press F1 for more info.
+""");
+		info.AaAddElem(sign, """
+<b>sign<> - strong-name signing key file, to sign the output assembly.
+
+Press F1 for more info.
+""");
+		info.AaAddElem(console, """
+<b>console<> - let the program run with console.
+""");
+		info.AaAddElem(platform, $"""
+<b>platform<> - CPU instruction set.
+
+Default on this computer: {(osVersion.isArm64Process ? "arm64" : "x64")}.
+Press F1 for more info.
+""");
+		
+		info.AaAddElem(xmlDoc, """
+<b>xmlDoc<> - create XML documentation file from <.c>/// comments<>. And print errors in <.c>/// comments<>.
+""");
+		#endregion
+		
+		#region Add reference
 		info.AaAddElem(addLibrary, """
 <b>Library<> - add a .NET assembly reference.
 Adds meta comment <c green>r DllFile<>.
 
-Don't need to add Au.dll and .NET runtime dlls.
-To remove this meta comment, edit the code in the code editor.
-To use 'extern alias Abc;', edit the code: <c green>r DllFile /alias=Abc<>
-If script role is editorExtension, may need to restart editor.
-To remove a default reference (.NET or Au): noRef AssemblyNameOrAuPathWildex;.
+Press F1 for more info.
 """);
 		info.AaAddElem(addNuget, """
-<b>NuGet<> - use a NuGet package installed by the NuGet tool (menu Tools > NuGet).
-Adds meta comment <c green>nuget folder\package<>.
+<b>NuGet<> - use a NuGet package reference (see menu <b>Tools > NuGet</b>).
+Adds meta comment <c green>nuget Folder\Package<>.
 
-To remove this meta comment, edit the code in the code editor.
-To use 'extern alias Abc;', edit the code: <c green>nuget folder\package /alias=Abc<>
+Press F1 for more info.
 """);
 		
 		const string c_com = """
- COM component's type library to an <i>interop assembly<>, and use it.
-Adds meta comment <c green>com FileName.dll<>. Saves the assembly file in <link>%folders.Workspace%\.interop<>.
+<b>COM<>, <b>...<> - convert (now) a COM component's type library to an <i>interop assembly<>, and use it.
+Adds meta comment <c green>com FileName.dll<>.
+Saves the assembly file in <link>%folders.Workspace%\.interop<>.
 
-An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered unmanaged dll or exe file). If a COM dll for current platform unavailable, try to set role exeProgram and change platform.
-
-To remove this meta comment, edit the code. Optionally delete unused interop assemblies.
-To use 'extern alias Abc;', edit the code: <c green>com FileName.dll /alias=Abc<>
+Press F1 for more info.
 """;
-		info.AaAddElem(addComRegistry, "<b>COM<> - convert a registered" + c_com);
-		info.AaAddElem(addComBrowse, "<b>...<> - convert a" + c_com);
+		info.AaAddElem(addComRegistry, c_com);
+		info.AaAddElem(addComBrowse, c_com);
 		info.AaAddElem(addProject, """
 <b>Project<> - add a reference to a class library created in this workspace.
-Adds meta comment <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.
+Adds meta comment <c green>pr File.cs<>.
 
-To remove this meta comment, edit the code. Optionally delete unused dll files.
+Press F1 for more info.
 """);
+		#endregion
+		
+		#region Add file
 		info.AaAddElem(addClassFile, """
 <b>Class file<> - add a C# code file that contains some classes/functions used by this file.
-Adds meta comment <c green>c File.cs<>. The compiler will compile all code files and create single assembly.
+Adds meta comment <c green>c File.cs<>.
 
-The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
-If folder, will compile all its descendant class files.
-Can be:
- • Path in the workspace. Examples: \Class5.cs, \Folder\Class5.cs.
- • Path relative to this file. Examples: Folder\Class5.cs, .\Class5.cs, ..\Folder\Class5.cs.
- • Filename. Error if multiple exist, unless single exists in the same folder.
-
-If this file is in a project, don't add class files that are in the project folder.
-To remove this meta comment, edit the code.
+Press F1 for more info.
 """);
 		//FUTURE: add UI to append resource suffix
 		info.AaAddElem(addResource, """
 <b>Resource<> - add image etc file(s) as managed resources.
 Adds meta comment <c green>resource File<>.
 
-Default resource type is Stream. You can append <c green>/byte[]<> or <c green>/string<>, like <c green>resource file.txt /string<>. Or <c green>/strings<>, to add multiple strings from 2-column CSV file (name, value). Or <c green>/embedded<>, to add as a separate top-level stream that can be loaded with <google>Assembly.GetManifestResourceStream<> (others are in top-level stream "AssemblyName.g.resources").
-
-The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
-If folder, will add all its descendant files.
-Can be:
- • Path in the workspace. Examples: \File.png, \Folder\File.png.
- • Path relative to this file. Examples: Folder\File.png, .\File.png, ..\Folder\File.png.
- • Filename. Error if multiple exist, unless single exists in the same folder.
-
-To remove this meta comment, edit the code.
-
-To load resources can be used <help>Au.More.ResourceUtil<>, like <code>var s = ResourceUtil.GetString("file.txt");</code>. Or <google>ResourceManager<>. To load WPF resources can be used "pack:..." URI; if role miniProgram, assembly name is like *ScriptName.
-
-Resource names in assembly by default are like "file.png". When adding a folder with subfolders, may be path relative to that folder, like "subfolder/file.png". If need path relative to this C# file, append space and <c green>/path<>. Resource names are lowercase, except <c green>/embedded<> and <c green>/strings<>. This program does not URL-encode resource names; WPF "pack:..." URI does not work if resource name contains spaces, non-ASCII or other URL-unsafe characters. Also this program does not convert XAML to BAML.
-
-To browse .NET assembly resources, types, etc can be used for example <google>ILSpy<>.
+Press F1 for more info.
 """);
 		info.AaAddElem(addFile, """
-<b>Other file<> - declare an unmanaged dll or other file used at run time.
+<b>Other file<> - make a file available at run time. Eg an unmanaged dll.
 Adds meta comment <c green>file File<>.
 
-If role is exeProgram, the compiler will copy the file to the output folder. Or subfolder: <c green>file.dll /sub<>.
-If role is miniProgram or editorExtension, will store the dll path in order to find it at run time.
-If role of this file is classFile, the above actions will be used when compiling scripts that use it.
-If role of this file is classLibrary, the above actions will be used when compiling scripts that use it as a project reference. The compiler never copies these files to the output folder of the library.
-
-The file must be in this workspace. Import files if need (eg drag-drop). Can be a link.
-Can be:
- • Path in the workspace. Examples: \File.png, \Folder\File.png.
- • Path relative to this file. Examples: Folder\File.png, .\File.png, ..\Folder\File.png.
- • Filename. Error if multiple exist, unless single exists in the same folder.
-
-If folder, will include all its descendant files. Will copy them into folders like in the workspace. If a folder name ends with -, will copy its contents only (will not create the folder).
-
-If an exeProgram script uses unmanaged 64-bit and 32-bit dll files, consider placing them in subfolders named "64" and "32". Then at run time will be loaded correct dll version.
-
-To remove this meta comment, edit the code.
+Press F1 for more info.
 """);
-		info.AaAddElem(bVersion, "<b>Version</b> - how to add version info.");
-	}
-	
-	static void _VersionInfo() {
-		print.it($$"""
-<>To add assembly file version info, insert and edit this code near the start of any C# file of the compilation.
-
-<code>using System.Reflection;
-
-[assembly: AssemblyVersion("1.0.0.0")]
-//[assembly: AssemblyFileVersion("1.0.0.0")] //if missing, uses AssemblyVersion
-//[assembly: AssemblyTitle("File description")]
-//[assembly: AssemblyDescription("Comments")]
-//[assembly: AssemblyCompany("Company name")]
-//[assembly: AssemblyProduct("Product name")]
-//[assembly: AssemblyInformationalVersion("1.0.0.0")] //product version
-//[assembly: AssemblyCopyright("Copyright © {{DateTime.Now.Year}} ")]
-//[assembly: AssemblyTrademark("Legal trademarks")]
-</code>
-""");
+		#endregion
 	}
 	
 	#endregion

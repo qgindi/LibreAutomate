@@ -308,14 +308,15 @@ class Delm : KDialogWindow {
 		bool noName = !_SetHideIfEmpty(_page.nameA, p.Name, check: true, escape: true, dontHide: true);
 		
 		bool haveCon = !isWeb && !_con.Is0;
-		if (haveCon && p.UiaId.ToInt(out int i1) && i1 == _con.ControlId) { //don't use uiaid if == control id
+		bool uncheckCon = haveCon && !_con.IsVisible; //eg in Photos window
+		if (haveCon && !uncheckCon && p.UiaId.ToInt(out int i1) && i1 == _con.ControlId) { //don't use uiaid if == control id
 			if (_con.GetWindowAndClientRectInScreen(out var rw1, out var rc1))
 				if (rc1 == p.Rect || rw1 == p.Rect) p.UiaId = null;
 			//never mind: possibly incorrect p.Rect of DPI-scaled window.
 		}
 		if (_SetHideIfEmpty(_page.uiaidA, p.UiaId, check: noName, escape: true)) noName = false;
 		
-		if (haveCon && !p.UiaCN.NE() && p.UiaCN.Eqi(_con.ClassName)) { //don't use uiacn if == control class
+		if (haveCon && !uncheckCon && !p.UiaCN.NE() && p.UiaCN.Eqi(_con.ClassName)) { //don't use uiacn if == control class
 			if (_con.GetWindowAndClientRectInScreen(out var rw1, out var rc1))
 				if (rc1 == p.Rect || rw1 == p.Rect) p.UiaCN = null;
 		}
@@ -329,6 +330,7 @@ class Delm : KDialogWindow {
 			string sId = TUtil.GetUsefulControlId(_con, _wnd, out int id) ? id.ToString() : _con.NameWinforms;
 			bool hasId = _SetHideIfEmpty(_page.idA, sId, check: true, escape: false);
 			_Set(_page.classA, TUtil.StripWndClassName(_con.ClassName, true), check: !hasId);
+			if (uncheckCon) _page.classA.c.IsChecked = _page.idA.c.IsChecked = false;
 		}
 		
 		_SetHideIfEmpty(_page.valueA, p.Value, check: false, escape: true);

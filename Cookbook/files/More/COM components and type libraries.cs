@@ -21,4 +21,4 @@ foreach (FolderItem v in shell.NameSpace(@"C:\").Items()) {
 /// - When converting a COM type library, may print several warnings "can't convert...". Ignore them.
 /// - When converting, may create several assembles. The <b>OK<> button adds them all to the script. One of them is the main; others are its dependencies and usually can be deleted from the script.
 /// - In other scripts you can use the same .NET assembly (don't need to convert again). Either copy-paste the <.c>/*/ com Shell32 ...; /*/<>, or in the <b>Properties<> dialog click the <b>...<> button and select from submenu <b>Use converted<>. Or convert again, it does not harm.
-/// - COM is an old technology. Some downloaded COM components may be 32-bit only. Script processes are 64-bit by default and can't use 32-bit dlls. To use 32-bit dlls, in the <b>Properties<> dialog select role <b>exeProgram<> and check <b>bit32<>.
+/// - COM is an old technology. Some downloaded COM components may be 32-bit only. Script processes are 64-bit by default and can't use 32-bit dlls. To use 32-bit dlls, in the <b>Properties<> dialog select role <.c>exeProgram<> and check <b>bit32<>.

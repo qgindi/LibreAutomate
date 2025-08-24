@@ -474,7 +474,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	}
 	
 	/// <summary>
-	/// Gets the cloaked state.
+	/// Gets the cloaked state (it's a way to hide a window).
 	/// </summary>
 	/// <value>
 	/// <br/>• 0 if not cloaked or if failed.
@@ -496,11 +496,13 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 		}
 	}
 	/// <summary>
-	/// Returns <c>true</c> if the window is cloaked.
-	/// Returns <c>false</c> if not cloaked or if failed.
+	/// Detects whether the window is cloaked (it's a way to hide a window).
+	/// </summary>
+	/// <value><c>true</c> if the window is cloaked. <c>false</c> if not cloaked or if failed.</value>
+	/// <remarks>
 	/// On Windows 7 returns <c>false</c> because there is no "cloaked window" feature.
 	/// Windows 10 uses window cloaking mostly to hide windows on inactive desktops. Windows 8 - mostly to hide Windows Store app windows.
-	/// </summary>
+	/// </remarks>
 	/// <seealso cref="IsCloakedGetState"/>
 	public bool IsCloaked => IsCloakedGetState != 0;
 	

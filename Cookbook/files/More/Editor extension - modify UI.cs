@@ -1,4 +1,4 @@
-/// Scripts with role <b>editorExtension<> can modify the UI of the script editor. This script contains examples of:
+/// Scripts with role <.c>editorExtension<> can modify the UI of the script editor. This script contains examples of:
 /// - Show/hide panels and toolbars.
 /// - Add buttons to toolbars.
 /// - Add menus to the menubar.

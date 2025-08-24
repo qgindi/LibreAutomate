@@ -38,7 +38,7 @@ class DOptions : KDialogWindow {
 		_CodeEditor();
 		_Templates();
 		_Hotkeys();
-		//_AI();//TODO
+		_AI();
 		_Other();
 		_OS();
 		
@@ -51,7 +51,7 @@ class DOptions : KDialogWindow {
 	/// Adds new TabItem to _tc. Creates and returns new wpfBuilder for building the tab page.
 	/// </summary>
 	wpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
-		var tp = new TabItem { Header = name };
+		var tp = new TabItem { Header = name, MinWidth = 30 };
 		_tc.Items.Add(tp);
 		return new wpfBuilder(tp, panelType).Margin("3");
 	}
@@ -638,33 +638,84 @@ Example:
 		};
 	}
 	
-	//void _AI() {
-	//	var b = _Page("AI");
-	//	b.Columns(0, 100, -1);
-	//	var sett = AI.AiSettings.Instance;
-	//	b.R.Add("API key of", out ComboBox provider).Tooltip("AI provider");
-	//	b.Add(out KTextBox apiKey).Tooltip("API key or %ENVIRONMENT_VARIABLE%");
-	//	provider.ItemsSource = App.Settings.ai_providers.Select(o => o.name);
-	//	provider.SelectionChanged += (_, _) => {
-	//		apiKey.Text = App.Settings.ai_providers[provider.SelectedIndex].apiKey;
-	//	};
-	//	provider.SelectedIndex = 0;
+	void _AI() {
+		//#if IDE_LA
+		var b = _Page("AI", WBPanelType.VerticalStack);
+		var sett = AI.AiSettings.Instance;
 		
-	//	b.R.Add("Search with", out ComboBox emModel).Span(1)
-	//		.Tooltip("AI model that creates embeddings for search and RAG")
-	//		.Items(sett.embeddingsModels.Select(o => o.name)).Select(sett.CurrentEmbeddingsModel);
-	//	//b.R.StartGrid<KGroupBox>("Embeddings model settings");
-	//	//b.End();
-	//	b.R.Add("Chat with", out ComboBox chatModel).Span(1)
-	//		.Tooltip("AI chat model");
-	//	//b.R.StartGrid<KGroupBox>("Chat model settings");
-	//	//b.End();
-	//	b.End();
+		b.xAddGroupSeparator("AI providers");
+		b.StartGrid().Columns(100, 0, -1);
+		b.R.Add(out ComboBox provider)
+			.Add("API key", out KPasswordBox apiKey).Tooltip("API key (will be saved encrypted) or environment variable (if the (X) toggled)").Disabled();
+		b.End();
 		
-	//	_b.OkApply += e => {
-	//		App.Settings.ai_embeddingsModel = emModel.SelectedIndex;
-	//	};
-	//}
+		b.xAddGroupSeparator("AI models");
+		b.StartGrid().Columns(0, 150, 20, 0, 150, -1);
+		b.R.Add("Search", out ComboBox searchApi).Tooltip("AI embedding API configuration for documentation search and chat");
+		b.Skip(1).Add("Icons", out ComboBox iconsApi).Tooltip("AI embedding API configuration for icon search in the Icons tool").Span(1);
+		//b.R.StartGrid<KGroupBox>("Search API settings");
+		//b.End();
+		b.R.Add("Chat", out ComboBox chatApi).Tooltip("AI chat API configuration").Span(1);
+		//b.R.StartGrid<KGroupBox>("Chat API settings");
+		//b.End();
+		b.R.AddButton("Print all configurations", _ => { print.it(sett); }).Span(2);
+		b.End();
+		b.End();
+		
+		b.Loaded += () => {
+			var provNames = sett.embedding.Select(o => o.provider).Distinct(StringComparer.OrdinalIgnoreCase).ToArray(); //TODO: concat from chat models
+			var provKeys = new (bool once, (string key, bool ev) now, (string key, bool ev) old)[provNames.Length];
+			int currentProvider = -1;
+			provider.ItemsSource = provNames;
+			provider.SelectionChanged += (_, e) => {
+				if (currentProvider >= 0) provKeys[currentProvider].now = (apiKey.Text.NullIfEmpty_(), apiKey.IsEnvVar);
+				currentProvider = provider.SelectedIndex;
+				apiKey.IsEnabled = currentProvider >= 0;
+				if (currentProvider < 0) return;
+				if (!provKeys[currentProvider].once) {
+					provKeys[currentProvider].once = true;
+					App.Settings.ai_ak.TryGetValue((string)provider.SelectedItem, out var key);
+					bool ev = false;
+					if (key.NE()) key = null;
+					else {
+						ev = key is ['%', _, .., '%'];
+						key = ev ? key[1..^1] : EdProtectedData.Unprotect(key);
+					}
+					provKeys[currentProvider].now = provKeys[currentProvider].old = (key, ev);
+				}
+				(apiKey.Text, apiKey.IsEnvVar) = provKeys[currentProvider].now;
+			};
+			//provider.SelectedIndex = 0; //no
+			b.Validation(apiKey, _ => {
+				if (currentProvider >= 0) provKeys[currentProvider].now = (apiKey.Text.NullIfEmpty_(), apiKey.IsEnvVar);
+				if (provKeys.Any(o => o.now.ev && o.now.key.Lenn() >= 32)) return "Variable name too long. Uncheck (X) if it's not a variable."; //probably checked the toggle button to see the key and forgot to uncheck
+				return null;
+			});
+			
+			_InitApiCombo(searchApi, false);
+			_InitApiCombo(iconsApi, true);
+			void _InitApiCombo(ComboBox c, bool icons) {
+				c.ItemsSource = sett.embedding.Where(o => o.name.Ends(" icons") == icons).Select(o => o.name);
+				c.SelectedItem = icons ? App.Settings.ai_iconsModel : App.Settings.ai_searchModel;
+			}
+			chatApi.SelectedItem = App.Settings.ai_chatModel;
+			
+			_b.OkApply += e => {
+				foreach (var (i, v) in provKeys.Index()) {
+					if (v.once && v.now != v.old) {
+						provKeys[i].old = v.now;
+						var key = v.now.key == null ? null : v.now.ev ? $"%{v.now.key}%" : EdProtectedData.Protect(v.now.key);
+						App.Settings.ai_ak[provNames[i]] = key;
+					}
+				}
+				
+				App.Settings.ai_searchModel = searchApi.SelectedItem as string;
+				App.Settings.ai_iconsModel = iconsApi.SelectedItem as string;
+				App.Settings.ai_chatModel = chatApi.SelectedItem as string;
+			};
+		};
+		//#endif
+	}
 	
 	void _Other() {
 		var b = _Page("Other");
@@ -675,14 +726,16 @@ Example:
 			.Tooltip("Always print a \"Compiled\" message when a script etc compiled successfully.\nIf unchecked, prints only if role is exeProgram or classLibrary.\nIf 3-rd state, prints only when executing the Compile command.");
 		b.End();
 		
-		_b.OkApply += e => {
-			if ((localHelp.SelectedIndex == 1) != App.Settings.localDocumentation) {
-				App.Settings.localDocumentation ^= true;
-				DocsHttpServer.StartOrSwitch();
-			}
-			App.Settings.internetSearchUrl = internetSearchUrl.TextOrNull() ?? "https://www.google.com/search?q=";
-			App.Settings.minimalSDK = minimalSdk.IsChecked;
-			App.Settings.comp_printCompiled = printCompiled.IsChecked;
+		b.Loaded += () => {
+			_b.OkApply += e => {
+				if ((localHelp.SelectedIndex == 1) != App.Settings.localDocumentation) {
+					App.Settings.localDocumentation ^= true;
+					DocsHttpServer.StartOrSwitch();
+				}
+				App.Settings.internetSearchUrl = internetSearchUrl.TextOrNull() ?? "https://www.google.com/search?q=";
+				App.Settings.minimalSDK = minimalSdk.IsChecked;
+				App.Settings.comp_printCompiled = printCompiled.IsChecked;
+			};
 		};
 	}
 	
@@ -690,26 +743,32 @@ Example:
 		var b = _Page("OS");
 		b.R.xAddInfoBlockF($"Some Windows settings for all programs{(!App.IsPortable ? null : "\n<s c='red'>Portable mode warning: portable apps should not change Windows settings.</s>")}");
 		
-		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout, WindowsHook.LowLevelHooksTimeout.ToS()).Width(70, "L")
-			.Validation(o => ((o as TextBox).Text.ToInt() is >= 300 and <= 1000) ? null : "300-1000");
-		bool disableLAW = 0 == Api.SystemParametersInfo(Api.SPI_GETFOREGROUNDLOCKTIMEOUT, 0);
-		b.R.Add(out KCheckBox cDisableLAW, "Disable \"lock active window\"").Checked(disableLAW);
-		bool underlineAK = Api.SystemParametersInfo(Api.SPI_GETKEYBOARDCUES);
-		b.R.Add(out KCheckBox cUnderlineAK, "Underline menu/dialog item access keys").Checked(underlineAK);
+		b.R.Add("Key/mouse hook timeout, ms", out TextBox hooksTimeout).Width(70, "L");
+		b.R.Add(out KCheckBox cDisableLAW, "Disable \"lock active window\"");
+		b.R.Add(out KCheckBox cUnderlineAK, "Underline menu/dialog item access keys");
 		b.R.AddButton("Java...", _ => Delm.Java.EnableDisableJabUI(this)).Width(70, "L");
 		b.End();
 		
-		_b.OkApply += e => {
-			int t = hooksTimeout.Text.ToInt();
-			if (t != WindowsHook.LowLevelHooksTimeout) {
-				WindowsHook.LowLevelHooksTimeout = t;
-				print.it("Info: The new hook timeout value will be used after restarting Windows.");
-			}
+		b.Loaded += () => {
+			hooksTimeout.Text = WindowsHook.LowLevelHooksTimeout.ToS();
+			b.Validation(hooksTimeout, o => ((o as TextBox).Text.ToInt() is >= 300 and <= 1000) ? null : "300-1000");
+			bool disableLAW = 0 == Api.SystemParametersInfo(Api.SPI_GETFOREGROUNDLOCKTIMEOUT, 0);
+			cDisableLAW.IsChecked = disableLAW;
+			bool underlineAK = Api.SystemParametersInfo(Api.SPI_GETKEYBOARDCUES);
+			cUnderlineAK.IsChecked = underlineAK;
 			
-			if (cDisableLAW.IsChecked != disableLAW)
-				Api.SystemParametersInfo(Api.SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (void*)(disableLAW ? 15000 : 0), save: true, notify: true);
-			if (cUnderlineAK.IsChecked != underlineAK)
-				Api.SystemParametersInfo(Api.SPI_SETKEYBOARDCUES, 0, (void*)(underlineAK ? 0 : 1), save: true, notify: true);
+			_b.OkApply += e => {
+				int t = hooksTimeout.Text.ToInt();
+				if (t != WindowsHook.LowLevelHooksTimeout) {
+					WindowsHook.LowLevelHooksTimeout = t;
+					print.it("Info: The new hook timeout value will be used after restarting Windows.");
+				}
+				
+				if (cDisableLAW.IsChecked != disableLAW)
+					Api.SystemParametersInfo(Api.SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (void*)(disableLAW ? 15000 : 0), save: true, notify: true);
+				if (cUnderlineAK.IsChecked != underlineAK)
+					Api.SystemParametersInfo(Api.SPI_SETKEYBOARDCUES, 0, (void*)(underlineAK ? 0 : 1), save: true, notify: true);
+			};
 		};
 	}
 	

@@ -18,4 +18,4 @@ internal const uint MB_TOPMOST = 0x40000;
 
 /// The declarations in the database are not perfect. Often need to edit them.
 
-/// You can find, downloaded and use other native (aka unmanaged) libraries too, but will need to write declarations of methods/types/etc manually (or find somewhere). Better try to find a .NET library that wraps the native library. Note: use 64-bit dlls; or in the <b>Properties<> dialog select role <b>exeProgram<> and check <b>bit32<>.
+/// You can find, downloaded and use other native (aka unmanaged) libraries too, but will need to write declarations of methods/types/etc manually (or find somewhere). Better try to find a .NET library that wraps the native library. Note: use 64-bit dlls; or in the <b>Properties<> dialog select role <.c>exeProgram<> and check <b>bit32<>.

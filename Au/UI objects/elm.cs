@@ -24,7 +24,7 @@ namespace Au;
 /// You can dispose <c>elm</c> variables to release the COM object, but it is not necessary (GC will do it later).
 /// </para>
 /// <para>
-/// An <c>elm</c> variable cannot be used in multiple threads. Only <see cref="Dispose"/> can be called in any thread.
+/// An <c>elm</c> variable cannot be used in multiple threads. Only <c>Dispose</c> can be called in any thread.
 /// </para>
 /// <para>
 /// UI elements are implemented and live in their applications. This class just communicates with them.

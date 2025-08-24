@@ -130,12 +130,13 @@ public abstract record class JSettings : IDisposable {
 		return R;
 		
 		static void _SaveAllIfNeed(bool timer) {
-			lock (s_list) {
-				foreach (var v in s_list) {
-					if (v.NoAutoSave) continue;
-					if (timer && v.NoAutoSaveTimer) continue;
-					v._SaveIfNeed(disposingOrExit: !timer);
-				}
+			JSettings[] a; //can't lock both s_list and _lock (possible deadlock)
+			lock (s_list) { a = s_list.ToArray(); }
+			
+			foreach (var v in a) {
+				if (v.NoAutoSave) continue;
+				if (timer && v.NoAutoSaveTimer) continue;
+				v.SaveIfNeed();
 			}
 		}
 	}
@@ -156,12 +157,13 @@ public abstract record class JSettings : IDisposable {
 	
 	///
 	protected virtual void Dispose(bool disposing) {
+		lock (s_list) if (!s_list.Remove(this)) return; //note: not inside `lock (_lock)` (possible deadlock)
+		
 		lock (_lock) {
-			lock (s_list) if (!s_list.Remove(this)) return;
 			_watcher?.Dispose();
 			_watcher = null;
 			_modifiedExternally = null;
-			if (!NoAutoSave) _SaveIfNeed(disposingOrExit: true);
+			if (!NoAutoSave) SaveIfNeed();
 			_file = null;
 		}
 	}
@@ -207,9 +209,7 @@ public abstract record class JSettings : IDisposable {
 	/// Saves now if need.
 	/// Call this when you want to save changed settings immediately; else the changes are auto-saved after max 2 s. See also <see cref="NoAutoSave"/> and <see cref="NoAutoSaveTimer"/>.
 	/// </summary>
-	public void SaveIfNeed() => _SaveIfNeed(false);
-	
-	void _SaveIfNeed(bool disposingOrExit) {
+	public void SaveIfNeed() {
 		lock (_lock) {
 			if (_file is null) return;
 			bool save = false;
@@ -301,13 +301,14 @@ public abstract record class JSettings : IDisposable {
 	
 	bool _Reload(out JSettings newSettings) {
 		newSettings = this;
+		JSettings R;
+		
 		lock (_lock) {
 			if (_file is null) {
 				print.warning($"JSettings.Reload called for a disposed or momory-only settings object");
 				return false;
 			}
 			
-			JSettings R;
 			try {
 				if (filesystem.exists(_file, true)) {
 					var b = filesystem.loadBytes(_file);
@@ -328,9 +329,10 @@ public abstract record class JSettings : IDisposable {
 			R._watcher = _watcher; _watcher = null;
 			R._modifiedExternally = _modifiedExternally; _modifiedExternally = null;
 			_file = null;
-			lock (s_list) { s_list[s_list.IndexOf(this)] = R; }
-			newSettings = R;
-			return true;
 		}
+		
+		lock (s_list) { s_list[s_list.IndexOf(this)] = R; } //note: not inside `lock (_lock)` (possible deadlock)
+		newSettings = R;
+		return true;
 	}
 }

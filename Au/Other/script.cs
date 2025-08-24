@@ -840,7 +840,7 @@ public static class script {
 	/// If this process was started by LibreAutomate, the new process will be started by LibreAutomate too. Else this function simply starts a new instance of this program.
 	/// </remarks>
 	public static int restart(params string[] args) {
-		if (s_idMainFile != 0) return _Run(4, $"<{s_idMainFile}>", args, out _);
+		if (s_idMainFile != 0) return _Run(4, $":{s_idMainFile}", args, out _);
 		if (role != SRole.ExeProgram) throw new InvalidOperationException(); //editorExtension
 		
 		var ps = new ProcessStarter_(process.thisExePath, StringUtil.CommandLineFromArray(args), null, rawExe: true);

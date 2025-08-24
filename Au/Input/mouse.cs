@@ -1509,8 +1509,11 @@ namespace Au.Types {
 	
 	/// <summary>
 	/// This type is used for parameters of <see cref="mouse"/> functions that accept multiple types of UI objects (window, UI element, screen, etc).
-	/// Has implicit conversions from <see cref="wnd"/>, <see cref="elm"/>, <see cref="uiimage"/>, <see cref="screen"/>, <see cref="RECT"/> and <c>bool</c> (relative coordinates). Also has static functions to specify more parameters.
 	/// </summary>
+	/// <remarks>
+	/// Has implicit conversions from <see cref="wnd"/>, <see cref="elm"/>, <see cref="uiimage"/>, <see cref="screen"/>, <see cref="RECT"/> and <c>bool</c> (relative coordinates).
+	/// Also has static functions to specify more parameters.
+	/// </remarks>
 	public struct MObject {
 		object _o;
 		MObject(object o) => _o = o;

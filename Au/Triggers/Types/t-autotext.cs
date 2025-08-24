@@ -284,7 +284,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	public TAMenuOptions MenuOptions { get; set; }
 	
 	/// <summary>
-	/// Clears all options that are applied to autotext triggers added afterwards: <see cref="DefaultFlags"/>, <see cref="DefaultPostfixType"/>, <see cref="DefaultPostfixChars"/>, <see cref="MenuOptions"/>.
+	/// Clears all options that affect autotext triggers created after setting the option: <see cref="DefaultFlags"/>, <see cref="DefaultPostfixType"/>, <see cref="DefaultPostfixChars"/>, <see cref="MenuOptions"/>.
 	/// </summary>
 	public void ResetOptions() {
 		this.DefaultFlags = 0;
@@ -640,8 +640,10 @@ public class AutotextTriggerArgs : TriggerArgs {
 	
 	/// <summary>
 	/// If <c>true</c>, <see cref="Replace"/> will select text with <c>Shift+Left</c> instead of erasing with <c>Backspace</c>. Except in console windows.
-	/// Initially <c>true</c> if flag <see cref="TAFlags.ShiftLeft"/> is set. Can be changed by a callback function, for example to use or not use <c>Shift+Left</c> only with some windows.
 	/// </summary>
+	/// <remarks>
+	/// Initially <c>true</c> if flag <see cref="TAFlags.ShiftLeft"/> is set. Can be changed by a callback function, for example to use or not use <c>Shift+Left</c> only with some windows.
+	/// </remarks>
 	public bool ShiftLeft { get; set; }
 	
 	///

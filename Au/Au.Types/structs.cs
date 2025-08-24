@@ -272,16 +272,20 @@ namespace Au.Types {
 		/// <summary>
 		/// Replaces this rectangle with the union of itself and the specified rectangle.
 		/// Union is the smallest rectangle that contains two full rectangles.
-		/// If either rectangle is empty (<see cref="Width"/> or <see cref="Height"/> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
+		/// <remarks>
+		/// If either rectangle is empty (<see cref="Width"/> or <see cref="Height"/> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+		/// </remarks>
 		/// <returns><c>true</c> if finally this rectangle is not empty.</returns>
 		public bool Union(RECT r2) => Api.UnionRect(out this, this, r2);
 		
 		/// <summary>
 		/// Returns the union of two rectangles.
 		/// Union is the smallest rectangle that contains two full rectangles.
-		/// If either rectangle is empty (<see cref="Width"/> or <see cref="Height"/> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
+		/// <remarks>
+		/// If either rectangle is empty (<see cref="Width"/> or <see cref="Height"/> is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+		/// </remarks>
 		public static RECT Union(RECT r1, RECT r2) { Api.UnionRect(out RECT r, r1, r2); return r; }
 		
 		/// <summary>

@@ -441,8 +441,7 @@ public class TriggerFuncs {
 	
 	/// <summary>
 	/// Sets callback function for the next added trigger.
-	/// If the trigger has a window scope, the callback function is called after evaluating the window.
-	/// This function is used with triggers of all types.
+	/// Called after evaluating the window scope (if any).
 	/// </summary>
 	public TFunc NextTrigger {
 		get => nextAfter;
@@ -450,9 +449,8 @@ public class TriggerFuncs {
 	}
 	
 	/// <summary>
-	/// Sets callback function for the next added trigger.
-	/// If the trigger has a window scope, the callback function is called before evaluating the window.
-	/// This function is used with triggers of these types: hotkey, autotext, mouse.
+	/// Sets callback function for the next added trigger (except window triggers).
+	/// Called before evaluating the window scope (if any).
 	/// </summary>
 	public TFunc NextTriggerBeforeWindow {
 		get => nextBefore;
@@ -460,10 +458,8 @@ public class TriggerFuncs {
 	}
 	
 	/// <summary>
-	/// Sets callback function for multiple triggers added afterwards.
-	/// If the trigger has a window scope, the callback function is called after evaluating the window.
-	/// This function is used with triggers of all types.
-	/// The value can be <c>null</c>.
+	/// Sets callback function for triggers added afterwards.
+	/// Called after evaluating the window scope (if any).
 	/// </summary>
 	public TFunc FollowingTriggers {
 		get => commonAfter;
@@ -471,10 +467,8 @@ public class TriggerFuncs {
 	}
 	
 	/// <summary>
-	/// Sets callback function for multiple triggers added afterwards.
-	/// If the trigger has a window scope, the callback function is called before evaluating the window.
-	/// This function is used with triggers of these types: hotkey, autotext, mouse.
-	/// The value can be <c>null</c>.
+	/// Sets callback function for triggers added afterwards (except window triggers).
+	/// Called before evaluating the window scope (if any).
 	/// </summary>
 	public TFunc FollowingTriggersBeforeWindow {
 		get => commonBefore;

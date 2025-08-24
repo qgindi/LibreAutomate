@@ -115,14 +115,16 @@ public static class StringUtil {
 	
 	/// <summary>
 	/// If string contains a number at <i>startIndex</i>, gets that number as <c>int</c>, also gets the string part that follows it, and returns <c>true</c>.
-	/// For example, for string <c>"25text"</c> or <c>"25 text"</c> gets <i>num</i> = <c>25</c>, <i>tail</i> = <c>"text"</c>.
-	/// Everything else is the same as with <see cref="ExtString.ToInt(string, int, out int, STIFlags)"/>.
 	/// </summary>
 	/// <param name="s"></param>
 	/// <param name="num">Receives the number. Receives 0 if no number.</param>
 	/// <param name="tail">Receives the string part that follows the number, or <c>""</c>. Receives <c>null</c> if no number. Can be this variable.</param>
 	/// <param name="startIndex">Offset in this string where to start parsing.</param>
 	/// <param name="flags"></param>
+	/// <remarks>
+	/// For example, for string <c>"25text"</c> or <c>"25 text"</c> gets <i>num</i> = <c>25</c>, <i>tail</i> = <c>"text"</c>.
+	/// Everything else is the same as with <see cref="ExtString.ToInt(string, int, out int, STIFlags)"/>.
+	/// </remarks>
 	public static bool ParseIntAndString(string s, out int num, out string tail, int startIndex = 0, STIFlags flags = 0) {
 		num = s.ToInt(startIndex, out int end, flags);
 		if (end == 0) {

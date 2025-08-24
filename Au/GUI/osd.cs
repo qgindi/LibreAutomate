@@ -622,12 +622,14 @@ namespace Au {
 		public TFFlags TextFormatFlags { get; set; } = TFFlags.NOPREFIX | TFFlags.WORDBREAK | TFFlags.EXPANDTABS;
 		
 		/// <summary>
-		/// Icon or image at the left. Can be <see cref="icon"/>, <see cref="System.Drawing.Icon"/> or <see cref="System.Drawing.Image"/>. Any size.
-		/// For example <c>System.Drawing.SystemIcons.Information</c> or <c>icon.stock(StockIcon.INFO)</c> or <c>ImageUtil.LoadGdipBitmapFromXaml("XAML copied from the Icons tool. You can edit, Width, Height and Fill (color).", screen.primary.Dpi)</c>.
+		/// Icon or image at the left. Any size.
 		/// </summary>
 		/// <remarks>
+		/// For example <c>System.Drawing.SystemIcons.Information</c> or <c>icon.stock(StockIcon.INFO)</c> or <c>ImageUtil.LoadGdipBitmapFromXaml("XAML copied from the Icons tool. You can edit, Width, Height and Fill (color).", screen.primary.Dpi)</c>.
+		/// 
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
+		/// <value><see cref="icon"/>, <see cref="System.Drawing.Icon"/> or <see cref="System.Drawing.Image"/>.</value>
 		public object Icon { get; set; }
 		SIZE _iconSize;
 		

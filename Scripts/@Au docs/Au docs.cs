@@ -36,6 +36,7 @@ void _Build() {
 	//cookbook = true;
 	//preprocess = true;
 	//postprocess = true;
+	//serve = true;
 	//postprocess = serve = true;
 	if (!(cookbook | preprocess | postprocess | build | serve)) preprocess = postprocess = build = serve = cookbook = true;
 	bool onlyMetadata = !true;

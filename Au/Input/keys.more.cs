@@ -54,12 +54,14 @@ partial class keys {
 		}
 		
 		/// <summary>
-		/// Converts string to <see cref="KKey"/> and <see cref="KMod"/>.
-		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = KMod.Ctrl</c>, <c>key = KKey.Left</c>.
+		/// Converts hotkey string like <c>"Ctrl+A"</c> to <see cref="KKey"/> and <see cref="KMod"/>.
 		/// </summary>
 		/// <returns><c>false</c> if the string is invalid.</returns>
 		/// <remarks>
+		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = KMod.Ctrl</c>, <c>key = KKey.Left</c>.
+		/// 
 		/// [Key names](xref:key_names) are like with <see cref="keys.send"/>.
+		/// 
 		/// Must be single non-modifier key, preceded by zero or more of modifier keys <c>Ctrl</c>, <c>Shift</c>, <c>Alt</c>, <c>Win</c>, all joined with <c>+</c>.
 		/// Valid hotkey examples: <c>"A"</c>, <c>"a"</c>, <c>"7"</c>, <c>"F12"</c>, <c>"."</c>, <c>"End"</c>, <c>"Ctrl+D"</c>, <c>"Ctrl+Alt+Shift+Win+Left"</c>, <c>" Ctrl + U "</c>.
 		/// Invalid hotkey examples: <c>null</c>, <c>""</c>, <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
@@ -84,9 +86,11 @@ partial class keys {
 		}
 		
 		/// <summary>
-		/// Converts string to winforms <see cref="System.Windows.Forms.Keys"/>.
-		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>hotkey = Keys.Control | Keys.Left</c>.
+		/// Converts hotkey string like <c>"Ctrl+A"</c> to winforms <see cref="System.Windows.Forms.Keys"/>.
 		/// </summary>
+		/// <remarks>
+		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>hotkey = Keys.Control | Keys.Left</c>.
+		/// </remarks>
 		/// <returns><c>false</c> if the string is invalid or contains <c>"Win"</c>.</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Forms.Keys hotkey) {
 			if (!parseHotkeyString(s, out var m, out var k)) { hotkey = 0; return false; }
@@ -98,10 +102,13 @@ partial class keys {
 		}
 		
 		/// <summary>
-		/// Converts string to WPF <see cref="System.Windows.Input.ModifierKeys"/> and <see cref="System.Windows.Input.Key"/> or <see cref="System.Windows.Input.MouseAction"/>.
-		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = ModifierKeys.Control</c> and <c>key = Key.Left</c>.
-		/// Supported mouse button strings: <c>"Click"</c>, <c>"D-click"</c>, <c>"R-click"</c>, <c>"M-click"</c>, <c>"Wheel"</c>. Example: <c>"Ctrl+R-click"</c>. The first character of a mouse word is case-insensitive.
+		/// Converts hotkey string like <c>"Ctrl+A"</c> to WPF <see cref="System.Windows.Input.ModifierKeys"/> and <see cref="System.Windows.Input.Key"/> or <see cref="System.Windows.Input.MouseAction"/>.
 		/// </summary>
+		/// <remarks>
+		/// For example, if <i>s</i> is <c>"Ctrl+Left"</c>, sets <c>mod = ModifierKeys.Control</c> and <c>key = Key.Left</c>.
+		/// 
+		/// Supported mouse button strings: <c>"Click"</c>, <c>"D-click"</c>, <c>"R-click"</c>, <c>"M-click"</c>, <c>"Wheel"</c>. Example: <c>"Ctrl+R-click"</c>. The first character of a mouse word is case-insensitive.
+		/// </remarks>
 		/// <returns><c>false</c> if the string is invalid or contains incorrectly specified mouse buttons.</returns>
 		public static bool parseHotkeyString(string s, out System.Windows.Input.ModifierKeys mod, out System.Windows.Input.Key key, out System.Windows.Input.MouseAction mouse) {
 			mod = 0; key = 0; mouse = 0;

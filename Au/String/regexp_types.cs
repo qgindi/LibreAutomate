@@ -370,9 +370,11 @@ namespace Au.Types {
 	/// <summary>
 	/// Managed version of PCRE API struct <c>pcre2_callout_block</c>.
 	/// When you set <see cref="regexp.Callout"/>, your callout function's parameter is of this type.
+	/// </summary>
+	/// <remarks>
 	/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 	/// Most properties are <c>pcre2_callout_block</c> fields as documented in PCRE help. Other properties and methods are easier/safer versions of unsafe fields like <c>offset_vector</c>.
-	/// </summary>
+	/// </remarks>
 	public unsafe struct RXCalloutData {
 #pragma warning disable 649 //field never assigned
 		struct pcre2_callout_block {
@@ -399,10 +401,12 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Sets the return value of the callout function, as documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
+		/// </summary>
+		/// <remarks>
 		/// Default 0.
 		/// If 1, matching fails at the current point, but the testing of other matching possibilities goes ahead, just as if a lookahead assertion had failed.
 		/// If -1 (<c>PCRE2_ERROR_NOMATCH</c>), the match function returns <c>false</c> (no match). Values less tan -2 are PCRE error codes and cause exception.
-		/// </summary>
+		/// </remarks>
 		public int Result { set => _p->version = value; internal get => _p->version; }
 		
 		internal RXCalloutData(void* calloutBlock) {

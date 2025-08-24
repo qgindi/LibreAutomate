@@ -1,8 +1,12 @@
 namespace Au.More;
 
 /// <summary>
-/// Replaces default trace listener with listener that overrides its <see cref="DefaultTraceListener.Fail(string?, string?)"/> method. On failed assertion (<see cref="Debug.Assert"/>, <see cref="Trace.Assert"/>, <see cref="Debug.Fail"/>, <see cref="Trace.Fail"/>) it shows message box with buttons <b>Exit</b> <b>Debug</b> <b>Ignore</b>, unless debugger is attached or !<see cref="DefaultTraceListener.AssertUiEnabled"/>.
+/// Replaces the default trace listener with a listener that shows a message box on a failed assertion.
 /// </summary>
+/// <remarks>
+/// The new trace listener overrides the <see cref="DefaultTraceListener.Fail(string?, string?)"/> method.
+/// On failed assertion (<see cref="Debug.Assert"/>, <see cref="Trace.Assert"/>, <see cref="Debug.Fail"/>, <see cref="Trace.Fail"/>) it shows a message box with buttons <b>Exit</b> <b>Debug</b> <b>Ignore</b>, unless debugger is attached or <see cref="DefaultTraceListener.AssertUiEnabled"/> is <c>false</c>.
+/// </remarks>
 public class DebugTraceListener : DefaultTraceListener {
 	/// <summary>
 	/// Replaces default trace listener.

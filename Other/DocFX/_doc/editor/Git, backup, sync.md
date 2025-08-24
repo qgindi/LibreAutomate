@@ -99,7 +99,7 @@ Git ignores (does not backup etc) files and directories specified in file named 
 
 ```
 
-The first 2 lines exclude directories that contain many big binary files (.dll etc) than can be easily restored. You may want to delete or comment out these lines if cannot easily restore, for example if using portable LibreAutomate. But then your local Git repository (folder `.git`) can become very big after some time. Next 2 lines exclude default directories used for your created programs and libraries. The last 2 lines exclude directories where LibreAutomate stores temporary files. Lines starting with `!` reinclude some files in directories excluded by other lines.
+The first 2 lines exclude directories that contain many big binary files (dll etc) than can be easily restored. You may want to delete or comment out these lines if cannot easily restore, for example if using portable LibreAutomate. But then your local Git repository (folder `.git`) can become very big after some time. Next 2 lines exclude default directories used for your created programs and libraries. The last 2 lines exclude directories where LibreAutomate stores temporary files. Lines starting with `!` reinclude some files in directories excluded by other lines.
 
 If using the same workspace on multiple computers, you can exclude these small folders if don't want to sync:
 - `/.state/` - saved foldings, caret position, lists of open files and expanded folders, etc.

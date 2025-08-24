@@ -121,15 +121,19 @@ public record struct Coord {
 	/// <summary>
 	/// Creates <see cref="Coord"/> of <c>Reverse</c> type.
 	/// Value 0 is at the right or bottom, and does not belong to the rectangle. Positive values are towards left or top.
-	/// Instead can be use "from end" index, for example argument <c>Coord.Reverse(1)</c> can be replaced with <c>^1</c>.
 	/// </summary>
+	/// <remarks>
+	/// Instead can be use "from end" index, for example argument <c>Coord.Reverse(1)</c> can be replaced with <c>^1</c>.
+	/// </remarks>
 	public static Coord Reverse(int v) => new(CoordType.Reverse, v);
 	
 	/// <summary>
 	/// Creates <see cref="Coord"/> of <c>Fraction</c> type.
 	/// Value 0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0 and >=1.0 are outside of the rectangle.
-	/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(.5)</c> can be replaced with <c>.5f</c>.
 	/// </summary>
+	/// <remarks>
+	/// Instead can be used implicit conversion from <c>float</c>, for example argument <c>Coord.Fraction(.5)</c> can be replaced with <c>.5f</c>.
+	/// </remarks>
 	public static unsafe Coord Fraction(double v) => (float)v;
 	
 	/// <summary>
@@ -363,9 +367,14 @@ public class PopupXY {
 }
 
 /// <summary>
-/// A window handle.
-/// Used for function parameters where the function needs a window handle as <see cref="wnd"/> but also allows to pass a variable of any of these types: <see cref="System.Windows.DependencyObject"/> (WPF window or control), <see cref="System.Windows.Forms.Control"/> (<c>Form</c> or control), <c>IntPtr</c> (window handle).
+/// Used for parameters of functions that need a window handle as <see cref="wnd"/> but also accept a WPF window/element, winforms form/control and <c>IntPtr</c>.
 /// </summary>
+/// <remarks>
+/// Has implicit conversions from:
+/// <br/>• <see cref="System.Windows.DependencyObject"/> - WPF window or element.
+/// <br/>• <see cref="System.Windows.Forms.Control"/> - <c>Form</c> or control.
+/// <br/>• <c>IntPtr</c> or <c>nint</c> - window handle.
+/// </remarks>
 public struct AnyWnd {
 	readonly object _o;
 	AnyWnd(object o) { _o = o; }

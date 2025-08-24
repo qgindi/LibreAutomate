@@ -161,7 +161,7 @@ Can be Pack.Icon, like Material.Folder.")
 			_dpi = Dpi.OfWindow(this);
 			_OpenDB();
 			
-			_a = new(30000);
+			_a = new(60000);
 			foreach (var (table, _) in s_tables) {
 				using var stat = s_db.Statement("SELECT name FROM " + table);
 				while (stat.Step()) {

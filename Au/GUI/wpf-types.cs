@@ -108,8 +108,10 @@ namespace Au.Types {
 	
 	/// <summary>
 	/// Used with <see cref="wpfBuilder"/> functions to specify width/height of columns and rows. Allows to specify minimal and/or maximal values too.
-	/// Like <see cref="WBLength"/>, but has functions to create <see cref="ColumnDefinition"/> and <see cref="RowDefinition"/>. Also has implicit conversion from these types.
 	/// </summary>
+	/// <remarks>
+	/// Like <see cref="WBLength"/>, but has functions to create <see cref="ColumnDefinition"/> and <see cref="RowDefinition"/>. Also has implicit conversion from these types.
+	/// </remarks>
 	public struct WBGridLength {
 		double _v;
 		Range _r;
@@ -533,17 +535,19 @@ namespace Au.More {
 		TextBox _tCB;
 		
 		/// <summary>
-		/// Initializes and adds this adorner to the <see cref="AdornerLayer"/> of the control.
+		/// Initializes and adds this adorner to the <see cref="AdornerLayer"/> found by <see cref="AdornerLayer.GetAdornerLayer"/>.
 		/// </summary>
-		/// <param name="c">The adorned control. Must be a child/descendant of an <see cref="AdornerDecorator"/>.</param>
+		/// <param name="c">The control.</param>
 		/// <param name="text">Watermark text.</param>
-		/// <exception cref="InvalidOperationException">The control isn't in an <see cref="AdornerDecorator"/>.</exception>
+		/// <remarks>
+		/// In some kinds of windows it may not work unless a parent or ancestor of the control is an <see cref="AdornerDecorator"/>.
+		/// </remarks>
 		public WatermarkAdorner(Control c, string text) : base(c) {
 			_c = c;
 			_text = text;
 			IsHitTestVisible = false;
-			var layer = AdornerLayer.GetAdornerLayer(c) ?? throw new InvalidOperationException("The control isn't in an AdornerDecorator");
-			layer.Add(this);
+			if (AdornerLayer.GetAdornerLayer(c) is { } layer) layer.Add(this);
+			else c.Loaded += (_, _) => { AdornerLayer.GetAdornerLayer(c)?.Add(this); }; //the Window or some ancestor element usually has an AdornerLayer in its template, which now probably still not applied
 		}
 		
 		/// <summary>
@@ -561,20 +565,28 @@ namespace Au.More {
 		
 		/// <summary>
 		/// Sets events to show/hide the adorner depending on control text.
-		/// The control must be <see cref="TextBox"/> or editable <see cref="ComboBox"/>.
+		/// The control must be <see cref="TextBox"/>, <see cref="PasswordBox"/> or editable <see cref="ComboBox"/>.
 		/// </summary>
 		public void SetAdornerVisibility() {
 			if (_c is TextBox t) {
-				_Visibility(t);
+				_VisibilityT(t);
+			} else if (_c is PasswordBox p) {
+				_VisibilityP(p);
 			} else {
-				_c.Loaded += (_, _) => {
-					if (_c.FindVisualDescendant(o => o is TextBox) is TextBox t2) _Visibility(_tCB = t2);
-				};
+				if (_c.IsLoaded) _OfChildTB();
+				else _c.Loaded += (_, _) => { _OfChildTB(); };
+				
+				void _OfChildTB() { if (_c.FindVisualDescendant(o => o is TextBox) is TextBox t2) _VisibilityT(_tCB = t2); }
 			}
 			
-			void _Visibility(TextBox t) {
+			void _VisibilityT(TextBox t) {
 				Visibility = t.Text.NE() ? Visibility.Visible : Visibility.Hidden;
 				t.TextChanged += (_, _) => { Visibility = t.Text.NE() ? Visibility.Visible : Visibility.Hidden; };
+			}
+			
+			void _VisibilityP(PasswordBox t) {
+				Visibility = t.Password.NE() ? Visibility.Visible : Visibility.Hidden;
+				t.PasswordChanged += (_, _) => { Visibility = t.Password.NE() ? Visibility.Visible : Visibility.Hidden; };
 			}
 		}
 		

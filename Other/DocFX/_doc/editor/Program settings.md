@@ -97,7 +97,7 @@ What .NET SDK to use for NuGet and Publish:
 
 #### Always print "Compiled"
 Always print a \"Compiled\" message when a script etc compiled successfully.
-If unchecked, prints only if role is **exeProgram** or **classLibrary**.
+If unchecked, prints only if role is `exeProgram` or `classLibrary`.
 If 3-rd state, prints when executing the **Compile** command, but not when compiling implicitly (for example before launching the script).
 
 ### OS

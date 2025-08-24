@@ -19,7 +19,6 @@ Multiple files can be open, but only one is visible. The list of open files is i
 All changes are saved automatically on these events: app deactivated, main window closed, timer. The **Save** button saves all changes immediately.
 
 ## Panels
-Panels and toolbars can be docked, floating or hidden.
 
 ### Files
 All files and folders of current workspace.
@@ -38,9 +37,9 @@ File properties are documented in the **Properties** dialog.
 
 Files are of these types:
 - Script - C# code file that can be executed directly, like a program.
-- Class - C# code file that cannot be executed directly but contains code used by other files.
+- Class - C# code file that contains classes and functions used by other files.
 - Text files - txt, xml and other files that can be edited in the code editor.
-- Other files - files that cannot be edited. Images etc. For example can be added to assembly resources.
+- Other files - files that cannot be edited. Images etc. For example can be added to exe program resources.
 
 Folders are of these types:
 - Simple folders.
@@ -85,7 +84,7 @@ Mouse x y, window name/class/program, control id/class/name, menu item id.
 Helps to find types, functions, fields, namespaces and regions in current C# code file.
 
 ### Cookbook, Recipe
-Automation code examples and info.
+Code examples and info.
 
 ### Bookmarks
 List of bookmarks.
@@ -122,3 +121,27 @@ Program help and library reference.
 Click - show and activate editor window. Right-click - show context menu.
 
 Gray when triggers are disabled.
+
+## Customizing
+
+### Customize the panel layout
+
+Panels and toolbars can be resized with splitters, moved to another place, grouped in stacks and tab groups, docked, floating, hidden.
+
+Each panel, tab group and toolbar has a caption bar. Right-click it to show a customization menu. Also use the menu to show hidden panels. Double-click the bar to toggle floating/docked state; drag to make floating; middle-click to hide.
+
+The splitters between panels have a right-click menu to set splitter width and float/dock/move that stack of panels.
+
+It's saved in `%folders.Documents%\LibreAutomate\.settings\Layout.xml`. To reset to the default layout, exit LibreAutomate and delete the file.
+
+### Customize toolbars, menus and hotkeys
+
+Use the **Customize** tool. Open it via the **Tools** menu or right-click a toolbar.
+
+You can add buttons to any toolbar, and change button properties. Default buttons cannot be removed, but can be hidden. To access hidden buttons, click the drop-down arrow in the toolbar. New toolbars can't be added, but there are two initially empty toolbars just for user buttons.
+
+Menu items can't be added/removed/moved, but you can change menu item properties. You can set hotkeys for menu commands.
+
+It's saved in `%folders.Documents%\LibreAutomate\.settings\Commands.xml`. You can edit the file in an XML editor. To reset everything, delete the file. To reset an item or toolbar, remove it from XML. Restart LibreAutomate.
+
+See also cookbook article **Editor extension - modify UI**.

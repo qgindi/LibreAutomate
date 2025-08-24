@@ -188,7 +188,9 @@ class MetaComments {
 	/// </summary>
 	public int WarningLevel { get; private set; }
 	
-	public const int DefaultWarningLevel = 8; //wave 7 adds 1 warning ("The type name only contains lower-cased ascii characters"), not useful
+	public const int DefaultWarningLevel = 8;
+	//Wave 7 adds 1 warning ("The type name only contains lower-cased ascii characters"), not useful.
+	//When changing the value here, change it also in `File properties.md`.
 	
 	/// <summary>
 	/// Meta option 'noWarnings'.
@@ -621,7 +623,7 @@ class MetaComments {
 					_ErrorN("unknown meta comment option");
 				}
 				
-				_ErrorN($"in this file only these options can be used: r, pr, nuget, com, c, resource, file. Others only in the main file of the compilation - {MainFile.f.Name}. <help editor/Class files, projects>More info<>.");
+				_ErrorN($"in this file only these options can be used: c, r, pr, nuget, com, resource, file. Others only in the main file of the compilation - {MainFile.f.Name}. <help editor/Class files, projects>More info<>.");
 			}
 			return;
 		}

@@ -23,7 +23,7 @@ Can start with `**options `:
 | :- | :- | :- |
 | `t` | Literal text (`*` and `?` are not wildcard characters). | `"**t text"` |
 | `r` | Text is PCRE regular expression ([regexp]()).<br>Syntax: [full](https://www.pcre.org/current/doc/html/pcre2pattern.html), [short](https://www.pcre.org/current/doc/html/pcre2syntax.html). | `"**r regex"` |
-| `R` | Text is .NET regular expression (**Regex**).<br>Cannot be used with [elm]() and [elmFinder](). | `"**R regex"` |
+| `R` | Text is .NET regular expression (`Regex`).<br>Cannot be used with [elm]() and [elmFinder](). | `"**R regex"` |
 | `c` | Must match case. | `"**tc text"`, `"**rc regex"` |
 | `m` | Multi-part (match any part). Separator `||`. | `"**m findAAA||orBBB||**r orCCC"` |
 | `m(sep)` | Multi-part. Separator `sep`. | `"**m(^^^) findAAA^^^orBBB"` |
@@ -31,7 +31,7 @@ Can start with `**options `:
 
  Only one of `t`, `r`, `R`, `m` can be specified. Option `c` specified with `m` is applied to all parts. Option `n` is applied finally.
 
- If the function argument is `null` or omitted, it usually means "match any". Wildcard expression `""` matches only `""`. Exception **ArgumentException** if invalid `**options ` or regular expression.
+ If the function argument is `null` or omitted, it usually means "match any". Wildcard expression `""` matches only `""`. Exception `ArgumentException` if invalid `**options ` or regular expression.
 
 Examples:
 ```csharp

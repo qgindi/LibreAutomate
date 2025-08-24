@@ -7,9 +7,10 @@ namespace Au.More
 	public static class Math2
 	{
 		/// <summary>
-		/// Creates <c>uint</c> by placing <c>(ushort)loWord</c> in bits 1-16 and <c>(ushort)hiWord</c> in bits 17-32. Returns it as <c>nint</c>, ready to use with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.
+		/// Creates <c>uint</c> by placing <c>(ushort)loWord</c> in bits 1-16 and <c>(ushort)hiWord</c> in bits 17-32.
 		/// Like C macro <c>MAKELONG</c>, <c>MAKEWPARAM</c>, <c>MAKELPARAM</c>, <c>MAKELRESULT</c>.
 		/// </summary>
+		/// <returns>The return value is of type <c>nint</c>. It can be used with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.</returns>
 		public static nint MakeLparam(int loWord, int hiWord) => MakeLparam((uint)loWord, (uint)hiWord);
 		//Returns nint, because usually used as sendmessage etc parameter. If uint, would need to explicitly cast to nint. If somebody casts to int, the result may be incorrect, ie negative.
 
@@ -21,9 +22,10 @@ namespace Au.More
 		public static nint MakeLparam(uint loWord, uint hiWord) => (nint)(((hiWord & 0xffff) << 16) | (loWord & 0xffff));
 
 		/// <summary>
-		/// Creates <c>uint</c> by placing <c>(ushort)p.x</c> in bits 1-16 and <c>(ushort)p.y</c> in bits 17-32. Returns it as <c>nint</c>, ready to use with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.
+		/// Creates <c>uint</c> by placing <c>(ushort)p.x</c> in bits 1-16 and <c>(ushort)p.y</c> in bits 17-32.
 		/// Like C macro <c>MAKELONG</c>, <c>MAKEWPARAM</c>, <c>MAKELPARAM</c>, <c>MAKELRESULT</c>.
 		/// </summary>
+		/// <returns>The return value is of type <c>nint</c>. It can be used with Windows message API as <i>lParam</i> or <i>wParam</i> or return value.</returns>
 		public static nint MakeLparam(POINT p) => MakeLparam((uint)p.x, (uint)p.y);
 
 		/// <summary>

@@ -8,6 +8,8 @@ Added commands in menu **Edit > Find**:
 - **Next found** (`F4`). Selects next item in the **Found** panel.
 - **Previous found** (`Shift+F4`).
 
+Documentation improvements. New articles.
+
 New tools:
 - .
 
@@ -25,7 +27,7 @@ New classes:
 - .
 
 New members:
-- .
+- `wpfBuilder.Validation` overload.
 
 New parameters:
 - .
@@ -34,6 +36,8 @@ Improved:
 - .
 
 Fixed bugs:
-- .
+- `script.restart` does not work.
+- `JSettings` can deadlock.
+- `WTaskbarButton` cannot be used in multiple threads.
 
 ### Breaking changes

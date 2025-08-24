@@ -4,6 +4,7 @@ using System.Windows;
 using System.Collections;
 using System.IO.Compression;
 using System.Runtime.Loader;
+using System.Security.Cryptography;
 
 /// <summary>
 /// .NET SDK etc.
@@ -604,6 +605,25 @@ class WindowDisabler {
 			if (--_d._count == 0)
 				_d._window.IsEnabled = true;
 		}
+	}
+}
+
+/// <summary>
+/// Calls <see cref="ProtectedData"/> <c>Protect</c> or <c>Unprotect</c> with LA's entropy.
+/// </summary>
+static class EdProtectedData {
+	static byte[] _entropy = [212, 71, 168, 115, 1, 83, 144, 90];
+	
+	/// <returns>Protected data as Base64 string. On exception prints warning and returns <c>null</c>.</returns>
+	public static string Protect(string s) {
+		try { return Convert.ToBase64String(ProtectedData.Protect(s.ToUTF8(), _entropy, DataProtectionScope.CurrentUser)); }
+		catch (Exception ex) { print.warning(ex); return null; }
+	}
+	
+	/// <returns>Unprotected data as string. On exception prints warning and returns <c>null</c>.</returns>
+	public static string Unprotect(string s) {
+		try { return ProtectedData.Unprotect(Convert.FromBase64String(s), _entropy, DataProtectionScope.CurrentUser).ToStringUTF8(); }
+		catch (Exception ex) { print.warning(ex); return null; }
 	}
 }
 

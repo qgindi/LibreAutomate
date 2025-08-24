@@ -882,8 +882,10 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// If <c>true</c>, some library functions may display more warnings and other info.
-		/// If not explicitly set, the default value depends on the build configuration of the main assembly: <c>true</c> if Debug, <c>false</c> if Release (<c>optimize true</c>). See <see cref="AssemblyUtil_.IsDebug"/>.
 		/// </summary>
+		/// <remarks>
+		/// If not explicitly set, the default value depends on the build configuration of the main assembly: <c>true</c> if Debug, <c>false</c> if Release (<c>optimize true</c>).
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// opt.warnings.Verbose = false;

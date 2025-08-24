@@ -10,11 +10,14 @@
 - name: Class files, projects
   href: Class files, projects.md
 
-- name: Command line
-  href: Command line.md
+- name: C# file properties
+  href: File properties.md
 
 - name: Program settings
   href: Program settings.md
+
+- name: Command line
+  href: Command line.md
 
 - name: Creating .exe programs
   href: Publish.md

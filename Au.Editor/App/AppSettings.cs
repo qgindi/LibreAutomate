@@ -172,8 +172,12 @@ record AppSettings : JSettings {
 	public int ci_rename;
 	
 	//AI
-	//public int ai_embeddingsModel, ai_chatModel;
-	//public List<AI.AiProviderSettings> ai_providers = AI.AiProviderSettings.DefaultProviders;
+	public string ai_searchModel, ai_chatModel, ai_iconsModel;
+	public Dictionary<string, string> ai_ak = new(StringComparer.OrdinalIgnoreCase) {
+		{ "Mistral", "%API_MISTRAL%" },
+		{ "OpenAI", "%API_OPENAI%" },
+		{ "Gemini", "%API_GOOGLE%" },
+	};
 	
 	//panel Files
 	public bool files_multiSelect;

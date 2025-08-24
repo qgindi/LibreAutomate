@@ -17,7 +17,7 @@ using System.Windows.Data;
 
 class PanelFind {
 	KScintilla _tFind, _tReplace;
-	KCheckBox _cCase, _cWord, _cRegex;
+	KCheckNoBox _cCase, _cWord, _cRegex;
 	Button _bFilter;
 	KPopup _ttRegex, _ttNext;
 	
@@ -64,10 +64,11 @@ class PanelFind {
 		
 		b.End();
 		
-		b.R.Add(out _cCase, "Case").Tooltip("Match case").Checked(App.Settings.find_case);
+		b.R.StartStack();
+		b.Add(out _cCase, "Case").Tooltip("Match case").Checked(App.Settings.find_case);
 		b.Add(out _cWord, "Word").Tooltip("Whole word").Checked(App.Settings.find_word);
 		b.Add(out _cRegex, "Regex").Tooltip("Regular expression");
-		b.End().End();
+		b.End().End().End();
 		
 		foreach (var v in new[] { _cCase, _cWord, _cRegex }) v.CheckChanged += _CheckedChanged;
 		

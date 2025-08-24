@@ -206,13 +206,13 @@ namespace Au {
 			/// Timeout text format string.
 			/// </summary>
 			/// <remarks>
-			/// Default: <c>"This dialog will disappear if not clicked in {0} s.\nTimeout action: {1}."</c>.
+			/// Default: <c>"{0} s until this dialog closes, unless clicked.\nTimeout action: {1}."</c>.
 			/// Use placeholder <c>{0}</c> for seconds (in the first line) and <c>{1}</c> for default action (in the second line). 
 			/// </remarks>
 			/// <seealso cref="SetTimeout(int, string, bool)"/>
 			public static string timeoutTextFormat { get; set; } = c_defaultTimeoutTextFormat;
 			
-			internal const string c_defaultTimeoutTextFormat = "This dialog will disappear if not clicked in {0} s.\nTimeout action: {1}.";
+			internal const string c_defaultTimeoutTextFormat = "{0} s until this dialog closes, unless clicked.\nTimeout action: {1}.";
 		}
 		
 		#endregion static options
@@ -704,9 +704,11 @@ namespace Au {
 		
 		/// <summary>
 		/// Makes the dialog window topmost or non-topmost.
+		/// </summary>
+		/// <remarks>
 		/// If <c>true</c>, will set topmost style when creating the dialog. If <c>false</c>, will not set.
 		/// If <c>null</c> (default), the dialog will be topmost if both these are true: no owner window, <see cref="dialog.options.topmostIfNoOwnerWindow"/> is <c>true</c> (default).
-		/// </summary>
+		/// </remarks>
 		public bool? Topmost { set; get; }
 		
 		#endregion set properties

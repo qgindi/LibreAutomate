@@ -59,7 +59,7 @@ In LibreAutomate each script runs in a separate process.
 
 In LibreAutomate each script can use only namespaces it wants to use. Namespaces contain classes; classes contain functions and fields (variables). In QM all scripts share all classes, global functions and global variables.
 
-LibreAutomate can create .NET class libraries (.dll files).
+LibreAutomate can create .NET class libraries (dll files).
 
 In the main LibreAutomate window you can resize and dock all panels and toolbars where you want, or make floating.
 

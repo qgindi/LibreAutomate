@@ -4,12 +4,12 @@ uid: debugger
 
 # Debugging C# scripts
 ## Useful functions
-See Cookbook recipe [Script testing and debugging](/cookbook/Script%20testing%20and%20debugging.html).
+See Cookbook recipe [Script testing and debugging](/cookbook/Script+testing+and+debugging.html).
 
 ## Debugger
 Debugger in LibreAutomate is similar to that of [Visual Studio](https://www.google.com/search?q=Visual+Studio+debugger), [VSCode](https://www.google.com/search?q=VSCode+debugger), [Rider](https://www.google.com/search?q=Rider+debugger) etc.
 
-Two panels are dedicated to debugging: **Debug** and **Breakpoints**. If the **Debug** panel was hidden when debugging starts, it becomes visible temporarily while debugging. Both panels initially are hidden; to show always, right-click any panel caption.
+Two panels are for debugging: **Debug** and **Breakpoints**. If the **Debug** panel was hidden when debugging starts, it becomes visible temporarily while debugging. Both panels initially are hidden; to show always, right-click any panel caption.
 
 To run current script with the debugger, click the **Debug run** button or menu item, or use the toolbar in the **Debug** panel. Usually at first you add one or more breakpoints in code (click the white margin). The script stops at a breakpoint line, or on exception, or in [Debugger.Break](ms:), [Debug.Assert](ms:), or when clicked **Pause**. Then you can use the **Debug** toolbar or hotkeys to execute the script in steps. Also you can click the white margin and select **Run to here**.
 

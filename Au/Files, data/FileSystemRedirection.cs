@@ -17,9 +17,12 @@ public struct FileSystemRedirection : IDisposable {
 
 	/// <summary>
 	/// If <see cref="osVersion.is32BitProcessAnd64BitOS"/>, calls API <ms>Wow64DisableWow64FsRedirection</ms>, which disables file system redirection.
-	/// The caller can call this without checking OS and process bitness. This function checks it and it is fast.
-	/// Always call <see cref="Revert"/> or <see cref="Dispose"/>, for example use <c>finally</c> or <c>using</c> statement. Not calling it is more dangerous than a memory leak. It is not called by GC.
 	/// </summary>
+	/// <remarks>
+	/// The caller can call this without checking OS and process bitness. This function checks it and it is fast.
+	/// 
+	/// Always call <see cref="Revert"/> or <see cref="Dispose"/>, for example use <c>finally</c> or <c>using</c> statement. Not calling it is more dangerous than a memory leak. It is not called by GC.
+	/// </remarks>
 	public void Disable() {
 		if (osVersion.is32BitProcessAnd64BitOS)
 			_redirected = Api.Wow64DisableWow64FsRedirection(out _redirValue);

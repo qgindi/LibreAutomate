@@ -18,8 +18,10 @@ namespace Au.More {
 
 		/// <summary>
 		/// Language, like <c>"en-US"</c>. See <see cref="AvailableLanguages"/>. If <c>null</c> (default), uses the default OCR language of this computer.
-		/// You can install languages in Windows <b>Settings > Time and language > Language and region</b>. Not all languages are supported.
 		/// </summary>
+		/// <remarks>
+		/// You can install languages in Windows <b>Settings > Time and language > Language and region</b>. Not all languages are supported.
+		/// </remarks>
 		public string Language { get; set; }
 
 		/// <summary>

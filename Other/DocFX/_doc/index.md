@@ -16,7 +16,7 @@ Some features:
 - C# code editor with intellisense. Script manager, cookbook, debugger.
 - Tools for recording keyboard/mouse and selecting UI objects such as buttons, links and images.
 - Also you can use .NET, libraries from NuGet, Windows API, etc.
-- Can create independent .exe programs and .dll libraries.
+- Can create independent exe programs and dll libraries.
 - Free and open-source. The automation library can be used in other programs too.
 
 With all the libraries and tools, code-based automation can be easier and faster than no-code RPA.

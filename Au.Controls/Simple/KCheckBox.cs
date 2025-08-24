@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Controls.Primitives;
 
 namespace Au.Controls;
 
@@ -40,6 +42,20 @@ public class KCheckBox : CheckBox {
 	/// Can be used to avoid 2-3 event handlers (Checked/Unchecked/Indeterminate).
 	/// </summary>
 	public event RoutedEventHandler CheckChanged;
+}
+
+/// <summary>
+/// <see cref="KCheckBox"/> without the box part.
+/// </summary>
+public class KCheckNoBox : KCheckBox {
+	static KCheckNoBox() {
+        DefaultStyleKeyProperty.OverrideMetadata(typeof(KCheckNoBox),new FrameworkPropertyMetadata(typeof(ToggleButton)));
+	}
+	
+	public KCheckNoBox() {
+		Padding = new(3, 0, 3, 1);
+		Background = BorderBrush = Brushes.Transparent;
+	}
 }
 
 /// <summary>
