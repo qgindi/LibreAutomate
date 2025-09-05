@@ -365,7 +365,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Performs the UI element's default action (see <see cref="DefaultAction"/>). Usually it is "click", "press" or similar.
+		/// Performs the UI element's default action (see <see cref="DefaultAction"/>). Usually it is "click", "press" or similar. Like a mouse click but without moving the mouse cursor or pressing mouse buttons.
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>

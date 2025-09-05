@@ -24,10 +24,24 @@ using Au.Compiler;
 using static Au.Controls.Sci;
 
 static class Test {
+	static void Ki(int i, CIFlags g) {
+		
+	}
 	public static void FromMenubar() {
-		print.clear();
+		//print.clear();
+		
+		//foreach (var v in App.Model.GetStartupScriptsExceptDisabled()) {
+		//	print.it(v.f);
+		//	var m = new MetaCommentsParser(v.f);
+		//	print.it(m.role);
+		//}
+		
+		App.Model.EnsureIsInStartupScripts(App.Model.CurrentFile, printAdded: true, printDisabled: true);
+		
 
-
+		//Au.wpfBuilder.StartDockvar b = new wpfBuilder();
+		//b.Add("", )
+		//b.Child;
 
 		//var doc = Panels.Editor.ActiveDoc;
 		//doc.ESetUndoMark_(-1);

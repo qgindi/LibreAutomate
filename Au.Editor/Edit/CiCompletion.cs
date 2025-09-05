@@ -715,7 +715,6 @@ partial class CiCompletion {
 			_popupList.Show(doc, span.Start, _data.items, groupsList, winApi: nativeApiClass != null); //and calls SelectBestMatch
 		}
 		catch (OperationCanceledException) { /*Debug_.Print("canceled");*/ return; }
-		//catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { return; }
 		finally {
 			if (_data == null) {
 				//p1.Next('z');
@@ -852,7 +851,7 @@ partial class CiCompletion {
 		var filterText = _data.filterText;
 		
 		bool noSelect = visibleListItems.Count == 0 || filterText == "_";
-		if (!noSelect && visibleListItems.Count > 4_000 && filterText.Length <= 2) { //make the winapi list faster
+		if (!noSelect && visibleListItems.Count > 10000 && filterText.Length <= 2) { //make the winapi list faster
 			if (filterText.Length < 2) noSelect = true;
 			else {
 				ci = visibleListItems.FirstOrDefault(o => o.Text.Starts(filterText));

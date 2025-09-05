@@ -24,9 +24,10 @@ namespace Au.Types {
 	}
 	
 	/// <summary>
-	/// Flags for <see cref="wpfBuilder.Add"/>.
+	/// Flags for obsolete <see cref="wpfBuilder.Add"/> overloads.
 	/// </summary>
 	[Flags]
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public enum WBAdd {
 		/// <summary>
 		/// Add as child of <see cref="wpfBuilder.Last"/>, which can be of type (or base type):
@@ -36,7 +37,7 @@ namespace Au.Types {
 		ChildOfLast = 1,
 		
 		/// <summary>
-		/// Don't adjust some properties (padding, aligning, specified in <see cref="wpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <c>ChildOfLast</c>.
+		/// Don't adjust properties of the element, except margin. By default it adjusts padding, alignment, etc, and properties specified in <see cref="wpfBuilder.Options"/>.
 		/// </summary>
 		DontSetProperties = 2,
 	}

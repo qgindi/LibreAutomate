@@ -157,7 +157,7 @@ public partial class KPanels {
 		bool _IsGoodMouseEvent(object sender, RoutedEventArgs e, out _Node target) {
 			target = null;
 			if (e.Source == sender) {
-				if (_IsTab && e.OriginalSource is not TabPanel) return false; //tab control border
+				if (_IsTab && e.OriginalSource is not FlexStackPanel) return false; //tab control border
 				target = sender == _splitter ? Parent : this;
 			} else if (e.Source is TabItem ti && ti.Parent == sender) target = _NodeFromTabItem(ti);
 			else return false;

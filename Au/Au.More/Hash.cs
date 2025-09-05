@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Buffers.Text;
 
 namespace Au.More;
 
@@ -231,14 +232,6 @@ public static unsafe class Hash {
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 		
 		/// <summary>
-		/// Converts this to hex string.
-		/// </summary>
-		public override string ToString() => Convert2.HexEncode(this);
-		
-		//rejected. Not much shorter than hex.
-		//public string ToBase64() => Convert.ToBase64String(ToArray());
-		
-		/// <summary>
 		/// Converts this to <c>byte[]</c> of length 16.
 		/// </summary>
 		public byte[] ToArray() {
@@ -251,10 +244,30 @@ public static unsafe class Hash {
 		}
 		
 		/// <summary>
+		/// Converts this to hex string.
+		/// </summary>
+		public override string ToString() => Convert2.HexEncode(this);
+		
+		/// <summary>
 		/// Creates <see cref="MD5Result"/> from hex string returned by <see cref="ToString"/>.
 		/// </summary>
 		/// <returns><c>false</c> if <i>encoded</i> is invalid.</returns>
 		public static bool FromString(RStr encoded, out MD5Result r) => Convert2.HexDecode(encoded, out r);
+		
+		/// <summary>
+		/// Converts this to Base64url string (URL-safe Base64).
+		/// </summary>
+		public string ToStringBase64Url() => Base64Url.EncodeToString(_AsSpan());
+		
+		/// <summary>
+		/// Creates <see cref="MD5Result"/> from string returned by <see cref="ToStringBase64Url"/>.
+		/// </summary>
+		public static bool FromStringBase64Url(RStr encoded, out MD5Result r) {
+			r = default;
+			return Base64Url.TryDecodeFromChars(encoded, r._AsSpan(), out _);
+		}
+		
+		Span<byte> _AsSpan() => MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref this, 1));
 	}
 	
 	/// <summary>

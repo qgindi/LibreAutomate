@@ -1879,8 +1879,7 @@ partial class FilesModel {
 	public WorkspaceSettings.User UserSettings => WSSett.CurrentUser;
 	
 	public void RunStartupScripts(bool startAsync) {
-		foreach (var (row, f) in GetStartupScriptsExceptDisabled()) {
-			if (f == null) { print.it("<>Startup script not found: " + row[0] + ". Please edit <+options Workspace>Options > Workspace > Run scripts...<>."); continue; }
+		foreach (var (row, f) in GetStartupScriptsExceptDisabled(printNotFound: true)) {
 			int delay = 0;
 			if (row.Length > 1) {
 				var sd = row[1];
@@ -1902,24 +1901,61 @@ partial class FilesModel {
 	csvTable _GetStartupScripts() {
 		if (UserSettings.startupScripts is var csv && !csv.NE()) {
 			try { return csvTable.parse(csv); }
-			catch (FormatException) { }
+			catch (FormatException e1) { print.warning(e1); }
 		}
 		return null;
 	}
 	
 	/// <summary>
-	/// Gets startup scripts of this workspace, except commented out.
+	/// Gets startup scripts of this workspace, except those commented out or missing.
 	/// </summary>
+	/// <param name="printNotFound">Print not found scripts.</param>
 	/// <returns>CSV row and the <b>FileNode</b> (null if not found).</returns>
-	public IEnumerable<(string[] row, FileNode f)> GetStartupScriptsExceptDisabled() {
-		if (_GetStartupScripts() is { } x) {
-			foreach (var row in x.Rows) {
+	public IEnumerable<(string[] row, FileNode f)> GetStartupScriptsExceptDisabled(bool printNotFound = false) {
+		if (_GetStartupScripts() is { } csv) {
+			foreach (var row in csv.Rows) {
 				string file = row[0];
 				if (file.NE() || file.Starts("//")) continue;
-				yield return (row, FindCodeFile(file));
+				if (FindCodeFile(file) is { } f) yield return (row, f);
+				else if (printNotFound) print.it("<>Startup script not found: " + file + ". Please edit <+options Workspace>Options > Workspace > Startup scripts<>.");
 			}
 		}
 	}
+	
+	/// <summary>
+	/// Finds <i>f</i> in startup scripts. If not found, adds to startup scripts.
+	/// </summary>
+	public EISSResult EnsureIsInStartupScripts(FileNode f, bool printAdded, bool printDisabled, bool usePath = false) {
+		string itemPath = f.ItemPath;
+		string itemPathOrName = usePath ? itemPath : f.ItemPathOrName();
+		var ss = App.Model.UserSettings.startupScripts;
+		if (ss.NE()) {
+			ss = itemPathOrName;
+		} else {
+			if (_GetStartupScripts() is not { } csv) return EISSResult.Failed;
+			string name = f.Name, name2 = f.DisplayName;
+			if (csv.Rows.FirstOrDefault(a => a[0].AsSpan(a[0].Starts("//") ? 2 : 0) is var s && (s.Eqi(itemPath) || s.Eqi(name) || s.Eqi(name2))) is { } a) {
+				if (!a[0].Starts("//")) return EISSResult.FoundEnabled;
+				if (printDisabled) print.it($"<>Note: script \"{itemPathOrName}\" is not set to run at startup. In <+options Workspace>Options > Workspace > Startup scripts<> remove the // prefix.");
+				return EISSResult.FoundDisabled;
+			}
+			csv.AddRow(itemPathOrName);
+			ss = csv.ToString();
+		}
+		
+		//if Options is open...
+		if (KDialogWindow.GetSingle<DOptions>(out var dOptions)) {
+			DOptions.AaShow(DOptions.EPage.Workspace);
+			clipboard.text = itemPathOrName;
+			dialog.show(null, $"Please add this to Options > Workspace > Startup scripts.\nIt's now in the clipboard.\n\n{itemPathOrName}", owner: dOptions);
+			return EISSResult.Failed;
+		}
+		
+		App.Model.UserSettings.startupScripts = ss;
+		if (printAdded) print.it($"<>Info: script \"{itemPathOrName}\" has been added to <+options Workspace>Options > Workspace > Startup scripts<>. If unwanted, delete or disable the line (prefix //).");
+		return EISSResult.Added;
+	}
+	public enum EISSResult { FoundEnabled, FoundDisabled, Added, Failed }
 	
 	//Used mostly by SciCode, but owned by workspace because can go to any file.
 	internal readonly EditGoBack EditGoBack = new();

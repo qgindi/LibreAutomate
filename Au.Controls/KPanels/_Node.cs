@@ -355,7 +355,6 @@ public partial class KPanels {
 					foreach (TabItem v in tc.Items) v.Style = null;
 				}
 				tc.TabStripPlacement = ca;
-				foreach (TabItem v in tc.Items) v.MinWidth = tc.TabStripPlacement is Dock.Top or Dock.Bottom ? c_tabHeaderMinWidth : 0;
 				_VerticalTabHeader();
 			} else if (_leaf.caption != null) {
 				DockPanel.SetDock(_leaf.caption, ca);

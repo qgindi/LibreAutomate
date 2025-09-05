@@ -674,7 +674,7 @@ public static partial class print {
 	
 #pragma warning disable 1591 //no XML doc
 	/// <summary>
-	/// Interpolated string handler that adds <c>:print</c> format like <see cref="it(InterpolatedString)"/>.
+	/// Interpolated string handler that adds <c>:print</c> format. See <see cref="it(InterpolatedString)"/>.
 	/// </summary>
 	[InterpolatedStringHandler, EditorBrowsable(EditorBrowsableState.Never)]
 	public ref struct InterpolatedString {

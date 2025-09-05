@@ -7,5 +7,5 @@ outputPath %folders.Workspace%\..\Au.Editor;
 miscFlags 1;
 noRef *\Au.dll;
 pr ..\@Au\Au.cs;
-resource Themes\Generic.xaml /embedded;
+resource resources\Generic.xaml /embedded;
 /*/

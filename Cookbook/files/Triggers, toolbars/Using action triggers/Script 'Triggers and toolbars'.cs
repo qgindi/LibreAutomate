@@ -4,7 +4,7 @@
 /// Add your triggers near the example triggers. Delete or comment out unused examples.
 /// To add toolbars, use menu <b>TT > New toolbar<>.
 ///
-/// Triggers and toolbars are active only when the script is running. When the program creates the folder, it also sets to run the script at program startup (<b>Options > Workspace > Run scripts when workspace loaded<>). Need to restart it (click the <b>Run<> button) to apply changes after editing triggers or toolbars.
+/// Triggers and toolbars are active only when the script is running. When the program creates the folder, it also sets to run the script at program startup (<b>Options > Workspace > Startup scripts<>). Need to restart it (click the <b>Run<> button) to apply changes after editing triggers or toolbars.
 /// 
 /// How it works: When the script starts, it calls functions with attribute <.c>[Triggers]<> or <.c>[Toolbars]<>. They are in other files; they contain triggers and toolbars (you added them there). Then the script runs all the time, waiting for trigger/toolbar events (hotkey, button click, etc). On event it executes the trigger/button action (code that follows the <.c>=><>).
 /// 

@@ -68,9 +68,9 @@ public class wpfBuilder {
 			_lastAdded = panel = p;
 		}
 		
-		public virtual void BeforeAdd(WBAdd flags = 0) {
+		public virtual void BeforeAdd(bool childOfLast) {
 			if (ended) throw new InvalidOperationException("Cannot add after End()");
-			if (flags.Has(WBAdd.ChildOfLast) && _lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
+			if (childOfLast && _lastAdded == panel) throw new ArgumentException("Cannot add as child. The last element is panel.");
 		}
 		
 		public virtual void Add(FrameworkElement c) {
@@ -145,9 +145,9 @@ public class wpfBuilder {
 			_grid.RowDefinitions.Add(height.Row);
 		}
 		
-		public override void BeforeAdd(WBAdd flags = 0) {
-			base.BeforeAdd(flags);
-			if (flags.Has(WBAdd.ChildOfLast)) return;
+		public override void BeforeAdd(bool childOfLast) {
+			base.BeforeAdd(childOfLast);
+			if (childOfLast) return;
 			if (_row < 0 || _col >= _grid.ColumnDefinitions.Count) Row(0);
 			_isSpan = false;
 		}
@@ -212,7 +212,7 @@ public class wpfBuilder {
 		}
 		
 		public void Skip(int span = 1) {
-			BeforeAdd();
+			BeforeAdd(false);
 			_col += span;
 			_isSpan = true;
 		}
@@ -706,9 +706,9 @@ public class wpfBuilder {
 	
 	bool? _ModifyPadding => _opt_modifyPadding == false ? false : _IsThemed switch { _Themed.Wpf => null, _Themed.Other => _opt_modifyPadding == true, _ => true };
 	
-	void _Add(FrameworkElement e, object text, WBAdd flags, bool add) {
-		bool childOfLast = flags.Has(WBAdd.ChildOfLast);
-		if (!flags.Has(WBAdd.DontSetProperties)) {
+	void _Add(FrameworkElement e, object text, bool raw = false) {
+		bool childOfLast = _child; _child = false;
+		if (!raw) {
 			if (e is Control c) {
 				//rejected: modify padding etc through XAML. Not better than this.
 				//rejected: use _opt_modifyPadding only if font Segoe UI. Tested with several fonts.
@@ -782,19 +782,17 @@ public class wpfBuilder {
 		}
 		if (!(childOfLast || e is GridSplitter)) e.Margin = _opt_margin;
 		
-		if (add) {
-			_AddToParent(e, childOfLast);
-			if (_alsoAll != null) {
-				_alsoAllArgs ??= new WBAlsoAllArgs();
-				if (_p is _Grid g) {
-					var v = g.NextCell;
-					_alsoAllArgs.Column = v.column - 1;
-					_alsoAllArgs.Row = v.row;
-				} else {
-					_alsoAllArgs.Column = _alsoAllArgs.Row = -1;
-				}
-				_alsoAll(this, _alsoAllArgs);
+		_AddToParent(e, childOfLast);
+		if (_alsoAll != null) {
+			_alsoAllArgs ??= new WBAlsoAllArgs();
+			if (_p is _Grid g) {
+				var v = g.NextCell;
+				_alsoAllArgs.Column = v.column - 1;
+				_alsoAllArgs.Row = v.row;
+			} else {
+				_alsoAllArgs.Column = _alsoAllArgs.Row = -1;
 			}
+			_alsoAll(this, _alsoAllArgs);
 		}
 	}
 	
@@ -813,14 +811,36 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
-	/// Adds an existing element (control etc of any type).
+	/// Sets option for the next <c>Add</c> call to add the element as a child or content of the last added element (<see cref="Last"/>), which must be a <see cref="Decorator"/> (for example <see cref="C.Border"/> or <see cref="AdornerDecorator"/>) or <see cref="ContentControl"/> (for example <see cref="Button"/>). Also will not change the <c>Margin</c> property.
+	/// </summary>
+	/// <exception cref="NotSupportedException">The last added element is not of a supported type.</exception>
+	/// <remarks>
+	/// Also applies to functions that call <c>Add</c>, for example <c>AddButton</c>. Does not affect the obsolete hidden <c>Add</c> overloads with parameter <i>flags</i>.
+	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// b.R.Add<Border>().Border(Brushes.Green).Child().Add(out TextBlock t1, "Text").Margin("L3R3");
+	/// ]]></code>
+	/// </example>
+	public wpfBuilder Child() {
+		if (!(Last is ContentControl or Decorator)) throw new NotSupportedException($"Cannot add child to {Last.GetType().Name}.");
+		_child = true;
+		return this;
+	}
+	bool _child;
+	
+	/// <summary>
+	/// Adds an existing element.
 	/// </summary>
 	/// <param name="element"></param>
-	/// <param name="flags"></param>
-	/// <exception cref="NotSupportedException">The function does not support flag <i>childOfLast</i> for this element type.</exception>
-	public wpfBuilder Add(FrameworkElement element, WBAdd flags = 0) {
-		_p.BeforeAdd(flags);
-		_Add(element, null, flags, true);
+	/// <param name="raw">Don't change element properties, except margin. If <c>false</c> (default), works like other <c>Add</c> overloads: for some element types sets padding, alignment, properties specified in <see cref="wpfBuilder.Options"/>, etc.</param>
+	/// <seealso cref="And"/>
+	/// <seealso cref="Child"/>
+	/// <seealso cref="Options"/>
+	/// <seealso cref="AlsoAll"/>
+	public wpfBuilder Add(FrameworkElement element, bool raw = false) {
+		_p.BeforeAdd(_child);
+		_Add(element, null, raw);
 		return this;
 	}
 	
@@ -842,33 +862,29 @@ public class wpfBuilder {
 	/// <br/>• <see cref="RichTextBox"/> - calls <c>AppendText</c> (see also <see cref="LoadFile"/>).
 	/// <br/>• Other element types that have <c>Text</c> property.
 	/// </param>
-	/// <param name="flags"></param>
-	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> or flag <c>ChildOfLast</c> for this element type.</exception>
-	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0) where T : FrameworkElement, new() {
-		_p.BeforeAdd(flags);
+	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> for this element type.</exception>
+	/// <seealso cref="And"/>
+	/// <seealso cref="Child"/>
+	/// <seealso cref="Options"/>
+	/// <seealso cref="AlsoAll"/>
+	public wpfBuilder Add<T>(out T variable, object text = null) where T : FrameworkElement, new() {
+		_p.BeforeAdd(_child);
 		variable = new T();
-		_Add(variable, text, flags, true);
+		_Add(variable, text);
 		return this;
 	}
-	
-	/// <summary>
-	/// Creates and adds element of type <i>T</i> (control etc of any type).
-	/// This overload just calls <see cref="Add{T}(out T, object, WBAdd)"/> with parameter <i>text</i> = <c>null</c>.
-	/// </summary>
-	/// <exception cref="NotSupportedException">The function does not support flag <c>ChildOfLast</c> for this element type.</exception>
-	[EditorBrowsable(EditorBrowsableState.Never)]
-	public wpfBuilder Add<T>(out T variable, WBAdd flags) where T : FrameworkElement, new()
-		=> Add(out variable, null, flags);
-	//Why this overload exists: with Add{T}(out T, object, WBAdd) it's easy to make a mistake - use WBAdd flags as the second argument. Roslyn shows WBAdd completions for the second parameter.
 	
 	/// <summary>
 	/// Creates and adds element of type <i>T</i> (any type). This overload can be used when don't need element's variable.
 	/// </summary>
 	/// <param name="text">Text, header or other content. More info - see other overload.</param>
-	/// <param name="flags"></param>
-	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> or flag <c>ChildOfLast</c> for this element type.</exception>
-	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new()
-		=> Add(out T _, text, flags);
+	/// <exception cref="NotSupportedException">The function does not support non-<c>null</c> <i>text</i> for this element type.</exception>
+	/// <seealso cref="And"/>
+	/// <seealso cref="Child"/>
+	/// <seealso cref="Options"/>
+	/// <seealso cref="AlsoAll"/>
+	public wpfBuilder Add<T>(object text = null) where T : FrameworkElement, new()
+		=> Add(out T _, text);
 	
 	/// <summary>
 	/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
@@ -882,9 +898,10 @@ public class wpfBuilder {
 	/// Finally calls <see cref="LabeledBy"/>; it sets <see cref="Label.Target"/>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/> and applies the <i>bindLabelVisibility</i> option (see <see cref="Options"/>).
 	/// </remarks>
 	public wpfBuilder Add<T>(object label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new() {
+		if (_child) throw new InvalidOperationException();
 		Add(out Label var1, label);
 		if (row2 != null) Row(row2.Value);
-		Add(out variable, text); //note: no flags
+		Add(out variable, text);
 		return this.LabeledBy(var1);
 	}
 	
@@ -893,33 +910,54 @@ public class wpfBuilder {
 	/// </summary>
 	/// <inheritdoc cref="Add{T}(object, out T, object, WBGridLength?)"/>
 	public wpfBuilder Add(object label, FrameworkElement element, WBGridLength? row2 = null) {
+		if (_child) throw new InvalidOperationException();
 		Add(out Label var1, label);
 		if (row2 != null) Row(row2.Value);
-		Add(element); //note: no flags
+		Add(element);
 		return this.LabeledBy(var1);
 	}
 	
 #if !DEBUG
-	/// <summary>
-	/// Adds 2 elements. One of type <c>T1</c>, other of type <c>T2</c>.
-	/// </summary>
-	/// <param name="var1">Variable of first element. More info - see other overload.</param>
-	/// <param name="text1">Text, header or other content of first element. More info - see other overload.</param>
-	/// <param name="var2">Variable of second element. More info - see other overload.</param>
-	/// <param name="text2">Text, header or other content of second element. More info - see other overload.</param>
-	/// <param name="row2">If not <c>null</c>, after adding first element calls <see cref="Row"/> with this argument.</param>
-	/// <exception cref="NotSupportedException">If the function does not support non-<c>null</c> <i>text</i> for element type <c>T1</c> or <c>T2</c>.</exception>
-	/// <remarks>
-	/// If <c>T1</c> is <c>Label</c>, sets <see cref="Label.Target"/>. If <c>T1</c> is <c>Label</c> or <c>TextBlock</c>, calls <see cref="System.Windows.Automation.AutomationProperties.SetLabeledBy"/>.
-	/// </remarks>
-	[EditorBrowsable(EditorBrowsableState.Never)] //obsolete. Too many overloads, confusing. Instead users can add label element separately and use <c>LabeledBy</c>.
-	[Obsolete]
+#pragma warning disable CS1591 //Missing XML comment for publicly visible type or member
+	//[Obsolete("Instead of flags use: b.Child().Add(...)")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public wpfBuilder Add(FrameworkElement element, WBAdd flags) {
+		_p.BeforeAdd(_child = flags.Has(WBAdd.ChildOfLast));
+		_Add(element, null, flags.Has(WBAdd.DontSetProperties));
+		return this;
+	}
+	
+	//[Obsolete("Instead of flags use: b.Child().Add(...)")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[OverloadResolutionPriority(-1)]
+	public wpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0) where T : FrameworkElement, new() {
+		_p.BeforeAdd(_child = flags.Has(WBAdd.ChildOfLast));
+		variable = new T();
+		_Add(variable, text, flags.Has(WBAdd.DontSetProperties));
+		return this;
+	}
+	
+	//[Obsolete("Instead of flags use: b.Child().Add(...)")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	//[OverloadResolutionPriority(-1)] //no, then woul choose Add<T>(out T variable, object text = null)
+	public wpfBuilder Add<T>(out T variable, WBAdd flags) where T : FrameworkElement, new()
+		=> Add(out variable, null, flags);
+	
+	//[Obsolete("Instead of flags use: b.Child().Add(...)")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[OverloadResolutionPriority(-1)]
+	public wpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new()
+		=> Add(out T _, text, flags);
+	
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[Obsolete] //Too many overloads, confusing. Instead can use Last2 or LabeledBy.
 	public wpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
 		Add(out var1, text1);
 		if (row2 != null) Row(row2.Value);
 		Add(out var2, text2); //note: no flags
 		return this.LabeledBy(var1);
 	}
+#pragma warning restore CS1591
 #endif
 	
 	/// <summary>
@@ -1489,7 +1527,7 @@ public class wpfBuilder {
 	/// <example>
 	/// <code><![CDATA[
 	/// b.R.Add<Label>("Example1").Border(Brushes.BlueViolet, 1, new(5)).Brush(Brushes.Cornsilk, Brushes.Green);
-	/// b.R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", WBAdd.ChildOfLast);
+	/// b.R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Child().Add<Label>("Example2");
 	/// ]]></code>
 	/// </example>
 	public wpfBuilder Border(Brush color = null, double thickness = 1d, Thickness? padding = null, double? cornerRadius = null, Thickness? thickness2 = null) {
@@ -1798,7 +1836,7 @@ public class wpfBuilder {
 	/// <exception cref="NotSupportedException">The last added element isn't <see cref="TextBox"/>, <see cref="PasswordBox"/> or editable <see cref="ComboBox"/> control.</exception>
 	/// <example>
 	/// <code><![CDATA[
-	/// b.R.Add<AdornerDecorator>().Add(out TextBox text1, WBAdd.ChildOfLast).Watermark("Water");
+	/// b.R.Add<AdornerDecorator>().Child().Add(out TextBox text1).Watermark("Water");
 	/// ]]></code>
 	/// More examples in Cookbook.
 	/// </example>
@@ -2415,7 +2453,7 @@ public class wpfBuilder {
 	/// <param name="stretchDirection">Sets <see cref="Image.StretchDirection"/>.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <see cref="C.Image"/>.</exception>
 	/// <remarks>
-	/// To load vector images from XAML, don't use <see cref="C.Image"/> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElement"/>, and add it with <see cref="Add(FrameworkElement, WBAdd)"/>.
+	/// To load vector images from XAML, don't use <see cref="C.Image"/> control and this function. Instead create control from XAML, for example with <see cref="ImageUtil.LoadWpfImageElement"/>, and add it with <see cref="Add(FrameworkElement, bool)"/>.
 	/// </remarks>
 	/// <seealso cref="icon.ToWpfImage"/>
 	/// <seealso cref="ImageUtil"/>
@@ -2517,7 +2555,7 @@ public class wpfBuilder {
 	#region nested panel
 	
 	wpfBuilder _Start(_PanelBase p, bool childOfLast) {
-		_p.BeforeAdd(childOfLast ? WBAdd.ChildOfLast : 0);
+		_p.BeforeAdd(childOfLast);
 		_AddToParent(p.panel, childOfLast);
 		_p = p;
 		return this;
@@ -2535,7 +2573,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
-	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
+	/// <param name="childOfLast">Add as a child or content of the last added element (<see cref="Last"/>), which must be a <see cref="Decorator"/> (for example <see cref="C.Border"/> or <see cref="AdornerDecorator"/>) or <see cref="ContentControl"/> (for example <see cref="Button"/>).</param>
 	/// <remarks>
 	/// How <see cref="Last"/> changes: after calling this function it is the grid (<see cref="Panel"/>); after adding an element it is the element; finally, after calling <see cref="End"/> it is the grid if <i>childOfLast</i> <c>false</c>, else its parent. The same with all <c>StartX</c> functions.
 	/// </remarks>
@@ -2572,7 +2610,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
-	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
+	/// <param name="childOfLast"><inheritdoc cref="StartGrid(bool)" path="/param[@name='childOfLast']/node()"/></param>
 	/// <remarks>
 	/// For each added control call <see cref="XY"/> or use indexer like <c>[x, y]</c> or <c>[x, y, width, height]</c>.
 	/// </remarks>
@@ -2595,7 +2633,7 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
-	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
+	/// <param name="childOfLast"><inheritdoc cref="StartGrid(bool)" path="/param[@name='childOfLast']/node()"/></param>
 	/// <remarks>
 	/// For added elements call <see cref="Dock"/>, maybe except for the last element that fills remaining space.
 	/// </remarks>
@@ -2619,7 +2657,7 @@ public class wpfBuilder {
 	/// Adds <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="vertical"></param>
-	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
+	/// <param name="childOfLast"><inheritdoc cref="StartGrid(bool)" path="/param[@name='childOfLast']/node()"/></param>
 	public wpfBuilder StartStack(bool vertical = false, bool childOfLast = false)
 		=> _Start(new _StackPanel(this, vertical), childOfLast);
 	
@@ -2641,7 +2679,7 @@ public class wpfBuilder {
 	/// Adds panel of any type. It will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 	/// </summary>
 	/// <param name="panel">New panel of any type (<see cref="Grid"/>, <see cref="WrapPanel"/>, etc). For <see cref="Grid"/> and <see cref="Canvas"/> this function sets some panel properties to make everything work like with other <c>StartX</c> functions.</param>
-	/// <param name="childOfLast"><inheritdoc cref="WBAdd.ChildOfLast" path="/summary/node()"/>.</param>
+	/// <param name="childOfLast"><inheritdoc cref="StartGrid(bool)" path="/param[@name='childOfLast']/node()"/></param>
 	public wpfBuilder StartPanel(Panel panel, bool childOfLast = false)
 		=> _Start(_StartPanel(panel), childOfLast);
 	

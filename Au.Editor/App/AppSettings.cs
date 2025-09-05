@@ -10,8 +10,11 @@ record AppSettings : JSettings {
 	//	NOTE: Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
 	//	Speed: first time 80 ms. Mostly to load/jit/etc dlls used by JsonSerializer. Later fast regardless of data size.
 	
+	public static JsonSerializerOptions SerializerOptions2 { get; } = new(JSettings.SerializerOptions) { PreferredObjectCreationHandling = JsonObjectCreationHandling.Populate, IgnoreReadOnlyFields = false };
+	//note: don't modify JSettings.SerializerOptions. Would be unexpected for editorExtension scripts.
+	
 	public static void Load() { //in TP thread
-		var r = Load<AppSettings>(DirBS + "Settings.json");
+		var r = Load<AppSettings>(DirBS + "Settings.json", jsOpt: SerializerOptions2);
 		r._Loaded();
 		App.Settings = r;
 	}
@@ -37,21 +40,12 @@ record AppSettings : JSettings {
 		(font_recipeText ??= new()).Normalize("Calibri", 10.5);
 		(font_recipeCode ??= new()).Normalize("Consolas", 9);
 		(font_find ??= new()).Normalize("Consolas", 9);
-		debug ??= new();
-		delm ??= new();
-		recorder ??= new();
-		if (ci_complParen is < 0 or > 2) ci_complParen = 0;
-		if (ci_enterWith is < 0 or > 2) ci_enterWith = 0;
 	}
 	
 	static ref string _NE(ref string s) {
 		if (s == "") s = null;
 		return ref s;
 	}
-	
-	//static void _Def(ref string s, string def) {
-	//	if (s.NE()) s = def;
-	//}
 	
 #if IDE_LA
 	public static readonly string DirBS = folders.ThisAppDocuments + @".settings_\";
@@ -103,7 +97,7 @@ record AppSettings : JSettings {
 			try {
 				var file = DirBS + "Settings.json";
 				if (filesystem.exists(file)) {
-					session_main = JsonSerializer.Deserialize<session_t>(filesystem.loadBytes(file), JSettings.SerializerOptions);
+					session_main = JsonSerializer.Deserialize<session_t>(filesystem.loadBytes(file), SerializerOptions2);
 				}
 				user = null;
 			}
@@ -157,7 +151,7 @@ record AppSettings : JSettings {
 	//public int templ_flags;
 	
 	//Options > Other
-	public string internetSearchUrl = "https://www.google.com/search?q=";
+	public string internetSearchUrl { get => field ?? "https://www.google.com/search?q="; set { field = value.NullIfEmpty_(); } }
 	public bool localDocumentation;
 	public bool? comp_printCompiled = false;
 	
@@ -167,17 +161,13 @@ record AppSettings : JSettings {
 	
 	//code info, autocorrection, formatting
 	public bool ci_complGroup = true, ci_enterBeforeParen = true, ci_enterBeforeSemicolon = true, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true, ci_semicolon = true;
-	public int ci_complParen; //0 spacebar, 1 always, 2 never
-	public int ci_enterWith;
+	public int ci_complParen { get => field; set { field = value.EnsureValid_(0, 2); } }
+	public int ci_enterWith { get => field; set { field = value.EnsureValid_(0, 2); } }
 	public int ci_rename;
 	
 	//AI
-	public string ai_searchModel, ai_chatModel, ai_iconsModel;
-	public Dictionary<string, string> ai_ak = new(StringComparer.OrdinalIgnoreCase) {
-		{ "Mistral", "%API_MISTRAL%" },
-		{ "OpenAI", "%API_OPENAI%" },
-		{ "Gemini", "%API_GOOGLE%" },
-	};
+	public string ai_modelDocSearch, ai_modelDocChat, ai_modelIconSearch, ai_modelIconImprove;
+	public readonly DictionaryI_<string> ai_ak = new();
 	
 	//panel Files
 	public bool files_multiSelect;
@@ -218,7 +208,7 @@ System.Threading.Tasks.TaskCanceledException
 		public string breakListT = c_defNotExc, breakListU = c_defNotExc;
 		public byte printEvents;
 	}
-	public debug_t debug;
+	public readonly debug_t debug = new();
 	
 	//settings common to various tools
 	public bool tools_pathUnexpand = true, tools_pathLnk;
@@ -249,7 +239,7 @@ System.Threading.Tasks.TaskCanceledException
 		public int xyIn;
 		public string speed = "10";
 	}
-	public recorder_t recorder;
+	public readonly recorder_t recorder = new();
 	
 	//Delm
 	public record delm_t {
@@ -258,7 +248,7 @@ System.Threading.Tasks.TaskCanceledException
 		public bool? def_UIA;
 		public int flags;
 	}
-	public delm_t delm;
+	public readonly delm_t delm = new();
 	
 	//DOcr
 	public Au.Tools.OcrEngineSettings ocr;

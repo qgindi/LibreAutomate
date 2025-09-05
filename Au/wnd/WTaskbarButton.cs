@@ -109,7 +109,6 @@ public unsafe class WTaskbarButton {
 /// <summary>
 /// Used by <see cref="WTaskbarButton.SetProgressState"/>.
 /// </summary>
-[NoDoc]
 public enum WTBProgressState {
 #pragma warning disable 1591 //XML doc
 	NoProgress = 0,

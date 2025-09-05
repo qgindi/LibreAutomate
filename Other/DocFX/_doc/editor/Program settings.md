@@ -35,7 +35,7 @@ Every day connect to `libreautomate.com` to get program version info. If a new v
 ### Workspace
 These settings are workspace-specific. Security: the scripts will not run on other computers, unless the user settings file copied there too.
 
-#### Run scripts when workspace loaded
+#### Startup scripts
 List of scripts to run when this program started and/or loaded this workspace. 
 The format is CSV. A delay can be specified in second column. Example:
 

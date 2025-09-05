@@ -607,34 +607,3 @@ class WindowDisabler {
 		}
 	}
 }
-
-/// <summary>
-/// Calls <see cref="ProtectedData"/> <c>Protect</c> or <c>Unprotect</c> with LA's entropy.
-/// </summary>
-static class EdProtectedData {
-	static byte[] _entropy = [212, 71, 168, 115, 1, 83, 144, 90];
-	
-	/// <returns>Protected data as Base64 string. On exception prints warning and returns <c>null</c>.</returns>
-	public static string Protect(string s) {
-		try { return Convert.ToBase64String(ProtectedData.Protect(s.ToUTF8(), _entropy, DataProtectionScope.CurrentUser)); }
-		catch (Exception ex) { print.warning(ex); return null; }
-	}
-	
-	/// <returns>Unprotected data as string. On exception prints warning and returns <c>null</c>.</returns>
-	public static string Unprotect(string s) {
-		try { return ProtectedData.Unprotect(Convert.FromBase64String(s), _entropy, DataProtectionScope.CurrentUser).ToStringUTF8(); }
-		catch (Exception ex) { print.warning(ex); return null; }
-	}
-}
-
-//class TempEnvVar : IDisposable {
-//	string[] _vars;
-//	public TempEnvVar(params (string name, string value)[] vars) {
-//		_vars = vars.Select(o => o.name).ToArray();
-//		foreach (var v in vars) Environment.SetEnvironmentVariable(v.name, v.value);
-//	}
-
-//	public void Dispose() {
-//		foreach (var v in _vars) Environment.SetEnvironmentVariable(v, null);
-//	}
-//}

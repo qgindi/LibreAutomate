@@ -130,7 +130,7 @@ public static class KExtWpf {
 	public static Border xAddInBorder<T>(this wpfBuilder b, out T var, string margin = null, Thickness? thickness = null) where T : FrameworkElement, new() {
 		b.Add(out Border c).Border(thickness2: thickness);
 		if (margin != null) b.Margin(margin);
-		b.Add(out var, WBAdd.ChildOfLast);
+		b.Child().Add(out var);
 		return c;
 	}
 	
@@ -140,7 +140,7 @@ public static class KExtWpf {
 	public static Border xAddInBorder(this wpfBuilder b, FrameworkElement e, string margin = null, Thickness? thickness = null) {
 		b.Add(out Border c).Border(thickness2: thickness);
 		if (margin != null) b.Margin(margin);
-		b.Add(e, WBAdd.ChildOfLast);
+		b.Child().Add(e);
 		return c;
 	}
 	
@@ -338,12 +338,8 @@ public static class KExtWpf {
 	/// Adds <b>TextBlock</b> with green background, wrapping and some padding.
 	/// </summary>
 	public static wpfBuilder xAddInfoBlockT(this wpfBuilder t, out TextBlock r, string text = null, bool scrollViewer = false) {
-		WBAdd flags = 0;
-		if (scrollViewer) {
-			t.Add(new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
-			flags = WBAdd.ChildOfLast;
-		}
-		return t.Add(out r, text, flags).Wrap().Brush(WpfUtil_.IsHighContrastDark ? 0x2E4D00 : 0xf8fff0).Padding(2, 1, 2, 2);
+		if (scrollViewer) t.Add(new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto }).Child();
+		return t.Add(out r, text).Wrap().Brush(WpfUtil_.IsHighContrastDark ? 0x2E4D00 : 0xf8fff0).Padding(2, 1, 2, 2);
 	}
 	
 	/// <summary>

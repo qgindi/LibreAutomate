@@ -36,8 +36,8 @@ public class KDialogWindow : Window {
 	/// <summary>
 	/// If a window of type T already exists (created with <see cref="ShowSingle"/>), gets it and returns true, else returns false.
 	/// </summary>
-	protected static bool GetSingle<T>(out T window) where T : KDialogWindow
-		=> null != (window = s_single.FirstOrDefault(static o => o is T) as T);
+	public static bool GetSingle<T>(out T window) where T : KDialogWindow
+		=> null != (window = s_single.OfType<T>().FirstOrDefault());
 	
 	/// <summary>
 	/// Sets <b>Title</b>, <b>Owner</b>, <b>ShowInTaskbar</b>.

@@ -28,7 +28,7 @@ partial class TriggersAndToolbars {
 		DPwnd windowTriggerWindowPage = null;
 		
 		b.Row(-1).Add(out ContentControl ccPages).Margin("0");
-		b.Add(out UserControl firstPage, WBAdd.ChildOfLast).StartGrid(childOfLast: true);
+		b.Child().Add(out UserControl firstPage).StartGrid(childOfLast: true);
 		for (int i = 0; i < 4; i++) pages[i][0] = firstPage;
 		
 		TriggersType tType = selectTriggersType != 0 ? selectTriggersType : _CodeAnalysis.GetTriggersType();
@@ -278,7 +278,7 @@ To set trigger scope window can be used {App.Settings.hotkeys.tool_quick}.
 		
 		public _AutotextTriggerPage() {
 			var b = new wpfBuilder(this).Columns(180, -1);
-			b.R.Add<System.Windows.Documents.AdornerDecorator>().Add(out _tText, WBAdd.ChildOfLast).Watermark("Trigger text");
+			b.R.Add<System.Windows.Documents.AdornerDecorator>().Child().Add(out _tText).Watermark("Trigger text");
 			
 			b.R.Add(out _useFlags).Span(1).Items("Use DefaultFlags|Use flags parameter|Set DefaultFlags");
 			b.R.StartStack(out KGroupBox gFlags, EdWpf.TextAndHelp<TAFlags>("<b>Flags</b>"), true);

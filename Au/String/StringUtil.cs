@@ -179,6 +179,37 @@ public static class StringUtil {
 	}
 	
 	/// <summary>
+	/// Converts flags to string where flags are mapped to characters.
+	/// </summary>
+	/// <remarks>
+	/// Don't use ASCII digits for flags, because <see cref="FlagsFromLetters"/> interprets a number-string as the flags value. Any other characters are OK, not only letters.
+	/// </remarks>
+	public static string FlagsToLetters(int flags, params (int flag, char c)[] map) {
+		Span<char> a = stackalloc char[32];
+		int len = 0;
+		foreach (var (f, c) in map) {
+			if (0 != (flags & f)) a[len++] = c;
+		}
+		return a[..len].ToString();
+	}
+	
+	/// <summary>
+	/// Parses flags from string where flags are mapped to characters. See <see cref="FlagsToLetters"/>
+	/// </summary>
+	/// <remarks>
+	/// If the string is a number, interprets it as the flags value. Don't use ASCII digits for flags. Any other characters are OK, not only letters.
+	/// </remarks>
+	public static int FlagsFromLetters(string s, params (int flag, char c)[] map) {
+		int r = 0;
+		if (!s.NE() && !s.ToInt(out r)) {
+			foreach (var (f, c) in map) {
+				if (s.Contains(c)) r |= f;
+			}
+		}
+		return r;
+	}
+	
+	/// <summary>
 	/// Calculates the Levenshtein distance between two strings, which tells how much they are different.
 	/// </summary>
 	/// <remarks>

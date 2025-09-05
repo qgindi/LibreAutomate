@@ -10,7 +10,7 @@ using EStyle = CiStyling.EStyle;
 using System.Windows.Input;
 
 class DOptions : KDialogWindow {
-	public enum EPage { Program, Workspace, FontAndColors, CodeEditor, Templates, Hotkeys, Other, OS }
+	public enum EPage { Program, Workspace, FontAndColors, CodeEditor, Templates, Hotkeys, AI, Other, OS }
 	
 	public static void AaShow(EPage? page = null) {
 		var d = ShowSingle(() => new DOptions());
@@ -96,12 +96,12 @@ class DOptions : KDialogWindow {
 	}
 	
 	void _Workspace() {
-		var b = _Page("Workspace").Columns(-1, 20, -1);
+		var b = _Page("Workspace").Columns(-1.5, 20, -1);
 		b.R.xAddInfoBlockT("Settings of current workspace");
 		
 		//left column
 		b.R.StartStack(vertical: true);
-		b.Add("Run scripts when workspace loaded", out TextBox startupScripts, App.Model.UserSettings.startupScripts).Multiline(110, TextWrapping.NoWrap)
+		b.Add("Startup scripts", out TextBox startupScripts, App.Model.UserSettings.startupScripts).Multiline(110, TextWrapping.NoWrap)
 			.Tooltip("Example:\nScript1.cs\n\\Folder\\Script2.cs\n//Disabled.cs\nDelay1.cs, 3s\nDelay2.cs, 300ms\n\"Comma, comma.cs\"")
 			.Validation(_startupScripts_Validation);
 		
@@ -128,7 +128,7 @@ Example:
 			App.Model.UserSettings.startupScripts = startupScripts.Text.Trim().NullIfEmpty_();
 			App.Model.UserSettings.gitBackup = cBackup.IsChecked;
 			
-			string skipOld = App.Model.WSSett.syncfs_skip, skipNew = tSyncFsSkip.Text.NullIfEmpty_();
+			string skipOld = App.Model.WSSett.syncfs_skip, skipNew = tSyncFsSkip.TextOrNull();
 			App.Model.WSSett.syncfs_skip = skipNew;
 			if (skipNew != skipOld) App.Model.SyncWithFilesystem_();
 		};
@@ -639,82 +639,124 @@ Example:
 	}
 	
 	void _AI() {
-		//#if IDE_LA
 		var b = _Page("AI", WBPanelType.VerticalStack);
-		var sett = AI.AiSettings.Instance;
 		
-		b.xAddGroupSeparator("AI providers");
-		b.StartGrid().Columns(100, 0, -1);
-		b.R.Add(out ComboBox provider)
-			.Add("API key", out KPasswordBox apiKey).Tooltip("API key (will be saved encrypted) or environment variable (if the (X) toggled)").Disabled();
+		b.xAddGroupSeparator("API keys");
+		b.StartGrid().Columns(100, -1);
+		b.R.Add(out ComboBox api)
+			.Add(out KPasswordBox apiKey).Tooltip("API key or environment variable (if (X) checked).\nAPI keys are saved encrypted and can't be decrypted on other computers/accounts.").Hidden();
 		b.End();
 		
-		b.xAddGroupSeparator("AI models");
-		b.StartGrid().Columns(0, 150, 20, 0, 150, -1);
-		b.R.Add("Search", out ComboBox searchApi).Tooltip("AI embedding API configuration for documentation search and chat");
-		b.Skip(1).Add("Icons", out ComboBox iconsApi).Tooltip("AI embedding API configuration for icon search in the Icons tool").Span(1);
-		//b.R.StartGrid<KGroupBox>("Search API settings");
+		b.StartGrid().Columns(0, -1, 10, 0, -1);
+		b.xAddGroupSeparator("Models for documentation search and chat");
+		b.R.Add("Search", out ComboBox modelDocSearch).Tooltip("AI embedding model for documentation search and chat RAG");
+		b.Skip().Add("Chat", out ComboBox modelDocChat).Tooltip("AI chat model");
+		//b.R.StartGrid<KGroupBox>("Chat model settings");
 		//b.End();
-		b.R.Add("Chat", out ComboBox chatApi).Tooltip("AI chat API configuration").Span(1);
-		//b.R.StartGrid<KGroupBox>("Chat API settings");
-		//b.End();
-		b.R.AddButton("Print all configurations", _ => { print.it(sett); }).Span(2);
+		
+		b.xAddGroupSeparator("Models for icon search in the Icons tool");
+		b.R.Add("Search", out ComboBox modelIconSearch).Tooltip("AI embedding model for icon search");
+		b.Skip().Add("Improve", out ComboBox modelIconImprove).Tooltip("AI chat model for filtering/reranking AI search results");
+		
+		b.AddSeparator(false);
+		b.R.AddButton("...", _ => _MoreMenu()).Align(HorizontalAlignment.Left).Span(1);
+		
 		b.End();
 		b.End();
 		
 		b.Loaded += () => {
-			var provNames = sett.embedding.Select(o => o.provider).Distinct(StringComparer.OrdinalIgnoreCase).ToArray(); //TODO: concat from chat models
-			var provKeys = new (bool once, (string key, bool ev) now, (string key, bool ev) old)[provNames.Length];
-			int currentProvider = -1;
-			provider.ItemsSource = provNames;
-			provider.SelectionChanged += (_, e) => {
-				if (currentProvider >= 0) provKeys[currentProvider].now = (apiKey.Text.NullIfEmpty_(), apiKey.IsEnvVar);
-				currentProvider = provider.SelectedIndex;
-				apiKey.IsEnabled = currentProvider >= 0;
-				if (currentProvider < 0) return;
-				if (!provKeys[currentProvider].once) {
-					provKeys[currentProvider].once = true;
-					App.Settings.ai_ak.TryGetValue((string)provider.SelectedItem, out var key);
+			var apiNames = AI.AiModel.Models.Select(o => o.api).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+			var apiKeys = new (bool once, (string key, bool ev) now, (string key, bool ev) old)[apiNames.Length];
+			int currentApi = -1;
+			api.ItemsSource = apiNames;
+			api.SelectionChanged += (_, e) => {
+				if (currentApi >= 0) apiKeys[currentApi].now = (apiKey.Text.NullIfEmpty_(), apiKey.IsEnvVar);
+				currentApi = api.SelectedIndex;
+				apiKey.Visibility = currentApi >= 0 ? Visibility.Visible : Visibility.Hidden;
+				if (currentApi < 0) return;
+				if (!apiKeys[currentApi].once) {
+					apiKeys[currentApi].once = true;
+					App.Settings.ai_ak.TryGetValue((string)api.SelectedItem, out var key);
 					bool ev = false;
 					if (key.NE()) key = null;
 					else {
 						ev = key is ['%', _, .., '%'];
 						key = ev ? key[1..^1] : EdProtectedData.Unprotect(key);
 					}
-					provKeys[currentProvider].now = provKeys[currentProvider].old = (key, ev);
+					apiKeys[currentApi].now = apiKeys[currentApi].old = (key, ev);
 				}
-				(apiKey.Text, apiKey.IsEnvVar) = provKeys[currentProvider].now;
+				(apiKey.Text, apiKey.IsEnvVar) = apiKeys[currentApi].now;
 			};
-			//provider.SelectedIndex = 0; //no
+			//api.SelectedIndex = 0; //no
 			b.Validation(apiKey, _ => {
-				if (currentProvider >= 0) provKeys[currentProvider].now = (apiKey.Text.NullIfEmpty_(), apiKey.IsEnvVar);
-				if (provKeys.Any(o => o.now.ev && o.now.key.Lenn() >= 32)) return "Variable name too long. Uncheck (X) if it's not a variable."; //probably checked the toggle button to see the key and forgot to uncheck
+				if (currentApi >= 0) apiKeys[currentApi].now = (apiKey.Text.NullIfEmpty_(), apiKey.IsEnvVar);
+				if (apiKeys.Any(o => o.now.ev && o.now.key.Lenn() >= 32)) return "Variable name too long. Uncheck (X) if it's not a variable."; //probably checked the toggle button to see the key and forgot to uncheck
 				return null;
 			});
 			
-			_InitApiCombo(searchApi, false);
-			_InitApiCombo(iconsApi, true);
-			void _InitApiCombo(ComboBox c, bool icons) {
-				c.ItemsSource = sett.embedding.Where(o => o.name.Ends(" icons") == icons).Select(o => o.name);
-				c.SelectedItem = icons ? App.Settings.ai_iconsModel : App.Settings.ai_searchModel;
+			_InitModelCombo(modelDocSearch, o => o is AI.AiEmbeddingModel { isCompact: false }, App.Settings.ai_modelDocSearch);
+			_InitModelCombo(modelDocChat, o => o is AI.AiChatModel, App.Settings.ai_modelDocChat);
+			_InitModelCombo(modelIconSearch, o => o is AI.AiEmbeddingModel { isCompact: true }, App.Settings.ai_modelIconSearch);
+			_InitModelCombo(modelIconImprove, o => o is AI.AiChatModel, App.Settings.ai_modelIconImprove, true);
+			void _InitModelCombo(ComboBox c, Func<AI.AiModel, bool> predicate, string select, bool optional = false) {
+				var e = AI.AiModel.Models.Where(predicate).Select(o => o.DisplayName);
+				if (optional) e = e.Prepend("none");
+				c.ItemsSource = e.ToArray();
+				c.SelectedItem = select;
 			}
-			chatApi.SelectedItem = App.Settings.ai_chatModel;
 			
 			_b.OkApply += e => {
-				foreach (var (i, v) in provKeys.Index()) {
+				foreach (var (i, v) in apiKeys.Index()) {
 					if (v.once && v.now != v.old) {
-						provKeys[i].old = v.now;
+						apiKeys[i].old = v.now;
 						var key = v.now.key == null ? null : v.now.ev ? $"%{v.now.key}%" : EdProtectedData.Protect(v.now.key);
-						App.Settings.ai_ak[provNames[i]] = key;
+						App.Settings.ai_ak[apiNames[i]] = key;
 					}
 				}
 				
-				App.Settings.ai_searchModel = searchApi.SelectedItem as string;
-				App.Settings.ai_iconsModel = iconsApi.SelectedItem as string;
-				App.Settings.ai_chatModel = chatApi.SelectedItem as string;
+				App.Settings.ai_modelDocSearch = _GetModelCombo(modelDocSearch);
+				App.Settings.ai_modelDocChat = _GetModelCombo(modelDocChat);
+				App.Settings.ai_modelIconSearch = _GetModelCombo(modelIconSearch);
+				App.Settings.ai_modelIconImprove = _GetModelCombo(modelIconImprove);
+				string _GetModelCombo(ComboBox c) => c.SelectedItem is string s && s != "none" ? s : null;
 			};
 		};
-		//#endif
+		
+		void _MoreMenu() {
+			var m = new popupMenu();
+			m["Print all model configurations"] = o => { print.it(AI.AiModel.Models); };
+			m["How to add new model"] = o => { _AddCustomModel(); };
+			var emFolder = folders.ThisAppDataCommon + $@"AI\Embedding";
+			if (filesystem.exists(emFolder).Directory) m["Open embedding vectors folder"] = o => { var s = run.itSafe(emFolder); };
+			
+			m.Show(owner: this);
+		}
+		
+		void _AddCustomModel() {
+			if (modelDocChat.SelectedIndex < 0 && modelDocChat.Items.Count > 0) modelDocChat.SelectedIndex = 0;
+			if (!(modelDocChat.SelectedItem is string mdn && AI.AiModel.Models.FirstOrDefault(o => o is AI.AiChatModel && o.DisplayName == mdn) is AI.AiChatModel m)) return;
+			string code = $$"""
+/*/ role editorExtension; testInternal Au.Editor; r Au.Editor.dll; /*/
+using AI;
+var model1 = AiModel.GetModel<{{m.GetType()}}>() with { model = "model-name" };
+AiModel.Models.Add(model1);
+
+""";
+			StringBuilder s = new("<>To add an AI model configuration, you need a script with role editorExtension (");
+			foreach (var v in App.Model.GetStartupScriptsExceptDisabled()) if (new MetaCommentsParser(v.f).role == "editorExtension") s.Append(v.f.SciLink()).Append(", ");
+			s.Append($$"""
+<+newStartupScriptEditorExtension {{code.Replace('>', '\x1')}}>create<>). Add the script to <+options Workspace>startup scripts<>.
+It's possible to create a completely new AI model configuration (any AI API, any parameters). How - please ask in the forum.
+Or clone an existing model configuration and change some properties. Example:
+<code>{{code}}</code>
+""");
+			print.it(s);
+			Panels.Output.Scintilla.AaTags.AddLinkTag("+newStartupScriptEditorExtension", code => {
+				code = code.Replace('\x1', '>');
+				App.Model.NewItem("Script.cs", name: "init.cs", beginRenaming: true, text: new(true, code));
+				//note: can't auto-add to startup scripts now, because the final script name is unknown
+			});
+		}
 	}
 	
 	void _Other() {
@@ -732,7 +774,7 @@ Example:
 					App.Settings.localDocumentation ^= true;
 					DocsHttpServer.StartOrSwitch();
 				}
-				App.Settings.internetSearchUrl = internetSearchUrl.TextOrNull() ?? "https://www.google.com/search?q=";
+				App.Settings.internetSearchUrl = internetSearchUrl.TextOrNull();
 				App.Settings.minimalSDK = minimalSdk.IsChecked;
 				App.Settings.comp_printCompiled = printCompiled.IsChecked;
 			};

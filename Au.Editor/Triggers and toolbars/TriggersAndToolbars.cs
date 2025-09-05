@@ -55,26 +55,10 @@ partial class TriggersAndToolbars {
 			}
 			
 			//set run at startup
-			const string c_script = @"\@Triggers and toolbars\Triggers and toolbars.cs";
-			bool startupFound = false;
-			var ss = App.Model.UserSettings.startupScripts;
-			if (ss.NE()) {
-				ss = c_script;
-			} else {
-				try {
-					var x = csvTable.parse(ss);
-					var rx = @"(?i)^(?://)?(?:\\@Triggers and toolbars\\)?Triggers and toolbars(?:\.cs)?$"; //path or name; with or without .cs; can be //disabled
-					startupFound = x.Rows.Exists(a => a[0].RxIsMatch(rx));
-					if (!startupFound) {
-						x.AddRow(c_script);
-						ss = x.ToString();
-					}
+			if (_GetFile(@"Triggers and toolbars.cs", create: false) is { } f) {
+				if (App.Model.EnsureIsInStartupScripts(f, printAdded: false, printDisabled: true, usePath: true) is FilesModel.EISSResult.Added) {
+					print.it($"<>Info: script \"{f.Name}\" has been added to <+options Workspace>Options > Workspace > Startup scripts<>. If unwanted, disable the line (prefix //)."); //disable, not delete, else next time would auto-add again
 				}
-				catch (FormatException) { startupFound = true; }
-			}
-			if (!startupFound) {
-				App.Model.UserSettings.startupScripts = ss;
-				print.it("Info: script \"Triggers and toolbars\" will run at program startup. If you want to disable it, add prefix // in Options > Workspace > Run scripts...");
 			}
 		}
 		return fProject;
@@ -108,7 +92,7 @@ partial class TriggersAndToolbars {
 		App.TrayIcon.Disabled = dis;
 		if (App.Commands is { } ac) ac[nameof(Menus.TT.Disable_triggers)].Checked = dis;
 	}
-
+	
 	//rejected
 	//public static void ShowActiveTriggers() {
 	//	var w = wnd.findFast(cn: "Au.Triggers.Hooks", messageOnly: true);

@@ -21,7 +21,7 @@ public class KHotkeyControl : UserControl {
 		b.Options(margin: _forTrigger || _onlyMod ? new(0, 0, 10, 0) : new());
 		
 		if (!_onlyMod) {
-			b.R.Add<AdornerDecorator>().Add(out _tHotkey, flags: WBAdd.ChildOfLast).Readonly(caretVisible: true)
+			b.R.Add<AdornerDecorator>().Child().Add(out _tHotkey).Readonly(caretVisible: true)
 				.Watermark("Hotkey")
 				.Tooltip("Focus this field and press a key with any combination of Ctrl, Shift, Alt, Win");
 		}

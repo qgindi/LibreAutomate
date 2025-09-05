@@ -1052,6 +1052,8 @@ public static partial class filesystem {
 	}
 	
 	static bool _DeleteShell(string path, bool recycle, List<string> a = null) {
+		//TODO: sometimes LA crashes when deleting a file. The crash dump shows it may be related to COM. Try to call the shell API in other thread.
+		
 		if (a != null) path = string.Join("\0", a);
 		if (wildex.hasWildcardChars(path)) throw new ArgumentException("*? not supported.");
 		var x = new Api.SHFILEOPSTRUCT() { wFunc = Api.FO_DELETE };

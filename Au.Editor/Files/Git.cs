@@ -418,7 +418,7 @@ This tool modifies only the .git folder, not workspace files.
 			
 			b.R.xAddGroupSeparator("GitHub repository");
 			var url = _GetURL();
-			b.R.Add<AdornerDecorator>("URL", out _).Add(out tUrl, url, flags: WBAdd.ChildOfLast).Watermark("https://github.com/owner/repo")
+			b.R.Add<AdornerDecorator>("URL", out _).Child().Add(out tUrl, url).Watermark("https://github.com/owner/repo")
 				.Validation(o => !_ParseURL(tUrl.Text, out _, out _) ? (tUrl.Text.NE() ? "URL empty" : "URL must be like https://github.com/owner/repo") : null);
 			
 			b.R.xAddGroupSeparator("Git");

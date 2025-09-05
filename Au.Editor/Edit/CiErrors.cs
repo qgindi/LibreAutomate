@@ -121,17 +121,25 @@ class CiErrors {
 			
 			List<string> usings = _GetMissingUsings(amu);
 			if (usings != null) {
-				//remove some usings that are rarely used and cause errors
-				if (usings.Count > 1 && usings.Contains("System.Windows.Forms") && cd.code.FindWord("wpfBuilder") > 0) usings.Remove("System.Windows.Forms");
+				//uncheck some usings that are rarely used and cause errors
+				bool uncheckForms = usings.Count > 1 && usings.Any(o => o is "System.Windows" or "System.Windows.Controls" or "System.Windows.Controls.Primitives" or "System.Windows.Input");
+				bool uncheckDrawing = usings.Count > 1 && usings.Contains("System.Windows.Media");
+				if (pastingSilent && uncheckForms) usings.Remove("System.Windows.Forms");
+				if (pastingSilent && uncheckDrawing) usings.Remove("System.Drawing");
 				
 				doc.Dispatcher.InvokeAsync(() => { //this func is called from scintilla notification
 					if (!pastingSilent) {
 						var d = new CheckListDialog("Add missing using directives?");
-						d.Add(usings, true);
+						foreach (var u in usings) {
+							bool check = true;
+							if (uncheckForms && u is "System.Windows.Forms") check = false;
+							if (uncheckDrawing && u is "System.Drawing") check = false;
+							d.Add(u, check);
+						}
 						if (!d.ShowDialog(doc) || !d.ResultItems.Any()) return;
 						usings = d.ResultItems.ToList();
 					}
-					InsertCode.UsingDirective(string.Join(';', usings), true);
+					if (usings.Count > 0) InsertCode.UsingDirective(string.Join(';', usings), true);
 					if (!pastingSilent && usings.Count > 1) print.it("Info: multiple using directives have been added. If it causes 'ambiguous reference' errors, remove one of usings displayed in the error tooltip. If that does not work, undo and remove other using.");
 				});
 			}

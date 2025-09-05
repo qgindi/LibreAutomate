@@ -983,7 +983,6 @@ namespace Au.Types {
 	/// <summary>
 	/// Used with <see cref="WndUtil.RegisterWindowClass"/>.
 	/// </summary>
-	[NoDoc]
 	public class RWCEtc {
 #pragma warning disable 1591 //XML doc
 		public uint style;

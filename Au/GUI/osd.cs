@@ -171,6 +171,7 @@ namespace Au.Types {
 			switch (message) {
 			case Api.WM_NCDESTROY:
 				Api.PostMessage(default, 0, 0, 0); //stop waiting for a message. Never mind: not always need it.
+				Closed?.Invoke(this, EventArgs.Empty);
 				_w = default;
 				break;
 			case Api.WM_ERASEBKGND:
@@ -185,15 +186,20 @@ namespace Au.Types {
 				return default;
 			case Api.WM_MOUSEACTIVATE:
 				return Api.MA_NOACTIVATE;
-			case Api.WM_LBUTTONUP:
-			case Api.WM_RBUTTONUP:
-			case Api.WM_MBUTTONUP:
+			case Api.WM_LBUTTONUP or Api.WM_RBUTTONUP or Api.WM_MBUTTONUP:
+				Clicked?.Invoke(this, message switch { Api.WM_LBUTTONUP => MButton.Left, Api.WM_RBUTTONUP => MButton.Right, _ => MButton.Middle });
 				if (ClickToClose) w.Post(Api.WM_CLOSE);
 				break;
 			}
 			
 			return Api.DefWindowProc(w, message, wParam, lParam);
 		}
+
+		///
+		public event EventHandler Closed;
+
+		///
+		public event EventHandler<MButton> Clicked;
 		
 		/// <summary>
 		/// Called when the OSD window must be drawn or redrawn.

@@ -1,9 +1,10 @@
 using System.Windows.Controls;
 
 /// <summary>
-/// Downloads and extracts a compressed file. With progress.
-/// To extract uses the LA's installed 7za.exe.
+/// Downloads and extracts a 7z or zip file containing multiple files into a directory. Deletes all old files. Shows progress.
+/// Can be used in UI thread.
 /// Must be disposed (it deletes a sentinel file if succeeded).
+/// To extract uses the LA's installed 7za.exe.
 /// </summary>
 sealed class Downloader : IDisposable {
 	string _dirExtract;
@@ -37,7 +38,7 @@ sealed class Downloader : IDisposable {
 	}
 	
 	/// <summary>
-	/// Downloads compressed file from given URL and extracts to the directory specified in a call to <see cref="PrepareDirectory"/>.
+	/// Downloads compressed file from given URL and extracts to the directory specified in a call to <see cref="PrepareDirectory"/>. Deletes all old files.
 	/// </summary>
 	/// <param name="url">Direct download URL. Must end with <c>".zip"</c> or <c>".7z"</c>.</param>
 	/// <param name="progress">This func will set text like <c>"Downloading, 20%"</c>. Can be null.</param>

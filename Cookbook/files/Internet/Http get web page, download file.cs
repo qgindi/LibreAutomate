@@ -77,7 +77,7 @@ b.R.AddButton("Download", async o => {
 		var data = await r4.Content.ReadAsByteArrayAsync(ctoken);
 		print.it(data.Length);
 	}
-	catch(TaskCanceledException) { print.it("canceled or timeout"); }
+	catch(OperationCanceledException) { print.it("canceled or timeout"); }
 	catch(Exception e) { print.it(e); }
 	o.Button.IsEnabled = true;
 	cts.Dispose();

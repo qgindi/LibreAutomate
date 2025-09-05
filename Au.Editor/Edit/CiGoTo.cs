@@ -457,7 +457,7 @@ class CiGoTo {
 			if (pos < cd.meta.end && pos > cd.meta.start) {
 				foreach (var t in Au.Compiler.MetaComments.EnumOptions(cd.code, cd.meta)) {
 					if (pos >= t.valueStart && pos <= t.valueEnd) {
-						_Open(cd.code[t.valueStart..t.valueEnd]);
+						_Meta(t.Name, t.Value);
 						break;
 					}
 				}
@@ -517,6 +517,22 @@ class CiGoTo {
 				return 2 == popupMenu.showSimple("1 Go to definition|2 Open folder");
 			}
 			return true;
+		}
+		
+		void _Meta(string name, string value) {
+			FNFind? ffn = name switch { "c" => FNFind.Class, "pr" or "preBuild" or "postBuild" => FNFind.CodeFile, "sign" or "manifest" => FNFind.File, "file" or "resource" or "icon" => FNFind.Any, _ => null };
+			if (ffn is { } ff) {
+				var f = Au.Compiler.MetaComments.FindFile(cd.sci.EFile, value, ff);
+				if (f == null && name is "c") f = Au.Compiler.MetaComments.FindFile(cd.sci.EFile, value, FNFind.Folder);
+				if (f != null) App.Model.SetCurrentFile(f);
+			} else if (name == "nuget") {
+				DNuget.ShowSingle(value);
+			} else if (name == "com") {
+				var path = App.Model.WorkspaceDirectory + @"\.interop\" + value;
+				if (filesystem.exists(path)) run.selectInExplorer(path);
+			} else {
+				_Open(value);
+			}
 		}
 	}
 	

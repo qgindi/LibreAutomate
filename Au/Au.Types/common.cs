@@ -3,11 +3,11 @@ using static Au.More.Serializer_;
 
 namespace Au.Types {
 	/// <summary>
-	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
+	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages. For it is used filter.yml.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never), AttributeUsage(AttributeTargets.All)]
 	public sealed class NoDoc : Attribute { }
-	//TODO: now DocFX has /// <exclude />. See https://dotnet.github.io/docfx/docs/dotnet-api-docs.html
+	//tested: the DocFX /// <exclude /> removes the member from the compilation, not just prevents creating the doc article. Then may be error; don't use it. See https://dotnet.github.io/docfx/docs/dotnet-api-docs.html
 	
 	/// <summary>
 	/// If a class is derived from this class, editor adds undeclared Windows API to its completion list.
@@ -169,27 +169,3 @@ namespace System.Runtime.CompilerServices //the attribute must be in this namesp
 		public string AssemblyName { get; }
 	}
 }
-
-//rejected. Better use snippets. Also, users can create own classes for it and put whatever there.
-//namespace Au
-//{
-//	/// <summary>
-//	/// Aliases of some frequently used functions of various classes.
-//	/// To call them without <c>classname.</c>, you need <c>using static Au.func;</c>.
-//	/// </summary>
-//	public static class func
-//	{
-//		///// <summary><inheritdoc cref="print.it(string)"/></summary>
-//		//public static void print(string s) => Au.print.it(s);
-//		//cannot use function name = class name. Then cannot call other members of that class.
-
-//		/// <summary><inheritdoc cref="print.it(string)"/></summary>
-//		public static void write(string s) => print.it(s);
-
-//		/// <summary><inheritdoc cref="keys.send(KKeysEtc[])"/></summary>
-//		public static void key([ParamString(PSFormat.keys)] params KKeysEtc[] keysEtc) => keys.send(keysEtc);
-
-//		/// <summary><inheritdoc cref="keys.sendt(string, string)"/></summary>
-//		public static void keyt(string text, string html = null) => keys.sendt(text, html);
-//	}
-//}

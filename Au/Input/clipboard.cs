@@ -268,7 +268,7 @@ public static class clipboard {
 		_Paste(data, options, hotkey, timeoutMS);
 	}
 	//problem: fails to paste in VMware player. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
-	//TODO: add a tip here in doc or in cookbook: To create HTML you can use an online HTML editor, for example https://html-online.com/.
+	//TODO2: add a tip here in doc or in cookbook: To create HTML you can use an online HTML editor, for example https://html-online.com/.
 	
 	/// <summary>
 	/// Calls <see cref="paste"/> and handles exceptions.

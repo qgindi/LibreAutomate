@@ -162,6 +162,22 @@ namespace Au {
 		public static StringContent jsonContent(JsonNode json) => jsonContent(json.ToJsonString());
 		
 		/// <summary>
+		/// Creates <see cref="HttpRequestMessage"/> for <see cref="HttpClient.Send"/> or <see cref="HttpClient.SendAsync"/> in the same way as the <see cref="HttpClient"/> extension methods of this library (<b>ExtInternet.Get</b>, <b>ExtInternet.Post</b> etc).
+		/// </summary>
+		/// <param name="method"><c>System.Net.Http.HttpMethod.Post</c> etc.</param>
+		/// <inheritdoc cref="ExtInternet.Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})" path="/param"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// using System.Net.Http;
+		/// var m = internet.message(HttpMethod.Get, "https://www.example.com");
+		/// var r = internet.http.Send(m);
+		/// print.it(r.Text());
+		/// ]]></code>
+		/// </example>
+		public static HttpRequestMessage message(HttpMethod method, string url, IEnumerable<string> headers = null, HttpContent content = null, string auth = null)
+			=> ExtInternet.HttpMessage_(method, url, headers, auth, null, content);
+		
+		/// <summary>
 		/// Joins a URL address and parameters. Urlencodes parameters.
 		/// </summary>
 		/// <param name="address">URL part without parameters or with some parameters. The function does not modify it.</param>
@@ -263,7 +279,7 @@ namespace Au.Types {
 		/// <c>null</c> or request headers like <c>["name1: value1", "name2: value2"]</c>.
 		/// Also you can add headers to <see cref="HttpClient.DefaultRequestHeaders"/>, like <c>internet.http.DefaultRequestHeaders.Add("User-Agent", "Script/1.0");</c>.
 		/// </param>
-		/// <param name="auth">String like <c>"username:password"</c> for basic authentication. Adds <c>Authorization</c> header.</param>
+		/// <param name="auth">String like <c>"username:password"</c> for basic authentication. It will be encoded and sent in the <c>Authorization</c> header. For other authentication schemes use the <i>headers</i> parameter instead, like <c>headers: ["Authorization: Bearer token"]</c>.</param>
 		/// <param name="also">Can set more properties for the request.</param>
 		/// <returns>An <c>HttpResponseMessage</c> object that can be used to get response content (web page HTML, JSON, file, etc), headers etc. To get content use <see cref="Text"/> etc.</returns>
 		/// <exception cref="Exception">
@@ -277,7 +293,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public static HttpResponseMessage Get(this HttpClient t, string url, bool dontWait = false, IEnumerable<string> headers = null, string auth = null, Action<HttpRequestMessage> also = null) {
-			using var m = _HttpMessage(HttpMethod.Get, url, headers, auth, also);
+			using var m = HttpMessage_(HttpMethod.Get, url, headers, auth, also);
 			return t.Send(m, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
 		}
 		
@@ -288,7 +304,7 @@ namespace Au.Types {
 		//	return t.SendAsync(m, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, cancel);
 		//}
 		
-		static HttpRequestMessage _HttpMessage(HttpMethod method, string url, IEnumerable<string> headers, string auth, Action<HttpRequestMessage> also, HttpContent content = null) {
+		internal static HttpRequestMessage HttpMessage_(HttpMethod method, string url, IEnumerable<string> headers, string auth, Action<HttpRequestMessage> also, HttpContent content = null) {
 			Not_.Null(url);
 			var m = new HttpRequestMessage(method, url);
 			if (headers != null) m.Headers.AddMany(headers);
@@ -325,7 +341,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public static bool TryGet(this HttpClient t, out HttpResponseMessage r, string url, bool dontWait = false, IEnumerable<string> headers = null, bool printError = false, string auth = null, Action<HttpRequestMessage> also = null) {
-			using var m = _HttpMessage(HttpMethod.Get, url, headers, auth, also);
+			using var m = HttpMessage_(HttpMethod.Get, url, headers, auth, also);
 			try {
 				r = t.Send(m, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
 				if (r.IsSuccessStatusCode) return true;
@@ -385,7 +401,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public static HttpResponseMessage Post(this HttpClient t, string url, HttpContent content, IEnumerable<string> headers = null, bool dontWait = false, string auth = null, Action<HttpRequestMessage> also = null) {
-			using var m = _HttpMessage(HttpMethod.Post, url, headers, auth, also, content);
+			using var m = HttpMessage_(HttpMethod.Post, url, headers, auth, also, content);
 			return t.Send(m, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
 		}
 		//rejected: bool disposeContent = true (auto-close MultipartFormDataContent streams etc).
@@ -420,7 +436,7 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		public static bool TryPost(this HttpClient t, out HttpResponseMessage r, string url, HttpContent content, IEnumerable<string> headers = null, bool printError = false, bool dontWait = false, string auth = null, Action<HttpRequestMessage> also = null) {
-			using var m = _HttpMessage(HttpMethod.Post, url, headers, auth, also, content);
+			using var m = HttpMessage_(HttpMethod.Post, url, headers, auth, also, content);
 			try {
 				r = t.Send(m, dontWait ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
 				if (r.IsSuccessStatusCode) return true;
@@ -481,7 +497,7 @@ namespace Au.Types {
 		/// <exception cref="HttpRequestException">Failed HTTP request.</exception>
 		/// <exception cref="Exception">Exceptions of <c>ReadFromJsonAsync</c>.</exception>
 		public static T Json<T>(this HttpResponseMessage t)
-			=> t.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<T>().Result;
+			=> t.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<T>().Result;//TODO
 		
 		/// <summary>
 		/// Saves content in a file. Downloads if need.

@@ -4,7 +4,7 @@
 /// - Add menus to the menubar.
 /// - Add controls to panels.
 /// - Add panels and toolbars.
-/// To run at startup, add the script name in <b>Options > Workspace > Run scripts when workspace loaded<>.
+/// To run at startup, add the script name in <b>Options > Workspace > Startup scripts<>.
 /// These menus and toolbars cannot be customized in menu <b>Tools > Customize<>.
 
 /*/

@@ -47,15 +47,71 @@ public class KCheckBox : CheckBox {
 /// <summary>
 /// <see cref="KCheckBox"/> without the box part.
 /// </summary>
-public class KCheckNoBox : KCheckBox {
+class KCheckNoBox : KCheckBox {
 	static KCheckNoBox() {
-        DefaultStyleKeyProperty.OverrideMetadata(typeof(KCheckNoBox),new FrameworkPropertyMetadata(typeof(ToggleButton)));
+		bool contrast = SystemParameters.HighContrast;
+		
+		var borderFactory = new FrameworkElementFactory(typeof(Border));
+		borderFactory.Name = "border";
+		borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(8));
+		borderFactory.SetValue(Border.BorderThicknessProperty, new Thickness(contrast ? 2 : 1));
+		borderFactory.SetValue(Border.BorderBrushProperty, SystemColors.ControlLightBrush);
+		borderFactory.SetValue(Border.BackgroundProperty, SystemColors.ControlLightLightBrush);
+		borderFactory.SetValue(Border.PaddingProperty, new Thickness(4, 0, 4, 1));
+		
+		var contentPresenter = new FrameworkElementFactory(typeof(ContentPresenter));
+		contentPresenter.SetValue(System.Windows.Documents.TextElement.ForegroundProperty, new TemplateBindingExtension(ForegroundProperty));
+		contentPresenter.SetValue(ContentPresenter.RecognizesAccessKeyProperty, true);
+		
+		borderFactory.AppendChild(contentPresenter);
+		
+		var template = new ControlTemplate(typeof(KCheckNoBox));
+		template.VisualTree = borderFactory;
+		
+		if (contrast) {
+			var t1 = new Trigger { Property = IsCheckedProperty, Value = true };
+			t1.Setters.Add(new Setter(Border.BackgroundProperty, SystemColors.HighlightBrush, "border"));
+			t1.Setters.Add(new Setter(ForegroundProperty, SystemColors.HighlightTextBrush));
+			template.Triggers.Add(t1);
+		} else {
+			var brushes = GetBrushes();
+			
+			var t1 = new Trigger { Property = IsCheckedProperty, Value = true };
+			t1.Setters.Add(new Setter(Border.BackgroundProperty, brushes.checkedCold, "border"));
+			t1.Setters.Add(new Setter(Border.BorderBrushProperty, SystemColors.ControlLightLightBrush, "border"));
+			template.Triggers.Add(t1);
+			
+			var t2 = new Trigger { Property = IsMouseOverProperty, Value = true };
+			t2.Setters.Add(new Setter(Border.BackgroundProperty, brushes.uncheckedHot, "border"));
+			template.Triggers.Add(t2);
+			
+			var mt = new MultiTrigger(); //checked hot
+			mt.Conditions.Add(new Condition { Property = IsCheckedProperty, Value = true });
+			mt.Conditions.Add(new Condition { Property = IsMouseOverProperty, Value = true });
+			mt.Setters.Add(new Setter(Border.BackgroundProperty, brushes.checkedHot, "border"));
+			template.Triggers.Add(mt);
+		}
+		
+		var style = new Style(typeof(KCheckNoBox));
+		style.Setters.Add(new Setter(TemplateProperty, template));
+		
+		StyleProperty.OverrideMetadata(typeof(KCheckNoBox), new FrameworkPropertyMetadata(style));
 	}
 	
-	public KCheckNoBox() {
-		Padding = new(3, 0, 3, 1);
-		Background = BorderBrush = Brushes.Transparent;
+	static (Brush checkedCold, Brush checkedHot, Brush uncheckedHot) GetBrushes() {
+		if (s_checkedCold == null) {
+			var c = (Color)new ColorInt(0x92C1E6);
+			SolidColorBrush brush1 = new(c), brush2 = new(Color.FromArgb(180, c.R, c.G, c.B)), brush3 = new(Color.FromArgb(80, c.R, c.G, c.B));
+			brush1.Freeze();
+			brush2.Freeze();
+			brush3.Freeze();
+			s_checkedHot = brush2;
+			s_uncheckedHot = brush3;
+			s_checkedCold = brush1;
+		}
+		return (s_checkedCold, s_checkedHot, s_uncheckedHot);
 	}
+	static Brush s_checkedCold, s_checkedHot, s_uncheckedHot;
 }
 
 /// <summary>

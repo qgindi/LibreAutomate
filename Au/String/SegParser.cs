@@ -36,19 +36,16 @@ namespace Au.More {
 		}
 		
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-		[NoDoc]
 		public SegParser GetEnumerator() => this;
 		
 		IEnumerator<StartEnd> IEnumerable<StartEnd>.GetEnumerator() => this;
 		
 		IEnumerator IEnumerable.GetEnumerator() => this;
 		
-		[NoDoc]
 		public StartEnd Current => new(_start, _end);
 		
 		object IEnumerator.Current => Current;
 		
-		[NoDoc]
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public bool MoveNext() {
 			gStart:
@@ -101,7 +98,6 @@ namespace Au.More {
 			//_end = _sStart - 1;
 		}
 		
-		[NoDoc]
 		public void Reset() {
 			_end = _sStart - 1;
 		}

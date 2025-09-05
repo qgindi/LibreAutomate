@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Au.Types;
 
 /// <summary>
-/// Base of record classes that contain various settings as public fields. Loads and lazily auto-saves from/to a JSON file.
+/// Base of record classes that contain various settings as public fields or properties. Loads and lazily auto-saves from/to a JSON file.
 /// </summary>
 /// <remarks>
 /// All functions are thread-safe.
@@ -44,6 +44,7 @@ public abstract record class JSettings : IDisposable {
 	string _file;
 	bool _loadedFile;
 	byte[] _old;
+	JsonSerializerOptions _jsOpt;
 	readonly object _lock = new();
 	
 	static readonly List<JSettings> s_list = new();
@@ -52,50 +53,53 @@ public abstract record class JSettings : IDisposable {
 	/// <summary>
 	/// Loads a JSON file and deserializes to an object of type <c>T</c>, or creates a new object of type <c>T</c>.
 	/// </summary>
-	/// <returns>An object of type <c>T</c>. Just creates a new object if the file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> <c>true</c>.</returns>
+	/// <returns>Object of type <c>T</c>. Either deserialized from file or new object with default values.</returns>
 	/// <param name="file">Full path of <c>.json</c> file. If <c>null</c>, does not load and will not save.</param>
-	/// <param name="useDefault">Use default settings, don't load from <i>file</i>. Delete <i>file</i> if exists.</param>
+	/// <param name="useDefault">Use default settings. Don't load from <i>file</i>. Delete <i>file</i> if exists.</param>
 	/// <param name="useDefaultOnError">What to do if failed to load or parse the file: <c>true</c> (default) - backup (rename) the file and use default settings; <c>false</c> - throw exception (for example <see cref="JsonException"/> if invalid JSON); <c>null</c> - show dialog with options to exit or use default settings.</param>
+	/// <param name="jsOpt">Options for deserializing and serializing. If <c>null</c>, uses <see cref="SerializerOptions"/>.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="NotSupportedException">Field type not supported by <see cref="JsonSerializer"/>.</exception>
-	protected static T Load<T>(string file, bool useDefault = false, bool? useDefaultOnError = true) where T : JSettings
-		=> (T)_Load(file, typeof(T), useDefault, useDefaultOnError);
+	protected static T Load<T>(string file, bool useDefault = false, bool? useDefaultOnError = true, JsonSerializerOptions jsOpt = null) where T : JSettings
+		=> (T)_Load(file, typeof(T), useDefault, useDefaultOnError, jsOpt);
 	
-	static JSettings _Load(string file, Type type, bool useDefault, bool? useDefaultOnError) {
+	static JSettings _Load(string file, Type type, bool useDefault, bool? useDefaultOnError, JsonSerializerOptions jsOpt) {
+		if (file == null) return Activator.CreateInstance(type) as JSettings;
+		
+		jsOpt ??= SerializerOptions;
+		
 		JSettings R = null;
-		if (file != null) {
-			file = pathname.normalize(file);
-			if (filesystem.exists(file, true)) {
-				try {
-					if (useDefault) {
-						filesystem.delete(file);
-					} else {
-						//using var p1 = perf.local(); //first time ~40 ms (similar hot and cold)
-						var b = filesystem.loadBytes(file);
-						//p1.Next('f');
-						R = JsonSerializer.Deserialize(b, type, SerializerOptions) as JSettings;
-						//p1.Next('d');
-						R._loadedFile = true;
-					}
+		file = pathname.normalize(file);
+		if (filesystem.exists(file, true)) {
+			try {
+				if (useDefault) {
+					filesystem.delete(file);
+				} else {
+					//using var p1 = perf.local(); //first time ~40 ms (similar hot and cold)
+					var b = filesystem.loadBytes(file);
+					//p1.Next('f');
+					R = JsonSerializer.Deserialize(b, type, jsOpt) as JSettings;
+					//p1.Next('d');
+					R._loadedFile = true;
 				}
-				catch (Exception ex) when (ex is not NotSupportedException) {
-					if (!useDefault) {
-						if (useDefaultOnError == false) throw;
-						if (useDefaultOnError == true) {
-							string backup = file + ".backup";
-							filesystem.move(file, backup, FIfExists.Delete); //note: don't try/catch
-							print.it($"<>Failed to load settings from {file}. Will use default settings.\r\n\t<\a>{ex.ToStringWithoutStack()}</\a>\r\n\tBackup: <explore>{backup}<>");
-						} else {
-							if (!Environment.UserInteractive) throw;
-							int button = dialog.show("Failed to load settings",
-								$"{ex.ToStringWithoutStack()}\n\n<a href=\"{file}\">{file}</a>",
-								"1 Exit|2 Backup (rename) the file and use default settings",
-								flags: DFlags.CommandLinks,
-								icon: DIcon.Error,
-								onLinkClick: o => { run.selectInExplorer(o.LinkHref); });
-							if (button == 1) Environment.Exit(1);
-							else if (filesystem.exists(file)) filesystem.move(file, file + ".backup", FIfExists.Delete);
-						}
+			}
+			catch (Exception ex) when (ex is not NotSupportedException) {
+				if (!useDefault) {
+					if (useDefaultOnError == false) throw;
+					if (useDefaultOnError == true) {
+						string backup = file + ".backup";
+						filesystem.move(file, backup, FIfExists.Delete); //note: don't try/catch
+						print.it($"<>Failed to load settings from {file}. Will use default settings.\r\n\t<\a>{ex.ToStringWithoutStack()}</\a>\r\n\tBackup: <explore>{backup}<>");
+					} else {
+						if (!Environment.UserInteractive) throw;
+						int button = dialog.show("Failed to load settings",
+							$"{ex.ToStringWithoutStack()}\n\n<a href=\"{file}\">{file}</a>",
+							"1 Exit|2 Backup (rename) the file and use default settings",
+							flags: DFlags.CommandLinks,
+							icon: DIcon.Error,
+							onLinkClick: o => { run.selectInExplorer(o.LinkHref); });
+						if (button == 1) Environment.Exit(1);
+						else if (filesystem.exists(file)) filesystem.move(file, file + ".backup", FIfExists.Delete);
 					}
 				}
 			}
@@ -103,29 +107,27 @@ public abstract record class JSettings : IDisposable {
 		
 		R ??= Activator.CreateInstance(type) as JSettings;
 		
-		if (file != null) {
-			R._Ctor2(file);
+		R._Ctor2(file, jsOpt);
+		
+		//autosave
+		if (Interlocked.Exchange(ref s_loadedOnce, 1) == 0) {
+			run.thread(() => {
+				for (; ; ) {
+					Thread.Sleep(2000);
+					//Debug_.MemorySetAnchor();
+					_SaveAllIfNeed(true);
+					//Debug_.MemoryPrint(); //editor ~6 KB
+				}
+			}, sta: false).Name = "Au.JSettings";
 			
-			//autosave
-			if (Interlocked.Exchange(ref s_loadedOnce, 1) == 0) {
-				run.thread(() => {
-					for (; ; ) {
-						Thread.Sleep(2000);
-						//Debug_.MemorySetAnchor();
-						_SaveAllIfNeed(true);
-						//Debug_.MemoryPrint(); //editor ~6 KB
-					}
-				}, sta: false).Name = "Au.JSettings";
-				
-				process.thisProcessExit += _ => { //info: .NET does not call finalizers when process exits
-					FileWatcher.DisposeAll_();
-					_SaveAllIfNeed(false);
-					s_list.Clear();
-				};
-			}
-			
-			lock (s_list) s_list.Add(R);
+			process.thisProcessExit += _ => { //info: .NET does not call finalizers when process exits
+				FileWatcher.DisposeAll_();
+				_SaveAllIfNeed(false);
+				s_list.Clear();
+			};
 		}
+		
+		lock (s_list) s_list.Add(R);
 		
 		return R;
 		
@@ -141,9 +143,10 @@ public abstract record class JSettings : IDisposable {
 		}
 	}
 	
-	void _Ctor2(string file) {
+	void _Ctor2(string file, JsonSerializerOptions jsOpt) {
 		_file = file;
-		_old = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), SerializerOptions);
+		_jsOpt = jsOpt;
+		_old = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), _jsOpt);
 	}
 	
 	/// <summary>
@@ -170,19 +173,30 @@ public abstract record class JSettings : IDisposable {
 	
 	//repeated serialization speed with same options ~50 times better, eg 15000 -> 300 mcs cold. It's documented. Can be shared by multiple types.
 	static readonly Lazy<JsonSerializerOptions> s_jsOptions = new(() => new() {
+		AllowTrailingCommas = true,
 		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+		Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 		IncludeFields = true,
 		IgnoreReadOnlyFields = true,
 		IgnoreReadOnlyProperties = true,
 		WriteIndented = true,
-		Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-		AllowTrailingCommas = true,
 	});
 	
 	/// <summary>
-	/// Use but don't modify.
+	/// Default deserialization and serialization options.
 	/// </summary>
-	internal static JsonSerializerOptions SerializerOptions => s_jsOptions.Value;
+	/// <value>
+	/// <code><![CDATA[
+	/// 	AllowTrailingCommas = true,
+	/// 	DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+	/// 	Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+	/// 	IncludeFields = true,
+	/// 	IgnoreReadOnlyFields = true,
+	/// 	IgnoreReadOnlyProperties = true,
+	/// 	WriteIndented = true,
+	/// ]]></code>
+	/// </value>
+	public static JsonSerializerOptions SerializerOptions => s_jsOptions.Value;
 	
 	/// <summary>
 	/// <c>true</c> if settings were loaded from file.
@@ -214,7 +228,7 @@ public abstract record class JSettings : IDisposable {
 			if (_file is null) return;
 			bool save = false;
 			try {
-				var b = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), SerializerOptions);
+				var b = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), _jsOpt);
 				save = !b.AsSpan().SequenceEqual(_old);
 				if (save) {
 					_watcher?.Paused = true;
@@ -312,7 +326,7 @@ public abstract record class JSettings : IDisposable {
 			try {
 				if (filesystem.exists(_file, true)) {
 					var b = filesystem.loadBytes(_file);
-					R = JsonSerializer.Deserialize(b, GetType(), SerializerOptions) as JSettings;
+					R = JsonSerializer.Deserialize(b, GetType(), _jsOpt) as JSettings;
 					R._loadedFile = true;
 				} else {
 					R = Activator.CreateInstance(GetType()) as JSettings;
@@ -323,7 +337,7 @@ public abstract record class JSettings : IDisposable {
 				return false;
 			}
 			
-			R._Ctor2(_file);
+			R._Ctor2(_file, _jsOpt);
 			R.NoAutoSave = NoAutoSave;
 			R.NoAutoSaveTimer = NoAutoSaveTimer;
 			R._watcher = _watcher; _watcher = null;

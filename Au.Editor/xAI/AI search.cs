@@ -1,92 +1,72 @@
 using System.Text.Json.Nodes;
 using System.Net.Http;
+using System.Buffers.Text;
 
 namespace AI;
 
-class Embeddings(AiSettings.EmbeddingModel sett) {
+class Embeddings(AiEmbeddingModel model) {
 	/// <summary>
 	/// Calls AI embeddings API to get embedding vectors for any number of strings.
 	/// </summary>
 	/// <param name="input">0 or more strings.</param>
 	/// <param name="forDatabase">true if for a vector database. false if for a query. Some API have optimization parameters for it.</param>
 	/// <param name="getInt8"><c>true</c> - get list of <c>sbyte[]</c>. <c>false</c> - get list of <c>float[]</c>.</param>
-	/// <returns><c>null</c> if canceled.</returns>
+	/// <exception cref="OperationCanceledException"></exception>
 	/// <exception cref="Exception"></exception>
-	public List<Array> GetEmbeddings(ICollection<string> input, bool forDatabase, bool getInt8 = false) {
+	public List<Array> CreateEmbeddings(IList<string> input, bool forDatabase, bool getInt8 = false, CancellationToken cancel = default) {
 		if (input.Count == 0) return [];
 		
-		var authHeader = sett.GetAuthHeader();
-		
-		dialog pd = null;
-		int waitRetryS = 0;
-		bool retryLinkClicked = false;
-		long downloadSize = 0;
-		
+		var headers = model.GetHeaders();
 		var allVectors = new List<Array>();
-		try {
-			if (input.Count == 1) {
-				_GetBatch(input);
-			} else {
+		long downloadSize = 0;
+		dialog pd = null;
+		using CancellationTokenSource cts = cancel != default ? CancellationTokenSource.CreateLinkedTokenSource(cancel) : new();
+		if (input.Count == 1) {
+			_GetBatch(input);
+		} else {
+			try {
 				var batch = new List<string>();
-				int tokenSum = 0;
+				int sizeSum = 0;
 				int tokensToDisplay = 0;
+				var lim = model.limits;
 				
 				foreach (var (i, s) in input.Index()) {
-					int estTokens = s.Length / 2;
-					if ((tokenSum + estTokens > sett.maxTokens && batch.Count > 0) || batch.Count == sett.maxInputs) {
-						_EnsureProgressDialog();
+					int nextSize = sizeSum + s.Length;
+					if ((lim.maxTokens > 0 && nextSize / 2 >= lim.maxTokens) || (lim.maxInputs > 0 && batch.Count == lim.maxInputs) || (lim.maxSize > 0 && nextSize >= lim.maxSize)) {
+						if (batch.Count == 0) batch.Add(s); //try anyway
+						if (pd == null) {
+							var url = string.Concat(model.url.Chunk(50).Select(o => { var s = new string(o); return s.Length < 50 ? s : s.Insert(s.LastIndexOfAny('/', ':') + 1, "\n  "); }));
+							pd = dialog.showProgress(false, "Creating AI search vectors", flags: DFlags.ExpandDown, expandedText: $"API: {model.api}\nModel: {model.model}\nURL: {url}", footer: " ");
+							pd.Destroyed += _pd_Destroyed;
+						}
 						int batchTokens = _GetBatch(batch);
-						if (batchTokens < 0) return null; //Cancel
-						tokensToDisplay += batchTokens;
+						bool noTokens = batchTokens == 0;
+						tokensToDisplay += noTokens ? sizeSum / 3 : batchTokens;
+						sizeSum = 0;
 						batch.Clear();
-						tokenSum = 0;
 						if (i < input.Count - 1) {
-							if (!pd.IsOpen) return null; //Cancel
+							if (!pd.IsOpen) { pd = null; throw new OperationCanceledException(); } //clicked Cancel
 							pd.Send.Progress(Math2.PercentFromValue(input.Count, allVectors.Count));
-							pd.Send.ChangeFooterText($"Tokens: {(sett.resultTokensPath.NE() ? "~" : null)}{tokensToDisplay.ToString("N0")}.  Downloaded: {downloadSize / (1024 * 1024)} MB.", false);
+							pd.Send.ChangeFooterText($"Tokens: {(noTokens ? "~" : null)}{tokensToDisplay.ToString("N0")}.  Downloaded: {downloadSize / (1024 * 1024)} MB.", false);
 						}
 					}
 					batch.Add(s);
-					tokenSum += estTokens;
+					sizeSum += s.Length;
 				}
 				if (batch.Count > 0) _GetBatch(batch);
 			}
-		}
-		finally { pd?.Send.Close(); }
-		return allVectors;
-		
-		void _EnsureProgressDialog() {
-			pd ??= dialog.showProgress(false,
-				"Creating AI search vectors",
-				" ",
-				footer: " ",
-				onLinkClick: o => { if (o.LinkHref is "retry") retryLinkClicked = true; });
-		}
-		
-		int _GetBatch(ICollection<string> input) {
-			var post = sett.GetPostJson(input, isQuery: !forDatabase);
-			//var postContent = internet.jsonContent(post); //no, ObjectDisposedException on retry
-			bool waitedFull = false;
-			gRetry:
-			var r = internet.http.Post(sett.url, internet.jsonContent(post), headers: [authHeader]);
-			if (r.StatusCode == System.Net.HttpStatusCode.TooManyRequests) {
-				if (waitedFull) waitRetryS += 5; else waitRetryS = Math.Max(5, waitRetryS);
-				_EnsureProgressDialog();
-				retryLinkClicked = false;
-				pd.Send.ChangeText2($"Too many requests. Waiting {waitRetryS} s and will <a href=\"retry\">retry</a>.", false);
-				int waitedS = 0;
-				for (int i = 0; i < waitRetryS * 10 && !retryLinkClicked; i++, waitedS = i / 10) Thread.Sleep(100);
-				pd.Send.ChangeText2(" ", false);
-				if (!pd.IsOpen) return -1;
-				waitedFull = !retryLinkClicked;
-				if (retryLinkClicked) waitRetryS = Math.Min(waitRetryS, waitedS);
-				goto gRetry;
-			}
-			if (!r.IsSuccessStatusCode) {
-				var s = r.Text(ignoreError: true);
-				throw new HttpRequestException($"{r.StatusCode}. {s}");
+			finally {
+				pd?.Destroyed -= _pd_Destroyed;
+				pd?.Send.Close();
 			}
 			
+			void _pd_Destroyed(DEventArgs _) { cts.Cancel(); }
+		}
+		return allVectors;
+		
+		int _GetBatch(IList<string> input) {
+			var post = model.GetPostData(input, isQuery: !forDatabase);
+			var r = model.Post(post, headers: headers, cts.Token);
 			var bytes = r.Bytes();
 			downloadSize += bytes.Length; //never mind: probably downloads less, because of compression
 			var json = JsonNode.Parse(bytes);
@@ -95,10 +75,11 @@ class Embeddings(AiSettings.EmbeddingModel sett) {
 			//print.it(json["usage"].ToJsonString(new(System.Text.Json.JsonSerializerDefaults.Web) { WriteIndented = true }));
 			//print.it(json["data"].ToJsonString(new(System.Text.Json.JsonSerializerDefaults.Web) { WriteIndented = true }));
 			
-			var ja = _GetResultsArray();
+			var ja = model.GetVectors(json);
 			foreach (var v in ja) {
 				float[] f = null; sbyte[] b = null;
 				if (v is JsonArray aj) {
+					if (aj.Count != model.dimensions) throw new InvalidOperationException($"Returned array length ({aj.Count} elements) does not match model's dimensions ({model.dimensions}).");
 					if (aj.All(o => o.AsValue().TryGetValue(out int i_))) {
 						b = new sbyte[aj.Count];
 						for (int j = 0; j < aj.Count; j++) b[j] = (sbyte)(int)aj[j];
@@ -108,7 +89,10 @@ class Embeddings(AiSettings.EmbeddingModel sett) {
 					}
 				} else { //OpenAI and Cohere can return float[] as base64 string
 					var base64 = v.GetValue<string>();
-					f = MemoryMarshal.Cast<byte, float>(Convert.FromBase64String(base64)).ToArray();
+					var t = Convert.FromBase64String(base64);
+					if (t.Length == model.dimensions) b = MemoryMarshal.Cast<byte, sbyte>(t).ToArray();
+					else if (t.Length == model.dimensions * 4) f = MemoryMarshal.Cast<byte, float>(t).ToArray();
+					else throw new InvalidOperationException($"Returned data length ({t.Length} bytes) does not match model's dimensions ({model.dimensions}).");
 				}
 				if (getInt8) {
 					if (b is null) {
@@ -129,62 +113,30 @@ class Embeddings(AiSettings.EmbeddingModel sett) {
 				}
 			}
 			
-			JsonNode[] _GetResultsArray() {
-				var resultPath = sett.resultItemPath;
-				var ap = resultPath.Split('/');
-				JsonNode j = json;
-				JsonArray ja = null;
-				int ip = 0;
-				while (ip < ap.Length) {
-					var part = ap[ip++];
-					if (part == "*") {
-						ja = j as JsonArray ?? throw new FormatException(resultPath);
-						break;
-					} else {
-						if (j is not JsonObject n1) throw new FormatException(resultPath);
-						j = j[part];
-					}
-				}
-				if (ip < ap.Length - 1) throw new FormatException(resultPath);
-				string member = ip == ap.Length ? null : ap[ip];
-				var r = new JsonNode[ja.Count];
-				for (int i = 0; i < r.Length; i++) {
-					r[i] = (member != null ? ja[i][member] : ja[i]) ?? throw new FormatException(resultPath);
-				}
-				return r;
-			}
-			
-			int _GetNTokens() {
-				if (sett.resultTokensPath.NE()) return input.Sum(o => o.Length / 3);
-				var j = json;
-				foreach (var v in sett.resultTokensPath.Split('/')) j = j[v] ?? throw new FormatException(sett.resultTokensPath);
-				return (int)j;
-			}
-			
-			return _GetNTokens();
+			return model.GetTokens(json);
 		}
 	}
 	
 	/// <summary>
 	/// Calls AI embeddings API to get embedding vector for single string used for a query.
 	/// </summary>
+	/// <exception cref="OperationCanceledException"></exception>
 	/// <exception cref="Exception"></exception>
-	public float[] GetEmbedding(string input) => (float[])GetEmbeddings([input], forDatabase: false)[0];
+	public float[] CreateEmbedding(string input, CancellationToken cancel = default) => CreateEmbeddings([input], forDatabase: false, cancel: cancel)[0] as float[];
 	
-	enum _GE { Docs, Icons }
-	
-	List<EmVector> _GetEmbeddings(_GE what, Func<(List<string> names, List<string> texts)> getData) {
-		string dbPath = what switch { _GE.Docs => _dbFileDocs, _GE.Icons => _dbFileIcons, _ => null };
+	List<EmVector> _GetEmbeddings(string dbPath, bool compact, Func<(List<string> names, List<string> texts)> getData, CancellationToken cancel) {
 		_EmHash newHash = _Hash(dbPath), oldHash = default;
-		string emPath = folders.ThisAppDataCommon + $@"AI\Embedding\{sett.name}.bin";
-		//if (AiSettings.test) emPath = emPath.Insert(^4, " - Copy");//TODO
+		string emPath = folders.ThisAppDataCommon + $@"AI\Embedding\{model.GetType()}-{pathname.getNameNoExt(dbPath)}.bin";
 		var emFile = new _EmStorageFile(emPath);
 		List<EmVector> ems = null;
+		bool retried = false; gRetry:
 		if (filesystem.exists(emPath).File) {
 			try { ems = emFile.Load(out oldHash); }
 			catch (Exception ex) when (emFile.Reading && ex is not OutOfMemoryException) { print.warning(ex); }
+			
+			//emFile.PrintUploadIfAtHome(model, newHash);
 		}
-		bool exists = ems != null && oldHash.sett == newHash.sett;
+		bool exists = ems != null && oldHash.modelParams == newHash.modelParams;
 		if (exists && oldHash.hash == newHash.hash) return ems;
 		
 		var (names, texts) = getData();
@@ -206,10 +158,14 @@ class Embeddings(AiSettings.EmbeddingModel sett) {
 			names.RemoveRange(j, names.Count - j);
 			texts.RemoveRange(j, texts.Count - j);
 		}
-		//print.it(names.Count);//TODO
+		//print.it(names.Count);
 		
-		var vectors = GetEmbeddings(texts, forDatabase: true, getInt8: what is _GE.Icons);
-		if (vectors == null) return null;
+		if (names.Count > 250 && !retried) {
+			retried = true;
+			if (emFile.TryDownload(model, newHash)) goto gRetry;
+		}
+		
+		var vectors = CreateEmbeddings(texts, forDatabase: true, getInt8: compact, cancel);
 		
 		if (exists) {
 			foreach (var v in aSame) { names.Add(v.name); texts.Add(v.text); vectors.Add(v.vec); }
@@ -217,45 +173,63 @@ class Embeddings(AiSettings.EmbeddingModel sett) {
 		
 		emFile.Save(names, vectors, texts, newHash);
 		
+		emFile.PrintUploadIfAtHome(model, newHash);
+		
 		return emFile.Load(out _);
 		
 		_EmHash _Hash(string file) {
 			var h = new Hash.MD5Context();
 			h.Add(filesystem.loadBytes(file));
-			return new(h.Hash, string.Join(';', sett.url, sett.json, sett.jsonQ, sett.jsonItem, sett.jsonItemQ));
+			return new(h.Hash, $"{model.model};{model.dimensions};{model.emType}");
 		}
 	}
 	
 	#region docs
 	
-	static string _dbFileDocs = folders.ThisAppBS + "doc4ai.db";
+	static string s_dbFileDocs = folders.ThisAppBS + "doc4ai.db";
 	
 	/// <summary>
 	/// Loads or creates/updates embeddings for docs.
 	/// </summary>
-	/// <returns>null if canceled.</returns>
+	/// <exception cref="OperationCanceledException"></exception>
 	/// <exception cref="Exception"></exception>
-	public List<EmVector> GetDocsEmbeddings() {
-		return _GetEmbeddings(_GE.Docs, _GetData);
+	public List<EmVector> GetDocsEmbeddings(CancellationToken cancel = default) {
+		_GetData();//TODO
 		
-		(List<string> names, List<string> texts) _GetData() {
+		return _GetEmbeddings(s_dbFileDocs, false, _GetData, cancel);
+		
+		static (List<string> names, List<string> texts) _GetData() {
 			List<string> names = [], texts = [];
-			using var db = new sqlite(_dbFileDocs, SLFlags.SQLITE_OPEN_READONLY);
+			using var db = new sqlite(s_dbFileDocs, SLFlags.SQLITE_OPEN_READONLY);
 			using var sta = db.Statement("SELECT name,text FROM doc");
 			while (sta.Step()) {
 				string name = sta.GetText(0), text = sta.GetText(1);
 				if (name.Ends("] toc")) continue;
 				names.Add(name);
+				_ProcessText(name, ref text);
 				texts.Add(text);
 			}
 			return (names, texts);
+		}
+		
+		static void _ProcessText(string name, ref string s) {
+			if (!name.Starts("[api]")) return;
+			//TODO
+			print.clear();
+			
+			int i = s.Find("\n\n##### Exceptions");
+			//if (i > 0) s = s[..i];
+			
+			print.it(s);
+			
+			//if (!dialog.show("Continue?",)) Environment.Exit(0);
 		}
 	}
 	
 	public string[] GetDocsTexts(IEnumerable<string> names, bool summary) {
 		string[] an = names.ToArray();
 		var a = new string[an.Length];
-		using var db = new sqlite(_dbFileDocs, SLFlags.SQLITE_OPEN_READONLY);
+		using var db = new sqlite(s_dbFileDocs, SLFlags.SQLITE_OPEN_READONLY);
 		using var sta = db.Statement($"SELECT name,{(summary ? "summary" : "text")} FROM doc WHERE name IN ({string.Join(',', an.Select(_ => "?"))})");
 		sta.BindAll(an);
 		while (sta.Step()) {
@@ -274,15 +248,15 @@ class Embeddings(AiSettings.EmbeddingModel sett) {
 	//TODO: upload icon vector files to libreautomate.com. With names = hash.
 	//	Or maybe to github. Probably not icons, but maybe docs. Convert to text: line = name + vector base64 + hash.
 	
-	static string _dbFileIcons = folders.ThisAppBS + "icons.db";
+	static string s_dbFileIcons = folders.ThisAppBS + "icons.db";
 	
 	/// <summary>
 	/// Loads or creates/updates embeddings for icons.
 	/// </summary>
-	/// <returns>null if canceled.</returns>
+	/// <exception cref="OperationCanceledException"></exception>
 	/// <exception cref="Exception"></exception>
-	public List<EmVector> GetIconsEmbeddings(bool? create = null) {
-		return _GetEmbeddings(_GE.Icons, _GetData);
+	public List<EmVector> GetIconsEmbeddings(CancellationToken cancel = default) {
+		return _GetEmbeddings(s_dbFileIcons, true, _GetData, cancel);
 		
 		(List<string> names, List<string> texts) _GetData() {
 			List<string> names = _GetUniqueIconNames(), texts = new(names.Count);
@@ -305,7 +279,7 @@ class Embeddings(AiSettings.EmbeddingModel sett) {
 			static List<string> _GetUniqueIconNames() {
 				HashSet<string> h = new(60000, StringComparer.OrdinalIgnoreCase);
 				
-				using var db = new sqlite(_dbFileIcons, SLFlags.SQLITE_OPEN_READONLY);
+				using var db = new sqlite(s_dbFileIcons, SLFlags.SQLITE_OPEN_READONLY);
 				using var stTables = db.Statement("SELECT name FROM _tables");
 				while (stTables.Step()) {
 					var table = stTables.GetText(0);
@@ -321,17 +295,34 @@ class Embeddings(AiSettings.EmbeddingModel sett) {
 		}
 	}
 	
+#if DEBUG
 	public List<string> GetIconNamesWithPack(IEnumerable<string> names) {
-		//TODO
-		return null;
+		string[] an = names.ToArray();
+		var nameIn = string.Join(',', an.Select(_ => "?"));
+		var d = an.ToDictionary(o => o, o => new List<string>());
+		List<string> a = [];
+		using var db = new sqlite(s_dbFileIcons, SLFlags.SQLITE_OPEN_READONLY);
+		using var stTables = db.Statement("SELECT name FROM _tables");
+		while (stTables.Step()) {
+			var table = stTables.GetText(0);
+			using var stNames = db.Statement($"SELECT name FROM {table} WHERE name COLLATE BINARY IN ({nameIn})");
+			stNames.BindAll(an);
+			while (stNames.Step()) {
+				d[stNames.GetText(0)].Add(table);
+			}
+		}
+		foreach (var (k, v) in d) {
+			foreach (var t in v) a.Add($"{t}.{k}");
+		}
+		return a;
 	}
+#endif
 	
 	#endregion
 	
 	public List<(EmVector f, float score)> GetTopMatches(float[] queryVector, List<EmVector> ems, int take) {
 		var a = ems
 			.Select(f => (f, score: CosineSimilarity(queryVector, f.vec)))
-			.Where(o => o.score >= sett.minScore)
 			.OrderByDescending(x => x.score)
 			.Take(take)
 			.ToList();
@@ -359,7 +350,7 @@ file class _EmStorageFile(string file) {
 		w.Write((ems[0] as Array).Length);
 		w.Write(hash.hash.r1);
 		w.Write(hash.hash.r2);
-		w.Write(hash.sett);
+		w.Write(hash.modelParams);
 		for (int i = 0; i < names.Count; i++) {
 			w.Write(names[i]);
 			switch (ems[i]) {
@@ -425,7 +416,42 @@ file class _EmStorageFile(string file) {
 		}
 		return d;
 	}
+	
+	public bool TryDownload(AiEmbeddingModel model, _EmHash hash) {
+#if !SCRIPT
+		if (App.IsAtHome) return false;
+#endif
+		if (_TryGetZipName(model, hash) is not { } zipName) return false;
+		string zipFile = file + ".7z";
+		try {
+			var r = internet.http.Get($"https://www.libreautomate.com/download/ai/embedding/{zipName}", dontWait: true);
+			if (!r.IsSuccessStatusCode) return false;
+			r.Download(zipFile);
+			var dir = pathname.getDirectory(file);
+			if (!SevenZip.Extract(out var errors, zipFile, dir)) { Debug_.Print(errors); return false; }
+		}
+		catch (Exception ex) { Debug_.Print(ex); }
+		finally { filesystem.delete(zipFile, FDFlags.CanFail); }
+		return true;
+	}
+	
+	string _TryGetZipName(AiEmbeddingModel model, _EmHash hash) {
+		if (!(file.Ends("-icons.bin") && model.isCompact && model.GetType().Assembly == GetType().Assembly)) return null;
+		
+		var md5 = new Hash.MD5Context();
+		md5.Add(hash.hash);
+		md5.Add(hash.modelParams);
+		return $"{pathname.getNameNoExt(file)}-{md5.Hash.ToStringBase64Url()}.zip";
+	}
+	
+	public void PrintUploadIfAtHome(AiEmbeddingModel model, _EmHash hash) {
+#if !SCRIPT
+		if (!App.IsAtHome) return;
+#endif
+		if (_TryGetZipName(model, hash) is not { } zipName) return;
+		print.it($"<><script AI upload.cs|{file}|{zipName}>Upload<> AI embedding vectors.");
+	}
 }
 
-file record struct _EmHash(Hash.MD5Result hash, string sett);
+file record struct _EmHash(Hash.MD5Result hash, string modelParams);
 

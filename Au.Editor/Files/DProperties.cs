@@ -106,7 +106,7 @@ class DProperties : KDialogWindow {
 		b.AddButton(out addFile, "Other file ▾", _ButtonClick_addFile);
 		b.End();
 		
-		b.Add<AdornerDecorator>().Add(out findInLists, WBAdd.ChildOfLast).Watermark("Find in lists")
+		b.Add<AdornerDecorator>().Child().Add(out findInLists).Watermark("Find in lists")
 			.Tooltip("In button drop-down lists show only items containing this text.\n\nTip: to hide garbage files, put them in folder(s) named \"Garbage\".");
 		
 		b.End();

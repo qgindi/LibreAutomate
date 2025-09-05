@@ -38,4 +38,8 @@
 	  <ProjectReference Include="..\Au\Au.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Themes\" />
+	</ItemGroup>
+
 </Project>

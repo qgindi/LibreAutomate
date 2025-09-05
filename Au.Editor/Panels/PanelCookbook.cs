@@ -41,8 +41,7 @@ class PanelCookbook {
 		var b = new wpfBuilder(P).Columns(-1, 0, 0).Brush(SystemColors.ControlBrush);
 		b.R.Add(out _search).Tooltip("Part of recipe name.\nTo search in recipe text, click the button next to this field.\nMiddle-click to clear.").UiaName("Find recipe");
 		b.Options(modifyPadding: false, margin: new());
-		_search.TextChanged += (_, _) => _Search(false);
-		b.xAddButtonIcon("*Material.TextSearch" + Menus.darkYellow, _ => _Search(true), "Find in recipe text");
+		_search.TextChanged += (_, _) => _Search();
 		b.xAddButtonIcon("*EvaIcons.ArrowBack" + Menus.darkYellow, _ => _HistoryMenu(), "Go back...").Margin(right: 3);
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, FullRowExpand = true, HotTrack = true, BackgroundColor = 0xf0f8e8 };
 		b.Row(-1).Add(_tv);
@@ -175,7 +174,7 @@ class PanelCookbook {
 		}
 	}
 	
-	void _Search(bool inBody) {
+	void _Search() {
 		var s = _search.Text.Trim();
 		if (s.Length < 2) {
 			_tv.SetItems(_root.Children());
@@ -187,16 +186,17 @@ class PanelCookbook {
 		
 		//print.clear();
 		
-		var root2 = _SearchContains(_root);
-		_Item _SearchContains(_Item parent) {
+		var rootInName = _SearchContains(_root, false);
+		var rootInText = _SearchContains(_root, true);
+		_Item _SearchContains(_Item parent, bool inText) {
 			_Item R = null;
 			for (var n = parent.FirstChild; n != null; n = n.Next) {
 				_Item r;
 				if (n.dir) {
-					r = _SearchContains(n);
+					r = _SearchContains(n, inText);
 					if (r == null) continue;
 				} else {
-					var t = inBody ? n.GetBodyTextWithoutLinksEtc() : n.name;
+					var t = inText ? n.GetBodyTextWithoutLinksEtc() : n.name;
 					if (t == null || !t.Contains(s, StringComparison.OrdinalIgnoreCase)) continue;
 					r = new _Item(n.name, n.ftype);
 				}
@@ -205,15 +205,16 @@ class PanelCookbook {
 			}
 			return R;
 			
-			//rejected: use SQLite FTS5. Tried but didn't like.
+			//rejected: use SQLite FTS5. Tried but didn't like. If need FTS, better use Lucene.
 			//	It would be useful with many big files. Now we have < 200 small files, total < 1 MB.
 		}
 		
 		//try stemmed fuzzy. Max Levenshtein distance 1 for a word.
 		//	rejected: use FuzzySharp. For max distance 1 don't need it.
-		if (root2 == null && !inBody && s.Length >= 3) {
-			var a1 = _Stem(s);
-			root2 = _SearchFuzzy(_root);
+		bool fuzzy = rootInName == null && s.Length >= 3;
+		if (fuzzy) {
+			string[] a1 = _Stem(s);
+			rootInName = _SearchFuzzy(_root);
 			_Item _SearchFuzzy(_Item parent) {
 				_Item R = null;
 				for (var n = parent.FirstChild; n != null; n = n.Next) {
@@ -243,6 +244,21 @@ class PanelCookbook {
 		//rejected: try joined words. Eg for "webpage" also find "web page" and "web-page".
 		//	Will find all after typing "web". Never mind fuzzy.
 		
+		_Item root2 = null;
+		if ((rootInName ?? rootInText) != null) {
+			root2 = new(null, FNType.Folder) { isExpanded = true };
+			_AddToRoot2(rootInName, fuzzy ? "Found in name using fuzzy search" : "Found in name");
+			_AddToRoot2(rootInText, "Found in text");
+			
+			void _AddToRoot2(_Item found, string name) {
+				if (found == null) return;
+				root2.AddChild(new(name, FNType.Other));
+				foreach (var v in found.Children().ToArray()) {
+					v.Remove();
+					root2.AddChild(v);
+				}
+			}
+		}
 		_tv.SetItems(root2?.Children());
 		
 		static bool _Match(string s1, string s2) {
@@ -367,9 +383,7 @@ class PanelCookbook {
 		string ITreeViewItem.DisplayText => name;
 		
 		object ITreeViewItem.Image
-			=> dir ? EdResources.FolderArrow(isExpanded)
-			: ftype == FNType.Class ? EdResources.c_iconClass
-			: "*BoxIcons.RegularCookie" + Menus.darkYellow;
+			=> ftype switch { FNType.Folder => EdResources.FolderArrow(isExpanded), FNType.Script => "*BoxIcons.RegularCookie" + Menus.darkYellow, FNType.Class => EdResources.c_iconClass, _ => null };
 		
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
 		
@@ -378,6 +392,14 @@ class PanelCookbook {
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		
 		bool ITreeViewItem.IsFolder => dir;
+		
+		bool _IsHeading => ftype is FNType.Other;
+
+		int ITreeViewItem.Color(TVColorInfo ci) => _IsHeading ? 0xB5DC8D : -1;
+
+        bool ITreeViewItem.IsDisabled => _IsHeading;
+
+        TVParts ITreeViewItem.NoParts => _IsHeading ? TVParts.Image : 0;
 		
 		#endregion
 		

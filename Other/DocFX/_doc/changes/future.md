@@ -28,9 +28,11 @@ New classes:
 
 New members:
 - `wpfBuilder.Validation` overload.
+- `wpfBuilder.Add` overloads without parameter `flags`. The old overloads now are hidden. Instead of the "child of last" flag call function `Child` before `Add`. Instead of the "don't change properties" flag added parameter *raw* to one overload.
+- `wpfBuilder.Child`.
 
 New parameters:
-- .
+- `JSettings.Load`: JSON serializer options.
 
 Improved:
 - .
@@ -38,6 +40,6 @@ Improved:
 Fixed bugs:
 - `script.restart` does not work.
 - `JSettings` can deadlock.
-- `WTaskbarButton` cannot be used in multiple threads.
+- `WTaskbarButton` exception if used in multiple threads.
 
 ### Breaking changes

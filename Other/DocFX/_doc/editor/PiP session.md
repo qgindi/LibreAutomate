@@ -23,7 +23,7 @@ A PiP session runs under the same Windows user account as the main session, so p
 
 Only these LibreAutomate settings are separate:
 - **Program > Start hidden**, **Visible if**, **Check for updates**
-- **Workspace > Run scripts**, **Auto-backup**
+- **Workspace > Startup scripts**, **Auto-backup**
 - Hotkeys (all in the **Hotkeys** page)
 - Window positions (main window, tool windows)
 - Bookmarks, breakpoints, expanded folders, open files, folding.

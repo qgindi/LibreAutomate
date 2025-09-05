@@ -295,6 +295,10 @@ partial class AuDocs {
 			case "inheritdoc":
 				if (!autoInheritdoc) _Warning("Non-expanded <inheritdoc>. Try to fully qualify a parameter type.", sxml);
 				continue;
+			case "exclude":
+				_Warning("Use [NoDoc] instead.", x);
+				//_b.Append("<exclude/>");
+				break;
 			default:
 				_Warning("unsupported tag", x);
 				continue;

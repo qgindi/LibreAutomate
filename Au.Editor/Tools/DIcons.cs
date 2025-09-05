@@ -1,3 +1,4 @@
+using System.Security.Authentication;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -24,7 +25,7 @@ class DIcons : KDialogWindow {
 	string _color = "#000000";
 	Random _random;
 	int _dpi;
-	//bool _withCollection;
+	CancellationTokenSource _ctsWindow = new(), _ctsTask;
 	KTreeView _tv;
 	KTextBox _tName;
 	KScintilla _tCustom;
@@ -36,14 +37,13 @@ class DIcons : KDialogWindow {
 		b.Columns(-1, 0);
 		
 		//left - edit control and tree view
-		b.Row(-1).StartDock();
-		b.Add(out _tName).Tooltip(@"Search.
+		b.Row(-1).StartGrid().Columns(-1, 0);
+		b.Add(out _tName).Focus().Tooltip(@"Search.
 Part of icon name, or wildcard expression.
 Examples: part, Part (match case), start*, *end, **rc regex case-sensitive.
-Can be Pack.Icon, like Material.Folder.")
-			.Dock(Dock.Top).Focus();
-		//b.Focus(); //currently cannot use this because of WPF tooltip bugs
-		b.xAddInBorder(out _tv);
+Can be Pack.Icon, like Material.Folder.");
+		b.xAddButtonIcon("*RemixIcon.GeminiLine" + Menus.blue, _ => _AiSearch(), "Use AI to find icons by name.\nFinds synonyms, understands languages, etc.");
+		b.Row(-1).xAddInBorder(out _tv);
 		_tv.ImageBrush = System.Drawing.Brushes.White;
 		b.End();
 		
@@ -115,7 +115,8 @@ Can be Pack.Icon, like Material.Folder.")
 					c2 = ImageUtil.LoadWpfImageElement(s);
 					c2.Width = c2.Height = 32;
 				}
-			} catch { }
+			}
+			catch { }
 			customPreview.Child = c;
 			customPreview2.Child = c2;
 			_EnableControls();
@@ -350,6 +351,177 @@ Can be Pack.Icon, like Material.Folder.")
 	string _ItemColor(_Item k) => _random == null ? _color : _ColorToString(k._color);
 	
 	bool _UseCustom => !_tCustom.AaWnd.Is0 && _tCustom.aaaLen8 > 0;
+	
+	async void _AiSearch() {
+		string query = _tName.Text;
+		if (query.NE()) return;
+		
+		AI.AiModel.ApiKeys = App.Settings.ai_ak;
+		var emModel = AI.AiModel.Models.OfType<AI.AiEmbeddingModel>().FirstOrDefault(o => o.isCompact && o.DisplayName == App.Settings.ai_modelIconSearch);
+		if (emModel == null) {
+			_AiSettingsError($"Please go to Options > AI and select models for icon search.");
+			return;
+		}
+		
+		AI.AiChatModel chatModel = null;
+		if (App.Settings.ai_modelIconImprove is { } mii) {
+			chatModel = AI.AiModel.Models.OfType<AI.AiChatModel>().FirstOrDefault(o => o.DisplayName == mii);
+			if (chatModel == null) {
+				_AiSettingsError($"Please go to Options > AI and select a model for icon improve.");
+				return;
+			}
+		}
+		
+		bool inChat = false;
+		this.IsEnabled = false;
+		try {
+			_ctsTask?.Cancel();
+			_ctsTask?.Dispose();
+			_ctsTask = CancellationTokenSource.CreateLinkedTokenSource(_ctsWindow.Token);
+			var cancel = _ctsTask.Token;
+			
+			var em = new AI.Embeddings(emModel);
+			var ems = await Task.Run(() => em.GetIconsEmbeddings(cancel));
+			
+			using var osd = osdText.showText("Searching.\nClick to cancel.", -1, PopupXY.Mouse, showMode: OsdMode.ThisThread);
+			osd.ResizeWhenContentChanged = true;
+			
+			var queryVector = await Task.Run(() => em.CreateEmbedding(query, cancel));
+			var topMatches = em.GetTopMatches(queryVector, ems, take: 500).Select(o => o.f.name).ToArray();
+			
+			void _Test() {
+				var a1 = _a.Select(o => o._name).Where(o => o.Contains("Hourglass")).Distinct().ToArray();
+				var a2 = topMatches.Where(o => o.Contains("Hourglass")).ToArray();
+				print.it(a1.Length, a2.Length, a1.Except(a2));
+			}
+			print.it("---");//TODO
+			_Test();
+			
+			_DisplayResults();
+			
+			if (chatModel != null) {
+				inChat = true;
+				var b = new StringBuilder();
+				
+				bool test = keys.isNumLock;
+				if (test) {
+					b.Append($$""""
+## Instructions for AI
+
+The `## Query` section contains a search phrase provided by the user. The user wants to find an icon by name. The query can be in any language.
+
+The `## List` section contains icon names. All names are in English.
+
+For each icon in the `## List`:
+- Return a relevance score between 0.0 and 1.0, measuring how well the icon name matches the query.
+- Keep the same order as the input list.
+- Output exactly one number per line.
+- Do not include icon names.
+- Do not include any text, labels, or markup before or after the list or list items.
+
+Do not remove items. The returned list must contain exactly {{topMatches.Length}} items.
+
+## Query
+
+{{query}}
+
+## List
+
+"""");
+				} else {
+					b.Append($$""""
+## Instructions for AI
+
+The `## Query` section contains a search phrase provided by the user. The user wants to find an icon by name. The query can be in any language.
+
+The `## List` section contains icon names. All names are in English.
+
+Return a ranked and filtered list of icon names, in the format:
+
+```
+Name
+Name
+Name
+...
+```
+
+Exclude icons unrelated to the search query. When unsure - include.
+
+Do not add any extra text before or after the list. Do not enclose in fences. Return just raw list.
+
+## Query
+
+{{query}}
+
+## List
+
+"""");
+					
+				}
+				
+				
+				foreach (var name in topMatches) {
+					b.Append($"\n{name}");
+				}
+				var message = b.ToString();
+				//print.it(message);
+				
+				osd.Text = "Improving results.\nClick to cancel.";
+				osd.Clicked += (o, mb) => { _ctsTask.Cancel(); };
+				
+				string system = """
+You are an AI assistant that improves the quality of icon search results.
+""";
+				var post = chatModel.GetPostData(system, [new(AI.ACMRole.user, message)]);
+				perf.first();
+				var json = await Task.Run(() => chatModel.Post(post, chatModel.GetHeaders(), cancel).Json());
+				perf.nw();
+				
+				if (test) {
+					print.it(json.ToJsonString());
+					return;
+				}
+				
+				var s = chatModel.GetAnswer(json).text;
+				topMatches = s.Lines().Distinct().ToArray(); //sometimes AI returns duplicates even if asked to make sure there are no duplicates
+				
+				_Test();//TODO
+				
+				_DisplayResults();
+			}
+			
+			void _DisplayResults() {
+				var d = _a.ToLookup(o => o._name);
+				var a = new List<_Item>(topMatches.Length * 3);
+				foreach (var name in topMatches) {
+					a.AddRange(d[name]);
+				}
+				
+				_tv.SetItems(a);
+			}
+		}
+		catch (OperationCanceledException etc) { if (etc.InnerException is TimeoutException) print.it(etc.Message); }
+		catch (InvalidCredentialException) {
+			var api = inChat ? chatModel.api : emModel.api;
+			_AiSettingsError($"Please go to Options > AI and set the API key for {api}.\nYou can create an API key in your account on the {api} website.");
+		}
+		catch (Exception e1) { print.it(e1); }
+		finally {
+			this.IsEnabled = true;
+		}
+		
+		void _AiSettingsError(string text) {
+			if (!dialog.showOkCancel("AI search error", text, owner: this)) return;
+			DOptions.AaShow(DOptions.EPage.AI);
+		}
+	}
+	
+	protected override void OnClosed(EventArgs e) {
+		_ctsWindow.Cancel();
+		_ctsWindow.Dispose();
+		_ctsTask?.Dispose();
+		base.OnClosed(e);
+	}
 	
 	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
 		_dpi = newDpi.PixelsPerInchX.ToInt();

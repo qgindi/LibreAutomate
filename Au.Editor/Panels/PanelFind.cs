@@ -1,7 +1,7 @@
-//TODO: once crashed when replacing in files.
-//	It's randon, may be hard to reproduce.
+//TODO2: once crashed when replacing in files.
+//	Can't reproduce.
 //	Replaced </msdn> with </ms> in Au project. Crashed in the middle.
-//	Probably crashed while saving, because left one ~backup file. The normal file was saved OK.
+//	Probably crashed while saving, because left one ~backup~ file. The normal file was saved OK.
 //	Process ended quickly. No exception, no log event, no dump file.
 
 using Au.Controls;
@@ -18,7 +18,7 @@ using System.Windows.Data;
 class PanelFind {
 	KScintilla _tFind, _tReplace;
 	KCheckNoBox _cCase, _cWord, _cRegex;
-	Button _bFilter;
+	Button _bInFiles, _bFilter;
 	KPopup _ttRegex, _ttNext;
 	
 	public PanelFind() {
@@ -49,7 +49,7 @@ class PanelFind {
 		bReplace.MouseRightButtonUp += (_, _) => _FindNextInEditor();
 		b.AddButton("Repl. all", _bReplaceAll_Click).Tooltip("Replace all in editor");
 		
-		b.R.AddButton("In files", _FindAllInFiles).Tooltip("Find text in files");
+		b.R.AddButton(out _bInFiles, "In files", _ => _FindAllInFiles()).Tooltip("Find text in files");
 		b.StartStack();
 		b.xAddButtonIcon(out _bFilter, "*Material.FolderSearchOutline" + Menus.green, _FilterMenu, "Let 'In files' search only in current project or root folder").Padding(1, 0, 1, 1);
 		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _Options(), "More options");
@@ -59,18 +59,20 @@ class PanelFind {
 		var bBack = b.Last;
 		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
 		
-		b.xAddButtonIcon(Menus.iconRegex, _ => { _cRegex.IsChecked = true; _ShowRegexInfo(_tReplace.IsFocused ? _tReplace : _tFind); }, "Regex tool");
-		b.xAddButtonIcon("*MaterialDesign.SavedSearch" + Menus.blue, _SavedSearches, "Saved searches");
+		b.xAddButtonIcon("*MaterialDesign.SavedSearch" + Menus.black, _SavedSearches, "Saved searches");
 		
 		b.End();
 		
 		b.R.StartStack();
-		b.Add(out _cCase, "Case").Tooltip("Match case").Checked(App.Settings.find_case);
-		b.Add(out _cWord, "Word").Tooltip("Whole word").Checked(App.Settings.find_word);
+		b.Add(out _cCase, "Case").Tooltip("Match case").Margin(right: 0).Checked(App.Settings.find_case);
+		b.Add(out _cWord, "Word").Tooltip("Whole word").Margin(right: 0).Checked(App.Settings.find_word);
 		b.Add(out _cRegex, "Regex").Tooltip("Regular expression");
+		b.xAddButtonIcon(Menus.iconRegex, _ => { _cRegex.IsChecked = true; _ShowRegexInfo(_tReplace.IsFocused ? _tReplace : _tFind); }, "Regex tool");
 		b.End().End().End();
 		
-		foreach (var v in new[] { _cCase, _cWord, _cRegex }) v.CheckChanged += _CheckedChanged;
+		_cCase.CheckChanged += _CheckedChanged;
+		_cWord.CheckChanged += _CheckedChanged;
+		_cRegex.CheckChanged += _CheckedChanged;
 		
 		P.IsVisibleChanged += (_, _) => {
 			if (P.IsVisible) UpdateQuickResults();
@@ -347,6 +349,12 @@ This setting also is used by 'Find references' etc.
 				return r | (filter << 8);
 			}
 		}
+		
+		readonly static (int flag, char letter)[] s_map = [(1, 'c'), (2, 'w'), (4, 'r'), (1 << 8, 'F'), (2 << 8, 'P'), (0x10000, 'S')];
+		
+		public string OptionsString(int other) => StringUtil.FlagsToLetters(OptionsInt | (other << 16), s_map);
+		
+		public static int OptionsStringToInt(string s) => StringUtil.FlagsFromLetters(s, s_map);
 	}
 	
 	bool _GetTextToFind(out TextToFind_ ttf, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false) {
@@ -605,7 +613,7 @@ This setting also is used by 'Find references' etc.
 	WildcardList _skip;
 	readonly string[] _aSkipImagesEtc = [".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani", ".snk", ".dll"];
 	
-	async void _FindAllInFiles(WBButtonClickArgs e) {
+	async void _FindAllInFiles() {
 		if (_cancelTS != null) {
 			_cancelTS.Cancel();
 			return;
@@ -616,8 +624,8 @@ This setting also is used by 'Find references' etc.
 		
 		App.Model.Save.AllNowIfNeed(); //save text of current document
 		
-		e.Button.IsEnabled = false;
-		var cancelTimer = timer.after(1000, _ => { if (_cancelTS != null) { e.Button.Content = "Stop"; e.Button.IsEnabled = true; } });
+		_bInFiles.IsEnabled = false;
+		var cancelTimer = timer.after(1000, _ => { if (_cancelTS != null) { _bInFiles.Content = "Stop"; _bInFiles.IsEnabled = true; } });
 		try {
 			using var workingState = Panels.Found.Prepare(PanelFound.Found.Text, ttf.findText, out var b);
 			
@@ -759,8 +767,8 @@ This setting also is used by 'Find references' etc.
 			_cancelTS?.Dispose();
 			_cancelTS = null;
 			cancelTimer.Stop();
-			e.Button.Content = "In files";
-			e.Button.IsEnabled = true;
+			_bInFiles.Content = "In files";
+			_bInFiles.IsEnabled = true;
 		}
 	}
 	CancellationTokenSource _cancelTS;
@@ -930,7 +938,7 @@ This setting also is used by 'Find references' etc.
 			if (x.ColumnCount < 4) x.ColumnCount = 4;
 			foreach (var r in x.Rows) if (r[0].NE()) r[0] = r[2]?.Limit(200);
 			foreach (var r in x.Rows.OrderBy(o => o[0], StringComparer.OrdinalIgnoreCase)) {
-				if (!r[1].NE()) c.Items.Add(new _SavedItem(r[0], r[2], r[1].ToInt(), r[3]));
+				if (!r[1].NE()) c.Items.Add(new _SavedItem(r[0], r[2], TextToFind_.OptionsStringToInt(r[1]), r[3]));
 			}
 		}
 		
@@ -941,6 +949,7 @@ This setting also is used by 'Find references' etc.
 				if (g.repl is string repl) { _tReplace.Focus(); _tReplace.aaaText = repl; }
 				_tFind.Focus();
 				_RecentUse(g, _tFind);
+				if (0 != (g.options & 0x10000)) _FindAllInFiles();
 			} else if (o == c.Items[0]) { //Save this
 				if (!_GetTextToFind(out var ttf, noRecent: true)) return; //info: returns false if text empty or regex invalid (shows tooltip)
 				string replace = _tReplace.aaaText.NullIfEmpty_();
@@ -948,14 +957,15 @@ This setting also is used by 'Find references' etc.
 				var b = new wpfBuilder("Save this search").WinSize(400);
 				b.R.Add("Name (optional)", out TextBox tName).Focus();
 				b.R.Add(out KCheckBox cAndReplace, "Include the Replace field").Disabled(replace.NE());
+				b.R.Add(out KCheckBox cInFiles, "Search in files when selected");
 				b.R.AddOkCancel();
 				b.Window.ShowInTaskbar = false;
 				if (!b.ShowDialog(App.Wmain)) return;
 				
 				var x = filesystem.exists(file, true).File ? csvTable.load(file) : new();
 				if (x.ColumnCount < 4) x.ColumnCount = 4;
-				if (x.RowCount == 0) { x.AddRow(); x.AddRow("CSV: name, flags, findText, replaceText"); }
-				string name = tName.Text.NullIfEmpty_(), text = ttf.findText, options = ttf.OptionsInt.ToS();
+				//if (x.RowCount == 0) { x.AddRow(); x.AddRow("CSV: name, options, findText, replaceText"); } //no, just adds noise
+				string name = tName.Text.NullIfEmpty_(), text = ttf.findText, options = ttf.OptionsString(cInFiles.IsChecked ? 1 : 0);
 				if (!cAndReplace.IsChecked) replace = null;
 				string[] dup = null;
 				var dupName = name is null ? null : x.Rows.FirstOrDefault(o => o[0]?.Eqi(name) == true);

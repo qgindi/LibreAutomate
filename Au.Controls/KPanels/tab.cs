@@ -100,15 +100,12 @@ public partial class KPanels {
 		void _AddToTab(bool moving) {
 			var ti = new TabItem { Style = s_styleTabItem, Header = _leaf.name, Content = _elem, Tag = this };
 			var tc = Parent._tab.tc;
-			if (tc.TabStripPlacement is Dock.Top or Dock.Bottom) ti.MinWidth = c_tabHeaderMinWidth;
 			tc.Items.Insert(_index, ti);
 			if (moving) {
 				_ShiftSiblingIndices(1);
 				Parent._VerticalTabHeader(onMove: true);
 			}
 		}
-		
-		const int c_tabHeaderMinWidth = 46;
 		
 		void _ShowHideInTab(bool show) {
 			var tc = Parent._tab.tc;

@@ -27,6 +27,6 @@ b.R.Add(out TextBox _, "custom border").Border(Brushes.LawnGreen, 2);
 
 //border with rounded corners
 b.R.Add<Border>().Border(Brushes.Orange, 1, padding: new Thickness(3, 0, 3, 1), cornerRadius: 3).Align(HorizontalAlignment.Center)
-	.Add<Label>("Label", WBAdd.ChildOfLast);
+	.Child().Add<Label>("Label");
 
 if (!b.ShowDialog()) return;
