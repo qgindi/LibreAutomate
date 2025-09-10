@@ -748,7 +748,8 @@ partial class Compiler {
 	
 	static void _GetIconFromXaml(string xaml, out MemoryStream ms) {
 		ms = new MemoryStream();
-		Au.Controls.KImageUtil.XamlImageToIconFile(ms, xaml, 16, 24, 32, 48, 64);
+		var e = ImageUtil.LoadWpfImageElement(xaml);
+		ImageUtil.ConvertWpfImageElementToIcon(ms, e, [16, 24, 32, 48, 64]);
 		ms.Position = 0;
 	}
 	

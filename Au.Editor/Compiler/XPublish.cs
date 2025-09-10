@@ -258,7 +258,8 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			} else if (DIcons.TryGetIconFromDB(f.CustomIconName, out string xaml)) {
 				var file = _csprojDir + @"\icon.ico";
 				try {
-					Au.Controls.KImageUtil.XamlImageToIconFile(file, xaml, 16, 24, 32, 48, 64);
+					var e = ImageUtil.LoadWpfImageElement(xaml);
+					ImageUtil.ConvertWpfImageElementToIcon(file, e, [16, 24, 32, 48, 64]);
 					_Add(xpg, "ApplicationIcon", file);
 				}
 				catch (Exception e1) { print.it(e1); }

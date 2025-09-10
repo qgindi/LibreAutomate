@@ -92,7 +92,7 @@ Can be Pack.Icon, like Material.Folder.");
 		b.StartGrid<Expander>("Export to current workspace folder").Columns(70, 70, 0, -1);
 		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(_Action.ExportXaml)).Disabled();
 		b.AddButton(out var bExportIco, ".ico", _ => _InsertCodeOrExport(_Action.ExportIcon)).Disabled();
-		b.Add("sizes", out iconSizes, "16,24,32,48,64");
+		b.Add("sizes", out iconSizes, "16,20,24,28,32,48,64");
 		b.End();
 		
 		b.StartStack<Expander>("Custom icon string", vertical: true);
@@ -284,7 +284,8 @@ Can be Pack.Icon, like Material.Folder.");
 					var path = $"{folder.FilePath}\\{name}{(ico ? ".ico" : ".xaml")}";
 					if (ico) {
 						var sizes = iconSizes.Text.Split_(',').Select(o => o.ToInt()).ToArray();
-						KImageUtil.XamlImageToIconFile(path, xaml, sizes);
+						var e = ImageUtil.LoadWpfImageElement(xaml);
+						ImageUtil.ConvertWpfImageElementToIcon(path, e, sizes);
 					} else {
 						filesystem.saveText(path, xaml);
 					}

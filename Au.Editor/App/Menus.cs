@@ -380,10 +380,10 @@ static class Menus {
 			
 			[Command("Create GUID")]
 			public static void Create_GUID() { var s = Guid.NewGuid().ToString(); clipboard.text = s; print.it($"Clipboard: {s}"); }
-		//}
-		
-		//[Command]
-		//public static class Refactor {
+			//}
+			
+			//[Command]
+			//public static class Refactor {
 			[Command]
 			public static void Add_function_Main() { InsertCode.AddClassProgram(); }
 			
@@ -391,7 +391,7 @@ static class Menus {
 			public static void Convert_PreserveSig() { ModifyCode.ConvertInterfaceMethodPreserveSig(); }
 		}
 		
-		[Command(separator = true)]
+		[Command("View/mode", separator = true)]
 		public static class View {
 			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap" + green)]
 			public static void Wrap_lines() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
@@ -401,6 +401,19 @@ static class Menus {
 			
 			[Command(checkable = true, image = "*Codicons.Preview" + green)]
 			public static void WPF_preview(MenuItem mi) { SciCode.WpfPreviewStartStop(mi); }
+			
+			const string c_tooltip_Autocorrect_disable_enter = """
+Temporarily disables the "auto-complete statement on Enter" features if they are enabled in Options > Code editor.
+Other ways to insert new line before ) or ] or ; when the auto-completion features are enabled:
+- Shift+Enter. Or Ctrl+Enter, depending on settings.
+- Space, then Enter.
+- Enter, then Ctrl+Z (undo).
+To exit statement when the features are disabled, use Ctrl+Enter. Or Shift+Enter, depending on settings.
+More info in app help topic "Code editor".
+""";
+			
+			[Command("Insert new line before ) ] ;", checkable = true, image = "*Unicons.Enter" + green, tooltip = c_tooltip_Autocorrect_disable_enter)]
+			public static void Autocorrect_disable_enter() { CiAutocorrect.TempToggleEnterCompletion(); }
 			
 			[Command("Customize...", separator = true)]
 			public static void Customize_edit_context_menu() { DCustomizeContextMenu.Dialog("Edit", "code editor"); }

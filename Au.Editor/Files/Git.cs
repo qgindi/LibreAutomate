@@ -112,7 +112,7 @@ static partial class Git {
 			m = "backup";
 			do {
 				if (!dialog.showInput(out m, "Git commit", "Message", editText: m, owner: App.Hmain,
-					footer: "Print:    <a href=\"status\">status</a>", onLinkClick: _Link
+					footer: new("Print:    <a href=\"status\">status</a>", _Link)
 					)) return false;
 			} while (m.NE());
 		}
@@ -190,7 +190,7 @@ static partial class Git {
 			if (!stashed) {
 				if (1 != dialog.show("Before git pull", "Need to commit, else new local changes would be lost. Commit now?",
 					"1 OK|Cancel", owner: App.Hmain,
-					footer: "Print:    <a href=\"status\">status</a>", onLinkClick: _Link
+					footer: new("Print:    <a href=\"status\">status</a>", _Link)
 					)) return;
 				if (!_Commit()) return;
 				gs.ahead++;
@@ -205,7 +205,7 @@ static partial class Git {
 					"0 Cancel|1 Keep remote\nDiscards new local changes and applies remote changes.\nAt first backups the new local commits in a new branch.\nFinally reloads the workspace.|2 Keep local\nDoes not modify the workspace.\nInserts the new remote commits before the new local commits.",
 					flags: DFlags.CommandLinks | DFlags.ExpandDown, icon: DIcon.Warning, owner: App.Hmain,
 					expandedText: "You can click Cancel and use eg GitHubDesktop to pull. It allows to merge remote changes and resolve possible conflicts. Be careful, it can damage some files.\n\nTo avoid this, always pull before making changes in the workspace.",
-					footer: "Print:    <a href=\"diff\">diff for 'keep remote'</a>    <a href=\"diffR\">diff for 'keep local'</a>", onLinkClick: _Link
+					footer: new("Print:    <a href=\"diff\">diff for 'keep remote'</a>    <a href=\"diffR\">diff for 'keep local'</a>", _Link)
 					);
 				
 				if (button == 1) {

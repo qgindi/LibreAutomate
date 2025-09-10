@@ -288,4 +288,59 @@ public static partial class ImageUtil {
 		return b;
 		//tested: GC OK. Don't need GC_.AddObjectMemoryPressure. WPF makes enough garbage to trigger GC when need.
 	}
+	
+	/// <summary>
+	/// Converts WPF image element to native icon file data.
+	/// </summary>
+	/// <param name="stream">Stream to write icon file data. Writes from start.</param>
+	/// <param name="e">Image element. See <see cref="LoadWpfImageElement"/>.</param>
+	/// <param name="sizes">Sizes of icon images to add. For example 16, 24, 32, 48, 64. Sizes can be 1 to 256 inclusive.</param>
+	/// <exception cref="ArgumentOutOfRangeException">An invalid size.</exception>
+	/// <exception cref="Exception"></exception>
+	public static unsafe void ConvertWpfImageElementToIcon(Stream stream, FrameworkElement e, int[] sizes) {
+		stream.Position = Math2.AlignUp(sizeof(Api.NEWHEADER) + sizeof(Api.ICONDIRENTRY) * sizes.Length, 4);
+		var a = stackalloc Api.ICONDIRENTRY[sizes.Length];
+		for (int i = 0; i < sizes.Length; i++) {
+			int size = sizes[i];
+			if (size < 1 || size > 256) throw new ArgumentOutOfRangeException();
+			using var b = ImageUtil.ConvertWpfImageElementToGdipBitmap(e, 96, (size, size));
+			int pos = (int)stream.Position;
+			b.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+			byte bsize = (byte)(size == 256 ? 0 : checked((byte)size));
+			a[i] = new Api.ICONDIRENTRY { bWidth = bsize, bHeight = bsize, wBitCount = 32, dwBytesInRes = (int)stream.Position - pos, dwImageOffset = pos };
+		}
+		var posEnd = stream.Position;
+		stream.Position = 0;
+		var h = new Api.NEWHEADER { wResType = 1, wResCount = (ushort)sizes.Length };
+		stream.Write(new(&h, sizeof(Api.NEWHEADER)));
+		stream.Write(new(a, sizeof(Api.ICONDIRENTRY) * sizes.Length));
+		stream.Position = posEnd;
+	}
+	
+	/// <summary>
+	/// Converts WPF image element to native icon file.
+	/// </summary>
+	/// <inheritdoc cref="ConvertWpfImageElementToIcon(Stream, FrameworkElement, int[])"/>
+	public static void ConvertWpfImageElementToIcon(string icoFile, FrameworkElement e, int[] sizes) {
+		icoFile = pathname.NormalizeMinimally_(icoFile);
+		using var stream = File.OpenWrite(icoFile);
+		ConvertWpfImageElementToIcon(stream, e, sizes);
+	}
+	
+	/// <summary>
+	/// Converts XAML icon to GDI+ icon.
+	/// </summary>
+	/// <param name="s">Icon name or XAML etc. See <see cref="ImageUtil.LoadWpfImageElement"/>.</param>
+	/// <param name="size"></param>
+	/// <returns>If fails, prints warning and returns null.</returns>
+	internal static System.Drawing.Icon XamlIconToGdipIcon_(string s, int size) {
+		try {
+			var e = ImageUtil.LoadWpfImageElement(s);
+			var ms = new MemoryStream();
+			ImageUtil.ConvertWpfImageElementToIcon(ms, e, [size]);
+			ms.Position = 0;
+			return new System.Drawing.Icon(ms);
+		}
+		catch (Exception ex) { print.warning(ex); return null; }
+	}
 }

@@ -614,6 +614,14 @@ class CiAutocorrect {
 		if (!_OnEnter2(mod)) doc.Call(Sci.SCI_NEWLINE);
 	}
 	
+	public static void TempToggleEnterCompletion() {
+		_tempDisableEnterCompletion ^= true;
+		if (!App.Settings.ci_enterBeforeParen && !App.Settings.ci_enterBeforeSemicolon) {
+			print.it($"<>Note: the <b>Let Enter insert new line before ) or ] or ;<> option temporarily disables the statement auto-completion features if they are enabled in <+options {DOptions.EPage.CodeEditor}>Options<>. Currently it has no effect because the features are disabled.");
+		}
+	}
+	static bool _tempDisableEnterCompletion;
+	
 	//mod: Ctrl 0, Shift 1, Ctrl+Shift 2, none -1, don't correct -2.
 	static bool _OnEnter2(int mod) {
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
@@ -636,7 +644,7 @@ class CiAutocorrect {
 		
 		if (!anywhere && mod != -2) {
 			if (tk1 is SyntaxKind.CloseParenToken or SyntaxKind.CloseBracketToken && tok1.SpanStart == pos) {
-				if (App.Settings.ci_enterBeforeParen && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
+				if (!_tempDisableEnterCompletion && App.Settings.ci_enterBeforeParen && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
 					canCorrect = canCorrectOnEnterBeforeParenEtc = nodeFromPos
 						is BaseArgumentListSyntax or BaseParameterListSyntax or ArrayRankSpecifierSyntax
 						or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax
@@ -645,7 +653,7 @@ class CiAutocorrect {
 						or (StatementSyntax and not BlockSyntax) || _IsSwitchCast(nodeFromPos);
 				}
 			} else if (tk1 is SyntaxKind.SemicolonToken && tok1.SpanStart == pos) {
-				if (App.Settings.ci_enterBeforeSemicolon && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
+				if (!_tempDisableEnterCompletion && App.Settings.ci_enterBeforeSemicolon && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
 					canCorrect = canCorrectOnEnterBeforeParenEtc = !(nodeFromPos is ForStatementSyntax or EmptyStatementSyntax);
 				}
 			} else if (!isEOF) {

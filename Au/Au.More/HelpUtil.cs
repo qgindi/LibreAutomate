@@ -24,7 +24,7 @@ public static class HelpUtil {
 		
 		var url = AuHelpBaseUrl;
 		if (!url.Ends('/')) url += "/";
-		if (!topic.NE()) url = url + (topic.Contains('/') ? null : (topic.Starts("Au.") ? "api/" : "api/Au.")) + topic + (topic.Ends('/') || topic.Ends(".html") ? null : ".html");
+		if (!topic.NE()) url = url + (topic.Contains('/') ? null : (topic.Starts("Au.") ? "api/" : "api/Au.")) + topic + (topic.Ends('/') || topic.Contains(".html") ? null : ".html");
 		return url;
 	}
 	

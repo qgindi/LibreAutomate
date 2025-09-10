@@ -93,11 +93,10 @@ public abstract record class JSettings : IDisposable {
 					} else {
 						if (!Environment.UserInteractive) throw;
 						int button = dialog.show("Failed to load settings",
-							$"{ex.ToStringWithoutStack()}\n\n<a href=\"{file}\">{file}</a>",
+							new($"{ex.ToStringWithoutStack()}\n\n<a>{file}</a>", o => { run.selectInExplorer(file); }),//TODO: test (all DText ctor calls)
 							"1 Exit|2 Backup (rename) the file and use default settings",
 							flags: DFlags.CommandLinks,
-							icon: DIcon.Error,
-							onLinkClick: o => { run.selectInExplorer(o.LinkHref); });
+							icon: DIcon.Error);
 						if (button == 1) Environment.Exit(1);
 						else if (filesystem.exists(file)) filesystem.move(file, file + ".backup", FIfExists.Delete);
 					}

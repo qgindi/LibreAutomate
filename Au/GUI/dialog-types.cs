@@ -1,10 +1,22 @@
 #pragma warning disable 649 //unused fields in API structs
 
 namespace Au.Types {
+	/// <summary>
+	/// Text for <see cref="dialog"/> functions. Supports links. Has implicit conversion from string.
+	/// </summary>
+	/// <param name="text">Text. Links can be specified like <c><![CDATA["Text <a>link</a> text."]]></c>.</param>
+	/// <param name="links">Link click handlers like <c>e => { print.it("link"); }</c>.</param>
+	public record class DText(string text, params Action<DEventArgs>[] links) {
+		/// <summary>
+		/// Implicit conversion from string.
+		/// </summary>
+		/// <returns><c>null</c> if the string is <c>null</c>.</returns>
+		public static implicit operator DText(string s) => s == null ? null : new(s, null);
+	}
 	
 #pragma warning disable 1591 //missing XML documentation
 	/// <summary>
-	/// Standard icons for <see cref="dialog.show"/> and similar functions.
+	/// Standard icons for <see cref="dialog"/> functions.
 	/// </summary>
 	public enum DIcon {
 		Warning = 0xffff,
@@ -28,24 +40,8 @@ namespace Au.Types {
 		App = Api.IDI_APPLICATION
 	}
 	
-	//rejected: struct DIcon with public static fields for common icons, like TaskDialogIcon. Rarely used.
-	//	Then also could support string like "x". But is it good?
-	//	Bad: intellisense does not auto-show completions like it does for enum. In our editor could make it show.
-	//public struct DIcon2
-	//{
-	//	object _o; //icon, Icon, Bitmap, IntPtr, string, int (standard icon)
-	
-	//	internal DIcon2(object o) {
-	//		_o = o;
-	//	}
-	
-	//	public static implicit operator DIcon2(icon i) => new(i);
-	
-	//	//public static implicit operator DIcon2(string i) => new(icon.of(i, ?)); //now we don't know icon size. Need different sizes for main and footer icons.
-	//}
-	
 	/// <summary>
-	/// Text edit field type for <see cref="dialog.showInput"/>, <see cref="dialog.SetEditControl"/>, etc.
+	/// Text edit field type for <see cref="dialog.showInput"/>, <see cref="dialog.Edit"/>, etc.
 	/// </summary>
 	public enum DEdit {
 		None, Text, Multiline, Password, Number, Combo
@@ -53,14 +49,14 @@ namespace Au.Types {
 #pragma warning restore 1591 //missing XML documentation
 	
 	/// <summary>
-	/// Flags for <see cref="dialog.show"/> and similar functions.
+	/// Flags for <see cref="dialog"/> functions.
 	/// </summary>
 	[Flags]
 	public enum DFlags {
 		/// <summary>
 		/// Display custom buttons as a column of command-links, not as a row of classic buttons.
 		/// Command links can have multi-line text. The first line has bigger font.
-		/// More info about custom buttons: <see cref="dialog.show"/>.
+		/// More info about custom buttons: <see cref="dialog.Buttons"/>.
 		/// </summary>
 		CommandLinks = 1,
 		
@@ -70,7 +66,7 @@ namespace Au.Types {
 		ExpandDown = 1 << 1,
 		
 		/// <summary>
-		/// Set <see cref="dialog.Width"/> = 700.
+		/// Call <see cref="dialog.Wider"/> with <i>width</i> 700.
 		/// </summary>
 		Wider = 1 << 2,
 		
@@ -92,17 +88,28 @@ namespace Au.Types {
 		CenterMouse = 1 << 5,
 		
 		/// <summary>
-		/// x y are relative to the primary screen (ignore <see cref="dialog.Screen"/> etc).
-		/// More info: <see cref="dialog.SetXY"/>. 
+		/// x y are raw coordinates relative to the primary screen.
+		/// More info: <see cref="dialog.XY"/>, <see cref="dialog.InScreen"/>. 
 		/// </summary>
 		RawXY = 1 << 6,
 		
-		//rejected. Can use dialog.Topmost, dialog.options.topmostIfNoOwnerWindow.
-		///// <summary>
-		///// Make the dialog a topmost window (always on top of other windows), regardless of <see cref="dialog.options.topmostIfNoOwnerWindow"/> etc.
-		///// More info: <see cref=""/>. 
-		///// </summary>
-		//Topmost = ,
+		/// <summary>
+		/// Add <b>Minimize</b> button to the title bar.
+		/// This flag is ignored if owner window specified.
+		/// </summary>
+		MinimizeButton = 1 << 7,
+		
+		/// <summary>
+		/// Make the dialog a topmost window (always on top of other windows), regardless of <see cref="dialog.options.topmostIfNoOwnerWindow"/> etc.
+		/// 
+		/// If neither <c>Topmost</c> nor <c>NoTopmost</c> are set, makes topmost if both these are true: no owner window, <see cref="dialog.options.topmostIfNoOwnerWindow"/> is <c>true</c> (default).
+		/// </summary>
+		Topmost = 1 << 8,
+		
+		/// <summary>
+		/// Don't make the dialog a topmost window, regardless of <see cref="dialog.options.topmostIfNoOwnerWindow"/> etc.
+		/// </summary>
+		NoTopmost = 1 << 9,
 		
 		//NoTaskbarButton = , //not so useful
 		//NeverActivate = , //don't know how to implement. TDF_NO_SET_FOREGROUND does not work. LockSetForegroundWindow does not work if we can activate windows. HCBT_ACTIVATE can prevent activating but does not prevent deactivating.
@@ -131,7 +138,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Sets initial and gets final checked radio button. It is button id (as specified in <see cref="RadioButtons"/>), not index.
-		/// See <see cref="dialog.SetRadioButtons"/>.
+		/// See <see cref="dialog.RadioButtons"/>.
 		/// </summary>
 		public int RadioId { get; set; }
 		
@@ -155,40 +162,20 @@ namespace Au.Types {
 	/// <summary>
 	/// Arguments for <see cref="dialog"/> event handlers.
 	/// </summary>
+	/// <param name="d">The dialog.</param>
+	/// <param name="hwnd">The dialog window.</param>
+	/// <param name="message">See <ms>task dialog notifications</ms>.</param>
+	/// <param name="wParam">See <ms>task dialog notifications</ms>.</param>
+	/// <param name="Button">In a <see cref="dialog.ButtonClicked"/> event handler - button id.</param>
+	/// <param name="TimerTimeMS">In a <see cref="dialog.Timer"/> event handler - timer time in milliseconds. The handler can set <c>returnValue</c> = 1 to reset this.</param>
+	/// <param name="LinkHref">In an <see cref="dialog.HyperlinkClicked"/> event handler - the <c>href</c> attribute.</param>
 	/// <remarks>
 	/// To return a non-zero value from the callback function, assign the value to the <c>returnValue</c> field.
 	/// More info: <ms>TaskDialogCallbackProc</ms>.
 	/// </remarks>
-	public class DEventArgs : EventArgs {
-		internal DEventArgs(dialog obj_, wnd hwnd_, DNative.TDN message_, nint wParam_, nint lParam_) {
-			d = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
-			LinkHref = (message_ == DNative.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
-		}
-		
-#pragma warning disable 1591 //missing XML documentation
-		public dialog d;
-		public wnd hwnd;
-		/// <summary>Reference: <ms>task dialog notifications</ms>.</summary>
-		public DNative.TDN message;
-		public nint wParam;
+	public record class DEventArgs(dialog d, wnd hwnd, DNative.TDN message, nint wParam, int Button, int TimerTimeMS, string LinkHref) {
+		///
 		public int returnValue;
-#pragma warning restore 1591 //missing XML documentation
-		
-		/// <summary>
-		/// Clicked hyperlink <c>href</c> attribute value. Use in <see cref="dialog.HyperlinkClicked"/> event handler.
-		/// </summary>
-		public string LinkHref { get; private set; }
-		
-		/// <summary>
-		/// Clicked button id. Use in <see cref="dialog.ButtonClicked"/> event handler.
-		/// </summary>
-		public int Button => (int)wParam;
-		
-		/// <summary>
-		/// Dialog timer time in milliseconds. Use in <see cref="dialog.Timer"/> event handler.
-		/// The event handler can set <c>returnValue</c>=1 to reset this.
-		/// </summary>
-		public int TimerTimeMS => (int)wParam;
 		
 		/// <summary>
 		/// Your <see cref="dialog.ButtonClicked"/> event handler function can use this to prevent closing the dialog.
@@ -481,6 +468,5 @@ namespace Au {
 		delegate int TaskDialogCallbackProc(wnd hwnd, DNative.TDN notification, nint wParam, nint lParam, IntPtr data);
 		
 		#endregion private WinAPI
-		
 	}
 }

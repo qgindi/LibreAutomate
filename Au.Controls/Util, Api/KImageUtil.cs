@@ -480,42 +480,6 @@ public static unsafe class KImageUtil {
 	//	return r;
 	//}
 	
-	/// <summary>
-	/// Converts XAML image to native icon file data.
-	/// </summary>
-	/// <param name="stream">Stream to write icon file data. Writes from start.</param>
-	/// <param name="image">Image XAML. See <see cref="ImageUtil.LoadWpfImageElement"/>.</param>
-	/// <param name="sizes">Sizes of icon images to add to the ico file. For example 16, 24, 32, 48, 64. Sizes can be 1 to 256 inclusive.</param>
-	/// <exception cref="ArgumentOutOfRangeException">An invalid size.</exception>
-	/// <exception cref="Exception"></exception>
-	public static unsafe void XamlImageToIconFile(Stream stream, string image, params int[] sizes) {
-		var e = ImageUtil.LoadWpfImageElement(image);
-		stream.Position = Math2.AlignUp(sizeof(Api.NEWHEADER) + sizeof(Api.ICONDIRENTRY) * sizes.Length, 4);
-		var a = stackalloc Api.ICONDIRENTRY[sizes.Length];
-		for (int i = 0; i < sizes.Length; i++) {
-			int size = sizes[i];
-			if (size < 1 || size > 256) throw new ArgumentOutOfRangeException();
-			using var b = ImageUtil.ConvertWpfImageElementToGdipBitmap(e, 96, (size, size));
-			int pos = (int)stream.Position;
-			b.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-			byte bsize = (byte)(size == 256 ? 0 : checked((byte)size));
-			a[i] = new Api.ICONDIRENTRY { bWidth = bsize, bHeight = bsize, wBitCount = 32, dwBytesInRes = (int)stream.Position - pos, dwImageOffset = pos };
-		}
-		var posEnd = stream.Position;
-		stream.Position = 0;
-		var h = new Api.NEWHEADER { wResType = 1, wResCount = (ushort)sizes.Length };
-		stream.Write(new(&h, sizeof(Api.NEWHEADER)));
-		stream.Write(new(a, sizeof(Api.ICONDIRENTRY) * sizes.Length));
-		stream.Position = posEnd;
-	}
-	
-	///
-	public static void XamlImageToIconFile(string file, string image, params int[] sizes) {
-		file = pathname.NormalizeMinimally_(file);
-		using var stream = File.OpenWrite(file);
-		XamlImageToIconFile(stream, image, sizes);
-	}
-	
 	//currently not used.
 	///// <summary>
 	///// Creates GDI+ <b>Bitmap</b> from a GDI bitmap.

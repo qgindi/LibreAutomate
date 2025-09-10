@@ -82,7 +82,7 @@ class HttpServerSessionExamples : HttpServerSession {
 		
 		//Example of how SERVER can process "run script" requests using POST request.
 		if (m.Method == "POST" && m.TargetPath == "/script.run") {
-			try { script.run(m.Multipart["name"], m.Multipart["a0"]); }
+			try { script.run(m.Multipart["name"].Text, m.Multipart["a0"].Text); }
 			catch { r.Status = System.Net.HttpStatusCode.NotFound; }
 		}
 		
@@ -103,7 +103,7 @@ class HttpServerSessionExamples : HttpServerSession {
 		//Receives script code, saves it in an existing script (overwrites), and runs the script.
 		Auth((u, p) => p == "password441+k");
 		if (m.Method == "POST" && m.TargetPath == "/script.run/code") {
-			string file = m.Multipart["file"], code = m.Multipart["code"];
+			string file = m.Multipart["file"].Text, code = m.Multipart["code"].Text;
 			string fullPath = folders.Workspace + $@"files\Volatile\{file}";
 			if (code != filesystem.loadText(fullPath)) filesystem.saveText(fullPath, code);
 			script.run($@"\Volatile\{file}");

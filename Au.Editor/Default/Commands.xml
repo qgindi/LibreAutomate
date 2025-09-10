@@ -59,6 +59,7 @@ All attributes are optional. The Example command contains all.
 		<Wrap_lines separator="" />
 		<Images_in_code />
 		<WPF_preview />
+		<Autocorrect_disable_enter />
 	</Edit>
 	<Tools>
 		<Input_recorder />

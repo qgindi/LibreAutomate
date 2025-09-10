@@ -10,6 +10,8 @@ Added commands in menu **Edit > Find**:
 
 Documentation improvements. New articles.
 
+Added menu command **Edit > View/mode > Insert new line before ) ] ;**. Temporarily disables the statement auto-completion on `Enter` feature. And toolbar button.
+
 New tools:
 - .
 
@@ -27,12 +29,16 @@ New classes:
 - .
 
 New members:
-- `wpfBuilder.Validation` overload.
-- `wpfBuilder.Add` overloads without parameter `flags`. The old overloads now are hidden. Instead of the "child of last" flag call function `Child` before `Add`. Instead of the "don't change properties" flag added parameter *raw* to one overload.
-- `wpfBuilder.Child`.
+- `wpfBuilder.Add` overloads without parameter `flags`. The old overloads now are hidden. Flags replaced with: function `Child`; parameter *raw* of one `Add` overload.
+- `dialog`: fluent methods for setting dialog properties. The old functions now are hidden.
+- And more.
 
 New parameters:
-- `JSettings.Load`: JSON serializer options.
+- 
+
+New features:
+- `dialog`: easier to add links.
+- `dialog`: supports XAML icons.
 
 Improved:
 - .

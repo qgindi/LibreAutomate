@@ -252,7 +252,7 @@ foreach (string path in args.Skip(1)) {
 							nssFile = a[i];
 						}
 					} else {
-						if (1 != dialog.show("Your nss file still not imported into shell.nss", "Open shell.nss?", buttons: "1 OK|0 Cancel", footer: $"<a href=\"{infoUrl}\">Setup info</a>", onLinkClick: e => { run.itSafe(e.LinkHref); }, owner: this)) return;
+						if (1 != dialog.show("Your nss file still not imported into shell.nss", "Open shell.nss?", buttons: "1 OK|0 Cancel", footer: new($"<a>Setup info</a>", _NssLink), owner: this)) return;
 					}
 					if (!App.Model.OpenAndGoTo(nssFile, kind: FNFind.File)) run.itSafe(nssFile);
 				}
@@ -264,11 +264,15 @@ foreach (string path in args.Skip(1)) {
 				if (!filesystem.exists(r).Directory) {
 					r = folders.ProgramFiles + "Nilesoft Shell";
 					while (!filesystem.exists(r).Directory) {
-						if (!dialog.showInput(out r, "Where is Nilesoft Shell installed?", $"Nilesoft Shell folder path", footer: $"<a href=\"{infoUrl}\">Setup info</a>", onLinkClick: e => { run.itSafe(e.LinkHref); }, owner: this)) return false;
+						if (!dialog.showInput(out r, "Where is Nilesoft Shell installed?", $"Nilesoft Shell folder path", footer: new($"<a>Setup info</a>", _NssLink), owner: this)) return false;
 						App.Settings.nilesoftShellDir = r;
 					}
 				}
 				return true;
+			}
+			
+			static void _NssLink(DEventArgs _) {
+				run.itSafe(infoUrl);
 			}
 		}
 	}

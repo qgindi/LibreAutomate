@@ -83,6 +83,7 @@ static class GenerateCode {
 	/// Prints delegate code. Does not insert.
 	/// </summary>
 	public static void CreateDelegate() {
+		//TODO: now does not work in `params Delegate[]`
 		if (!_CreateDelegate()) print.it("To create delegate code, the text cursor must be where a delegate can be used, for example after 'Event+=' or in a function argument list.");
 	}
 	

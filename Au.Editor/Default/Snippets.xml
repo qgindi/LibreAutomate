@@ -126,26 +126,20 @@ finally {  }]]>
 			<![CDATA[if (!dialog.showYesNo("${1:header}", $"${2:text}"$3)) return;]]>
 		</list>
 		<list item="Custom &amp;buttons">
-			<![CDATA[int button = dialog.show("${1:header}", $"${2:text}", "${3:1 OK|0 Cancel|2 Yes|3 No|4 Retry|5 Close|10 Button1|11 Button2}", flags: DFlags.CommandLinks$4);
+			<![CDATA[int button = dialog.show("${1:header}", $"${2:text}", "${3:1 OK|2 Cancel|3 Yes|4 No|5 Retry|6 Close|10 Button1|11 Button2}", flags: DFlags.CommandLinks$4);
 switch (button) {
 case 1: $0 break;
-case 2:  break;
 case 3:  break;
 case 4:  break;
 case 5:  break;
+case 6:  break;
 case 10:  break;
 case 11:  break;
 default: return;
 }]]>
 		</list>
 		<list item="&amp;List of buttons">
-			<![CDATA[int button = dialog.showList("${1:one|two|three}", "${2:header}", $"${3:text}"$4);
-switch (button) {
-case 1: $0 break;
-case 2:  break;
-case 3:  break;
-default: return;
-}]]>
+			<![CDATA[int button = dialog.showList("${1:one|two|three}", "${2:header}", $"${3:text}"$4);}]]>
 		</list>
 		<list item="&amp;Text input">
 			<![CDATA[if (!dialog.showInput(out string ${1:s}, "${2:header}", $"${3:text}"$4)) return;]]>

@@ -171,23 +171,23 @@ public static class script {
 		if (s_setupException.Has(UExcept.Print)) print.it(e);
 		if (s_setupException.Has(UExcept.Dialog)) {
 			var text = e.ToStringWithoutStack();
+			var d = new dialog("Task failed", null, "Close", flags: DFlags.ExpandDown, expandedText: e.ToString());
 			if (ScriptEditor.Available) {
 				var st = new StackTrace(e, true);
-				var b = new StringBuilder(text);
-				b.Append("\n");
+				var b = new StringBuilder(text + "\n");
 				for (int i = 0; i < st.FrameCount; i++) {
 					var f = st.GetFrame(i);
 					if (f.HasSource()) b.Append($"\n<a href=\"{i}\">{f.GetMethod()?.Name}</a> in {pathname.getName(f.GetFileName())}:{f.GetFileLineNumber()}");
 				}
-				dialog.show("Task failed", b.ToString(), "Close", flags: DFlags.ExpandDown, expandedText: e.ToString(), onLinkClick: _Link1);
-				void _Link1(DEventArgs e) {
+				text = b.ToString();
+				d.HyperlinkClicked += e => {
 					if (s_setupException.Has(UExcept.Print)) e.d.Send.Close();
 					var f = st.GetFrame(e.LinkHref.ToInt());
 					ScriptEditor.Open(f.GetFileName(), f.GetFileLineNumber(), Math.Max(0, f.GetFileColumnNumber() - 1));
-				}
-			} else {
-				dialog.show("Task failed", text, "Close", expandedText: e.ToString());
+				};
 			}
+			d.Text2(text);
+			d.ShowDialog(); //TODO: test both cases
 		}
 		
 		//workaround for .NET bug: randomly changes error mode.
@@ -871,7 +871,7 @@ public static class script {
 			throw new FileNotFoundException($"Script '{script}' not found.");
 		}
 	}
-
+	
 	/// <summary>
 	/// Returns true if this process is running in a child session (aka Picture-in-Picture).
 	/// This function is an alias of <see cref="miscInfo.isChildSession"/>.
@@ -1011,7 +1011,7 @@ public static class script {
 			end();
 		}
 		var d = new dialog("Waiting for debugger to attach", $"{script.name}\nProcess: {process.thisExeName}  {process.thisProcessId}", title: "Attach debugger");
-		d.Screen = screen.ofMouse;
+		d.InScreen(screen.ofMouse);
 		d.ShowDialogNoWait();
 		wait.until(0, () => Debugger.IsAttached);
 		d.Send.Close();

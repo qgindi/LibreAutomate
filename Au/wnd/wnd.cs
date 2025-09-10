@@ -182,7 +182,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	public bool SendTimeout(int millisecondsTimeout, out nint result, int message, nint wParam = 0, nint lParam = 0, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
-		Debug.Assert(!Is0);
+		Debug.Assert(!Is0); //TODO: need something better
 		return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out result);
 	}
 	
@@ -2697,7 +2697,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// <returns><c>null</c> if failed, eg if the control is destroyed or its thread is hung. Supports <see cref="lastError"/>.</returns>
 	[SkipLocalsInit]
 	string _GetTextFast(bool useSlowIfEmpty) {
-		if (Is0) return null;
+		if (Is0) { lastError.code = Api.ERROR_INVALID_WINDOW_HANDLE; return null; } //return early. Used in properties of wnd and other types. They can be called not explicitly from code, eg by debugger, record.ToString(), etc. Eg a record may have a property of wnd type, and it may be 0 (it's valid).
 		using FastBuffer<char> b = new();
 		for (; ; b.More()) {
 			lastError.clear();
@@ -2719,6 +2719,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// <returns><c>null</c> if failed, eg if the control is destroyed or its thread is hung. Supports <see cref="lastError"/>.</returns>
 	[SkipLocalsInit]
 	string _GetTextSlow() {
+		if (Is0) { lastError.code = Api.ERROR_INVALID_WINDOW_HANDLE; return null; }
 		if (!SendTimeout(5000, out nint n, Api.WM_GETTEXTLENGTH)) return null;
 		if (n < 1) return "";
 		
