@@ -160,7 +160,8 @@ record AppSettings : JSettings {
 	public string edit_theme;
 	
 	//code info, autocorrection, formatting
-	public bool ci_complGroup = true, ci_enterBeforeParen = true, ci_enterBeforeSemicolon = true, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true, ci_semicolon = true;
+	public bool ci_complGroup = true, ci_formatCompact = true, ci_formatTabIndent = true, ci_formatAuto = true, ci_semicolon = true;
+	public bool ci_enterBeforeParen = true, ci_enterBeforeSemicolon = true, ci_tempRawEnter;
 	public int ci_complParen { get => field; set { field = value.EnsureValid_(0, 2); } }
 	public int ci_enterWith { get => field; set { field = value.EnsureValid_(0, 2); } }
 	public int ci_rename;

@@ -462,7 +462,7 @@ namespace Au.Types {
 		/// <exception cref="Exception">Exceptions of <see cref="HttpContent.ReadAsStringAsync()"/>.</exception>
 		public static string Text(this HttpResponseMessage t, bool ignoreError = false) {
 			if (!ignoreError) t.EnsureSuccessStatusCode();
-			return t.Content.ReadAsStringAsync().Result;
+			return t.Content.ReadAsStringAsync().Result_();
 		}
 		
 		/// <summary>
@@ -474,7 +474,7 @@ namespace Au.Types {
 		/// <exception cref="Exception">Exceptions of <see cref="HttpContent.ReadAsByteArrayAsync()"/>.</exception>
 		public static byte[] Bytes(this HttpResponseMessage t, bool ignoreError = false) {
 			if (!ignoreError) t.EnsureSuccessStatusCode();
-			return t.Content.ReadAsByteArrayAsync().Result;
+			return t.Content.ReadAsByteArrayAsync().Result_();
 		}
 		
 		/// <summary>
@@ -497,7 +497,7 @@ namespace Au.Types {
 		/// <exception cref="HttpRequestException">Failed HTTP request.</exception>
 		/// <exception cref="Exception">Exceptions of <c>ReadFromJsonAsync</c>.</exception>
 		public static T Json<T>(this HttpResponseMessage t)
-			=> t.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<T>().Result;//TODO
+			=> t.EnsureSuccessStatusCode().Content.ReadFromJsonAsync<T>().Result_();
 		
 		/// <summary>
 		/// Saves content in a file. Downloads if need.

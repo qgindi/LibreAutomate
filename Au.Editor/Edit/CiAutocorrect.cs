@@ -83,6 +83,7 @@ class CiAutocorrect {
 	/// If ch is ')' etc, and at current position is ')' etc previously added on '(' etc, clears the temp range and returns true.
 	/// If ch is ';' and current position is at '(...|)' and the statement etc must end with ';': adds ';' if missing, sets current position after ';', and returns true.
 	/// If ch is '"' after two '"', may close raw string (add """") and return true.
+	/// If ch is '.' after a statement that ends with `expression;`, replaces the ';' with `\r\n\t.;` for method chain.
 	/// Also called by SciBeforeKey on Backspace and Tab. Then ch is '\b' or '\t'.
 	/// If a new statement can start here, may add semicolon.
 	/// If at the very end, adds "\r\n" at the end.
@@ -107,6 +108,7 @@ class CiAutocorrect {
 			if (_AutoSemicolon()) return false;
 			
 			if (ch == ';') return _OnSemicolon(anywhere: false);
+			if (ch == '.') return _OnDot();
 			
 			switch (ch) {
 			case '"' or '\'' or ')' or ']' or '}' or '>' or '\t': break; //skip auto-added char
@@ -210,7 +212,7 @@ class CiAutocorrect {
 			case SyntaxKind.ElseKeyword or SyntaxKind.DoKeyword:
 				break;
 			case SyntaxKind.CloseBracketToken:
-				if (!(node is AttributeListSyntax { Target: {  } alst } && alst.Identifier.Kind() is SyntaxKind.ModuleKeyword or SyntaxKind.AssemblyKeyword)) return false;
+				if (!(node is AttributeListSyntax { Target: { } alst } && alst.Identifier.Kind() is SyntaxKind.ModuleKeyword or SyntaxKind.AssemblyKeyword)) return false;
 				break;
 			default: return false;
 			}
@@ -264,7 +266,7 @@ class CiAutocorrect {
 	
 	/// <summary>
 	/// Called on SCN_CHARADDED.
-	/// If ch is '(' etc, adds ')' etc. Similar with /*.
+	/// If ch is '(' etc, adds ')' etc. For /* adds */.
 	/// At the start of line corrects indent of '}' (or formats the block) or '{'. Removes that of '#'.
 	/// Replaces code like 5s with 5.s(); etc.
 	/// If ch is '/' in XML comments, may add the end tag.
@@ -525,6 +527,30 @@ class CiAutocorrect {
 		}
 	}
 	
+	//Called by SciBeforeCharAdded on '.'.
+	//Implements a quick way to continue a vertical method chain: type `.` on the next line after the `;`, and it will replace the `;\r\n` with `\r\n\t.;` and show the completion list.
+	static bool _OnDot() {
+		if (!CodeInfo.GetContextWithoutDocument(out var cd)) return false;
+		int i = CiUtil.SkipSpaceAndNewlineBack(cd.code, cd.pos);
+		if (!cd.code.Eq(--i, ';')) return false;
+		if (!cd.GetDocument()) return false;
+		var token = cd.syntaxRoot.FindToken(i);
+		if (!token.IsKind(SyntaxKind.SemicolonToken) || token.SpanStart != i) return false;
+		var node = token.GetPreviousToken().Parent;
+		if (node?.FirstAncestorOrSelf<ExpressionSyntax>() is not { } es) return false;
+		
+		using var undo = cd.sci.ENewUndoAction();
+		if (cd.code.AsSpan(i..cd.pos).Contains('\n')) {
+			CiIndent ind = new(cd, i, forNewLine: true);
+			var s = "\r\n" + ind.ToString() + ";";
+			cd.sci.aaaReplaceRange(true, i, cd.pos, s);
+			i += s.Length - 1;
+		}
+		cd.sci.aaaCurrentPos16 = i;
+		cd.sci.Call(Api.WM_CHAR, (nint)'.');
+		return true;
+	}
+	
 	//anywhere true when Ctrl+;.
 	static bool _OnSemicolon(bool anywhere) {
 		if (!CodeInfo.GetDocumentAndFindToken(out var cd, out var token)) return false;
@@ -614,14 +640,6 @@ class CiAutocorrect {
 		if (!_OnEnter2(mod)) doc.Call(Sci.SCI_NEWLINE);
 	}
 	
-	public static void TempToggleEnterCompletion() {
-		_tempDisableEnterCompletion ^= true;
-		if (!App.Settings.ci_enterBeforeParen && !App.Settings.ci_enterBeforeSemicolon) {
-			print.it($"<>Note: the <b>Let Enter insert new line before ) or ] or ;<> option temporarily disables the statement auto-completion features if they are enabled in <+options {DOptions.EPage.CodeEditor}>Options<>. Currently it has no effect because the features are disabled.");
-		}
-	}
-	static bool _tempDisableEnterCompletion;
-	
 	//mod: Ctrl 0, Shift 1, Ctrl+Shift 2, none -1, don't correct -2.
 	static bool _OnEnter2(int mod) {
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
@@ -644,7 +662,7 @@ class CiAutocorrect {
 		
 		if (!anywhere && mod != -2) {
 			if (tk1 is SyntaxKind.CloseParenToken or SyntaxKind.CloseBracketToken && tok1.SpanStart == pos) {
-				if (!_tempDisableEnterCompletion && App.Settings.ci_enterBeforeParen && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
+				if (!App.Settings.ci_tempRawEnter && App.Settings.ci_enterBeforeParen && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
 					canCorrect = canCorrectOnEnterBeforeParenEtc = nodeFromPos
 						is BaseArgumentListSyntax or BaseParameterListSyntax or ArrayRankSpecifierSyntax
 						or ParenthesizedExpressionSyntax or TupleExpressionSyntax or CollectionExpressionSyntax
@@ -653,7 +671,7 @@ class CiAutocorrect {
 						or (StatementSyntax and not BlockSyntax) || _IsSwitchCast(nodeFromPos);
 				}
 			} else if (tk1 is SyntaxKind.SemicolonToken && tok1.SpanStart == pos) {
-				if (!_tempDisableEnterCompletion && App.Settings.ci_enterBeforeSemicolon && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
+				if (!App.Settings.ci_tempRawEnter && App.Settings.ci_enterBeforeSemicolon && !(mod >= 0 || code[pos - 1] is ' ' or ',')) {
 					canCorrect = canCorrectOnEnterBeforeParenEtc = !(nodeFromPos is ForStatementSyntax or EmptyStatementSyntax);
 				}
 			} else if (!isEOF) {

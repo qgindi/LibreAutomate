@@ -278,7 +278,7 @@ namespace Au {
 				} else {
 					//tested: switching thread does not make slower. The speed depends mostly on locking, because then thread pool threads must wait.
 #if true
-					R = Task.Factory.StartNew(() => _GetShellIcon2(usePidl, pidl2, size), default, 0, StaTaskScheduler_.Default).Result;
+					R = Task.Factory.StartNew(() => _GetShellIcon2(usePidl, pidl2, size), default, 0, StaTaskScheduler_.Default).Result_();
 #else //old code, uses ThreadPoolSTA_
 					using var work = ThreadPoolSTA_.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl2, size); });
 					work.Submit();

@@ -442,7 +442,6 @@ class PanelBookmarks {
 		} else {
 			m["Add bookmark", "*Material.Bookmark @16" + Menus.darkYellow] = o => ToggleBookmark(pos8);
 		}
-		m.Separator();
 		m["Previous bookmark", "*JamIcons.ArrowSquareUp" + Menus.black] = o => NextBookmark(true);
 		m["Next bookmark", "*JamIcons.ArrowSquareDown" + Menus.black] = o => NextBookmark(false);
 	}

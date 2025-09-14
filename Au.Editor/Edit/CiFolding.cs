@@ -387,7 +387,7 @@ partial class SciCode {
 			}
 		} else if (os == _EOpenState.NewFileNoTemplate) {
 		} else {
-			//TODO: test SCI_SCROLLVERTICAL
+			//TODO2: test SCI_SCROLLVERTICAL
 			
 			//restore saved folding, some markers, scroll position and caret position
 			if (App.Model.State.EditorGet(_fn, out _sed)) {

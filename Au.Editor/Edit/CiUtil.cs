@@ -187,7 +187,7 @@ static class CiUtil {
 	
 	public static ISymbol GetSymbolFromPos(CodeInfo.Context cd, bool andZeroLength = false, bool preferVar = false) {
 		if (andZeroLength && _TryGetAltSymbolFromPos(cd) is ISymbol s1) return s1;
-		var sym = SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result;
+		var sym = SymbolFinder.FindSymbolAtPositionAsync(cd.document, cd.pos).Result_();
 		if (sym is IMethodSymbol ims) sym = ims.PartialImplementationPart ?? sym;
 		else if (preferVar && sym is INamedTypeSymbol) { //for 'this' and 'base' SymbolFinder gets INamedTypeSymbol
 			int i1 = cd.pos, i2 = i1;
@@ -699,7 +699,7 @@ static class CiUtil {
 		using var ws = new AdhocWorkspace();
 		var document = CreateDocumentFromCode(ws, code, needSemantic: true);
 		//var semo = document.GetSemanticModelAsync().Result;
-		var a = GetClassifiedSpansAsync(document, 0, code.Length).Result;
+		var a = GetClassifiedSpansAsync(document, 0, code.Length).Result_();
 		foreach (var v in a) {
 			//print.it(v.TextSpan, v.ClassificationType, code[v.TextSpan.Start..v.TextSpan.End]);
 			EStyle style = CiStyling.StyleFromClassifiedSpan(v);

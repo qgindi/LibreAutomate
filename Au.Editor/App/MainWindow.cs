@@ -36,9 +36,6 @@ partial class MainWindow : Window {
 		
 		App.Commands = new KMenuCommands(typeof(Menus), Panels.Menu);
 		
-		App.Commands[nameof(Menus.File.New)].OnSubmenuOpened(mi => FilesModel.FillMenuNew(mi));
-		App.Commands[nameof(Menus.File.Workspace)].OnSubmenuOpened(mi => FilesModel.FillMenuRecentWorkspaces(mi));
-		
 		App.Commands.OnCustomizingError = (c, s, ex) => print.it($"<>Customization error in <+DCustomize>{c.Name}<>: {s}. {ex?.ToStringWithoutStack()}");
 		var atb = new ToolBar[7] { Panels.THelp, Panels.TTools, Panels.TFile, Panels.TRun, Panels.TEdit, Panels.TCustom1, Panels.TCustom2 };
 		App.Commands.InitToolbarsAndCustomize(folders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
@@ -52,8 +49,6 @@ partial class MainWindow : Window {
 			bRun.Margin = margin;
 			if (App.Commands[nameof(Menus.Run.Debug_run)].FindButtonInToolbar(Panels.TRun) is { } bDebugRun) bDebugRun.Margin = margin;
 		}
-		
-		if (Au.Triggers.ActionTriggers.DisabledEverywhere) App.Commands[nameof(Menus.TT.Disable_triggers)].Checked = true;
 		
 		Panels.CreatePanels();
 		

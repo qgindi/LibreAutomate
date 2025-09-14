@@ -20,7 +20,7 @@ static class Menus {
 	public const string
 		iconBack = "*EvaIcons.ArrowBack" + black,
 		iconTrigger = "*Codicons.SymbolEvent" + blue,
-		iconIcons = "*FontAwesome.IconsSolid" + green,
+		iconIcons = "*FontAwesome.IconsSolid" + blue,
 		iconUndo = "*Ionicons.UndoiOS" + brown,
 		iconPaste = "*Material.ContentPaste" + brown,
 		iconReferences = "*Material.MapMarkerMultiple" + blue,
@@ -29,7 +29,7 @@ static class Menus {
 	
 	[Command(target = "Files")]
 	public static class File {
-		[Command(target = "", image = "*EvaIcons.FileAddOutline" + blue)]
+		[Command(target = "", image = "*Material.FilePlusOutline" + black)]
 		public static class New {
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 			
@@ -44,6 +44,10 @@ static class Menus {
 			
 			[Command('f', image = EdResources.c_iconFolder)]
 			public static void New_folder() { _New(null); }
+			
+			static void _Init(KMenuCommands mc, KMenuCommands.Command c) {
+				c.OnSubmenuOpened(mi => FilesModel.FillMenuNew(mi));
+			}
 		}
 		
 		[Command("Delete...", separator = true, keysText = "Delete", image = "*Modern.Delete" + black)]
@@ -141,6 +145,10 @@ static class Menus {
 		
 		[Command(target = "")]
 		public static class Workspace {
+			static void _Init(KMenuCommands mc, KMenuCommands.Command c) {
+				c.OnSubmenuOpened(mi => FilesModel.FillMenuRecentWorkspaces(mi));
+			}
+			
 			[Command(image = "*Material.Reload" + black)]
 			public static void Reload_this_workspace() { FilesModel.LoadWorkspace(App.Model.WorkspaceDirectory); }
 			
@@ -153,7 +161,7 @@ static class Menus {
 			[Command("...", separator = true)]
 			public static void Repair_workspace() { RepairWorkspace.Repair(); }
 			
-			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black, tooltip = "Save all changes now (don't wait for auto-save). Editor text, files, settings etc.")]
+			[Command(separator = true, keys = "Ctrl+S", image = "*MaterialDesign.SaveAltRound" + black, tooltip = "Save all changes now (don't wait for auto-save). Editor text, files, settings etc.")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 		
@@ -232,7 +240,7 @@ static class Menus {
 			public static void Copy_without_screenshots() { Panels.Editor.ActiveDoc.ECopy(SciCode.ECopyAs.TextWithoutScreenshots); }
 		}
 		
-		[Command("Undo, redo")]
+		[Command("Undo")]
 		public static class UndoRedo {
 			[Command(keys = "Ctrl+Z", image = iconUndo)]
 			public static void Undo() { SciUndo.OfWorkspace.UndoRedo(false); }
@@ -281,15 +289,6 @@ static class Menus {
 			
 			[Command(keys = "Shift+F4", target = "")]
 			public static void Previous_found() { Panels.Found.NextFound(true); }
-		}
-		
-		[Command]
-		public static class Intellisense {
-			[Command(keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + blue)]
-			public static void Autocompletion_list() { CodeInfo.ShowCompletionList(); }
-			
-			[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + blue)]
-			public static void Parameter_info() { CodeInfo.ShowSignature(); }
 		}
 		
 		[Command]
@@ -391,7 +390,7 @@ static class Menus {
 			public static void Convert_PreserveSig() { ModifyCode.ConvertInterfaceMethodPreserveSig(); }
 		}
 		
-		[Command("View/mode", separator = true)]
+		[Command(separator = true)]
 		public static class View {
 			[Command(checkable = true, keys = "Ctrl+W", image = "*Codicons.WordWrap" + green)]
 			public static void Wrap_lines() { SciCode.EToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
@@ -402,21 +401,39 @@ static class Menus {
 			[Command(checkable = true, image = "*Codicons.Preview" + green)]
 			public static void WPF_preview(MenuItem mi) { SciCode.WpfPreviewStartStop(mi); }
 			
-			const string c_tooltip_Autocorrect_disable_enter = """
-Temporarily disables the "auto-complete statement on Enter" features if they are enabled in Options > Code editor.
+			[Command("Customize...", separator = true)]
+			public static void Customize_edit_context_menu() { DCustomizeContextMenu.Dialog("Edit", "code editor"); }
+		}
+		
+		[Command]
+		public static class Other {
+			[Command(keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + blue)]
+			public static void Autocompletion_list() { CodeInfo.ShowCompletionList(); }
+			
+			[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + blue)]
+			public static void Parameter_info() { CodeInfo.ShowSignature(); }
+			
+			const string c_tooltip_Autocorrect_raw_enter = """
+Temporarily disables the "auto-complete statement on Enter" features that are enabled in Options > Code editor.
 Other ways to insert new line before ) or ] or ; when the auto-completion features are enabled:
 - Shift+Enter. Or Ctrl+Enter, depending on settings.
 - Space, then Enter.
 - Enter, then Ctrl+Z (undo).
+- Continue a vertical method chain by typing . on the next line after the ;.
 To exit statement when the features are disabled, use Ctrl+Enter. Or Shift+Enter, depending on settings.
 More info in app help topic "Code editor".
 """;
 			
-			[Command("Insert new line before ) ] ;", checkable = true, image = "*Unicons.Enter" + green, tooltip = c_tooltip_Autocorrect_disable_enter)]
-			public static void Autocorrect_disable_enter() { CiAutocorrect.TempToggleEnterCompletion(); }
+			[Command("Raw Enter before ) ] ;", checkable = true, separator = true, image = "*Unicons.Enter" + green, tooltip = c_tooltip_Autocorrect_raw_enter)]
+			public static void Autocorrect_raw_enter() {
+				App.Settings.ci_tempRawEnter ^= true;
+				if (!App.Settings.ci_enterBeforeParen && !App.Settings.ci_enterBeforeSemicolon)
+					print.it($"<>Note: the <b>Raw Enter before ) ] ;<> option temporarily disables the statement auto-completion features if they are enabled in <+options {DOptions.EPage.CodeEditor}>Options<>. Currently it has no effect because the features are disabled.");
+			}
 			
-			[Command("Customize...", separator = true)]
-			public static void Customize_edit_context_menu() { DCustomizeContextMenu.Dialog("Edit", "code editor"); }
+			static void _Init(KMenuCommands mc, KMenuCommands.Command c) {
+				if (App.Settings.ci_tempRawEnter) mc[nameof(Autocorrect_raw_enter)].MenuItem.IsChecked = true;
+			}
 		}
 	}
 	
@@ -499,6 +516,10 @@ More info in app help topic "Code editor".
 		[Command(separator = true)]
 		public static void Disable_triggers() { TriggersAndToolbars.DisableTriggers(null); }
 		
+		static void _Init(KMenuCommands mc, KMenuCommands.Command c) {
+			if (Au.Triggers.ActionTriggers.DisabledEverywhere) mc[nameof(Disable_triggers)].Checked = true;
+		}
+		
 		[Command]
 		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 		
@@ -580,7 +601,7 @@ More info in app help topic "Code editor".
 		[Command(tooltip = "Clear icon caches")]
 		public static void Update_icons() { IconImageCache.ClearAll(); }
 		
-		[Command(image = "*SimpleIcons.NuGet" + green)]
+		[Command(image = "*SimpleIcons.NuGet" + blue)]
 		public static void NuGet() { DNuget.ShowSingle(); }
 		
 		[Command(image = "*Codicons.SymbolSnippet" + green)]
@@ -613,7 +634,7 @@ More info in app help topic "Code editor".
 	
 	[Command(target = "")]
 	public static class Help {
-		[Command(image = "*Modern.Home" + blue)]
+		[Command(image = "*Modern.Home" + darkYellow)]
 		public static void Website() { run.itSafe(HelpUtil.AuHelpBaseUrlDefault_); }
 		
 		[Command(image = "*BoxIcons.RegularLibrary" + darkYellow)]
@@ -636,7 +657,7 @@ More info in app help topic "Code editor".
 		[Command("Online/local...")]
 		public static void Help_mode() { DOptions.AaShow(DOptions.EPage.Other); }
 		
-		[Command(image = "*Material.Forum" + blue)]
+		[Command(image = "*Material.Forum" + darkYellow)]
 		public static void Forum() { run.itSafe("https://www.libreautomate.com/forum/"); }
 		
 		[Command]
@@ -651,7 +672,7 @@ More info in app help topic "Code editor".
 Version: {Au_.Version}
 Download: <link>https://www.libreautomate.com/<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
-Uses C# 14, <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.5.7<>, <link https://www.pcre.org/>PCRE 10.42<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 5.1<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/microsoft/win32metadata>win32metadata<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, <link https://github.com/xoofx/markdig>Markdig<>.
+Uses C# 14, <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.5.7<>, <link https://www.pcre.org/>PCRE 10.46<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 5.1<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/microsoft/win32metadata>win32metadata<>, <link https://github.com/google/diff-match-patch>DiffMatchPatch<>, <link https://github.com/DmitryGaravsky/ILReader>ILReader<>, <link https://github.com/nemec/porter2-stemmer>Porter2Stemmer<>, <link https://github.com/xoofx/markdig>Markdig<>.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppDataRoaming}>ThisAppDataRoaming<>, <link {folders.ThisAppDataCommon}>ThisAppDataCommon<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.
 {typeof(App).Assembly.GetCustomAttribute<AssemblyCopyrightAttribute>().Copyright}.
 --------------------------");

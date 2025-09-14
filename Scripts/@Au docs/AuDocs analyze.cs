@@ -225,7 +225,7 @@ class _Analyze {
 		void _Print(object s) {
 			if (_currentSym != _prevPrintSym) {
 				_prevPrintSym = _currentSym;
-				print.it($"<>{AuDocs.VsGoto(_currentSym)}");
+				print.it($"<>{AuDocs.LaGoto(_currentSym)}");
 			}
 			print.it($"<><_>{s}</_>");
 		}
@@ -273,7 +273,7 @@ class _Analyze {
 			print.it($"""
 <><lc green>Duplicate text:<>
 <lc wheat><_>{s}</_><>
-{string.Join('\n', a.Select(o => AuDocs.VsGoto(o)))}
+{string.Join('\n', a.Select(o => AuDocs.LaGoto(o)))}
 """);
 		}
 	}
@@ -314,6 +314,6 @@ class _Analyze {
 #endif
 	
 	void _Warning(string warning, object text) {
-		print.warning($"<_>{warning}</_>\r\n\tMember: {AuDocs.VsGoto(_currentSym)} in {_semo.SyntaxTree.FilePath}\r\n\tText: <_>{text}</_>", 1);
+		print.warning($"<_>{warning}</_>\r\n\tMember: {AuDocs.LaGoto(_currentSym)} in {_semo.SyntaxTree.FilePath}\r\n\tText: <_>{text}</_>", 1);
 	}
 }

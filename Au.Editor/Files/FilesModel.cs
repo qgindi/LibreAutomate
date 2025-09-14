@@ -1,4 +1,4 @@
-//TODO: idea: in each directory auto-create-update a hidden file containing a copy of files.xml branch for that directory. Benefits:
+//TODO2: idea: in each directory auto-create-update a hidden file containing a copy of files.xml branch for that directory. Benefits:
 //	Could recreate the ordering etc when the folder imported into another workspace.
 //	Could recreate deleted or corrupt files.xml.
 

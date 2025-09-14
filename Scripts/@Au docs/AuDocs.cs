@@ -574,14 +574,12 @@ partial class AuDocs {
 	}
 	
 	void _Warning(string warning, object text) {
-		print.warning($"<_>{warning}</_>\r\n\tMember: {VsGoto(_currentSym)} in {_semo.SyntaxTree.FilePath}\r\n\tText: <_>{text}</_>", 1);
+		print.warning($"<_>{warning}</_>\r\n\tMember: {LaGoto(_currentSym)} in {_semo.SyntaxTree.FilePath}\r\n\tText: <_>{text}</_>", 1);
 	}
 	
-	public static string VsGoto(ISymbol sym) {
-		var s = sym.QualifiedName();
-		var text = sym.ToString();
-		//var text = s;
-		return $"<script VS goto.cs|{s}>{text}<>";
+	public static string LaGoto(ISymbol sym) {
+		var loc = sym.Locations[0];
+		return $@"<open C:\code\au\Au{loc.SourceTree.FilePath}||{loc.SourceSpan.Start}>{sym}<>";
 	}
 	
 	//static readonly PortableExecutableReference[] s_refs = Au.Compiler.MetaReferences.DefaultReferences.Values.ToArray();

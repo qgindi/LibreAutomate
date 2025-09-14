@@ -524,13 +524,13 @@ ${SELECTED_TEXT}$0
 			HashSet<string> h2 = new();
 			using var ws2 = new AdhocWorkspace();
 			var doc2 = CiUtil.CreateDocumentFromCode(ws2, s, false);
-			var semo2 = doc2.GetSemanticModelAsync().Result;
+			var semo2 = doc2.GetSemanticModelAsync().Result_();
 			_GetDeclaredSymbols(semo2, semo2.Root, a2, h2, makeVarName1 ? h1 : null);
 			//print.it("---- h2 ----"); foreach (var v in h2) print.it(v);
 			if (h2.Count == 0) return;
 			
 			//get names of symbols declared in scope (editor code)
-			var semo1 = k.document.GetSemanticModelAsync().Result;
+			var semo1 = k.document.GetSemanticModelAsync().Result_();
 			_GetDeclaredSymbols(semo1, scope, null, h1, null);
 			//print.it("---- h1 ----"); foreach (var v in h1) print.it(v);
 			if (h1.Count == 0) return;
@@ -563,11 +563,11 @@ ${SELECTED_TEXT}$0
 				//print.it(sym.Name, name2);
 				g2:
 				var opt1 = new SymbolRenameOptions();
-				sol = Renamer.RenameSymbolAsync(sol, sym, opt1, name2).Result;
+				sol = Renamer.RenameSymbolAsync(sol, sym, opt1, name2).Result_();
 				h2.Remove(sym.Name);
 				renamed = true;
 			}
-			if (renamed) s = sol.GetDocument(doc2.Id).GetTextAsync().Result.ToString();
+			if (renamed) s = sol.GetDocument(doc2.Id).GetTextAsync().Result_().ToString();
 			
 			//rejected: don't rename if variables in both codes are in unrelated { blocks }.
 			//	Tested: in most cases better like now.

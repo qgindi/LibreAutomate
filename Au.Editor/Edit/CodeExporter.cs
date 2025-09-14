@@ -22,7 +22,7 @@ static class CodeExporter {
 		
 		var a = new EStyle[s.Length];
 		int prevEnd = 0; EStyle prevStyle = 0;
-		foreach (var v in CiUtil.GetClassifiedSpansAsync(document, 0, s.Length).Result) {
+		foreach (var v in CiUtil.GetClassifiedSpansAsync(document, 0, s.Length).Result_()) {
 			EStyle style = CiStyling.StyleFromClassifiedSpan(v);
 			int start = v.TextSpan.Start, end = v.TextSpan.End;
 			//print.it(style, s[start..end]);

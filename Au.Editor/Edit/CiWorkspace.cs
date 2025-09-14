@@ -36,7 +36,7 @@ class CiWorkspace : IDisposable {
 	/// <summary>
 	/// Gets <b>Compilation</b> of the main project: <c>=> Solution.GetProject(Projects[0].projectId).GetCompilationAsync().Result</c>
 	/// </summary>
-	public Compilation GetCompilation() => Solution.GetProject(Projects[0].projectId).GetCompilationAsync().Result;
+	public Compilation GetCompilation() => Solution.GetProject(Projects[0].projectId).GetCompilationAsync().Result_();
 	
 	/// <summary>
 	/// <b>DocumentId</b> of <i>fn</i>, or null.

@@ -96,6 +96,12 @@
     <ClCompile Include="pcre2_ucptables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pcre2_chkdint.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pcre2_compile_class.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pcre2_internal.h">
@@ -111,6 +117,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pcre2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pcre2_compile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pcre2_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

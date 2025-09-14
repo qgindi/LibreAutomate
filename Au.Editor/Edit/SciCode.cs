@@ -378,13 +378,15 @@ partial class SciCode : KScintilla {
 			Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos8);
 			Panels.Debug.AddMarginMenuItems_(this, m, line);
 		}
-#else //breakpoints and bookmarks in single menu
+#else //breakpoints and bookmarks in single menu, but bookmarks first if rclick
+		if (rclick) Panels.Bookmarks.AddMarginMenuItems_(this, m, pos8);
 		if (EFile.IsCodeFile) {
+			if (rclick) m.Separator();
 			Panels.Breakpoints.AddMarginMenuItems_(this, m, line, pos8);
 			Panels.Debug.AddMarginMenuItems_(this, m, line);
-			m.Separator();
+			if (!rclick) m.Separator();
 		}
-		Panels.Bookmarks.AddMarginMenuItems_(this, m, pos8);
+		if (!rclick) Panels.Bookmarks.AddMarginMenuItems_(this, m, pos8);
 #endif
 		var xy = mouse.xy; xy.Offset(-_dpi / 2, -_dpi / 8);
 		m.Show(xy: xy, owner: AaWnd);

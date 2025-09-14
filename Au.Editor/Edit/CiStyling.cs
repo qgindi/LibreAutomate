@@ -285,7 +285,6 @@ partial class CiStyling {
 			}
 		}
 		catch (OperationCanceledException) { }
-		catch (AggregateException e1) when (e1.InnerException is TaskCanceledException) { } //TODO: probably don't need
 		catch (Exception e1) { Debug_.Print(e1); } //InvalidOperationException when this code: wpfBuilder ... .Also(b=>b.Panel.for)
 		finally {
 			cancelTS.Dispose();

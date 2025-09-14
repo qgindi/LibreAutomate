@@ -80,7 +80,15 @@ While the list is visible, you can press the **[+]** button or `Ctrl+Space` to s
 When you type `(`, `[`, `{`, `<`, `"` or `'`, editor adds the closing `)`, `]`, `}`, `>`, `"` or `'`. Then, while the text cursor is before the added `)` etc, typing another `)` or `Tab` just leaves the enclosed area. Also then `Backspace` erases both characters.
 
 ### Statement completion
-When you press `Enter` immediately before `)` or `]`, editor adds missing `;` or `{  }`, adds new line, moves the text cursor, and formats the statement. Except if before is `,` or space character. Next **Undo** command undoes the change and adds new line without statement completion. This feature can be disabled in **Options**; or temporarily with `Shift+Enter` or in menu **Edit > View/mode**.
+When you press `Enter` immediately before `)`, `]` or `;`, editor adds missing `;` or `{  }`, adds new line, moves the text cursor, and formats the statement. Except if before is `,` or space character.
+
+However the above feature interferes with writing multi-line statements. Ways to bypass it:
+- Disable temporarily: toggle **Raw Enter before ) ] ;** on the toolbar.
+- Use `Shift+Enter`. Or `Ctrl+Enter`, depending on settings.
+- Type space before `Enter`.
+- `Enter` and `Ctrl+Z` (undo). It undoes the change and adds new line inside the statement.
+- You can continue a vertical method chain by typing `.` on the next line after the `;`.
+- If you never need this feature, disable it in **Options**.
 
 Use hotkey `Ctrl+Enter` (can be changed in **Options**) to complete current statement when the text cursor is anywhere in it. Also it can add `{  }` to `class C` etc.
 

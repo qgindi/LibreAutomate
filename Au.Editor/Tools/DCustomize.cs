@@ -523,10 +523,12 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 		e.Handled = true;
 	}
 	
-	public static void ToolbarContextMenuOpening(object sender, ContextMenuEventArgs _) {
+	public static void ToolbarContextMenuOpening(object sender, ContextMenuEventArgs _1) {
+		if (GetSingle<DCustomize>(out _)) return;
 		var toolbar = sender as ToolBar;
 		FrameworkElement e = null;
 		ICommand ic = null;
+		int index = 0;
 		
 		//WPF does not have a better way to get the right-clicked element when it is disabled. Mouse.DirectlyOver etc return the container.
 		var xy = mouse.xy;
@@ -537,45 +539,49 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 				else if (v is Border b2 && b2.Child is Menu m2) ic = m2.Items.OfType<MenuItem>().SingleOrDefault()?.Command;
 				break;
 			}
+			index++;
 		}
 		if (ic is not KMenuCommands.Command c) return;
 		
-#if true
+		OverflowMode hide1 = ToolBar.GetOverflowMode(e);
+		bool separatorBefore = index > 0 && toolbar.Items[index - 1] is Separator;
+		
 		var m = new popupMenu();
 		m["Customize..."] = o => DCustomize.ShowSingle(c.Name);
-		m.Show();
-#else //rejected: menu item "Hide". The #else code hides/shows the button, but also need to manage its separator, and add menu item "Separator before".
-		var a = App.Commands.LoadFiles(); if (a == null) return;
-		if (a.FirstOrDefault(o => o.Name == toolbar.Name)?.Element(c.Name) is not { } x) return;
-		
-		OverflowMode hide1 = x.Attr("hide") switch { "always" => OverflowMode.Always, "never" => OverflowMode.Never, _ => OverflowMode.AsNeeded };
-		
-		var m = new popupMenu();
-		m["Customize"] = o => DCustomize.ShowSingle(c.Name);
-		m.Submenu("Hide", m => {
-			m.AddRadio("Always", hide1 == OverflowMode.Always, _Hide);
-			m.AddRadio("Never", hide1 == OverflowMode.Never, _Hide);
-			m.AddRadio("Auto", hide1 == OverflowMode.AsNeeded, _Hide);
-		});
+		m.Separator();
+		m.AddCheck("Hide", hide1 == OverflowMode.Always, _ => _Hide(hide1 == OverflowMode.Always ? OverflowMode.AsNeeded : OverflowMode.Always));
+		m.AddCheck("Never hide", hide1 == OverflowMode.Never, _ => _Hide(hide1 == OverflowMode.Never ? OverflowMode.AsNeeded : OverflowMode.Never));
+		if (!ToolBar.GetIsOverflowItem(e)) {
+			m.Separator();
+			m.AddCheck("Separator before", separatorBefore, o => _Separator());
+		}
 		m.Show();
 		
-		void _Hide(PMItem k) {
-			OverflowMode hide2 = k.Text switch { "Always" => OverflowMode.Always, "Never" => OverflowMode.Never, _ => OverflowMode.AsNeeded };
-			if (hide2 != hide1) {
-				x.SetAttributeValue("hide", hide2 switch { OverflowMode.Always => "always", OverflowMode.Never => "never", _ => null });
-				var xr = new XElement("commands", a);
-				xr.SaveElem(App.Commands.UserFile);
-				
-				bool isOfi1 = ToolBar.GetIsOverflowItem(e);
-				ToolBar.SetOverflowMode(e, hide2);
-				bool isOfi2 = ToolBar.GetIsOverflowItem(e);
-				print.it(isOfi1, isOfi2); //updated async
-				//if (isOfi2!=isOfi1) {
-				//	print.it(isOfi2);
-				//}
-				//todo: separator
+		void _Hide(OverflowMode hide2) {
+			if (!_ModifyUserXmlButton(x => { x.SetAttributeValue("hide", hide2 switch { OverflowMode.Always => "always", OverflowMode.Never => "never", _ => null }); })) return;
+			
+			ToolBar.SetOverflowMode(e, hide2);
+			if (separatorBefore) ToolBar.SetOverflowMode(toolbar.Items[index - 1] as Separator, hide2);
+		}
+		
+		void _Separator() {
+			if (!_ModifyUserXmlButton(x => { x.SetAttributeValue("separator", separatorBefore ? null : ""); })) return;
+			
+			if (separatorBefore) {
+				toolbar.Items.RemoveAt(index - 1);
+			} else {
+				var sep = new Separator();
+				if (hide1 != default) ToolBar.SetOverflowMode(sep, hide1);
+				toolbar.Items.Insert(index, sep);
 			}
 		}
-#endif
+		
+		bool _ModifyUserXmlButton(Action<XElement> modify) {
+			if (App.Commands.LoadFiles() is not { } toolbars) return false;
+			if (toolbars.FirstOrDefault(o => o.Name == toolbar.Name)?.Element(c.Name) is not { } x) return false;
+			modify(x);
+			new XElement("commands", toolbars).SaveElem(App.Commands.UserFile);
+			return true;
+		}
 	}
 }

@@ -784,5 +784,10 @@ public static unsafe partial class ExtMisc {
 		//tested: RegGetValue same speed.
 	}
 	
+	/// <summary>
+	/// <c>=> t.GetAwaiter().GetResult();</c>
+	/// </summary>
+	internal static T Result_<T>(this Task<T> t) => t.GetAwaiter().GetResult();
+	
 	#endregion
 }

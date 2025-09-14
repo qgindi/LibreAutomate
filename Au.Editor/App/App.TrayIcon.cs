@@ -1,7 +1,7 @@
 static partial class App {
 	internal static class TrayIcon {
 		static IntPtr[] _icons;
-		static bool _disabled;
+		static bool _disabled = Au.Triggers.ActionTriggers.DisabledEverywhere;
 		static wnd _wNotify;
 		
 		const int c_msgNotify = Api.WM_APP + 1;

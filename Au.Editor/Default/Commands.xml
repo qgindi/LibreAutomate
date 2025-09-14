@@ -27,10 +27,10 @@ All attributes are optional. The Example command contains all.
 	<File>
 		<New />
 		<Properties />
-		<Save_now />
-		<Git hide="always" />
 		<MultiSelect_files />
 		<Collapse_all_folders hide="always" />
+		<Save_now hide="always" />
+		<Git hide="always" />
 	</File>
 	<Run>
 		<Compile />
@@ -55,11 +55,11 @@ All attributes are optional. The Example command contains all.
 		<Find_symbol />
 		<Go_back separator="" />
 		<Go_forward />
-		<Next_bookmark />
+		<Next_bookmark hide="always" />
 		<Wrap_lines separator="" />
 		<Images_in_code />
 		<WPF_preview />
-		<Autocorrect_disable_enter />
+		<Autocorrect_raw_enter />
 	</Edit>
 	<Tools>
 		<Input_recorder />

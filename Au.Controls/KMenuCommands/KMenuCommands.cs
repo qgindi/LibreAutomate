@@ -98,7 +98,7 @@ public partial class KMenuCommands {
 			return;
 		}
 		
-		var list = new List<(MemberInfo mi, CommandAttribute a)>(am.Length);
+		List<(MemberInfo mi, CommandAttribute a)> list = new(am.Length);
 		foreach (var mi in am) {
 			var ca = mi.GetCustomAttribute<CommandAttribute>(false);
 			//var ca = mi.GetCustomAttributes().OfType<CommandAttribute>().FirstOrDefault(); //CommandAttribute and inherited. Similar speed. Don't need because factory action receives MemberInfo an can get other attributes from it.
@@ -151,7 +151,10 @@ public partial class KMenuCommands {
 			if (parentMenu is Menu m1) c.MenuItem.MinHeight = 22;
 			
 			if (!ca.hide) parentMenu.Items.Add(c.MenuItem);
-			if (mi is TypeInfo ti) _CreateMenu(ti, c.MenuItem, autoUnderline, itemFactory, added, namePrefix, ca.target);
+			if (mi is TypeInfo ti) {
+				_CreateMenu(ti, c.MenuItem, autoUnderline, itemFactory, added, namePrefix, ca.target);
+				if (ti.GetDeclaredMethod("_Init") is { } init) init.Invoke(null, [this, c]);
+			}
 		}
 		
 		if (autoUnderline) {

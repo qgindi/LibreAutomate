@@ -214,7 +214,9 @@
   <ItemGroup>
     <ClCompile Include="pcre2_auto_possess.c" />
     <ClCompile Include="pcre2_chartables.c" />
+    <ClCompile Include="pcre2_chkdint.c" />
     <ClCompile Include="pcre2_compile.c" />
+    <ClCompile Include="pcre2_compile_class.c" />
     <ClCompile Include="pcre2_config.c" />
     <ClCompile Include="pcre2_context.c" />
     <ClCompile Include="pcre2_dfa_match.c">
@@ -256,9 +258,11 @@
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="pcre2.h" />
+    <ClInclude Include="pcre2_compile.h" />
     <ClInclude Include="pcre2_internal.h" />
     <ClInclude Include="pcre2_intmodedep.h" />
     <ClInclude Include="pcre2_ucp.h" />
+    <ClInclude Include="pcre2_util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

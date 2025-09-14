@@ -929,7 +929,7 @@ public static partial class filesystem {
 	/// <param name="paths">string array, <c>List</c> or other collection. Full paths.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
-	/// <exception cref="AggregateException">Failed to delete all or some items. The <see cref="AggregateException"/> object contains <see cref="AuException"/> for each failed-to-delete item.</exception>
+	/// <exception cref="AggregateException">Failed to delete all or some items. The exception object contains one <see cref="AuException"/> for each failed-to-delete item.</exception>
 	/// <remarks>
 	/// This overload is faster when using Recycle Bin.
 	/// If fails to delete some items specified in the list, deletes as many as possible.

@@ -2,8 +2,8 @@
 <+p options>Options<> <.r>(?imsnxUJ)<> and <.r>(*...)<>
 <+p meta>Metacharacters<> <.r>^ $ . [ | ( ) * + ? { \<>
 <+p escape>Escaped chars<> <.r>\^ \n<> etc and text <.r>\Q...\E<>
-<+p charTypes>Any char, digit, word, space<> <.r>. \d \w \s \R<>
-<+p charClasses>Character classes<> <.r>[abc]<> and <.r>[:posix:]<>
+<+p charTypes>Character types, any char<> <.r>\d \w \s \R .<>
+<+p charClasses>Character classes<> <.r>[abc]<> and <.r>(?[ext])<>
 <+p repetition>Repetition quantifiers<> <.r>* + ? {n} {n,m}<>
 <+p startEnd>Start/end of string/line/word<> <.r>^ $ \b<> etc
 <+p or>OR operator<> <.r>A|B|C<>
@@ -36,7 +36,7 @@
 
 -- options --
 
-<.h>Options<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC15>Options<><>
 
 <+a>(?i)<>  -  case-insensitive. In the Find panel this is default when 'Case' unchecked.
 <+a>(?m)<>  -  <.r>^<> and <.r>$<> are start/end of a line. Default in the Find panel. Known as "multiline".
@@ -59,7 +59,7 @@ These options can be set anywhere in regular expression and are applied until it
 
 Example regex: <.r>(?mi)^ab((?s).+?)cd(?-i)ef<>. Here option <.r>m<> is set for whole regex, option <.r>i<> until <.r>(?-i)<>, and option <.r>s<> added only in group <.r>(.+?)<>.
 
-<b>Rarely used options and flags<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC3>Start-of-regex options<><>
 <+a>(*BSR_UNICODE)<>  -  <.r>\R<> matches any Unicode newline characters, not only <.r>\n<>, <.r>\r<> and <.r>\r\n<>.
 <+a>(*ANY)<>  -  newline includes any Unicode newline characters, not only <.r>\n<>, <.r>\r<> and <.r>\r\n<>.
 <+a>(*LF)<>  -  newline is only <.r>\n<>.
@@ -72,21 +72,19 @@ Example regex: <.r>(?mi)^ab((?s).+?)cd(?-i)ef<>. Here option <.r>m<> is set for 
 <+a>(*NO_START_OPT)<>  -  set this flag.
 <+a>(*UTF)<>  -  set this flag.
 <+a>(*UCP)<>  -  set this flag.
+<+a>(*EC)<>  -  enable UTS#18 extended character classes
 
-These options can be set only at the start of regular expression.
+These options can be set only at the start of regular expression. Example: <.r>(*ANY)(*UCP)regex<>.
 
 With regular expression functions you can also use flags <help>Au.Types.RXFlags<> and <help>Au.Types.RXMatchFlags<>. There are flags for most <.r>(?...)<> and <.r>(*...)<> options and more. Options <.r>(?...)<> set in regular expression override function's flags.
 
 <b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC13>Options (?...)<>
-<link https://www.pcre.org/current/doc/html/pcre2api.html#SEC20>PCRE2_ flags and corresponding options<>
+<link https://www.pcre.org/current/doc/html/pcre2api.html#SEC20>API flags<>
 <link https://www.pcre.org/current/doc/html/pcre2unicode.html>Unicode, (*UTF), (*UCP)<>
-
-TODO: update links. Changed section indices. Maybe update PCRE.
 
 -- meta --
 
-<.h>Metacharacters<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC4>Metacharacters<><>
 
 <.r>^<>  -  start of string (or line, in multiline mode).
 <.r>$<>  -  end of string (or line, in multiline mode).
@@ -113,9 +111,9 @@ In a character class <.r>[...]<> the only metacharacters are:
 
 -- escape --
 
-<.h>Escaped metacharacters, non-printing characters and literal text<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC5>Escape sequences and literal text<><>
 
-<.r>\<> makes the next metacharacter a literal character. It is an "escape sequence".
+<.r>\<> makes the next metacharacter a literal character. It is an <i>escape sequence<>.
 
 <+a>\^<>, <+a>\$<>, <+a>\.<>, <+a>\[<>, <+a>\|<>, <+a>\(<>, <+a>\)<>, <+a>\*<>, <+a>\+<>, <+a>\?<>, <+a>\{<>, <+a>\\<>  -  escape sequences for metacharacters.
 <+a>\#<>, <+a>\ <> (space)  -  in extended mode also need these.
@@ -133,18 +131,15 @@ Escape sequences for non-printing characters:
 <+a \x{`|`}>\x{hhhh}<>  -  character with hex character code hhhh.
 <+a \N{U+`|`}>\N{U+hhhh}<>  -  character with Unicode hex code point hhhh.
 
-<+a \Q`|`\E>\Q...\E<>  -  literal text. There are no metacharacters and escape sequences.
+<+a \Q`|`\E>\Q...\E<>  -  literal text.
 
 Metacharacter <.r>\<> also has other uses. With regex functions use <c green>@"verbatim string"<> to avoid C# escape sequences for every <.r>\<>.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC5>Escape sequences etc<>
-
 -- charTypes --
 
-<.h>Any character, digit, word, space and other character types<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC7>Any character<>, <link https://www.pcre.org/current/doc/html/pcre2pattern.html#newlineseq>newlines<> and <link https://www.pcre.org/current/doc/html/pcre2pattern.html#genericchartypes>character types<><>
 
-<+a>.<> - any character except newlines (<.r>\r<>, <.r>\n<>). Any character if option <.r>(?s)<>.
+<+a>.<>  -  any character except newlines (<.r>\r<>, <.r>\n<>). Any character if option <.r>(?s)<>.
 <+a>\N<>  -  any character except newlines, regardless of option <.r>(?s)<>.
 <+a>\R<>  -  newline sequence <.r>\r\n<> or <.r>\n<> or <.r>\r<>. Not allowed in <.r>[...]<>.
 <+a>\d<>  -  digit (ASCII 0-9).
@@ -161,18 +156,14 @@ Metacharacter <.r>\<> also has other uses. With regex functions use <c green>@"v
 <+a \P{`|`}>\P{Xx}<>  -  character without the Xx <+p charProp>property<> or not in <+p scripts>script<>.
 <+a>\X<>  -  Unicode extended grapheme cluster.
 
-<b>Options<>
+<b>Options<>  (must be at the start of regular expression)
 <+a>(*UCP)<>  -  <.r>\d<>, <.r>\w<> and <.r>\s<> match not only ASCII characters. Flag <help Au.Types.RXFlags>RXFlags.UCP<>.
 <+a>(*BSR_UNICODE)<>  -  <.r>\R<> matches any Unicode newline characters, not only <.r>\n<>, <.r>\r<> and <.r>\r\n<>.
 <+a>(*ANY)<>, <+a>(*LF)<>, <+a>(*CR)<>, <+a>(*CRLF)<>  -  <+p>options<> for <.r>.<> and <.r>\N<>.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#genericchartypes>Generic character types<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC7>. and \N<>
-
 -- charClasses --
 
-<.h>Character classes<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC9>Character classes<><>
 
 <+a [`|`]>[abc]<>  -  character a, b or c.
 <+a [^`|`]>[^abc]<>  -  any character except a, b, c.
@@ -188,7 +179,7 @@ Can include several ranges, characters plus ranges, character types like <.r>\d<
 <+a>[0-9A-Fa-f]<> or <+a>[[:xdigit:]]<>  -  a hexadecimal digit.
 <+a>[A-Za-z_]\w+<> or <+a>[[:alpha:]_]\w+<>  -  a C# identifier.
 
-<b>POSIX character classes in <.r>[...]<><>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC12>POSIX character classes<> in <.r>[...]<><>
 <+a>[:alnum:]<>  -  letters and digits.
 <+a>[:alpha:]<>  -  letters.
 <+a>[:ascii:]<>  -  character codes 0 - 127.
@@ -206,16 +197,26 @@ Can include several ranges, characters plus ranges, character types like <.r>\d<
 
 See also: <+p charProp>Unicode character properties<> and <+p scripts>scripts<>.
 
-<b>Options<>
-<+a>(*UCP)<>  -  include non-ASCII characters in POSIX classes. Flag <help Au.Types.RXFlags>RXFlags.UCP<>.
+<b>Options<>  (must be at the start of regular expression)
+<+a>(*UCP)<>  -  include non-ASCII characters in POSIX classes and <.r>\w<> etc. Flag <help Au.Types.RXFlags>RXFlags.UCP<>. Also there are options and flags to exclude some.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC9>Character classes [...]<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC10>POSIX character classes [:class:]<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC10>Extended character classes<><>
+<+a (?[`|`])>(?[...])<>  -  extended character class. Can contain multiple simple classes like <.r>\d<> or <.r>[...]<>, operators like <.r>-<>, and <.r>()<> for grouping.
+
+<b>Examples<>
+<+a>(?[\w -[xy]])<>  -  word characters except x and y.
+<+a>(?[\w -[:upper:]])<>  -  word characters except uppercase letters.
+
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC11>UTS#18 extended character classes<><>
+<+a>(*EC)<>  -  enable UTS#18 extended character classes. This must be at the start of regular expression.
+
+<b>Examples<>
+<+a>[\w--[xy]]<>  -  word characters except x and y.
+<+a>[.\-\w--[:upper:]]<>  -  dot, hyphen and word characters except uppercase letters.
 
 -- repetition --
 
-<.h>Repetition quantifiers<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC19>Repetition quantifiers<><>
 
 <+a>?<>  -  0 or 1. Lazy <+a>??<>, possessive <+a>?+<>.
 <+a>*<>  -  0 or more. Lazy <+a>*?<>, possessive <+a>*+<>.
@@ -240,15 +241,11 @@ Quantifiers can be placed after:
 Quantifiers can be greedy (default), lazy (with <.r>?<> or option <.r>(?U)<>) or possessive (with <.r>+<>).
 • Greedy - as many as possible. For example regex <.r><.+><> matches <c green><ab> cd <ef><> in string <c green><ab> cd <ef> gh<>.
 • Lazy - as few as possible. For example regex <.r><.+?><> matches <c green><ab><> in the above string.
-• Possessive - once the regex part matched, it cannot be backtracked (retried smaller parts of it) when next regex part does not match; it can make faster. Greedy, ignores <.r>(?U)<>. The same as <+p groups>atomic groups<>, just simpler syntax.
-
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC17>Repetition<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC18>Atomic groups and possessive quantifiers<>
+• <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC20>Possessive<> - once the regex part matched, it cannot be backtracked (retried smaller parts of it) when next regex part does not match; it can make faster. Greedy, ignores <.r>(?U)<>. The same as <+p groups>atomic groups<>, just simpler syntax.
 
 -- startEnd --
 
-<.h>Start/end of string/line/word anchors and simple assertions<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#smallassertions>Start/end of string/line/word<><>
 
 <+a>\b<>  -  word boundary.
 <+a>\B<>  -  not a word boundary.
@@ -263,30 +260,24 @@ A word boundary is between two characters that match <.r>\w<> (letters, digits a
 
 Default newlines are any of <.r>\r\n<>, <.r>\n<> and <.r>\r<>. There are <+p>options<> to change it, and thus change the behaviour of <.r>^<>, <.r>$<> and <.r>\Z<>.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#smallassertions>Simple assertions<>
-
 -- or --
 
-<.h>OR operator<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC14>OR operator<><>
 
 <.r>red|green|blue<>  -  red or green or blue.
 <.r>red|green|<>  -  red or green or empty.
 
 Often used in a group like <.r>(one|two)<> or in a "followed/preceded by" assertion like <.r>(?=one|two)<> etc.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC12>Vertical bar<>
-
 -- groups --
 
-<.h>Groups and backreferences<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC16>Groups<> and backreferences<>
 
 <+a (`|`)>(...)<>  -  capturing group.
 <+a (?'`|`')>(?'name'...)<>  -  named capturing group. Or <+a "(?<`|`>)">(?<name>...)<>, <+a "(?P<`|`>)">(?P<name>...)<>.
 <+a (?:`|`)>(?:...)<>  -  non-capturing group.
 <+a (?|`|`)>(?|...)<>  -  nested groups like A and B in <.r>(?|(A)s|(B))<> have the same number. Non-capturing.
-<+a "(?>`|`)">(?>...)<>  -  atomic non-capturing group. Or <+a (*atomic:`|`)>(*atomic:...)<>.
+<+a "(?>`|`)">(?>...)<> or <+a (*atomic:`|`)>(*atomic:...)<>  -  <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC20>atomic non-capturing group<>.
 
 Groups are used:
 1. To localize/isolate several <+p or>alternatives<> like <.r>(one|two)<> or <+p>options<> like <.r>((?i)...)<>.
@@ -301,9 +292,9 @@ Capturing groups have numbers starting from 1. Non-capturing groups don't have n
 
 Groups can be nested, like <.r>(group1(group2))<>.
 
-Atomic groups can be used to avoid unnecessary backtracking and thus improve performance. Once the group matched, it cannot be backtracked (retried to find alternative matches) when next regex part does not match. For simple cases can instead be used <+p repetition>possessive quantifiers<>, which is the same just simpler syntax.
+<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC20>Atomic groups<> can be used to avoid unnecessary backtracking and thus improve performance. Once the group matched, it cannot be backtracked (retried to find alternative matches) when next regex part does not match. For simple cases can instead be used <+p repetition>possessive quantifiers<>, which is the same just simpler syntax.
 
-<b>Backreferences<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC21>Backreferences<><>
 <+a \g`|`>\gn<>  -  reference to group n (1, 2, ...). Or <+a \`|`>\n<>, but can be ambiguous.
 <+a \g{`|`}>\g{n}<>  -  reference to group n. Use when followed by a digit.
 <+a \g-`|`>\g-n<> or <+a \g{-`|`}>\g{-n}<>  -  relative reference to a group started at the left.
@@ -312,14 +303,9 @@ Atomic groups can be used to avoid unnecessary backtracking and thus improve per
 
 A backreference matches the same substring as the referenced group matched most recently.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC14>Groups<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC18>Atomic groups and possessive quantifiers<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC19>Backreferences<>
-
 -- assertions --
 
-<.h>Assertions "followed by", "preceded by" and setting the start of match<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC22>Follows/precedes assertions<> and <link https://www.pcre.org/current/doc/html/pcre2pattern.html#resetmatchstart>setting the start of match<><>
 
 <+a (?=`|`)>(?=...)<>  -  positive lookahead assertion. It means "followed by ...".
 <+a (*pla:`|`)>(*pla:...)<> or <+a (*positive_lookahead:`|`)>(*positive_lookahead:...)<>  -  the same.
@@ -329,17 +315,15 @@ A backreference matches the same substring as the referenced group matched most 
 <+a (*plb:`|`)>(*plb:...)<> or <+a (*positive_lookbehind:`|`)>(*positive_lookbehind:...)<>  -  the same.
 <+a (?<!`|`)>(?<!...)<>  -  negative lookbehind assertion. It means "not preceded by ...".
 <+a (*nlb:`|`)>(*nlb:...)<> or <+a (*negative_lookbehind:`|`)>(*negative_lookbehind:...)<>  -  the same.
+<+a (*scs:(1)`|`)>(*scs:(group)...)<> or <+a (*scan_substring:(1)`|`)>(*scan_substring:(group)...)<>  -  (<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC24>docs<>) the matched substring of group must also match .... Group: group number or +-relative or <.r>'name'<> or list. The ... regex must match at the start of the substring; use <.r>\z<> to also match at its end.
 
 An assertion is a test on the string part following or preceding the current matching point that does not consume any characters. For example, regex <.r>ab(?=cd)<> matches ab followed by cd, but does not include cd in the reported match.
 
 An assertion can contain several local "or" parts like <.r>(?=ab|cd)<>, local options like <.r>(?=(?i)...)<>, nested assertions. Several assertions (of any sort) may occur in succession. For example, <.r>(?<=\d{3})(?<!999)foo<> matches foo preceded by three digits that are not 999.
 
-Lookbehind assertions ("preceded by") must be of a known length, for example <.r>(?<=abc)<> or <.r>(?<=abc|defgh)<>, but not <.r>(?<=.*)<> because <.r>.*<> can match a substring of any length.
+Lookbehind assertions ("preceded by") must be of a known length (max 255), for example <.r>(?<=abc)<> or <.r>(?<=abc|defgh)<> or <.r>(?<=\d{1,9})<>, but not <.r>(?<=.*)<> because <.r>.*<> can match a substring of any length.
 
-Often instead can be used <.r>\K<>. It sets the reported start of match; the string part matched before <.r>\K<> is not included in the reported match. For example, instead of invalid regex <.r>(?<=\w*)\d<> use <.r>\w*\K\d<>.
-
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC20>Assertions<>
+Often instead of a lookbehind assertion can be used <.r>\K<>. It sets the reported start of match; the string part matched before <.r>\K<> is not included in the reported match. For example, instead of invalid regex <.r>(?<=\w*)\d<> use <.r>\w*\K\d<>.
 
 -- extended --
 
@@ -367,7 +351,7 @@ three<>
 
 -- conditional --
 
-<.h>Conditional groups<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC26>Conditional groups<><>
 
 <+a (?(`|`))>(?(condition)yes-pattern)<>  -  "if condition is true then use yes-pattern".
 <+a (?(`|`)|)>(?(condition)yes-pattern|no-pattern)<>  -  "if condition is true then use yes-pattern, else no-pattern".
@@ -384,12 +368,9 @@ Conditions:
 <+a VERSION=`|`.>VERSION=n.m<>  -  test PCRE2 version.
 <+a "VERSION>=`|`.">VERSION>=n.m<>  -  test PCRE2 version.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC23>Conditional groups<>
-
 -- subroutines --
 
-<.h>Subroutines and recursion<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC28>Subroutines and recursion<><>
 
 <+a "(?`|`)">(?n)<>  -  call subroutine by group number n (1, 2, ...). Or <+a "\g'`|`'">\g'n'<>, <+a "\g<`|`>"><_>\g<n></_><>.
 <+a "(?-`|`)">(?-n)<>  -  call subroutine by relative number. Or <+a "\g'-`|`'">\g'-n'<>, <+a "\g<-`|`>"><_>\g<-n></_><>.
@@ -404,25 +385,20 @@ Recursive regex examples:
 
 A capturing group <.r>(...)<> can be reused in other parts of regular expression. It is like a subroutine that can be called like a function by its number or name. It also can be called recursively (from itself). Unlike a backreference (the substring captured by the referenced group), a subroutine call is like a copy of the group in the regular expression. For example, regex <.r>(\w+)-(?1)<> is the same as <.r>(\w+)-(?:\w+)<>; as well as <.r>(?(DEFINE)(\w+))(?1)-(?1)<> and <.r>(?(DEFINE)(?'word'\w+))(?&word)-(?&word)<>.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC26>Groups as subroutines<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC25>Recursive patterns<>
-
 -- callouts --
 
-<.h>Callouts<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC31>Callouts<><>
 
 <+a>(?C)<>  -  callout (assumed number 0).
 <+a (?C`|`)>(?Cn)<>  -  callout with numerical data n.
 <+a (?C'`|`')>(?C'text')<>  -  callout with string data.
 
 <b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC28>Callouts<>
 <help>regexp.Callout<>
 
 -- backtracking --
 
-<.h>Backtracking control<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC32>Backtracking control<><>
 
 All backtracking control verbs may be in the form <.r>(*VERB:NAME)<>. For <.r>(*MARK)<> the name is mandatory, for the others it is optional. <.r>(*SKIP)<> changes its behaviour if <.r>:NAME<> is present. The others just set a name for passing back to the caller, but this is not a name that <.r>(*SKIP)<> can see. The following act immediately they are reached:
 
@@ -440,12 +416,9 @@ The following act only when a subsequent match failure causes a backtrack to rea
 
 The effect of one of these verbs in a group called as a subroutine is confined to the subroutine call.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC29>Backtracking control<>
-
 -- charProp --
 
-<.h>Unicode character properties<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#uniextseq>Unicode character properties<><>
 
 <+a>\pC<>  -  Other.
 <+a>\p{Cc}<>  -  Control.
@@ -498,12 +471,9 @@ The effect of one of these verbs in a group called as a subroutine is confined t
 <+a>\p{Xuc}<>  -  Univerally-named character.
 <+a>\p{Xwd}<>  -  Perl word: property Xan or underscore.
 
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#uniextseq>Unicode character properties and scripts<>
-
 -- scripts --
 
-<.h>Unicode scripts<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#uniextseq>Unicode scripts<><>
 
 Some characters belong to certain scripts, like Greek, Arabic or Han.
 
@@ -514,16 +484,12 @@ Some characters belong to certain scripts, like Greek, Arabic or Han.
 
 Adlam, Ahom, Anatolian_Hieroglyphs, Arabic, Armenian, Avestan, Balinese, Bamum, Bassa_Vah, Batak, Bengali, Bhaiksuki, Bopomofo, Brahmi, Braille, Buginese, Buhid, Canadian_Aboriginal, Carian, Caucasian_Albanian, Chakma, Cham, Cherokee, Common, Coptic, Cuneiform, Cypriot, Cyrillic, Deseret, Devanagari, Dogra, Duployan, Egyptian_Hieroglyphs, Elbasan, Ethiopic, Georgian, Glagolitic, Gothic, Grantha, Greek, Gujarati, Gunjala_Gondi, Gurmukhi, Han, Hangul, Hanifi_Rohingya, Hanunoo, Hatran, Hebrew, Hiragana, Imperial_Aramaic, Inherited, Inscriptional_Pahlavi, Inscriptional_Parthian, Javanese, Kaithi, Kannada, Katakana, Kayah_Li, Kharoshthi, Khmer, Khojki, Khudawadi, Lao, Latin, Lepcha, Limbu, Linear_A, Linear_B, Lisu, Lycian, Lydian, Mahajani, Makasar, Malayalam, Mandaic, Manichaean, Marchen, Masaram_Gondi, Medefaidrin, Meetei_Mayek, Mende_Kikakui, Meroitic_Cursive, Meroitic_Hieroglyphs, Miao, Modi, Mongolian, Mro, Multani, Myanmar, Nabataean, New_Tai_Lue, Newa, Nko, Nushu, Ogham, Ol_Chiki, Old_Hungarian, Old_Italic, Old_North_Arabian, Old_Permic, Old_Persian, Old_Sogdian, Old_South_Arabian, Old_Turkic, Oriya, Osage, Osmanya, Pahawh_Hmong, Palmyrene, Pau_Cin_Hau, Phags_Pa, Phoenician, Psalter_Pahlavi, Rejang, Runic, Samaritan, Saurashtra, Sharada, Shavian, Siddham, SignWriting, Sinhala, Sogdian, Sora_Sompeng, Soyombo, Sundanese, Syloti_Nagri, Syriac, Tagalog, Tagbanwa, Tai_Le, Tai_Tham, Tai_Viet, Takri, Tamil, Tangut, Telugu, Thaana, Thai, Tibetan, Tifinagh, Tirhuta, Ugaritic, Unknown, Vai, Warang_Citi, Yi, Zanabazar_Square.
 
-<b>Script runs<>
+<.h><link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC25>Script runs<><>
 
 A script run is a sequence of characters that are all from the same script.
 
 <+a (*sr:`|`)>(*sr:...)<> - script run. Matches only if <.r>...<> belongs to a single script.
 <+a (*asr:`|`)>(*asr:...)<> - atomic script run (backtracking is not allowed into the <.r>...<>).
-
-<b>Links<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#uniextseq>Unicode character properties and scripts<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC22>Script runs<>
 
 -- replace --
 

@@ -2,15 +2,19 @@
 
 ### Editor
 
+Documentation improvements. New articles.
+
 Added commands in menu **Edit > Find**:
 - **Find next** (`F3` or click the **Find** button).
 - **Find previous** (`Shift+F3` or right-click the **Find** button).
 - **Next found** (`F4`). Selects next item in the **Found** panel.
 - **Previous found** (`Shift+F4`).
 
-Documentation improvements. New articles.
+Menu **Edit > Other > Insert new line before ) ] ;**. Temporarily disables statement auto-completion on `Enter`. And toolbar button.
 
-Added menu command **Edit > View/mode > Insert new line before ) ] ;**. Temporarily disables the statement auto-completion on `Enter` feature. And toolbar button.
+New code editor feature: continue a vertical method chain by typing `.` on the next line after the `;`.
+
+Updated PCRE (regular expressions engine) to v10.46.
 
 New tools:
 - .
@@ -30,11 +34,11 @@ New classes:
 
 New members:
 - `wpfBuilder.Add` overloads without parameter `flags`. The old overloads now are hidden. Flags replaced with: function `Child`; parameter *raw* of one `Add` overload.
-- `dialog`: fluent methods for setting dialog properties. The old functions now are hidden.
+- `dialog`: fluent API methods for setting dialog properties. The old functions now are hidden.
 - And more.
 
 New parameters:
-- 
+- .
 
 New features:
 - `dialog`: easier to add links.

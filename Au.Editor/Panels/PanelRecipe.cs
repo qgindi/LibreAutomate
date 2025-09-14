@@ -179,7 +179,7 @@ class PanelRecipe {
 		var syn = document.GetSyntaxRootSynchronously(default);
 		var node = syn.FindToken(code.Length - 3 - s.Length, true).Parent.FirstAncestorOrSelf<CrefSyntax>();
 		if (node != null) {
-			var semo = document.GetSemanticModelAsync().Result;
+			var semo = document.GetSemanticModelAsync().Result_();
 			if (semo.GetSymbolInfo(node).GetAnySymbol() is ISymbol sym)
 				return CiUtil.GetSymbolHelpUrl(sym);
 		}

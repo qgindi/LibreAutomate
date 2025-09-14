@@ -1,5 +1,3 @@
-#pragma once
-
 /* src/config.h.  Generated from config.h.in by configure.  */
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
@@ -54,8 +52,23 @@ sure both macros are undefined; an emulation function will then be used. */
    LF does in an ASCII/Unicode environment. */
 /* #undef EBCDIC_NL25 */
 
+/* Define to 1 if you have the <assert.h> header file. */
+/* #undef HAVE_ASSERT_H */
+
+/* Define this if your compiler supports __attribute__((uninitialized)) */
+/* #undef HAVE_ATTRIBUTE_UNINITIALIZED */
+
 /* Define to 1 if you have the `bcopy' function. */
 /* #undef HAVE_BCOPY */
+
+/* Define this if your compiler provides __assume() */
+/* #undef HAVE_BUILTIN_ASSUME */
+
+/* Define this if your compiler provides __builtin_mul_overflow() */
+/* #undef HAVE_BUILTIN_MUL_OVERFLOW */
+
+/* Define this if your compiler provides __builtin_unreachable() */
+/* #undef HAVE_BUILTIN_UNREACHABLE */
 
 /* Define to 1 if you have the <bzlib.h> header file. */
 /* #undef HAVE_BZLIB_H */
@@ -73,16 +86,19 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_EDIT_READLINE_READLINE_H */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-/* #undef HAVE_INTTYPES_H */
+#define HAVE_INTTYPES_H
 
 /* Define to 1 if you have the <limits.h> header file. */
 #define HAVE_LIMITS_H 1
 
+/* Define to 1 if you have the `memfd_create' function. */
+/* #undef HAVE_MEMFD_CREATE */
+
 /* Define to 1 if you have the `memmove' function. */
 #define HAVE_MEMMOVE 1
 
-/* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+/* Define to 1 if you have the <minix/config.h> header file. */
+/* #undef HAVE_MINIX_CONFIG_H */
 
 /* Define to 1 if you have the `mkostemp' function. */
 /* #undef HAVE_MKOSTEMP */
@@ -93,17 +109,26 @@ sure both macros are undefined; an emulation function will then be used. */
 /* Have PTHREAD_PRIO_INHERIT. */
 /* #undef HAVE_PTHREAD_PRIO_INHERIT */
 
+/* Define to 1 if you have the <readline.h> header file. */
+/* #undef HAVE_READLINE_H */
+
 /* Define to 1 if you have the <readline/history.h> header file. */
 /* #undef HAVE_READLINE_HISTORY_H */
 
 /* Define to 1 if you have the <readline/readline.h> header file. */
 /* #undef HAVE_READLINE_READLINE_H */
 
+/* Define to 1 if you have the `realpath' function. */
+/* #undef HAVE_REALPATH */
+
 /* Define to 1 if you have the `secure_getenv' function. */
 /* #undef HAVE_SECURE_GETENV */
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#define HAVE_STDIO_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
@@ -129,8 +154,12 @@ sure both macros are undefined; an emulation function will then be used. */
 /* Define to 1 if you have the <unistd.h> header file. */
 /* #undef HAVE_UNISTD_H */
 
-/* Define to 1 if the compiler supports simple visibility declarations. */
+/* Define to 1 if the compiler supports GCC compatible visibility
+   declarations. */
 /* #undef HAVE_VISIBILITY */
+
+/* Define to 1 if you have the <wchar.h> header file. */
+#define HAVE_WCHAR_H
 
 /* Define to 1 if you have the <windows.h> header file. */
 #define HAVE_WINDOWS_H 1
@@ -165,7 +194,7 @@ sure both macros are undefined; an emulation function will then be used. */
    matching attempt. The value is also used to limit a loop counter in
    pcre2_dfa_match(). There is a runtime interface for setting a different
    limit. The limit exists in order to catch runaway regular expressions that
-   take for ever to determine that they do not match. The default is set very
+   take forever to determine that they do not match. The default is set very
    large so that it does not accidentally catch legitimate cases. */
 #ifndef MATCH_LIMIT
 #define MATCH_LIMIT 10000000
@@ -196,7 +225,13 @@ sure both macros are undefined; an emulation function will then be used. */
    Care must be taken if it is increased, because it guards against integer
    overflow caused by enormously large patterns. */
 #ifndef MAX_NAME_SIZE
-#define MAX_NAME_SIZE 32
+#define MAX_NAME_SIZE 128
+#endif
+
+/* The value of MAX_VARLOOKBEHIND specifies the default maximum length, in
+   characters, for a variable-length lookbehind assertion. */
+#ifndef MAX_VARLOOKBEHIND
+#define MAX_VARLOOKBEHIND 255
 #endif
 
 /* Defining NEVER_BACKSLASH_C locks out the use of \C in all patterns. */
@@ -220,7 +255,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PACKAGE_NAME "PCRE2"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PCRE2 10.42"
+#define PACKAGE_STRING "PCRE2 10.46"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "pcre2"
@@ -229,7 +264,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "10.42"
+#define PACKAGE_VERSION "10.46"
 
 /* The value of PARENS_NEST_LIMIT specifies the maximum depth of nested
    parentheses (of any kind) in a pattern. This limits the amount of system
@@ -259,18 +294,22 @@ sure both macros are undefined; an emulation function will then be used. */
 /* Define to any value to include debugging code. */
 /* #undef PCRE2_DEBUG */
 
+/* to make a symbol visible */
+#define PCRE2_EXPORT
+
 /* If you are compiling for a system other than a Unix-like system or
    Win32, and it needs some magic to be inserted before the definition
    of a function that is exported by the library, define this macro to
    contain the relevant magic. If you do not define this macro, a suitable
-    __declspec value is used for Windows systems; in other environments
-   "extern" is used for a C compiler and "extern C" for a C++ compiler.
+   __declspec value is used for Windows systems; in other environments
+   a compiler relevant "extern" is used with any "visibility" related
+   attributes from PCRE2_EXPORT included.
    This macro apears at the start of every exported function that is part
    of the external API. It does not appear on functions that are "external"
    in the C sense, but which are internal to the library. */
 /* #undef PCRE2_EXP_DEFN */
 
-/* Define to any value if linking statically */
+/* Define to any value if linking statically (TODO: make nice with Libtool) */
 #define PCRE2_STATIC 1
 
 /* Define to necessary symbol if this constant uses a non-standard name on
@@ -282,8 +321,13 @@ sure both macros are undefined; an emulation function will then be used. */
    unless SUPPORT_JIT is also defined. */
 /* #undef SLJIT_PROT_EXECUTABLE_ALLOCATOR */
 
-/* Define to 1 if you have the ANSI C header files. */
-#define STDC_HEADERS 1
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
+/* #undef STDC_HEADERS */
+
+/* Define to any value to enable differential fuzzing support. */
+/* #undef SUPPORT_DIFF_FUZZ */
 
 /* Define to any value to enable support for Just-In-Time compiling. */
 /* #undef SUPPORT_JIT */
@@ -336,35 +380,97 @@ sure both macros are undefined; an emulation function will then be used. */
 #ifndef _ALL_SOURCE
 # define _ALL_SOURCE 1
 #endif
-/* Enable GNU extensions on systems that have them.  */
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE 1
-#endif
-/* Enable threading extensions on Solaris.  */
-#ifndef _POSIX_PTHREAD_SEMANTICS
-# define _POSIX_PTHREAD_SEMANTICS 1
-#endif
-/* Enable extensions on HP NonStop.  */
-#ifndef _TANDEM_SOURCE
-# define _TANDEM_SOURCE 1
+/* Enable general extensions on macOS.  */
+#ifndef _DARWIN_C_SOURCE
+# define _DARWIN_C_SOURCE 1
 #endif
 /* Enable general extensions on Solaris.  */
 #ifndef __EXTENSIONS__
 # define __EXTENSIONS__ 1
 #endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE 1
+#endif
+/* Enable X/Open compliant socket functions that do not require linking
+   with -lxnet on HP-UX 11.11.  */
+#ifndef _HPUX_ALT_XOPEN_SOCKET_API
+# define _HPUX_ALT_XOPEN_SOCKET_API 1
+#endif
+/* Identify the host operating system as Minix.
+   This macro does not affect the system headers' behavior.
+   A future release of Autoconf may stop defining this macro.  */
+#ifndef _MINIX
+/* # undef _MINIX */
+#endif
+/* Enable general extensions on NetBSD.
+   Enable NetBSD compatibility extensions on Minix.  */
+#ifndef _NETBSD_SOURCE
+# define _NETBSD_SOURCE 1
+#endif
+/* Enable OpenBSD compatibility extensions on NetBSD.
+   Oddly enough, this does nothing on OpenBSD.  */
+#ifndef _OPENBSD_SOURCE
+# define _OPENBSD_SOURCE 1
+#endif
+/* Define to 1 if needed for POSIX-compatible behavior.  */
+#ifndef _POSIX_SOURCE
+/* # undef _POSIX_SOURCE */
+#endif
+/* Define to 2 if needed for POSIX-compatible behavior.  */
+#ifndef _POSIX_1_SOURCE
+/* # undef _POSIX_1_SOURCE */
+#endif
+/* Enable POSIX-compatible threading on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-5:2014.  */
+#ifndef __STDC_WANT_IEC_60559_ATTRIBS_EXT__
+# define __STDC_WANT_IEC_60559_ATTRIBS_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-1:2014.  */
+#ifndef __STDC_WANT_IEC_60559_BFP_EXT__
+# define __STDC_WANT_IEC_60559_BFP_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-2:2015.  */
+#ifndef __STDC_WANT_IEC_60559_DFP_EXT__
+# define __STDC_WANT_IEC_60559_DFP_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-4:2015.  */
+#ifndef __STDC_WANT_IEC_60559_FUNCS_EXT__
+# define __STDC_WANT_IEC_60559_FUNCS_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TS 18661-3:2015.  */
+#ifndef __STDC_WANT_IEC_60559_TYPES_EXT__
+# define __STDC_WANT_IEC_60559_TYPES_EXT__ 1
+#endif
+/* Enable extensions specified by ISO/IEC TR 24731-2:2010.  */
+#ifndef __STDC_WANT_LIB_EXT2__
+# define __STDC_WANT_LIB_EXT2__ 1
+#endif
+/* Enable extensions specified by ISO/IEC 24747:2009.  */
+#ifndef __STDC_WANT_MATH_SPEC_FUNCS__
+# define __STDC_WANT_MATH_SPEC_FUNCS__ 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# define _TANDEM_SOURCE 1
+#endif
+/* Enable X/Open extensions.  Define to 500 only if necessary
+   to make mbstate_t available.  */
+#ifndef _XOPEN_SOURCE
+/* # undef _XOPEN_SOURCE */
+#endif
 
 /* Version number of package */
-#define VERSION "10.42"
+#define VERSION "10.46"
 
-/* Define to 1 if on MINIX. */
-/* #undef _MINIX */
+/* Number of bits in a file offset, on hosts where this is settable. */
+/* #undef _FILE_OFFSET_BITS */
 
-/* Define to 2 if the system does not provide POSIX.1 features except with
-   this defined. */
-/* #undef _POSIX_1_SOURCE */
-
-/* Define to 1 if you need to in order for `stat' and other things to work. */
-/* #undef _POSIX_SOURCE */
+/* Define for large files, on AIX-style hosts. */
+/* #undef _LARGE_FILES */
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
@@ -399,10 +505,5 @@ sure both macros are undefined; an emulation function will then be used. */
 
 // -----------------------
 
-//Exclude files:
-//pcre2_convert.c
-//pcre2_dfa_match.c
-//pcre2_substitute.c
-//all jit
-//pcre2_dftables.c, pcre2_fuzzsupport.c, pcre2_pcreprintint.c
-//all where name isn't like pcre2_x.c
+//Exclude files moved to the `excluded` dir.
+

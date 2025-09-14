@@ -1,5 +1,3 @@
-//TODO: adds `\` before `&` (in link text only?), eg `EnumUI\&lt;T\&gt;` in recipe Dialog - enum check-list, select
-
 using System.Xml.Linq;
 
 partial class AuDocs {
@@ -97,7 +95,9 @@ This is an online copy of the LibreAutomate cookbook.
 					Debug_.PrintIf(s.Contains('\n'), s);
 				}
 				
-				if (s.Contains('<')) s = rxTag.Replace(s, _Repl);
+				bool onlyRawText = s.Like("<_>*</_>");
+				if (onlyRawText) s = _MarkdownEscape(s[3..^4]);
+				else if (s.Contains('<')) s = rxTag.Replace(s, _Repl);
 				
 				//non-link tags
 				switch (tag) {
@@ -149,7 +149,8 @@ This is an online copy of the LibreAutomate cookbook.
 				case "+see": //was <see cref="attr"/>, now <+see 'attr'>attr<>
 					if (PanelRecipe.GetSeeUrl(attr, usings) is string url2) {
 						if (url2.Starts(website)) url2 = url2[website.Length..];
-						return $"<a href=\"{url2}\">{_MarkdownEscape(s)}</a>";
+						if (!onlyRawText) s = _MarkdownEscape(s);
+						return $"<a href=\"{url2}\">{s}</a>";
 					}
 					break;
 				}

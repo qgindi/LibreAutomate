@@ -852,7 +852,7 @@ partial class Compiler {
 	
 	public static void Warmup(CAW::Microsoft.CodeAnalysis.Document document) {
 		//using var p1 = perf.local();
-		var compilation = document.Project.GetCompilationAsync().Result;
+		var compilation = document.Project.GetCompilationAsync().Result_();
 		//compilation.GetDiagnostics(); //just makes Emit faster, and does not make the real GetDiagnostics faster first time
 		//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 		var asmStream = new MemoryStream(16000);

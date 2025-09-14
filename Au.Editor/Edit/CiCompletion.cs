@@ -215,6 +215,7 @@ partial class CiCompletion {
 					//TargetTypedCompletionFilter = true, //?
 				};
 				//print.it(options);
+				//rejected: support /// <completionlist cref="ClassUsedLikeEnum"/>. There is no option. It seems it's a legacy undocumented VS-only feature.
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
 				
 				CompletionList r1 = await completionService.GetCompletionsAsync(document, position, options, null, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
@@ -945,7 +946,7 @@ partial class CiCompletion {
 		if (symbols != null) return CiText.FromSymbols(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
 		if (ci.kind == CiItemKind.Namespace) return null; //extern alias
 		Debug_.PrintIf(!(ci.kind == CiItemKind.None || ci.GetCI().Flags.Has(CompletionItemFlags.Expanded)), ci.kind); //None if Regex
-		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.GetCI()).Result; //fast if Regex, else not tested
+		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.GetCI()).Result_(); //fast if Regex, else not tested
 		return r == null ? null : CiText.FromTaggedParts(r.TaggedParts);
 	}
 	
@@ -1001,7 +1002,7 @@ partial class CiCompletion {
 		} else {
 			var ci = item.GetCI();
 			displayTextSuffix = ci.DisplayTextSuffix;
-			var change = data.completionService.GetChangeAsync(data.document, ci).Result;
+			var change = data.completionService.GetChangeAsync(data.document, ci).Result_();
 			//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 			
 			var changes = change.TextChanges;

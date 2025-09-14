@@ -187,7 +187,7 @@ public static class script {
 				};
 			}
 			d.Text2(text);
-			d.ShowDialog(); //TODO: test both cases
+			d.ShowDialog();
 		}
 		
 		//workaround for .NET bug: randomly changes error mode.

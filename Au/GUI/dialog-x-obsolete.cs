@@ -1,9 +1,11 @@
+//info: the "x" in filename is for DocFX to correctly resolve links (changes file processing order).
+
 #if !DEBUG
 namespace Au;
 
 public partial class dialog {
 	/// <remarks>This overload is obsolete. For text with links now use <see cref="DText"/> instead of string + <i>onLinkClick</i>.</remarks>
-	/// <inheritdoc cref="show" path="/param"/>
+	/// <inheritdoc cref="show(string, DText, Strings, DFlags, DIcon, AnyWnd, DText, DText, string, DControls, Coord, Coord, screen, int)" path="/param"/>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[OverloadResolutionPriority(-1)]
 	public dialog(
@@ -16,7 +18,7 @@ public partial class dialog {
 	}
 	
 	/// <remarks>This overload is obsolete. For text with links now use <see cref="DText"/> instead of string + <i>onLinkClick</i>.</remarks>
-	/// <inheritdoc cref="show"/>
+	/// <inheritdoc cref="show(string, DText, Strings, DFlags, DIcon, AnyWnd, DText, DText, string, DControls, Coord, Coord, screen, int)"/>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[OverloadResolutionPriority(-1)]
 	public static int show(
@@ -31,7 +33,7 @@ public partial class dialog {
 	}
 	
 	/// <remarks>This overload is obsolete. For text with links now use <see cref="DText"/> instead of string + <i>onLinkClick</i>.</remarks>
-	/// <inheritdoc cref="showInput"/>
+	/// <inheritdoc cref="showInput(out string, string, DText, DEdit, string, Strings, DFlags, AnyWnd, DText, DText, string, DControls, Coord, Coord, screen, int, string, Action{DEventArgs})"/>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[OverloadResolutionPriority(-1)]
 	public static bool showInput(out string s,
@@ -54,7 +56,7 @@ public partial class dialog {
 	}
 	
 	/// <remarks>This overload is obsolete. For text with links now use <see cref="DText"/> instead of string + <i>onLinkClick</i>.</remarks>
-	/// <inheritdoc cref="showList"/>
+	/// <inheritdoc cref="showList(Strings, string, DText, DFlags, AnyWnd, DText, DText, string, DControls, Coord, Coord, screen, int)"/>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[OverloadResolutionPriority(-1)]
 	public static int showList(
@@ -71,7 +73,7 @@ public partial class dialog {
 	}
 	
 	/// <remarks>This overload is obsolete. For text with links now use <see cref="DText"/> instead of string + <i>onLinkClick</i>.</remarks>
-	/// <inheritdoc cref="showProgress"/>
+	/// <inheritdoc cref="showProgress(bool, string, DText, string, DFlags, AnyWnd, DText, DText, string, DControls, Coord, Coord, screen, int)"/>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[OverloadResolutionPriority(-1)]
 	public static dialog showProgress(bool marquee,
@@ -93,7 +95,7 @@ public partial class dialog {
 	}
 	
 	/// <remarks>This overload is obsolete. For text with links now use <see cref="DText"/> instead of string + <i>onLinkClick</i>.</remarks>
-	/// <inheritdoc cref="showNoWait"/>
+	/// <inheritdoc cref="showNoWait(string, DText, Strings, DFlags, DIcon, AnyWnd, DText, DText, string, DControls, Coord, Coord, screen, int)"/>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[OverloadResolutionPriority(-1)]
 	public static dialog showNoWait(
@@ -134,7 +136,7 @@ public partial class dialog {
 	///<inheritdoc cref="Buttons"/>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public void SetButtons(Strings buttons, bool asCommandLinks = false, Strings customButtons = default) {
-		Buttons(buttons, asCommandLinks).ButtonsList(customButtons, asCommandLinks); //TODO: test
+		Buttons(buttons, asCommandLinks).ButtonsList(customButtons, asCommandLinks);
 	}
 	
 	/// <summary>

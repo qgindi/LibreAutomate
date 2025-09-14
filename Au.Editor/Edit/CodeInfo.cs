@@ -72,7 +72,7 @@ static class CodeInfo {
 				var document = sol.GetDocument(documentId);
 				//p1.Next();
 				
-				var semo = document.GetSemanticModelAsync().Result;
+				var semo = document.GetSemanticModelAsync().Result_();
 				//p1.Next('s');
 				
 				//let the coloring and folding in editor start working immediately
@@ -424,7 +424,7 @@ static class CodeInfo {
 		
 		public CompilationUnitSyntax syntaxRoot { get; private set; }
 		
-		public SemanticModel semanticModel => document.GetSemanticModelAsync().Result; //only first time slow
+		public SemanticModel semanticModel => document.GetSemanticModelAsync().Result_(); //only first time slow
 		
 		/// <summary>
 		/// Initializes all fields except document.

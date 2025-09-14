@@ -93,7 +93,7 @@ public abstract record class JSettings : IDisposable {
 					} else {
 						if (!Environment.UserInteractive) throw;
 						int button = dialog.show("Failed to load settings",
-							new($"{ex.ToStringWithoutStack()}\n\n<a>{file}</a>", o => { run.selectInExplorer(file); }),//TODO: test (all DText ctor calls)
+							new($"{ex.ToStringWithoutStack()}\n\n<a>{file}</a>", o => { run.selectInExplorer(file); }),
 							"1 Exit|2 Backup (rename) the file and use default settings",
 							flags: DFlags.CommandLinks,
 							icon: DIcon.Error);

@@ -142,7 +142,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <remarks>Supports <see cref="lastError"/>.</remarks>
 	public nint Send(int message, nint wParam = 0, nint lParam = 0) {
-		Debug.Assert(!Is0);
+		Debug_.PrintIf(Is0);
 		return Api.SendMessage(this, message, wParam, lParam);
 	}
 	
@@ -151,7 +151,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <remarks>Supports <see cref="lastError"/>.</remarks>
 	public nint Send(int message, nint wParam, string lParam) {
-		Debug.Assert(!Is0);
+		Debug_.PrintIf(Is0);
 		fixed (char* p = lParam)
 			return Api.SendMessage(this, message, wParam, (nint)p);
 		//info: don't use overload, then eg ambiguous if null.
@@ -162,7 +162,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <remarks>Supports <see cref="lastError"/>.</remarks>
 	public nint Send(int message, nint wParam, void* lParam) {
-		Debug.Assert(!Is0);
+		Debug_.PrintIf(Is0);
 		return Api.SendMessage(this, message, wParam, (nint)lParam);
 		//info: don't use overload, then eg ambiguous if null.
 	}
@@ -173,7 +173,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	///// Returns its return value (<c>false</c> if failed). Supports <see cref="lastError"/>.
 	///// </summary>
 	//public bool SendTimeout(int millisecondsTimeout, int message, nint wParam = 0, nint lParam = 0, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
-	//	Debug.Assert(!Is0);
+	//	Debug_.PrintIf(Is0);
 	//	return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out _);
 	//}
 	
@@ -182,7 +182,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	public bool SendTimeout(int millisecondsTimeout, out nint result, int message, nint wParam = 0, nint lParam = 0, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
-		Debug.Assert(!Is0); //TODO: need something better
+		Debug_.PrintIf(Is0);
 		return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out result);
 	}
 	
@@ -191,7 +191,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	public bool SendTimeout(int millisecondsTimeout, out nint result, int message, nint wParam, string lParam, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
-		Debug.Assert(!Is0);
+		Debug_.PrintIf(Is0);
 		result = 0;
 		fixed (char* p = lParam)
 			return 0 != Api.SendMessageTimeout(this, message, wParam, (nint)p, flags, millisecondsTimeout, out result);
@@ -202,7 +202,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	public bool SendTimeout(int millisecondsTimeout, out nint result, int message, nint wParam, void* lParam, SMTFlags flags = SMTFlags.ABORTIFHUNG) {
-		Debug.Assert(!Is0);
+		Debug_.PrintIf(Is0);
 		return 0 != Api.SendMessageTimeout(this, message, wParam, (nint)lParam, flags, millisecondsTimeout, out result);
 	}
 	
@@ -211,7 +211,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
 	public bool SendNotify(int message, nint wParam = 0, nint lParam = 0) {
-		Debug.Assert(!Is0);
+		Debug_.PrintIf(Is0);
 		return Api.SendNotifyMessage(this, message, wParam, lParam);
 	}
 	

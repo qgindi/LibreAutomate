@@ -56,7 +56,7 @@ class CiErrors {
 				if (ec == ErrorCode.ERR_NamespaceUnexpected) {
 					//If unknown name, convert to ERR_NameNotInContext. Then on mouse hover will display tooltip with links to add using directive etc.
 					var d2 = cd.document.WithText(SourceText.From(code.Insert(end, ";")));
-					var m2 = d2.GetSemanticModelAsync().Result;
+					var m2 = d2.GetSemanticModelAsync().Result_();
 					//print.it(m2.GetDiagnostics(span));
 					d = m2.GetDiagnostics(span).FirstOrDefault(o => (ErrorCode)o.Code == ErrorCode.ERR_NameNotInContext);
 					if (d == null) continue;

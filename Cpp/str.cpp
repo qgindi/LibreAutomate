@@ -184,12 +184,12 @@ pcre2_code_16* Compile(STR rx, size_t len, __int64 flags /*= 0*/, out BSTR* errS
 {
 	int errCode; size_t errOffset;
 	UINT f = (UINT)flags, fe = flags >> 32;
+	fe &= 0xFFFFFF; //hi 8 bits are used for match flags in C#.
 
 	//If rx contains non-ASCII characters, add PCRE2_UTF flag. Else case-insensitive does not work.
 	if(!(f & (PCRE2_UTF | PCRE2_NEVER_UTF))) {
 		for(size_t i = 0; i < len; i++) if(rx[i] >= 128) { f |= PCRE2_UTF; break; }
 	}
-	fe &= 0xFF; //reserve other bits for the future, eg non-PCRE flags or JIT flags. Currently the EXTRA flag values are 1-8.
 
 	pcre2_compile_context_16* cc = null;
 	if(fe) {
@@ -207,7 +207,7 @@ pcre2_code_16* Compile(STR rx, size_t len, __int64 flags /*= 0*/, out BSTR* errS
 
 //Calls/returns pcre2_compile_16. Returns null if fails (errors in regular expression etc).
 //This version is called from C#. In this dll use Compile instead.
-//flags is __int64 consisting of pcre2_compile_16 flags in lo 32 bits and pcre2_set_compile_extra_options_16 flags in lo 8 bits of hi 32 bits.
+//flags is __int64 consisting of pcre2_compile_16 flags in lo 32 bits and pcre2_set_compile_extra_options_16 flags in lo 24 bits of hi 32 bits.
 //	Adds PCRE2_UTF if rx contains non-ASCII characters and flags does not contain PCRE2_UTF or PCRE2_NEVER_UTF.
 //codeSize receives code size (PCRE2_INFO_SIZE).
 //errStr, if not null, receives error text when fails. Caller then must SysFreeString it.
@@ -241,7 +241,7 @@ struct _RxMdVec { CHeapPtr<POINT> a; int n; };
 
 //After upgrading PCRE library, this reminds to check/reapply its modifications. Then edit this line.
 //More info in config.h in PCRE project.
-static_assert(PCRE2_MAJOR == 10 && PCRE2_MINOR == 42);
+static_assert(PCRE2_MAJOR == 10 && PCRE2_MINOR == 46);
 
 //Cpp_RegexMatch results.
 struct RegexMatch

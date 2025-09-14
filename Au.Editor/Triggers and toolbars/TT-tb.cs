@@ -532,7 +532,7 @@ void {{name}}() {
 						var t = new _Toolbar { method = m, location = m.Locations[0], Name = m.Name, fn = f, tree = tree, variable = loc, };
 						
 						at.Clear();
-						foreach (var x in SymbolFinder.FindCallersAsync(m, _sln).Result) {
+						foreach (var x in SymbolFinder.FindCallersAsync(m, _sln).Result_()) {
 							foreach (var y in x.Locations) {
 								var node = y.FindNode(default);
 								string tt = "?";

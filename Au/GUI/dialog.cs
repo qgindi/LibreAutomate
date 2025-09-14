@@ -742,7 +742,7 @@ public partial class dialog {
 	/// Call this method after setting text and other properties.
 	/// </summary>
 	/// <returns>Selected button id.</returns>
-	/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+	/// <exception cref="Win32Exception">Failed to show dialog. Unlikely.</exception>
 	public unsafe int ShowDialog() {
 		//info: named ShowDialog, not Show, to not confuse with the static Show() which is used almost everywhere in documentation.
 		
@@ -834,16 +834,14 @@ public partial class dialog {
 			
 			wnd.Internal_.EnableActivate(true);
 			
-			for (int i = 0; i < 10; i++) { //see the API bug workaround comment below
-				_LockUnlock(true); //see the API bug workaround comment below
-				
+			//TaskDialog[Indirect] API bug: If called simultaneously by 2 threads, often fails and returns an unknown error code 0x800403E9.
+			//Known workarounds:
+			//	1. Lock. Unlock on first callback message. Now used.
+			//	2. Retry. Now used only for other unexpected errors, eg out-of-memory.
+			_LockUnlock(true);
+			
+			for (int i = 0; i < 10; i++) { //see the API bug workaround comment
 				hr = _CallTDI(out rNativeButton, out rRadioButton, out rIsChecked);
-				
-				//TaskDialog[Indirect] API bug:
-				//	If called simultaneously by 2 threads, often fails and returns an unknown error code 0x800403E9.
-				//Known workarounds:
-				//	1. Lock. Unlock on first callback message. Now used.
-				//	2. Retry. Now used only for other unexpected errors, eg out-of-memory.
 				
 				//if(hr != 0) print.it("0x" + hr.ToString("X"), !_dlg.Is0);
 				if (hr == 0 //succeeded
@@ -1028,7 +1026,7 @@ public partial class dialog {
 		if (_IsEdit) _EditControlOnMessage(message);
 		
 		if (e != null) {
-			var ed = new DEventArgs(this, _dlg, message, wParam, button, timerTime, linkHref);//TODO: test
+			var ed = new DEventArgs(this, _dlg, message, wParam, button, timerTime, linkHref);
 			e(ed);
 			R = ed.returnValue;
 		}
@@ -1110,10 +1108,11 @@ public partial class dialog {
 	/// Calls <see cref="ThreadWaitForOpen"/>, therefore the dialog is already open when this function returns.
 	/// More info: <see cref="showNoWait"/>
 	/// </remarks>
-	/// <exception cref="AggregateException">Failed to show dialog.</exception>
+	/// <exception cref="Win32Exception">Failed to show dialog. Unlikely.</exception>
 	public void ShowDialogNoWait() {
-		var t = Task.Run(() => ShowDialog());
-		if (!ThreadWaitForOpen()) throw t.Exception ?? new AggregateException();
+		Exception ex = null;
+		Task.Run(() => { try { ShowDialog(); } catch (Exception e) { ex = e; } });
+		if (!ThreadWaitForOpen()) throw ex ?? new Win32Exception(0);
 	}
 	
 	/// <summary>
@@ -1160,7 +1159,7 @@ public partial class dialog {
 		_AssertIsOtherThread();
 		while (!IsOpen) {
 			if (_isClosed) return false;
-			wait.doEvents(15); //need ~3 loops if 15. Without doEvents hangs if a form is the dialog owner.
+			wait.doEvents(15); //need 2-3 loops if 15. Without doEvents hangs if a form is the dialog owner.
 		}
 		return true;
 	}

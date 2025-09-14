@@ -506,7 +506,7 @@ static class ModifyCode {
 				
 				//find references of the variable declared in the duplicate wnd.find statement
 				if (cd.semanticModel.GetDeclaredSymbol(lds.Declaration.Variables[0]) is ISymbol sym) {
-					if (SymbolFinder.FindReferencesAsync(sym, cd.document.Project.Solution, [cd.document]).Result.SingleOrDefault() is { } rs) {
+					if (SymbolFinder.FindReferencesAsync(sym, cd.document.Project.Solution, [cd.document]).Result_().SingleOrDefault() is { } rs) {
 						foreach (var loc in rs.Locations) {
 							var span = loc.Location.SourceSpan;
 							aRepl.Add((span.Start, span.End, repl));

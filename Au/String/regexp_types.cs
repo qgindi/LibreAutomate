@@ -47,48 +47,48 @@ namespace Au.Types {
 			StartNoK = k.indexNoK;
 			_rx = rx;
 			//_subject = subject;
-			
+
 			var g = _groups = new RXGroup[k.vecCount];
 			var v = k.vec;
 			for (int i = 0; i < g.Length; i++) {
 				g[i] = new RXGroup(subject, v[i]);
 			}
 		}
-		
+
 		//string readonly _subject;
 		readonly regexp _rx;
 		readonly RXGroup[] _groups;
-		
+
 		/// <summary>
 		/// Gets the subject string in which this match was found.
 		/// </summary>
 		public string Subject => _groups[0].Subject_;
-		
+
 		/// <summary>
 		/// Gets the number of groups in the regular expression, + 1 for the whole match.
 		/// </summary>
 		public int GroupCountPlusOne => _groups.Length;
-		
+
 		/// <summary>
 		/// Gets start offset of the match in the subject string. The same as that of group 0 (<see cref="RXGroup.Start"/>).
 		/// </summary>
 		public int Start => _groups[0].Start;
-		
+
 		/// <summary>
 		/// Gets length of the match in the subject string. The same as that of group 0 (<see cref="RXGroup.Length"/>).
 		/// </summary>
 		public int Length => _groups[0].Length;
-		
+
 		/// <summary>
 		/// Gets end offset of the match in the subject string (<see cref="Start"/> + <see cref="Length"/>). The same as that of group 0 (<see cref="RXGroup.End"/>).
 		/// </summary>
 		public int End => _groups[0].End;
-		
+
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.Value"/>).
 		/// </summary>
 		public string Value => _groups[0].Value;
-		
+
 		/// <summary>
 		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.Span"/>).
 		/// </summary>
@@ -96,12 +96,12 @@ namespace Au.Types {
 		/// Unlike <see cref="Value"/>, does not create new string.
 		/// </remarks>
 		public RStr Span => _groups[0].Span;
-		
+
 		/// <summary>
 		/// Returns <see cref="RXGroup.ToString"/> of group 0.
 		/// </summary>
 		public override string ToString() => _groups[0].ToString();
-		
+
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.GetValue_"/>).
 		/// </summary>
@@ -110,7 +110,7 @@ namespace Au.Types {
 		/// </remarks>
 		/// <param name="subject">Must be the same subject string as passed to the <see cref="regexp"/> function that returned this result.</param>
 		internal string GetValue_(RStr subject) => _groups[0].GetValue_(subject);
-		
+
 		/// <summary>
 		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>. The same as that of group 0 (<see cref="RXGroup.GetSpan_"/>).
 		/// </summary>
@@ -119,13 +119,13 @@ namespace Au.Types {
 		/// </remarks>
 		/// <param name="subject">Must be the same subject string as passed to the <see cref="regexp"/> function that returned this result.</param>
 		internal RStr GetSpan_(RStr subject) => _groups[0].GetSpan_(subject);
-		
+
 		/// <summary>
 		/// Gets start offset of whole match regardless of <c>\K</c>.
 		/// When the regular expression contains <c>\K</c>, this is less than <see cref="Start"/>.
 		/// </summary>
 		public int StartNoK { get; private set; }
-		
+
 		/// <summary>
 		/// Gets the name of a found mark, or <c>null</c>.
 		/// </summary>
@@ -134,7 +134,7 @@ namespace Au.Types {
 		/// After a full successful match, it is the last mark encountered on the matching path through the pattern. After a "no match" or a partial match, it is the last encountered mark. For example, consider this pattern: <c>"^(*MARK:A)((*MARK:B)a|b)c"</c>. When it matches <c>"bc"</c>, the mark is <c>A</c>. The <c>B</c> mark is "seen" in the first branch of the group, but it is not on the matching path. On the other hand, when this pattern fails to match <c>"bx"</c>, the mark is <c>B</c>.
 		/// </remarks>
 		public string Mark { get; private set; }
-		
+
 		/// <summary>
 		/// Gets the return value of the <see cref="regexp.Match(string, out RXMatch, Range?, RXMatchFlags)"/> call.
 		/// </summary>
@@ -143,20 +143,20 @@ namespace Au.Types {
 		/// When <c>false</c>, all properties except <see cref="Exists"/> and <see cref="Mark"/> have undefined values or throw exception.
 		/// </remarks>
 		public bool Exists { get; private set; }
-		
+
 		/// <summary>
-		/// Returns <c>true</c> if this match is partial.
+		/// Returns <c>true</c> if this match is <see href="https://www.pcre.org/current/doc/html/pcre2partial.html">partial</see>.
 		/// Partial match is possible if used a <c>PARTIAL_</c> flag.
 		/// </summary>
 		public bool IsPartial { get; private set; }
-		
+
 		/// <summary>
 		/// Gets group info. Index 0 is whole match. Index 1 is the first group.
 		/// </summary>
 		/// <param name="group">1-based group index, or 0 for whole match.</param>
 		/// <exception cref="IndexOutOfRangeException">Invalid <i>group</i>. Max valid value is <see cref="GroupCountPlusOne"/>.</exception>
 		public ref RXGroup this[int group] => ref _groups[group];
-		
+
 		/// <summary>
 		/// Gets group info of a named group.
 		/// </summary>
@@ -175,7 +175,7 @@ namespace Au.Types {
 				return ref _groups[i];
 			}
 		}
-		
+
 		/// <summary>
 		/// Finds a named group and returns its 1-based index. Returns -1 if not found.
 		/// </summary>
@@ -192,7 +192,7 @@ namespace Au.Types {
 			Not_.Null(groupName);
 			fixed (char* p = groupName) return GroupNumberFromName_(p, groupName.Length, out _);
 		}
-		
+
 		/// <summary>
 		/// Finds a named group and returns its 1-based index. Returns -1 if not found.
 		/// </summary>
@@ -210,7 +210,7 @@ namespace Au.Types {
 			Not_.Null(groupName);
 			fixed (char* p = groupName) return GroupNumberFromName_(p, groupName.Length, out notUnique);
 		}
-		
+
 		//Used by regexp.ReplaceAll to avoid repl.Substring.
 		internal int GroupNumberFromName_(char* s, int len, out bool notUnique) {
 			notUnique = false;
@@ -233,7 +233,7 @@ namespace Au.Types {
 			}
 			return R;
 		}
-		
+
 		/// <summary>
 		/// Returns expanded version of the specified replacement pattern.
 		/// </summary>
@@ -259,7 +259,7 @@ namespace Au.Types {
 			}
 		}
 	}
-	
+
 	/// <summary>
 	/// Regular expression group match info.
 	/// Used with <see cref="RXMatch"/>, <see cref="regexp"/> and some <see cref="String"/> extension methods.
@@ -277,36 +277,36 @@ namespace Au.Types {
 		readonly string _subject;
 		readonly int _index; //offset in _subject, or -1 if this group does not exist
 		readonly int _len; //length, or 0 if this group match does not exist
-		
+
 		internal RXGroup(string subject, int start, int end) {
 			_subject = subject;
 			_index = start;
 			_len = end - start; //note: can be <0 if (?=...\K). It's OK.
 		}
-		
+
 		internal RXGroup(string subject, StartEnd r) {
 			_subject = subject;
 			_index = r.start;
 			_len = r.Length; //note: can be <0 if (?=...\K). It's OK.
 		}
-		
+
 		internal string Subject_ => _subject;
-		
+
 		/// <summary>
 		/// Gets start offset of the group match in the subject string.
 		/// </summary>
 		public int Start => _index;
-		
+
 		/// <summary>
 		/// Gets length of the group match in the subject string.
 		/// </summary>
 		public int Length => _len;
-		
+
 		/// <summary>
 		/// Gets end offset of the group match in the subject string (<see cref="Start"/> + <see cref="Length"/>).
 		/// </summary>
 		public int End => _index + _len;
-		
+
 		/// <summary>
 		/// Returns <c>true</c> if the group exists in the subject string, <c>false</c> if does not exist.
 		/// More info in <see cref="RXGroup"/> topic. Example in <see cref="RXMatch"/> topic.
@@ -315,7 +315,7 @@ namespace Au.Types {
 		/// Other ways to detect it: if a group does not exist, its <see cref="Start"/> is -1 and <see cref="Value"/> is <c>null</c>.
 		/// </remarks>
 		public bool Exists => _index >= 0;
-		
+
 		/// <summary>
 		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>.
 		/// </summary>
@@ -324,7 +324,7 @@ namespace Au.Types {
 		/// Unlike <see cref="Value"/>, does not create new string.
 		/// </remarks>
 		public RStr Span => _len > 0 ? _subject.AsSpan(_index, _len) : (_index < 0 ? default : ""); //_len can be < 0
-		
+
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
 		/// </summary>
@@ -333,13 +333,13 @@ namespace Au.Types {
 		/// Creates new string each time. See also <see cref="Span"/>.
 		/// </remarks>
 		public string Value => _len > 0 ? _subject[_index..End] : (_index < 0 ? null : ""); //_len can be < 0
-		
+
 		/// <summary>
 		/// Returns <see cref="Value"/>.
 		/// </summary>
 		public override string ToString() => Value;
 		//public override string ToString() => _subject != null ? Value : $"{_index}..{End}";
-		
+
 		/// <summary>
 		/// Gets substring of the subject string from <see cref="Start"/> to <see cref="End"/>.
 		/// Returns <c>null</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
@@ -349,7 +349,7 @@ namespace Au.Types {
 		/// </remarks>
 		/// <param name="subject">Must be the same subject string as passed to the <see cref="regexp"/> function that returned this result.</param>
 		internal string GetValue_(RStr subject) => _len > 0 ? subject[_index..End].ToString() : (_index < 0 ? null : "");
-		
+
 		/// <summary>
 		/// Gets span of the subject string from <see cref="Start"/> to <see cref="End"/>.
 		/// Returns <c>null</c> if the group does not exist in the subject string (see <see cref="Exists"/>).
@@ -359,14 +359,14 @@ namespace Au.Types {
 		/// </remarks>
 		/// <param name="subject">Must be the same subject string as passed to the <see cref="regexp"/> function that returned this result.</param>
 		internal RStr GetSpan_(RStr subject) => _len > 0 ? subject.Slice(_index, _len) : (_index < 0 ? default : "");
-		
+
 		///
 		public static implicit operator Range(RXGroup g) => g.Exists ? g.Start..g.End : default;
 	}
-	
-	
+
+
 	#region callout
-	
+
 	/// <summary>
 	/// Managed version of PCRE API struct <c>pcre2_callout_block</c>.
 	/// When you set <see cref="regexp.Callout"/>, your callout function's parameter is of this type.
@@ -393,12 +393,12 @@ namespace Au.Types {
 			public readonly int callout_flags;
 		}
 #pragma warning restore 649
-		
+
 		//We use pointer instead of adding pcre2_callout_block fields to this struct. Other ways are not good:
 		//	Passing whole block to the final callback by value is slow (104 bytes, tested speed). Also then cannot have Result like now.
 		//	With 'in' fast, but then users have to declare lambda parameters like 'in RXCalloutData d'. Now just 'd'.
 		pcre2_callout_block* _p;
-		
+
 		/// <summary>
 		/// Sets the return value of the callout function, as documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
@@ -408,77 +408,77 @@ namespace Au.Types {
 		/// If -1 (<c>PCRE2_ERROR_NOMATCH</c>), the match function returns <c>false</c> (no match). Values less tan -2 are PCRE error codes and cause exception.
 		/// </remarks>
 		public int Result { set => _p->version = value; internal get => _p->version; }
-		
+
 		internal RXCalloutData(void* calloutBlock) {
 			_p = (pcre2_callout_block*)calloutBlock;
 			Result = 0;
 		}
-		
+
 		/// <summary>
 		/// Callout number, eg 5 for <c>"(?C5)"</c>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int callout_number => _p->callout_number;
-		
+
 		/// <summary>
 		/// One more than the number of the highest numbered captured group so far.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int capture_top => _p->capture_top;
-		
+
 		/// <summary>
 		/// The number of the most recently captured group.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int capture_last => _p->capture_last;
-		
+
 		/// <summary>
 		/// Flags.
 		/// 1 <c>PCRE2_CALLOUT_STARTMATCH</c>, 2 <c>PCRE2_CALLOUT_BACKTRACK</c>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int callout_flags => _p->callout_flags;
-		
+
 		/// <summary>
 		/// The offset within the subject string at which the current match attempt started. But depends on <c>\K</c> etc.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int start_match => (int)_p->start_match;
-		
+
 		/// <summary>
 		/// The current offset within the subject string.
 		/// </summary>
 		public int current_position => (int)_p->current_position;
-		
+
 		/// <summary>
 		/// The offset in the regular expression to the next item to be matched.
 		/// </summary>
 		public int pattern_position => (int)_p->pattern_position;
-		
+
 		/// <summary>
 		/// The length of the next item to be processed in the regular expression.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int next_item_length => (int)_p->next_item_length;
-		
+
 		/// <summary>
 		/// The callout string offset in the regular expression. Used with callouts like <c>"(?C'calloutString')"</c>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int callout_string_offset => (int)_p->callout_string_offset;
-		
+
 		/// <summary>
 		/// The callout string, eg <c>"xyz"</c> for <c>"(?C'xyz')"</c>.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public string callout_string => _p->callout_string == null ? null : new string(_p->callout_string, 0, (int)_p->callout_string_length);
-		
+
 		/// <summary>
 		/// The most recently passed <c>(*MARK)</c>, <c>(*PRUNE)</c>, or <c>(*THEN)</c> item in the match, or <c>null</c> if no such items have been passed.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public string mark => _p->mark == null ? null : new string(_p->mark);
-		
+
 		/// <summary>
 		/// Gets the start index and length of the specified group in the subject string.
 		/// </summary>
@@ -490,7 +490,7 @@ namespace Au.Types {
 			int i = (int)v[group *= 2];
 			return (i, (int)v[group + 1] - i);
 		}
-		
+
 		/// <summary>
 		/// Gets the value (substring) of the specified group.
 		/// </summary>
@@ -502,20 +502,20 @@ namespace Au.Types {
 			if (len == 0) return "";
 			return new string(_p->subject, i, len);
 		}
-		
+
 		/// <summary>
 		/// Gets the start index and length of the most recently captured group in the subject string.
 		/// </summary>
 		public (int index, int length) LastGroup => Group(_p->capture_last);
-		
+
 		/// <summary>
 		/// Gets the value (substring) of the most recently captured group.
 		/// </summary>
 		public string LastGroupValue => GroupValue(_p->capture_last);
 	}
-	
+
 	#endregion
-	
+
 #pragma warning disable 1591 //no XML doc
 	/// <summary>
 	/// Flags for <see cref="regexp"/> constructor.
@@ -534,60 +534,168 @@ namespace Au.Types {
 	/// </remarks>
 	[Flags]
 	public enum RXFlags : ulong {
+		/// <summary>Match only at the first position</summary>
 		ANCHORED = 0x80000000,
+
+		/// <summary>Pattern can match only at end of subject</summary>
 		ENDANCHORED = 0x20000000,
+
+		/// <summary>Do not check the pattern for UTF validity</summary>
 		NO_UTF_CHECK = 0x40000000,
-		
+
+		/// <summary>Allow empty classes</summary>
 		ALLOW_EMPTY_CLASS = 0x00000001,
+
+		/// <summary>Alternative handling of <c>\u</c>, <c>\U</c>, and <c>\x</c></summary>
 		ALT_BSUX = 0x00000002,
+
+		/// <summary>Compile automatic callouts</summary>
 		AUTO_CALLOUT = 0x00000004,
+
+		/// <summary>Do caseless matching</summary>
 		CASELESS = 0x00000008,
+
+		/// <summary><c>$</c> not to match newline at end</summary>
 		DOLLAR_ENDONLY = 0x00000010,
+
+		/// <summary><c>.</c> matches anything including newlines</summary>
 		DOTALL = 0x00000020,
+
+		/// <summary>Allow duplicate names for subpatterns</summary>
 		DUPNAMES = 0x00000040,
+
+		/// <summary>Ignore white space and <c>#</c> comments</summary>
 		EXTENDED = 0x00000080,
+
+		/// <summary>Force matching to be before newline</summary>
 		FIRSTLINE = 0x00000100,
+
+		/// <summary>Match unset backreferences</summary>
 		MATCH_UNSET_BACKREF = 0x00000200,
+
+		/// <summary><c>^</c> and <c>$</c> match newlines within data</summary>
 		MULTILINE = 0x00000400,
+
+		/// <summary>Lock out <c>UCP</c>, e.g. via <c>(*UCP)</c></summary>
 		NEVER_UCP = 0x00000800,
+
+		/// <summary>Lock out <c>UTF</c>, e.g. via <c>(*UTF)</c></summary>
 		NEVER_UTF = 0x00001000,
+
+		/// <summary>Disable numbered capturing paren-theses (named ones available)</summary>
 		NO_AUTO_CAPTURE = 0x00002000,
+
+		/// <summary>Disable auto-possessification</summary>
 		NO_AUTO_POSSESS = 0x00004000,
+
+		/// <summary>Disable automatic anchoring for <c>.*</c></summary>
 		NO_DOTSTAR_ANCHOR = 0x00008000,
+
+		/// <summary>Disable match-time start optimizations</summary>
 		NO_START_OPTIMIZE = 0x00010000,
+
+		/// <summary>Use Unicode properties for <c>\d</c>, <c>\w</c>, etc</summary>
 		UCP = 0x00020000,
+
+		/// <summary>Invert greediness of quantifiers</summary>
 		UNGREEDY = 0x00040000,
-		
+
 		/// <summary>
 		/// Fully support Unicode text (case-insensitivity etc). More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2unicode.html">pcre2unicode</see>.
 		/// This flag is implicitly added if regular expression contains non-ASCII characters and there is no flag <c>NEVER_UTF</c>.
 		/// </summary>
 		UTF = 0x00080000,
-		
+
+		/// <summary>Lock out the use of <c>\C</c> in patterns</summary>
 		NEVER_BACKSLASH_C = 0x00100000,
+
+		/// <summary>Alternative handling of <c>^</c> in multiline mode</summary>
 		ALT_CIRCUMFLEX = 0x00200000,
+
+		/// <summary>Process backslashes in verb names</summary>
 		ALT_VERBNAMES = 0x00400000,
+
 		//USE_OFFSET_LIMIT = 0x00800000, //used with pcre2_set_offset_limit(), but currently we don't support it
+
+		/// <summary></summary>
 		EXTENDED_MORE = 0x01000000,
+
+		/// <summary>Pattern characters are all literal</summary>
 		LITERAL = 0x02000000,
-		
+
+		/// <summary>Enable support for matching invalid UTF</summary>
+		MATCH_INVALID_UTF = 0x04000000,
+
+		/// <summary>Alternative extended character class syntax</summary>
+		ALT_EXTENDED_CLASS = 0x08000000,
+
 		//PCRE2_EXTRA_ flags.
-		
-		//ALLOW_SURROGATE_ESCAPES = 0x1L << 32, //not used with UTF-16
-		//BAD_ESCAPE_IS_LITERAL = 0x2L << 32, //dangerous
+
+		//EXTRA_ALLOW_SURROGATE_ESCAPES = 0x1L << 32, //not used with UTF-16
+		//EXTRA_BAD_ESCAPE_IS_LITERAL = 0x2L << 32, //dangerous
+
+		[EditorBrowsable(EditorBrowsableState.Never)] //bad name
 		MATCH_WORD = 0x4L << 32,
+		[EditorBrowsable(EditorBrowsableState.Never)] //bad name
 		MATCH_LINE = 0x8L << 32,
-		
+
+		/// <summary>Pattern matches "words"</summary>
+		EXTRA_MATCH_WORD = 0x4L << 32,
+
+		/// <summary>Pattern matches whole lines</summary>
+		EXTRA_MATCH_LINE = 0x8L << 32,
+
+		//EXTRA_ALT_BSUX //noise
+		//EXTRA_ALLOW_LOOKAROUND_BSK //fbc
+
+		/// <summary>Disable mixed ASCII/non-ASCII case folding</summary>
+		EXTRA_CASELESS_RESTRICT = 0x80L << 32,
+
+		/// <summary><c>\d</c> remains ASCII in UCP mode</summary>
+		EXTRA_ASCII_BSD = 0x100L << 32,
+
+		/// <summary><c>\s</c> remains ASCII in UCP mode</summary>
+		EXTRA_ASCII_BSS = 0x200L << 32,
+
+		/// <summary><c>\w</c> remains ASCII in UCP mode</summary>
+		EXTRA_ASCII_BSW = 0x400L << 32,
+
+		/// <summary>POSIX classes remain ASCII in UCP mode</summary>
+		EXTRA_ASCII_POSIX = 0x800L << 32,
+
+		/// <summary><c>[:digit:]</c> and <c>[:xdigit:]</c> POSIX classes remain ASCII in UCP mode</summary>
+		EXTRA_ASCII_DIGIT = 0x1000L << 32,
+
+		/// <summary>Disallow callouts in pattern</summary>
+		EXTRA_NEVER_CALLOUT = 0x8000L << 32,
+
+		/// <summary>Use Turkish I case folding</summary>
+		EXTRA_TURKISH_CASING = 0x10000L << 32,
+
+		//EXTRA_PYTHON_OCTAL
+		//EXTRA_NO_BS0 //rare
+
 		//Match API flags. regexp ctor moves them to a field that later is combined with RXMatchFlags when calling the match API.
-		
+
+		/// <summary>Subject string is not the beginning of a line</summary>
 		NOTBOL = 0x00000001L << 56, //hi byte of long
+
+		/// <summary>Subject string is not the end of a line</summary>
 		NOTEOL = 0x00000002L << 56,
+
+		/// <summary>An empty string is not a valid match</summary>
 		NOTEMPTY = 0x00000004L << 56,
+
+		/// <summary>An empty string at the start of the subject is not a valid match</summary>
 		NOTEMPTY_ATSTART = 0x00000008L << 56,
+
+		/// <summary>Allow partial soft match. See <see cref="RXMatch.IsPartial"/>.</summary>
 		PARTIAL_SOFT = 0x00000010L << 56,
+
+		/// <summary>Allow partial hard match. See <see cref="RXMatch.IsPartial"/>.</summary>
 		PARTIAL_HARD = 0x00000020L << 56,
 	}
-	
+
 	/// <summary>
 	/// Flags for <see cref="regexp"/> class functions.
 	/// Documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>.
@@ -598,55 +706,70 @@ namespace Au.Types {
 	[Flags]
 	public enum RXMatchFlags : uint {
 		//These are the same as in RXFlags, and can be used either when compiling or when matching.
-		
+
+		/// <summary>Match only at the first position</summary>
 		ANCHORED = 0x80000000,
+
+		/// <summary>Pattern can match only at end of subject</summary>
 		ENDANCHORED = 0x20000000,
+
+		/// <summary>Do not check the subject for UTF validity</summary>
 		NO_UTF_CHECK = 0x40000000,
-		
+
 		//These are only for matching. Also added to the hi int of RXFlags.
-		
+
+		/// <summary>Subject string is not the beginning of a line</summary>
 		NOTBOL = 0x00000001,
+
+		/// <summary>Subject string is not the end of a line</summary>
 		NOTEOL = 0x00000002,
+
+		/// <summary>An empty string is not a valid match</summary>
 		NOTEMPTY = 0x00000004,
+
+		/// <summary>An empty string at the start of the subject is not a valid match</summary>
 		NOTEMPTY_ATSTART = 0x00000008,
+
+		/// <summary>Allow partial soft match. See <see cref="RXMatch.IsPartial"/>.</summary>
 		PARTIAL_SOFT = 0x00000010,
+
+		/// <summary>Allow partial hard match. See <see cref="RXMatch.IsPartial"/>.</summary>
 		PARTIAL_HARD = 0x00000020,
+
+		//COPY_MATCHED_SUBJECT //this library does not use the PCRE API for wchich would need this
+		//DISABLE_RECURSELOOP_CHECK //for PCRE testing
+		//NO_JIT
 	}
 #pragma warning restore 1591
-	
+
 	internal static unsafe partial class Cpp {
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern nint Cpp_RegexCompile(string rx, nint len, RXFlags flags, out int codeSize, out BSTR errStr);
-		
+
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_RegexDtor(IntPtr code);
-		
+
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		internal struct RegexMatch {
 			public StartEnd* vec;
 			public int vecCount;
 			public int indexNoK;
 			public char* mark;
-			
+
 			public string Mark => mark == null ? null : new(mark, 0, mark[-1]);
 		}
-		
+
 		internal unsafe delegate int PcreCalloutT(void* calloutBlock, void* param);
-		
+
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_RegexMatch(HandleRef code, char* s, nint len, nint start, RXMatchFlags flags,
 			PcreCalloutT callout, out RegexMatch m, bool needM, out BSTR errStr);
 		//note: don't use [MarshalAs(UnmanagedType.BStr)] out string errStr, it makes much slower.
-		
-		//rejected
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern int Cpp_RegexSubstitute(HandleRef code, string s, nint len, nint start, PCRE2_SUBSTITUTE_ flags,
-		//	string repl, nint rlen, [Out] char[] outputbuffer, ref nint outlen, out BSTR errStr);
-		
+
 		#region PCRE API
-		
+
 		//internal enum PCRE2_ERROR_
 		//{
 		//	PARTIAL = 0, //note: the PCRE API value is -2, but our C++ dll API then returns 0
@@ -656,21 +779,13 @@ namespace Au.Types {
 		//	NOUNIQUESUBSTRING = -50,
 		//	//others not useful
 		//}
-		
+
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int pcre2_pattern_info(HandleRef code, PCRE2_INFO_ what, void* where);
-		
+
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int pcre2_substring_nametable_scan(HandleRef code, char* name, ushort** first, ushort** last);
-		
-		internal enum PCRE2_SUBSTITUTE_ {
-			EXTENDED = 0x00000200,
-			GLOBAL = 0x00000100,
-			OVERFLOW_LENGTH = 0x00001000,
-			UNKNOWN_UNSET = 0x00000800,
-			UNSET_EMPTY = 0x00000400,
-		}
-		
+
 		internal enum PCRE2_INFO_ {
 			ALLOPTIONS = 0,
 			//ARGOPTIONS = 1,
@@ -699,7 +814,7 @@ namespace Au.Types {
 			//FRAMESIZE = 24,
 			//HEAPLIMIT = 25,
 		}
-		
+
 		#endregion
 	}
 }

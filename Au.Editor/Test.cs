@@ -24,23 +24,12 @@ using Au.Compiler;
 using static Au.Controls.Sci;
 
 static class Test {
+	/// <summary>
+	/// 
+	/// </summary>
 	public static void FromMenubar() {
 		//print.clear();
 		
-		//var menu = Panels.Menu;
-		//foreach (var mi in menu.Items.OfType<MenuItem>()) {
-		//	print.it(mi);
-		//	//mi.InvalidateVisual();
-		//	print.it(mi.UseLayoutRounding);
-		//	mi.UseLayoutRounding ^= true;
-		//	mi.UseLayoutRounding ^= true;
-		//}
-		
-		foreach (var m in App.Wmain.VisualDescendants().OfType<Menu>()) { //extension method
-			//m.UseLayoutRounding ^= true;
-			//m.UseLayoutRounding ^= true;
-			m.InvalidateMeasure();
-		}
 		
 		
 		//timer2.every(500, _=> { GC.Collect(); });
