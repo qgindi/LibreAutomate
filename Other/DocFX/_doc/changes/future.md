@@ -10,19 +10,20 @@ Added commands in menu **Edit > Find**:
 - **Next found** (`F4`). Selects next item in the **Found** panel.
 - **Previous found** (`Shift+F4`).
 
-Menu **Edit > Other > Insert new line before ) ] ;**. Temporarily disables statement auto-completion on `Enter`. And toolbar button.
+Menu **Edit > Assist > Insert new line before ) ] ;**. Temporarily disables statement auto-completion on `Enter`. And toolbar button.
 
 New code editor feature: continue a vertical method chain by typing `.` on the next line after the `;`.
 
-Updated PCRE (regular expressions engine) to v10.46.
+Quickly hide toolbar buttons using the context menu.
+
+Updated PCRE regex library to v10.46.
+
+Several small improvements.
 
 New tools:
 - .
 
 New cookbook recipes:
-- .
-
-Improved:
 - .
 
 Fixed bugs:

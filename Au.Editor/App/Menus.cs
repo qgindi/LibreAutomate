@@ -292,6 +292,37 @@ static class Menus {
 		}
 		
 		[Command]
+		public static class Assist {
+			[Command(keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + blue)]
+			public static void Autocompletion_list() { CodeInfo.ShowCompletionList(); }
+			
+			[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + blue)]
+			public static void Parameter_info() { CodeInfo.ShowSignature(); }
+			
+			const string c_tooltip_Autocorrect_raw_enter = """
+Temporarily disables the "auto-complete statement on Enter" features that are enabled in Options > Code editor.
+Other ways to insert new line before ) or ] or ; when the auto-completion features are enabled:
+- Shift+Enter. Or Ctrl+Enter, depending on settings.
+- Space, then Enter.
+- Enter, then Ctrl+Z (undo).
+- Continue a vertical method chain by typing . on the next line after the ;.
+To exit statement when the features are disabled, use Ctrl+Enter. Or Shift+Enter, depending on settings.
+More info in app help topic "Code editor".
+""";
+			
+			[Command("Raw Enter before ) ] ;", checkable = true, separator = true, image = "*Unicons.Enter" + green, tooltip = c_tooltip_Autocorrect_raw_enter)]
+			public static void Autocorrect_raw_enter() {
+				App.Settings.ci_tempRawEnter ^= true;
+				if (!App.Settings.ci_enterBeforeParen && !App.Settings.ci_enterBeforeSemicolon)
+					print.it($"<>Note: the <b>Raw Enter before ) ] ;<> option temporarily disables the statement auto-completion features if they are enabled in <+options {DOptions.EPage.CodeEditor}>Options<>. Currently it has no effect because the features are disabled.");
+			}
+			
+			static void _Init(KMenuCommands mc, KMenuCommands.Command c) {
+				if (App.Settings.ci_tempRawEnter) mc[nameof(Autocorrect_raw_enter)].MenuItem.IsChecked = true;
+			}
+		}
+		
+		[Command]
 		public static class Navigate {
 			[Command(image = "*Material.Bookmark @16" + darkYellow)]
 			public static void Toggle_bookmark() { Panels.Bookmarks.ToggleBookmark(); }
@@ -403,37 +434,6 @@ static class Menus {
 			
 			[Command("Customize...", separator = true)]
 			public static void Customize_edit_context_menu() { DCustomizeContextMenu.Dialog("Edit", "code editor"); }
-		}
-		
-		[Command]
-		public static class Other {
-			[Command(keysText = "Ctrl+Space", image = "*FontAwesome.ListUlSolid" + blue)]
-			public static void Autocompletion_list() { CodeInfo.ShowCompletionList(); }
-			
-			[Command(keysText = "Ctrl+Shift+Space", image = "*RemixIcon.ParenthesesLine" + blue)]
-			public static void Parameter_info() { CodeInfo.ShowSignature(); }
-			
-			const string c_tooltip_Autocorrect_raw_enter = """
-Temporarily disables the "auto-complete statement on Enter" features that are enabled in Options > Code editor.
-Other ways to insert new line before ) or ] or ; when the auto-completion features are enabled:
-- Shift+Enter. Or Ctrl+Enter, depending on settings.
-- Space, then Enter.
-- Enter, then Ctrl+Z (undo).
-- Continue a vertical method chain by typing . on the next line after the ;.
-To exit statement when the features are disabled, use Ctrl+Enter. Or Shift+Enter, depending on settings.
-More info in app help topic "Code editor".
-""";
-			
-			[Command("Raw Enter before ) ] ;", checkable = true, separator = true, image = "*Unicons.Enter" + green, tooltip = c_tooltip_Autocorrect_raw_enter)]
-			public static void Autocorrect_raw_enter() {
-				App.Settings.ci_tempRawEnter ^= true;
-				if (!App.Settings.ci_enterBeforeParen && !App.Settings.ci_enterBeforeSemicolon)
-					print.it($"<>Note: the <b>Raw Enter before ) ] ;<> option temporarily disables the statement auto-completion features if they are enabled in <+options {DOptions.EPage.CodeEditor}>Options<>. Currently it has no effect because the features are disabled.");
-			}
-			
-			static void _Init(KMenuCommands mc, KMenuCommands.Command c) {
-				if (App.Settings.ci_tempRawEnter) mc[nameof(Autocorrect_raw_enter)].MenuItem.IsChecked = true;
-			}
 		}
 	}
 	
@@ -574,7 +574,7 @@ More info in app help topic "Code editor".
 			}
 		}
 		
-		[Command("...", image = "*BoxIcons.RegularHistory" + blue)]
+		[Command("...", image = "*BoxIcons.RegularHistory" + black)]
 		public static void Recent() { RecentTT.Show(); }
 		
 		[Command(image = "*Material.Bug" + green2)]

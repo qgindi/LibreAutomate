@@ -83,7 +83,6 @@ static class GenerateCode {
 	/// Prints delegate code. Does not insert.
 	/// </summary>
 	public static void CreateDelegate() {
-		//TODO: now does not work in `params Delegate[]`
 		if (!_CreateDelegate()) print.it("To create delegate code, the text cursor must be where a delegate can be used, for example after 'Event+=' or in a function argument list.");
 	}
 	
@@ -94,8 +93,8 @@ static class GenerateCode {
 		if (!CodeInfo.GetContextAndDocument(out var cd)) return false;
 		int pos = cd.pos;
 		var semo = cd.semanticModel;
-		
-		var node = cd.syntaxRoot.FindTokenOnLeftOfPosition(cd.pos).Parent;
+		var token = cd.syntaxRoot.FindTokenOnLeftOfPosition(cd.pos);
+		SyntaxNode node = token.Parent, node0 = node;
 		
 		for (; node != null; node = node.Parent) {
 			if (node is AssignmentExpressionSyntax aes) {
@@ -103,10 +102,14 @@ static class GenerateCode {
 					return _GetTypeAndFormat(aes.Left, aes);
 			} else if (node is BaseArgumentListSyntax als) {
 				if (!node.Span.ContainsInside(pos)) continue;
-				if (CiUtil.GetArgumentParameterFromPos(als, pos, semo, out _, out var ps, o => o.Type.TypeKind == TypeKind.Delegate || o.Type.SpecialType == SpecialType.System_Delegate)) {
+				if (CiUtil.GetArgumentParameterFromPos(als, pos, semo, out _, out var aps, o => _GetDelegateType(o.Type) != null)) {
 					bool ok = false;
-					foreach (var v in ps) ok |= _Format(v.Type);
+					foreach (var ps in aps) {
+						ok |= _Format(ps.Type);
+					}
 					return ok;
+					
+					//rejected: support generic, like `void M12<T>(T a) where T: Delegate`
 				}
 			} else if (node is VariableDeclarationSyntax vds) {
 				return _GetTypeAndFormat(vds.Type);
@@ -117,11 +120,21 @@ static class GenerateCode {
 				case MethodDeclarationSyntax m: return _GetTypeAndFormat(m.ReturnType);
 				case PropertyDeclarationSyntax p: return _GetTypeAndFormat(p.Type);
 				}
+			} else if (node is LambdaExpressionSyntax les && node == node0 && token.IsKind(SyntaxKind.EqualsGreaterThanToken)) { //maybe the lambda returns a delegate
+				if (semo.GetTypeInfo(les).ConvertedType is INamedTypeSymbol { DelegateInvokeMethod: { } dim }) return _Format(dim.ReturnType);
+			} else if (node is StatementSyntax or AnonymousFunctionExpressionSyntax) {
 			} else continue;
 			break;
 		}
 		
 		return false;
+		
+		INamedTypeSymbol _GetDelegateType(ITypeSymbol t) {
+			if (t.TypeKind == TypeKind.Delegate || t.SpecialType == SpecialType.System_Delegate) return t as INamedTypeSymbol;
+			if (t is IArrayTypeSymbol ats) return _GetDelegateType(ats.ElementType);
+			if (t is INamedTypeSymbol { Arity: 1 } nt && t.CanBeEnumerated()) return _GetDelegateType(nt.TypeArguments[0]);
+			return null;
+		}
 		
 		bool _GetTypeAndFormat(SyntaxNode sn, AssignmentExpressionSyntax aes = null) {
 			if (sn == null) return false;
@@ -129,9 +142,9 @@ static class GenerateCode {
 		}
 		
 		bool _Format(ITypeSymbol type, AssignmentExpressionSyntax aes = null) {
-			if (type is not INamedTypeSymbol t || t is IErrorTypeSymbol) return false;
+			if (_GetDelegateType(type) is not INamedTypeSymbol t || t is IErrorTypeSymbol) return false;
 			if (t.TypeKind != TypeKind.Delegate) {
-				if (t.SpecialType == SpecialType.System_Delegate && type.ContainingAssembly.GetTypeByMetadataName("System.Action") is { } tsa) t = tsa;
+				if (t.SpecialType == SpecialType.System_Delegate && t.ContainingAssembly.GetTypeByMetadataName("System.Action") is { } tsa) t = tsa;
 				else return false;
 			}
 			var b = new StringBuilder("<><lc #A0C0A0>Delegate method and lambda<>\r\n<code>");
@@ -317,8 +330,7 @@ static class GenerateCode {
 	static string _AccToString(ISymbol v) => v.DeclaredAccessibility switch { acc.Public => "public", acc.Internal => "internal", acc.Protected => "protected", acc.ProtectedOrInternal => "protected internal", acc.ProtectedAndInternal => "private protected", _ => "" };
 	
 	public static void ImplementInterfaceOrAbstractClass(int position = -1) {
-		//TODO: now ignores members that have default implementation.
-		//	It seems it worked well, but maybe broken in a new Roslyn version.
+		//note: ignores interface members that have default implementation. The same as in VS. To add such a member, type like `IExample.` and select from the list; it creates member code.
 		
 		if (!CodeInfo.GetContextAndDocument(out var cd, position)) return;
 		var semo = cd.semanticModel;

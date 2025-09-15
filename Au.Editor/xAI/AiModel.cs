@@ -474,7 +474,7 @@ record class ModelClaudeChat : AiChatModel {
 			system = systemInstruction,
 			messages = messages.Select(o => new { role = o.role.ToString(), content = o.text }),
 			max_tokens = 32000, //opus-4.1 32000, sonnet-4 64000
-			temperature,
+			temperature = temperature ?? 1, //TODO: error if null. What is the default?
 		};
 	
 	public override AiChatMessage GetAnswer(JsonNode j)
