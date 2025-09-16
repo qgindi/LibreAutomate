@@ -183,10 +183,10 @@ class DPwnd : UserControl {
 		
 		public Controls(wpfBuilder b, bool addAlso) {
 			b.Columns(70, -1);
-			name = b.xAddCheckText("name");
-			cn = b.xAddCheckText("class");
-			program = b.xAddCheckTextDropdown("program");
-			contains = b.xAddCheckTextDropdown("contains");
+			name = b.xAddCheckText<KTextExpressionBox>("name");
+			cn = b.xAddCheckText<KTextExpressionBox>("class");
+			program = b.xAddCheckTextDropdown<KTextExpressionBox>("program");
+			contains = b.xAddCheckTextDropdown<KTextExpressionBox>("contains");
 			if (addAlso) also = b.xAddCheckText("also", "o=>true");
 		}
 		

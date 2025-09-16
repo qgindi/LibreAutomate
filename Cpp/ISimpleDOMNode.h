@@ -6,7 +6,7 @@
 #ifndef __ISimpleDOMNode_h__ 
 #define __ISimpleDOMNode_h__ 
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1020) 
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once 
 #endif 
 
@@ -356,60 +356,60 @@ ISimpleDOMNode : public IUnknown
 #ifdef COBJMACROS 
 
 
-#define ISimpleDOMNode_QueryInterface(This,riid,ppvObject)	\ 
-	(This)->lpVtbl -> QueryInterface(This,riid,ppvObject) 
+#define ISimpleDOMNode_QueryInterface(This,riid,ppvObject)	\
+	(This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
 
-#define ISimpleDOMNode_AddRef(This)	\ 
-		(This)->lpVtbl -> AddRef(This) 
+#define ISimpleDOMNode_AddRef(This)	\
+		(This)->lpVtbl -> AddRef(This)
 
-#define ISimpleDOMNode_Release(This)	\ 
-		(This)->lpVtbl -> Release(This) 
+#define ISimpleDOMNode_Release(This)	\
+		(This)->lpVtbl -> Release(This)
 
 
-#define ISimpleDOMNode_get_nodeInfo(This,nodeName,nameSpaceID,nodeValue,numChildren,uniqueID,nodeType)	\ 
-		(This)->lpVtbl -> get_nodeInfo(This,nodeName,nameSpaceID,nodeValue,numChildren,uniqueID,nodeType) 
+#define ISimpleDOMNode_get_nodeInfo(This,nodeName,nameSpaceID,nodeValue,numChildren,uniqueID,nodeType)	\
+		(This)->lpVtbl -> get_nodeInfo(This,nodeName,nameSpaceID,nodeValue,numChildren,uniqueID,nodeType)
 
-#define ISimpleDOMNode_get_attributes(This,maxAttribs,attribNames,nameSpaceID,attribValues,numAttribs)	\ 
-		(This)->lpVtbl -> get_attributes(This,maxAttribs,attribNames,nameSpaceID,attribValues,numAttribs) 
+#define ISimpleDOMNode_get_attributes(This,maxAttribs,attribNames,nameSpaceID,attribValues,numAttribs)	\
+		(This)->lpVtbl -> get_attributes(This,maxAttribs,attribNames,nameSpaceID,attribValues,numAttribs)
 
-#define ISimpleDOMNode_get_attributesForNames(This,numAttribs,attribNames,nameSpaceID,attribValues)	\ 
-		(This)->lpVtbl -> get_attributesForNames(This,numAttribs,attribNames,nameSpaceID,attribValues) 
+#define ISimpleDOMNode_get_attributesForNames(This,numAttribs,attribNames,nameSpaceID,attribValues)	\
+		(This)->lpVtbl -> get_attributesForNames(This,numAttribs,attribNames,nameSpaceID,attribValues)
 
-#define ISimpleDOMNode_get_computedStyle(This,maxStyleProperties,useAlternateView,styleProperties,styleValues,numStyleProperties)	\ 
-		(This)->lpVtbl -> get_computedStyle(This,maxStyleProperties,useAlternateView,styleProperties,styleValues,numStyleProperties) 
+#define ISimpleDOMNode_get_computedStyle(This,maxStyleProperties,useAlternateView,styleProperties,styleValues,numStyleProperties)	\
+		(This)->lpVtbl -> get_computedStyle(This,maxStyleProperties,useAlternateView,styleProperties,styleValues,numStyleProperties)
 
-#define ISimpleDOMNode_get_computedStyleForProperties(This,numStyleProperties,useAlternateView,styleProperties,styleValues)	\ 
-		(This)->lpVtbl -> get_computedStyleForProperties(This,numStyleProperties,useAlternateView,styleProperties,styleValues) 
+#define ISimpleDOMNode_get_computedStyleForProperties(This,numStyleProperties,useAlternateView,styleProperties,styleValues)	\
+		(This)->lpVtbl -> get_computedStyleForProperties(This,numStyleProperties,useAlternateView,styleProperties,styleValues)
 
-#define ISimpleDOMNode_scrollTo(This,placeTopLeft)	\ 
-		(This)->lpVtbl -> scrollTo(This,placeTopLeft) 
+#define ISimpleDOMNode_scrollTo(This,placeTopLeft)	\
+		(This)->lpVtbl -> scrollTo(This,placeTopLeft)
 
-#define ISimpleDOMNode_get_parentNode(This,node)	\ 
-		(This)->lpVtbl -> get_parentNode(This,node) 
+#define ISimpleDOMNode_get_parentNode(This,node)	\
+		(This)->lpVtbl -> get_parentNode(This,node)
 
-#define ISimpleDOMNode_get_firstChild(This,node)	\ 
-		(This)->lpVtbl -> get_firstChild(This,node) 
+#define ISimpleDOMNode_get_firstChild(This,node)	\
+		(This)->lpVtbl -> get_firstChild(This,node)
 
-#define ISimpleDOMNode_get_lastChild(This,node)	\ 
-		(This)->lpVtbl -> get_lastChild(This,node) 
+#define ISimpleDOMNode_get_lastChild(This,node)	\
+		(This)->lpVtbl -> get_lastChild(This,node)
 
-#define ISimpleDOMNode_get_previousSibling(This,node)	\ 
-		(This)->lpVtbl -> get_previousSibling(This,node) 
+#define ISimpleDOMNode_get_previousSibling(This,node)	\
+		(This)->lpVtbl -> get_previousSibling(This,node)
 
-#define ISimpleDOMNode_get_nextSibling(This,node)	\ 
-		(This)->lpVtbl -> get_nextSibling(This,node) 
+#define ISimpleDOMNode_get_nextSibling(This,node)	\
+		(This)->lpVtbl -> get_nextSibling(This,node)
 
-#define ISimpleDOMNode_get_childAt(This,childIndex,node)	\ 
-		(This)->lpVtbl -> get_childAt(This,childIndex,node) 
+#define ISimpleDOMNode_get_childAt(This,childIndex,node)	\
+		(This)->lpVtbl -> get_childAt(This,childIndex,node)
 
-#define ISimpleDOMNode_get_innerHTML(This,innerHTML)	\ 
-		(This)->lpVtbl -> get_innerHTML(This,innerHTML) 
+#define ISimpleDOMNode_get_innerHTML(This,innerHTML)	\
+		(This)->lpVtbl -> get_innerHTML(This,innerHTML)
 
-#define ISimpleDOMNode_get_localInterface(This,localInterface)	\ 
-		(This)->lpVtbl -> get_localInterface(This,localInterface) 
+#define ISimpleDOMNode_get_localInterface(This,localInterface)	\
+		(This)->lpVtbl -> get_localInterface(This,localInterface)
 
-#define ISimpleDOMNode_get_language(This,language)	\ 
-		(This)->lpVtbl -> get_language(This,language) 
+#define ISimpleDOMNode_get_language(This,language)	\
+		(This)->lpVtbl -> get_language(This,language)
 
 #endif /* COBJMACROS */ 
 

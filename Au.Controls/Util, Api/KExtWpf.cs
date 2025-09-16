@@ -29,7 +29,7 @@ public static class KExtWpf {
 	/// Adds KTextBox that can be used with KCheckBox in a propertygrid row. Or alone in a grid or stack row.
 	/// Sets multiline with limited height. If in grid, sets padding/margin for propertygrid.
 	/// </summary>
-	public static wpfBuilder xAddText(this wpfBuilder b, out KTextBox t, string text = null) {
+	public static wpfBuilder xAddText<TTBox>(this wpfBuilder b, out TTBox t, string text = null) where TTBox: KTextBox, new() {
 		b.Add(out t, text).Multiline(..55, wrap: TextWrapping.NoWrap);
 		if (b.Panel is Grid) b.Padding(new Thickness(0, 0, 0, 1)).Margin(left: 4);
 		return b;
@@ -43,12 +43,16 @@ public static class KExtWpf {
 	/// <param name="text">Textbox text.</param>
 	/// <param name="noR">Don't add new row.</param>
 	/// <param name="check">Checkbox state.</param>
-	public static KCheckTextBox xAddCheckText(this wpfBuilder b, string name, string text = null, bool noR = false, bool check = false) {
+	public static KCheckTextBox xAddCheckText<TTBox>(this wpfBuilder b, string name, string text = null, bool noR = false, bool check = false) where TTBox: KTextBox, new() {
 		xAddCheck(b, out KCheckBox c, name, noR, check);
 		var m = c.Margin; if (m.Top <= 1) c.Margin = m with { Top = m.Top + 1 };
-		xAddText(b, out var t, text);
+		xAddText(b, out TTBox t, text);
 		return new(c, t);
 	}
+	
+	/// <inheritdoc cref="xAddCheckText{TTBox}(wpfBuilder, string, string, bool, bool)"/>
+	public static KCheckTextBox xAddCheckText(this wpfBuilder b, string name, string text = null, bool noR = false, bool check = false)
+		=> xAddCheckText<KTextBox>(b, name, text, noR, check);
 	
 	/// <summary>
 	/// Adds KCheckBox (<see cref="xAddCheck"/>) and multiline KTextBox (<see cref="xAddText"/>) in a propertygrid row.
@@ -59,13 +63,17 @@ public static class KExtWpf {
 	/// <param name="name">Checkbox text.</param>
 	/// <param name="text">Textbox text.</param>
 	/// <param name="check">Checkbox state.</param>
-	public static KCheckTextBox xAddCheckTextDropdown(this wpfBuilder b, string name, string text = null, bool check = false) {
+	public static KCheckTextBox xAddCheckTextDropdown<TTBox>(this wpfBuilder b, string name, string text = null, bool check = false) where TTBox: KTextBox, new() {
 		xAddCheck(b, out KCheckBox c, name, check: check);
-		xAddText(b, out var t, text);
+		xAddText(b, out TTBox t, text);
 		b.And(14).Add(out Button k, "▾").Padding(new Thickness(0)).Border(); //tested: ok on Win7
 		k.Width += 4;
 		return new(c, t, k);
 	}
+	
+	/// <inheritdoc cref="xAddCheckTextDropdown{TTBox}(wpfBuilder, string, string, bool)"/>
+	public static KCheckTextBox xAddCheckTextDropdown(this wpfBuilder b, string name, string text = null, bool check = false)
+		=> xAddCheckTextDropdown<KTextBox>(b, name, text, check);
 	
 	/// <summary>
 	/// Adds KCheckBox (<see cref="xAddCheck"/>) and readonly ComboBox (<see cref="xAddOther"/>) in a propertygrid row.

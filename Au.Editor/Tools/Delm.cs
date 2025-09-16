@@ -3,6 +3,8 @@ using System.Windows.Controls;
 using Au.Controls;
 using System.Windows.Input;
 
+//TODO: normal acc capturing does not work for links in Chrome and Edge, and for everything in Brave. UIA OK. Alternative capturing OK (toggle with Shift+F3).
+
 //TODO3: if checked 'state', activate window before test. Else different FOCUSED etc.
 
 //CONSIDER: here and in Dwnd: UI for "contains image".
@@ -70,23 +72,23 @@ class Delm : KDialogWindow {
 			panel = b.Panel as Grid;
 			//elm properties (left side)
 			b.R.xStartPropertyGrid("L2 TRB").Height = panel.Height;
-			roleA = b.xAddCheckText("role");
-			nameA = b.xAddCheckText("name");
+			roleA = b.xAddCheckText<KTextExpressionBox>("role");
+			nameA = b.xAddCheckText<KTextExpressionBox>("name");
 			//note: these must be == prop property names
-			uiaidA = b.xAddCheckText("uiaid");
-			uiacnA = b.xAddCheckText("uiacn");
-			idA = b.xAddCheckText("id");
-			classA = b.xAddCheckText("class");
-			valueA = b.xAddCheckText("value");
-			descriptionA = b.xAddCheckText("desc");
-			actionA = b.xAddCheckText("action");
-			keyA = b.xAddCheckText("key");
-			helpA = b.xAddCheckText("help");
-			urlA = b.xAddCheckText("url");
+			uiaidA = b.xAddCheckText<KTextExpressionBox>("uiaid");
+			uiacnA = b.xAddCheckText<KTextExpressionBox>("uiacn");
+			idA = b.xAddCheckText<KTextExpressionBox>("id");
+			classA = b.xAddCheckText<KTextExpressionBox>("class");
+			valueA = b.xAddCheckText<KTextExpressionBox>("value");
+			descriptionA = b.xAddCheckText<KTextExpressionBox>("desc");
+			actionA = b.xAddCheckText<KTextExpressionBox>("action");
+			keyA = b.xAddCheckText<KTextExpressionBox>("key");
+			helpA = b.xAddCheckText<KTextExpressionBox>("help");
+			urlA = b.xAddCheckText<KTextExpressionBox>("url");
 			b.R.Add(out htmlAttr); //HTML attributes will be added with another builder
-			elemA = b.xAddCheckText("item");
-			stateA = b.xAddCheckText("state");
-			rectA = b.xAddCheckText("rect");
+			elemA = b.xAddCheckText<KTextExpressionBox>("item");
+			stateA = b.xAddCheckText<KTextExpressionBox>("state");
+			rectA = b.xAddCheckText<KTextExpressionBox>("rect");
 			b.xEndPropertyGrid();
 			b.SpanRows(3);
 			b.xAddSplitterV(span: 4, thickness: 12);
@@ -95,7 +97,7 @@ class Delm : KDialogWindow {
 			//other parameters
 			alsoA = b.xAddCheckText("also", "o=>true");
 			skipA = b.xAddCheckText("skip");
-			navigA = b.xAddCheckText("navig");
+			navigA = b.xAddCheckText<KTextExpressionBox>("navig");
 			//search settings
 			b.xAddCheck(out hiddenTooA, "Find hidden too");
 			b.xAddCheck(out reverseA, "Reverse order");
@@ -103,9 +105,9 @@ class Delm : KDialogWindow {
 			b.xAddCheck(out notInprocA, "Not in-process");
 			b.xAddCheck(out clientAreaA, "Only client area");
 			b.xAddCheck(out menuTooA, "Can be in menu");
-			notinA = b.xAddCheckText("notin"); //note: these must be == prop property names
-			maxccA = b.xAddCheckText("maxcc");
-			levelA = b.xAddCheckText("level");
+			notinA = b.xAddCheckText<KTextExpressionBox>("notin"); //note: these must be == prop property names
+			maxccA = b.xAddCheckText<KTextExpressionBox>("maxcc");
+			levelA = b.xAddCheckText<KTextExpressionBox>("level");
 			b.xEndPropertyGrid();
 			b.R.Skip(2).AddSeparator(vertical: false).Margin("T9 B9");
 			b.Row(-1).Skip(2).Add(out inPath, "Add to path").Margin("1");
@@ -345,7 +347,7 @@ class Delm : KDialogWindow {
 			foreach (var attr in p.HtmlAttributes) {
 				string na = attr.Key, va = attr.Value;
 				bool check = noName && (na == "id" || na == "name") && va.Length > 0;
-				var k = b.xAddCheckText("@" + na, TUtil.EscapeWildex(va));
+				var k = b.xAddCheckText<KTextExpressionBox>("@" + na, TUtil.EscapeWildex(va));
 				if (check) { k.c.IsChecked = true; noName = false; }
 				var info = TUtil.CommonInfos.AppendWildexInfo(TUtil.CommonInfos.PrependName(na, "HTML attribute."));
 				_info.AaAddElem(k.c, info);
@@ -478,15 +480,15 @@ class Delm : KDialogWindow {
 					b.Append(", ");
 					if (!isName) b.Append("prop: ");
 					propStart = b.Length;
-					b.Append("new(");
+					b.Append("[");
 				} else b.Append(", ");
 				int j = b.Length;
 				b.Append('"').Append(k.c.Content as string).Append('=');
 				if (!va.NE()) {
-					if (nProp == 1 && va.Contains('|')) nProp++;
-					if (TUtil.IsVerbatim(va, out int prefixLen)) {
-						b.Insert(j, va.Remove(prefixLen++));
-						b.Append(va, prefixLen, va.Length - prefixLen);
+					if (va.Starts("@@")) {
+						b.Insert(j, '$').Append('{').Append(va[2..]).Append('}');
+					} else if (TUtil.IsVerbatim(va, out int prefixLen)) {
+						b.Insert(j, va[..prefixLen++]).Append(va, prefixLen, va.Length - prefixLen);
 						return;
 					} else {
 						va = va.Escape();
@@ -515,10 +517,7 @@ class Delm : KDialogWindow {
 			_AppendProp(page.notinA);
 			_AppendProp(page.maxccA);
 			_AppendProp(page.levelA);
-			if (nProp > 0) {
-				if (nProp == 1) b.Remove(propStart, 4); //new(
-				else b.Append(')');
-			}
+			if (nProp > 0) b.Append(']');
 			
 			if (TUtil.FormatFlags(out var s1,
 				(page.hiddenTooA, EFFlags.HiddenToo),

@@ -1363,7 +1363,7 @@ class KTextExpressionBox : KTextBox {
 		this.SetExpressionContextMenu();
 		base.OnContextMenuOpening(e);
 	}
-}//TODO: use everywhere. Now used only in the DOcr OCR engine settings dialog.
+}
 
 /// <summary>
 /// Editable <b>ComboBox</b> that supports C# expression in text.

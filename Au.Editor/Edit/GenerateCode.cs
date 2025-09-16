@@ -129,7 +129,7 @@ static class GenerateCode {
 		
 		return false;
 		
-		INamedTypeSymbol _GetDelegateType(ITypeSymbol t) {
+		static INamedTypeSymbol _GetDelegateType(ITypeSymbol t) {
 			if (t.TypeKind == TypeKind.Delegate || t.SpecialType == SpecialType.System_Delegate) return t as INamedTypeSymbol;
 			if (t is IArrayTypeSymbol ats) return _GetDelegateType(ats.ElementType);
 			if (t is INamedTypeSymbol { Arity: 1 } nt && t.CanBeEnumerated()) return _GetDelegateType(nt.TypeArguments[0]);

@@ -79,8 +79,8 @@ class Dwnd : KDialogWindow {
 		b.R.AddSeparator(false).Margin("T4 B0"); _sepControl = b.Last as Separator;
 		b.R.Add(out _cControl, "Control").Margin("T5 B3").xSetHeaderProp();
 		b.Row(0).StartGrid().Columns(70, -1); _gCon1 = b.Panel as Grid;
-		nameC = b.xAddCheckTextDropdown("name");
-		classC = b.xAddCheckText("class");
+		nameC = b.xAddCheckTextDropdown<KTextExpressionBox>("name");
+		classC = b.xAddCheckText<KTextExpressionBox>("class");
 		idC = b.xAddCheckText("id");
 		b.End().Skip();
 		b.StartGrid().Columns(44, -1); _gCon2 = b.Panel as Grid;

@@ -14,7 +14,7 @@ class DEnumDir : KDialogWindow {
 	
 	KTextBoxFile _tFolder;
 	ComboBox _cbGet;
-	TextBox _tFilter;
+	KTextExpressionBox _tFilter;
 	KCheckBox _cArray, _cForeach, _cFileFilter, _cDirFilter, _cRecurse, _cIgnore, _cSymlink, _cRelative, _cSkipHidden, _cSkipHiddenSystem, _cWhere, _cOrderBy, _cThenBy, _cSelectPath, _cSelectOther/*, _cNet*/;
 	Panel _p1, _p2;
 	KSciCodeBox _code;

@@ -60,7 +60,7 @@ static class QuickCapture {
 			m["Trigger scope - program"] = _ => TriggersAndToolbars.QuickWindowTrigger(w, 2);
 			m.Last.Tooltip = "Hotkey/autotext/mouse triggers added afterwards will work only when a window of this program is active";
 			
-			//TODO: add options for trigger scope:
+			//CONSIDER: add options for trigger scope:
 			//1. `using Triggers.Of.Window(...) { ... }`
 			//2. `#region ... #endregion`. With regions can find scopes in the Outline panel.
 		});

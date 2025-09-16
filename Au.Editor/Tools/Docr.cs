@@ -33,7 +33,7 @@ class Docr : KDialogWindow {
 	KCheckBox exceptionC, exceptionnoC;
 	KCheckTextBox rectC, scaleC, skipC, waitC, waitnoC;
 	KCheckComboBox wiflagsC, engineC;
-	TextBox textC;
+	KTextExpressionBox textC;
 	//CONSIDER: add wnd Activate if pixels from screen.
 
 	public Docr() {
