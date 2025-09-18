@@ -16,9 +16,6 @@ using System.Drawing;
 namespace Au.Tools;
 
 class Duiimage : KDialogWindow {
-	public static void Dialog(wnd wCapture = default)
-		=> TUtil.ShowDialogInNonmainThread(() => new Duiimage(wCapture));
-
 	wnd _wnd, _con;
 	bool _useCon;
 	Bitmap _image;
@@ -79,7 +76,7 @@ class Duiimage : KDialogWindow {
 		b.End();
 		_noeventValueChanged = false;
 
-		WndSavedRect.Restore(this, App.Settings.wndpos.uiimage, o => App.Settings.wndpos.uiimage = o);
+		WndSavedRect.Restore(this, Editor.Settings.wndpos.uiimage, o => Editor.Settings.wndpos.uiimage = o);
 
 		if (!wCapture.Is0) {
 			WindowState = System.Windows.WindowState.Minimized;
@@ -104,8 +101,6 @@ class Duiimage : KDialogWindow {
 		if (_image != null) _pict.Image = _image = null;
 
 		base.OnClosed(e);
-
-		App.Hmain.ActivateL();
 	}
 
 	void _Capture(wnd wCapture = default) {
@@ -488,7 +483,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			InsertCode.Statements(s, ICSFlags.MakeVarName1);
+			Editor.InsertStatements(new(s, makeVarName1: true));
 			_close = true;
 			_bInsert.Content = "Close";
 			_bInsert.MouseLeave += (_, _) => {

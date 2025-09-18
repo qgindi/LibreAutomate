@@ -284,9 +284,9 @@ static class CiFind {
 	}
 	
 	public static void SciUpdateUI(SciCode doc, bool modified) {
-		if (modified || 0 == doc.aaaIndicatorGetValue(SciCode.c_indicRefs, doc.aaaCurrentPos8) || doc.aaaHasSelection)
-			doc.aaaIndicatorClear(SciCode.c_indicRefs);
-		doc.aaaIndicatorClear(SciCode.c_indicBraces);
+		if (modified || 0 == doc.aaaIndicatorGetValue(SciTheme.Indic.Refs, doc.aaaCurrentPos8) || doc.aaaHasSelection)
+			doc.aaaIndicatorClear(SciTheme.Indic.Refs);
+		doc.aaaIndicatorClear(SciTheme.Indic.Braces);
 		_cancelTS?.Cancel();
 		_cancelTS = null;
 		_doc = doc;
@@ -338,8 +338,8 @@ static class CiFind {
 				}
 				
 				foreach (var v in ar) {
-					if (cd.sci.SnippetMode_ != null && 0 != (cd.sci.aaaIndicatorGetAll(v.Start.Value, true) & 1 << SciCode.c_indicSnippetFieldActive)) continue; //avoid mixed color
-					cd.sci.aaaIndicatorAdd(SciCode.c_indicRefs, true, v);
+					if (cd.sci.SnippetMode_ != null && 0 != (cd.sci.aaaIndicatorGetAll(v.Start.Value, true) & 1 << SciTheme.Indic.SnippetFieldActive)) continue; //avoid mixed color
+					cd.sci.aaaIndicatorAdd(SciTheme.Indic.Refs, true, v);
 				}
 			}
 			catch (OperationCanceledException) { return; }
@@ -398,8 +398,8 @@ static class CiFind {
 			}
 			if (posR < 0 || !(posL == pos || posR == pos)) return;
 			if (posR - posL < 4) return; //don't hilite () etc
-			cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, posL..(posL + 1));
-			cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, posR..(posR + 1));
+			cd.sci.aaaIndicatorAdd(SciTheme.Indic.Braces, true, posL..(posL + 1));
+			cd.sci.aaaIndicatorAdd(SciTheme.Indic.Braces, true, posR..(posR + 1));
 		}
 		
 		void _Directive() {
@@ -413,7 +413,7 @@ static class CiFind {
 				if (node2 != null) a = [node, node2];
 			}
 			if (a == null) return;
-			foreach (var v in a) cd.sci.aaaIndicatorAdd(SciCode.c_indicBraces, true, v.HashToken.Span.ToRange());
+			foreach (var v in a) cd.sci.aaaIndicatorAdd(SciTheme.Indic.Braces, true, v.HashToken.Span.ToRange());
 		}
 	}
 	

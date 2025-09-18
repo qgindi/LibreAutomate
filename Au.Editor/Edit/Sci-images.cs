@@ -17,6 +17,7 @@ using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Classification;
 using CT = CAW::Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
+using Au.Controls;
 
 partial class SciCode {
 	struct _Image {
@@ -39,7 +40,7 @@ partial class SciCode {
 		//if (App.Settings.edit_noImages) return; //caller does it, because it has some more work to do if need images
 		//using var p1 = perf.local(); //fast when bitmaps loaded/cached
 		
-		if (a.Length > 0) aaaIndicatorClear(c_indicImages, true, a[0].TextSpan.Start..a[^1].TextSpan.End);
+		if (a.Length > 0) aaaIndicatorClear(SciTheme.Indic.Images, true, a[0].TextSpan.Start..a[^1].TextSpan.End);
 		
 		string code = cd.code;
 		int maxWidth = 0;
@@ -93,7 +94,7 @@ partial class SciCode {
 			
 			if (_im.a == null) {
 				_im.a = new();
-				Call(SCI_INDICSETSTYLE, c_indicImages, INDIC_HIDDEN);
+				Call(SCI_INDICSETSTYLE, SciTheme.Indic.Images, INDIC_HIDDEN);
 				int descent = Dpi.Scale(16, _dpi) - Call(SCI_TEXTHEIGHT) + Call(SCI_GETEXTRADESCENT) + Call(SCI_GETEXTRAASCENT);
 				if (descent > 0) {
 					bool caretVisible = AaWnd.ClientRect.Contains(0, Call(SCI_POINTYFROMPOSITION, 0, aaaCurrentPos8));
@@ -103,7 +104,7 @@ partial class SciCode {
 					if (caretVisible) Call(SCI_SCROLLCARET);
 				}
 				if (_im.callback == null) _im.callbackPtr = Marshal.GetFunctionPointerForDelegate(_im.callback = _ImagesMarginDrawCallback);
-				Call(SCI_SETMARGINDRAWCALLBACK, 1 << c_marginImages, _im.callbackPtr);
+				Call(SCI_SETMARGINDRAWCALLBACK, 1 << SciTheme.Margin.Images, _im.callbackPtr);
 			}
 			var ab = _im.a;
 			int ii;
@@ -111,12 +112,12 @@ partial class SciCode {
 			if (ii == ab.Count) ab.Add(new() { image = b, isImage = isImage, isComment = isComment });
 			//print.it(ii, s);
 			
-			aaaIndicatorAdd(c_indicImages, true, start..(start + 1), ii + 1);
+			aaaIndicatorAdd(SciTheme.Indic.Images, true, start..(start + 1), ii + 1);
 		}
 		
 		//maxWidth is 0 if no images or if all images are in folded regions.
 		if (maxWidth > 0) maxWidth = Math.Min(maxWidth, Dpi.Scale(100, _dpi)) + 8;
-		var (left, right) = aaaMarginGetX(c_marginImages);
+		var (left, right) = aaaMarginGetX(SciTheme.Margin.Images);
 		_ImagesMarginAutoWidth(right - left, maxWidth);
 		if (maxWidth > 0) Api.InvalidateRect(AaWnd, new RECT(left, 0, maxWidth, short.MaxValue));
 		//TODO3: draw only when need, ie when new indicators are different than old.
@@ -248,9 +249,9 @@ partial class SciCode {
 		Graphics g = null;
 		try {
 			for (; ; pos++) {
-				pos = Call(SCI_INDICATOREND, c_indicImages, pos); //skip non-indicator range
+				pos = Call(SCI_INDICATOREND, SciTheme.Indic.Images, pos); //skip non-indicator range
 				if (pos <= 0 || pos >= posEnd) break; //after the visible range or at the end of text
-				int i = Call(SCI_INDICATORVALUEAT, c_indicImages, pos) - 1;
+				int i = Call(SCI_INDICATORVALUEAT, SciTheme.Indic.Images, pos) - 1;
 				if ((uint)i >= _im.a.Count) break; //should never
 				int line = aaaLineFromPos(false, pos);
 				if (0 == Call(SCI_GETLINEVISIBLE, line)) continue; //folded?
@@ -299,17 +300,17 @@ partial class SciCode {
 		//when shrinking, in wrap mode could start autorepeating, when makes less lines wrapped and it uncovers wider images at the bottom and need to expand again.
 		//	Tried to delay or to not change if changed recently, but not good. Never mind.
 		if (width < oldWidth && App.Settings.edit_wrap) return;
-		AaWnd.Post(SCI_SETMARGINWIDTHN, c_marginImages, width);
+		AaWnd.Post(SCI_SETMARGINWIDTHN, SciTheme.Margin.Images, width);
 	}
 	
 	void _ImagesOnOff() {
 		if (App.Settings.edit_noImages == (_im.a == null)) return;
 		if (_im.a != null) {
 			Call(SCI_SETMARGINDRAWCALLBACK);
-			Call(SCI_SETMARGINWIDTHN, c_marginImages, 0);
+			Call(SCI_SETMARGINWIDTHN, SciTheme.Margin.Images, 0);
 			Call(SCI_SETEXTRAASCENT, 0);
 			Call(SCI_SETEXTRADESCENT, 1);
-			aaaIndicatorClear(c_indicImages);
+			aaaIndicatorClear(SciTheme.Indic.Images);
 			_im.a = null;
 		} else {
 			if (this == Panels.Editor.ActiveDoc) CodeInfo._styling.Update();

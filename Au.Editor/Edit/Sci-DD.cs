@@ -119,11 +119,11 @@ partial class SciCode {
 					string[] files = null, names = null;
 					files = _data.shell != null ? _GetShell(_data.shell, out names) : _data.files;
 					if (isCodeFile) {
-						var what = TUtil.PathInfo.InsertCodeMenu(files, _sci.AaWnd);
+						var what = PathInfo.InsertCodeMenu(files, _sci.AaWnd);
 						if (what == 0) return;
 						for (int i = 0; i < files.Length; i++) {
 							if (i > 0) b.AppendLine();
-							var k = new TUtil.PathInfo(files[i], names?[i]);
+							var k = new PathInfo(files[i], names?[i]);
 							b.Append(k.FormatCode(what, i + 1));
 						}
 					} else {
@@ -156,7 +156,7 @@ partial class SciCode {
 						}
 					}
 				} else { //file, script or URL
-					if (isCodeFile) InsertCode.Statements(s, ICSFlags.NoFocus);
+					if (isCodeFile) InsertCode.Statements(new(s, noFocus: true));
 					else if (!_sci.aaaIsReadonly) _sci.aaaReplaceSel(s + "\r\n");
 					else print.it(s);
 				}

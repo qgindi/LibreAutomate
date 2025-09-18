@@ -1,5 +1,3 @@
-/* role editorExtension; define SCRIPT; testInternal Au,Au.Editor,Au.Controls; r Au.Editor.dll; r Au.Controls.dll; /*/
-
 using System.Windows.Controls;
 using Au.Controls;
 using System.Windows.Documents;
@@ -10,16 +8,9 @@ using Au.Tools;
 Docr.Dialog();
 #else
 namespace Au.Tools;
-
-record OcrEngineSettings {
-	public string wLang, tLang, tCL, gKey, gFeat, gIC, mUrl, mKey;
-}
 #endif
 
 class Docr : KDialogWindow {
-	public static void Dialog()
-		=> TUtil.ShowDialogInNonmainThread(() => new Docr());
-
 	wnd _wnd, _con;
 	bool _useCon;
 
@@ -78,7 +69,7 @@ class Docr : KDialogWindow {
 		b.End();
 		_noeventValueChanged = false;
 
-		WndSavedRect.Restore(this, App.Settings.wndpos.ocr, o => App.Settings.wndpos.ocr = o);
+		WndSavedRect.Restore(this, Editor.Settings.wndpos.ocr, o => Editor.Settings.wndpos.ocr = o);
 	}
 
 	static Docr() {
@@ -90,12 +81,6 @@ class Docr : KDialogWindow {
 
 		_InitInfo();
 		//_bWnd_Click(); //rejected. Confusing.
-	}
-
-	protected override void OnClosed(EventArgs e) {
-		base.OnClosed(e);
-
-		App.Hmain.ActivateL();
 	}
 
 	void _bWnd_Click() {
@@ -189,7 +174,7 @@ class Docr : KDialogWindow {
 
 		bool isEngine = engineC.GetIndex(out var ieng);
 		if (isEngine) {
-			var g = App.Settings.ocr ?? new();
+			var g = Editor.Settings.ocr ?? new();
 			bb.AppendFormat("{0}engine = new Ocr{1}(", forTest ? "var " : "ocr.", engineC.t.SelectedItem);
 			if (ieng == 3) bb.AppendStringArg(g.mUrl).AppendStringArg(g.mKey);
 			else if (ieng == 2) bb.AppendStringArg(g.gKey);
@@ -289,7 +274,7 @@ class Docr : KDialogWindow {
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			InsertCode.Statements(s, ICSFlags.MakeVarName1);
+			Editor.InsertStatements(new(s, makeVarName1: true));
 			//if (_Opt.Has(_EOptions.InsertClose)) {
 			//	base.Close();
 			//} else {
@@ -382,7 +367,7 @@ If unchecked, returns false.");
 	#region OCR engine properties
 
 	private void _bEngine_Click(WBButtonClickArgs e) {
-		var g = App.Settings.ocr ?? new();
+		var g = Editor.Settings.ocr ?? new();
 
 		var b = new wpfBuilder("OCR engine properties").WinSize(500);
 		b.Window.UseLayoutRounding = true;
@@ -429,7 +414,7 @@ If unchecked, returns false.");
 
 		static string _Text(string s) => s.Trim().NullIfEmpty_();
 
-		App.Settings.ocr = g;
+		Editor.Settings.ocr = g;
 		_FormatCode();
 
 		void _StartGroupBox(string engine) {

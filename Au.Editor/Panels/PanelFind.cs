@@ -51,15 +51,15 @@ class PanelFind {
 		
 		b.R.AddButton(out _bInFiles, "In files", _ => _FindAllInFiles()).Tooltip("Find text in files");
 		b.StartStack();
-		b.xAddButtonIcon(out _bFilter, "*Material.FolderSearchOutline" + Menus.green, _FilterMenu, "Let 'In files' search only in current project or root folder").Padding(1, 0, 1, 1);
-		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _Options(), "More options");
+		b.xAddButtonIcon(out _bFilter, "*Material.FolderSearchOutline" + EdIcons.green, _FilterMenu, "Let 'In files' search only in current project or root folder").Padding(1, 0, 1, 1);
+		b.xAddButtonIcon("*EvaIcons.Options2" + EdIcons.green, _ => _Options(), "More options");
 		
 		var cmd1 = App.Commands[nameof(Menus.Edit.Navigate.Go_back)];
-		b.xAddButtonIcon(Menus.iconBack, _ => Menus.Edit.Navigate.Go_back(), "Go back").Disabled(!cmd1.Enabled);
+		b.xAddButtonIcon(EdIcons.Back, _ => Menus.Edit.Navigate.Go_back(), "Go back").Disabled(!cmd1.Enabled);
 		var bBack = b.Last;
 		cmd1.CanExecuteChanged += (o, e) => bBack.IsEnabled = cmd1.Enabled;
 		
-		b.xAddButtonIcon("*MaterialDesign.SavedSearch" + Menus.black, _SavedSearches, "Saved searches");
+		b.xAddButtonIcon("*MaterialDesign.SavedSearch" + EdIcons.black, _SavedSearches, "Saved searches");
 		
 		b.End();
 		
@@ -67,7 +67,7 @@ class PanelFind {
 		b.Add(out _cCase, "Case").Tooltip("Match case").Margin(right: 0).Checked(App.Settings.find_case);
 		b.Add(out _cWord, "Word").Tooltip("Whole word").Margin(right: 0).Checked(App.Settings.find_word);
 		b.Add(out _cRegex, "Regex").Tooltip("Regular expression");
-		b.xAddButtonIcon(Menus.iconRegex, _ => { _cRegex.IsChecked = true; _ShowRegexInfo(_tReplace.IsFocused ? _tReplace : _tFind); }, "Regex tool");
+		b.xAddButtonIcon(EdIcons.Regex, _ => { _cRegex.IsChecked = true; _ShowRegexInfo(_tReplace.IsFocused ? _tReplace : _tFind); }, "Regex tool");
 		b.End().End().End();
 		
 		_cCase.CheckChanged += _CheckedChanged;
@@ -94,7 +94,7 @@ class PanelFind {
 	}
 	
 	void _SetCodeStyles(KScintilla k) {
-		CiStyling.TTheme.Current.ToScintilla(k, fontName: App.Settings.font_find.name, fontSize: App.Settings.font_find.size);
+		SciTheme.Current.ToScintilla(k, fontName: App.Settings.font_find.name, fontSize: App.Settings.font_find.size);
 		k.aaaStyleForeColor(255, 0xa0a0a0); //watermark
 		
 		if (k.Parent is Border { Parent: Grid g } b) {
@@ -163,14 +163,14 @@ class PanelFind {
 		};
 	}
 	
-	RegexWindow _regexWindow;
+	KRegexWindow _regexWindow;
 	string _regexTopic;
 	
 	void _ShowRegexInfo(KScintilla k, bool onFocus = false) {
 		if (onFocus) {
 			if (_regexWindow == null || _regexWindow.UserClosed) return;
 		} else {
-			_regexWindow ??= new RegexWindow();
+			_regexWindow ??= new();
 			_regexWindow.UserClosed = false;
 		}
 		
@@ -268,7 +268,7 @@ This setting also is used by 'Find references' etc.
 	}
 	int _filter; //0 workspace, 1 root folder, 2 project or root folder
 	
-	static string _FilterImage(int f) => "*Material.FolderSearchOutline" + (f == 0 ? Menus.green : f == 1 ? Menus.orange : Menus.red);
+	static string _FilterImage(int f) => "*Material.FolderSearchOutline" + (f == 0 ? EdIcons.green : f == 1 ? EdIcons.orange : EdIcons.red);
 	
 	void _SetFilter(int f) {
 		if (f != _filter) {

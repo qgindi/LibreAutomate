@@ -279,8 +279,11 @@ Meta comment `/*/ r File.dll; /*/`.
 
 Don't need to add `Au.dll` and .NET runtime dlls.  
 To remove this meta comment, edit the code in the code editor.  
-To use `extern alias Abc;`, edit the code: `/*/ r DllFile /alias=Abc; /*/`  
 If script role is `editorExtension`, may need to restart editor.
+
+In code you can add some properties, like `/*/ r DllFile /property1|property2; /*/`:
+- To not copy the dll to the output directory: `noCopy`
+- To use `extern alias Abc;`: `alias=Abc`
 
 ### `nuget` (button **NuGet**)
 Use a NuGet package reference (see menu **Tools > NuGet**).

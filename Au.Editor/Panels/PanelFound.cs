@@ -19,10 +19,10 @@ class PanelFound {
 		var tb = b.xAddToolBar(hideOverflow: true, controlBrush: true);
 		tb.UiaSetName("Found_toolbar");
 		
-		var cKeep = tb.AddCheckbox("*RemixIcon.Lock2Line" + Menus.black, "Keep results", enabled: false);
+		var cKeep = tb.AddCheckbox("*RemixIcon.Lock2Line" + EdIcons.black, "Keep results", enabled: false);
 		cKeep.CheckChanged += (_, _) => { if (_sci != null) _sci.isLocked = cKeep.IsChecked; };
 		
-		var bCloseOF = tb.AddButton("*Codicons.CloseAll" + Menus.black, _ => _sci?.CloseOpenedFiles(), "Close opened files", enabled: false);
+		var bCloseOF = tb.AddButton("*Codicons.CloseAll" + EdIcons.black, _ => _sci?.CloseOpenedFiles(), "Close opened files", enabled: false);
 		
 		b.Add<Border>().Border(thickness2: new(1, 0, 0, 0)).SpanRows(2);
 		b.Child().Add(out _grid);
@@ -60,12 +60,12 @@ class PanelFound {
 				var c = new _KScintilla(kind);
 				_grid.Children.Add(c);
 				li = new _LbItem(c, kind switch {
-					Found.Files => "*FeatherIcons.File" + Menus.black,
-					//Found.Text => "*Material.Text" + Menus.black,
-					Found.Text => "*Material.FindReplace" + Menus.black,
-					Found.SymbolReferences => Menus.iconReferences,
-					Found.SymbolRename => "*PicolIcons.Edit" + Menus.red,
-					Found.Repair => "*RPGAwesome.Repair" + Menus.black,
+					Found.Files => "*FeatherIcons.File" + EdIcons.black,
+					//Found.Text => "*Material.Text" + EdIcons.black,
+					Found.Text => "*Material.FindReplace" + EdIcons.black,
+					Found.SymbolReferences => EdIcons.References,
+					Found.SymbolRename => "*PicolIcons.Edit" + EdIcons.red,
+					Found.Repair => "*RPGAwesome.Repair" + EdIcons.black,
 					_ => null
 				}, null);
 				li.ContextMenuOpening += (_, _) => {

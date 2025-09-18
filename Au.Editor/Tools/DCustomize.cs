@@ -65,12 +65,12 @@ class DCustomize : KDialogWindow {
 		b.StartGrid<KGroupBox>("Properties common to menu item and toolbar button").Columns(0, -1, 30, 30);
 		b.R.Add("Text", out _tText).Tooltip("Text.\nInsert _ before Alt-underlined character.");
 		b.R.Add("Color", out _tColor).Tooltip("Text color.\nCan be a .NET color name or #RRGGBB or #RGB.")
-			.xAddButtonIcon("*MaterialDesign.ColorLens" + Menus.green, _ => KColorPicker.ColorTool(s => { _tColor.Text = s; }, b.Window, modal: true, add0xRgbButton: false, addBgrButton: false), "Colors").Span(1);
+			.xAddButtonIcon("*MaterialDesign.ColorLens" + EdIcons.green, _ => KColorPicker.ColorTool(s => { _tColor.Text = s; }, b.Window, modal: true, add0xRgbButton: false, addBgrButton: false), "Colors").Span(1);
 		b.R.Add("Image", out _tImage).Tooltip("Icon name etc.\nSee ImageUtil.LoadWpfImageElement.")
-			.xAddButtonIcon(Menus.iconIcons, _ => { _tImage.SelectAll(); DIcons.ShowSingle(expandMenuIcon: true); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'.").Span(1);
+			.xAddButtonIcon(EdIcons.Icons, _ => { _tImage.SelectAll(); DIcons.ShowSingle(expandMenuIcon: true); }, "Icons tool.\nSelect an icon and click button 'Menu or toolbar item'.").Span(1);
 		b.R.Add("Keys", out _tKeys).Tooltip("Keyboard or/and mouse shortcut(s), like Ctrl+E, Shift+M-click.\nSee keys.more.parseHotkeyString.")
-			.xAddButtonIcon("*Material.KeyboardOutline" + Menus.green, _ => _KeysTool(), "Keys tool");
-		b.xAddButtonIcon("*FeatherIcons.Eye" + Menus.blue, _ => _KeysList(), "Existing hotkeys");
+			.xAddButtonIcon("*Material.KeyboardOutline" + EdIcons.green, _ => _KeysTool(), "Keys tool");
+		b.xAddButtonIcon("*FeatherIcons.Eye" + EdIcons.blue, _ => _KeysList(), "Existing hotkeys");
 		b.StartGrid<Expander>("Default");
 		b.R.Add("Text", out _tDefText); _Readonly(_tDefText);
 		b.R.Add("Image", out _tDefImage); _Readonly(_tDefImage);
@@ -468,7 +468,7 @@ You also can edit the <explore {App.Commands.UserFile}>file<> in an XML editor. 
 		string ITreeViewItem.DisplayText => displayText;
 		
 		object ITreeViewItem.Image
-			=> Level == 0 ? EdResources.FolderArrow(_isExpanded) : (image ?? def.attr.image);
+			=> Level == 0 ? EdIcons.FolderArrow(_isExpanded) : (image ?? def.attr.image);
 		
 		int ITreeViewItem.Color(TVColorInfo ci)
 			=> Level > 0 ? -1 : isMenu ? 0xF0C080 : 0xC0E0A0;

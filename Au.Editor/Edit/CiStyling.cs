@@ -6,6 +6,7 @@ extern alias CAW;
 
 using Au.Controls;
 using static Au.Controls.Sci;
+using static Au.Controls.SciTheme;
 
 using Microsoft.CodeAnalysis;
 using CAW::Microsoft.CodeAnalysis;

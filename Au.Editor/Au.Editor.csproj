@@ -42,8 +42,6 @@
 		<None Remove="Default\Layout.xml" />
 		<None Remove="Default\Snippets.xml" />
 		<None Remove="Default\Themes\*.csv" />
-		<None Remove="Tools\Keys.txt" />
-		<None Remove="Tools\Regex.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -91,9 +89,6 @@
 		<Page Remove="resources\ci\Snippet.xaml" />
 		<Page Remove="resources\ci\Structure.xaml" />
 		<Page Remove="resources\ci\TypeParameter.xaml" />
-		<Page Remove="resources\Images\ExpandDown_16x.xaml" />
-		<Page Remove="resources\Images\ExpandRight_16x.xaml" />
-		<Page Remove="resources\Images\SettingsGroup_16x.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -125,11 +120,6 @@
 		<Resource Include="resources\ci\Snippet.xaml" />
 		<Resource Include="resources\ci\Structure.xaml" />
 		<Resource Include="resources\ci\TypeParameter.xaml" />
-		<Resource Include="resources\Images\ExpandDown_16x.xaml" />
-		<Resource Include="resources\Images\ExpandRight_16x.xaml" />
-		<Resource Include="resources\Images\SettingsGroup_16x.xaml" />
-		<Resource Include="Tools\Keys.txt" />
-		<Resource Include="Tools\Regex.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -177,6 +167,21 @@
 		  <HintPath>$(ProgramFiles)\dotnet\sdk\$(NETCoreSdkVersion)\NuGet.Versioning.dll</HintPath>
 		  <Private>False</Private>
 		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Properties\Settings.Designer.cs">
+	    <DesignTimeSharedInput>True</DesignTimeSharedInput>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Settings.settings</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Properties\Settings.settings">
+	    <Generator>SettingsSingleFileGenerator</Generator>
+	    <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+	  </None>
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

@@ -449,7 +449,7 @@ partial class PanelDebug {
 		void ITreeViewItem.SetIsExpanded(bool yes) { _isExpanded = yes; }
 		
 		object ITreeViewItem.Image
-			=> _isFolder ? EdResources.FolderArrow(_isExpanded)
+			=> _isFolder ? EdIcons.FolderArrow(_isExpanded)
 			: null;
 		
 		void ITreeViewItem.SetNewText(string text) {

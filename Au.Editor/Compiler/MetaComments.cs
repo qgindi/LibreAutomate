@@ -544,20 +544,19 @@ class MetaComments {
 		switch (name) {
 		case "r" or "com" or "pr" or "nuget":
 			if (forExport) if (name[0] != 'p' || !_flags.Has(MCFlags.ExportPR)) return;
-			if (!MetaReferences.ParseAlias_(value, out var s1, out var alias, supportOldSyntax: true)) {
+			if (!MetaReferences.ParseRefAliasEtc_(name, value, out var s1, out var alias, out bool noCopy)) {
 				_ErrorV("invalid string");
 			} else if (name[0] == 'n') {
 				_NuGet(s1, alias);
 			} else {
 				if (name[0] == 'p') {
-					if (alias != null) { _ErrorV("pr alias not supported"); return; } //could support, but who will use it
 					//Specified |= EMSpecified.pr;
 					if (!_PR(ref s1) || forCodeInfo || forExport) return;
 				}
 				
 				try {
 					//var p1 = perf.local();
-					if (!References.Resolve(s1, alias, name[0] == 'c', false)) {
+					if (!References.Resolve(s1, alias, isCOM: name[0] == 'c', isNuget: false, noCopy: noCopy)) {
 						_ErrorV("reference assembly not found: " + s1); //TODO3: need more info, or link to Help
 					}
 					//p1.NW('r');
@@ -919,7 +918,7 @@ class MetaComments {
 			foreach (var x in xx.Elements()) {
 				if (x.Name.LocalName is not ("r" or "ro")) continue;
 				var r = dir + x.Value;
-				if (!References.Resolve(r, alias, false, true)) {
+				if (!References.Resolve(r, alias, isCOM: false, isNuget: true)) {
 					_ErrorV("NuGet file not found: " + r);
 				}
 			}

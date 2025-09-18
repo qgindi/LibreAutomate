@@ -160,22 +160,27 @@ class MetaReferences {
 	//bool _test;
 	
 	/// <summary>
-	/// If <i>s</i> is like "X.dll /alias=Abc" (or "Abc=X.dll" if <i>supportOldSyntax</i>), splits and sets <i>s1</i> = "X.dll" and <i>alias</i> = "Abc".
+	/// Splits <i>s</i> if it is like <c>"X /properties"</c>.
+	/// Called for meta r, com, pr and nuget.
 	/// </summary>
-	/// <param name="s1">Receives <i>s</i> part before " /", or full <i>s</i>.</param>
-	/// <param name="alias">Receives <i>s</i> part after " /alias=", or null.</param>
-	/// <param name="supportOldSyntax">Support "Alias=X.dll".</param>
+	/// <param name="s1">Receives <i>s</i> or its part before <c>" /"</c>.</param>
+	/// <param name="alias">Receives ALIAS if <i>s</i> is like <c>"X /alias=ALIAS"</c>, else <c>null</c>.</param>
+	/// <param name="noCopy"><i>s</i> is like <c>"X.dll /noCopy"</c></param>
 	/// <returns>false if invalid "/string".</returns>
-	internal static bool ParseAlias_(string s, out string s1, out string alias, bool supportOldSyntax = false) {
+	internal static bool ParseRefAliasEtc_(string name, string s, out string s1, out string alias, out bool noCopy) {
 		alias = null;
+		noCopy = false;
 		s1 = MetaComments.SplitArgs_(s, out var s2);
 		if (s2 != null) {
 			foreach (var v in s2.Split('|')) {
-				if (v.Starts("alias=")) alias = v[6..].NullIfEmpty_();
-				else return false;
+				if (v.Starts("alias=")) {
+					if (name[0] == 'p') return false; //could support for pr too, but who will use it
+					alias = v[6..].NullIfEmpty_();
+				} else if (v == "noCopy") {
+					if (!(name[0] is 'r')) return false; //could support for pr and com too, but who will use it
+					noCopy = true;
+				} else return false;
 			}
-		} else if (supportOldSyntax && s.Contains('=')) { //fbc: "alias=ref"
-			if (s.RxMatch(@"^(\w+)=(.+)$", out var rm)) { alias = rm[1].Value; s1 = rm[2].Value; }
 		}
 		return true;
 	}
@@ -193,7 +198,7 @@ class MetaReferences {
 	/// <remarks>
 	/// Loads the file but does not parse. If bad format, error later when compiling.
 	/// </remarks>
-	public bool Resolve(string reference, string alias, bool isCOM, bool isNuget) {
+	public bool Resolve(string reference, string alias, bool isCOM, bool isNuget, bool noCopy = false) {
 		if (reference.Length == 0) return false;
 		
 		var cache = s_cache;
@@ -261,6 +266,7 @@ class MetaReferences {
 			}
 			
 			_refs.Add(r);
+			if (noCopy) (NoCopyRefs ??= []).Add(r);
 		}
 		
 		//Returns true if k name matches one of default refs, unless k is any version of that ref.
@@ -296,6 +302,12 @@ class MetaReferences {
 	/// Note: it may be less than DefaultReferences.Count (some default references can be removed).
 	/// </summary>
 	public int DefaultRefCount { get; private set; }
+	
+	/// <summary>
+	/// Dlls from meta <c>r dll /noCopy</c>. Don't copy these dlls to the exeProgram's output dir.
+	/// <c>null</c> if there are no such references.
+	/// </summary>
+	public List<PortableExecutableReference> NoCopyRefs { get; private set; }
 	
 	/// <summary>
 	/// Removes from <b>Refs</b> all matching a wildex. Used for meta noRef.

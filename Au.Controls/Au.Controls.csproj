@@ -20,13 +20,16 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <DebugType>embedded</DebugType>
+	  <DefineConstants>$(DefineConstants);CONTROLS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	  <DebugType>embedded</DebugType>
+	  <DefineConstants>$(DefineConstants);CONTROLS</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\Au.Editor\App\AppSettings.cs" Link="Tools\Classes\AppSettings.cs" />
 	  <Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
 	</ItemGroup>
 
@@ -39,7 +42,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Themes\" />
+		<Reference Include="Microsoft.CodeAnalysis">
+			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="Microsoft.CodeAnalysis.CSharp">
+			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 
 </Project>

@@ -15,40 +15,6 @@ partial class SciCode : KScintilla {
 	
 	public override string ToString() => _fn.ToString();
 	
-	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
-	public const int
-		c_marginFold = 0,
-		c_marginImages = 1,
-		c_marginMarkers = 2,
-		c_marginLineNumbers = 3,
-		c_marginChanges = 4; //currently not impl, just adds some space between line numbers and text
-	
-	//markers. We can use 0-20. Changes 21-24. Folding 25-31.
-	public const int c_markerUnderline = 0,
-		c_markerBookmark = 1, c_markerBookmarkInactive = 2,
-		c_markerBreakpoint = 3, c_markerBreakpointD = 4, c_markerBreakpointC = 5, c_markerBreakpointCD = 6, c_markerBreakpointL = 7, c_markerBreakpointLD = 8,
-		c_markerDebugLine = 19, c_markerDebugLine2 = 20;
-	//public const int c_markerStepNext = 3;
-	
-	//indicators. We can use 8-31. KScintilla can use 0-7. Draws indicators from smaller to bigger, eg error on warning.
-	public const int
-		c_indicImages = 8,
-		c_indicRefs = 9,
-		c_indicBraces = 10,
-		c_indicDebug = 11,
-		c_indicDebug2 = 12,
-		c_indicFound = 13,
-		c_indicSnippetField = 14,
-		c_indicSnippetFieldActive = 15,
-		c_indicDiagHidden = 20,
-		c_indicInfo = 21,
-		c_indicWarning = 22,
-		c_indicError = 23,
-		c_indicTestBox = 29,
-		c_indicTestStrike = 30,
-		c_indicTestPoint = 31
-		;
-	
 	internal SciCode(FileNode file, aaaFileLoaderSaver fls) {
 		_fn = file;
 		_fls = fls;
@@ -67,16 +33,16 @@ partial class SciCode : KScintilla {
 			//| MOD.SC_MOD_CHANGEFOLD //only when text modified, but not when user clicks +-
 			));
 		
-		aaaMarginSetType(c_marginImages, SC_MARGIN_COLOUR, markersMask: 0);
-		Call(SCI_SETMARGINBACKN, c_marginImages, Api.GetSysColor(Api.COLOR_BTNFACE));
-		aaaMarginSetWidth(c_marginImages, 0);
+		aaaMarginSetType(SciTheme.Margin.Images, SC_MARGIN_COLOUR, markersMask: 0);
+		Call(SCI_SETMARGINBACKN, SciTheme.Margin.Images, Api.GetSysColor(Api.COLOR_BTNFACE));
+		aaaMarginSetWidth(SciTheme.Margin.Images, 0);
 		
-		aaaMarginSetType(c_marginMarkers, SC_MARGIN_COLOUR, markersMask: 0x1FFFFFF, sensitive: true, cursorArrow: true);
-		aaaMarginSetWidth(c_marginMarkers, 16);
+		aaaMarginSetType(SciTheme.Margin.Markers, SC_MARGIN_COLOUR, markersMask: 0x1FFFFFF, sensitive: true, cursorArrow: true);
+		aaaMarginSetWidth(SciTheme.Margin.Markers, 16);
 		
-		aaaMarginSetType(c_marginLineNumbers, SC_MARGIN_NUMBER);
+		aaaMarginSetType(SciTheme.Margin.LineNumbers, SC_MARGIN_NUMBER);
 		
-		aaaMarginSetWidth(c_marginChanges, 10);
+		aaaMarginSetWidth(SciTheme.Margin.Changes, 10);
 		aaaMarginSetWidth(-1, 2);
 		
 		Call(SCI_SETWRAPMODE, App.Settings.edit_wrap ? SC_WRAP_WORD : 0);
@@ -90,7 +56,7 @@ partial class SciCode : KScintilla {
 //		Call(SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITEDC);
 //#endif
 		
-		CiStyling.TTheme.Current.ToScintilla(this);
+		SciTheme.Current.ToScintilla(this, sciCode: true);
 		
 		_OnHandleCreatedOrDpiChanged();
 		if (_fn.IsCodeFile) CiFolding.InitFolding(this);
@@ -260,11 +226,11 @@ partial class SciCode : KScintilla {
 		case NOTIF.SCN_MARGINCLICK when isActive:
 			if (_fn.IsCodeFile) {
 				CodeInfo.Cancel();
-				if (n.margin == c_marginFold) {
+				if (n.margin == SciTheme.Margin.Fold) {
 					_FoldOnMarginClick(n.position, n.modifiers);
 				}
 			}
-			if (n.margin == c_marginMarkers) {
+			if (n.margin == SciTheme.Margin.Markers) {
 				if (n.modifiers is 0) _MarkersMarginClicked(false, n.position);
 			}
 			break;
@@ -308,17 +274,17 @@ partial class SciCode : KScintilla {
 				if (margin >= 0) {
 					if (msg == Api.WM_RBUTTONDOWN) {
 						//prevent changing the caret/selection when rclicked some margins
-						if (margin is c_marginFold or c_marginMarkers) return 0;
+						if (margin is SciTheme.Margin.Fold or SciTheme.Margin.Markers) return 0;
 						
 						//prevent changing the caret/selection if it is in the rclicked line
 						var selStart = aaaSelectionStart8;
 						var (_, start, end) = aaaLineStartEndFromPos(false, aaaPosFromXY(false, p, false));
 						if (selStart >= start && selStart <= end) return 0;
 						//do vice versa if the end of non-empty selection is at the start of the rclicked line, to avoid comment/uncomment wrong lines
-						if (margin is c_marginLineNumbers or c_marginImages or c_marginChanges) {
+						if (margin is SciTheme.Margin.LineNumbers or SciTheme.Margin.Images or SciTheme.Margin.Changes) {
 							if (aaaSelectionEnd8 == start) aaaGoToPos(false, start); //clear selection above start
 						}
-					} else if (margin == c_marginMarkers) {
+					} else if (margin == SciTheme.Margin.Markers) {
 						int pos = aaaPosFromXY(false, p, false);
 						if (pos >= 0) {
 							int line = aaaLineFromPos(false, pos);
@@ -333,13 +299,13 @@ partial class SciCode : KScintilla {
 				int margin = aaaMarginFromPoint(p);
 				if (margin >= 0) {
 					switch (margin) {
-					case c_marginLineNumbers or c_marginImages or c_marginChanges:
+					case SciTheme.Margin.LineNumbers or SciTheme.Margin.Images or SciTheme.Margin.Changes:
 						ModifyCode.Comment(null, notSlashStar: true);
 						break;
-					case c_marginMarkers:
+					case SciTheme.Margin.Markers:
 						_MarkersMarginClicked(true, base.aaaPosFromXY(false, p, false));
 						break;
-					case c_marginFold:
+					case SciTheme.Margin.Fold:
 						_FoldContextMenu(aaaPosFromXY(false, p, false));
 						break;
 					}
@@ -454,13 +420,13 @@ partial class SciCode : KScintilla {
 		int c = 4;
 		int lines = aaaLineCount;
 		while (lines > 999) { c++; lines /= 10; }
-		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(c_marginLineNumbers, 3, _prevLineNumberMarginWidth = c);
+		if (!onModified || c != _prevLineNumberMarginWidth) aaaMarginSetWidth(SciTheme.Margin.LineNumbers, 3, _prevLineNumberMarginWidth = c);
 	}
 	int _prevLineNumberMarginWidth;
 	
 	protected override void AaOnDeletingLineWithMarkers(int line, uint markers) {
-		if ((markers & 3 << c_markerBookmark) != 0) Panels.Bookmarks.SciDeletingLineWithMarker(this, line);
-		if ((markers & 63 << c_markerBreakpoint) != 0) Panels.Breakpoints.SciDeletingLineWithMarker(this, line);
+		if ((markers & 3 << SciTheme.Marker.Bookmark) != 0) Panels.Bookmarks.SciDeletingLineWithMarker(this, line);
+		if ((markers & 63 << SciTheme.Marker.Breakpoint) != 0) Panels.Breakpoints.SciDeletingLineWithMarker(this, line);
 		base.AaOnDeletingLineWithMarkers(line, markers);
 	}
 	
@@ -567,10 +533,10 @@ partial class SciCode : KScintilla {
 			strokeWidth = _dpi < 144 ? 100 : 200;
 		//strokeWidth = _dpi < 144 ? 100 : _dpi < 192 ? 150 : 200;
 		
-		aaaIndicatorDefine(c_indicError, style, 0xff0000, strokeWidth: strokeWidth);
-		aaaIndicatorDefine(c_indicWarning, style, 0x008000, strokeWidth: strokeWidth); //dark green
-		aaaIndicatorDefine(c_indicInfo, INDIC_DIAGONAL, 0xc0c0c0, strokeWidth: strokeWidth);
-		aaaIndicatorDefine(c_indicDiagHidden, INDIC_DOTS, 0xc0c0c0, strokeWidth: strokeWidth);
+		aaaIndicatorDefine(SciTheme.Indic.Error, style, 0xff0000, strokeWidth: strokeWidth);
+		aaaIndicatorDefine(SciTheme.Indic.Warning, style, 0x008000, strokeWidth: strokeWidth); //dark green
+		aaaIndicatorDefine(SciTheme.Indic.Info, INDIC_DIAGONAL, 0xc0c0c0, strokeWidth: strokeWidth);
+		aaaIndicatorDefine(SciTheme.Indic.DiagHidden, INDIC_DOTS, 0xc0c0c0, strokeWidth: strokeWidth);
 	}
 	
 	bool _indicHaveFound, _indicHaveDiag;
@@ -578,21 +544,21 @@ partial class SciCode : KScintilla {
 	internal void EInicatorsFound_(List<Range> a) {
 		if (_indicHaveFound) {
 			_indicHaveFound = false;
-			aaaIndicatorClear(c_indicFound);
+			aaaIndicatorClear(SciTheme.Indic.Found);
 		}
 		if (a.NE_()) return;
 		_indicHaveFound = true;
 		
-		foreach (var v in a) aaaIndicatorAdd(c_indicFound, true, v);
+		foreach (var v in a) aaaIndicatorAdd(SciTheme.Indic.Found, true, v);
 	}
 	
 	internal void EInicatorsDiag_(bool has) {
 		if (_indicHaveDiag) {
 			_indicHaveDiag = false;
-			aaaIndicatorClear(c_indicDiagHidden);
-			aaaIndicatorClear(c_indicInfo);
-			aaaIndicatorClear(c_indicWarning);
-			aaaIndicatorClear(c_indicError);
+			aaaIndicatorClear(SciTheme.Indic.DiagHidden);
+			aaaIndicatorClear(SciTheme.Indic.Info);
+			aaaIndicatorClear(SciTheme.Indic.Warning);
+			aaaIndicatorClear(SciTheme.Indic.Error);
 		}
 		if (!has) return;
 		_indicHaveDiag = true;
@@ -723,16 +689,16 @@ class Program { static void Main() { new DialogClass().Preview(); }}
 			_Bitmap(ref s_markerBitmaps.debugLine, "*Codicons.DebugStackframe #40B000 @16", 14);
 			_Bitmap(ref s_markerBitmaps.debugLine2, "*Codicons.DebugStackframe #808080 @16", 14);
 		}
-		_Marker(c_markerBookmark, s_markerBitmaps.bookmark);
-		_Marker(c_markerBookmarkInactive, s_markerBitmaps.bookmark2);
-		_Marker(c_markerBreakpoint, s_markerBitmaps.breakpoint);
-		_Marker(c_markerBreakpointD, s_markerBitmaps.breakpointD);
-		_Marker(c_markerBreakpointC, s_markerBitmaps.breakpointC);
-		_Marker(c_markerBreakpointCD, s_markerBitmaps.breakpointCD);
-		_Marker(c_markerBreakpointL, s_markerBitmaps.breakpointL);
-		_Marker(c_markerBreakpointLD, s_markerBitmaps.breakpointLD);
-		_Marker(c_markerDebugLine, s_markerBitmaps.debugLine);
-		_Marker(c_markerDebugLine2, s_markerBitmaps.debugLine2);
+		_Marker(SciTheme.Marker.Bookmark, s_markerBitmaps.bookmark);
+		_Marker(SciTheme.Marker.BookmarkInactive, s_markerBitmaps.bookmark2);
+		_Marker(SciTheme.Marker.Breakpoint, s_markerBitmaps.breakpoint);
+		_Marker(SciTheme.Marker.BreakpointD, s_markerBitmaps.breakpointD);
+		_Marker(SciTheme.Marker.BreakpointC, s_markerBitmaps.breakpointC);
+		_Marker(SciTheme.Marker.BreakpointCD, s_markerBitmaps.breakpointCD);
+		_Marker(SciTheme.Marker.BreakpointL, s_markerBitmaps.breakpointL);
+		_Marker(SciTheme.Marker.BreakpointLD, s_markerBitmaps.breakpointLD);
+		_Marker(SciTheme.Marker.DebugLine, s_markerBitmaps.debugLine);
+		_Marker(SciTheme.Marker.DebugLine2, s_markerBitmaps.debugLine2);
 		
 		unsafe void _Bitmap(ref (int size, nint data) mb, string icon, int size) {
 			if (mb.data != 0) { MemoryUtil.Free((uint*)mb.data); mb.data = 0; }

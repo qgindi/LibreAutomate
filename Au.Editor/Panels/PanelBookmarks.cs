@@ -151,7 +151,7 @@ class PanelBookmarks {
 		var f = _FindItemOfFile(doc); if (f == null) return;
 		bool removed = false;
 		for (var b = f.FirstChild; b != null;) {
-			int h = doc.aaaMarkerAdd(b.isActive ? SciCode.c_markerBookmark : SciCode.c_markerBookmarkInactive, b.line);
+			int h = doc.aaaMarkerAdd(b.isActive ? SciTheme.Marker.Bookmark : SciTheme.Marker.BookmarkInactive, b.line);
 			if (h == -1) {
 				var bb = b; b = b.Next;
 				bb.Remove();
@@ -184,7 +184,7 @@ class PanelBookmarks {
 		} else {
 			if (!useSelStart) if (doc.aaaLineFromPos() == line) useSelStart = true;
 			
-			int h = doc.aaaMarkerAdd(SciCode.c_markerBookmark, line); if (h < 0) return;
+			int h = doc.aaaMarkerAdd(SciTheme.Marker.Bookmark, line); if (h < 0) return;
 			var folder = _FindItemOfFile(doc);
 			if (folder == null) {
 				_root.AddChild(folder = new(doc.EFile, true), true);
@@ -303,7 +303,7 @@ class PanelBookmarks {
 			
 			if (b.Parent.file.OpenDoc is { } doc) {
 				doc.aaaMarkerDeleteHandle(b.markerHandle);
-				b.markerHandle = doc.aaaMarkerAdd(b.isActive ? SciCode.c_markerBookmark : SciCode.c_markerBookmarkInactive, b.line);
+				b.markerHandle = doc.aaaMarkerAdd(b.isActive ? SciTheme.Marker.Bookmark : SciTheme.Marker.BookmarkInactive, b.line);
 			}
 		}
 	}
@@ -355,7 +355,7 @@ class PanelBookmarks {
 		m.Show(owner: _tv);
 	}
 	
-	bool _IsBookmark(SciCode doc, int line) => (doc.Call(Sci.SCI_MARKERGET, line) & 3 << SciCode.c_markerBookmark) != 0;
+	bool _IsBookmark(SciCode doc, int line) => (doc.Call(Sci.SCI_MARKERGET, line) & 3 << SciTheme.Marker.Bookmark) != 0;
 	
 	_Item _BookmarkFromLine(SciCode doc, int line) {
 		if (_FindItemOfFile(doc) is { } folder) {
@@ -436,14 +436,14 @@ class PanelBookmarks {
 	
 	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int pos8) {
 		if (_BookmarkFromLine(doc, doc.aaaLineFromPos(false, pos8)) is { } b) {
-			m["Delete bookmark", "*Material.BookmarkMinus @16" + Menus.darkYellow] = o => ToggleBookmark(pos8);
-			m["Rename bookmark"/*, "*Modern.Edit @14" + Menus.darkYellow*/] = o => _Rename(b);
+			m["Delete bookmark", "*Material.BookmarkMinus @16" + EdIcons.darkYellow] = o => ToggleBookmark(pos8);
+			m["Rename bookmark"/*, "*Modern.Edit @14" + EdIcons.darkYellow*/] = o => _Rename(b);
 			m.AddCheck("Active bookmark\tM-click", b.isActive, o => _SetActive(b, o.IsChecked));
 		} else {
-			m["Add bookmark", "*Material.Bookmark @16" + Menus.darkYellow] = o => ToggleBookmark(pos8);
+			m["Add bookmark", "*Material.Bookmark @16" + EdIcons.darkYellow] = o => ToggleBookmark(pos8);
 		}
-		m["Previous bookmark", "*JamIcons.ArrowSquareUp" + Menus.black] = o => NextBookmark(true);
-		m["Next bookmark", "*JamIcons.ArrowSquareDown" + Menus.black] = o => NextBookmark(false);
+		m["Previous bookmark", "*JamIcons.ArrowSquareUp" + EdIcons.black] = o => NextBookmark(true);
+		m["Next bookmark", "*JamIcons.ArrowSquareDown" + EdIcons.black] = o => NextBookmark(false);
 	}
 	
 	internal void SciMiddleClick_(SciCode doc, int line) {
@@ -501,9 +501,9 @@ class PanelBookmarks {
 		
 		void ITreeViewItem.SetNewText(string text) { name = text; Panels.Bookmarks._SaveLater(); }
 		
-		object ITreeViewItem.Image => _isFolder ? EdResources.FolderArrow(_isExpanded)
-			: isActive ? "*Material.Bookmark @14" + Menus.darkYellow
-			: "*Material.BookmarkOutline @14" + Menus.darkYellow;
+		object ITreeViewItem.Image => _isFolder ? EdIcons.FolderArrow(_isExpanded)
+			: isActive ? "*Material.Bookmark @14" + EdIcons.darkYellow
+			: "*Material.BookmarkOutline @14" + EdIcons.darkYellow;
 		
 		#endregion
 		

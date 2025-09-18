@@ -289,20 +289,6 @@ static class EdDebug {
 
 #endif
 
-static class EdResources {
-	public const string
-		c_iconScript = "*Material.ScriptOutline #73BF00|#87E100",
-		//c_iconScript = "*Material.Square white %4,1,4,1,f;*Material.ScriptOutline #73BF00|#87E100", //white-filled. In some places looks not good.
-		c_iconClass = "*Codicons.SymbolClass #4080FF|#84ACFF",
-		c_iconFolder = "*Material.Folder #EABB00",
-		c_iconFolderOpen = "*Material.FolderOpen #EABB00"
-	;
-	
-	public static string FolderIcon(bool open) => open ? c_iconFolderOpen : c_iconFolder;
-	
-	public static string FolderArrow(bool open) => open ? @"resources/images/expanddown_16x.xaml" : @"resources/images/expandright_16x.xaml";
-}
-
 static class EdWpf {
 	public static TextBlock TextAndHelp(string text, string helpTopic) {
 		helpTopic = HelpUtil.AuHelpUrl(helpTopic);

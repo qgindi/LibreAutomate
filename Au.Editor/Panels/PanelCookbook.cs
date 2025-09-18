@@ -42,7 +42,7 @@ class PanelCookbook {
 		b.R.Add(out _search).Tooltip("Part of recipe name.\nTo search in recipe text, click the button next to this field.\nMiddle-click to clear.").UiaName("Find recipe");
 		b.Options(modifyPadding: false, margin: new());
 		_search.TextChanged += (_, _) => _Search();
-		b.xAddButtonIcon("*EvaIcons.ArrowBack" + Menus.darkYellow, _ => _HistoryMenu(), "Go back...").Margin(right: 3);
+		b.xAddButtonIcon("*EvaIcons.ArrowBack" + EdIcons.darkYellow, _ => _HistoryMenu(), "Go back...").Margin(right: 3);
 		_tv = new() { Name = "Cookbook_list", SingleClickActivate = true, FullRowExpand = true, HotTrack = true, BackgroundColor = 0xf0f8e8 };
 		b.Row(-1).Add(_tv);
 		b.End();
@@ -383,7 +383,7 @@ class PanelCookbook {
 		string ITreeViewItem.DisplayText => name;
 		
 		object ITreeViewItem.Image
-			=> ftype switch { FNType.Folder => EdResources.FolderArrow(isExpanded), FNType.Script => "*BoxIcons.RegularCookie" + Menus.darkYellow, FNType.Class => EdResources.c_iconClass, _ => null };
+			=> ftype switch { FNType.Folder => EdIcons.FolderArrow(isExpanded), FNType.Script => "*BoxIcons.RegularCookie" + EdIcons.darkYellow, FNType.Class => EdIcons.Class, _ => null };
 		
 		void ITreeViewItem.SetIsExpanded(bool yes) { isExpanded = yes; }
 		

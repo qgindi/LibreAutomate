@@ -726,7 +726,7 @@ class CiSnippetMode {
 						if (v.n < nStart) { nStart = v.n; iStart = fi; }
 						var f = new _Field { n = v.n, start = v.offset, end = v.offset + v.len };
 						_doc.aaaNormalizeRange(true, ref f.start, ref f.end);
-						_doc.aaaIndicatorAdd(SciCode.c_indicSnippetField, false, f.start..f.end, f.n);
+						_doc.aaaIndicatorAdd(SciTheme.Indic.SnippetField, false, f.start..f.end, f.n);
 						_fields[fi++] = f;
 					}
 				}
@@ -745,7 +745,7 @@ class CiSnippetMode {
 		if (_doc.SnippetMode_ != this) return;
 		_doc.SnippetMode_ = null;
 		
-		_doc.aaaIndicatorClear(SciCode.c_indicSnippetField);
+		_doc.aaaIndicatorClear(SciTheme.Indic.SnippetField);
 		
 		_FieldLeaved(true);
 		
@@ -758,8 +758,8 @@ class CiSnippetMode {
 		_activeField = field;
 		foreach (var f in _fields) {
 			if (f.n == field.n) {
-				_doc.aaaIndicatorAdd(SciCode.c_indicSnippetFieldActive, false, f.start..f.end, f.n);
-				_doc.aaaIndicatorClear(SciCode.c_indicSnippetField, false, f.start..f.end); //erase c_indicSnippetField to avoid mixed color
+				_doc.aaaIndicatorAdd(SciTheme.Indic.SnippetFieldActive, false, f.start..f.end, f.n);
+				_doc.aaaIndicatorClear(SciTheme.Indic.SnippetField, false, f.start..f.end); //erase SciTheme.Indic.SnippetField to avoid mixed color
 			}
 		}
 		if (select) {
@@ -772,10 +772,10 @@ class CiSnippetMode {
 	void _FieldLeaved(bool ending = false) {
 		if (_activeField == null) return;
 		var af = _activeField; _activeField = null;
-		_doc.aaaIndicatorClear(SciCode.c_indicSnippetFieldActive);
-		if (!ending) { //restore c_indicSnippetField erased by _SetActiveField
+		_doc.aaaIndicatorClear(SciTheme.Indic.SnippetFieldActive);
+		if (!ending) { //restore SciTheme.Indic.SnippetField erased by _SetActiveField
 			foreach (var v in _fields) {
-				if (v.n == af.n) _doc.aaaIndicatorAdd(SciCode.c_indicSnippetField, false, v.start..v.end, v.n);
+				if (v.n == af.n) _doc.aaaIndicatorAdd(SciTheme.Indic.SnippetField, false, v.start..v.end, v.n);
 			}
 		}
 		_ReplaceTextOfRelatedFields(ending);
@@ -831,7 +831,7 @@ class CiSnippetMode {
 		if (_finalCaretPos >= pos2) _finalCaretPos += len;
 		_range.end += len;
 		
-		_doc.aaaIndicatorAdd(_activeField != null ? SciCode.c_indicSnippetFieldActive : SciCode.c_indicSnippetField, false, field.start..field.end, field.n);
+		_doc.aaaIndicatorAdd(_activeField != null ? SciTheme.Indic.SnippetFieldActive : SciTheme.Indic.SnippetField, false, field.start..field.end, field.n);
 		
 		_modifiedField = field;
 		
@@ -923,7 +923,7 @@ class CiSnippetMode {
 			if (!ending) {
 				foreach (var f in _fields) {
 					if (f.n == field.n && f != field) {
-						_doc.aaaIndicatorAdd(SciCode.c_indicSnippetField, false, f.start..f.end, f.n);
+						_doc.aaaIndicatorAdd(SciTheme.Indic.SnippetField, false, f.start..f.end, f.n);
 					}
 				}
 			}
@@ -933,12 +933,12 @@ class CiSnippetMode {
 	
 	//#if DEBUG
 	//	void _TestShowFields() {
-	//		_doc.aaaIndicatorClear(SciCode.c_indicTestStrike);
-	//		_doc.aaaIndicatorClear(SciCode.c_indicTestPoint);
+	//		_doc.aaaIndicatorClear(SciTheme.Indic.TestStrike);
+	//		_doc.aaaIndicatorClear(SciTheme.Indic.TestPoint);
 	//		foreach (var f in _fields) {
-	//			_doc.aaaIndicatorAdd(SciCode.c_indicTestStrike, false, f.start..f.end);
+	//			_doc.aaaIndicatorAdd(SciTheme.Indic.TestStrike, false, f.start..f.end);
 	//		}
-	//		if (_finalCaretPos >= 0) _doc.aaaIndicatorAdd(SciCode.c_indicTestPoint, false, _finalCaretPos..(_finalCaretPos + 1));
+	//		if (_finalCaretPos >= 0) _doc.aaaIndicatorAdd(SciTheme.Indic.TestPoint, false, _finalCaretPos..(_finalCaretPos + 1));
 	//	}
 	//#endif
 }

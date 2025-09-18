@@ -107,7 +107,7 @@ This tool creates <a href='{infoUrl}'>Nilesoft Shell</a> code for adding a menu 
 			b.R.Add("Image", out KTextBox tImage).Tooltip(@"A font icon, like \uE025 or image.glyph(\uE025, #00e000)
 Or path of a file with icons, like c:\dir\file.ico, c:\dir\file.exe, c:\dir\file.dll,3
 Or color, like #c0ff80");
-			//b.And(26).xAddButtonIcon("*Material.HelpCircleOutline #79AEFF" + Menus.blue, _ => _ImageButton(), "Image reference");
+			//b.And(26).xAddButtonIcon("*Material.HelpCircleOutline #79AEFF" + EdIcons.blue, _ => _ImageButton(), "Image reference");
 			b.And(26).xAddControlHelpButton(_ => _ImageButton(), "Image reference");
 			b.R.Add("Tooltip", out KTextBox tTip).Multiline();
 			b.R.Add<Label>("Separator"); b.StartStack().Add(out KCheckBox cSepBefore, "before").Add(out KCheckBox cSepAfter, "after").End();
@@ -135,7 +135,7 @@ Or color, like #c0ff80");
 			b.R.Add("Expression", out KTextBox tExpression).Hidden(null);
 			b.R.Add("Arguments", out KTextBox tArgs, "@sel(true)")
 				.Tooltip("@sel(true) means \"paths of selected files\".\nYou can add more arguments before or after.");
-			b.And(26).xAddButtonIcon(out var bArgs, "*Modern.LanguageCsharp" + Menus.blue, _ => _ArgsButton(), "Copy C# code");
+			b.And(26).xAddButtonIcon(out var bArgs, "*Modern.LanguageCsharp" + EdIcons.blue, _ => _ArgsButton(), "Copy C# code");
 			cbAction.SelectionChanged += (_, _) => {
 				int i = cbAction.SelectedIndex;
 				tProgram.Visibility = i == 1 ? Visibility.Visible : Visibility.Collapsed;

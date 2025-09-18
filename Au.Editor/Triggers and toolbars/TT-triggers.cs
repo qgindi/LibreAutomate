@@ -64,7 +64,7 @@ partial class TriggersAndToolbars {
 		b.End(); //of firstPage
 		
 		b.R.StartOkCancel();
-		b.AddButton(out bBack, ImageUtil.LoadWpfImageElement("*EvaIcons.ArrowBack @12" + Menus.black), k => {
+		b.AddButton(out bBack, ImageUtil.LoadWpfImageElement("*EvaIcons.ArrowBack @12" + EdIcons.black), k => {
 			ccPages.Content = pages[(int)tType - 1][--iPage];
 			bBack.IsEnabled = iPage > 0;
 			bNext.Content = "Next";
@@ -198,7 +198,7 @@ To set trigger scope window can be used {App.Settings.hotkeys.tool_quick}.
 			s = windowTriggerSettingsPage.FormatCode(s, sAction, ttVar);
 		}
 		
-		InsertCode.Statements(s, ICSFlags.GoTo);
+		InsertCode.Statements(new(s, goTo: true));
 		if (s.Contains("`|`")) {
 			CodeInfo.ShowSignature();
 			if (tType == TriggersType.Mouse) CodeInfo.ShowCompletionList();
@@ -563,7 +563,7 @@ Please make sure the text cursor is in correct place. The new scope statement wi
 				if (!_TriggerScopeDialog(out s, w)) return;
 			}
 			_CodeAnalysis.MoveCaretForNewTriggerOrScope();
-			InsertCode.Statements(s);
+			InsertCode.Statements(new(s));
 		}
 	}
 	

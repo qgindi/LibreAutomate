@@ -59,7 +59,7 @@ class CiPopupList {
 		
 		//var options = new Button();
 		//options.Click += _Options_Click;
-		//_AddButton(options, "Options", "resources/images/settingsgroup_16x.xaml");
+		//_AddButton(options, "Options", );
 		
 		void _AddButton(ButtonBase b, string text, string image, RoutedEventHandler click) {
 			b.Style = (b is CheckBox) ? cstyle : bstyle;

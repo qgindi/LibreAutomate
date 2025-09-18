@@ -1,3 +1,65 @@
+using Au.Controls;
+
+namespace Au.Tools;
+
+public class KRegexWindow : KInfoWindow { //KPopup
+	public KRegexWindow() : base(250) {
+		Size = (800, 220);
+		WindowName = "Regex";
+		Name = "Ci.Regex"; //prevent hiding when activated
+		CloseHides = true;
+	}
+	
+	protected override void OnHandleCreated() {
+		for (int i = 0; i < 2; i++) {
+			var c = i == 0 ? this.Control1 : this.Control2;
+			c.AaTags.AddStyleTag(".r", new() { textColor = 0xf08080 }); //red regex
+			c.AaTags.AddLinkTag("+p", o => CurrentTopic = o); //link to a local info topic
+			c.AaTags.SetLinkStyle(new() { textColor = 0x0080FF, underline = false }); //remove underline from links
+			c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
+		}
+		this.Control2.AaTags.AddStyleTag(".h", new() { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
+		this.Control2.AaTags.AddLinkTag("+a", o => KUtil.InsertTextIn(InsertInControl, o)); //link that inserts a regex token
+		
+		_SetTocText();
+		CurrentTopic = @"help";
+		
+		base.OnHandleCreated();
+	}
+	
+	void _SetTocText() {
+		this.Text = c_contentText.Remove(c_contentText.Find("\r\n\r\n-- "));
+	}
+	
+	/// <summary>
+	/// Opens an info topic or gets current topic name.
+	/// </summary>
+	public string CurrentTopic {
+		get => _topic;
+		set {
+			if (value == _topic) return;
+			_topic = value;
+			string s;
+			if (value.Starts("Note:")) {
+				s = value;
+			} else {
+				s = c_contentText;
+				if (!s.RxMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
+				else s = s.Replace("{Editor.Settings.internetSearchUrl}", IEditor.Editor.InternetSearchUrl);
+			}
+			this.Text2 = s;
+		}
+	}
+	string _topic;
+	
+	public void Refresh() {
+		_SetTocText();
+		var s = _topic;
+		_topic = null;
+		CurrentTopic = s;
+	}
+	
+	const string c_contentText = """
 <+p help>Help<>
 <+p options>Options<> <.r>(?imsnxUJ)<> and <.r>(*...)<>
 <+p meta>Metacharacters<> <.r>^ $ . [ | ( ) * + ? { \<>
@@ -32,7 +94,7 @@
 <link https://www.pcre.org/current/doc/html/index.html>PCRE regex library reference<>
 <link>http://www.rexegg.com/<>
 <link>https://www.regular-expressions.info/<>
-<link {App.Settings.internetSearchUrl}regular+expression+tester,+PCRE>Find regex test tools<>
+<link {Editor.Settings.internetSearchUrl}regular+expression+tester,+PCRE>Find regex test tools<>
 
 -- options --
 
@@ -521,3 +583,5 @@ Result: <c green>2020-10-08<>
 <help>regexp.Replace<>
 
 -- end --
+""";
+}

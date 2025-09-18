@@ -1,5 +1,12 @@
+using Au.Controls;
+using Au.Tools;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+#if CONTROLS
+using App = Au.Tools.Editor;
+namespace Au.Tools;
+#endif
 
 /// <summary>
 /// Program settings.
@@ -17,6 +24,8 @@ record AppSettings : JSettings {
 		var r = Load<AppSettings>(DirBS + "Settings.json", jsOpt: SerializerOptions2);
 		r._Loaded();
 		App.Settings = r;
+		
+		IEditor.Editor = new _KInterface();
 	}
 	
 	public static void SetReloadModifiedExternally() { //in main thread
@@ -228,7 +237,12 @@ System.Threading.Tasks.TaskCanceledException
 	public Dictionary<string, HashSet<string>> ci_hiddenSnippets;
 	
 	//CiGoTo
-	public Dictionary<string, CiGoTo.AssemblySett> ci_gotoAsm;
+	public record gotoAsm_t {
+		public string repo, path, context;
+		public bool csharp;
+		public gotoAsm_t() { csharp = true; }
+	}
+	public Dictionary<string, gotoAsm_t> ci_gotoAsm;
 	public int ci_gotoTab;
 	
 	//CiFindGo
@@ -252,7 +266,10 @@ System.Threading.Tasks.TaskCanceledException
 	public readonly delm_t delm = new();
 	
 	//DOcr
-	public Au.Tools.OcrEngineSettings ocr;
+	public record ocr_t {
+		public string wLang, tLang, tCL, gKey, gFeat, gIC, mUrl, mKey;
+	}
+	public ocr_t ocr;
 	
 	//panel Find
 	public string find_skip;
@@ -266,6 +283,14 @@ System.Threading.Tasks.TaskCanceledException
 	public int publish, export;
 	public bool? minimalSDK;
 	public string nilesoftShellDir;
+	
+	class _KInterface : IEditor {
+		string IEditor.SettingsDirBS => DirBS;
+		
+		string IEditor.ThemeName { get => App.Settings.edit_theme; set { App.Settings.edit_theme = value; } }
+
+		string IEditor.InternetSearchUrl => App.Settings.internetSearchUrl;
+    }
 }
 
 /// <summary>

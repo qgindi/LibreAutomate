@@ -42,7 +42,7 @@ class DIcons : KDialogWindow {
 Part of icon name, or wildcard expression.
 Examples: part, Part (match case), start*, *end, **rc regex case-sensitive.
 Can be Pack.Icon, like Material.Folder.");
-		b.xAddButtonIcon("*RemixIcon.GeminiLine" + Menus.blue, _ => _AiSearch(), "Use AI to find icons by name.\nFinds synonyms, understands languages, etc.");
+		b.xAddButtonIcon("*RemixIcon.GeminiLine" + EdIcons.blue, _ => _AiSearch(), "Use AI to find icons by name.\nFinds synonyms, understands languages, etc.");
 		b.Row(-1).xAddInBorder(out _tv);
 		_tv.ImageBrush = System.Drawing.Brushes.White;
 		b.End();

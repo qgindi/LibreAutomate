@@ -1,4 +1,6 @@
-namespace Au.Controls;
+using Au.Controls;
+
+namespace Au.Tools;
 
 /// <summary>
 /// Scintilla-based control that shows colored C# code.
@@ -16,7 +18,7 @@ class KSciCodeBox : KScintilla {
 
 		aaaMarginSetWidth(1, 0);
 		aaaIsReadonly = true;
-		CiStyling.TTheme.Current.ToScintilla(this, fontSize: 9);
+		SciTheme.Current.ToScintilla(this, fontSize: 9);
 	}
 
 	protected override void AaOnSciNotify(ref Sci.SCNotification n) {
@@ -70,7 +72,7 @@ class KSciCodeBox : KScintilla {
 	protected int _LenUtf8 => Call(Sci.SCI_GETTEXTLENGTH);
 
 	unsafe void _Styling() {
-		var styles8 = CiUtil.GetScintillaStylingBytes8(aaaText);
+		if(!WndCopyData.SendReceive<char>(ScriptEditor.WndMsg_, 15, aaaText, out byte[] styles8)) return;
 		Call(Sci.SCI_STARTSTYLING);
 		fixed (byte* p = styles8) Call(Sci.SCI_SETSTYLINGEX, styles8.Length, p);
 	}

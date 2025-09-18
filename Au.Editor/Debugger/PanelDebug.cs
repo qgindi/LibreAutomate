@@ -42,7 +42,7 @@ partial class PanelDebug {
 		
 		var tb = b.xAddToolBar(hideOverflow: true);
 		tb.UiaSetName("Debug_toolbar");
-		const string c_color = Menus.blue, c_color2 = Menus.green2, c_color3 = Menus.black;
+		const string c_color = EdIcons.blue, c_color2 = EdIcons.green2, c_color3 = EdIcons.black;
 		_buttons.debug = _TbButton("*Material.Bug" + c_color2, _ => _Start(), "Run with debugger.\nWill stop (pause) at a breakpoint or exception line.\nTo add a breakpoint, click the white margin in the code editor.");
 		_buttons.restart = _TbButton("*Codicons.DebugRestart" + c_color2, _ => _Restart(), "Restart");
 		_buttons.end = _TbButton("*Material.SquareOutline @14" + c_color3, button => {
@@ -68,7 +68,7 @@ partial class PanelDebug {
 		_buttons.stepOut = _TbButton("*Codicons.DebugStepOut" + c_color, _ => _StepOut(), "Step out\n\nShift+F11");
 		tb.Items.Add(new Separator());
 		//_TbButton("*BoxIcons.RegularMenu" + c_color3, null,  "More debugger commands").xDropdownMenu(_CommandsMenu);
-		_TbButton("*EvaIcons.Options2" + Menus.green, null, "Debugger options").xDropdownMenu(_OptionsMenu);
+		_TbButton("*EvaIcons.Options2" + EdIcons.green, null, "Debugger options").xDropdownMenu(_OptionsMenu);
 #if DEBUG
 		_TbButton("*WeatherIcons.SnowWind #FF3300", _ => { _Test(); }, "Test");
 #endif
@@ -392,10 +392,10 @@ System.Threading.Tasks.TaskCanceledException
 	#endregion
 	
 	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int line) {
-		m["Run to here", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.EFile, line, false);
-		m["Run to here non-stop", "*JamIcons.ArrowCircleDownRight @14" + Menus.blue] = o => _RunToHere(doc.EFile, line, true);
-		if (IsDebugging) m["Restart and run to here non-stop", "*Codicons.DebugRestart @14" + Menus.green2] = o => _RunToHere(doc.EFile, line, true, true);
-		if (IsStopped) m["Jump to here", "*Codicons.DebugStackframe @14" + Menus.green2] = o => _JumpToHere(doc.EFile, line);
+		m["Run to here", "*JamIcons.ArrowCircleDownRight @14" + EdIcons.blue] = o => _RunToHere(doc.EFile, line, false);
+		m["Run to here non-stop", "*JamIcons.ArrowCircleDownRight @14" + EdIcons.blue] = o => _RunToHere(doc.EFile, line, true);
+		if (IsDebugging) m["Restart and run to here non-stop", "*Codicons.DebugRestart @14" + EdIcons.green2] = o => _RunToHere(doc.EFile, line, true, true);
+		if (IsStopped) m["Jump to here", "*Codicons.DebugStackframe @14" + EdIcons.green2] = o => _JumpToHere(doc.EFile, line);
 	}
 	
 	void _Step(string s) {
@@ -749,7 +749,7 @@ System.Threading.Tasks.TaskCanceledException
 		}
 		return false;
 	}
-	_Marker _marker = new(SciCode.c_markerDebugLine, SciCode.c_indicDebug), _marker2 = new(SciCode.c_markerDebugLine2, SciCode.c_indicDebug2);
+	_Marker _marker = new(SciTheme.Marker.DebugLine, SciTheme.Indic.Debug), _marker2 = new(SciTheme.Marker.DebugLine2, SciTheme.Indic.Debug2);
 	
 	void _UpdateUI(_UU u) {
 		if (u == _UU.Resumed) {

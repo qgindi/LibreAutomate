@@ -9,7 +9,7 @@ if (args[0] == "post") {
 	//compiler always copies the true Au.dll to outputPath. Let's replace it with our Au.dll.
 	filesystem.copyTo(@"C:\code\ok\dll\Au.dll", outputPath, FIfExists.Delete);
 } else {
-	foreach (var w in wnd.findAll("LibreAutomate", "HwndWrapper[Au.Editor;*", also: o => o.ProcessId != process.thisProcessId)) {
+	foreach (var w in wnd.findAll("**m LibreAutomate||Find window||Find UI element", "HwndWrapper[Au.Editor;*", also: o => o.ProcessId != process.thisProcessId)) {
 		w.Close(noWait: true);
 		w.WaitForClosed(3, waitUntilProcessEnds: true);
 	}

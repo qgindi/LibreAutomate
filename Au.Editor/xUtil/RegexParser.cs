@@ -1,4 +1,4 @@
-using EStyle = CiStyling.EStyle;
+using EStyle = Au.Controls.SciTheme.EStyle;
 
 static class RegexParser {
 	public record struct RXSpan(int start, int end, EStyle token);

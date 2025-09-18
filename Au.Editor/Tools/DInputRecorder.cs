@@ -40,9 +40,9 @@ class DInputRecorder : KDialogWindow {
 	ScrollViewer _scroller;
 	TextBox _tSpeed;
 	
-	const string c_iconPause = "*Material.PauseCircleOutline" + Menus.blue,
-		c_iconRetry = "*BoxIcons.RegularReset" + Menus.red,
-		c_iconUndo = Menus.iconUndo;
+	const string c_iconPause = "*Material.PauseCircleOutline" + EdIcons.blue,
+		c_iconRetry = "*BoxIcons.RegularReset" + EdIcons.red,
+		c_iconUndo = EdIcons.Undo;
 	
 	const int c_xyControl = 1, c_xyScreen = 2;
 	
@@ -997,7 +997,7 @@ class DInputRecorder : KDialogWindow {
 #else
 			//InsertCode.Statements(s); //flickers
 			//timer.after(100, _ => InsertCode.Statements(s));
-			Dispatcher.InvokeAsync(() => InsertCode.Statements(s), DispatcherPriority.ApplicationIdle); //35 ms
+			Dispatcher.InvokeAsync(() => InsertCode.Statements(new(s)), DispatcherPriority.ApplicationIdle); //35 ms
 #endif
 		}
 	}

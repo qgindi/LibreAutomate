@@ -645,11 +645,11 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	
 	public static string GetFileTypeImageSource(FNType ft, bool openFolder = false)
 		=> ft switch {
-			FNType.Script => App.Settings.icons.ft_script ?? EdResources.c_iconScript,
-			FNType.Class => App.Settings.icons.ft_class ?? EdResources.c_iconClass,
+			FNType.Script => App.Settings.icons.ft_script ?? EdIcons.Script,
+			FNType.Class => App.Settings.icons.ft_class ?? EdIcons.Class,
 			FNType.Folder => openFolder
-				? App.Settings.icons.ft_folderOpen ?? EdResources.c_iconFolderOpen
-				: App.Settings.icons.ft_folder ?? EdResources.c_iconFolder,
+				? App.Settings.icons.ft_folderOpen ?? EdIcons.FolderOpen
+				: App.Settings.icons.ft_folder ?? EdIcons.Folder,
 			_ => null
 		};
 	

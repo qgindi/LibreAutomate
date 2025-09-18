@@ -4,27 +4,16 @@ using System.Windows;
 using System.Windows.Controls;
 
 static class Menus {
-	public const string
-		black = " #505050|#EEEEEE",
-		blue = " #4080FF|#99CCFF",
-		//darkBlue = " #5060FF|#7080FF",
-		//lightBlue = " #B0C0FF|#D0E0FF",
-		green = " #99BF00|#A7D000",
-		green2 = " #40B000|#4FD200",
-		brown = " #9F5300|#EEEEEE",
-		purple = " #A040FF|#D595FF",
-		darkYellow = " #EABB00",
-		orange = " #FFA500",
-		red = " #FF4040|#FF9595"
-		;
-	public const string
-		iconBack = "*EvaIcons.ArrowBack" + black,
-		iconTrigger = "*Codicons.SymbolEvent" + blue,
-		iconIcons = "*FontAwesome.IconsSolid" + blue,
-		iconUndo = "*Ionicons.UndoiOS" + brown,
-		iconPaste = "*Material.ContentPaste" + brown,
-		iconReferences = "*Material.MapMarkerMultiple" + blue,
-		iconRegex = "*FileIcons.Regex @12" + blue
+	const string
+		black = EdIcons.black,
+		blue = EdIcons.blue,
+		green = EdIcons.green,
+		green2 = EdIcons.green2,
+		brown = EdIcons.brown,
+		purple = EdIcons.purple,
+		darkYellow = EdIcons.darkYellow,
+		orange = EdIcons.orange,
+		red = EdIcons.red
 		;
 	
 	[Command(target = "Files")]
@@ -33,16 +22,16 @@ static class Menus {
 		public static class New {
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 			
-			[Command('s', keys = "Ctrl+N", image = EdResources.c_iconScript, tooltip = "A script is a C# code file that can be executed like a program.")]
+			[Command('s', keys = "Ctrl+N", image = EdIcons.Script, tooltip = "A script is a C# code file that can be executed like a program.")]
 			public static void New_script() { _New("Script.cs"); }
 			
-			[Command('c', image = EdResources.c_iconClass, tooltip = "Class files contain C# classes/functions that can be used in other C# files.")]
+			[Command('c', image = EdIcons.Class, tooltip = "Class files contain C# classes/functions that can be used in other C# files.")]
 			public static void New_class() { _New("Class.cs"); }
 			
 			[Command('t', image = "*FeatherIcons.FileText" + black, tooltip = "Text files contain any text except C# code.\nTo change the file type, edit the \"txt\" in the filename.")]
 			public static void New_text_file() { _New("File.txt"); }
 			
-			[Command('f', image = EdResources.c_iconFolder)]
+			[Command('f', image = EdIcons.Folder)]
 			public static void New_folder() { _New(null); }
 			
 			static void _Init(KMenuCommands mc, KMenuCommands.Command c) {
@@ -218,7 +207,7 @@ static class Menus {
 			[Command(keys = "Ctrl+C", image = "*Material.ContentCopy" + brown)]
 			public static void Copy() { Panels.Editor.ActiveDoc.ECopy(); }
 			
-			[Command(keys = "Ctrl+V", image = iconPaste)]
+			[Command(keys = "Ctrl+V", image = EdIcons.Paste)]
 			public static void Paste() { Panels.Editor.ActiveDoc.EPaste(); }
 			
 			[Command(image = "*Material.ForumOutline" + brown, text = "Copy _forum code", separator = true)]
@@ -242,7 +231,7 @@ static class Menus {
 		
 		[Command("Undo")]
 		public static class UndoRedo {
-			[Command(keys = "Ctrl+Z", image = iconUndo)]
+			[Command(keys = "Ctrl+Z", image = EdIcons.Undo)]
 			public static void Undo() { SciUndo.OfWorkspace.UndoRedo(false); }
 			
 			[Command(keys = "Ctrl+Y", image = "*Ionicons.RedoiOS" + brown)]
@@ -263,7 +252,7 @@ static class Menus {
 			[Command("...", keys = "Ctrl+T", image = "*FontAwesome.SearchLocationSolid" + blue)]
 			public static void Find_symbol() { CiFindGo.ShowSingle(); }
 			
-			[Command(keys = "Shift+F12", image = iconReferences, separator = true)]
+			[Command(keys = "Shift+F12", image = EdIcons.References, separator = true)]
 			public static void Find_references() { CiFind.FindReferencesOrImplementations(false); }
 			
 			[Command(image = "*Material.InformationVariant" + blue)]
@@ -333,7 +322,7 @@ More info in app help topic "Code editor".
 			[Command(image = "*JamIcons.ArrowSquareDown" + black, keys = "Alt+Down", noIndirectDisable = true)]
 			public static void Next_bookmark() { Panels.Bookmarks.NextBookmark(false); }
 			
-			[Command(keys = "Alt+Left", target = "", image = iconBack, separator = true, noIndirectDisable = true)]
+			[Command(keys = "Alt+Left", target = "", image = EdIcons.Back, separator = true, noIndirectDisable = true)]
 			public static void Go_back() { App.Model.EditGoBack.GoBack(); }
 			
 			[Command(keys = "Alt+Right", target = "", image = "*EvaIcons.ArrowForward" + black, noIndirectDisable = true)]
@@ -443,16 +432,16 @@ More info in app help topic "Code editor".
 		public static void Input_recorder() { DInputRecorder.ShowRecorder(); }
 		
 		[Command("Find _window", image = "*BoxIcons.SolidWindowAlt" + blue)]
-		public static void wnd() { Dwnd.Dialog(); }
+		public static void wnd() { ToolProcess.StartDwnd(); }
 		
 		[Command("Find UI _element", image = "*Material.CheckBoxOutline @15" + blue)]
-		public static void elm() { Delm.Dialog(); }
+		public static void elm() { ToolProcess.StartDelm(); }
 		
 		[Command("Find _image", image = "*Material.ImageSearchOutline" + blue)]
-		public static void uiimage() { Duiimage.Dialog(); }
+		public static void uiimage() { ToolProcess.StartDuiimage(); }
 		
 		[Command("Find _OCR text", image = "*Material.Ocr" + blue)]
-		public static void ocr() { Docr.Dialog(); }
+		public static void ocr() { ToolProcess.StartDocr(); }
 		
 		[Command(image = "*Material.FolderOutline" + blue)]
 		public static void Get_files_in_folder() { DEnumDir.Dialog(); }
@@ -460,7 +449,7 @@ More info in app help topic "Code editor".
 		[Command(keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline" + blue)]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 		
-		[Command(underlined: 'x', image = iconRegex, keysText = "Ctrl+Space in string")]
+		[Command(underlined: 'x', image = EdIcons.Regex, keysText = "Ctrl+Space in string")]
 		public static void Regex() { CiTools.CmdShowRegexWindow(); }
 		
 		[Command(image = "*MaterialDesign.ColorLens" + blue)]
@@ -487,7 +476,7 @@ More info in app help topic "Code editor".
 		[Command]
 		public static void Window_triggers() { TriggersAndToolbars.Edit(@"Triggers\Window triggers.cs"); }
 		
-		[Command("...", image = iconTrigger)]
+		[Command("...", image = EdIcons.Trigger)]
 		public static void New_trigger() { TriggersAndToolbars.NewTrigger(); }
 		
 		//rejected. It's in the quick capturing menu.
@@ -595,7 +584,7 @@ More info in app help topic "Code editor".
 		[Command(image = "*PicolIcons.Settings" + green)]
 		public static void Options() { DOptions.AaShow(); }
 		
-		[Command(image = iconIcons)]
+		[Command(image = EdIcons.Icons)]
 		public static void Icons() { DIcons.ShowSingle(); }
 		
 		[Command(tooltip = "Clear icon caches")]

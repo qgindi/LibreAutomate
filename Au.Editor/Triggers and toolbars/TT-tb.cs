@@ -341,7 +341,7 @@ Please edit window name strings in the toolbar trigger code.
 	void _AddTrigger(_Toolbar t, string s, int pos) {
 		if (pos < 0) pos = _FindToolbarTriggersFunction(t).node.Body.CloseBraceToken.SpanStart;
 		if (null == _OpenSourceFile(t.fn, pos)) return;
-		InsertCode.Statements(s, ICSFlags.SelectNewCode);
+		InsertCode.Statements(new(s, selectNewCode: true));
 	}
 	
 	static void _EditTrigger(_Trigger t) {

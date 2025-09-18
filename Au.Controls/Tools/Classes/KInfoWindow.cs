@@ -9,13 +9,13 @@ namespace Au.Tools;
 /// You can set text, resize and show/hide/dispose it many times.
 /// User can middle-click to hide.
 /// </summary>
-class InfoWindow : KPopup {
+public class KInfoWindow : KPopup {
 	DockPanel _panel;
 	_InfoBox _c, _c2;
 
 	/// <param name="split">If not 0, sets <b>Control1.Width</b>=<i>split</i> and adds <b>Control2</b>.</param>
 	/// <param name="caption">With caption.</param>
-	public InfoWindow(int split, bool caption = true) : base(caption ? WS.THICKFRAME | WS.POPUP | WS.CAPTION | WS.SYSMENU : WS.THICKFRAME | WS.POPUP) {
+	public KInfoWindow(int split, bool caption = true) : base(caption ? WS.THICKFRAME | WS.POPUP | WS.CAPTION | WS.SYSMENU : WS.THICKFRAME | WS.POPUP) {
 		Content = _panel = new();
 		_panel.Children.Add(_c = new());
 		if (split > 0) {
@@ -57,9 +57,6 @@ class InfoWindow : KPopup {
 	public FrameworkElement InsertInControl { get; set; }
 
 	class _InfoBox : KSciInfoBox {
-		//InfoWindow _t;
-
-		//public _Control(InfoWindow t) {
 		public _InfoBox() {
 			//_t = t;
 			this.AaInitUseSystemFont = true;

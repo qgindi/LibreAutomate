@@ -139,7 +139,7 @@ partial class MainWindow : Window {
 		if (App.Loaded == AppState.LoadedUI) {
 			App.Model.Save.AllNowIfNeed();
 			Panels.PanelManager.Save();
-			Au.Tools.TUtil.CloseDialogsInNonmainThreads(); //let they save rects etc
+			Au.Tools.TUtil2.CloseDialogsInNonmainThreads(); //let they save rects etc
 		}
 		
 		EditorExtension.ClosingWorkspace_(onExit: true); //must be called before closing documents

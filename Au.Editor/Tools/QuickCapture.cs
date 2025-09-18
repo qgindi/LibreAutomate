@@ -30,12 +30,12 @@ static class QuickCapture {
 		m.Submenu("Find+", m => {
 			m["Find and activate"] = _ => _Insert(_Wnd_Find(w, activate: true));
 			m["Find or run"] = _ => {
-				var k = TUtil.PathInfo.FromWindow(w);
-				if (k != null) _Insert(_Wnd_Find(w, activate: true, orRun: k.FormatCode(TUtil.PathCode.Run)));
+				var k = PathInfo.FromWindow(w);
+				if (k != null) _Insert(_Wnd_Find(w, activate: true, orRun: k.FormatCode(PathCode.Run)));
 			};
 			m["Run and find"] = _ => {
-				var k = TUtil.PathInfo.FromWindow(w);
-				if (k != null) _Insert(_Wnd_Find(w, activate: true, andRun: k.FormatCode(TUtil.PathCode.Run)));
+				var k = PathInfo.FromWindow(w);
+				if (k != null) _Insert(_Wnd_Find(w, activate: true, andRun: k.FormatCode(PathCode.Run)));
 			};
 			m["wndFinder"] = _ => _Insert("var f = new wndFinder(" + TUtil.ArgsFromWndFindCode(_Wnd_Find(w)) + ");");
 			m["Find control"] = _ => _Insert(_Wnd_Find(w, c));
@@ -65,9 +65,9 @@ static class QuickCapture {
 			//2. `#region ... #endregion`. With regions can find scopes in the Outline panel.
 		});
 		m.Submenu("Program", m => {
-			var k = TUtil.PathInfo.FromWindow(w);
+			var k = PathInfo.FromWindow(w);
 			if (k != null) {
-				TUtil.PathInfo.QuickCaptureMenu(m, o => _Insert(k.FormatCode(o)));
+				PathInfo.QuickCaptureMenu(m, o => _Insert(k.FormatCode(o)));
 				m.Separator();
 				m["Copy path"] = _ => clipboard.text = k.fileRaw;
 				m["Copy @\"path\""] = _ => clipboard.text = k.fileString;
@@ -116,18 +116,18 @@ static class QuickCapture {
 
 	static void _Insert(string s) {
 		//print.it(s);
-		InsertCode.Statements(s, ICSFlags.MakeVarName1);
+		InsertCode.Statements(new(s, makeVarName1: true));
 	}
 
 	public static void AoolDwnd() {
-		Dwnd.Dialog(wnd.fromMouse());
+		ToolProcess.StartDwnd(wnd.fromMouse());
 	}
 
 	public static void ToolDelm() {
-		Delm.Dialog(mouse.xy);
+		ToolProcess.StartDelm(mouse.xy);
 	}
 
 	public static void ToolDuiimage() {
-		Duiimage.Dialog(wnd.fromMouse(WXYFlags.NeedWindow));
+		ToolProcess.StartDuiimage(wnd.fromMouse(WXYFlags.NeedWindow));
 	}
 }

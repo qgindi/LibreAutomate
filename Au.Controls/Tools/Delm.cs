@@ -1,7 +1,11 @@
+using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
-using Au.Controls;
 using System.Windows.Input;
+using System.Runtime.Loader;
+using System.ComponentModel;
+
+namespace Au.Tools;
 
 //TODO: normal acc capturing does not work for links in Chrome and Edge, and for everything in Brave. UIA OK. Alternative capturing OK (toggle with Shift+F3).
 
@@ -28,12 +32,7 @@ using System.Windows.Input;
 
 //CONSIDER: action "screenshot".
 
-namespace Au.Tools;
-
 class Delm : KDialogWindow {
-	public static void Dialog(POINT? p = null)
-		=> TUtil.ShowDialogInNonmainThread(() => new Delm(p));
-	
 	elm _elm;
 	wnd _wnd, _con;
 	bool _useCon;
@@ -125,26 +124,26 @@ class Delm : KDialogWindow {
 		b.R.StartGrid().Columns(76, 76, 130, 0, 70, -1);
 		//row 1
 		b.R.StartStack();
-		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + Menus.red, $"Enable capturing (hotkey {App.Settings.delm.hk_capture}, and {App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
-		b.xAddCheckIcon(out _cAutoTestAction, "*Material.CursorDefaultClickOutline" + Menus.red, "Auto test action when captured.\r\nIf no action selected, will show menu.");
-		b.xAddCheckIcon(out _cAutoInsert, "*VaadinIcons.Insert" + Menus.brown, "Auto insert code when captured");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + EdIcons.red, $"Enable capturing (hotkey {Editor.Settings.delm.hk_capture}, and {Editor.Settings.delm.hk_insert} to insert) and show UI element rectangles");
+		b.xAddCheckIcon(out _cAutoTestAction, "*Material.CursorDefaultClickOutline" + EdIcons.red, "Auto test action when captured.\r\nIf no action selected, will show menu.");
+		b.xAddCheckIcon(out _cAutoInsert, "*VaadinIcons.Insert" + EdIcons.brown, "Auto insert code when captured");
 		b.AddSeparator(true);
-		b.xAddButtonIcon(Menus.iconUndo, _ => App.Dispatcher.InvokeAsync(() => SciUndo.OfWorkspace.UndoRedo(false)), "Undo in editor");
-		b.xAddButtonIcon("*Material.SquareEditOutline" + Menus.blue, _ => App.Hmain.ActivateL(true), "Activate editor window");
-		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular" + Menus.blue, _ => _wnd.ActivateL(true), "Activate captured window");
+		//b.xAddButtonIcon(EdIcons.iconUndo, _ => App.Dispatcher.InvokeAsync(() => SciUndo.OfWorkspace.UndoRedo(false)), "Undo in editor");
+		//b.xAddButtonIcon("*Material.SquareEditOutline" + EdIcons.blue, _ => App.Hmain.ActivateL(true), "Activate editor window");
+		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular" + EdIcons.blue, _ => _wnd.ActivateL(true), "Activate captured window");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + Menus.black, _ => _Test(testAction: true), "Test action");
-		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + Menus.blue, _ => _Test(testAction: true, actWin: true), "Activate window and test action");
+		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + EdIcons.black, _ => _Test(testAction: true), "Test action");
+		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + EdIcons.blue, _ => _Test(testAction: true, actWin: true), "Activate window and test action");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _ => _ToolSettings(), "Tool settings");
+		b.xAddButtonIcon("*EvaIcons.Options2" + EdIcons.green, _ => _ToolSettings(), "Tool settings");
 		b.AddSeparator(true);
-		b.Add(out _cUIA, "UIA").Checked(App.Settings.delm.def_UIA, threeState: true).Tooltip("What API to use to capture UI elements:\nChecked - UI Automation\nUnchecked - MSAA\nIndeterminate - auto");
+		b.Add(out _cUIA, "UIA").Checked(Editor.Settings.delm.def_UIA, threeState: true).Tooltip("What API to use to capture UI elements:\nChecked - UI Automation\nUnchecked - MSAA\nIndeterminate - auto");
 		
 		b.End();
 		//row 2
 		b.R.AddButton(out _bTest, "Test", _ => _Test()).Tooltip("Execute the 'find' part of the code now and show the rectangle.\r\nRight-click for more options.");
 		_bTest.ContextMenuOpening += _bTest_ContextMenuOpening;
-		b.AddButton(out _bInsert, "Insert", _ => _Insert(hotkey: false)).Tooltip($"Insert code in editor.\nHotkey {App.Settings.delm.hk_insert} (while capturing).");
+		b.AddButton(out _bInsert, "Insert", _ => _Insert(hotkey: false)).Tooltip($"Insert code in editor.\nHotkey {Editor.Settings.delm.hk_insert} (while capturing).");
 		b.Add(out _cbAction).Tooltip("Action. Call this function when found. Or instead of Find call FindAll or create new elmFinder.");
 		_xy = b.xAddCheckText("x, y", noR: true, check: _Opt.Has(_EOptions.MouseXY)); b.Span(1).Height(18); _xy.t.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
 		b.Add(out _cScroll, "Scroll").Checked(_Opt.Has(_EOptions.MouseScroll));
@@ -152,7 +151,7 @@ class Delm : KDialogWindow {
 		b.R.StartStack();
 		b.AddButton(out _bWindow, "Window...", _bWnd_Click).Width(70);
 		b.xAddCheck(out _cControl, "Control").Margin("R30");
-		_wait = b.xAddCheckText("Wait", App.Settings.delm.def_wait ?? "1", check: !_Opt.Has(_EOptions.NoWait)); b.Width(48);
+		_wait = b.xAddCheckText("Wait", Editor.Settings.delm.def_wait ?? "1", check: !_Opt.Has(_EOptions.NoWait)); b.Width(48);
 		b.xAddCheck(out _cException, "Fail if not found").Checked();
 		b.End();
 		
@@ -183,7 +182,7 @@ class Delm : KDialogWindow {
 			showActivated: _elm != null ? false : null //eg if captured a popup menu item, activating this window closes the menu and we cannot get properties
 			);
 		
-		WndSavedRect.Restore(this, App.Settings.wndpos.elm, o => App.Settings.wndpos.elm = o);
+		WndSavedRect.Restore(this, Editor.Settings.wndpos.elm, o => Editor.Settings.wndpos.elm = o);
 	}
 	
 	static Delm() {
@@ -614,7 +613,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	TUtil.CapturingWithHotkey _capt;
 	
 	void _InitCapturingWithHotkey() {
-		_capt = new TUtil.CapturingWithHotkey(_cCapture, _GetRect, (App.Settings.delm.hk_capture, _Capture), (App.Settings.delm.hk_insert, () => _Insert(hotkey: true)), (App.Settings.delm.hk_smaller, _CaptureSmallerToggle));
+		_capt = new TUtil.CapturingWithHotkey(_cCapture, _GetRect, (Editor.Settings.delm.hk_capture, _Capture), (Editor.Settings.delm.hk_insert, () => _Insert(hotkey: true)), (Editor.Settings.delm.hk_smaller, _CaptureSmallerToggle));
 		_cCapture.IsChecked = true;
 		
 		(RECT? r, string s) _GetRect(POINT p) { //timer every ~250 ms while capturing
@@ -960,7 +959,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				if (s.RxMatch(@"(?m)^var e = w\.Elm\[""(?:[a-z]+:)?([a-zA-Z][\w ]+\w)""", out var m)) rename_e = [("e", m[1].Value.Lower().Replace(' ', '_'))];
 			}
 			
-			InsertCode.Statements(s, ICSFlags.MakeVarName1, renameVars: rename_e);
+			Editor.InsertStatements(new(s, makeVarName1: true, renameVars: rename_e));
 			if (!hotkey) {
 				_close = true;
 				_bInsert.Content = "Close";
@@ -1321,7 +1320,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
 		
-		object ITreeViewItem.Image => _IsFolder ? EdResources.FolderArrow(_isExpanded) : null;
+		object ITreeViewItem.Image => _IsFolder ? EdIcons.FolderArrow(_isExpanded) : null;
 		
 		int ITreeViewItem.TextColor(TVColorInfo ci)
 			=> _isFailed ? 0xff0000
@@ -1530,7 +1529,7 @@ new elmFinder || 5
 		}
 		
 		_testedAction = _aActions[0];
-		_ActionChange(_ActionFind(App.Settings.delm.def_action));
+		_ActionChange(_ActionFind(Editor.Settings.delm.def_action));
 	}
 	
 	void _ActionChange(_Action action) {
@@ -1586,7 +1585,7 @@ new elmFinder || 5
 					if (test && ReferenceEquals(action, _testedAction)) _FormatCode();
 				} else if (s1.Starts('?')) {
 					if (s1 == "?table") {
-						Panels.Cookbook.OpenRecipe("Extract table*UI*");
+						Editor.OpenCookbookRecipe("Extract table*UI*");
 						action = _ActionFind("FindAll, table");
 					}
 				}
@@ -1682,16 +1681,16 @@ new elmFinder || 5
 		//var cCC = m.AddCheck("Compact code", _Opt.Has(_EOptions.Compact)); cNS.Tooltip = "Insert code without { } and don't use elm e with action";
 		m.Separator();
 		m.Add("Save action", _ => {
-			App.Settings.delm.def_action = _selectedAction.name;
+			Editor.Settings.delm.def_action = _selectedAction.name;
 			_SetOpt(_EOptions.MouseXY, _xy.c.IsChecked);
 			_SetOpt(_EOptions.MouseScroll, _cScroll.IsChecked);
 		}).Tooltip = "Let the tool start with current action and its settings";
 		m.Add("Save wait", _ => {
-			App.Settings.delm.def_wait = _wait.t.Text;
+			Editor.Settings.delm.def_wait = _wait.t.Text;
 			_SetOpt(_EOptions.NoWait, !_wait.c.IsChecked);
 		}).Tooltip = "Let the tool start with current wait settings";
 		m.Add("Save UIA", _ => {
-			App.Settings.delm.def_UIA = _cUIA.IsChecked;
+			Editor.Settings.delm.def_UIA = _cUIA.IsChecked;
 		}).Tooltip = "Let the tool start with current UIA checkbox state";
 		//if (Java.GetJavaPath(out _)) { //moved to Options -> OS. It isn't a tool setting.
 		//	m.Separator();
@@ -1718,8 +1717,8 @@ new elmFinder || 5
 	}
 	
 	static _EOptions _Opt {
-		get => (_EOptions)App.Settings.delm.flags;
-		set => App.Settings.delm.flags = (int)value;
+		get => (_EOptions)Editor.Settings.delm.flags;
+		set => Editor.Settings.delm.flags = (int)value;
 	}
 	
 	static bool _SetOpt(_EOptions opt, bool on) {
@@ -2115,7 +2114,7 @@ If unchecked, returns null.");
 	}
 	
 	string _dialogInfo = $@"This tool creates code to find <help elm>UI element<> in <help wnd.find>window<>.
-1. Move the mouse to a UI element. Press <+hotkey>hotkey<> <b>{App.Settings.delm.hk_capture}<>.
+1. Move the mouse to a UI element. Press <+hotkey>hotkey<> <b>{Editor.Settings.delm.hk_capture}<>.
 2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields or select another element.
 4. Click Insert. Click Close, or capture/insert again.
@@ -2123,7 +2122,7 @@ If unchecked, returns null.");
 
 How to find UI elements that don't have a name or other property with unique constant value? Capture another UI element near it, and use <b>navig<> to get it. Or try <b>skip<>. Or path.
 
-If the wanted element is ""behind"" a bigger element, try <+hotkey>hotkey<> <b>{App.Settings.delm.hk_smaller}<>.";
+If the wanted element is ""behind"" a bigger element, try <+hotkey>hotkey<> <b>{Editor.Settings.delm.hk_smaller}<>.";
 	
 	const string c_infoJava = "If there are no UI elements in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help>elm<> help.";
 	

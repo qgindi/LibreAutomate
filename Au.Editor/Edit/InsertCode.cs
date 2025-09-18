@@ -14,25 +14,7 @@ using acc = Microsoft.CodeAnalysis.Accessibility;
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
-
-/// <summary>Flags for <see cref="InsertCode.Statements"/>.</summary>
-[Flags]
-enum ICSFlags {
-	/// <summary>If text contains <c>`|`</c>, remove it and finally move caret there.</summary>
-	GoTo = 1,
-	
-	/// <summary>Activate editor window.</summary>
-	ActivateEditor = 4,
-	
-	/// <summary>Don't focus the editor control. Without this flag focuses it if window is active or activated.</summary>
-	NoFocus = 8,
-	
-	GoToStart = 16,
-	
-	SelectNewCode = 32,
-	
-	MakeVarName1 = 64,
-}
+using Au.Tools;
 
 /// <summary>
 /// Inserts various code in code editor. With correct indent etc.
@@ -41,21 +23,20 @@ enum ICSFlags {
 static class InsertCode {
 	/// <summary>
 	/// Inserts one or more statements at current line. With correct position, indent, etc.
-	/// If editor is null or readonly, prints in output.
+	/// If editor is null or readonly or not C# file, prints in output.
 	/// Async if called from non-main thread.
 	/// </summary>
-	/// <param name="s">Text. The function ignores "\r\n" at the end. Does nothing if null.</param>
-	/// <param name="separate">Prepend/append empty line to separate from surrounding code if need. If null, does it if <i>s</i> contains '\n'.</param>
-	/// <param name="renameVars">Variable names to rename in s.</param>
-	public static void Statements(string s, ICSFlags flags = 0, bool? separate = null, (string oldName, string newName)[] renameVars = null) {
-		if (s == null) return;
-		bool sep = separate ?? s.Contains('\n');
+	public static void Statements(InsertCodeParams p) {
+		if (p.s == null) return;
 		
-		if (App.IsMainThread) _Statements(s, flags, sep, renameVars);
-		else App.Dispatcher.InvokeAsync(() => _Statements(s, flags, sep, renameVars));
-	}
-	
-	static void _Statements(string s, ICSFlags flags, bool separate, (string oldName, string newName)[] renameVars) {
+		if (!App.IsMainThread) {
+			App.Dispatcher.InvokeAsync(() => Statements(p));
+			return;
+		}
+		
+		string s = p.s;
+		bool separate = s.Contains('\n');
+		
 		if (!App.Hmain.IsVisible) App.ShowWindow();
 		if (!CodeInfo.GetContextAndDocument(out var k, metaToo: true)) {
 			print.it(s);
@@ -141,7 +122,7 @@ static class InsertCode {
 		
 		//rename symbols in s if need
 		
-		try { Util.RenameNewSymbols(ref s, k, node, pos, flags.Has(ICSFlags.MakeVarName1), renameVars); }
+		try { Util.RenameNewSymbols(ref s, k, node, pos, p.makeVarName1, p.renameVars); }
 		catch (Exception e1) { Debug_.Print(e1); }
 		
 		//indent, newlines
@@ -177,7 +158,7 @@ static class InsertCode {
 		//insert
 		
 		int go = -1;
-		if (flags.Has(ICSFlags.GoTo)) {
+		if (p.goTo) {
 			go = s.Find("`|`");
 			if (go >= 0) s = s.Remove(go, 3);
 		}
@@ -187,13 +168,13 @@ static class InsertCode {
 			d.aaaReplaceSel(s);
 			
 			if (go >= 0) d.aaaGoToPos(true, pos + go);
-			else if (flags.Has(ICSFlags.SelectNewCode)) d.aaaSelect(true, pos + s.TrimEnd('\t').Length, pos, true);
-			else if (flags.Has(ICSFlags.GoToStart)) d.aaaGoToPos(true, pos);
+			else if (p.selectNewCode) d.aaaSelect(true, pos + s.TrimEnd('\t').Length, pos, true);
+			//else if (p.goToStart)) d.aaaGoToPos(true, pos);
 		}
 		
 		var w = d.AaWnd.Window;
-		if (flags.Has(ICSFlags.ActivateEditor)) w.ActivateL();
-		if (!flags.Has(ICSFlags.NoFocus) && w.IsActive) d.Focus();
+		if (p.activateEditor) w.ActivateL();
+		if (!p.noFocus && w.IsActive) d.Focus();
 	}
 	
 	/// <summary>
@@ -205,50 +186,7 @@ static class InsertCode {
 		Debug.Assert(App.IsMainThread);
 		var d = Panels.Editor.ActiveDoc;
 		if (d == null || d.aaaIsReadonly) return;
-		TextSimplyInControl(d, s);
-	}
-	
-	/// <summary>
-	/// Inserts text in specified or focused control.
-	/// At current position, not as new line, replaces selection.
-	/// </summary>
-	/// <param name="c">If null, uses the focused control, else sets focus.</param>
-	/// <param name="s">If contains <c>`|`</c>, removes it and moves caret there; must be single line.</param>
-	public static void TextSimplyInControl(FrameworkElement c, string s) {
-		if (c == null) {
-			c = App.FocusedElement;
-			if (c == null) return;
-		} else {
-			Debug.Assert(Environment.CurrentManagedThreadId == c.Dispatcher.Thread.ManagedThreadId);
-			if (c != App.FocusedElement) //be careful with HwndHost
-				c.Focus();
-		}
-		
-		int i = s.Find("`|`");
-		if (i >= 0) {
-			Debug.Assert(!s.Contains('\n'));
-			s = s.Remove(i, 3);
-			i = s.Length - i;
-		}
-		
-		if (c is KScintilla sci) {
-			if (sci.aaaIsReadonly) return;
-			sci.aaaReplaceSel(s);
-			while (i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
-		} else if (c is TextBox tb) {
-			if (tb.IsReadOnly) return;
-			tb.SelectedText = s;
-			tb.CaretIndex = tb.SelectionStart + tb.SelectionLength - Math.Max(i, 0);
-		} else {
-			Debug_.Print(c);
-			if (!c.Hwnd().Window.ActivateL()) return;
-			Task.Run(() => {
-				var k = new keys(null);
-				k.AddText(s);
-				if (i > 0) k.AddKey(KKey.Left).AddRepeat(i);
-				k.SendNow();
-			});
-		}
+		KUtil.InsertTextIn(d, s);
 	}
 	
 	/// <summary>

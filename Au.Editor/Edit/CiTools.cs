@@ -1,4 +1,5 @@
 using Au.Tools;
+using Au.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,13 +19,13 @@ class CiTools {
 	
 	#region regex
 	
-	RegexWindow _regexWindow;
+	KRegexWindow _regexWindow;
 	string _regexTopic;
 	
 	void _RegexWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, bool replace, wnd dontCover = default) {
 		var (spanStart, spanEnd) = si.textSpan;
 		
-		_regexWindow ??= new RegexWindow();
+		_regexWindow ??= new();
 		_ShowWindow(_regexWindow, doc, pos16, dontCover);
 		
 		if (!replace && si.isClassic) {
@@ -59,7 +60,7 @@ class CiTools {
 	
 	#endregion
 	
-	static void _ShowWindow(InfoWindow w, SciCode doc, int position, wnd dontCover) {
+	static void _ShowWindow(KInfoWindow w, SciCode doc, int position, wnd dontCover) {
 		if (w.IsVisible) w.Hwnd.ZorderTop();
 		var r = doc.EGetCaretRectFromPos(position, inScreen: true);
 		r.left -= Dpi.Scale(80, doc);
@@ -102,7 +103,7 @@ class CiTools {
 				if (good1 && good2) s = "\"`|`\""; else if (good1) s = "\"`|`\", "; else if (good2) s = ", \"`|`\""; else s = ", \"`|`\", ";
 				InsertCode.TextSimply(s);
 			} else {
-				InsertCode.Statements("keys.send(\"`|`\");", ICSFlags.GoTo);
+				InsertCode.Statements(new("keys.send(\"`|`\");", goTo: true));
 			}
 			retry = true;
 			goto g1;

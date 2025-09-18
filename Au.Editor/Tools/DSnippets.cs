@@ -19,6 +19,7 @@ using Au.Controls;
 using System.Xml.Linq;
 using System.Windows.Documents;
 using System.Text.Json.Nodes;
+using Au.Tools;
 
 class DSnippets : KDialogWindow {
 	/// <param name="openSnippet">Open this snippet. Must be <c>"snippetName|fileName.ext"</c>.</param>
@@ -574,11 +575,11 @@ class DSnippets : KDialogWindow {
 		string ITreeViewItem.DisplayText => text;
 		
 		object ITreeViewItem.Image => Level switch {
-			0 => "*Modern.PageXml" + Menus.black,
-			1 => IsFolder ? s_snippetMenuIcon : "*Codicons.SymbolSnippet" + Menus.blue,
-			_ => "*Material.Asterisk @12" + Menus.blue,
+			0 => "*Modern.PageXml" + EdIcons.black,
+			1 => IsFolder ? s_snippetMenuIcon : "*Codicons.SymbolSnippet" + EdIcons.blue,
+			_ => "*Material.Asterisk @12" + EdIcons.blue,
 		};
-		static string[] s_snippetMenuIcon = ["*Codicons.SymbolSnippet" + Menus.blue, "*Material.Asterisk @8" + Menus.blue];
+		static string[] s_snippetMenuIcon = ["*Codicons.SymbolSnippet" + EdIcons.blue, "*Material.Asterisk @8" + EdIcons.blue];
 		
 		TVCheck ITreeViewItem.CheckState => Level == 2 ? TVCheck.None : isChecked ? TVCheck.Checked : TVCheck.Unchecked;
 		

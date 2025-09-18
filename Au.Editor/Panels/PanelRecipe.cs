@@ -238,7 +238,7 @@ class PanelRecipe {
 				//aaaStyleFont(STYLE_DEFAULT, "Verdana", 9); //too wide
 				//aaaStyleFont(STYLE_DEFAULT, "Tahoma", 9); //good
 				//aaaStyleFont(STYLE_DEFAULT, "Calibri", 10.5); //perfect
-				CiStyling.TTheme.Default.ToScintilla(this, multiFont: true, fontName: App.Settings.font_recipeCode.name, fontSize: App.Settings.font_recipeCode.size);
+				SciTheme.Default.ToScintilla(this, multiFont: true, fontName: App.Settings.font_recipeCode.name, fontSize: App.Settings.font_recipeCode.size);
 			}
 			
 			//workaround for: the default font Calibri looks best, but need size 10.5 instead of normal 9, and it increases line height

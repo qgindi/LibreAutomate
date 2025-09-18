@@ -39,11 +39,6 @@ static class Pip {
 			}
 		}
 		
-#if DEBUG
-		print.qm2.use = !true;
-		//print.clear();
-#endif
-		
 		if (!script.TrySingle_(@"Global\Au.PiP-mutex")) {
 			if (!noActivate) {
 				var w = wnd.find("PiP session", "*.Window.*", process.thisExeName);

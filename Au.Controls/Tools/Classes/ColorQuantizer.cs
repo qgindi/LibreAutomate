@@ -1,6 +1,8 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 
+namespace Au.Tools;
+
 /// <summary>
 /// Reduces image color depth with better quality than GDI/GDI+. It makes image smaller.
 /// Uses color quantizer algorithm of Xiaolin Wu.

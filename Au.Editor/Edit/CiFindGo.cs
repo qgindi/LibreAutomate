@@ -48,8 +48,8 @@ Filters: t Type, m Member, n Namespace.
 		b.Add(out _cFuzzy, "Fuzzy");
 		_cFuzzy.CheckChanged += (_, _) => _timer1.After(200);
 		
-		b.xAddButtonIcon("*EvaIcons.Options2" + Menus.green, _Options, "Tool settings");
-		b.xAddCheckIcon(out _cKeepOpen, "*MaterialLight.Pin" + Menus.black, "Keep this window open");
+		b.xAddButtonIcon("*EvaIcons.Options2" + EdIcons.green, _Options, "Tool settings");
+		b.xAddCheckIcon(out _cKeepOpen, "*MaterialLight.Pin" + EdIcons.black, "Keep this window open");
 		
 		b.Row(-1).Add(out _tv);
 		_tv.CustomDraw = new _TvDraw();

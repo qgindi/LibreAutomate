@@ -50,7 +50,7 @@ class DNuget : KDialogWindow {
 		b.R.Add(wpfBuilder.formattedText($"<a href='https://www.nuget.org'>NuGet</a> package"), out _tPackage)
 			.Tooltip("Examples:\nPackageName (will get the latest version)\nPackageName --version 1.2.3\ndotnet add package PackageName --version 1.2.3 (copied from the package's web page)")
 			.Focus();
-		b.xAddButtonIcon(Menus.iconPaste, _ => { _tPackage.SelectAll(); _tPackage.Paste(); }, "Paste");
+		b.xAddButtonIcon(EdIcons.Paste, _ => { _tPackage.SelectAll(); _tPackage.Paste(); }, "Paste");
 		
 		b.R.StartGrid().Columns(76, 0, -1, 20, 0, -1);
 		
@@ -100,7 +100,7 @@ class DNuget : KDialogWindow {
 		b.End(); //group "Installed"
 		
 		b.R.Add(out _tStatus)
-			.xAddButtonIcon(out _bMenu, "*MaterialDesign.MoreHorizRound" + Menus.black, _ => _Menu(), "Menu")
+			.xAddButtonIcon(out _bMenu, "*MaterialDesign.MoreHorizRound" + EdIcons.black, _ => _Menu(), "Menu")
 			.xAddDialogHelpButtonAndF1("editor/NuGet");
 		
 		b.End();
@@ -1150,7 +1150,7 @@ class DNuget : KDialogWindow {
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
 		public bool IsFolder { get; }
 		string ITreeViewItem.DisplayText => Updates is null ? NameVersion : NameVersion + "  ->  " + Updates;
-		object ITreeViewItem.Image => IsFolder ? EdResources.FolderIcon(_isExpanded) : Icon;
+		object ITreeViewItem.Image => IsFolder ? EdIcons.FolderIcon(_isExpanded) : Icon;
 		
 		int ITreeViewItem.TextColor(TVColorInfo ci) {
 			if (Updates is string s) {

@@ -342,12 +342,12 @@ class CiFolding {
 	}
 	
 	public static void Fold(SciCode doc, List<SciFoldPoint> af) {
-		doc.aaaFoldingApply(af, SciCode.c_markerUnderline);
+		doc.aaaFoldingApply(af, SciTheme.Marker.Underline);
 		doc.ERestoreEditorData_();
 	}
 	
 	public static void InitFolding(SciCode doc) {
-		doc.aaaFoldingInit(SciCode.c_marginFold, SciCode.c_markerUnderline);
+		doc.aaaFoldingInit(SciTheme.Margin.Fold, SciTheme.Marker.Underline);
 	}
 	
 	[Flags]

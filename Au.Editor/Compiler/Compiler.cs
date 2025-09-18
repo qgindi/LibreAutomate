@@ -403,7 +403,7 @@ partial class Compiler {
 		return rflags;
 	}
 	
-	//Gets paths of used managed and unmanaged dlls (meta nuget, r, etc).
+	//Gets paths of used managed and unmanaged dlls (meta nuget, r, com, pr).
 	//Sets: _dr - managed dlls, _dn - other dlls. If compiling exeProgram, _dn also contains other files from nuget.
 	//	Full paths are in dictionary values. Keys contain filenames or nuget relative paths, and for callers almost not useful.
 	//Called when:
@@ -424,6 +424,11 @@ partial class Compiler {
 				var refs = m.References.Refs;
 				for (int k = m.References.DefaultRefCount; k < refs.Count; k++) {
 					if (refs[k].Properties.EmbedInteropTypes || MetaReferences.IsNuget(refs[k])) continue; //com or nuget
+					
+					if (m.References.NoCopyRefs is { } ncr && _meta.Role == MCRole.exeProgram) {
+						if(ncr.Contains(refs[k])) continue;
+					}
+					
 					var path = refs[k].FilePath;
 					_Add(ref dr, pathname.getName(path), path);
 					

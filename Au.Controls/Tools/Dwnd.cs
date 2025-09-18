@@ -1,6 +1,6 @@
+using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
-using Au.Controls;
 
 //FUTURE: add UI to format code 'w = w.Get.Right();' etc.
 //FUTURE: init from code string.
@@ -16,9 +16,6 @@ enum DwndFlags {
 }
 
 class Dwnd : KDialogWindow {
-	public static void Dialog(wnd w = default)
-		=> TUtil.ShowDialogInNonmainThread(() => new Dwnd(w));
-
 	wnd _wnd, _con;
 	bool _dontInsert, _noControl, _checkControl;
 	string _wndName;
@@ -47,7 +44,7 @@ class Dwnd : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize((500, 450..), (600, 430..)).Columns(-1);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
-		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + Menus.red, $"Enable capturing ({App.Settings.delm.hk_capture}) and show window/control rectangles");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + EdIcons.red, $"Enable capturing ({Editor.Settings.delm.hk_capture}) and show window/control rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Execute the 'find' part of the code now and show the rectangle");
 		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!_dontInsert) b.Tooltip("Insert code in editor");
 		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind|finder").Tooltip("Function").Width(90);
@@ -113,7 +110,7 @@ class Dwnd : KDialogWindow {
 			showActivated: _dontInsert || w.Is0 ? null : false //eg if captured a popup menu, activating this window closes the menu and we cannot get properties
 			);
 
-		WndSavedRect.Restore(this, App.Settings.wndpos.wnd, o => App.Settings.wndpos.wnd = o);
+		WndSavedRect.Restore(this, Editor.Settings.wndpos.wnd, o => Editor.Settings.wndpos.wnd = o);
 	}
 
 	static Dwnd() {
@@ -280,9 +277,7 @@ class Dwnd : KDialogWindow {
 		};
 
 		if (!forTest && iFunc is 1 or 2) {
-			var k = TUtil.PathInfo.FromWindow(_wnd);
-			if (k != null) {
-				var s1 = k.FormatCode(TUtil.PathCode.Run);
+			if (WndCopyData.SendReceive<char>(ScriptEditor.WndMsg_, 19, _wnd.Handle.ToS(), out string s1)) {
 				if (iFunc == 1) f.orRunW = s1; else f.andRunW = s1;
 			}
 		}
@@ -317,7 +312,7 @@ class Dwnd : KDialogWindow {
 		_capt ??= new TUtil.CapturingWithHotkey(
 			_cCapture,
 			p => (wnd.fromXY(p, _noControl ? WXYFlags.NeedWindow : 0).Rect, null),
-			(App.Settings.delm.hk_capture, _Capture)
+			(Editor.Settings.delm.hk_capture, _Capture)
 			);
 		_capt.Capturing = _cCapture.IsChecked;
 	}
@@ -377,7 +372,7 @@ class Dwnd : KDialogWindow {
 		} else if (_close) {
 			Close();
 		} else if (s != null) {
-			InsertCode.Statements(s, ICSFlags.MakeVarName1);
+			Editor.InsertStatements(new(s, makeVarName1: true));
 			_close = true;
 			_bInsert.Content = "Close";
 			_bInsert.MouseLeave += (_, _) => {
@@ -480,7 +475,7 @@ class Dwnd : KDialogWindow {
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
 
-		object ITreeViewItem.Image => _IsFolder ? EdResources.FolderArrow(_isExpanded) : null;
+		object ITreeViewItem.Image => _IsFolder ? EdIcons.FolderArrow(_isExpanded) : null;
 
 		int ITreeViewItem.TextColor(TVColorInfo ci)
 			=> _isFailed ? 0xff
@@ -680,7 +675,7 @@ For example, if 1, gets the second matching control.");
 
 	string _dialogInfo =
 $@"This tool creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
-1. Move the mouse to a window or control. Press <+hotkey>hotkey<> <b>{App.Settings.delm.hk_capture}<>.
+1. Move the mouse to a window or control. Press <+hotkey>hotkey<> <b>{Editor.Settings.delm.hk_capture}<>.
 2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields or select another window/control.
 4. Click Insert. Click Close, or capture/insert again.

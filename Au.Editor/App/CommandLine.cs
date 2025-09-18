@@ -41,6 +41,9 @@ static class CommandLine {
 			case "/dd":
 				UacDragDrop.NonAdminProcess.MainDD(args[1..]);
 				return true;
+			case "/tool":
+				Au.Tools.ToolProcess.Run(args[1..]);
+				return true;
 			}
 			
 			string argN = null; if (args is ["/n" or "-n", ..]) { argN = args[0]; args = args[1..]; }
@@ -313,6 +316,18 @@ static class CommandLine {
 		//	return WndCopyData.Return<char>(s, wparam);
 		case 14: //ScriptEditor.GetFileInfo
 			return _GetFileInfo(s) is byte[] r1 ? WndCopyData.Return<byte>(r1, wparam) : 0;
+		case 15: //get styling for tools
+			return WndCopyData.Return<byte>(CiUtil.GetScintillaStylingBytes8(s), wparam);
+		case 16:
+			return _GetCodeFileText(s, out var text1) ? WndCopyData.Return<char>(text1, wparam) : 0;
+		case 17:
+			InsertCode.Statements(System.Text.Json.JsonSerializer.Deserialize<Au.Tools.InsertCodeParams>(s));
+			return 1;
+		case 18:
+			Panels.Cookbook.OpenRecipe(s);
+			return 1;
+		case 19:
+			return Au.Tools.PathInfo.FromWindow((wnd)s.ToInt()) is {  } pathInfo ? WndCopyData.Return<char>(pathInfo.FormatCode(Au.Tools.PathCode.Run), wparam) : 0;
 		case 100: //script.run/runWait
 		case 101: //run script from command line
 		case 102: //script.runInPip
@@ -411,6 +426,12 @@ static class CommandLine {
 				return Serializer_.Serialize(f.ItemPath, text, (int)kind, (int)f.Id, f.FilePath, App.Model.WorkspaceDirectory);
 			}
 			return null;
+		}
+		
+		static bool _GetCodeFileText(string name, out string text) {
+			text = null;
+			var f = name.Eqi("global.cs") ? App.Model.FindGlobalCs() : App.Model.FindCodeFile(name);
+			return f?.GetCurrentText(out text) == true;
 		}
 	}
 	

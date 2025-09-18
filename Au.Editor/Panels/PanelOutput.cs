@@ -103,7 +103,7 @@ class PanelOutput {
 		}
 		
 		public void AaSetStyles() {
-			var t = CiStyling.TTheme.Default with {
+			var t = SciTheme.Default with {
 				FontName = App.Settings.font_output.name,
 				FontSize = App.Settings.font_output.size,
 				Background = 0xF7F7F7,

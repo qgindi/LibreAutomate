@@ -51,7 +51,7 @@ class DEnumDir : KDialogWindow {
 		b.AddButton("OK", _ => {
 			Close();
 			var s = _FormatCode();
-			InsertCode.Statements(s, ICSFlags.MakeVarName1);
+			InsertCode.Statements(new(s, makeVarName1: true));
 		});
 		
 		b.Add(out _cArray, "Get array").Checked().Tooltip("Store results in an array variable before starting to use them.\nThen it is safe to delete/rename/move/copy the files.\nBut then cannot start using results until all retrieved from the file system.\nCheck if going to delete/rename/move/copy files.\nUncheck if going to search in a potentially large directory.")

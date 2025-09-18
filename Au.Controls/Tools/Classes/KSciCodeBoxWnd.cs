@@ -1,11 +1,10 @@
-using Au.Tools;
+using Au.Controls;
 using System.Windows;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Au.Controls;
+namespace Au.Tools;
 
 /// <summary>
 /// Scintilla-based control that shows colored C# code. Based on <see cref="KSciCodeBox"/> and adds methods to get code for wnd.find.

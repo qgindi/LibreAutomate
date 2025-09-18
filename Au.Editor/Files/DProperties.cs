@@ -1,3 +1,5 @@
+//TODO: UI to set r etc alias and noCopy
+
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
@@ -289,7 +291,7 @@ class Class1 {
 		};
 		if (!d.ShowOpen(out string[] a, this)) return;
 		
-		if (!TUtil.UnexpandPathsMetaR(a, this)) return;
+		if (!TUtil2.UnexpandPathsMetaR(a, this)) return;
 		
 		_meta.r.AddRange(a);
 		_ShowInfo_Added(e.Button, _meta.r);

@@ -6,8 +6,8 @@ using System.Windows.Controls.Primitives;
 using Au.Tools;
 using System.Windows.Media;
 using System.Windows.Documents;
-using EStyle = CiStyling.EStyle;
 using System.Windows.Input;
+using EStyle = Au.Controls.SciTheme.EStyle;
 
 class DOptions : KDialogWindow {
 	public enum EPage { Program, Workspace, FontAndColors, CodeEditor, Templates, Hotkeys, AI, Other, OS }
@@ -195,7 +195,7 @@ Example:
 	}
 	
 	void _FontAndColors() {
-		CiStyling.TTheme theme = null, savedTheme = null;
+		SciTheme theme = null, savedTheme = null;
 		bool ignoreColorEvents = false;
 		
 		var b = _Page("Font, colors", WBPanelType.Dock);
@@ -315,12 +315,12 @@ Example:
 				("Line number margin", c_isElementColorOnly, -1),
 				("Marker margin", c_isElementColorOnly, -2),
 
-				("Text highlight", c_isIndicator, SciCode.c_indicFound),
-				("Symbol highlight", c_isIndicator, SciCode.c_indicRefs),
-				("Brace highlight", c_isIndicator, SciCode.c_indicBraces),
-				("Debug highlight", c_isIndicator, SciCode.c_indicDebug),
-				("Snippet field", c_isIndicator, SciCode.c_indicSnippetField),
-				("Snippet field active", c_isIndicator, SciCode.c_indicSnippetFieldActive),
+				("Text highlight", c_isIndicator, SciTheme.Indic.Found),
+				("Symbol highlight", c_isIndicator, SciTheme.Indic.Refs),
+				("Brace highlight", c_isIndicator, SciTheme.Indic.Braces),
+				("Debug highlight", c_isIndicator, SciTheme.Indic.Debug),
+				("Snippet field", c_isIndicator, SciTheme.Indic.SnippetField),
+				("Snippet field active", c_isIndicator, SciTheme.Indic.SnippetFieldActive),
 
 				("Selection", c_isElementAlpha, Sci.SC_ELEMENT_SELECTION_BACK),
 				("Selection no focus", c_isElementAlpha, Sci.SC_ELEMENT_SELECTION_INACTIVE_BACK),
@@ -439,18 +439,18 @@ Example:
 			
 			_b.OkApply += e => {
 				bool stylesChanged = theme != savedTheme;
-				bool stylesOrThemeChanged = CiStyling.TTheme.OptionsApply(theme, stylesChanged);
-				if (stylesChanged) { savedTheme = CiStyling.TTheme.Current; theme = savedTheme with { }; }
+				bool stylesOrThemeChanged = _ThemeApply(stylesChanged);
+				if (stylesChanged) { savedTheme = SciTheme.Current; theme = savedTheme with { }; }
 				
 				if (fontFind.Apply(ref App.Settings.font_find) || stylesOrThemeChanged) Panels.Find.CodeStylesChanged_();
 				if (fontOutput.Apply(ref App.Settings.font_output)) Panels.Output.Scintilla.AaSetStyles();
 				if (fontRecipeText.Apply(ref App.Settings.font_recipeText) | fontRecipeCode.Apply(ref App.Settings.font_recipeCode)) Panels.Recipe.Scintilla.AaChangedFontSettings();
 			};
 			
-			_OpenTheme(CiStyling.TTheme.Current);
+			_OpenTheme(SciTheme.Current);
 		};
 		
-		void _OpenTheme(CiStyling.TTheme t) {
+		void _OpenTheme(SciTheme t) {
 			savedTheme = t;
 			theme = savedTheme with { };
 			
@@ -460,9 +460,51 @@ Example:
 		}
 		
 		void _ThemesButtonClicked(WBButtonClickArgs e) {
-			var t = CiStyling.TTheme.OptionsMenu(theme, this);
-			if (t is null) return;
-			_OpenTheme(t);
+			var m = new popupMenu();
+			_Add("LA.csv");
+			foreach (var v in filesystem.enumFiles(SciTheme.ThemesDirDefaultBS, "*.csv")) _Add(v.Name);
+			
+			void _Add(string fn) {
+				var s = fn[..^4];
+				_Add2(s);
+				if (filesystem.exists(SciTheme.ThemesDirCustomizedBS + fn)) _Add2(s + " [customized]");
+				
+				void _Add2(string s) {
+					var v = m.AddRadio(s);
+					if (s == theme.Name) v.IsChecked = true;
+				}
+			}
+			
+			m.Separator();
+			m.Submenu("Open folder", m => {
+				m["Default themes"] = o => { run.itSafe(SciTheme.ThemesDirDefaultBS); };
+				m["Customized themes"] = o => { run.itSafe(SciTheme.ThemesDirCustomizedBS); };
+			});
+			
+			m.Show(owner: this);
+			if (m.Result is { IsChecked: true } r) {
+				_OpenTheme(new(r.Text));
+			}
+		}
+		
+		bool _ThemeApply(bool modified) {
+			if (!modified && theme.Name == SciTheme.Current.Name) return false;
+			
+			var name = theme.Name;
+			if (modified && !name.Ends(" [customized]")) name += " [customized]";
+			
+			var t = theme with { Name = name };
+			SciTheme.Current = t;
+			
+			App.Settings.edit_theme = name == "LA" ? null : name;
+			if (modified) t.Save();
+			
+			foreach (var v in Panels.Editor.OpenDocs) {
+				t.ToScintilla(v);
+				v.ESetLineNumberMarginWidth_();
+			}
+			
+			return true;
 		}
 	}
 	

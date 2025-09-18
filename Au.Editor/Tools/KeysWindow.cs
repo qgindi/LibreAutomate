@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace Au.Tools;
 
-class KeysWindow : InfoWindow { //KPopup
+class KeysWindow : KInfoWindow { //KPopup
 	public KeysWindow() : base(0) {
 		Size = (500, 240);
 		WindowName = "Keys";
@@ -25,7 +25,7 @@ class KeysWindow : InfoWindow { //KPopup
 	}
 	
 	void _SetText() {
-		var s = ResourceUtil.GetString("tools/keys.txt").RxReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
+		var s = c_contentText.RxReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
 		if (_format != 0) {
 			bool mod = _format == PSFormat.TriggerMod;
 			int i = s.Find(mod ? "\n" : "\n<b>Operator") + 1;
@@ -90,11 +90,11 @@ class KeysWindow : InfoWindow { //KPopup
 				int stringEnd = si.stringNode.Span.End;
 				if (to == stringEnd) s = "\"" + s;
 				cd.sci.aaaGoToPos(true, stringEnd);
-				InsertCode.TextSimplyInControl(cd.sci, s);
+				KUtil.InsertTextIn(cd.sci, s);
 			}
 		}
 		
-		InsertCode.TextSimplyInControl(con, s);
+		KUtil.InsertTextIn(con, s);
 		
 		bool _GetTrueKeyName() {
 			bool ok = true;
@@ -182,4 +182,20 @@ class KeysWindow : InfoWindow { //KPopup
 	}
 	int _linkStyle;
 	StartEnd _linkRange;
+	
+	const string c_contentText = """
+<b>Modifier:<><mono>  {Alt}  {Ctrl}  {Shift}  {Win}  {right ▾}<>
+<b>Navigate:<><mono>   {Down}  {Left}  {Right}  {Up}  {End}  {Home}  {PgDn}  {PgUp}<>
+<b>Other:<><mono>   {Back}  {Del}  {Enter}  {Esc}  {Space}  {Tab}<>
+<b>Function:<><mono>   {F1}  {F2}  {F3}  {F4}  {F5}  {F6}  {F7}  {F8}  {F9}  {F10}  {F11}  {F12}<>
+<b>Letter:<><mono>   {A} {B} {C} {D} {E} {F} {G} {H} {I} {J} {K} {L} {M} {N} {O} {P} {Q} {R} {S} {T} {U} {V} {W} {X} {Y} {Z}<>
+<b>Number:<><mono>   {1!}  {2@}  {3#}  {4$}  {5%}  {6^}  {7&}  {8*}  {9(}  {0)}<>
+<b>Punctuation etc:<><mono>   {`~}  {-_}  {=+}  {[{}  {]}}  {\|}  {;:}  {'"}  {,<}  {.>}  {/?}<>
+<b>Numpad:<><mono>   {#1} {#2} {#3} {#4} {#5} {#6} {#7} {#8} {#9} {#0} {#/} {#*} {#-} {#+} {#.}<>
+<b>Rare:<><mono>   {Apps}  {Ins}  {Pause}  {PrtSc}  {lock ▾}  {other ▾}  <+a VK>code<><>
+<b>Operator:<><mono>   <+a *>*nTimes<>  {*down}  {*up}  <+a +>+key<>  <+a +(`|`)>+(keys)<>  <+a _>_char<>  <+a ^>^chars<><>
+<b>Argument:<><mono>   {text}  {html}  {sleepMs}  {keyCode}  {scanCode}  {action}<>
+
+<help keys.send>Help<>    Example:  <code>keys.send("Ctrl+A Del Tab*3", "!text", 100, "Enter");</code>
+""";
 }

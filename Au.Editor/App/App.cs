@@ -18,10 +18,21 @@ static partial class App {
 	
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
-#if DEBUG //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
-		print.qm2.use = true;
-		//print.clear(); 
-		//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
+#if IDE_LA //test tools
+//		print.clear();
+		
+//		args = ["/tool", "Dwnd", "0", "0"];
+//		args = ["/tool", "Delm"];
+//		//args = ["/tool", "Duiimage", "0"];
+//		//args = ["/tool", "Docr"];
+#endif
+		
+#if DEBUG && !IDE_LA //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
+		if (!(args is ["/tool" or "/pip" or "/dd", ..])) {
+			print.qm2.use = true;
+			//print.clear(); 
+			//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
+		}
 #endif
 		
 		script.role = SRole.EditorExtension; //used by the folders class
@@ -426,18 +437,6 @@ static partial class App {
 	static timer _timer;
 	
 	public static AppState Loaded;
-	
-	/// <summary>
-	/// Gets Keyboard.FocusedElement. If null, and a HwndHost-ed control is focused, returns the HwndHost.
-	/// Slow if HwndHost-ed control.
-	/// </summary>
-	public static FrameworkElement FocusedElement {
-		get {
-			var v = System.Windows.Input.Keyboard.FocusedElement;
-			if (v != null) return v as FrameworkElement;
-			return wnd.Internal_.ToWpfElement(Api.GetFocus());
-		}
-	}
 	
 	public static bool IsAtHome { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
 	

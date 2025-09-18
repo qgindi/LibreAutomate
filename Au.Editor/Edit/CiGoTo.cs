@@ -213,7 +213,7 @@ class CiGoTo {
 	}
 	
 	void _CodeSearchDialog() {
-		AssemblySett asm = new(), asmSaved = null;
+		AppSettings.gotoAsm_t asm = new(), asmSaved = null;
 		App.Settings.ci_gotoAsm?.TryGetValue(_assembly, out asmSaved);
 		asmSaved ??= new();
 		asmSaved.repo ??= _repo;
@@ -410,12 +410,6 @@ class CiGoTo {
 		string _NotPath() => @"\b[Tt]est|\b[Gg]enerat|\b[Uu]nix\b|\/ref\/" + (_repo == "dotnet/wpf" ? @"|\/cycle-breakers\/" : null); //note: sourcegraph does not support (?i) and (?-i)
 	}
 	static string s_wndpos;
-	
-	internal record AssemblySett {
-		public string repo, path, context;
-		public bool csharp;
-		public AssemblySett() { csharp = true; }
-	}
 	
 	//This was used with referencesource. It seems don't need it now.
 	///// <summary>

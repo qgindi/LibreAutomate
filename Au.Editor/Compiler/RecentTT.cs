@@ -94,7 +94,7 @@ static class RecentTT {
 			var v = s_a[i];
 			var s = $"{v.trigger ?? v.file.DisplayName}\t{_Time(v.startTime)} - {_Time(v.endTime)}";
 			if (v.repeated > 0) s = $"{s} ({v.repeated + 1} times)";
-			var k = m.Add(s, v.trigger != null ? Menus.iconTrigger : v.file.IconString);
+			var k = m.Add(s, v.trigger != null ? EdIcons.Trigger : v.file.IconString);
 			k.Tag = v;
 			if (highContrast) {
 				if (v.failed) k.TextColor = 0xff0000;

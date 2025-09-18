@@ -169,7 +169,7 @@ class PanelBreakpoints {
 		} else {
 			if (!useSelStart) if (doc.aaaLineFromPos() == line) useSelStart = true;
 			
-			int h = doc.aaaMarkerAdd(logpoint ? SciCode.c_markerBreakpointL : SciCode.c_markerBreakpoint, line); if (h < 0) return;
+			int h = doc.aaaMarkerAdd(logpoint ? SciTheme.Marker.BreakpointL : SciTheme.Marker.Breakpoint, line); if (h < 0) return;
 			var folder = _FindItemOfFile(doc);
 			if (folder == null) {
 				_root.AddChild(folder = new(this, doc.EFile, true), true);
@@ -212,7 +212,7 @@ class PanelBreakpoints {
 			m.AddCheck("Enabled breakpoint\tM-click", b.IsEnabled, o => _SetEnabled(b, o.IsChecked));
 		} else {
 			m["Add breakpoint", "*Material.Circle @12 #EE3000"] = o => ToggleBreakpoint(pos8);
-			m["Add logpoint", "*BootstrapIcons.DiamondFill @14" + Menus.green2] = o => ToggleBreakpoint(pos8, true);
+			m["Add logpoint", "*BootstrapIcons.DiamondFill @14" + EdIcons.green2] = o => ToggleBreakpoint(pos8, true);
 		}
 	}
 	
@@ -271,7 +271,7 @@ Not all kinds of expressions are supported.
 		if (n.position >= 0 || !doc.EFile.IsCodeFile) return;
 		if (started) {
 			int margin = doc.aaaMarginFromPoint((n.x, n.y));
-			if (margin != SciCode.c_marginMarkers) return;
+			if (margin != SciTheme.Margin.Markers) return;
 			int pos = doc.aaaPosFromXY(false, (n.x, n.y), false);
 			int line = doc.aaaLineFromPos(false, pos);
 			if (_BreakpointFromLine(doc, line) is { } b && b.HasProperties) {
@@ -330,7 +330,7 @@ Not all kinds of expressions are supported.
 		m.Show(owner: _tv);
 	}
 	
-	bool _IsBreakpoint(SciCode doc, int line) => (doc.Call(Sci.SCI_MARKERGET, line) & 63 << SciCode.c_markerBreakpoint) != 0;
+	bool _IsBreakpoint(SciCode doc, int line) => (doc.Call(Sci.SCI_MARKERGET, line) & 63 << SciTheme.Marker.Breakpoint) != 0;
 	
 	_Item _BreakpointFromLine(SciCode doc, int line) {
 		if (_FindItemOfFile(doc) is { } folder) {
@@ -470,7 +470,7 @@ Not all kinds of expressions are supported.
 		public bool SetMarkerInDoc() {
 			if (Parent.file.OpenDoc is { } doc) {
 				if (markerHandle != 0) { doc.aaaMarkerDeleteHandle(markerHandle); markerHandle = 0; }
-				int marker = !log.NE() ? SciCode.c_markerBreakpointL : !condition.NE() ? SciCode.c_markerBreakpointC : SciCode.c_markerBreakpoint;
+				int marker = !log.NE() ? SciTheme.Marker.BreakpointL : !condition.NE() ? SciTheme.Marker.BreakpointC : SciTheme.Marker.Breakpoint;
 				if (!_isEnabled) marker++;
 				var h = doc.aaaMarkerAdd(marker, line);
 				if (h != -1) { markerHandle = h; return true; }
@@ -491,7 +491,7 @@ Not all kinds of expressions are supported.
 		string ITreeViewItem.DisplayText => _isFolder ? (file.Parent.HasParent ? $"{file.Name}  [{file.Parent.ItemPath}]" : file.Name) : $"{(line + 1).ToS()}  {name}";
 		//never mind: after moving the file should display the new path (just redraw).
 		
-		object ITreeViewItem.Image => _isFolder ? EdResources.FolderArrow(_isExpanded) : null;
+		object ITreeViewItem.Image => _isFolder ? EdIcons.FolderArrow(_isExpanded) : null;
 		
 		TVParts ITreeViewItem.NoParts => _isFolder ? TVParts.Checkbox : TVParts.Image;
 		
