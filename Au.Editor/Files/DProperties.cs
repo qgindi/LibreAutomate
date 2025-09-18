@@ -3,11 +3,12 @@
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
-using Au.Compiler;
 using Microsoft.Win32;
 using System.Drawing;
 using System.Windows.Documents;
-using Au.Tools;
+using UnsafeTools;
+
+namespace LA;
 
 class DProperties : KDialogWindow {
 	public static void ShowFor(FileNode f) {
@@ -547,7 +548,7 @@ class Class1 {
 	}
 	
 	void _ShowInfoTooltip(UIElement by, string s) {
-		Au.Tools.TUtil.InfoTooltip(ref _tt, by, s, Dock.Right);
+		UnsafeTools.TUtil.InfoTooltip(ref _tt, by, s, Dock.Right);
 	}
 	KPopup _tt;
 	

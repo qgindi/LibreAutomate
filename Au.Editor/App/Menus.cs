@@ -1,7 +1,9 @@
 using Au.Controls;
-using Au.Tools;
+using UnsafeTools;
 using System.Windows;
 using System.Windows.Controls;
+
+namespace LA;
 
 static class Menus {
 	const string
@@ -157,37 +159,37 @@ static class Menus {
 		[Command(target = "", image = "*Material.Git" + blue)]
 		public static class Git {
 			[Command(image = "*MaterialDesign.InfoOutline" + blue)]
-			public static void Git_status() { global::Git.Status(); }
+			public static void Git_status() { LA.Git.Status(); }
 			
 			[Command("Commit", image = "*RemixIcon.GitCommitLine" + blue)]
-			public static void Git_commit() { global::Git.Commit(); }
+			public static void Git_commit() { LA.Git.Commit(); }
 			
 			[Command("Push to GitHub", image = "*Unicons.CloudUpload" + blue)]
-			public static void Git_push() { global::Git.Push(); }
+			public static void Git_push() { LA.Git.Push(); }
 			
 			[Command("Pull from GitHub", image = "*Unicons.CloudDownload" + blue)]
-			public static void Git_pull() { global::Git.Pull(); }
+			public static void Git_pull() { LA.Git.Pull(); }
 			
 			[Command("GitHub Desktop", image = "*Codicons.Github" + purple, separator = true)]
-			public static void Git_gui() { global::Git.RunGui(); }
+			public static void Git_gui() { LA.Git.RunGui(); }
 			
 			[Command("Cmd", image = "*Material.Console" + black)]
-			public static void Git_cmd() { global::Git.RunCmd(); }
+			public static void Git_cmd() { LA.Git.RunCmd(); }
 			
 			[Command("Workspace folder", image = "*Material.Folder" + darkYellow)]
-			public static void Git_workspace_folder() { global::Git.WorkspaceFolder(); }
+			public static void Git_workspace_folder() { LA.Git.WorkspaceFolder(); }
 			
 			[Command("Reload workspace", image = "*Material.Reload" + black)]
-			public static void Git_reload_workspace() { global::Git.ReloadWorkspace(); }
+			public static void Git_reload_workspace() { LA.Git.ReloadWorkspace(); }
 			
 			[Command("GitHub sign out", separator = true)]
-			public static void Git_sign_out() { global::Git.Signout(); }
+			public static void Git_sign_out() { LA.Git.Signout(); }
 			
 			[Command("Maintenance...")]
-			public static void Git_maintenance() { global::Git.Maintenance(); }
+			public static void Git_maintenance() { LA.Git.Maintenance(); }
 			
 			[Command("...")]
-			public static void Git_setup() { global::Git.Setup(); }
+			public static void Git_setup() { LA.Git.Setup(); }
 		}
 		
 		[Command(separator = true, target = "", keysText = "Alt+F4")]

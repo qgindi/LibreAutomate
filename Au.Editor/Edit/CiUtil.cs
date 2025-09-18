@@ -14,8 +14,9 @@ using CAW::Microsoft.CodeAnalysis.Tags;
 using CAW::Microsoft.CodeAnalysis.FindSymbols;
 
 using System.Collections.Immutable;
-using Au.Compiler;
-using EStyle = Au.Controls.SciTheme.EStyle;
+using EStyle = LA.SciTheme.EStyle;
+
+namespace LA;
 
 static class CiUtil {
 	#region simple string util
@@ -919,15 +920,15 @@ global using System.Windows.Media;
 		if (printErrors) foreach (var d in x.GetDiagnostics()) print.it(d.Code, d.Location.SourceSpan, d);
 	}
 	
-	public static void DebugHiliteRange(int start, int end, int indic = Au.Controls.SciTheme.Indic.TestBox) {
+	public static void DebugHiliteRange(int start, int end, int indic = SciTheme.Indic.TestBox) {
 		var doc = Panels.Editor.ActiveDoc;
 		doc.aaaIndicatorClear(indic);
 		if (end > start) doc.aaaIndicatorAdd(indic, true, start..end);
 	}
 	
-	public static void DebugHiliteRange(TextSpan span, int indic = Au.Controls.SciTheme.Indic.TestBox) => DebugHiliteRange(span.Start, span.End, indic);
+	public static void DebugHiliteRange(TextSpan span, int indic = SciTheme.Indic.TestBox) => DebugHiliteRange(span.Start, span.End, indic);
 	
-	public static void DebugHiliteRanges(List<Range> a, int indic = Au.Controls.SciTheme.Indic.TestBox) {
+	public static void DebugHiliteRanges(List<Range> a, int indic = SciTheme.Indic.TestBox) {
 		var doc = Panels.Editor.ActiveDoc;
 		doc.aaaIndicatorClear(indic);
 		int i = 0;

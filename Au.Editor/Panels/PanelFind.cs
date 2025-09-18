@@ -5,7 +5,7 @@
 //	Process ended quickly. No exception, no log event, no dump file.
 
 using Au.Controls;
-using Au.Tools;
+using UnsafeTools;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,6 +14,8 @@ using System.Windows.Data;
 
 //CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
 //CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
+
+namespace LA;
 
 class PanelFind {
 	KScintilla _tFind, _tReplace;
@@ -163,7 +165,7 @@ class PanelFind {
 		};
 	}
 	
-	KRegexWindow _regexWindow;
+	RegexWindow _regexWindow;
 	string _regexTopic;
 	
 	void _ShowRegexInfo(KScintilla k, bool onFocus = false) {

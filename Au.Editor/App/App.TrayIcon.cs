@@ -1,3 +1,5 @@
+namespace LA;
+
 static partial class App {
 	internal static class TrayIcon {
 		static IntPtr[] _icons;

@@ -5,7 +5,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Data;
 using Au.Controls;
-using Au.Tools;
+using UnsafeTools;
+
+namespace LA;
 
 class DEnumDir : KDialogWindow {
 	public static void Dialog(string initFolder = null) {

@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Reflection;
 
-namespace Au.Tools;
+namespace UnsafeTools;
 
 static class Scripting {
 	/// <summary>

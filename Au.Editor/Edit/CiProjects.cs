@@ -10,7 +10,8 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using SymAcc = Microsoft.CodeAnalysis.Accessibility;
 
-using Au.Compiler;
+
+namespace LA;
 
 class CiProjects {
 	//public void Test() {

@@ -1,7 +1,8 @@
 using Au.Controls;
-using Au.Compiler;
 using System.Xml;
 using System.Xml.Linq;
+
+namespace LA;
 
 partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	#region types

@@ -1,5 +1,7 @@
 using Au.Controls;
 
+namespace LA;
+
 partial class PanelDebug {
 	KTreeView _tvStack;
 	_StackViewItem[] _aStack;

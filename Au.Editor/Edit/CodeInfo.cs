@@ -4,7 +4,6 @@ extern alias CAW;
 
 using System.Windows.Input;
 using System.Windows;
-using Au.Compiler;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
@@ -17,6 +16,8 @@ using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Completion;
+
+namespace LA;
 
 static class CodeInfo {
 	internal static readonly CiCompletion _compl = new();

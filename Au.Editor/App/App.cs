@@ -3,8 +3,10 @@ using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Threading;
 
-[assembly: AssemblyTitle(App.AppName)]
+[assembly: AssemblyTitle(LA.App.AppName)]
 //more attributes in global2.cs
+
+namespace LA;
 
 static partial class App {
 	public const string AppName = "LibreAutomate";

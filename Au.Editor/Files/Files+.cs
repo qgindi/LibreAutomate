@@ -1,7 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
-using Au.Compiler;
+
+namespace LA;
 
 /// <summary>
 /// File type of a <see cref="FileNode"/>.

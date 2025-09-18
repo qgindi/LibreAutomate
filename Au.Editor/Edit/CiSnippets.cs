@@ -14,6 +14,8 @@ using System.Xml.Linq;
 using Au.Controls;
 using System.Windows.Input;
 
+namespace LA;
+
 static class CiSnippets {
 	class _CiComplItemSnippet : CiComplItem {
 		public readonly XElement x;

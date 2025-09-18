@@ -10,6 +10,8 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 
+namespace LA;
+
 class CiWinapi {
 	int _typenameStart;
 	bool _canInsert;

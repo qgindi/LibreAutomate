@@ -1,4 +1,5 @@
-using Au.Compiler;
+
+namespace LA;
 
 /// <seealso cref="MetaComments.FindMetaComments"/>
 /// <seealso cref="MetaComments.EnumOptions"/>

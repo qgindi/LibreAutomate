@@ -1,4 +1,4 @@
-namespace Au.Compiler;
+namespace LA;
 
 partial class Compiler {
 	unsafe class _NativeResources {

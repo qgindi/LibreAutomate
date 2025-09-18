@@ -1,10 +1,11 @@
 //#define TEST_STARTUP_SPEED
 
-using Au.Compiler;
 using Au.Controls;
 
 //CONSIDER: for ifRunning use mutex. Release mutex as soon as script ends, ie before the process ends (need some time to unload .NET).
 //	Maybe then could repeatedly start short tasks more frequently.
+
+namespace LA;
 
 static class CompileRun {
 	/// <summary>

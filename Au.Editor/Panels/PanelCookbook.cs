@@ -23,6 +23,8 @@ using Au.Controls;
 //The last 2 show not only cookbook recipes.
 //Maybe move the search box to the Help toolbar. And use separate panel for results (or in Found).
 
+namespace LA;
+
 class PanelCookbook {
 	KTreeView _tv;
 	KTextBox _search;

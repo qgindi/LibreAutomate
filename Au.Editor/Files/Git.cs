@@ -6,6 +6,8 @@ using System.Text.Json.Nodes;
 using Au.Controls;
 using System.Net.Http;
 
+namespace LA;
+
 static partial class Git {
 	static string _gitExe, //git.exe path
 		_dir, //workspace dir

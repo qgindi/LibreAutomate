@@ -1,5 +1,8 @@
 using System.Security.Principal;
 using System.Xml.Linq;
+
+namespace LA;
+
 using api = WinSchedulerApi;
 using TT = WinSchedulerApi.TASK_TRIGGER_TYPE2;
 

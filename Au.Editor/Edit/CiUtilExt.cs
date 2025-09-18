@@ -17,6 +17,8 @@ using Microsoft.CodeAnalysis.Completion;
 //using Microsoft.CodeAnalysis.FindSymbols;
 //using Roslyn.Utilities;
 
+namespace LA;
+
 /// <summary>
 /// Code info util extension methods.
 /// </summary>

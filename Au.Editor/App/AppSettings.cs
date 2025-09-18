@@ -1,12 +1,9 @@
 using Au.Controls;
-using Au.Tools;
+using UnsafeTools;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-#if CONTROLS
-using App = Au.Tools.Editor;
-namespace Au.Tools;
-#endif
+namespace LA;
 
 /// <summary>
 /// Program settings.
@@ -24,8 +21,6 @@ record AppSettings : JSettings {
 		var r = Load<AppSettings>(DirBS + "Settings.json", jsOpt: SerializerOptions2);
 		r._Loaded();
 		App.Settings = r;
-		
-		IEditor.Editor = new _KInterface();
 	}
 	
 	public static void SetReloadModifiedExternally() { //in main thread
@@ -283,14 +278,6 @@ System.Threading.Tasks.TaskCanceledException
 	public int publish, export;
 	public bool? minimalSDK;
 	public string nilesoftShellDir;
-	
-	class _KInterface : IEditor {
-		string IEditor.SettingsDirBS => DirBS;
-		
-		string IEditor.ThemeName { get => App.Settings.edit_theme; set { App.Settings.edit_theme = value; } }
-
-		string IEditor.InternetSearchUrl => App.Settings.internetSearchUrl;
-    }
 }
 
 /// <summary>

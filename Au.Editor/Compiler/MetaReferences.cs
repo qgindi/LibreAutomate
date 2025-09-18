@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using CAW::Microsoft.CodeAnalysis;
 
-namespace Au.Compiler;
+namespace LA;
 
 /// <summary>
 /// Resolves assembly metadata references (string to PortableExecutableReference).

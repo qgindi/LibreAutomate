@@ -1,6 +1,6 @@
 using System.Runtime.Loader;
 
-namespace Au.Tools;
+namespace UnsafeTools;
 
 /// <summary>
 /// Tools like "Find UI element" run in a separate Au.Editor.exe process. They are implemented in Au.Controls.dll.
@@ -40,7 +40,7 @@ static class ToolProcess {
 		}
 		catch (Exception ex) { Debug_.Print(ex); }
 		
-		Task task1 = Task.Run(() => { AppSettings.Load(); }); //makes startup faster, although with PO not so much
+		Task task1 = Task.Run(() => { LA.AppSettings.Load(); }); //makes startup faster, although with PO not so much
 		
 		_ToolProcess(args, task1);
 	}
@@ -49,7 +49,7 @@ static class ToolProcess {
 		//perf.next();
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
-		App.InitThisAppFoldersEtc_();
+		LA.App.InitThisAppFoldersEtc_();
 		AssemblyLoadContext.Default.Resolving += (alc, an) => alc.LoadFromAssemblyPath($@"{folders.ThisAppBS}\Roslyn\{an.Name}.dll");
 		
 		new System.Windows.Window { Content = new System.Windows.Controls.Button() };

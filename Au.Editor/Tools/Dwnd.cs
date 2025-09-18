@@ -6,7 +6,7 @@ using System.Windows.Controls;
 //FUTURE: init from code string.
 //TODO3: try to find and select control in current tree when captured from same window. Like in Delm.
 
-namespace Au.Tools;
+namespace UnsafeTools;
 
 [Flags]
 enum DwndFlags {
@@ -44,7 +44,7 @@ class Dwnd : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize((500, 450..), (600, 430..)).Columns(-1);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
-		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + EdIcons.red, $"Enable capturing ({Editor.Settings.delm.hk_capture}) and show window/control rectangles");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + EdIcons.red, $"Enable capturing ({LA.App.Settings.delm.hk_capture}) and show window/control rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Execute the 'find' part of the code now and show the rectangle");
 		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!_dontInsert) b.Tooltip("Insert code in editor");
 		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind|finder").Tooltip("Function").Width(90);
@@ -110,7 +110,7 @@ class Dwnd : KDialogWindow {
 			showActivated: _dontInsert || w.Is0 ? null : false //eg if captured a popup menu, activating this window closes the menu and we cannot get properties
 			);
 
-		WndSavedRect.Restore(this, Editor.Settings.wndpos.wnd, o => Editor.Settings.wndpos.wnd = o);
+		WndSavedRect.Restore(this, LA.App.Settings.wndpos.wnd, o => LA.App.Settings.wndpos.wnd = o);
 	}
 
 	static Dwnd() {
@@ -312,7 +312,7 @@ class Dwnd : KDialogWindow {
 		_capt ??= new TUtil.CapturingWithHotkey(
 			_cCapture,
 			p => (wnd.fromXY(p, _noControl ? WXYFlags.NeedWindow : 0).Rect, null),
-			(Editor.Settings.delm.hk_capture, _Capture)
+			(LA.App.Settings.delm.hk_capture, _Capture)
 			);
 		_capt.Capturing = _cCapture.IsChecked;
 	}
@@ -372,7 +372,7 @@ class Dwnd : KDialogWindow {
 		} else if (_close) {
 			Close();
 		} else if (s != null) {
-			Editor.InsertStatements(new(s, makeVarName1: true));
+			ToolToEditor.InsertStatements(new(s, makeVarName1: true));
 			_close = true;
 			_bInsert.Content = "Close";
 			_bInsert.MouseLeave += (_, _) => {
@@ -675,7 +675,7 @@ For example, if 1, gets the second matching control.");
 
 	string _dialogInfo =
 $@"This tool creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
-1. Move the mouse to a window or control. Press <+hotkey>hotkey<> <b>{Editor.Settings.delm.hk_capture}<>.
+1. Move the mouse to a window or control. Press <+hotkey>hotkey<> <b>{LA.App.Settings.delm.hk_capture}<>.
 2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields or select another window/control.
 4. Click Insert. Click Close, or capture/insert again.

@@ -19,6 +19,8 @@ using CAW::Microsoft.CodeAnalysis.Shared.Collections;
 using Au.Controls;
 using System.Windows.Input;
 
+namespace LA;
+
 class CiFindGo : KDialogWindow {
 	KTextBox _tQuery;
 	KCheckBox _cFuzzy, _cKeepOpen;

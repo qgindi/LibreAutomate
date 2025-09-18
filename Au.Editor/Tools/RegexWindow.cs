@@ -1,9 +1,9 @@
 using Au.Controls;
 
-namespace Au.Tools;
+namespace UnsafeTools;
 
-public class KRegexWindow : KInfoWindow { //KPopup
-	public KRegexWindow() : base(250) {
+class RegexWindow : InfoWindow { //KPopup
+	public RegexWindow() : base(250) {
 		Size = (800, 220);
 		WindowName = "Regex";
 		Name = "Ci.Regex"; //prevent hiding when activated
@@ -19,7 +19,7 @@ public class KRegexWindow : KInfoWindow { //KPopup
 			c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
 		}
 		this.Control2.AaTags.AddStyleTag(".h", new() { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
-		this.Control2.AaTags.AddLinkTag("+a", o => KUtil.InsertTextIn(InsertInControl, o)); //link that inserts a regex token
+		this.Control2.AaTags.AddLinkTag("+a", o => TUtil.InsertTextIn(InsertInControl, o)); //link that inserts a regex token
 		
 		_SetTocText();
 		CurrentTopic = @"help";
@@ -45,7 +45,7 @@ public class KRegexWindow : KInfoWindow { //KPopup
 			} else {
 				s = c_contentText;
 				if (!s.RxMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
-				else s = s.Replace("{Editor.Settings.internetSearchUrl}", IEditor.Editor.InternetSearchUrl);
+				else s = s.Replace("{App.Settings.internetSearchUrl}", LA.App.Settings.internetSearchUrl);
 			}
 			this.Text2 = s;
 		}
@@ -94,7 +94,7 @@ public class KRegexWindow : KInfoWindow { //KPopup
 <link https://www.pcre.org/current/doc/html/index.html>PCRE regex library reference<>
 <link>http://www.rexegg.com/<>
 <link>https://www.regular-expressions.info/<>
-<link {Editor.Settings.internetSearchUrl}regular+expression+tester,+PCRE>Find regex test tools<>
+<link {App.Settings.internetSearchUrl}regular+expression+tester,+PCRE>Find regex test tools<>
 
 -- options --
 

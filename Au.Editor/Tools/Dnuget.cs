@@ -12,10 +12,11 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Au.Compiler;
 using Au.Controls;
 using NGC = NuGet.Configuration;
 using System.Collections.ObjectModel;
+
+namespace LA;
 
 class DNuget : KDialogWindow {
 	/// <param name="package">null or package name or folder\name.</param>

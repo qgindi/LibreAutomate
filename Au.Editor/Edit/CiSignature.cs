@@ -7,6 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 
 //FUTURE: show for lambda parameters. Currently VS does not show too.
 
+namespace LA;
+
 class CiSignature {
 	CiPopupText _textPopup;
 	_Data _data; //not null while the popup window is visible

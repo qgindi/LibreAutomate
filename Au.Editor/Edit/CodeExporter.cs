@@ -7,11 +7,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Classification;
 using CAW::Microsoft.CodeAnalysis.Classification;
-using static Au.Controls.SciTheme;
+using static LA.SciTheme;
 
-#if SCRIPT
-namespace Script;
-#endif
+namespace LA;
 
 static class CodeExporter {
 	public static EStyle[] GetStyles(string s) {
@@ -150,5 +148,5 @@ static class CodeExporter {
 			_ => "st" //Rx (unused)
 		};
 	
-	static TStyle _StyleToStruct(EStyle style) => Au.Controls.SciTheme.Default[style];
+	static TStyle _StyleToStruct(EStyle style) => SciTheme.Default[style];
 }

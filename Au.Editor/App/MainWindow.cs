@@ -5,6 +5,8 @@ using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
 
+namespace LA;
+
 partial class MainWindow : Window {
 	protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
 		if (e.Property == VisibilityProperty && (Visibility)e.NewValue == Visibility.Visible) {
@@ -59,18 +61,6 @@ partial class MainWindow : Window {
 		_NormalizeMouseWheel();
 		
 		DocsHttpServer.StartOrSwitch();
-		
-		//timer.after(100, _ => DOptions.aaShow());
-		//timer.after(100, _ => App.Model.Properties());
-		//timer.after(100, _ => Menus.File.Workspace.New_workspace());
-		//timer.after(100, _ => DIcons.aaShow());
-		//timer.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.find(null, "Shell_TrayWnd")));
-		//timer.after(600, _ => Au.Tools.Dwnd.Dialog(wnd.findOrRun(null, "Notepad", run: () => run.it(folders.System + "notepad.exe"))));
-		//timer.after(500, _ => Au.Tools.Delm.Dialog(new POINT(806, 1580)));
-		//timer.after(500, _ => Au.Tools.Delm.Dialog());
-		//timer.after(400, _ => Au.Tools.Duiimage.Dialog());
-		//timer2.every(200, _ => { GC.Collect(); });
-		//timer.after(100, _ => Menus.Tools.NuGet());
 		
 #if DEBUG
 		App.Timer1s += () => {
@@ -139,7 +129,7 @@ partial class MainWindow : Window {
 		if (App.Loaded == AppState.LoadedUI) {
 			App.Model.Save.AllNowIfNeed();
 			Panels.PanelManager.Save();
-			Au.Tools.TUtil2.CloseDialogsInNonmainThreads(); //let they save rects etc
+			TUtil2.CloseDialogsInNonmainThreads(); //let they save rects etc
 		}
 		
 		EditorExtension.ClosingWorkspace_(onExit: true); //must be called before closing documents

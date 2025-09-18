@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Au.Controls;
 
+namespace LA;
+
 class DIcons : KDialogWindow {
 	public static void ShowSingle(string find = null, bool expandFileIcon = false, bool expandMenuIcon = false) {
 		var d = ShowSingle(() => new DIcons(randomizeColors: find == null, expandFileIcon, expandMenuIcon));

@@ -14,7 +14,8 @@ using CAW::Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using CAW::Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp.Formatting;
-using Au.Compiler;
+
+namespace LA;
 
 static class ModifyCode {
 	/// <summary>

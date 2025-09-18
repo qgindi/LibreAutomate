@@ -4,6 +4,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Completion;
 
+namespace LA;
+
 class CiComplItem : ITreeViewItem {
 	CompletionItem _ci;
 	public readonly CiItemKind kind;

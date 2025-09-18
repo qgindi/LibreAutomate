@@ -3,11 +3,13 @@ using System.Windows.Controls;
 using Au.Controls;
 using Microsoft.Win32;
 using System.Windows.Controls.Primitives;
-using Au.Tools;
+using UnsafeTools;
 using System.Windows.Media;
 using System.Windows.Documents;
 using System.Windows.Input;
-using EStyle = Au.Controls.SciTheme.EStyle;
+using EStyle = LA.SciTheme.EStyle;
+
+namespace LA;
 
 class DOptions : KDialogWindow {
 	public enum EPage { Program, Workspace, FontAndColors, CodeEditor, Templates, Hotkeys, AI, Other, OS }

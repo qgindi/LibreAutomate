@@ -1,10 +1,11 @@
 using Au.Controls;
+using UnsafeTools;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Au.Tools;
+namespace LA;
 
-class KeysWindow : KInfoWindow { //KPopup
+class KeysWindow : InfoWindow { //KPopup
 	public KeysWindow() : base(0) {
 		Size = (500, 240);
 		WindowName = "Keys";
@@ -90,11 +91,11 @@ class KeysWindow : KInfoWindow { //KPopup
 				int stringEnd = si.stringNode.Span.End;
 				if (to == stringEnd) s = "\"" + s;
 				cd.sci.aaaGoToPos(true, stringEnd);
-				KUtil.InsertTextIn(cd.sci, s);
+				TUtil.InsertTextIn(cd.sci, s);
 			}
 		}
 		
-		KUtil.InsertTextIn(con, s);
+		TUtil.InsertTextIn(con, s);
 		
 		bool _GetTrueKeyName() {
 			bool ok = true;

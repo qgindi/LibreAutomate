@@ -1,4 +1,4 @@
-using Au.Tools;
+using UnsafeTools;
 using Au.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -8,6 +8,8 @@ using System.Windows.Controls;
 
 //FUTURE: Color tool. Eg to set toolbar colors.
 //	Now can select in the Icons dialog or capture with Duiimage.
+
+namespace LA;
 
 class CiTools {
 	public bool HideTempWindows() {
@@ -19,7 +21,7 @@ class CiTools {
 	
 	#region regex
 	
-	KRegexWindow _regexWindow;
+	RegexWindow _regexWindow;
 	string _regexTopic;
 	
 	void _RegexWindowShow(SciCode doc, string code, int pos16, in CiStringInfo si, bool replace, wnd dontCover = default) {
@@ -60,7 +62,7 @@ class CiTools {
 	
 	#endregion
 	
-	static void _ShowWindow(KInfoWindow w, SciCode doc, int position, wnd dontCover) {
+	static void _ShowWindow(InfoWindow w, SciCode doc, int position, wnd dontCover) {
 		if (w.IsVisible) w.Hwnd.ZorderTop();
 		var r = doc.EGetCaretRectFromPos(position, inScreen: true);
 		r.left -= Dpi.Scale(80, doc);

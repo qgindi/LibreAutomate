@@ -23,6 +23,8 @@ using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 //	Also need a tool for wildcard expression.
 //	Now users can in "string" press F1 or Ctrl+Space to open the help page.
 
+namespace LA;
+
 partial class CiCompletion {
 	CiPopupList _popupList;
 	_Data _data; //not null while the popup list window is visible

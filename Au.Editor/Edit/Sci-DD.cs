@@ -1,6 +1,8 @@
 using static Au.Controls.Sci;
 using System.Windows;
-using Au.Tools;
+using UnsafeTools;
+
+namespace LA;
 
 partial class SciCode {
 	void _InitDragDrop() {

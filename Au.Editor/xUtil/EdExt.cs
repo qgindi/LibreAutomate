@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 
+namespace LA;
+
 /// <summary>
 /// Misc extension methods.
 /// </summary>

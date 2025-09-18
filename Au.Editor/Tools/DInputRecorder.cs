@@ -8,12 +8,9 @@ using System.Windows.Threading;
 
 //FUTURE: record "wait for UAC consent and then for normal desktop".
 
-#if SCRIPT
-using Au.Tools;
-namespace Au.Tools2;
-#else
-namespace Au.Tools;
-#endif
+using UnsafeTools;
+
+namespace LA;
 
 class DInputRecorder : KDialogWindow {
 	public static void ShowRecorder() {

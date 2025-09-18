@@ -9,7 +9,8 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
-using Au.Compiler;
+
+namespace LA;
 
 /// <summary>
 /// Ctor creates new <b>AdhocWorkspace</b> (<see cref="Workspace"/>) and adds projects and documents.

@@ -1,4 +1,5 @@
-using Au.Compiler;
+
+namespace LA;
 
 static class CommandLine {
 	/// <summary>
@@ -42,7 +43,7 @@ static class CommandLine {
 				UacDragDrop.NonAdminProcess.MainDD(args[1..]);
 				return true;
 			case "/tool":
-				Au.Tools.ToolProcess.Run(args[1..]);
+				UnsafeTools.ToolProcess.Run(args[1..]);
 				return true;
 			}
 			
@@ -321,13 +322,13 @@ static class CommandLine {
 		case 16:
 			return _GetCodeFileText(s, out var text1) ? WndCopyData.Return<char>(text1, wparam) : 0;
 		case 17:
-			InsertCode.Statements(System.Text.Json.JsonSerializer.Deserialize<Au.Tools.InsertCodeParams>(s));
+			InsertCode.Statements(System.Text.Json.JsonSerializer.Deserialize<InsertCode.InsertCodeParams>(s));
 			return 1;
 		case 18:
 			Panels.Cookbook.OpenRecipe(s);
 			return 1;
 		case 19:
-			return Au.Tools.PathInfo.FromWindow((wnd)s.ToInt()) is {  } pathInfo ? WndCopyData.Return<char>(pathInfo.FormatCode(Au.Tools.PathCode.Run), wparam) : 0;
+			return PathInfo.FromWindow((wnd)s.ToInt()) is {  } pathInfo ? WndCopyData.Return<char>(pathInfo.FormatCode(PathCode.Run), wparam) : 0;
 		case 100: //script.run/runWait
 		case 101: //run script from command line
 		case 102: //script.runInPip

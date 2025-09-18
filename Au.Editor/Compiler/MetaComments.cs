@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 //	Problem: security. These files could contain malicious code.
 //	It seems nuget supports source files, not only compiled assemblies: https://stackoverflow.com/questions/52880687/how-to-share-source-code-via-nuget-packages-for-use-in-net-core-projects
 
-namespace Au.Compiler;
+namespace LA;
 
 //This XML doc is outdated. Most info is in the Properties dialog.
 /// <summary>
@@ -1002,7 +1002,7 @@ class MetaComments {
 		//	r = r.WithTopLevelBinderFlags(BinderFlags.IgnoreAccessibility);
 		//}
 		//But if using this code, code info has problems. Completion list contains internal/protected from all assemblies, and difficult to filter out. No signature info.
-		//We instead modify Roslyn code and use class Au.Compiler.TestInternal. More info in project CompilerDlls here.
+		//We instead modify Roslyn code and use class TestInternal. More info in project CompilerDlls here.
 		
 		//r = r.WithTopLevelBinderFlags(BinderFlags.SemanticModel); //should be used in editor? Tested a bit, it seems works the same.
 		

@@ -14,6 +14,8 @@ using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Au.Controls;
 using static Au.Controls.Sci;
 
+namespace LA;
+
 class CiFolding {
 	//Called from CiStyling._Work -> Task.Run when document opened or modified (250 ms timer).
 	//We always set/update folding for entire code. Makes slower, but without it sometimes bad folding.
@@ -572,7 +574,7 @@ partial class SciCode {
 		m.Show(owner: AaWnd);
 		
 		void _Fold(bool expand, CiFolding.FoldKind kind) {
-			var meta = Au.Compiler.MetaComments.FindMetaComments(aaaText);
+			var meta = MetaComments.FindMetaComments(aaaText);
 			int metaLine = meta.end == 0 ? -1 : aaaLineFromPos(true, meta.start);
 			var a = _Folds().ToArray();
 			List<int> a2 = new();

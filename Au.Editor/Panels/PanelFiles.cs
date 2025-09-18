@@ -3,7 +3,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Documents;
 using Au.Controls;
-using Au.Tools;
+using UnsafeTools;
+
+namespace LA;
 
 partial class PanelFiles {
 	FilesModel.FilesView _tv;

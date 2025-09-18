@@ -1,3 +1,5 @@
+namespace LA;
+
 /// <summary>
 /// Logs started/ended tasks and trigger actions for menu Run > Recent.
 /// </summary>

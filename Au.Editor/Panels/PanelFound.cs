@@ -4,6 +4,8 @@ using System.Windows.Input;
 using Au.Controls;
 using static Au.Controls.Sci;
 
+namespace LA;
+
 class PanelFound {
 	_LbItem _li;
 	_KScintilla _sci;

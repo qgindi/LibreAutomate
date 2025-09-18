@@ -2,20 +2,20 @@ using Au.Controls;
 using System.Windows.Controls;
 using System.Windows;
 
-namespace Au.Tools;
+namespace UnsafeTools;
 
 /// <summary>
 /// <see cref="KPopup"/>-based info window with 1 or 2 scintilla controls (<see cref="KSciInfoBox"/>) with output tags etc.
 /// You can set text, resize and show/hide/dispose it many times.
 /// User can middle-click to hide.
 /// </summary>
-public class KInfoWindow : KPopup {
+class InfoWindow : KPopup {
 	DockPanel _panel;
 	_InfoBox _c, _c2;
 
 	/// <param name="split">If not 0, sets <b>Control1.Width</b>=<i>split</i> and adds <b>Control2</b>.</param>
 	/// <param name="caption">With caption.</param>
-	public KInfoWindow(int split, bool caption = true) : base(caption ? WS.THICKFRAME | WS.POPUP | WS.CAPTION | WS.SYSMENU : WS.THICKFRAME | WS.POPUP) {
+	public InfoWindow(int split, bool caption = true) : base(caption ? WS.THICKFRAME | WS.POPUP | WS.CAPTION | WS.SYSMENU : WS.THICKFRAME | WS.POPUP) {
 		Content = _panel = new();
 		_panel.Children.Add(_c = new());
 		if (split > 0) {

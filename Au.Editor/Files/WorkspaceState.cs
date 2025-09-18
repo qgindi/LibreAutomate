@@ -8,6 +8,8 @@
 //		It's a binary file, as compact as possible. Managed by struct WorkspaceState._Folding.
 //In child session separately, in subfolder "pip".
 
+namespace LA;
+
 /// <summary>
 /// Workspace state, such as open files, expanded folders, editor caret position, folded lines.
 /// WorkspaceDirectory + @"\.state\state.json"

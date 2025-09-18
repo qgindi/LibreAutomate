@@ -1,6 +1,8 @@
 //CONSIDER: disable hotkeys when editor hidden.
 
-namespace Au.Tools;
+using UnsafeTools;
+
+namespace LA;
 
 static class QuickCapture {
 	static popupMenu _m;

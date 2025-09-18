@@ -16,6 +16,8 @@ using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Rename;
 using acc = Microsoft.CodeAnalysis.Accessibility;
 
+namespace LA;
+
 /// <summary>
 /// Inserts various code in code editor. With correct indent etc.
 /// Some functions can insert in other controls too.

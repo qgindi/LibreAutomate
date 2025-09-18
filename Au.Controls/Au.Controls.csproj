@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0-windows</TargetFramework>
@@ -29,27 +29,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Include="..\Au.Editor\App\AppSettings.cs" Link="Tools\Classes\AppSettings.cs" />
 	  <Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Remove="Au.Controls.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <ProjectReference Include="..\Au\Au.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Include="Microsoft.CodeAnalysis">
-			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Microsoft.CodeAnalysis.CSharp">
-			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
 	</ItemGroup>
 
 </Project>

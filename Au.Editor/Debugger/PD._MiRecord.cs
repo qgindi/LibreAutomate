@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+namespace LA;
+
 partial class PanelDebug {
 	record class _MiRecord {
 		public readonly int token;

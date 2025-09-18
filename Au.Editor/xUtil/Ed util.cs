@@ -6,6 +6,8 @@ using System.IO.Compression;
 using System.Runtime.Loader;
 using System.Security.Cryptography;
 
+namespace LA;
+
 /// <summary>
 /// .NET SDK etc.
 /// </summary>

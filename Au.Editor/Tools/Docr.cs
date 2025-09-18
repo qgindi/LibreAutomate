@@ -2,13 +2,7 @@ using System.Windows.Controls;
 using Au.Controls;
 using System.Windows.Documents;
 
-#if SCRIPT
-using Au.Tools;
-
-Docr.Dialog();
-#else
-namespace Au.Tools;
-#endif
+namespace UnsafeTools;
 
 class Docr : KDialogWindow {
 	wnd _wnd, _con;
@@ -69,7 +63,7 @@ class Docr : KDialogWindow {
 		b.End();
 		_noeventValueChanged = false;
 
-		WndSavedRect.Restore(this, Editor.Settings.wndpos.ocr, o => Editor.Settings.wndpos.ocr = o);
+		WndSavedRect.Restore(this, LA.App.Settings.wndpos.ocr, o => LA.App.Settings.wndpos.ocr = o);
 	}
 
 	static Docr() {
@@ -174,7 +168,7 @@ class Docr : KDialogWindow {
 
 		bool isEngine = engineC.GetIndex(out var ieng);
 		if (isEngine) {
-			var g = Editor.Settings.ocr ?? new();
+			var g = LA.App.Settings.ocr ?? new();
 			bb.AppendFormat("{0}engine = new Ocr{1}(", forTest ? "var " : "ocr.", engineC.t.SelectedItem);
 			if (ieng == 3) bb.AppendStringArg(g.mUrl).AppendStringArg(g.mKey);
 			else if (ieng == 2) bb.AppendStringArg(g.gKey);
@@ -274,7 +268,7 @@ class Docr : KDialogWindow {
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			Editor.InsertStatements(new(s, makeVarName1: true));
+			ToolToEditor.InsertStatements(new(s, makeVarName1: true));
 			//if (_Opt.Has(_EOptions.InsertClose)) {
 			//	base.Close();
 			//} else {
@@ -367,7 +361,7 @@ If unchecked, returns false.");
 	#region OCR engine properties
 
 	private void _bEngine_Click(WBButtonClickArgs e) {
-		var g = Editor.Settings.ocr ?? new();
+		var g = LA.App.Settings.ocr ?? new();
 
 		var b = new wpfBuilder("OCR engine properties").WinSize(500);
 		b.Window.UseLayoutRounding = true;
@@ -414,7 +408,7 @@ If unchecked, returns false.");
 
 		static string _Text(string s) => s.Trim().NullIfEmpty_();
 
-		Editor.Settings.ocr = g;
+		LA.App.Settings.ocr = g;
 		_FormatCode();
 
 		void _StartGroupBox(string engine) {

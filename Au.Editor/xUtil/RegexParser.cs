@@ -1,4 +1,6 @@
-using EStyle = Au.Controls.SciTheme.EStyle;
+using EStyle = LA.SciTheme.EStyle;
+
+namespace LA;
 
 static class RegexParser {
 	public record struct RXSpan(int start, int end, EStyle token);

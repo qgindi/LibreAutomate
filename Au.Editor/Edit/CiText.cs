@@ -18,6 +18,8 @@ using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.DocumentationComments;
 using Microsoft.CodeAnalysis.SignatureHelp;
 
+namespace LA;
+
 class CiText {
 	readonly Stack<TextElement> _stack = new();
 	TextElement _container = new Section();

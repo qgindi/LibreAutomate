@@ -1,8 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
+using UnsafeTools;
 
-namespace Au.Tools;
+namespace LA;
 
 class DWinapi : KDialogWindow {
 	sqlite _db;

@@ -9,6 +9,8 @@ using Microsoft.Win32;
 using System.Runtime.Loader;
 using wpfc = System.Windows.Controls;
 
+namespace LA;//TODO
+
 static class Pip {
 	public static bool noActivate;
 	static wnd _wMsg;

@@ -4,12 +4,14 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using Au.Controls;
-using Au.Tools;
+using UnsafeTools;
 using System.Xml.Linq;
 
 #if SCRIPT
 namespace Script;
 #endif
+
+namespace LA;
 
 class DCustomize : KDialogWindow {
 	public static void ShowSingle(string commandName = null) {

@@ -7,11 +7,13 @@ using System.IO.Compression;
 using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
-using static Menus.File;
-using Au.Compiler;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using Au.Controls;
+
+namespace LA;
+
+using static Menus.File;
 
 partial class FilesModel {
 	public readonly FileNode Root;
@@ -828,7 +830,7 @@ partial class FilesModel {
 		foreach (var k in e) {
 			if (!k.IsFolder) {
 				State.EditorDelete(k);
-				if (k.IsCodeFile) Au.Compiler.Compiler.Uncache(k);
+				if (k.IsCodeFile) Compiler.Uncache(k);
 			}
 			if (k.IsLink && k.IsFolder) {
 				//_rootLF?.Remove(k);
@@ -1029,7 +1031,7 @@ partial class FilesModel {
 		if (text != null && f == CurrentFile) {
 			Debug.Assert(f.IsScript);
 			f.GetCurrentText(out s);
-			var me = Au.Compiler.MetaComments.FindMetaComments(s).end;
+			var me = MetaComments.FindMetaComments(s).end;
 			if (!text.meta.NE()) {
 				if (me == 0) s = _MetaPlusText(s); //never mind: should skip script doc comments at start. Rare and not important.
 				else s = s.Insert(me - 3, (s[me - 4] == ' ' ? "" : " ") + text.meta + " ");

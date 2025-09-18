@@ -20,7 +20,7 @@ class CookbookDb {
 		
 		DebugTraceListener.Setup(false);
 		
-		bool reload = Panels.Cookbook.UnloadLoad(false);
+		bool reload = LA.Panels.Cookbook.UnloadLoad(false);
 		filesystem.delete(file);
 		
 		using var db = new sqlite(file);
@@ -50,6 +50,6 @@ class CookbookDb {
 		}
 		
 		print.it("Info: updated cookbook.db");
-		if (reload) Panels.Cookbook.UnloadLoad(true);
+		if (reload) LA.Panels.Cookbook.UnloadLoad(true);
 	}
 }

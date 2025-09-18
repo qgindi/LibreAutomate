@@ -10,12 +10,11 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
-using Au.Compiler;
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 
-//using Au.Triggers;
+namespace LA;
 
 partial class TriggersAndToolbars {
 #if DEBUG

@@ -20,8 +20,9 @@ using System.Windows.Controls;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 
-using Au.Compiler;
 using static Au.Controls.Sci;
+
+namespace LA;
 
 static class Test {
 	/// <summary>

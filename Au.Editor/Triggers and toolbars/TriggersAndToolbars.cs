@@ -1,6 +1,8 @@
 using System.Xml.Linq;
 using Au.Triggers;
 
+namespace LA;
+
 partial class TriggersAndToolbars {
 	public static bool Edit(string file) {
 		var f = _GetFile(file, create: true);

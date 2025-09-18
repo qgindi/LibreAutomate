@@ -5,6 +5,8 @@
 using System.Runtime.Loader;
 using System.Windows;
 
+using LA;
+
 /// <summary>
 /// Functions and events for scripts with role editorExtension.
 /// The script must have this at the start <c>/*/ role editorExtension; r Au.Editor.dll; /*/</c>.

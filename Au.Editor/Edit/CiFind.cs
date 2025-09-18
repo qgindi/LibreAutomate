@@ -19,6 +19,8 @@ using CAW::Microsoft.CodeAnalysis.Rename.ConflictEngine;
 using Au.Controls;
 using static Au.Controls.Sci;
 
+namespace LA;
+
 static class CiFind {
 	const int c_markerSymbol = 0, c_markerInfo = 1, c_markerSeparator = 2, c_indicProject = 15;
 	const int c_markerRenameComment = 3, c_markerRenameDisabled = 4, c_markerRenameString = 5, c_markerRenameError = 6;
@@ -54,7 +56,7 @@ static class CiFind {
 			k.aaaMarginSetWidth(c_marginUsage, 0, implementations ? 0 : 7);
 			
 			//perf.first();
-			Au.Compiler.TestInternal.RefsStart();
+			TestInternal.RefsStart();
 			var (solution, info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
 			
 			//perf.next('s');
@@ -253,7 +255,7 @@ static class CiFind {
 		}
 		finally {
 			_working = false;
-			Au.Compiler.TestInternal.RefsEnd();
+			TestInternal.RefsEnd();
 		}
 	}
 	
@@ -450,7 +452,7 @@ static class CiFind {
 			
 			//using var p1 = perf.local();
 			LightweightRenameLocations rlocs;
-			Au.Compiler.TestInternal.RefsStart();
+			TestInternal.RefsStart();
 			try {
 				(var solution, _info) = await CiProjects.GetSolutionForFindReferences(sym, cd);
 				//p1.Next('s');
@@ -458,7 +460,7 @@ static class CiFind {
 				SymbolRenameOptions sro = new(_overloads, _strings, _comments | _disabled);
 				rlocs = await Renamer.FindRenameLocationsAsync(solution, sym, sro, default);
 			}
-			finally { Au.Compiler.TestInternal.RefsEnd(); }
+			finally { TestInternal.RefsEnd(); }
 			//p1.Next('f');
 			
 			Dictionary<FileNode, _File> df = new();

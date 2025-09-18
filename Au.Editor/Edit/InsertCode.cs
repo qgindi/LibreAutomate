@@ -14,13 +14,27 @@ using acc = Microsoft.CodeAnalysis.Accessibility;
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
-using Au.Tools;
+using UnsafeTools;
+
+namespace LA;
 
 /// <summary>
 /// Inserts various code in code editor. With correct indent etc.
 /// Some functions can insert in other controls too.
 /// </summary>
 static class InsertCode {
+	/// <summary>
+	/// Parameters for <c>InsertCode.Statements</c>.
+	/// </summary>
+	/// <param name="s">Text. The function ignores "\r\n" at the end. Does nothing if null. If contains '\n', prepends/appends empty line to separate from surrounding code.</param>
+	/// <param name="goTo">If text contains <c>`|`</c>, remove it and finally move caret there.</param>
+	/// <param name="activateEditor">Activate editor window.</param>
+	/// <param name="noFocus">Don't focus the editor control. Without this flag focuses it if window is active or activated.</param>
+	/// <param name="selectNewCode"></param>
+	/// <param name="makeVarName1"></param>
+	/// <param name="renameVars">Variable names to rename in <i>s</i>.</param>
+	public record InsertCodeParams(string s, bool goTo = false, bool activateEditor = false, bool noFocus = false, bool selectNewCode = false, bool makeVarName1 = false, (string oldName, string newName)[] renameVars = null);
+	
 	/// <summary>
 	/// Inserts one or more statements at current line. With correct position, indent, etc.
 	/// If editor is null or readonly or not C# file, prints in output.
@@ -186,7 +200,7 @@ static class InsertCode {
 		Debug.Assert(App.IsMainThread);
 		var d = Panels.Editor.ActiveDoc;
 		if (d == null || d.aaaIsReadonly) return;
-		KUtil.InsertTextIn(d, s);
+		TUtil.InsertTextIn(d, s);
 	}
 	
 	/// <summary>

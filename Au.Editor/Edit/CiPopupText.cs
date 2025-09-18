@@ -2,6 +2,8 @@ using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 
+namespace LA;
+
 class CiPopupText {
 	public enum UsedBy { PopupList, Signature, Info }
 

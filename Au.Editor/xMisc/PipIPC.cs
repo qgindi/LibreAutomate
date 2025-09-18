@@ -5,6 +5,8 @@ using System.Text.Json.Nodes;
 using Microsoft.Win32;
 using System.Text.Json;
 
+namespace LA;//TODO
+
 /// <summary>
 /// Used by all PiP processes.
 /// </summary>

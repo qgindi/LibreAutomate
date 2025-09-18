@@ -1,6 +1,8 @@
 using System.Collections;
 using DictSS = System.Collections.Generic.Dictionary<string, string>;
 
+namespace LA;
+
 class EnvVarUpdater {
 	DictSS _r;
 	

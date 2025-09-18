@@ -6,6 +6,8 @@
 //	Using newer dbgshim.dll: https://www.nuget.org/packages/Microsoft.Diagnostics.DbgShim.win-x64 and Microsoft.Diagnostics.DbgShim.win-arm64
 //	More info in netcoredbg solution > readme.md.
 
+namespace LA;
+
 partial class PanelDebug {
 	class _Debugger {
 		consoleProcess _p;

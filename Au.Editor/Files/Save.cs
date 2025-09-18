@@ -1,3 +1,4 @@
+namespace LA;
 
 partial class FilesModel {
 	public class AutoSave {

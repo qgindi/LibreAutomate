@@ -12,6 +12,8 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions.ContextQuery;
 
+namespace LA;
+
 class CiErrors {
 	SemanticModel _semo;
 	List<(Diagnostic d, int start, int end)> _codeDiag;
@@ -490,7 +492,7 @@ class CiErrors {
 				InsertCode.UsingDirective(s, true);
 			}
 		} else if (action == 'A') { //Windows API
-			new Au.Tools.DWinapi(s[2..]).Show();
+			new DWinapi(s[2..]).Show();
 		} else if (action == 'r') { //Add reference
 			Menus.File.Properties();
 		} else if (action == 'i') { //implement interface or abstract class

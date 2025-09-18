@@ -1,3 +1,5 @@
+namespace LA;
+
 class EditGoBack {
 	record struct _Location(FileNode fn, int pos);
 	

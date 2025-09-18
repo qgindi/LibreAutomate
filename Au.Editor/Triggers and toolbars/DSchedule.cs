@@ -4,6 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Xml;
 using System.Xml.Linq;
+
+namespace LA;
+
 using api = WinSchedulerApi;
 using TT = WinSchedulerApi.TASK_TRIGGER_TYPE2;
 using TTS = WinSchedulerApi.TASK_SESSION_STATE_CHANGE_TYPE;

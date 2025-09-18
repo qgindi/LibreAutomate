@@ -15,6 +15,8 @@ using System.Windows.Input;
 //CONSIDER: save watches.
 //CONSIDER: add separate "Watch" treeview. Also move <mouse> there.
 
+namespace LA;
+
 partial class PanelDebug {
 	KTreeView _tvVariables;
 	_VariablesViewItem[] _aVar;

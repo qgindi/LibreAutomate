@@ -2,6 +2,8 @@
 
 using System.Security.Cryptography;
 
+namespace LA;
+
 /// <summary>
 /// Calls <see cref="ProtectedData"/> <c>Protect</c> or <c>Unprotect</c> with LA's entropy.
 /// </summary>

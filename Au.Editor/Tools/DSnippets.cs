@@ -19,7 +19,9 @@ using Au.Controls;
 using System.Xml.Linq;
 using System.Windows.Documents;
 using System.Text.Json.Nodes;
-using Au.Tools;
+using UnsafeTools;
+
+namespace LA;
 
 class DSnippets : KDialogWindow {
 	/// <param name="openSnippet">Open this snippet. Must be <c>"snippetName|fileName.ext"</c>.</param>

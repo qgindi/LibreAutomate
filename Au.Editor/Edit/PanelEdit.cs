@@ -6,6 +6,8 @@ using System.Windows.Controls;
 using Au.Controls;
 using static Au.Controls.Sci;
 
+namespace LA;
+
 class PanelEdit {
 	readonly List<SciCode> _docs = new();
 	SciCode _activeDoc;

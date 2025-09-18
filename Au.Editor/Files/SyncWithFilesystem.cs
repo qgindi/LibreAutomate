@@ -3,6 +3,8 @@
 using System.Xml;
 using System.Xml.Linq;
 
+namespace LA;
+
 partial class FilesModel {
 	WildcardList _ignoredPaths, _ignoredPaths2;
 	_FileWatchers _syncWatchers;
@@ -458,7 +460,7 @@ partial class FilesModel {
 			if (f.IsDeleted) continue;
 			if (f.Parent.Id != aOldParent[i]) {
 				//print.it($"Moved {f.Name}, {f.Descendants():print}");
-				Au.Compiler.Compiler.Uncache(f, andDescendants: true);
+				Compiler.Uncache(f, andDescendants: true);
 			}
 		}
 		
@@ -475,7 +477,7 @@ partial class FileNode {
 			if (!(IsCodeFile && type is FNType.Script or FNType.Class)) throw new ArgumentException();
 			_type = type;
 			_testScriptId = 0;
-			Au.Compiler.Compiler.Uncache(this);
+			Compiler.Uncache(this);
 		}
 		
 		string icon = null;
@@ -490,7 +492,7 @@ partial class FileNode {
 			//case "f": flags = (_Flags)value.ToInt(); break; //currently there are no flags
 			case "n" when value != _name:
 				_SetName(value);
-				Au.Compiler.Compiler.Uncache(this, andDescendants: true);
+				Compiler.Uncache(this, andDescendants: true);
 				break;
 			case "icon": icon = value; break;
 			case "run": value.ToInt(out testScriptId); break;
@@ -503,7 +505,7 @@ partial class FileNode {
 		
 		if (icon != _icon) {
 			_icon = icon;
-			Au.Compiler.Compiler.Uncache(this);
+			Compiler.Uncache(this);
 		}
 		
 		if (testScriptId != _testScriptId) {

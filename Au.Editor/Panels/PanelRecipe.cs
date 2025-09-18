@@ -13,6 +13,8 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
+namespace LA;
+
 class PanelRecipe {
 	KScintilla_ _c;
 	string _usings;

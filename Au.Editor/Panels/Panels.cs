@@ -3,6 +3,8 @@ using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Input;
 
+namespace LA;
+
 static class Panels {
 	public static KPanels PanelManager;
 	//internal static KPanels.ILeaf DocPlaceholder_;

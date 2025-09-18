@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Interop;
 
+namespace LA;//TODO
+
 class UacDragDrop {
 	public class AdminProcess {
 		WinEventHook _hook; //SYSTEM_CAPTURESTART

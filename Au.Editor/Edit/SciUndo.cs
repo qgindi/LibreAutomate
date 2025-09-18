@@ -1,6 +1,8 @@
 using Au.Controls;
 using static Au.Controls.Sci;
 
+namespace LA;
+
 class SciUndo : IDisposable {
 	public static SciUndo OfWorkspace => (App.Model.UndoContext_ ??= new SciUndo()) as SciUndo;
 	

@@ -1,5 +1,4 @@
-
-namespace Au.Compiler;
+namespace LA;
 
 static class TestInternal {
 	static HashSet<(string user, string target)> _hsCompiler = new(), _hsCi = new(), _hsRefs = new();

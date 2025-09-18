@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Au.Compiler;
+namespace LA;
 
 static partial class CompilerUtil {
 	/// <summary>

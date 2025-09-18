@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
 
-namespace Au.Tools;
+namespace LA;
 
 static class DCommandline {
 	static FileNode _CurrentFile() {

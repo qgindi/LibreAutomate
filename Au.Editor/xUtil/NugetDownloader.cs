@@ -1,6 +1,8 @@
 using System.IO.Compression;
 using System.Xml.Linq;
 
+namespace LA;
+
 static class NugetDownloader {
 #if USED
 	/// <summary>

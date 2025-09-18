@@ -3,6 +3,8 @@
 using Au.Controls;
 using static Au.Controls.Sci;
 
+namespace LA;
+
 partial class SciCode : KScintilla {
 	[Flags]
 	public enum TempRangeFlags {

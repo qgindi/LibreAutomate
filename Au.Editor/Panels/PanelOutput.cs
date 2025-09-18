@@ -2,6 +2,8 @@ using System.Windows.Controls;
 using Au.Controls;
 using static Au.Controls.Sci;
 
+namespace LA;
+
 class PanelOutput {
 	readonly KScintilla_ _c;
 	readonly KPanels.ILeaf _leaf;

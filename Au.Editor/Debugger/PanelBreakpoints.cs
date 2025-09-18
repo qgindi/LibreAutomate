@@ -6,6 +6,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 using System.Xml.Linq;
 
+namespace LA;
+
 class PanelBreakpoints {
 	KTreeView _tv;
 	_Item _root;

@@ -14,14 +14,10 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 using CAW::Microsoft.CodeAnalysis.FindSymbols;
 
 using Au.Triggers;
-using Au.Tools;
-using Au.Compiler;
+using UnsafeTools;
 using Au.Controls;
 
-#if SCRIPT
-namespace Script;
-#else
-#endif
+namespace LA;
 
 partial class TriggersAndToolbars {
 	_Toolbar[] _toolbars;

@@ -14,6 +14,8 @@ using Microsoft.CodeAnalysis.CSharp.Extensions;
 using Microsoft.CodeAnalysis.CSharp.Indentation;
 using CAW::Microsoft.CodeAnalysis.Indentation;
 
+namespace LA;
+
 class CiAutocorrect {
 	/// <summary>
 	/// Call when added text with { } etc and want it behave like when the user types { etc.

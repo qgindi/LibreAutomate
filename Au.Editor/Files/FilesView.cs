@@ -3,6 +3,8 @@ using System.Windows.Input;
 using System.Windows;
 using System.Windows.Controls;
 
+namespace LA;
+
 partial class FilesModel {
 	public class FilesView : KTreeView {
 		public FilesView() {

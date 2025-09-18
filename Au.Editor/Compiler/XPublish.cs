@@ -1,10 +1,11 @@
-using Au.Compiler;
 using Au.Controls;
 using System.Xml.Linq;
 using System.Windows;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Windows.Controls;
+
+namespace LA;
 
 class XPublish {
 	MetaComments _meta;

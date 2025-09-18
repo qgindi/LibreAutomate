@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using Au.Controls;
 using System.IO.Compression;
 
+namespace LA;
+
 class DPortable : KDialogWindow {
 	public static void ShowSingle() {
 		if (App.IsPortable) {

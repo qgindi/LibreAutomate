@@ -1,3 +1,5 @@
+namespace LA;
+
 class DocsHttpServer : HttpServerSession {
 	static bool s_running;
 	static int s_port;

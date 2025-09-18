@@ -2,6 +2,8 @@ using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 
+namespace LA;
+
 class PanelMouse {
 	KScintilla _sci;
 	POINT _prevXY;

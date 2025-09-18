@@ -7,6 +7,8 @@ using System.Windows.Controls;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+namespace LA;
+
 partial class SciCode : KScintilla {
 	readonly aaaFileLoaderSaver _fls;
 	readonly FileNode _fn;

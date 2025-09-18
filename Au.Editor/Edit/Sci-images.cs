@@ -19,6 +19,8 @@ using CAW::Microsoft.CodeAnalysis.Classification;
 using CT = CAW::Microsoft.CodeAnalysis.Classification.ClassificationTypeNames;
 using Au.Controls;
 
+namespace LA;
+
 partial class SciCode {
 	struct _Image {
 		public Bitmap image;

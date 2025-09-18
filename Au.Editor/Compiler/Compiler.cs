@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using System.Text.Json.Nodes;
 
-namespace Au.Compiler;
+namespace LA;
 
 /// <summary>
 /// Compiles C# files.

@@ -1,10 +1,11 @@
-using Au.Tools;
+using Au.Controls;
 
-namespace Au.Controls;
+using static Au.Controls.Sci;
 
-using static Sci;
+namespace LA;
+//note: although not in UnsafeTools namespace, the code here also is used in tool process and does not depend on something that is available only in main process.
 
-public record class SciTheme { //info: record class because need `with` and synthesized ==
+record class SciTheme { //info: record class because need `with` and synthesized ==
 	public record struct TStyle(int color, bool back = false, bool bold = false, bool italic = false, bool underline = false) {
 		public static implicit operator TStyle(int color) => new(color);
 	}
@@ -60,8 +61,8 @@ public record class SciTheme { //info: record class because need `with` and synt
 	public int CaretLine = 0x1E0E0E0; //alpha = frame thickness
 	
 	//note: these must be before the static properties, else would be null when the properties use them.
-	public static string ThemesDirCustomizedBS => IEditor.Editor.SettingsDirBS + @"Themes\";
-	public static string ThemesDirDefaultBS => folders.ThisAppBS + @"Default\Themes\";
+	public static readonly string ThemesDirCustomizedBS = AppSettings.DirBS + @"Themes\";
+	public static readonly string ThemesDirDefaultBS = folders.ThisAppBS + @"Default\Themes\";
 	
 	//public
 	
@@ -91,20 +92,20 @@ public record class SciTheme { //info: record class because need `with` and synt
 		
 		/// <param name="theme">"" - current. null - default ("LA").</param>
 		public _ThemeInfo(string theme) {
-			if (theme is "") theme = IEditor.Editor.ThemeName.NullIfEmpty_();
+			if (theme is "") theme = App.Settings.edit_theme.NullIfEmpty_();
 			if (theme is null or "LA") {
 				_Cust();
 				
 				//In the past LA did not support multiple themes...
 				if (!custExists && theme is null) {
-					var sOld = IEditor.Editor.SettingsDirBS + "Font.csv";
+					var sOld = AppSettings.DirBS + "Font.csv";
 					if (filesystem.exists(sOld, true).File) {
 						try {
 							var s = filesystem.loadText(sOld);
 							s = s.RxReplace(@"(?m)^Function\b(.+)", "Function$1\r\nEvent$1");
 							s = s.RxReplace(@"(?m)^Variable\b(.+)", "LocalVariable$1\r\nField$1");
 							filesystem.saveText(custPath, s);
-							IEditor.Editor.ThemeName = "LA [customized]";
+							App.Settings.edit_theme = "LA [customized]";
 							name = "LA";
 							customized = custExists = true;
 							filesystem.rename(sOld, "Font.csv.bak", FIfExists.RenameNew);

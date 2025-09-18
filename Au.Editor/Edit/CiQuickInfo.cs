@@ -4,6 +4,8 @@ using System.Windows.Documents;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
+namespace LA;
+
 class CiQuickInfo {
 	public async Task<Section> GetTextAt(int pos16) {
 		//using var p1 = perf.local();

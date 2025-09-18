@@ -1,5 +1,7 @@
 using System.Windows.Controls;
 
+namespace LA;
+
 /// <summary>
 /// Downloads and extracts a 7z or zip file containing multiple files into a directory. Deletes all old files. Shows progress.
 /// Can be used in UI thread.

@@ -18,6 +18,8 @@ using System.Text.RegularExpressions;
 
 //FUTURE: try source link. Like now VS.
 
+namespace LA;
+
 class CiGoTo {
 	struct _SourceLocation {
 		public _SourceLocation(string file, int line, int column) {
@@ -449,7 +451,7 @@ class CiGoTo {
 		} else if (helpKind == CiUtil.HelpKind.None && cd != null) { //maybe path in comments or disabled code
 			int pos = cd.pos;
 			if (pos < cd.meta.end && pos > cd.meta.start) {
-				foreach (var t in Au.Compiler.MetaComments.EnumOptions(cd.code, cd.meta)) {
+				foreach (var t in MetaComments.EnumOptions(cd.code, cd.meta)) {
 					if (pos >= t.valueStart && pos <= t.valueEnd) {
 						_Meta(t.Name, t.Value);
 						break;
@@ -516,8 +518,8 @@ class CiGoTo {
 		void _Meta(string name, string value) {
 			FNFind? ffn = name switch { "c" => FNFind.Class, "pr" or "preBuild" or "postBuild" => FNFind.CodeFile, "sign" or "manifest" => FNFind.File, "file" or "resource" or "icon" => FNFind.Any, _ => null };
 			if (ffn is { } ff) {
-				var f = Au.Compiler.MetaComments.FindFile(cd.sci.EFile, value, ff);
-				if (f == null && name is "c") f = Au.Compiler.MetaComments.FindFile(cd.sci.EFile, value, FNFind.Folder);
+				var f = MetaComments.FindFile(cd.sci.EFile, value, ff);
+				if (f == null && name is "c") f = MetaComments.FindFile(cd.sci.EFile, value, FNFind.Folder);
 				if (f != null) App.Model.SetCurrentFile(f);
 			} else if (name == "nuget") {
 				DNuget.ShowSingle(value);

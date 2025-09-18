@@ -7,8 +7,5 @@ outputPath %folders.Workspace%\..\Au.Editor
 miscFlags 1
 noRef *\Au.dll
 pr ..\@Au\Au.cs
-r Roslyn\Microsoft.CodeAnalysis.CSharp.dll /noCopy
-r Roslyn\Microsoft.CodeAnalysis.dll /noCopy
-c AppSettings.cs
 resource resources\Generic.xaml /embedded
 /*/

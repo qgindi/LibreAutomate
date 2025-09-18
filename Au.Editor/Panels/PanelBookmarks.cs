@@ -5,6 +5,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 using System.Windows;
 
+namespace LA;
+
 class PanelBookmarks {
 	KTreeView _tv;
 	_Item _root;

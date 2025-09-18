@@ -1,3 +1,5 @@
+namespace LA;
+
 static class RegHotkeys {
 	static RegisteredHotkey[] _a = new RegisteredHotkey[9];
 	
@@ -49,10 +51,10 @@ static class RegHotkeys {
 	internal static void WmHotkey_(nint wParam) {
 		var id = (Id)(int)wParam;
 		switch (id) {
-		case Id.QuickCaptureMenu: Au.Tools.QuickCapture.Menu(); break;
-		case Id.QuickCaptureDwnd: Au.Tools.QuickCapture.AoolDwnd(); break;
-		case Id.QuickCaptureDelm: Au.Tools.QuickCapture.ToolDelm(); break;
-		case Id.QuickCaptureDuiimage: Au.Tools.QuickCapture.ToolDuiimage(); break;
+		case Id.QuickCaptureMenu: QuickCapture.Menu(); break;
+		case Id.QuickCaptureDwnd: QuickCapture.AoolDwnd(); break;
+		case Id.QuickCaptureDelm: QuickCapture.ToolDelm(); break;
+		case Id.QuickCaptureDuiimage: QuickCapture.ToolDuiimage(); break;
 		case >= _DebugFirst and <= _DebugLast: Panels.Debug.WmHotkey_(id); break;
 		}
 	}

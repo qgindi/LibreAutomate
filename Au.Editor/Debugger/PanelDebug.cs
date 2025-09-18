@@ -9,6 +9,8 @@ using System.Windows.Input;
 using Au.Controls;
 using System.Windows.Interop;
 
+namespace LA;
+
 partial class PanelDebug {
 	_Debugger _d;
 	(Button debug, Button restart, Button next, Button step, Button stepOut, Button @continue, Button pause, Button end) _buttons;

@@ -6,6 +6,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
 
+namespace LA;
+
 class PanelOutline {
 	KTreeView _tv;
 	SciCode _activeDoc;

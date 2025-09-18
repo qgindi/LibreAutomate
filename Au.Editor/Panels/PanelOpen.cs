@@ -2,6 +2,8 @@ using Au.Controls;
 using System.Windows.Controls;
 using System.Windows.Input;
 
+namespace LA;
+
 class PanelOpen {
 	KTreeView _tv;
 	bool _updatedOnce;

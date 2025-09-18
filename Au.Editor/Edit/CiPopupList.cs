@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Automation;
 
+namespace LA;
+
 class CiPopupList {
 	KPopup _popup;
 	DockPanel _panel;
