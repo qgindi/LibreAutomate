@@ -2,7 +2,7 @@ using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 /// <summary>
 /// Dialog page for capturing a top-level window and editing its properties.
@@ -27,7 +27,7 @@ class DPwnd : UserControl {
 		b.Row(50).Add(out _info);
 		
 		b.R.StartGrid().Columns(0, 76, -1);
-		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + EdIcons.red, $"Enable capturing ({LA.App.Settings.delm.hk_capture}) and show window rectangles");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + LA.EdIcons.red, $"Enable capturing ({LA.App.Settings.delm.hk_capture}) and show window rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Span(1).Disabled().Tooltip("Find the window and show the rectangle");
 		b.End();
 		
@@ -103,7 +103,7 @@ class DPwnd : UserControl {
 	TUtil.CapturingWithHotkey _capt;
 	
 	void _cCapture_CheckedChanged() {
-		_capt ??= new TUtil.CapturingWithHotkey(
+		_capt ??= new(
 			_cCapture,
 			p => (wnd.fromXY(p, WXYFlags.NeedWindow).Rect, null),
 			(LA.App.Settings.delm.hk_capture, _Capture)
@@ -171,7 +171,7 @@ class DPwnd : UserControl {
 		string s1 = _wnd.Is0 ? "C" : "You can c", s = $@"{s1}apture a window with <+hotkey>hotkey<> <b>{LA.App.Settings.delm.hk_capture}<>.";
 		_info.aaaText = s;
 		_info.AaAddElem(this, s);
-		TUtil.RegisterLink_DialogHotkey(_info);
+		TUtil.CapturingWithHotkey.RegisterLink_DialogHotkey(_info);
 		_k.InitInfo(_info);
 	}
 	

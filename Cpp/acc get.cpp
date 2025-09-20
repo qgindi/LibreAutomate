@@ -282,7 +282,6 @@ namespace outproc {
 			//	tested: inproc does not help.
 			//	This info is old, maybe now something changed. Anyway, OpenOffice often crashes when using its AO.
 		}
-		//CONSIDER: AccEnableFirefox
 
 		//The caller may want to modify flags depending on window. Also need to detect DPI-scaled windows (I don't want to duplicate the code here).
 		//	Use callback because this func can retry with another window.

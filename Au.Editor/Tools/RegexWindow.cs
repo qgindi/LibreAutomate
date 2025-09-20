@@ -1,6 +1,6 @@
 using Au.Controls;
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 class RegexWindow : InfoWindow { //KPopup
 	public RegexWindow() : base(250) {

@@ -26,7 +26,7 @@
 
 using System.Text.RegularExpressions;
 
-namespace DiffMatchPatch
+namespace Libs.DiffMatchPatch
 {
 	internal static class CompatibilityExtensions
 	{

@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
+namespace Au.Controls;
+
 /// <summary>
 /// <c>PasswordBox</c> box with a toggle button "Environment variable" that turns it into <c>TextBox</c>.
 /// </summary>

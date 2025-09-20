@@ -4,7 +4,7 @@ namespace Au.Types;
 /// Wraps some UI Automation API.
 /// </summary>
 static class UiaUtil {
-	public static UiaApi.IUIAutomation Uia => _uia ??= new UiaApi.CUIAutomation() as UiaApi.IUIAutomation;
+	public static UiaApi.IUIAutomation Uia => _uia ??= osVersion.minWin8 ? new UiaApi.CUIAutomation8() as UiaApi.IUIAutomation : new UiaApi.CUIAutomation() as UiaApi.IUIAutomation;
 	[ThreadStatic] static UiaApi.IUIAutomation _uia;
 	
 	/// <summary>
@@ -181,6 +181,9 @@ unsafe class UiaApi : NativeApi {
 	
 	[ComImport, Guid("ff48dba4-60ef-4201-aa87-54103eef594e"), ClassInterface(ClassInterfaceType.None)]
 	internal class CUIAutomation { }
+
+	[ComImport, Guid("e22ad333-b25f-460c-83d0-0581107395c9"), ClassInterface(ClassInterfaceType.None)]
+	internal class CUIAutomation8 { }
 	
 	[ComImport, Guid("30cbe57d-d9d0-452a-ab13-7ac5ac4825ee"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 	internal interface IUIAutomation {

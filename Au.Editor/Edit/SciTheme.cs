@@ -3,7 +3,7 @@ using Au.Controls;
 using static Au.Controls.Sci;
 
 namespace LA;
-//note: although not in UnsafeTools namespace, the code here also is used in tool process and does not depend on something that is available only in main process.
+//note: used in ToolLand too.
 
 record class SciTheme { //info: record class because need `with` and synthesized ==
 	public record struct TStyle(int color, bool back = false, bool bold = false, bool italic = false, bool underline = false) {

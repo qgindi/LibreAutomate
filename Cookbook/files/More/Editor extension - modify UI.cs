@@ -16,6 +16,7 @@ r Au.Controls.dll;
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
+using LA;
 
 EditorExtension.WindowLoaded += () => _Load();
 

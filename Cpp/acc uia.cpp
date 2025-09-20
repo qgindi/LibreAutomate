@@ -27,7 +27,7 @@ namespace uia {
 
 	IUIAutomation* UIA() {
 		ThreadVar& tv = t_var;
-		if (!tv.uia) tv.uia.CoCreateInstance(__uuidof(CUIAutomation), null, CLSCTX_INPROC_SERVER);
+		if (!tv.uia) tv.uia.CoCreateInstance(osVer.minWin8() ? __uuidof(CUIAutomation8) : __uuidof(CUIAutomation), null, CLSCTX_INPROC_SERVER);
 		return tv.uia;
 	}
 

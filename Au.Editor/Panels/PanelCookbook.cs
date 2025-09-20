@@ -285,26 +285,31 @@ class PanelCookbook {
 		}
 		return _stem.a.ToArray();
 	}
-	(Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a, regexp rx) _stem;
+	(Libs.Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a, regexp rx) _stem;
 	
 	/// <summary>
 	/// Finds and opens a recipe.
-	/// Thread-safe.
+	/// <para>
+	/// If called in LA tools process or in a non-main LA thread, runs async in the main process/thread.
+	/// </para>
 	/// </summary>
-	/// <param name="s">Wildcard or start or any substring of recipe name.</param>
-	public void OpenRecipe(string s) {
-		if (App.IsMainThread) _Open(); else App.Dispatcher.InvokeAsync(_Open);
-		void _Open() {
-			Panels.PanelManager[P].Visible = true;
-			_OpenRecipe(_FindRecipe(s), true);
-		}
+	/// <param name="name">Wildcard or start or any substring of recipe name.</param>
+	public static void OpenRecipe(string name) {
+		if (process.IsLaMainThread_) Panels.Cookbook._OpenRecipe(name);
+		else if (process.IsLaProcess_) App.Dispatcher.InvokeAsync(() => OpenRecipe(name));
+		else WndCopyData.Send<char>(ScriptEditor.WndMsg_, 18, name);
+	}
+	
+	void _OpenRecipe(string name) {
+		Panels.PanelManager[P].Visible = true;
+		_OpenRecipe(_FindRecipe(name), true);
 	}
 	
 	/// <summary>
 	/// Opens recipe in web browser. Does not change anything in the Cookbook panel. Does not add to history.
 	/// </summary>
 	/// <param name="name">Exact recipe name. If null, opens the cookbook index page.</param>
-	public void OpenRecipeInWebBrowser(string name) {
+	public static void OpenRecipeInWebBrowser(string name) {
 		var s = name?.Replace("#", "Sharp").Replace(".", "dot-") ?? "index"; //see project @Au docs -> AuDocs.Cookbook
 		HelpUtil.AuHelp($"cookbook/{s}");
 	}
@@ -396,12 +401,12 @@ class PanelCookbook {
 		bool ITreeViewItem.IsFolder => dir;
 		
 		bool _IsHeading => ftype is FNType.Other;
-
+		
 		int ITreeViewItem.Color(TVColorInfo ci) => _IsHeading ? 0xB5DC8D : -1;
-
-        bool ITreeViewItem.IsDisabled => _IsHeading;
-
-        TVParts ITreeViewItem.NoParts => _IsHeading ? TVParts.Image : 0;
+		
+		bool ITreeViewItem.IsDisabled => _IsHeading;
+		
+		TVParts ITreeViewItem.NoParts => _IsHeading ? TVParts.Image : 0;
 		
 		#endregion
 		

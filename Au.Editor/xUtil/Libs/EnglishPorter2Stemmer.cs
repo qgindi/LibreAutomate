@@ -2,7 +2,7 @@
 
 #pragma warning disable 1591 //no XML comment
 
-namespace Porter2Stemmer;
+namespace Libs.Porter2Stemmer;
 
 /// <summary>
 /// Based off of the improved Porter2 algorithm:

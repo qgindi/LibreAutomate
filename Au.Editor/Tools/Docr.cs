@@ -2,7 +2,7 @@ using System.Windows.Controls;
 using Au.Controls;
 using System.Windows.Documents;
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 class Docr : KDialogWindow {
 	wnd _wnd, _con;
@@ -268,7 +268,7 @@ class Docr : KDialogWindow {
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			ToolToEditor.InsertStatements(new(s, makeVarName1: true));
+			LA.InsertCode.Statements(new(s, makeVarName1: true));
 			//if (_Opt.Has(_EOptions.InsertClose)) {
 			//	base.Close();
 			//} else {

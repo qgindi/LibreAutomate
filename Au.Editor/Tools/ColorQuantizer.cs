@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 /// <summary>
 /// Reduces image color depth with better quality than GDI/GDI+. It makes image smaller.

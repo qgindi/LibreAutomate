@@ -14,7 +14,7 @@ using acc = Microsoft.CodeAnalysis.Accessibility;
 using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
-using UnsafeTools;
+using ToolLand;
 
 namespace LA;
 
@@ -38,13 +38,16 @@ static class InsertCode {
 	/// <summary>
 	/// Inserts one or more statements at current line. With correct position, indent, etc.
 	/// If editor is null or readonly or not C# file, prints in output.
-	/// Async if called from non-main thread.
+	/// <para>
+	/// If called in LA tools process or in a non-main LA thread, runs async in the main process/thread.
+	/// </para>
 	/// </summary>
 	public static void Statements(InsertCodeParams p) {
 		if (p.s == null) return;
 		
-		if (!App.IsMainThread) {
-			App.Dispatcher.InvokeAsync(() => Statements(p));
+		if (!process.IsLaMainThread_) {
+			if (process.IsLaProcess_) App.Dispatcher.InvokeAsync(() => Statements(p));
+			else WndCopyData.Send<char>(ScriptEditor.WndMsg_, 17, System.Text.Json.JsonSerializer.Serialize(p));
 			return;
 		}
 		

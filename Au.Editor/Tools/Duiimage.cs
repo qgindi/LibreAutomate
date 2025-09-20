@@ -12,7 +12,7 @@ using System.Drawing;
 //	_ => @"image:"
 //};
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 class Duiimage : KDialogWindow {
 	wnd _wnd, _con;
@@ -482,7 +482,7 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 		if (_close) {
 			base.Close();
 		} else if (_code.aaaText.NullIfEmpty_() is string s) {
-			ToolToEditor.InsertStatements(new(s, makeVarName1: true));
+			LA.InsertCode.Statements(new(s, makeVarName1: true));
 			_close = true;
 			_bInsert.Content = "Close";
 			_bInsert.MouseLeave += (_, _) => {

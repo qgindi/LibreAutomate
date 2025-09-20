@@ -8,7 +8,7 @@ using System.Windows.Threading;
 
 //FUTURE: record "wait for UAC consent and then for normal desktop".
 
-using UnsafeTools;
+using ToolLand;
 
 namespace LA;
 

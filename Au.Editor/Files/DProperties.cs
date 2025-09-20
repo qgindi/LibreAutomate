@@ -6,7 +6,7 @@ using Au.Controls;
 using Microsoft.Win32;
 using System.Drawing;
 using System.Windows.Documents;
-using UnsafeTools;
+using ToolLand;
 
 namespace LA;
 
@@ -548,7 +548,7 @@ class Class1 {
 	}
 	
 	void _ShowInfoTooltip(UIElement by, string s) {
-		UnsafeTools.TUtil.InfoTooltip(ref _tt, by, s, Dock.Right);
+		ToolLand.TUtil.InfoTooltip(ref _tt, by, s, Dock.Right);
 	}
 	KPopup _tt;
 	

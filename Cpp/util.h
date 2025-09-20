@@ -113,6 +113,10 @@ public:
 
 	int minor() { return _minor; }
 
+	int winver() { return _winver; }
+
+	bool minWin8() { return _winver >= 0x602; }
+
 	bool minWin10() { return _major >= 10; }
 
 	bool minWin11() { return _win10build >= 22000; }

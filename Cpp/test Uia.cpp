@@ -16,7 +16,7 @@ public:
 	Smart<IUIAutomationElement> eFound;
 
 	UiaFinder() {
-		if(_f.CoCreateInstance(__uuidof(CUIAutomation), null, CLSCTX_INPROC_SERVER)) return;
+		if(_f.CoCreateInstance(__uuidof(CUIAutomation8), null, CLSCTX_INPROC_SERVER)) return;
 		if(_f->get_RawViewCondition(&_condRaw)) return;
 	}
 
@@ -99,9 +99,9 @@ LRESULT TestUia(HWND w)
 
 	//_TODO: CoInitialize if need.
 
-	//Smart<IUIAutomation> f(__uuidof(CUIAutomation), null, CLSCTX_INPROC_SERVER);
+	//Smart<IUIAutomation> f(__uuidof(CUIAutomation8), null, CLSCTX_INPROC_SERVER);
 	Smart<IUIAutomation> f;
-	if(f.CreateInstance(__uuidof(CUIAutomation), null, CLSCTX_INPROC_SERVER)) return 1;
+	if(f.CreateInstance(__uuidof(CUIAutomation8), null, CLSCTX_INPROC_SERVER)) return 1;
 	//Print((__int64)f.p);
 
 	Smart<IUIAutomationElement> ew;

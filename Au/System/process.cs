@@ -718,16 +718,16 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// true in LA main thread (LA sets it). Elsewhere false, even in main thread. This is a [ThreadStatic] variable.
+		/// <c>true</c> in LA main process. LA sets it, except in tools/pip/dragdrop processes.
+		/// </summary>
+		internal static bool IsLaProcess_;
+
+		/// <summary>
+		/// <c>true</c> in main thread of main LA process. LA sets it, except in tools/pip/dragdrop processes. This is a [ThreadStatic] variable.
 		/// NOTE: don't use <c>Environment.CurrentManagedThreadId == 1</c>, it's not always 1 in the main thread.
 		/// </summary>
 		[ThreadStatic]
 		internal static bool IsLaMainThread_;
-
-		/// <summary>
-		/// true in LA process (LA sets it).
-		/// </summary>
-		internal static bool IsLaProcess_;
 		
 		/// <summary>
 		/// After <i>afterMS</i> milliseconds invokes GC and calls API <c>SetProcessWorkingSetSize</c>.

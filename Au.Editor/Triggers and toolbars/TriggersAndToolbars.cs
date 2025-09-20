@@ -58,7 +58,7 @@ partial class TriggersAndToolbars {
 			
 			//set run at startup
 			if (_GetFile(@"Triggers and toolbars.cs", create: false) is { } f) {
-				if (App.Model.EnsureIsInStartupScripts(f, printAdded: false, printDisabled: true, usePath: true) is FilesModel.EISSResult.Added) {
+				if (App.Model.EnsureIsInStartupScripts(f, printAdded: false, usePath: true) is FilesModel.EISSResult.Added) {
 					print.it($"<>Info: script \"{f.Name}\" has been added to <+options Workspace>Options > Workspace > Startup scripts<>. If unwanted, disable the line (prefix //)."); //disable, not delete, else next time would auto-add again
 				}
 			}

@@ -17,5 +17,6 @@ dotnet_diagnostic.CS1573.severity = suggestion
 
 [*]
 charset = utf-8
+
 [*.iss]
 charset = utf-8-bom

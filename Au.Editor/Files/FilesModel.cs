@@ -1927,7 +1927,7 @@ partial class FilesModel {
 	/// <summary>
 	/// Finds <i>f</i> in startup scripts. If not found, adds to startup scripts.
 	/// </summary>
-	public EISSResult EnsureIsInStartupScripts(FileNode f, bool printAdded, bool printDisabled, bool usePath = false) {
+	public EISSResult EnsureIsInStartupScripts(FileNode f, bool printAdded, bool usePath = false) {
 		string itemPath = f.ItemPath;
 		string itemPathOrName = usePath ? itemPath : f.ItemPathOrName();
 		var ss = App.Model.UserSettings.startupScripts;
@@ -1938,7 +1938,8 @@ partial class FilesModel {
 			string name = f.Name, name2 = f.DisplayName;
 			if (csv.Rows.FirstOrDefault(a => a[0].AsSpan(a[0].Starts("//") ? 2 : 0) is var s && (s.Eqi(itemPath) || s.Eqi(name) || s.Eqi(name2))) is { } a) {
 				if (!a[0].Starts("//")) return EISSResult.FoundEnabled;
-				if (printDisabled) print.it($"<>Note: script \"{itemPathOrName}\" is not set to run at startup. In <+options Workspace>Options > Workspace > Startup scripts<> remove the // prefix.");
+				//rejected. It may be set to run from other startup script.
+				//if (printDisabled) print.it($"<>Note: script \"{itemPathOrName}\" is not set to run at startup. In <+options Workspace>Options > Workspace > Startup scripts<> remove the // prefix.");
 				return EISSResult.FoundDisabled;
 			}
 			csv.AddRow(itemPathOrName);
@@ -1954,7 +1955,7 @@ partial class FilesModel {
 		}
 		
 		App.Model.UserSettings.startupScripts = ss;
-		if (printAdded) print.it($"<>Info: script \"{itemPathOrName}\" has been added to <+options Workspace>Options > Workspace > Startup scripts<>. If unwanted, delete or disable the line (prefix //).");
+		if (printAdded) print.it($"<>Info: script \"{itemPathOrName}\" has been added to <+options Workspace>Options > Workspace > Startup scripts<>. If unwanted, disable the line (prefix //).");
 		return EISSResult.Added;
 	}
 	public enum EISSResult { FoundEnabled, FoundDisabled, Added, Failed }

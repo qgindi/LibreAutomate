@@ -285,7 +285,7 @@ class PanelRecipe {
 			m["Copy this code", disable: !_CanGetCode] = o => { if (_GetCode() is string s) clipboard.text = s; };
 			m["New script", disable: !_CanGetCode] = o => { if (_GetCode() is string s) App.Model.NewItem("Script.cs", null, _panel._currentRecipeName + ".cs", true, new(true, s)); };
 			m.Separator();
-			m["Open in web browser"] = o => { Panels.Cookbook.OpenRecipeInWebBrowser(_panel._currentRecipeName); };
+			m["Open in web browser"] = o => { PanelCookbook.OpenRecipeInWebBrowser(_panel._currentRecipeName); };
 			m.Show(owner: Handle);
 		}
 		

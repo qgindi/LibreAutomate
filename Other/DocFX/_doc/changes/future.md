@@ -54,3 +54,5 @@ Fixed bugs:
 - `WTaskbarButton` exception if used in multiple threads.
 
 ### Breaking changes
+
+Changed namespaces in `Au.Editor` project. Edit your `editorExtension` scripts that use its internal classes (unlikely).

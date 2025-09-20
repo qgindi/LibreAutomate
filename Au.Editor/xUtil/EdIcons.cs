@@ -1,5 +1,6 @@
+namespace LA;
 
-public static class EdIcons {
+static class EdIcons {
 	public const string
 		Script = "*Material.ScriptOutline #73BF00|#87E100",
 		//Script = "*Material.Square white %4,1,4,1,f;*Material.ScriptOutline #73BF00|#87E100", //white-filled. In some places looks not good.
@@ -9,6 +10,8 @@ public static class EdIcons {
 		Back = "*EvaIcons.ArrowBack" + black,
 		Trigger = "*Codicons.SymbolEvent" + blue,
 		Icons = "*FontAwesome.IconsSolid" + blue,
+		Keys = "*Material.KeyboardOutline" + blue,
+		Color = "*MaterialDesign.ColorLens" + blue,
 		Undo = "*Ionicons.UndoiOS" + brown,
 		Paste = "*Material.ContentPaste" + brown,
 		References = "*Material.MapMarkerMultiple" + blue,

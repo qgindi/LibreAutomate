@@ -1,5 +1,5 @@
 using Au.Controls;
-using UnsafeTools;
+using ToolLand;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -448,13 +448,13 @@ More info in app help topic "Code editor".
 		[Command(image = "*Material.FolderOutline" + blue)]
 		public static void Get_files_in_folder() { DEnumDir.Dialog(); }
 		
-		[Command(keysText = "Ctrl+Space in string", image = "*Material.KeyboardOutline" + blue)]
+		[Command(keysText = "Ctrl+Space in string", image = EdIcons.Keys)]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 		
 		[Command(underlined: 'x', image = EdIcons.Regex, keysText = "Ctrl+Space in string")]
 		public static void Regex() { CiTools.CmdShowRegexWindow(); }
 		
-		[Command(image = "*MaterialDesign.ColorLens" + blue)]
+		[Command(image = EdIcons.Color)]
 		public static void Color() { KColorPicker.ColorTool(s => { clipboard.text = s; print.it($"Clipboard: {s}"); }, App.Wmain, modal: false, add0xRgbButton: true, addBgrButton: true); }
 		
 		[Command(underlined: 'A', image = "*Material.Api" + blue)]
@@ -490,7 +490,7 @@ More info in app help topic "Code editor".
 		//public static void Active_triggers() { TriggersAndToolbars.ShowActiveTriggers(); }
 		
 		[Command]
-		public static void Other_triggers() { TriggersAndToolbars.Edit(@"Triggers\Other triggers.cs"); Panels.Cookbook.OpenRecipe("Other triggers"); }
+		public static void Other_triggers() { TriggersAndToolbars.Edit(@"Triggers\Other triggers.cs"); PanelCookbook.OpenRecipe("Other triggers"); }
 		
 		[Command(separator = true)]
 		public static void Toolbars() { TriggersAndToolbars.GoToToolbars(); }
@@ -518,7 +518,7 @@ More info in app help topic "Code editor".
 		public static void Find_triggers() { TriggersAndToolbars.AllTriggersMenu(App.Model.CurrentFile); }
 		
 		[Command]
-		public static void Triggers_list_info() { Panels.Cookbook.OpenRecipe("Show triggers"); }
+		public static void Triggers_list_info() { PanelCookbook.OpenRecipe("Show triggers"); }
 		
 		[Command(separator = true, image = "*RemixIcon.TerminalLine" + blue)]
 		public static class Script_launchers {

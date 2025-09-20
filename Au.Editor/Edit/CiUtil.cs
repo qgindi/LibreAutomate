@@ -693,8 +693,16 @@ static class CiUtil {
 	/// Controls that use this should set styles like this example, probably when handle created:
 	/// <c>var styles = new CiStyling.TTheme { FontSize = 9 };
 	/// styles.ToScintilla(this);</c>
+	/// <para>
+	/// If called in LA tools process or in a non-main LA thread, runs in the main process/thread; returns <c>null</c> if failed.
+	/// </para>
 	/// </summary>
 	public static byte[] GetScintillaStylingBytes8(string code) {
+		if (!process.IsLaMainThread_) {
+			if (process.IsLaProcess_) return App.Dispatcher.Invoke<byte[]>(() => GetScintillaStylingBytes8(code));
+			return WndCopyData.SendReceive<char>(ScriptEditor.WndMsg_, 15, code, out byte[] r1) ? r1 : null;
+		}
+		
 		var styles8 = new byte[Encoding.UTF8.GetByteCount(code)];
 		var map8 = styles8.Length == code.Length ? null : Convert2.Utf8EncodeAndGetOffsets_(code).offsets;
 		using var ws = new AdhocWorkspace();

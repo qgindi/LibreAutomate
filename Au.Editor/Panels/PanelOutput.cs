@@ -1,3 +1,6 @@
+//TODO: multiple output controls in the Output panel. Eg compiler output should be separated, and cleared without clearing common output text.
+//	Alternatively, allow to clear certain parts of output text, eg compiler output.
+
 using System.Windows.Controls;
 using Au.Controls;
 using static Au.Controls.Sci;
@@ -89,7 +92,7 @@ class PanelOutput {
 			SciTags.AddCommonLinkTag("open", _OpenLink);
 			SciTags.AddCommonLinkTag("script", _RunScript);
 			SciTags.AddCommonLinkTag("google", _Google);
-			SciTags.AddCommonLinkTag("+recipe", Panels.Cookbook.OpenRecipe);
+			SciTags.AddCommonLinkTag("+recipe", PanelCookbook.OpenRecipe);
 			SciTags.AddCommonLinkTag("+nuget", DNuget.ShowSingle);
 			SciTags.AddCommonLinkTag("+options", s => { DOptions.AaShow(s.NE() ? null : Enum.Parse<DOptions.EPage>(s)); });
 			AaTags.AddLinkTag("+properties", fid => {

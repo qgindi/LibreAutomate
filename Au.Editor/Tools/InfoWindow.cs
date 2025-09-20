@@ -2,7 +2,7 @@ using Au.Controls;
 using System.Windows.Controls;
 using System.Windows;
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 /// <summary>
 /// <see cref="KPopup"/>-based info window with 1 or 2 scintilla controls (<see cref="KSciInfoBox"/>) with output tags etc.

@@ -1,6 +1,6 @@
 using Au.Controls;
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 /// <summary>
 /// Scintilla-based control that shows colored C# code.
@@ -12,21 +12,21 @@ class KSciCodeBox : KScintilla {
 		//aaInitBorder = true; //no, the native border is of different color and thickness (high DPI) than other WPF controls
 		Name = "code";
 	}
-
+	
 	protected override void AaOnHandleCreated() {
 		base.AaOnHandleCreated();
-
+		
 		aaaMarginSetWidth(1, 0);
 		aaaIsReadonly = true;
 		LA.SciTheme.Current.ToScintilla(this, fontSize: 9);
 	}
-
+	
 	protected override void AaOnSciNotify(ref Sci.SCNotification n) {
 		//switch(n.nmhdr.code) {
 		//case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: break;
 		//default: print.it(n.nmhdr.code, n.modificationType); break;
 		//}
-
+		
 		switch (n.code) {
 		case Sci.NOTIF.SCN_UPDATEUI:
 			//make text after _ReadonlyStartUtf8 readonly
@@ -41,10 +41,10 @@ class KSciCodeBox : KScintilla {
 			_Styling();
 			break;
 		}
-
+		
 		base.AaOnSciNotify(ref n);
 	}
-
+	
 	/// <summary>
 	/// Sets text and makes all or part of it readonly.
 	/// </summary>
@@ -62,17 +62,17 @@ class KSciCodeBox : KScintilla {
 			_readonlyLenUtf8 = -1;
 		}
 	}
-
+	
 	public int AaReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : aaaPos16(_ReadonlyStartUtf8);
-
+	
 	protected int _readonlyLenUtf8;
-
+	
 	protected int _ReadonlyStartUtf8 => _readonlyLenUtf8 < 0 ? 0 : _LenUtf8 - _readonlyLenUtf8;
-
+	
 	protected int _LenUtf8 => Call(Sci.SCI_GETTEXTLENGTH);
-
+	
 	unsafe void _Styling() {
-		if(!WndCopyData.SendReceive<char>(ScriptEditor.WndMsg_, 15, aaaText, out byte[] styles8)) return;
+		if (LA.CiUtil.GetScintillaStylingBytes8(aaaText) is not { } styles8) return;
 		Call(Sci.SCI_STARTSTYLING);
 		fixed (byte* p = styles8) Call(Sci.SCI_SETSTYLINGEX, styles8.Length, p);
 	}

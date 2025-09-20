@@ -39,10 +39,7 @@ static partial class App {
 		
 		script.role = SRole.EditorExtension; //used by the folders class
 		script.name = AppName;
-
 		Thread.CurrentThread.Name = "@Au.Main";
-		process.IsLaMainThread_ = true; //[ThreadStatic]
-		process.IsLaProcess_ = true;
 
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
 		
@@ -53,8 +50,21 @@ static partial class App {
 		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
 			if (_RestartAsAdmin(args)) return 0;
 		}
-		
+
+		process.IsLaProcess_ = true;
+		process.IsLaMainThread_ = true; //[ThreadStatic]
 		InitThisAppFoldersEtc_(args);
+		
+		//This would make startup faster eg 900 ms -> 700 ms.
+		//	Unfortunately can't use it. It tries to optimize editorExtension asseblies too. Then exception because can't load.
+		//	Never mind: possible workaround: load it in _Assembly_Resolving().
+		//try {
+		//	var poDir = folders.ThisAppDataCommon + "optimization";
+		//	if (!Directory.Exists(poDir)) Directory.CreateDirectory(poDir);
+		//	AssemblyLoadContext.Default.SetProfileOptimizationRoot(poDir);
+		//	AssemblyLoadContext.Default.StartProfileOptimization("main");
+		//}
+		//catch (Exception ex) { Debug_.Print(ex); }
 		
 		//Debug_.PrintLoadedAssemblies(true, !true);
 		

@@ -576,7 +576,7 @@ public partial struct wnd {
 			return a.ToArray();
 
 			//Another way - UI Automation:
-			//	var x = new CUIAutomation();
+			//	var x = new CUIAutomation8();
 			//	var cond = x.CreatePropertyCondition(30003, 0xC370); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
 			//	var a = x.GetRootElement().FindAll(TreeScope.TreeScope_Children, cond);
 			//	for(int i = 0; i < a.Length; i++) print.it((wnd)a.GetElement(i).CurrentNativeWindowHandle);

@@ -6,7 +6,7 @@ using System.Windows.Controls;
 //FUTURE: init from code string.
 //TODO3: try to find and select control in current tree when captured from same window. Like in Delm.
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 [Flags]
 enum DwndFlags {
@@ -44,7 +44,7 @@ class Dwnd : KDialogWindow {
 		var b = new wpfBuilder(this).WinSize((500, 450..), (600, 430..)).Columns(-1);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
-		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + EdIcons.red, $"Enable capturing ({LA.App.Settings.delm.hk_capture}) and show window/control rectangles");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + LA.EdIcons.red, $"Enable capturing ({LA.App.Settings.delm.hk_capture}) and show window/control rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Execute the 'find' part of the code now and show the rectangle");
 		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!_dontInsert) b.Tooltip("Insert code in editor");
 		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind|finder").Tooltip("Function").Width(90);
@@ -309,7 +309,7 @@ class Dwnd : KDialogWindow {
 	TUtil.CapturingWithHotkey _capt;
 
 	void _cCapture_CheckedChanged() {
-		_capt ??= new TUtil.CapturingWithHotkey(
+		_capt ??= new(
 			_cCapture,
 			p => (wnd.fromXY(p, _noControl ? WXYFlags.NeedWindow : 0).Rect, null),
 			(LA.App.Settings.delm.hk_capture, _Capture)
@@ -372,7 +372,7 @@ class Dwnd : KDialogWindow {
 		} else if (_close) {
 			Close();
 		} else if (s != null) {
-			ToolToEditor.InsertStatements(new(s, makeVarName1: true));
+			LA.InsertCode.Statements(new(s, makeVarName1: true));
 			_close = true;
 			_bInsert.Content = "Close";
 			_bInsert.MouseLeave += (_, _) => {
@@ -475,7 +475,7 @@ class Dwnd : KDialogWindow {
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
 
-		object ITreeViewItem.Image => _IsFolder ? EdIcons.FolderArrow(_isExpanded) : null;
+		object ITreeViewItem.Image => _IsFolder ? LA.EdIcons.FolderArrow(_isExpanded) : null;
 
 		int ITreeViewItem.TextColor(TVColorInfo ci)
 			=> _isFailed ? 0xff
@@ -641,7 +641,7 @@ class Dwnd : KDialogWindow {
 
 		_info.aaaText = _dialogInfo;
 		_info.AaAddElem(this, _dialogInfo);
-		TUtil.RegisterLink_DialogHotkey(_info);
+		TUtil.CapturingWithHotkey.RegisterLink_DialogHotkey(_info);
 
 		_k.InitInfo(_info);
 		_info.InfoCT(idC, "Control id.");

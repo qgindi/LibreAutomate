@@ -723,17 +723,17 @@ partial class SciCode {
 		int len = s.Lenn(); if (len == 0) goto gRaw;
 		string old = isRange ? aaaRangeText(true, rFrom, rTo) : aaaText;
 		if (len > 5_000_000 || old.Length > 5_000_000 || old.Length == 0) goto gRaw;
-		var dmp = new DiffMatchPatch.diff_match_patch();
+		var dmp = new Libs.DiffMatchPatch.diff_match_patch();
 		var a = dmp.diff_main(old, s, true); //the slowest part. Timeout 1 s; then a valid but smaller.
 		dmp.diff_cleanupEfficiency(a);
 		using (ENewUndoAction(onUndoDontChangeCaretPos: !isRange)) {
 			for (int i = a.Count - 1, j = old.Length; i >= 0; i--) {
 				var d = a[i];
-				if (d.operation == DiffMatchPatch.Operation.INSERT) {
+				if (d.operation == Libs.DiffMatchPatch.Operation.INSERT) {
 					aaaInsertText(true, j + rFrom, d.text);
 				} else {
 					j -= d.text.Length;
-					if (d.operation == DiffMatchPatch.Operation.DELETE)
+					if (d.operation == Libs.DiffMatchPatch.Operation.DELETE)
 						aaaDeleteRange(true, j + rFrom, j + d.text.Length + rFrom);
 				}
 			}

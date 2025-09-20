@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Reflection;
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 static class Scripting {
 	/// <summary>
@@ -41,7 +41,7 @@ static class Scripting {
 		
 		SyntaxTree treeGlobal = null;
 		if (addGlobalCs) {
-			if (WndCopyData.SendReceive<char>(ScriptEditor.WndMsg_, 16, "global.cs", out string gcode)) {
+			if (WndCopyData.SendReceive<char>(ScriptEditor.WndMsg_, 16, "global.cs", out string gcode)) { //never mind: in LA main process/thread could call directly.
 				treeGlobal = CSharpSyntaxTree.ParseText(gcode, parseOpt);
 			}
 			//TODO3: also recursively add files etc specified in meta c, r, etc.

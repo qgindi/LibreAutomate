@@ -2,10 +2,8 @@ using Au.Controls;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Runtime.Loader;
-using System.ComponentModel;
 
-namespace UnsafeTools;
+namespace ToolLand;
 
 //TODO: normal acc capturing does not work for links in Chrome and Edge, and for everything in Brave. UIA OK. Alternative capturing OK (toggle with Shift+F3).
 
@@ -31,6 +29,8 @@ namespace UnsafeTools;
 //	Now by default auto-switches to UIA; it works, but then broken Invoke (in taskbar only).
 
 //CONSIDER: action "screenshot".
+
+//note: in System Informer window all UIA API hang for 2 s. Mixed acc/UIA capturing too. Pure acc OK. Same if notinproc. Other tested apps too (Inspect, PAD, UiPath).
 
 class Delm : KDialogWindow {
 	elm _elm;
@@ -124,18 +124,18 @@ class Delm : KDialogWindow {
 		b.R.StartGrid().Columns(76, 76, 130, 0, 70, -1);
 		//row 1
 		b.R.StartStack();
-		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + EdIcons.red, $"Enable capturing (hotkey {LA.App.Settings.delm.hk_capture}, and {LA.App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
-		b.xAddCheckIcon(out _cAutoTestAction, "*Material.CursorDefaultClickOutline" + EdIcons.red, "Auto test action when captured.\r\nIf no action selected, will show menu.");
-		b.xAddCheckIcon(out _cAutoInsert, "*VaadinIcons.Insert" + EdIcons.brown, "Auto insert code when captured");
+		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + LA.EdIcons.red, $"Enable capturing (hotkey {LA.App.Settings.delm.hk_capture}, and {LA.App.Settings.delm.hk_insert} to insert) and show UI element rectangles");
+		b.xAddCheckIcon(out _cAutoTestAction, "*Material.CursorDefaultClickOutline" + LA.EdIcons.red, "Auto test action when captured.\r\nIf no action selected, will show menu.");
+		b.xAddCheckIcon(out _cAutoInsert, "*VaadinIcons.Insert" + LA.EdIcons.brown, "Auto insert code when captured");
 		b.AddSeparator(true);
-		//b.xAddButtonIcon(EdIcons.iconUndo, _ => App.Dispatcher.InvokeAsync(() => SciUndo.OfWorkspace.UndoRedo(false)), "Undo in editor");
-		//b.xAddButtonIcon("*Material.SquareEditOutline" + EdIcons.blue, _ => App.Hmain.ActivateL(true), "Activate editor window");
-		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular" + EdIcons.blue, _ => _wnd.ActivateL(true), "Activate captured window");
+		//b.xAddButtonIcon(LA.EdIcons.iconUndo, _ => App.Dispatcher.InvokeAsync(() => SciUndo.OfWorkspace.UndoRedo(false)), "Undo in editor");
+		//b.xAddButtonIcon("*Material.SquareEditOutline" + LA.EdIcons.blue, _ => App.Hmain.ActivateL(true), "Activate editor window");
+		b.xAddButtonIcon("*FontAwesome.WindowMaximizeRegular" + LA.EdIcons.blue, _ => _wnd.ActivateL(true), "Activate captured window");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + EdIcons.black, _ => _Test(testAction: true), "Test action");
-		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + EdIcons.blue, _ => _Test(testAction: true, actWin: true), "Activate window and test action");
+		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + LA.EdIcons.black, _ => _Test(testAction: true), "Test action");
+		b.xAddButtonIcon("*Material.CursorDefaultClickOutline" + LA.EdIcons.blue, _ => _Test(testAction: true, actWin: true), "Activate window and test action");
 		b.AddSeparator(true);
-		b.xAddButtonIcon("*EvaIcons.Options2" + EdIcons.green, _ => _ToolSettings(), "Tool settings");
+		b.xAddButtonIcon("*EvaIcons.Options2" + LA.EdIcons.green, _ => _ToolSettings(), "Tool settings");
 		b.AddSeparator(true);
 		b.Add(out _cUIA, "UIA").Checked(LA.App.Settings.delm.def_UIA, threeState: true).Tooltip("What API to use to capture UI elements:\nChecked - UI Automation\nUnchecked - MSAA\nIndeterminate - auto");
 		
@@ -613,7 +613,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	TUtil.CapturingWithHotkey _capt;
 	
 	void _InitCapturingWithHotkey() {
-		_capt = new TUtil.CapturingWithHotkey(_cCapture, _GetRect, (LA.App.Settings.delm.hk_capture, _Capture), (LA.App.Settings.delm.hk_insert, () => _Insert(hotkey: true)), (LA.App.Settings.delm.hk_smaller, _CaptureSmallerToggle));
+		_capt = new(_cCapture, _GetRect, (LA.App.Settings.delm.hk_capture, _Capture), (LA.App.Settings.delm.hk_insert, () => _Insert(hotkey: true)), (LA.App.Settings.delm.hk_smaller, _CaptureSmallerToggle));
 		_cCapture.IsChecked = true;
 		
 		(RECT? r, string s) _GetRect(POINT p) { //timer every ~250 ms while capturing
@@ -959,7 +959,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				if (s.RxMatch(@"(?m)^var e = w\.Elm\[""(?:[a-z]+:)?([a-zA-Z][\w ]+\w)""", out var m)) rename_e = [("e", m[1].Value.Lower().Replace(' ', '_'))];
 			}
 			
-			ToolToEditor.InsertStatements(new(s, makeVarName1: true, renameVars: rename_e));
+			LA.InsertCode.Statements(new(s, makeVarName1: true, renameVars: rename_e));
 			if (!hotkey) {
 				_close = true;
 				_bInsert.Content = "Close";
@@ -1320,7 +1320,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
 		
-		object ITreeViewItem.Image => _IsFolder ? EdIcons.FolderArrow(_isExpanded) : null;
+		object ITreeViewItem.Image => _IsFolder ? LA.EdIcons.FolderArrow(_isExpanded) : null;
 		
 		int ITreeViewItem.TextColor(TVColorInfo ci)
 			=> _isFailed ? 0xff0000
@@ -1585,7 +1585,7 @@ new elmFinder || 5
 					if (test && ReferenceEquals(action, _testedAction)) _FormatCode();
 				} else if (s1.Starts('?')) {
 					if (s1 == "?table") {
-						ToolToEditor.OpenCookbookRecipe("Extract table*UI*");
+						LA.PanelCookbook.OpenRecipe("Extract table*UI*");
 						action = _ActionFind("FindAll, table");
 					}
 				}
@@ -2084,7 +2084,7 @@ new elmFinder || 5
 		_info.AaAddElem(this, _dialogInfo);
 		_info.AaTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 		_info.AaTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
-		TUtil.RegisterLink_DialogHotkey(_info);
+		TUtil.CapturingWithHotkey.RegisterLink_DialogHotkey(_info);
 		
 		//note: for Test button etc it's better to use tooltip, not _info.
 		
