@@ -209,9 +209,7 @@ namespace {
 	ENABLE_BITMASK_OPERATORS(eAccResult);
 
 	bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = null, RECT* rect = null) {
-		if (stream == null) CreateStreamOnHGlobal(0, true, &stream);
-
-		eAccResult has = (eAccResult)0;
+		eAccResult has = {};
 		if (aPrev != null) {
 			if (a.acc == aPrev->acc && a.elem != 0) has |= eAccResult::UsePrevAcc; else aPrev->acc = a.acc;
 			if (a.misc.level != 0) has |= a.misc.level == aPrev->misc.level ? eAccResult::UsePrevLevel : eAccResult::Level;
@@ -223,9 +221,10 @@ namespace {
 		if (a.misc.roleByte != 0) has |= eAccResult::Role;
 		if (rect != null) has |= eAccResult::Rect;
 
-		if (stream->Write(&has, 1, null)) return false;
+		if (0 != stream->Write(&has, 1, null)) return false;
 
 		a.misc.flags |= eAccMiscFlags::InProc;
+
 		if (!(has & eAccResult::UsePrevAcc)) {
 			//problem: with some AO the hook is not called when we try to do something inproc, eg get all props.
 			//	They use a custom IMarshal, which redirects to another (not hooked) IAccessible interface. In most cases it is even in another process.
@@ -240,7 +239,7 @@ namespace {
 			if (0 == a.acc->QueryInterface(&m)) m->Release();
 			else hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
 			//ao::PrintAcc(a.acc, a.elem); Print((DWORD)hr);
-			if (hr) {
+			if (hr != 0) {
 #if true
 				HRESULT hr1 = hr;
 				auto wrap = new AccessibleMarshalWrapper(a.acc);
@@ -253,7 +252,7 @@ namespace {
 #endif
 				//ao::PrintAcc(a.acc, a.elem);
 			} //else Print(L"OK");
-			if (hr) return false;
+			if (hr != 0) return false;
 			inproc::s_hookIAcc.Hook(a.acc);
 		}
 
@@ -276,6 +275,100 @@ namespace {
 
 #pragma endregion
 
+	struct _AccRect {
+		Cpp_Acc a;
+		RECT r;
+		int state, nSiblings;
+
+		int role() const { return a.misc.roleByte; }
+		int level() const { return a.misc.level; }
+
+		static bool Skip(ref Cpp_Acc& a, int state) {
+			if (!(state & (STATE_SYSTEM_OFFSCREEN | STATE_SYSTEM_INVISIBLE))) return false;
+			if (a.elem != 0) return true;
+
+			bool skip = true;
+			int role = a.misc.roleByte;
+			if (!!(state & STATE_SYSTEM_OFFSCREEN)) {
+				bool mayHaveVisibleChildren = (state & STATE_SYSTEM_EXPANDED) || IsIn(role, ROLE_SYSTEM_PAGETAB, ROLE_SYSTEM_PAGETABLIST);
+				skip = !mayHaveVisibleChildren;
+			}
+
+			//workaround for bugs in some apps where a hidden control has visible acc descendants, eg in WinUI3 windows like Win11 mspaint.
+			//	If it's the only child of a visible parent, likely its acc descendants are visible.
+			if (skip && IsIn(role, ROLE_SYSTEM_WINDOW, ROLE_SYSTEM_CLIENT, ROLE_SYSTEM_PANE)) {
+				HWND w = 0;
+				if (0 == WindowFromAccessibleObject(a.acc, &w) && w) {
+					if ((wn::Style(w) & WS_CHILD) != 0 && IsWindowVisible(GetParent(w)) && GetWindow(w, GW_HWNDNEXT) == 0 && GetWindow(w, GW_HWNDPREV) == 0) {
+						skip = false;
+					}
+					//note: don't compare rect, it may be empty
+				}
+			}
+
+			return skip;
+		}
+
+		static void FilterRects(ref std::vector<_AccRect>& a) {
+			//remove all GROUPING that don't contain descendants other than GROUPING. And PANE too.
+			int nRemove = 0;
+			for (int n = (int)a.size(), i = n; --i >= 0; ) {
+				auto& v = a[i];
+				if (IsIn(v.role(), ROLE_SYSTEM_GROUPING, ROLE_SYSTEM_PANE)) {
+					bool noChildren = i == n - 1;
+					if (!noChildren) {
+						auto& v2 = a[i + 1];
+						int levelPlus = v2.level() - v.level();
+						noChildren = levelPlus <= 0 || (levelPlus == 1 && v2.nSiblings == 0); //v2 is not child, or is removed child
+					}
+					if (noChildren) {
+						v.nSiblings = 0;
+						nRemove++;
+					}
+				}
+			}
+			if (nRemove > 0) {
+				//auto len1 = a.size();
+				a.erase(std::remove_if(a.begin(), a.end(), [](const _AccRect& v) { return v.nSiblings == 0; }), a.end());
+				//Printf(L"erase: %i, %i", (int)len1, (int)a.size());
+			}
+
+			for (int n = (int)a.size(), i = n; --i >= 0; ) {
+				auto& v = a[i];
+				//exclude STATICTEXT etc if it is single child in parent and does not have non-removed children
+				if (v.nSiblings == 1 && v.level() > 0) { //single child in parent
+					int role = v.role();
+					bool isStatic = role == ROLE_SYSTEM_STATICTEXT || role == ROLE_SYSTEM_GRAPHIC || role == ROLE_SYSTEM_GROUPING || (role == ROLE_SYSTEM_TEXT && 0 == (v.state & (STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_UNAVAILABLE)));
+					if (isStatic) {
+						bool noChildren = i == n - 1;
+						if (!noChildren) {
+							auto& v2 = a[i + 1];
+							int levelPlus = v2.level() - v.level();
+							noChildren = levelPlus <= 0 || (levelPlus == 1 && v2.nSiblings == 0); //v2 is not child, or is removed child
+						}
+						if (noChildren) { //does not have non-removed children (in window rect)
+							v.nSiblings = 0; //mark to exclude
+							continue;
+						}
+					}
+				}
+				//maybe re-include previously excluded descendants
+				if (i < n - 1 && a[i + 1].nSiblings == 0) {
+					bool reInclude = v.role() == ROLE_SYSTEM_GROUPING;
+					if (!(reInclude || ao::IsLinkOrButton(v.role()))) {
+						Bstr bn;
+						reInclude = !((0 == v.a.acc->get_accName(ao::VE(), &bn)) && bn && bn.Length() > 0); //no name
+					}
+					if (reInclude) {
+						for (int j = i + 1; j < n && a[j].nSiblings == 0 && a[j].level() - a[j - 1].level() == 1; j++) {
+							a[j].nSiblings = 1;
+						}
+					}
+				}
+			}
+		}
+	};
+
 } //namespace
 
 namespace inproc {
@@ -284,6 +377,8 @@ namespace inproc {
 	//Common for Cpp_AccFind, Cpp_AccFromWindow and other functions that return AO.
 	HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResult) {
 		Smart<IStream> stream;
+		if (0 != CreateStreamOnHGlobal(0, true, &stream)) return RPC_E_SERVER_CANTMARSHAL_DATA;
+
 		auto action = h->action;
 		if (action == InProcAction::IPA_AccNavigate) {
 			auto p = (MarshalParams_AccElem*)h;
@@ -341,38 +436,40 @@ namespace inproc {
 			HWND w = (HWND)(LPARAM)p->hwnd;
 			eAF2 flags2 = p->flags2;
 			bool findAll = !!(flags2 & eAF2::FindAll), getRects = !!(flags2 & eAF2::GetRects);
-			WCHAR resultProp = ap.resultProp;
+			int skip = ap.skip;
 			HRESULT hr = (HRESULT)eError::NotFound;
 			Cpp_Acc aParent(iacc, 0, h->miscFlags), aPrev;
 			DpiElmScaling des(getRects, w, null);
+			std::vector<_AccRect> agr;
 
 			HRESULT hr2 = AccFind(
-				[&hr, &stream, &aPrev, resultProp, findAll, skip = ap.skip, &sResult, getRects, &des](Cpp_Acc a) mutable {
+				[&](Cpp_Acc a, int state, int nSiblings) mutable {
 					if (!findAll && skip-- > 0) return eAccFindCallbackResult::Continue;
 
-					if (resultProp) {
-						if (resultProp != '-') {
+					if (ap.resultProp) {
+						if (ap.resultProp != '-') {
 							a.misc.flags |= eAccMiscFlags::InProc;
-							AccGetProp(a, resultProp, out sResult);
+							AccGetProp(a, ap.resultProp, out sResult);
 						}
-					} else {
-						if (!stream) CreateStreamOnHGlobal(0, true, &stream);
-
-						DWORD pos = 0;
-						if (findAll) istream::GetPos(stream, out pos);
-
-						RECT rect = { }; RECT* pRect = null;
-						if (getRects) { //Delm uses it together with findAll to get all AO and their rects when inproc
-							if (0 != ao::accLocation(out rect, a.acc, a.elem)) return eAccFindCallbackResult::Continue;
-							int scaleResult = des.ScaleIfNeed(ref rect, true);
-							if (scaleResult == 1) return eAccFindCallbackResult::Continue; //not in window rect
-							pRect = &rect;
+					} else if (getRects) { //Delm in "capture smaller" mode uses it together with findAll to get all AO and their rects when inproc
+						if (!(ap.flags & eAF::HiddenToo)) {
+							if (_AccRect::Skip(ref a, state)) return eAccFindCallbackResult::SkipChildren;
 						}
+						RECT rect = { };
+						if (0 != ao::accLocation(out rect, a.acc, a.elem)) return eAccFindCallbackResult::Continue;
+						int scaleResult = des.ScaleIfNeed(ref rect, true);
+						if (scaleResult == 1) return eAccFindCallbackResult::Continue; //not in window rect
 
-						if (!WriteAccToStream(ref stream, a, &aPrev, pRect)) {
-							if (!findAll) goto ge;
+						agr.emplace_back(a, rect, state, nSiblings);
+						a.acc->AddRef();
+					} else if (findAll) {
+						DWORD pos = 0; istream::GetPos(stream, out pos);
+
+						if (!WriteAccToStream(ref stream, a, &aPrev)) {
 							stream->Seek(istream::LI(pos), STREAM_SEEK_SET, null);
 						}
+					} else {
+						if (!WriteAccToStream(ref stream, a, &aPrev)) goto ge;
 					}
 
 					hr = 0;
@@ -384,7 +481,21 @@ namespace inproc {
 
 			if (hr2 != 0 && hr2 != (HRESULT)eError::NotFound) return hr2;
 			if (hr != 0) return hr;
-			if (resultProp) return 0;
+
+			if (getRects) {
+				_AccRect::FilterRects(ref agr);
+				for (auto& k : agr) {
+					if (k.nSiblings > 0) { //else removed
+						DWORD pos = 0; istream::GetPos(stream, out pos);
+						if (!WriteAccToStream(ref stream, k.a, &aPrev, &k.r)) {
+							stream->Seek(istream::LI(pos), STREAM_SEEK_SET, null);
+						}
+					}
+					k.a.acc->Release();
+				}
+			} else {
+				if (ap.resultProp) return 0;
+			}
 		}
 
 		DWORD streamSize, readSize;
@@ -416,13 +527,13 @@ namespace outproc {
 			_resultSize = _br.ByteLength(); if (_resultSize == 0) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 			HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, _resultSize); if (hg == 0) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 			LPVOID mem = GlobalLock(hg); memcpy(mem, _br, _resultSize); GlobalUnlock(mem);
-			CreateStreamOnHGlobal(hg, true, &_stream);
+			if (0 != CreateStreamOnHGlobal(hg, true, &_stream)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 			//Print(_resultSize);
 		}
 
 		DWORD pos; if (istream::GetPos(_stream, out pos) && pos == _resultSize) return (HRESULT)eError::NotFound; //no more results when FindAll. Fast.
 
-		eAccResult has = (eAccResult)0;
+		eAccResult has = {};
 		if (0 != _stream->Read(&has, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
 		if (!(has & eAccResult::UsePrevAcc)) {
@@ -606,8 +717,24 @@ namespace outproc {
 		} else {
 			ap.flags2 |= eAF2::NotInProc;
 			bool found = false;
+			int skip = ap.skip;
+			std::vector<_AccRect> agr;
+			RECT rWin = {}; if (getRects) GetWindowRect(w, &rWin);
+
 			R = AccFind(
-				[&found, &aResult, &sResult, &ap, skip = ap.skip, also](Cpp_Acc a) mutable {
+				[&](Cpp_Acc a, int state, int nSiblings) mutable {
+					if (getRects) {
+						if (!(ap.flags & eAF::HiddenToo)) {
+							if (_AccRect::Skip(ref a, state)) return eAccFindCallbackResult::SkipChildren;
+						}
+						RECT rect = { };
+						if (0 != ao::accLocation(out rect, a.acc, a.elem)) return eAccFindCallbackResult::Continue;
+						if (!IntersectRect(&rect, &rect, &rWin)) return eAccFindCallbackResult::Continue;
+						agr.emplace_back(a, rect, state, nSiblings);
+						a.acc->AddRef();
+						return eAccFindCallbackResult::Continue;
+					}
+
 					if (also) {
 						a.acc->AddRef(); //of proxy (fast)
 						if (!also(a, null)) return eAccFindCallbackResult::Continue;
@@ -626,7 +753,17 @@ namespace outproc {
 					return eAccFindCallbackResult::StopFound;
 				}, w, aParent, ref ap, out sResult);
 
-			if (!R && !found) R = (HRESULT)eError::NotFound;
+			if (getRects) {
+				if (R != (HRESULT)eError::NotFound) return R;
+				_AccRect::FilterRects(ref agr);
+				for (auto& k : agr) {
+					if (k.nSiblings > 0) { //else removed
+						also(k.a, &k.r);
+					}
+				}
+			} else {
+				if (R == 0 && !found) R = (HRESULT)eError::NotFound;
+			}
 		}
 		//Perf.NW();
 

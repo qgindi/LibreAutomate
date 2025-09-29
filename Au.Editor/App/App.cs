@@ -23,10 +23,10 @@ static partial class App {
 #if IDE_LA //test tools
 //		print.clear();
 		
-//		args = ["/tool", "Dwnd", "0", "0"];
-//		args = ["/tool", "Delm"];
-//		//args = ["/tool", "Duiimage", "0"];
-//		//args = ["/tool", "Docr"];
+//		args = ["/tool", "0", "Dwnd", "0", "0"];
+		args = ["/tool", "0", "Delm"];
+//		//args = ["/tool", "0", "Duiimage", "0"];
+//		//args = ["/tool", "0", "Docr"];
 #endif
 		
 #if DEBUG && !IDE_LA //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.

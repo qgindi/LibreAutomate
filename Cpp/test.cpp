@@ -794,7 +794,7 @@ EXPORT void Cpp_Test() {
 		//#if true
 		//	eTest t = eTest::One | eTest::Two;
 		//	//eTest t = eTest::Two;
-		//	//t = (eTest)0;
+		//	//t = {};
 		//	Print(t); //error if 'enum class'
 		//	Print((int)t);
 		//

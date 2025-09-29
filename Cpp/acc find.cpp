@@ -41,17 +41,6 @@ class AccFinder {
 	BSTR* _errStr; //error string, when a parameter is invalid
 	HWND _wTL; //window in which currently searching
 
-	//A parsed path part, when the role parameter is path like "A/B[4]/C". 
-	//struct _PathPart {
-	//	STR role; //eg "B" if "B[4]" //stored in _roleStrings
-	//	int startIndex; //eg 4 if "B[4]"
-	//	bool exactIndex; //true if eg "B[4!]"
-
-	//	_PathPart() { ZEROTHIS; }
-	//};
-	//_PathPart* _path; //null if no path
-	//int _pathCount; //_path array element count
-
 	bool _Error(STR es) {
 		if (_errStr) *_errStr = SysAllocString(es);
 		return false;
@@ -61,46 +50,6 @@ class AccFinder {
 		_Error(es);
 		return (HRESULT)eError::InvalidParameter;
 	}
-
-	//	bool _ParseRole(STR role, int roleLen)
-	//	{
-	//		if(role == null) return true;
-	//
-	//		//is path?
-	//		//rejected. Nobody will use.
-	//		if(_pathCount = (int)std::count(role, role + roleLen, '/')) {
-	//			auto a = _path = new _PathPart[++_pathCount];
-	//			int level = 0;
-	//			LPWSTR s = _roleStrings.Assign(role, roleLen);
-	//			for(LPWSTR partStart = s, eos = s + roleLen; s <= eos; s++) {
-	//				auto c = *s;
-	//				if(c == '/' || c == '[' || s == eos) {
-	//					_PathPart& e = a[level];
-	//					if(s > partStart) { //else can be any role at this level
-	//						e.role = partStart;
-	//						*s = 0;
-	//					}
-	//					if(c == '[') {
-	//						auto s0 = s + 1;
-	//						e.startIndex = strtoi(s0, &s);
-	//						if(s == s0) goto ge;
-	//						if(*s == '!') { s++; e.exactIndex = true; }
-	//						if(*s++ != ']') goto ge;
-	//						if(s < eos && *s != '/') goto ge;
-	//					}
-	//					partStart = s + 1;
-	//					level++;
-	//				}
-	//			}
-	//			//Print(_pathCount); for(int i = 0; i < _pathCount; i++) Printf(L"'%s'  %i %i", a[i].role, a[i].startIndex, a[i].exactIndex);
-	//		} else {
-	//			_role = role;
-	//		}
-	//
-	//		return true;
-	//ge:
-	//		return _Error(L"Invalid role.");
-	//	}
 
 	void _ParseNotin(LPWSTR s, LPWSTR eos) {
 		_notinCount = (int)std::count(s, eos, ',') + 1;
@@ -192,7 +141,6 @@ class AccFinder {
 								if (!_ParseState(va, s)) return false;
 								break;
 							case 2:
-								//if(_path != null) return _Error(L"Path and level.");
 								_minLevel = strtoi(va, &s2);
 								if (s2 == va || _minLevel < 0) goto ge;
 								if (s2 == s) _maxLevel = _minLevel;
@@ -261,7 +209,6 @@ public:
 	}
 
 	~AccFinder() {
-		//delete[] _path;
 		delete[] _prop;
 		delete[] _notin;
 	}
@@ -356,7 +303,7 @@ private:
 
 		//isControl is true when is specified class or id. Now caller is enumerating controls. Need _Match for control's WINDOW, not only for descendants.
 		int level = 0;
-		if (isControl /*&& _path == null*/) {
+		if (isControl) {
 			switch (_Match(ref aw, level++)) {
 			case _eMatchResult::Stop: return 0;
 			case _eMatchResult::SkipChildren: goto gnf;
@@ -371,10 +318,6 @@ private:
 	//Returns true to stop.
 	bool _FindInAcc(const Cpp_Acc& aParent, int level) {
 		int startIndex = 0; bool exactIndex = false;
-		//if(_path != null) {
-		//	startIndex = _path[level].startIndex;
-		//	if(_path[level].exactIndex) exactIndex = true;
-		//}
 
 		AccChildren c(ref _context, ref aParent, startIndex, exactIndex, !!(_flags & eAF::Reverse));
 		//Printf(L"%i  %i", level, c.Count());
@@ -390,7 +333,7 @@ private:
 			AccDtorIfElem0 aChild;
 			if (!c.GetNext(out aChild)) break;
 
-			switch (_Match(ref aChild, level)) {
+			switch (_Match(ref aChild, level, c.Count())) {
 			case _eMatchResult::Stop: return true;
 			case _eMatchResult::SkipChildren: continue;
 			}
@@ -402,7 +345,7 @@ private:
 
 	enum class _eMatchResult { Continue, Stop, SkipChildren };
 
-	_eMatchResult _Match(ref AccDtorIfElem0& a, int level) {
+	_eMatchResult _Match(ref AccDtorIfElem0& a, int level, int nSiblings = 0) {
 		if (_findDOCUMENT && a.elem != 0) return _eMatchResult::SkipChildren;
 
 		bool skipChildren = a.elem != 0 || level >= _maxLevel;
@@ -433,6 +376,14 @@ private:
 			return fdr;
 		}
 
+		if (!!(_flags2 & eAF2::GetRects)) {
+			switch ((*_callback)(a, state.State(), nSiblings)) {
+			case eAccFindCallbackResult::Continue: return skipChildren ? _eMatchResult::SkipChildren : _eMatchResult::Continue;
+			case eAccFindCallbackResult::SkipChildren: return _eMatchResult::SkipChildren;
+			}
+			return _eMatchResult::Stop;
+		}
+
 		//skip children of AO of user-specified roles
 		STR roleString = null;
 		if (_notin && !skipChildren) {
@@ -443,7 +394,7 @@ private:
 			}
 		}
 
-		STR roleNeeded = /*_path != null ? _path[level].role :*/ _role;
+		STR roleNeeded = _role;
 
 		if (level >= _minLevel) {
 			//If eAF::Mark, the caller is getting all AO using callback, and wants us to add eAccMiscFlags::Marked to AOs that match role, rect, name and state.
@@ -460,14 +411,9 @@ private:
 					if (!roleString) roleString = ao::RoleToString(ref varRole);
 					if (wcscmp(roleNeeded, roleString)) {
 						if (mark) mark = -1;
-						//else if(_path != null) return _eMatchResult::SkipChildren;
 						else goto gr;
 					}
 				}
-				//if(_path != null) {
-				//	if(level < _pathCount - 1) goto gr;
-				//	skipChildren = true;
-				//}
 			}
 
 			if (!!(_flags2 & eAF2::IsElem) && a.elem != _elem) goto gr;
@@ -486,7 +432,7 @@ private:
 					[[fallthrough]];
 				case 1: //only INVISIBLE
 					if (_IsRoleTopLevelClient(role, level)) break; //rare
-					skipChildren = true; goto gr;
+					return _eMatchResult::SkipChildren;
 				}
 
 				//never mind: MSAA bug of child windows classnamed "Windows.UI.Input.InputSite.WindowClass": WINDOW has INVISIBLE, although descendants are visible.
@@ -497,7 +443,7 @@ private:
 			}
 
 			if (!!(_stateYes | _stateNo) && mark >= 0) {
-				auto k = state.State();
+				int k = state.State();
 				if ((k & _stateYes) != _stateYes || !!(k & _stateNo)) {
 					if (mark) mark = -1; else goto gr;
 				}
@@ -522,8 +468,9 @@ private:
 				_flags |= eAF::Marked_;
 			}
 
-			switch ((*_callback)(a)) {
+			switch ((*_callback)(a, 0, 0)) {
 			case eAccFindCallbackResult::Continue: goto gr;
+			case eAccFindCallbackResult::SkipChildren: return _eMatchResult::SkipChildren;
 			case eAccFindCallbackResult::StopFound: _found = true;
 				//case eAccFindCallbackResult::StopNotFound: break;
 			}
@@ -531,8 +478,8 @@ private:
 		}
 	gr:
 		if (!skipChildren) {
-			//depending on flags, skip children of AO that often have many descendants (eg MENUITEM, LIST, TREE)
-			skipChildren = _IsRoleToSkipDescendants(role, roleNeeded, a.acc);
+			//flag MenuToo
+			skipChildren = role == ROLE_SYSTEM_MENUITEM && !(_flags & eAF::MenuToo) && !str::Switch(roleNeeded, { L"MENUITEM", L"MENUPOPUP" });
 
 			//skip children of invisible AO that often have many descendants (eg DOCUMENT, WINDOW)
 			if (!skipChildren && !hiddenToo && _IsRoleToSkipIfInvisible(role) && !_IsRoleTopLevelClient(role, level)) skipChildren = state.IsInvisible();
@@ -584,16 +531,6 @@ private:
 		//	Can be even parent marked as invisible when child not. Then we'll not find child if parent's role is one of above.
 		//	Never mind. This probably will be rare with these roles. Then user can add flag HiddenToo.
 		//	But code tools should somehow detect it and add the flag.
-	}
-
-	bool _IsRoleToSkipDescendants(int role, STR roleNeeded, IAccessible* a) {
-		switch (role) {
-		case ROLE_SYSTEM_MENUITEM:
-			if (!(_flags & eAF::MenuToo))
-				if (!str::Switch(roleNeeded, { L"MENUITEM", L"MENUPOPUP" })) return true;
-			break;
-		}
-		return false;
 	}
 
 	//Returns true if the AO is most likely the client area of the top-level window.
@@ -1012,7 +949,7 @@ namespace outproc {
 	//Else returns 0.
 	//If detects Chrome, enables its acc.
 	EXPORT eAF2 Cpp_AccRolePrefix(STR s, int len, HWND w) {
-		eAF2 R = (eAF2)0;
+		eAF2 R = {};
 		HWND c = 0;
 		int prefix = str::Switch(s, len, { L"web", L"chrome", L"firefox" });
 		if (prefix > 0) {

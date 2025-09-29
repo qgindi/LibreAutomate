@@ -65,7 +65,7 @@ public unsafe class elmFinder {
 	/// <summary>
 	/// Stores the specified UI element properties in this object.
 	/// </summary>
-	/// <inheritdoc cref="this" path="/param"/>
+	/// <inheritdoc cref="this" path="//param|//remarks"/>
 	public elmFinder(string role = null,
 		[ParamString(PSFormat.Wildex)] string name = null,
 		Strings prop = default, EFFlags flags = 0, Func<elm, bool> also = null,
@@ -507,14 +507,22 @@ public unsafe class elmFinder {
 
 		Cpp.Cpp_AccFindCallbackT also = (ca, rect) => {
 			var e = new elm(ca);
-			a.Add((e, rect != null ? *rect : e.Rect)); //info: rect null if not inproc
+			a.Add((e, *rect));
 			return 0;
 		};
-
-		var ap = new Cpp.Cpp_AccFindParams { flags = flags };
+		
+		var ap = new Cpp.Cpp_AccFindParams(null, null, null, flags, 0, default);
 		Cpp.Cpp_AccFind(w, null, ap, also, out var ca, out string sResult, getRects: true);
 		GC.KeepAlive(also);
 		return a;
+		
+		//TODO2: try async. Let the in-proc code return immediately and later post results.
+		//	Alternatively can use CoMarshalInterThreadInterfaceInStream, but it makes ~50% slower if need to marshal all. Maybe can optimize to marshal only some.
+		//TODO2: add `elm.MarshalToThisThread`.
+		//TODO2: (heavy change) maybe instead of `IAccessible` use a UIA element. Wrap acc in it like now uia in acc.
+		//	Why: UIA elements are free-threaded (unlike acc).
+		//	Why: maybe then easier to wrap more UIA API.
+		//	Or some way to avoid passing COM objects to this process.
 	}
 
 	///

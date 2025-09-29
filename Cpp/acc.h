@@ -148,13 +148,6 @@ namespace ao {
 		return hr;
 	}
 
-	static bool IsStatic(int role, IAccessible* iacc) {
-		if (role == ROLE_SYSTEM_STATICTEXT || role == ROLE_SYSTEM_GRAPHIC) return true;
-		if (role != ROLE_SYSTEM_TEXT) return false;
-		long state = 0;
-		return 0 == get_accState(state, iacc) && 0 == (state & (STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_UNAVAILABLE));
-	}
-
 #if TRACE
 	static void PrintAcc(IAccessible* acc, long elem = 0, int level = 0) {
 		_variant_t vr; HRESULT hr = acc->get_accRole(VE(elem), &vr);
@@ -162,6 +155,10 @@ namespace ao {
 		Bstr bn; STR sn = L""; if (0 == acc->get_accName(ao::VE(elem), &bn) && bn) sn = bn;
 
 		Printf(L"<><c 0x80>%*s%s  \"%s\"</c>", level, L"", sr, sn);
+	}
+
+	static void PrintAcc(ref Cpp_Acc& a) {
+		PrintAcc(a.acc, a.elem, a.misc.level);
 	}
 #endif
 
@@ -207,6 +204,10 @@ namespace ao {
 		TempSetScreenReader tsr; if (screenReader) tsr.Set(w);
 		return AccessibleObjectFromWindow(w, objid, IID_IAccessible, (void**)a);
 	}
+
+	static bool IsLinkOrButton(int role) {
+		return IsIn(role, ROLE_SYSTEM_LINK, ROLE_SYSTEM_PUSHBUTTON, ROLE_SYSTEM_BUTTONMENU, ROLE_SYSTEM_BUTTONDROPDOWN, ROLE_SYSTEM_BUTTONDROPDOWNGRID, ROLE_SYSTEM_CHECKBUTTON, ROLE_SYSTEM_RADIOBUTTON);
+	}
 } //namespace ao
 
 //IAccessible* and child element id.
@@ -216,7 +217,7 @@ struct AccRaw : public Cpp_Acc {
 	AccRaw() noexcept : Cpp_Acc() {}
 
 	//Does not AddRef.
-	AccRaw(IAccessible* acc_, int elem_, eAccMiscFlags flags_ = (eAccMiscFlags)0) noexcept : Cpp_Acc(acc_, elem_, flags_) {}
+	AccRaw(IAccessible* acc_, int elem_, eAccMiscFlags flags_ = {}) noexcept : Cpp_Acc(acc_, elem_, flags_) {}
 
 	//Does not AddRef.
 	AccRaw(ref const Cpp_Acc& x) noexcept : Cpp_Acc(x) {}
@@ -406,7 +407,7 @@ public:
 	AccDtorIfElem0() noexcept {}
 
 	//Does not AddRef.
-	AccDtorIfElem0(IAccessible* acc_, int elem_, eAccMiscFlags flags_ = (eAccMiscFlags)0) noexcept : AccRaw(acc_, elem_, flags_) {}
+	AccDtorIfElem0(IAccessible* acc_, int elem_, eAccMiscFlags flags_ = {}) noexcept : AccRaw(acc_, elem_, flags_) {}
 
 	//Does not AddRef.
 	AccDtorIfElem0(ref const AccRaw& x) noexcept : AccRaw(x) {}

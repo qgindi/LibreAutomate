@@ -152,7 +152,7 @@ static class Menus {
 			[Command("...", separator = true)]
 			public static void Repair_workspace() { RepairWorkspace.Repair(); }
 			
-			[Command(separator = true, keys = "Ctrl+S", image = "*MaterialDesign.SaveAltRound" + black, tooltip = "Save all changes now (don't wait for auto-save). Editor text, files, settings etc.")]
+			[Command(separator = true, keys = "Ctrl+S", image = "*BoxIcons.RegularSave" + black, tooltip = "Save all changes now (don't wait for auto-save). Editor text, files, settings etc.")]
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 		

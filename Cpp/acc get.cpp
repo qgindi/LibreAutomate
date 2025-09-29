@@ -27,7 +27,6 @@ namespace {
 		case ROLE_SYSTEM_DIALOG:
 			//case ROLE_SYSTEM_DOCUMENT: //often either empty or contains many slow elements
 		case ROLE_SYSTEM_GROUPING:
-		case ROLE_SYSTEM_PAGETAB:
 		case ROLE_SYSTEM_PAGETABLIST:
 		case ROLE_SYSTEM_PANE:
 		case ROLE_SYSTEM_PROPERTYPAGE:
@@ -37,23 +36,20 @@ namespace {
 		return false;
 	}
 
-	bool _IsLinkOrButton(int role) {
-		switch (role) {
-		case ROLE_SYSTEM_LINK:
-		case ROLE_SYSTEM_PUSHBUTTON: case ROLE_SYSTEM_BUTTONMENU: case ROLE_SYSTEM_BUTTONDROPDOWN: case ROLE_SYSTEM_BUTTONDROPDOWNGRID:
-		case ROLE_SYSTEM_CHECKBUTTON: case ROLE_SYSTEM_RADIOBUTTON:
-			return true;
-		}
-		return false;
+	bool _IsStaticTextImage(int role, IAccessible* iacc) {
+		if (role == ROLE_SYSTEM_STATICTEXT || role == ROLE_SYSTEM_GRAPHIC) return true;
+		if (role != ROLE_SYSTEM_TEXT) return false;
+		long state = 0;
+		return 0 == ao::get_accState(state, iacc) && 0 == (state & (STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_UNAVAILABLE));
 	}
 
 	void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem, ref BYTE& role, bool isUIA) {
 		//note: the child AO of LINK/BUTTON can be anything except LINK/BUTTON, although usually TEXT, STATICTEXT, IMAGE.
-		if (_IsLinkOrButton(role)) return;
+		if (ao::IsLinkOrButton(role)) return;
 		IAccessible* parent = null;
 		if (elem != 0) parent = a; else if (0 != ao::get_accParent(a, out parent)) return;
 		BYTE role2 = ao::GetRoleByte(parent);
-		bool useParent = _IsLinkOrButton(role2);
+		bool useParent = ao::IsLinkOrButton(role2);
 		if (!useParent) {
 			switch (role2) {
 			case ROLE_SYSTEM_STATICTEXT:
@@ -63,7 +59,7 @@ namespace {
 				break;
 			default:
 				if (!isUIA || role2 == ROLE_SYSTEM_LISTITEM || role2 == ROLE_SYSTEM_OUTLINEITEM || role2 == ROLE_SYSTEM_MENUITEM) {
-					if (ao::IsStatic(role, a)) {
+					if (_IsStaticTextImage(role, a)) {
 						long cc = 0;
 						//Perf.First();
 						//get_accChildCount can be very slow if UIA, eg in Firefox big pages.
@@ -72,7 +68,7 @@ namespace {
 						//Perf.NW();
 						if (useParent) {
 							Bstr bn;
-							useParent = (0 == parent->get_accName(ao::VE(elem), &bn)) && bn && bn.Length() > 0;
+							useParent = (0 == parent->get_accName(ao::VE(), &bn)) && bn && bn.Length() > 0;
 						}
 
 					}
@@ -156,7 +152,7 @@ namespace {
 	HRESULT _AccFromPoint(POINT p, HWND wFP, eXYFlags flags, eSpecWnd specWnd, out Cpp_Acc& aResult) {
 		//Perf.First();
 		Smart<IAccessible> iacc; long elem = 0;
-		eAccMiscFlags miscFlags = (eAccMiscFlags)0;
+		eAccMiscFlags miscFlags = {};
 		BYTE role = 0;
 		bool inProc = !(flags & eXYFlags::NotInProc);
 	g1:

@@ -19,7 +19,7 @@ class Dwnd : KDialogWindow {
 	wnd _wnd, _con;
 	bool _dontInsert, _noControl, _checkControl;
 	string _wndName;
-
+	
 	KSciInfoBox _info, _winInfo;
 	Button _bTest, _bInsert;
 	KCheckBox _cCapture, _cControl, _cActivate, _cException;
@@ -28,19 +28,19 @@ class Dwnd : KDialogWindow {
 	ScrollViewer _scroller;
 	KSciCodeBoxWnd _code;
 	KTreeView _tree;
-
+	
 	Grid _gCon1, _gCon2;
 	DPwnd.Controls _k;
 	KCheckTextBox idC, nameC, classC, alsoC, waitW, skipC;
 	KCheckBox cHiddenTooW, cCloakedTooW, cHiddenTooC;
-
+	
 	public Dwnd(wnd w = default, DwndFlags flags = 0, string title = "Find window") {
 		_dontInsert = flags.Has(DwndFlags.DontInsert);
 		_noControl = flags.Has(DwndFlags.NoControl);
 		_checkControl = flags.Has(DwndFlags.CheckControl);
-
+		
 		Title = title;
-
+		
 		var b = new wpfBuilder(this).WinSize((500, 450..), (600, 430..)).Columns(-1);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
@@ -53,7 +53,7 @@ class Dwnd : KDialogWindow {
 		b.Add(out _cException, "Fail if not found").Checked(true).Tooltip("Throw exception if not found");
 		//cActivate.CheckChanged += (_, _) => { cException.Visibility = cActivate.IsChecked ? Visibility.Hidden : Visibility.Visible; }; //no, need for control too
 		b.End();
-
+		
 		//window and control properties and search settings
 		b.R.AddSeparator(false).Margin("B");
 		b.Row(0); //auto height, else adds v scrollbar when textbox height changes when a textbox text is multiline or too long (with h scrollbar)
@@ -87,10 +87,10 @@ class Dwnd : KDialogWindow {
 		b.End();
 		b.xEndPropertyGrid();
 		b.R.AddSeparator(false);
-
+		
 		//code
 		b.Row(64).xAddInBorder(out _code, "B");
-
+		
 		//tree and window info
 		b.xAddSplitterH(span: -1);
 		b.Row(-1).StartGrid().Columns(-1, 0, -1);
@@ -98,75 +98,75 @@ class Dwnd : KDialogWindow {
 		b.xAddSplitterV();
 		b.xAddInBorder(out _winInfo, "TL"); _winInfo.AaWrapLines = false; _winInfo.Name = "window_info";
 		b.End();
-
+		
 		b.End();
-
+		
 		_InitTree();
-
+		
 		_con = w;
-
+		
 		b.WinProperties(
 			topmost: true,
 			showActivated: _dontInsert || w.Is0 ? null : false //eg if captured a popup menu, activating this window closes the menu and we cannot get properties
 			);
-
+		
 		WndSavedRect.Restore(this, LA.App.Settings.wndpos.wnd, o => LA.App.Settings.wndpos.wnd = o);
 	}
-
+	
 	static Dwnd() {
 		TUtil.OnAnyCheckTextBoxValueChanged<Dwnd>((d, o) => d._AnyCheckTextBoxValueChanged(o));
 	}
-
+	
 	protected override void OnSourceInitialized(EventArgs e) {
 		base.OnSourceInitialized(e);
-
+		
 		if (!_con.Is0) _SetWnd(false);
 		_InitInfo();
 		_cCapture.IsChecked = true;
 	}
-
+	
 	protected override void OnClosing(CancelEventArgs e) {
 		_cCapture.IsChecked = false;
-
+		
 		base.OnClosing(e);
 	}
-
+	
 	void _SetWnd(bool captured) {
 		_bTest.IsEnabled = true; _bInsert.IsEnabled = true;
-
+		
 		var wndOld = _wnd;
 		_wnd = _con.Window;
 		if (_wnd == _con || _noControl) _con = default;
 		bool newWindow = _wnd != wndOld;
-
+		
 		_ClearTree();
 		if (!_FillProperties(newWindow)) return;
 		_FormatCode(false);
 		_FillTree();
 	}
-
+	
 	bool _FillProperties(bool newWindow) {
 		bool isCon = !_con.Is0;
-
+		
 		_WinInfo f = default;
-
+		
 		if (!_GetClassName(_wnd, out f.wClass)) return false; //note: get even if !newWindow, to detect closed window
 		if (isCon && !_GetClassName(_con, out f.cClass)) return false;
-
+		
 		bool _GetClassName(wnd w, out string cn) {
 			cn = w.ClassName; if (cn != null) return true;
 			_winInfo.aaaText = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + lastError.message;
 			_scroller.Visibility = Visibility.Hidden;
 			return false;
 		}
-
+		
 		_noeventValueChanged = true;
-
+		
 		var wndName = _wnd.NameTL_;
 		if (newWindow) _k.Fill(_wnd, wndName, f.wClass, f.wProg = _wnd.ProgramName);
 		else if (wndName != _wndName) _k.FillChangedName(wndName);
 		f.wName = _wndName = wndName;
-
+		
 		if (isCon) {
 			//name combo
 			f.cName = _con.Name;
@@ -185,7 +185,7 @@ class Dwnd : KDialogWindow {
 				an.Add(prefix + TUtil.EscapeWildex(value));
 				return true;
 			}
-
+			
 			bool idUseful = TUtil.GetUsefulControlId(_con, _wnd, out f.cId);
 			//idC.Visible = idUseful;
 			idC.Set(idUseful, f.cId.ToS() + (idUseful ? null : " /*probably not useful*/"));
@@ -197,18 +197,18 @@ class Dwnd : KDialogWindow {
 			var skip = idUseful ? null : TUtil.GetControlSkip(_wnd, _con, sName, sClass, hiddenToo);
 			skipC.Set(skip != null, skip);
 		}
-
+		
 		bool checkControl = isCon && _checkControl;
 		_cControl.IsChecked = checkControl;
 		_ShowControlProperties(showGrid: checkControl, showAll: isCon);
-
+		
 		_noeventValueChanged = false;
-
+		
 		_scroller.Visibility = Visibility.Visible;
 		_FillWindowInfo(f);
 		return true;
 	}
-
+	
 	private void _cbFunc_SelectionChanged(object sender, SelectionChangedEventArgs e) {
 		int iFunc = _cbFunc.SelectedIndex;
 		_noeventValueChanged = true;
@@ -224,7 +224,7 @@ class Dwnd : KDialogWindow {
 		_noeventValueChanged = false;
 		_FormatCode();
 	}
-
+	
 	//when checked/unchecked any checkbox, and when text changed of any textbox
 	void _AnyCheckTextBoxValueChanged(object source) {
 		if (source == _cCapture) {
@@ -248,7 +248,7 @@ class Dwnd : KDialogWindow {
 		}
 	}
 	bool _noeventValueChanged = true, _formattedOnValueChanged;
-
+	
 	void _ShowControlProperties(bool showGrid, bool? showAll) {
 		if (showAll != null) {
 			var vis = showAll.Value ? Visibility.Visible : Visibility.Hidden;
@@ -260,11 +260,11 @@ class Dwnd : KDialogWindow {
 		_gCon1.IsEnabled = showGrid;
 		_gCon2.IsEnabled = showGrid;
 	}
-
+	
 	(string code, string wndVar) _FormatCode(bool forTest = false) {
 		if (!_scroller.IsVisible) return default; //still not captured, or failed to get window props
 		int iFunc = _cbFunc.SelectedIndex;
-
+		
 		var f = new TUtil.WindowFindCodeFormatter {
 			Test = forTest,
 			Finder = iFunc == 3,
@@ -275,16 +275,16 @@ class Dwnd : KDialogWindow {
 			cloakedTooW = cCloakedTooW.IsChecked,
 			hiddenTooC = cHiddenTooC.IsChecked,
 		};
-
+		
 		if (!forTest && iFunc is 1 or 2) {
 			if (WndCopyData.SendReceive<char>(ScriptEditor.WndMsg_, 19, _wnd.Handle.ToS(), out string s1)) {
 				if (iFunc == 1) f.orRunW = s1; else f.andRunW = s1;
 			}
 		}
-
+		
 		_k.GetResults(f);
 		if (!forTest) waitW.GetText(out f.waitW, emptyToo: true);
-
+		
 		if (f.NeedControl) {
 			nameC.GetText(out f.nameC, emptyToo: true);
 			classC.GetText(out f.classC);
@@ -294,29 +294,29 @@ class Dwnd : KDialogWindow {
 			f.nameC_comments = nameC.t.Text;
 			f.classC_comments = classC.t.Text;
 		}
-
+		
 		var R = f.Format();
-
+		
 		if (!forTest) {
 			_code.AaSetText(R);
 		}
-
+		
 		return (R, "w");
 	}
-
+	
 	#region capture
-
+	
 	TUtil.CapturingWithHotkey _capt;
-
+	
 	void _cCapture_CheckedChanged() {
 		_capt ??= new(
 			_cCapture,
-			p => (wnd.fromXY(p, _noControl ? WXYFlags.NeedWindow : 0).Rect, null),
-			(LA.App.Settings.delm.hk_capture, _Capture)
+			o => (_noControl ? o.wTL : wnd.fromXY(o.p)).GetRect(out o.resultRect),
+			new(LA.App.Settings.delm.hk_capture, _Capture)
 			);
 		_capt.Capturing = _cCapture.IsChecked;
 	}
-
+	
 	void _Capture() {
 		var c = wnd.fromMouse(); if (c.Is0) return;
 		_con = c;
@@ -327,46 +327,46 @@ class Dwnd : KDialogWindow {
 			w.ActivateL();
 		}
 	}
-
+	
 	#endregion
-
+	
 	#region Insert, Test
-
+	
 	/// <summary>
 	/// When OK clicked, the top-level window (even when <see cref="AaResultUseControl"/> is true).
 	/// </summary>
 	public wnd AaResultWindow => _wnd;
-
+	
 	/// <summary>
 	/// When OK clicked, the control (even when <see cref="AaResultUseControl"/> is false) or default(wnd).
 	/// </summary>
 	public wnd AaResultControl => _con;
-
+	
 	/// <summary>
 	/// When OK clicked, true if a control was selected and the 'Control' checkbox checked.
 	/// Use <see cref="AaResultWindow"/> or <see cref="AaResultControl"/>, depending on this property.
 	/// </summary>
 	public bool AaResultUseControl { get; private set; }
-
+	
 	/// <summary>
 	/// When OK clicked, contains C# code. Else null.
 	/// </summary>
 	public string AaResultCode { get; private set; }
-
+	
 	//rejected. Can use Closed event; then aaResultCode not null if OK.
 	///// <summary>
 	///// When closed with OK button.
 	///// </summary>
 	//public event Action OK;
-
+	
 	private void _Insert(WBButtonClickArgs e) {
 		var s = _code.aaaText.NullIfEmpty_();
-
+		
 		if (_dontInsert) {
 			AaResultCode = s;
 			if (s == null) e.Cancel = true;
 			else AaResultUseControl = !_con.Is0 && _cControl.IsChecked;
-
+			
 			if (this.IsModal_() == false) Close();
 			else DialogResult = s != null;
 		} else if (_close) {
@@ -382,7 +382,7 @@ class Dwnd : KDialogWindow {
 		}
 	}
 	bool _close;
-
+	
 	private void _bTest_Click(WBButtonClickArgs ea) {
 		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;
 		var rr = TUtil.RunTestFindObject(this, code, wndVar, _wnd, getRect: o => {
@@ -396,11 +396,11 @@ class Dwnd : KDialogWindow {
 		});
 		_info.InfoErrorOrInfo(rr.info);
 	}
-
+	
 	#endregion
-
+	
 	#region tree
-
+	
 	void _InitTree() {
 		_tree.SingleClickActivate = true;
 		_tree.ItemActivated += e => {
@@ -411,11 +411,11 @@ class Dwnd : KDialogWindow {
 			if (!_con.Is0) TUtil.ShowOsdRect(_con.Rect);
 		};
 	}
-
+	
 	void _ClearTree() {
 		_tree.SetItems(null);
 	}
-
+	
 	void _FillTree() {
 		_TreeItem xWindow = new() { c = _wnd }, xSelect = _con.Is0 ? xWindow : null;
 		_AddChildren(_wnd, xWindow);
@@ -427,22 +427,22 @@ class Dwnd : KDialogWindow {
 				_AddChildren(t, x);
 			}
 		}
-
+		
 		_tree.SetItems(new _TreeItem[1] { xWindow });
-
+		
 		//print.it(xWindow.Descendants().Select(o=>o.c));
-
+		
 		if (xSelect != null) _tree.SelectSingle(xSelect);
 	}
-
+	
 	class _TreeItem : TreeBase<_TreeItem>, ITreeViewItem {
 		public wnd c;
 		string _displayText;
 		bool _isExpanded;
 		bool _isFailed;
-
+		
 		#region ITreeViewItem
-
+		
 		string ITreeViewItem.DisplayText {
 			get {
 				if (_displayText == null) {
@@ -451,7 +451,7 @@ class Dwnd : KDialogWindow {
 						_isFailed = true;
 						return _displayText = "Failed: " + lastError.message;
 					}
-
+					
 					var name = c.Name;
 					if (name.NE()) _displayText = cn;
 					else {
@@ -465,37 +465,37 @@ class Dwnd : KDialogWindow {
 				return _displayText;
 			}
 		}
-
+		
 		void ITreeViewItem.SetIsExpanded(bool yes) { _isExpanded = yes; }
-
+		
 		bool ITreeViewItem.IsExpanded => _isExpanded;
-
+		
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
-
+		
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
-
+		
 		object ITreeViewItem.Image => _IsFolder ? LA.EdIcons.FolderArrow(_isExpanded) : null;
-
+		
 		int ITreeViewItem.TextColor(TVColorInfo ci)
 			=> _isFailed ? 0xff
 			: !c.IsVisible ? ColorInt.SwapRB(Api.GetSysColor(Api.COLOR_GRAYTEXT))
 			: -1;
-
+		
 		#endregion
 	}
-
+	
 	#endregion
-
+	
 	#region info
-
+	
 	struct _WinInfo {
 		public string wClass, wName, wProg, cClass, cName, cText, /*cLabel,*/ cElm, cWF;
 		public int cId;
-
+		
 		public string Format(wnd w, wnd c, int wcp) {
 			var b = new StringBuilder();
-
+			
 			if (wcp == 2 && c.Is0) wcp = 1;
 			if (!w.IsAlive) return "";
 			if (wcp == 1) { //window
@@ -521,7 +521,7 @@ class Dwnd : KDialogWindow {
 				}
 			} else { //program
 				b.AppendLine("<lc #B0E0B0><+switch 1>Window<>    <+switch 2>Control<>    <b>Process<><>");
-			g1:
+				g1:
 				if (wProg == null) {
 					wProg = w.ProgramName;
 				}
@@ -538,7 +538,7 @@ class Dwnd : KDialogWindow {
 						.Append(", ").AppendLine(uac.Elevation.ToString());
 				}
 				b.Append("<i>CommandLine<>:    ").AppendLine(process.getCommandLine(pid));
-
+				
 				//if control's process or thread is different...
 				if (!c.Is0) {
 					int pid2 = c.ProcessId;
@@ -554,10 +554,10 @@ class Dwnd : KDialogWindow {
 					}
 				}
 			}
-
+			
 			return b.ToString();
 		}
-
+		
 		void _Common(bool isCon, StringBuilder b, wnd w, string name, string className) {
 			string s, sh = w.Handle.ToString();
 			b.Append("<i>Handle<>:    ").AppendLine(sh);
@@ -603,7 +603,7 @@ class Dwnd : KDialogWindow {
 				b.Append(p.Key).Append(" = ").Append(p.Value.ToString());
 			}
 			b.AppendLine();
-
+			
 			void _AppendIs(bool yes, string prop) {
 				if (b[^1] != ' ') b.Append(", ");
 				if (!yes) b.Append('!');
@@ -611,7 +611,7 @@ class Dwnd : KDialogWindow {
 			}
 		}
 	}
-
+	
 	void _FillWindowInfo(in _WinInfo f) {
 		if (_wiWCP == 0) {
 			_wiWCP = 1;
@@ -627,27 +627,27 @@ class Dwnd : KDialogWindow {
 			});
 		}
 		_SetText(f);
-
+		
 		void _SetText(in _WinInfo wi) {
 			var s1 = wi.Format(_wnd, _con, _wiWCP);
 			_winInfo.aaaText = s1.TrimEnd("\r\n");
 		}
 	}
 	int _wiWCP; //0 not inited, 1 window, 2 control, 3 program
-
+	
 	TUtil.CommonInfos _commonInfos;
 	void _InitInfo() {
 		_commonInfos = new TUtil.CommonInfos(_info);
-
+		
 		_info.aaaText = _dialogInfo;
 		_info.AaAddElem(this, _dialogInfo);
 		TUtil.CapturingWithHotkey.RegisterLink_DialogHotkey(_info);
-
+		
 		_k.InitInfo(_info);
 		_info.InfoCT(idC, "Control id.");
 		_info.InfoCT(nameC, "Control name.", true);
 		_info.InfoCT(classC, "Control class name.", true);
-
+		
 		_info.InfoC(cHiddenTooW, "Flag <help>Au.Types.WFlags<>.HiddenToo.");
 		_info.InfoC(cCloakedTooW, "Flag <help>Au.Types.WFlags<>.CloakedToo.");
 		_info.InfoCT(waitW,
@@ -659,9 +659,9 @@ The function waits for such window max this time interval. On timeout throws exc
 		_info.InfoCT(skipC,
 @"0-based index of matching control.
 For example, if 1, gets the second matching control.");
-
+		
 		_info.Info(_tree, "Tree view", "All child/descendant controls in the window.");
-
+		
 		//TODO3: now no info for HwndHost
 		//			_Info(_code, "Code",
 		//@"Created code to find the window or control.
@@ -672,7 +672,7 @@ For example, if 1, gets the second matching control.");
 		//For example can be useful when creating <i>also<> function.
 		//");
 	}
-
+	
 	string _dialogInfo =
 $@"This tool creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
 1. Move the mouse to a window or control. Press <+hotkey>hotkey<> <b>{LA.App.Settings.delm.hk_capture}<>.
@@ -682,6 +682,6 @@ $@"This tool creates code to find <help wnd.find>window<> or <help wnd.Child>con
 5. If need, edit the code in editor. For example rename variables, delete duplicate wnd.find lines, replace part of window name with *. Add code to use the window or control. Examples: w.Activate(); var s = w.Name;.
 
 {(uacInfo.isAdmin ? "" : "If the hotkey does not work when the target window is active, probably its process is admin and this process isn't.")}";
-
+	
 	#endregion
 }

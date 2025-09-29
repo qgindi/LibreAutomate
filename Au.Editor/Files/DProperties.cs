@@ -1,4 +1,4 @@
-//TODO: UI to set r etc alias and noCopy
+//TODO2: UI to set r etc alias and noCopy
 
 using System.Windows;
 using System.Windows.Controls;

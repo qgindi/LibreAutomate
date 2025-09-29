@@ -139,12 +139,14 @@ public unsafe sealed partial class elm : IDisposable {
 	///
 	~elm() {
 #if DEBUG
+		//print.it("~elm");
 		try { Dispose(false); }
 		catch (Exception ex) { print.it(ex); }
 #else
 		Dispose(false);
 #endif
 	}
+	//TODO2: try: release elm COM objects in process.Exit event. Use weak reference. Or GC.Collect.
 	
 	//internal void Debug1() {
 	//	print.it(_iacc, Debug_.GetComObjRefCount_(_iacc));
@@ -266,16 +268,36 @@ public unsafe sealed partial class elm : IDisposable {
 	/// </example>
 	public static elm fromXY(POINT p, EXYFlags flags = 0) {
 		WarnInSendMessage_();
+		return fromXY_(p, flags);
+	}
+	
+	//used by fromXY and Delm
+	internal static elm fromXY_(POINT p, EXYFlags flags, Cpp.Cpp_AccFromPointCallbackT callback = null) {
+		wnd w = default;
+		bool retry = false;
+		gRetry:
 		
 		int hr = Cpp.Cpp_AccFromPoint(p, flags, (flags, wFP, wTL) => {
+			w = wFP;
+			if (callback is {  } cb) flags = cb(flags, wFP, wTL);
+			
 			if (osVersion.minWin8_1 ? !flags.Has(EXYFlags.NotInProc) : flags.Has(EXYFlags.UIA)) {
 				bool dpiV = Dpi.IsWindowVirtualized(wTL);
 				if (dpiV) flags |= Enum_.EXYFlags_DpiScaled;
 			}
 			return flags;
 		}, out var a);
-		if (hr == 0) return new elm(a);
-		return null;
+		
+		if (hr != 0) return null;
+		
+		//workaround for Chrome bug. Sometimes DOCUMENT. Eg after scrolling. Also in some pages or page parts, eg LA home page when scrolled to the bottom. Same in all modes except acc notinproc.
+		if (!retry && a.misc.roleByte == (byte)ERole.DOCUMENT && w.ClassNameIs("Chrome*")) {
+			Marshal.Release(a.acc);
+			retry = true;
+			goto gRetry;
+		}
+		
+		return new elm(a);
 	}
 	
 	/// <inheritdoc cref="fromXY(POINT, EXYFlags)"/>

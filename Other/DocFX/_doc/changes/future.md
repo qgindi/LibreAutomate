@@ -14,17 +14,15 @@ Menu **Edit > Assist > Insert new line before ) ] ;**. Temporarily disables stat
 
 New code editor feature: continue a vertical method chain by typing `.` on the next line after the `;`.
 
-Quickly hide toolbar buttons using the context menu.
+Quickly hide toolbar buttons using the context menu (in LA window).
 
 Updated PCRE regex library to v10.46.
 
+Tools like **Find UI element** now run in separate process.
+
+Improved UI element capturing (tool **Find UI element**) in some apps and modes.
+
 Several small improvements.
-
-New tools:
-- .
-
-New cookbook recipes:
-- .
 
 Fixed bugs:
 - .

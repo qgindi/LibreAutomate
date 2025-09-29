@@ -24,21 +24,19 @@ ENABLE_BITMASK_OPERATORS(eAccMiscFlags);
 
 //IAccessible* and child element id.
 //Has only ctors. Does not have a dtor (does not Release etc), operator=, etc.
-struct Cpp_Acc
-{
+struct Cpp_Acc {
 	IAccessible* acc;
 	long elem;
 	struct MISC {
 		eAccMiscFlags flags;
 		BYTE roleByte; //for optimization. 0 if not set or failed to get. ROLE_CUSTOM (0xFF) if VT_BSTR or not 1-ROLE_MAX.
-		WORD level; //for ToString. 0 if not set.
+		WORD level; //for ToString etc. 0 if not set.
 	} misc;
 
 	Cpp_Acc() noexcept { Zero(); }
 
 	//Does not AddRef.
-	Cpp_Acc(IAccessible* acc_, int elem_, eAccMiscFlags flags_ = (eAccMiscFlags)0) noexcept
-	{
+	Cpp_Acc(IAccessible* acc_, int elem_, eAccMiscFlags flags_ = {}) noexcept {
 		acc = acc_;
 		elem = elem_;
 		*(DWORD*)&misc = (DWORD)flags_;
@@ -58,7 +56,7 @@ typedef struct Cpp_Acc Cpp_Acc_Agent;
 #else
 struct Cpp_Acc_Agent : Cpp_Acc {
 	~Cpp_Acc_Agent() {
-		if(acc != null) {
+		if (acc != null) {
 			acc->Release();
 			acc = null;
 		}
@@ -70,8 +68,7 @@ struct Cpp_Acc_Agent : Cpp_Acc {
 //Flags for Cpp_AccFind.
 //The same as C# EFFlags. Documented there.
 //[Flags]
-enum class eAF
-{
+enum class eAF {
 	Reverse = 1,
 	HiddenToo = 2,
 	MenuToo = 4,
@@ -101,8 +98,7 @@ struct Cpp_AccFindParams {
 //Must Release a.iacc. Preferably later, in spare time. Can do it in another thread.
 using Cpp_AccFindCallbackT = BOOL(__stdcall*)(Cpp_Acc a, RECT* r);
 
-enum class eXYFlags
-{
+enum class eXYFlags {
 	NotInProc = 1,
 	UIA = 2,
 	PreferLink = 4,
@@ -117,15 +113,13 @@ ENABLE_BITMASK_OPERATORS(eXYFlags);
 
 using Cpp_AccFromPointCallbackT = eXYFlags(__stdcall*)(eXYFlags flags, HWND wFP, HWND wTL);
 
-enum class eFocusedFlags
-{
+enum class eFocusedFlags {
 	NotInProc = 1,
 	UIA = 2,
 };
 ENABLE_BITMASK_OPERATORS(eFocusedFlags);
 
-enum class eError
-{
+enum class eError {
 	NotFound = 0x1001, //AO not found. With FindAll - no errors. This is actually not an error.
 	InvalidParameter = 0x1002, //invalid parameter, for example wildcard expression (or regular expression in it)
 	WindowClosed = 0x1003, //the specified window handle is invalid or the window was destroyed while injecting

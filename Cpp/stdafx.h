@@ -148,3 +148,7 @@ operator !(Enum rhs)
 
 #pragma endregion
 
+template<class T, class... Ts>
+constexpr bool IsIn(const T& v, Ts... vs) {
+    return ((v == vs) || ...);
+}

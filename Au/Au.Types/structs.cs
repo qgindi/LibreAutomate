@@ -218,6 +218,11 @@ namespace Au.Types {
 		/// </summary>
 		public int CenterY => top + (bottom - top) / 2;
 		//public int CenterY => (int)(((long)top + bottom) / 2);
+
+		/// <summary>
+		/// Returns width multiplied by height: <c>Math.Abs((long)Width * Height)</c>.
+		/// </summary>
+		internal long Area_ => Math.Abs((long)Width * Height);
 		
 		/// <summary>
 		/// Returns <c>true</c> if this rectangle contains the specified point.

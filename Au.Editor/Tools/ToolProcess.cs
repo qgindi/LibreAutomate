@@ -1,4 +1,5 @@
 using System.Runtime.Loader;
+using System.Windows;
 
 namespace ToolLand;
 
@@ -64,23 +65,30 @@ static class ToolProcess {
 				catch (Exception ex) { Debug_.Print(ex); }
 			});
 			
-			timer2.every(200, _ => { //exit when main window closed
-				if (!wMain.IsAlive) Api.ExitProcess(0); //Environment.Exit not always works when main thread is hung
-			});
+			if (!wMain.Is0)
+				timer2.every(200, _ => { //exit when main window closed
+					if (!wMain.IsAlive) {
+						s_wTool.Dispatcher.InvokeAsync(() => s_wTool.Close());
+						if (wait.until(-2, () => !s_wTool.IsLoaded)) 500.ms();
+						Api.ExitProcess(0); //Environment.Exit not always works when main thread is hung
+					}
+				});
 		});
 		
 		if (args[0] is "Dwnd") {
-			var d = new Dwnd((wnd)args[1].ToInt(), (DwndFlags)args[2].ToInt());
-			d.ShowDialog();
+			s_wTool = new Dwnd((wnd)args[1].ToInt(), (DwndFlags)args[2].ToInt());
+			s_wTool.ShowDialog();
 		} else if (args[0] is "Delm") {
-			var d = new Delm(args.Length > 2 ? new POINT(args[1].ToInt(), args[2].ToInt()) : null);
-			d.ShowDialog();
+			s_wTool = new Delm(args.Length > 2 ? new POINT(args[1].ToInt(), args[2].ToInt()) : null);
+			s_wTool.ShowDialog();
 		} else if (args[0] is "Duiimage") {
-			var d = new Duiimage((wnd)args[1].ToInt());
-			d.ShowDialog();
+			s_wTool = new Duiimage((wnd)args[1].ToInt());
+			s_wTool.ShowDialog();
 		} else if (args[0] is "Docr") {
-			var d = new Docr();
-			d.ShowDialog();
+			s_wTool = new Docr();
+			s_wTool.ShowDialog();
 		}
 	}
+	
+	static Window s_wTool;
 }

@@ -5,8 +5,6 @@ using System.Windows.Input;
 
 namespace ToolLand;
 
-//TODO: normal acc capturing does not work for links in Chrome and Edge, and for everything in Brave. UIA OK. Alternative capturing OK (toggle with Shift+F3).
-
 //TODO3: if checked 'state', activate window before test. Else different FOCUSED etc.
 
 //CONSIDER: here and in Dwnd: UI for "contains image".
@@ -39,8 +37,6 @@ class Delm : KDialogWindow {
 	bool _wndNoActivate;
 	string _wndName;
 	string _screenshot;
-	//POINT _captPoint;
-	//EXYFlags _captFlags;
 	
 	KSciInfoBox _info;
 	Button _bTest, _bInsert, _bWindow;
@@ -203,16 +199,19 @@ class Delm : KDialogWindow {
 	}
 	
 	protected override void OnClosed(EventArgs e) {
-		//let GC collect UI elements in case this window isn't collected when it should. Not tested, never mind.
-		_elm = null;
-		_treeRoot = null;
-		GC.Collect();
-		
 		base.OnClosed(e);
+		
+		//release COM objects. Else later can't unload the C++ dll from processes where used UIA etc.
+		_tree.SetItems(null);
+		foreach (var f in typeof(Delm).GetFields(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)) {
+			if (!f.FieldType.IsValueType) f.SetValue(this, null);
+		}
+		GC.Collect();
+		GC.WaitForPendingFinalizers();
 	}
 	
 	void _SetElm(bool captured) {
-		wnd c = _GetWndContainer(), w = c.Window;
+		wnd c = _elm.WndContainer, w = c.Window;
 		if (w.Is0) return;
 		
 		string wndName = w.NameTL_;
@@ -283,10 +282,8 @@ class Delm : KDialogWindow {
 	
 	//Called when: 1. Captured, or window/control changed (_FillPropertiesTreeAndCode). 2. A tree item clicked.
 	bool _FillProperties(out EProperties p) {
-		var (propOK, pr, (browser, propUrl)) = _RunElmTask(2000, (_elm, _con.Is0 ? _wnd : _con), static m => {
-			if (!m.Item1.GetProperties("Rnuvdakh@srwU", out var pr)) return default;
-			return (true, pr, _IsVisibleWebPage(m.Item1, m.Item2));
-		});
+		bool propOK = _elm.GetProperties("Rnuvdakh@srwU", out var pr);
+		var (browser, propUrl) = propOK ? _IsVisibleWebPage(_elm, _con.Is0 ? _wnd : _con) : default;
 		p = pr;
 		if (propOK != _bTest.IsEnabled) _EnableDisableTopControls(propOK);
 		if (!propOK) {
@@ -613,50 +610,42 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	TUtil.CapturingWithHotkey _capt;
 	
 	void _InitCapturingWithHotkey() {
-		_capt = new(_cCapture, _GetRect, (LA.App.Settings.delm.hk_capture, _Capture), (LA.App.Settings.delm.hk_insert, () => _Insert(hotkey: true)), (LA.App.Settings.delm.hk_smaller, _CaptureSmallerToggle));
+		_capt = new(_cCapture,
+			_GetCapturingRect,
+			new(LA.App.Settings.delm.hk_capture, _Capture),
+			new(LA.App.Settings.delm.hk_insert, () => _Insert(hotkey: true)),
+			new(LA.App.Settings.delm.hk_smaller, _CaptureSmallerToggle));
 		_cCapture.IsChecked = true;
+	}
+	
+	//Called repeatedly while capturing to display rectangles of elements from mouse.
+	bool _GetCapturingRect(TUtil.CapturingWithHotkey.GetRectArgs k) {
+		//don't show rects when a mouse button is pressed. With some apps then hangs. Eg Word > Insert > Symbol, click a symbol; notinproc too, but not UIA.
+		if (mouse.isPressed()) return false;
 		
-		(RECT? r, string s) _GetRect(POINT p) { //timer every ~250 ms while capturing
-			if (_CaptureSmallerIsOnInWindow(p)) return _CaptureSmallerGetRect(p);
-			
-			var flags = _GetXYFlags(p);
-			//bool xy = _ActionIsMouse(_iAction);
-			return _RunElmTask(500, (p, flags), static m => {
-				//don't show rects when a mouse button is pressed.
-				//	With some apps then hangs. Eg Word > Insert > Symbol, click a symbol; notinproc too, but not UIA.
-				//print.it(Au.mouse.isPressed());
-				if (mouse.isPressed()) return default;
-				
-				//using var pe1 = perf.local();
-				using var e = _ElmFromPointRaw(m.p, m.flags);
-				//pe1.Next('e');
-				if (e == null) return default;
-				var r = e.Rect;
-				//pe1.Next('r');
-				var s = e.Role;
-				//if (m.xy) s = $"{s}    {m.p.x - r.left}, {m.p.y - r.top}";
-				
-				//rejected: if big etc, inform about 'Smaller'
-				//if (r.Width * r.Height > 5000) {
-				//	var ri = e.RoleInt;
-				//	if (!(_RoleIsLinkOrButton(ri) || ri is ERole.Custom or ERole.TEXT or ERole.STATICTEXT or ERole.IMAGE or ERole.DIAGRAM)) {
-				//		int wid = (int)Dpi.Unscale(r.Width, r), hei = Math2.MulDiv(r.Height, wid, r.Width);
-				//		//print.it(wid, hei, wid * hei);
-				//		bool big = wid * hei > 10000;
-				//		if (!big && !m.flags.Has(EXYFlags.UIA)) {
-				//			var ee = _ElmFromPointRaw(m.p, m.flags | EXYFlags.UIA);
-				//			if (ee != null && ee.RoleInt != ri) {
-				//				var rr = ee.Rect;
-				//				if (rr.Width * rr.Height < r.Width * r.Height / 2) big = true;
-				//			}
-				//		}
-				//		if (big) s += "\nTry the hotkey";
-				//	}
-				//}
-				
-				return (r, s);
-			});
+		if (_smaller is { } sm && sm.Window == k.wTL) {
+			return sm.GetRect(k);
 		}
+		
+		var p = k.p;
+		
+		var flags = _GetXYFlags();
+		//using var pe1 = perf.local();
+		var (e_, w) = _ElmFromPointRaw(p, flags);
+		//pe1.Next('e');
+		if (e_ == null) return false;
+		
+		using var e = e_;
+		var r = e.Rect;
+		//pe1.Next('r');
+		
+		if (_CaptureSmallerChromeWorkaround(e, w, r)) {
+			return _smaller.GetRect(k);
+		}
+		
+		k.resultRect = r;
+		k.resultText = e.Role;
+		return true;
 	}
 	
 	void _Capture() {
@@ -674,7 +663,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		}
 	}
 	
-	EXYFlags _GetXYFlags(POINT p) {
+	EXYFlags _GetXYFlags() {
 		var flags = EXYFlags.PreferLink;
 		switch (_cUIA.IsChecked) { case true: flags |= EXYFlags.UIA; break; case null: flags |= EXYFlags.OrUIA; break; }
 		if (_page != null) {
@@ -683,43 +672,48 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		return flags;
 	}
 	
-	static bool _NeedUiaFlagForWindow(wnd wTL) {
-		//UIA was faster by ~20% in all tested Store apps.
-		//	Also, MSAA Invoke does not work with many controls, eg in Settings and XAML Gallery. The UIA wrapper tries various patterns (Toggle, Expand, Select) and usually it works.
-		//	Also, when eg window minimized, the Store process is suspended, and MSAA hangs when trying to get properties etc; UIA fails immediately (good).
-		if (0 != wTL.IsUwpApp || wTL.IsWindows8MetroStyle) return true;
-		if (0 != wTL.ClassNameIs(
-			"WinUIDesktopWin32WindowClass", //WinUI (UIA faster/better). Eg WinUI3 Gallery, Microsoft PowerToys.
-			"GlassWndClass*" //JavaFX (no MSAA)
-			)) return true;
-		if (!wTL.Child(cn: "Windows.UI.Input.InputSite.WindowClass").Is0) return true; //MSAA bug: the WINDOW has INVISIBLE style. Can't capture its descendants, although they are visible. Eg Win11 taskbar, terminal, paint.
-		return false;
+	static EXYFlags _AdjustXYFlagsForWindow(wnd wFP, wnd wTL, EXYFlags flags) {
+		if (flags.HasAny(EXYFlags.OrUIA | EXYFlags.UIA)) {
+			if (!flags.Has(EXYFlags.UIA)) {
+				//UIA was faster by ~20% in all tested Store apps.
+				//	Also, MSAA Invoke does not work with many controls, eg in Settings and XAML Gallery. The UIA wrapper tries various patterns (Toggle, Expand, Select) and usually it works.
+				//	Also, when eg window minimized, the Store process is suspended, and MSAA hangs when trying to get properties etc; UIA fails immediately (good).
+				if (0 != wTL.IsUwpApp || wTL.IsWindows8MetroStyle) return flags | EXYFlags.UIA;
+				if (0 != wTL.ClassNameIs(
+					"WinUIDesktopWin32WindowClass", //WinUI (UIA faster/better). Eg WinUI3 Gallery, Microsoft PowerToys.
+					"GlassWndClass*" //JavaFX (no MSAA)
+					)) return flags | EXYFlags.UIA;
+				
+				if (!wTL.Child(cn: "Windows.UI.Input.InputSite.WindowClass", flags: WCFlags.HiddenToo).Is0) return flags | EXYFlags.UIA; //eg Win11 taskbar, terminal, taskmanager. MSAA bug: intermediate hidden child window; from-point API does not work; for find/enum may need hiddentoo flag.
+				if (wFP != wTL) { //maybe need UIA flag only for part of window, eg Win11 explorer's ribbon. With UIA much slower to find.
+					if (wFP.ClassNameIs("Microsoft.UI.Content.DesktopChildSiteBridge")) flags |= EXYFlags.UIA; //eg Win11 mspaint, explorer's ribbon, notepad. No MSAA.
+				}
+			}
+			if (!flags.Has(EXYFlags.NotInProc)) {
+				if (wTL.ClassNameIs("Notepad") && osVersion.minWin11) return flags | EXYFlags.UIA | EXYFlags.NotInProc; //need uia, but then inproc very slow find/enum
+			}
+		}
+		return flags;
 	}
 	
-	static elm _ElmFromPointRaw(POINT p, EXYFlags flags) {
-		var hr = Cpp.Cpp_AccFromPoint(p, flags, static (flags, wFP, wTL) => {
-			if (!flags.Has(EXYFlags.UIA) && flags.Has(EXYFlags.OrUIA)) if (_NeedUiaFlagForWindow(wTL)) flags |= EXYFlags.UIA;
-			
-			if (osVersion.minWin8_1 ? !flags.Has(EXYFlags.NotInProc) : flags.Has(EXYFlags.UIA)) {
-				bool dpiV = Dpi.IsWindowVirtualized(wTL);
-				if (dpiV) flags |= Enum_.EXYFlags_DpiScaled;
-			}
-			
-			return flags;
-		}, out var a);
-		//Debug_.PrintIf(hr != 0, "failed");
-		if (hr != 0) return null;
-		var e = new elm(a);
-		return e;
+	static (elm e, wnd w) _ElmFromPointRaw(POINT p, EXYFlags flags) {
+		wnd w = default;
+		elm e = elm.fromXY_(p, flags, (flags, wFP, wTL) => {
+			w = wTL;
+			return _AdjustXYFlagsForWindow(wFP, wTL, flags);
+		});
+		return (e, w);
 	}
 	
 	//Called only when capturing, not to display rectangles of elements from mouse.
 	bool _ElmFromPoint(POINT p, bool ctor = false) {
-		var flags = _GetXYFlags(p);
+		_capturingMenu?.Close();
 		
-		var a = _CaptureSmallerIsOnInWindow(p)
-			? _CaptureSmallerNow(p)
-			: _RunElmTask(2000, (p, flags, ctor), static m => _GetElm(m.p, m.flags, m.ctor));
+		var flags = _GetXYFlags();
+		
+		var a = _smaller is { } sm && sm.Window == wnd.fromXY(p, WXYFlags.NeedWindow)
+			? sm.GetElm(p)
+			: _GetElm(p, flags, ctor);
 		if (a.NE_()) return false;
 		var e = a[0];
 		
@@ -727,17 +721,23 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		
 		if (a.Length > 1) {
 			var m = new popupMenu();
-			var hs = new HashSet<char>();
 			for (int i = 0; i < a.Length;) {
 				var v = a[i++];
 				var s = v.role.NullIfEmpty_() ?? i.ToS();
-				for (int j = 0; j < s.Length; j++) if (!hs.Contains(s[j])) { hs.Add(s[j]); s = s.Insert(j, "&"); break; } //underline unique char
+				s = $"&{i}. {s}";
 				var mi = m.Add(i, s);
 				mi.Tooltip = v.tt;
 				mi.Tag = v.rect;
 			}
+			_capturingMenu = m;
 			int k = _ShowMenu(m, e.rect, osd: true) - 1;
-			if (k > 0) e = a[k];
+			_capturingMenu = null;
+			if (k < 0) return false;
+			
+			//some objects become invalid while showing the menu (or in any case when mouse moved out). Eg STATICTEXT in icons in VSCode left toolbar.
+			while (!a[k].e.GetRect(out _, raw: true)) if (++k == a.Length) return false;
+			
+			e = a[k];
 		}
 		
 		//set x y field always, not only when a mouse action selected, because may select a mouse action afterwards
@@ -746,24 +746,26 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		_noeventValueChanged--;
 		
 		_elm = e.e;
-		//_captPoint = p;
-		//_captFlags = flags;
 		return true;
 		
-		static _CapturedElm[] _GetElm(POINT p, EXYFlags flags, bool ctor) {
-			
-			if (ctor /*&& wnd.fromXY(p).ClassNameIs("Chrome_*")*/) {
+		_CapturedElm[] _GetElm(POINT p, EXYFlags flags, bool ctor) {
+			if (ctor) {
 				//workaround for: Chrome may give wrong element at first. Eg youtube right list -> "x months ago".
 				//	Possibly this can be useful with some other apps too.
-				//	If not ctor, capturing works well because _ElmFromPointRaw is called every 250 ms to display element rectangles.
+				//	If not ctor, capturing works well because _ElmFromPointRaw is called to display element rectangles.
 				//	Even with this delay, may be no HTML attributes at first. Never mind.
 				_ElmFromPointRaw(p, flags);
 				100.ms();
 			}
 			
-			var e = _ElmFromPointRaw(p, flags);
-			if (!uacInfo.isAdmin && wnd.fromMouse().UacAccessDenied) print.warning("The target process is admin; this process isn't. Can't use its UI elements.", -1); //not _info.InfoError, it's unreliable here, even with timer
+			var (e, w) = _ElmFromPointRaw(p, flags);
+			if (!uacInfo.isAdmin && w.UacAccessDenied) print.warning("The target process is admin; this process isn't. Can't use its UI elements.", -1); //not _info.InfoError, it's unreliable here, even with timer
 			if (e == null) return null;
+			
+			//the same workaround as in _GetCapturingRect
+			if (ctor && _CaptureSmallerChromeWorkaround(e, w)) {
+				return _smaller.GetElm(p);
+			}
 			
 			//If e probably does not support Invoke or Focus, show menu with e and the first ancestor that supports it.
 			//	In some cases use the ancestor without a menu (if LINK or BUTTON etc).
@@ -837,10 +839,97 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		}
 	}
 	bool _waitAutoCheckedOnce; //if user unchecks, don't check next time
+	popupMenu _capturingMenu;
 	
 	record class _CapturedElm(elm e, string role, string tt, RECT rect);
 	
-	(bool smaller, wnd w, (elm e, RECT rect)[] a, int timer) _smaller;
+	class _CaptureSmaller {
+		Delm _d;
+		wnd _w;
+		(elm e, RECT rect)[] _a;
+		long _timeUpdated, _updatePeriod;
+		
+		public _CaptureSmaller(Delm d, wnd w) {
+			_d = d;
+			_w = w;
+		}
+		
+		public wnd Window => _w;
+		
+		public bool Update() {
+			if (_d._capturingMenu != null || _d._actionMenu != null) return false;
+			
+			EFFlags flags = 0;
+			if (_d._page is { } page) {
+				if (page.notInprocA.IsChecked) flags |= EFFlags.NotInProc;
+				if (page.hiddenTooA.IsChecked) flags |= EFFlags.HiddenToo;
+			}
+			EXYFlags xyFlags = _AdjustXYFlagsForWindow(wnd.fromMouse(WXYFlags.Raw), _w, _d._GetXYFlags());
+			if (xyFlags.Has(EXYFlags.UIA)) flags |= EFFlags.UIA;
+			if (xyFlags.Has(EXYFlags.NotInProc)) flags |= EFFlags.NotInProc;
+			
+			_timeUpdated = long.MaxValue;
+			try {
+				var aOld = _a;
+				long t1 = Environment.TickCount64;
+				_a = elmFinder.GetAllWithRect_(_w, flags).ToArray();
+				long t2 = Environment.TickCount64;
+				long t3 = t2 - t1;
+				
+				if (t3 < 3000) (_timeUpdated, _updatePeriod) = (t2, 2000 + t3 * 2);
+				
+				//Release old COM objects.
+				//	Old test results, now can't repro:
+				//		Else may become slower, and the target process memory grows, until next GC.
+				//		Eg Chrome the "get all" time normally is ~32 ms, but without this grows until 80-120 ms.
+				if (aOld != null) Task.Delay(1000).ContinueWith(t => { GC.Collect(); });
+				
+				//rejected: auto switch to UIA when need. Eg if CLIENT empty.
+				//	Difficult to reliably detect whether it's better.
+				//	Anyway does not improve all cases. Eg when need UIA only for a single child window, eg HtmlHelp tree.
+			}
+			catch (Exception e1) { Debug_.Print(e1); return false; }
+			
+			//Task.Run(() => { using (osdText.showTransparentText("updated", 1, PopupXY.Mouse)) 500.ms(); });
+			return true;
+		}
+		
+		public bool GetRect(TUtil.CapturingWithHotkey.GetRectArgs k) {
+			long timeNow = Environment.TickCount64;
+			bool update = timeNow - _timeUpdated >= _updatePeriod;
+			if (!update) {
+				long liTime = Api.GetLastInputTime();
+				update = liTime > _timeUpdated && timeNow - liTime > 600;
+			}
+			if (update) Update();
+			
+			var a = GetElm(k.p);
+			if (a.Length == 0) return false;
+			k.resultRect = a[0].rect;
+			k.resultText = a[0].role + " *";
+			return true;
+		}
+		
+		public _CapturedElm[] GetElm(POINT p) {
+			//get objects whose rect contains p. Get only tree leaves.
+			List<_CapturedElm> r = [];
+			int skipLevel = 0;
+			for (int i = _a.Length; --i >= 0;) {
+				int level = _a[i].e.Level;
+				if (level < skipLevel) { skipLevel = level; continue; }
+				if (_a[i].rect.Contains(p)) {
+					r.Add(new(_a[i].e, _a[i].e.Role, null, _a[i].rect));
+					skipLevel = level;
+				}
+			}
+			if (r.Count == 0) return [];
+			if (r.Count == 1) return [r[0]];
+			var a = r.OrderBy(o => o.rect.NoArea ? long.MaxValue : o.rect.Area_).ToArray();
+			return a;
+		}
+	}
+	_CaptureSmaller _smaller;
+	wnd _noAutoSmaller;
 	
 	void _CaptureSmallerToggle() {
 		var w = wnd.fromMouse(WXYFlags.NeedWindow);
@@ -851,90 +940,63 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			return;
 		}
 		
-		bool smaller = _smaller.smaller && w == _smaller.w;
+		_CaptureSmallerToggle(w);
+	}
+	
+	void _CaptureSmallerToggle(wnd w) {
+		bool smaller = _smaller?.Window == w;
 		smaller = !smaller && !w.Is0;
-		_smaller = default;
+		_smaller = null;
 		
 		if (smaller) {
-			bool working = true;
-			var tim = timer2.after(500, _ => {
-				if (!working) return;
-				using var osd = osdText.showText("Getting element rectangles...", -1, PopupXY.Mouse);
-				wait.until(0, () => !working);
-			});
-			smaller = _CaptureSmallerUpdateRects(w);
-			tim.Stop();
-			working = false;
+			var sm = new _CaptureSmaller(this, w);
+			if (sm.Update()) _smaller = sm; else smaller = false;
+		} else {
+			_noAutoSmaller = w;
 		}
 		
-		_smaller.smaller = smaller;
-		_smaller.w = w;
-		
-		//if (smaller) { //briefly display w rect. Not useful when w is a top-level window.
-		//	Task.Run(() => {
-		//		using var osdr = new osdRect { Rect = w.Rect, Opacity = .3, Color = 0x4066FF };
-		//		osdr.Show();
-		//		500.ms();
-		//	});
-		//}
 		osdText.showText(smaller ? "Using alternative elm capturing method in this window" : "Using default elm capturing method", smaller ? 3 : 2, PopupXY.Mouse);
 	}
 	
-	bool _CaptureSmallerIsOnInWindow(POINT? p = null) => _smaller.smaller && _smaller.w == wnd.fromXY(p ?? mouse.xy, WXYFlags.NeedWindow);
-	//bool _CaptureSmallerIsOnInWindow(POINT? p = null) => _smaller.smaller && _smaller.w == wnd.fromXY(p ?? mouse.xy);
-	
-	bool _CaptureSmallerUpdateRects(wnd w) {
-		EFFlags flags = EFFlags.MenuToo;
-		if (_cUIA.IsChecked ?? _NeedUiaFlagForWindow(w)) flags |= EFFlags.UIA;
-		if (_page != null) {
-			if (_page.notInprocA.IsChecked) flags |= EFFlags.NotInProc;
-			if (_page.hiddenTooA.IsChecked) flags |= EFFlags.HiddenToo;
+	//workaround for Chromium bug (now fixed in browsers): can't capture links etc in acc mode.
+	//	On mouse-move over a link, Chrome shows the URL at the bottom. While the URL is visible, acc elm-from-point API doesn't work.
+	//	Similar in some other cases, eg when shows a tab thumbnail. Then uia API don't work too (never mind).
+	//	In next Chrome and Edge version they restored the old element-from-point behavior: acc OK, UIA dead in Chrome.
+	//	Still need this for VSCode (2025-09-27); for any element, not just links.
+	bool _CaptureSmallerChromeWorkaround(elm e, wnd w, RECT? rIfHave = null) {
+		if (w == _noAutoSmaller) return false;
+		if (e == null || (e.MiscFlags & (EMiscFlags.InProc | EMiscFlags.UIA | EMiscFlags.Java)) != EMiscFlags.InProc) return false;
+		if (e.RoleInt_ is ERole.PANE && w.ClassNameIs("Chrome_WidgetWin_1")) {
+			var r = rIfHave ?? e.Rect;
+			if (r == w.ClientRectInScreen) {
+				_CaptureSmallerToggle(w);
+				return _smaller != null;
+			}
 		}
+		return false;
 		
-		_smaller.timer = int.MaxValue;
-		try {
-			int t = Environment.TickCount;
-			_smaller.a = _RunElmTask(2000, this, _ => {
-				//using var p1 = perf.local();
-				return elmFinder.GetAllWithRect_(w, flags).ToArray();
-				
-				//rejected: auto switch to UIA when need. Eg if CLIENT empty.
-				//	Difficult to reliably detect whether it's better.
-				//	Anyway does not improve all cases. Eg when need UIA only for a single child window, eg HtmlHelp tree.
-			});
-			t = Environment.TickCount - t; if (t < 1000) _smaller.timer = t / 50 + 4; //~1.5s (1-6)
-		}
-		catch (Exception e1) { Debug_.Print(e1); return false; }
-		return true;
-	}
-	
-	(RECT? r, string s) _CaptureSmallerGetRect(POINT p) {
-		if (--_smaller.timer == 0) {
-			_CaptureSmallerUpdateRects(_smaller.w);
-		} else if (_smaller.timer == 2) {
-			//Release old COM objects.
-			//	Else may become slower, and the target process memory grows, until next GC.
-			//	Eg Chrome the "get all" time normally is ~32 ms, but without this grows until 80-120 ms.
-			GC.Collect(1);
-		}
+		//CONSIDER: auto-switch to smaller mode in any window. Or just inform about it. To detect:
+		//	If acc rect == window rect or control rect (client):
+		//	Enum direct acc children to find one at that point. If found, switch.
+		//	Can detect it in C++ acc-from-point code and return a flag "has a child at that point". Then in the role tooltip display "ROLE (Shift+F3 to show smaller elements)".
 		
-		var a = _smaller.a;
-		int iSm = -1; long sizeSm = 0;
-		for (int i = 0; i < a.Length; i++) {
-			if (!a[i].rect.Contains(p)) continue;
-			long size = (long)a[i].rect.Width * a[i].rect.Height;
-			if (size > 0) if (sizeSm == 0 || size <= sizeSm) { sizeSm = size; iSm = i; }
-		}
-		if (iSm < 0) return default;
-		return (a[iSm].rect, a[iSm].e.Role + " *");
-	}
-	
-	_CapturedElm[] _CaptureSmallerNow(POINT p) {
-		List<_CapturedElm> r = new();
-		foreach (var v in _smaller.a) {
-			if (v.rect.Contains(p)) r.Add(new(v.e, v.e.Role, null, v.rect));
-		}
-		return r.OrderBy(o => (long)o.rect.Width * o.rect.Height).ToArray();
+		//[old] rejected: if big etc, inform about 'Smaller'
+		//if (r.Width * r.Height > 5000) {
+		//	var ri = e.RoleInt;
+		//	if (!(_RoleIsLinkOrButton(ri) || ri is ERole.Custom or ERole.TEXT or ERole.STATICTEXT or ERole.IMAGE or ERole.DIAGRAM)) {
+		//		int wid = (int)Dpi.Unscale(r.Width, r), hei = Math2.MulDiv(r.Height, wid, r.Width);
+		//		//print.it(wid, hei, wid * hei);
+		//		bool big = wid * hei > 10000;
+		//		if (!big && !m.flags.Has(EXYFlags.UIA)) {
+		//			var ee = _ElmFromPointRaw(m.p, m.flags | EXYFlags.UIA);
+		//			if (ee != null && ee.RoleInt != ri) {
+		//				var rr = ee.Rect;
+		//				if (rr.Width * rr.Height < r.Width * r.Height / 2) big = true;
+		//			}
+		//		}
+		//		if (big) s += "\nTry the hotkey";
+		//	}
+		//}
 	}
 	
 	#endregion
@@ -984,24 +1046,21 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		_testing = true;
 		var restoreOwner = new int[1];
 		try {
-			var (rr, bad) = _RunElmTask(10000, (this.Hwnd(), _WndSearchIn), m => {
-				elmFinder.t_navigResult = (true, null, null);
-				var rr = TUtil.RunTestFindObject(m.Item1, code, wndVar, m.Item2, o => (o as elm).Rect, actWin, restoreOwner, this.Dispatcher);
-				elm elmFound = rr.obj as elm, elmFoundBN = null;
-				//need elm found before navig
-				if (elmFound != null) elmFoundBN = elmFinder.t_navigResult.after == elmFound ? elmFinder.t_navigResult.before : elmFound;
-				elmFinder.t_navigResult = default;
-				bool bad = false;
-				if (elmFound != null) {
-					RECT r1 = elmFoundBN.Rect, r2 = elmSelected.Rect;
-					//print.it(r1, r2); //in DPI-scaled windows can be slightly different if different inproc of elmSelected and elmFoundBN. Would be completely different if using raw rect.
-					int diff = elmFoundBN.MiscFlags.Has(EMiscFlags.InProc) == elmSelected.MiscFlags.Has(EMiscFlags.InProc) ? 0 : 2;
-					bad = (!RECT.EqualFuzzy_(r1, r2, diff) || elmFoundBN.Role != elmSelected.Role);
-				}
-				return (rr, bad);
-			});
+			elmFinder.t_navigResult = (true, null, null);
+			var rr = TUtil.RunTestFindObject(this.Hwnd(), code, wndVar, _WndSearchIn, o => (o as elm).Rect, actWin, restoreOwner, this.Dispatcher);
+			elm elmFound = rr.obj as elm, elmFoundBN = null;
+			//need elm found before navig
+			if (elmFound != null) elmFoundBN = elmFinder.t_navigResult.after == elmFound ? elmFinder.t_navigResult.before : elmFound;
+			elmFinder.t_navigResult = default;
+			bool bad = false;
+			if (elmFound != null) {
+				RECT r1 = elmFoundBN.Rect, r2 = elmSelected.Rect;
+				//print.it(r1, r2); //in DPI-scaled windows can be slightly different if different inproc of elmSelected and elmFoundBN. Would be completely different if using raw rect.
+				int diff = elmFoundBN.MiscFlags.Has(EMiscFlags.InProc) == elmSelected.MiscFlags.Has(EMiscFlags.InProc) ? 0 : 2;
+				bad = (!RECT.EqualFuzzy_(r1, r2, diff) || elmFoundBN.Role != elmSelected.Role);
+			}
 			
-			if (rr.obj is not elm elmFound) {
+			if (elmFound == null) {
 				string osd;
 				if (rr.info == null) _info.InfoError(osd = "Timeout", "Not found in 10 s.");
 				else if (rr.speed < 0) { //error
@@ -1010,7 +1069,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				} else { //not found
 					osd = "Not found";
 					string s2 = "Try: check <b>Find hidden too<>; check/uncheck/edit other controls.";
-					int n = _page.maxccA.GetText(out _) ? 0 : _RunElmTask(200, 0, m => _elm.Parent?.ChildCount ?? 0);
+					int n = _page.maxccA.GetText(out _) ? 0 : (_elm.Parent?.ChildCount ?? 0);
 					if (n > 10000) { //never mind: may be an indirect ancestor. Rare.
 						s2 = $"The parent element has {n} children. Need to specify maxcc.";
 					} else {
@@ -1047,22 +1106,13 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				string aCode = _ActionGetCode(test: true);
 				if (aCode != null) {
 					Api.AllowSetForegroundWindow();
-#if true
-					var re = _RunElmTask(2000, (elmFound, aCode), static m => TUtil.RunTestAction(m.elmFound, m.aCode));
+					var re = TUtil.RunTestAction(elmFound, aCode);
 					if (re != null) {
 						_info.InfoErrorOrInfo(re);
 						_Osd(re.header, true);
 						return;
 					}
 					restoreOwner[0] = 1000;
-#else
-					var re = await _StartElmTask((elmFound, aCode), static m => TUtil.RunTestAction(m.elmFound, m.aCode));
-					if (re != null) {
-						_info.InfoErrorOrInfo(re);
-						return;
-					}
-					restoreOwner[0] = 1000;
-#endif
 				}
 			}
 			
@@ -1110,12 +1160,12 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		void _ItemActivated(_TreeItem ti) {
 			_elm = ti.e;
 			//_screenshot = null;
-			_SetWndCon(_wnd, _GetWndContainer(), _useCon);
+			_SetWndCon(_wnd, _elm.WndContainer, _useCon);
 			if (!_PathSetPageWhenTreeItemSelected(ti)) {
 				if (!_FillProperties(out _)) return;
 			}
 			_FormatCode();
-			TUtil.ShowOsdRect(_RunElmTask(1000, _elm, e => e.Rect));
+			TUtil.ShowOsdRect(_elm.Rect);
 		}
 		
 		_tree.ItemClick += e => {
@@ -1147,44 +1197,43 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		if (_page.uiaA.IsChecked) flags |= EFFlags.UIA;
 		if (!_elm.MiscFlags.Has(EMiscFlags.InProc)) flags |= EFFlags.NotInProc; //if captured notinproc in DPI-scaled, would fail to select in tree if tree elems retrieved inproc, because would compare with non-scaled rects
 		
-		var (xRoot, xSelect, exc) = _RunElmTask(10000, this, dlg => {
-			//TODO3: cancellation
-			var us = (uint)p.State;
-			var prop = $"rect={p.Rect}\0state=0x{us:X},!0x{~us:X}";
-			if (skipWINDOW) prop += $"\0notin=WINDOW";
-			var role = p.Role.NullIfEmpty_();
-			
-			_TreeItem xRoot = new(dlg), xSelect = null;
-			var stack = new Stack<_TreeItem>(); stack.Push(xRoot);
-			int level = 0;
-			
-			try {
-				w.Elm[role, "**tc " + p.Name, prop, flags, also: o => {
-					_TreeItem x = new(dlg);
-					int lev = o.Level;
-					if (lev != level) {
-						if (lev > level) {
-							Debug.Assert(lev - level == 1);
-							stack.Push(stack.Peek().LastChild);
-						} else {
-							while (level-- > lev) stack.Pop();
-						}
-						level = lev;
+		var us = (uint)p.State;
+		var prop = $"rect={p.Rect}\0state=0x{us:X},!0x{~us:X}";
+		if (skipWINDOW) prop += $"\0notin=WINDOW";
+		var role = p.Role.NullIfEmpty_();
+		
+		_TreeItem xRoot = new(this), xSelect = null;
+		var stack = new Stack<_TreeItem>(); stack.Push(xRoot);
+		int level = 0;
+		
+		try {
+			w.Elm[role, "**tc " + p.Name, prop, flags, also: o => {
+				_TreeItem x = new(this);
+				int lev = o.Level;
+				if (lev != level) {
+					if (lev > level) {
+						Debug.Assert(lev - level == 1);
+						stack.Push(stack.Peek().LastChild);
+					} else {
+						while (level-- > lev) stack.Pop();
 					}
-					x.e = o;
-					if (o.MiscFlags.Has(Enum_.EMiscFlags_Marked)) {
-						if (xSelect == null) xSelect = x;
-					}
-					stack.Peek().AddChild(x);
-					return false;
+					level = lev;
 				}
-				].Exists();
+				x.e = o;
+				if (o.MiscFlags.Has(Enum_.EMiscFlags_Marked)) {
+					if (xSelect == null) xSelect = x;
+				}
+				stack.Peek().AddChild(x);
+				return false;
 			}
-			catch (Exception ex) { return (null, null, ex.Message); }
-			return (xRoot, xSelect, (string)null);
-		});
-		if (xRoot == null) _info.InfoError("Failed to get UI element tree.", exc ??= "Timeout.");
-		return (xRoot, xSelect);
+			].Exists();
+			
+			return (xRoot, xSelect);
+		}
+		catch (Exception ex) {
+			_info.InfoError("Failed to get UI element tree.", ex.Message);
+			return default;
+		}
 	}
 	
 	void _FillTree(EProperties p) {
@@ -1242,17 +1291,15 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			_ClearTree();
 			return false;
 		}
-		//if(keys.isScrollLock) return false;
 		
-		ti = _RunElmTask(5000, (_elm, a), static m => {
-			//TODO3: cancellation
-			var e = m.Item1;
+		ti = _Find(_elm, a);
+		static _TreeItem _Find(elm e, _TreeItem[] a) {
 			if (!e.GetProperties("rn", out var p)) return null;
 			int item = e.Item;
 			var ri = e.RoleInt;
-			string rs = e.RoleInt == ERole.Custom ? e.Role : null;
+			string rs = ri == ERole.Custom ? e.Role : null;
 			//CONSIDER: to make faster, run all this code inproc. Or at least switch context once for each element.
-			foreach (var v in m.a) {
+			foreach (var v in a) {
 				e = v.e;
 				if (e.Item != item) continue;
 				if (e.RoleInt != ri) continue;
@@ -1262,7 +1309,8 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				return v;
 			}
 			return null;
-		});
+		}
+		
 		if (ti != null) _SelectTreeItem(ti);
 		else Debug_.Print("recreating tree of same window");
 		return ti != null;
@@ -1289,23 +1337,25 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		string ITreeViewItem.DisplayText {
 			get {
 				if (_displayText == null) {
-					(_displayText, _isInvisible, _isFailed) = _dlg._RunElmTask(500, e, static e => {
-						bool isWINDOW = e.RoleInt == ERole.WINDOW;
-						string props = isWINDOW ? "Rnsw" : "Rns";
-						if (!e.GetProperties(props, out var p)) return ("Failed: " + lastError.message, false, true);
-						
-						string s;
+					bool isWINDOW = e.RoleInt == ERole.WINDOW;
+					string props = isWINDOW ? "Rnsw" : "Rns";
+					if (!e.GetProperties(props, out var p)) {
+						_displayText = "Failed: " + lastError.message;
+						(_isInvisible, _isFailed) = (false, true);
+					} else {
 						if (isWINDOW) {
 							using (new StringBuilder_(out var b)) {
 								b.Append(p.Role).Append("  (").Append(p.WndContainer.ClassName).Append(')');
 								if (p.Name.Length > 0) b.Append("  \"").Append(p.Name).Append('"');
-								s = b.ToString();
+								_displayText = b.ToString();
 							}
-						} else if (p.Name.Length == 0) s = p.Role;
-						else s = p.Role + " \"" + p.Name.Escape(limit: 250) + "\"";
-						
-						return (s, e.IsInvisible_(p.State), false);
-					});
+						} else if (p.Name.Length == 0) {
+							_displayText = p.Role;
+						} else {
+							_displayText = p.Role + " \"" + p.Name.Escape(limit: 250) + "\"";
+						}
+						(_isInvisible, _isFailed) = (e.IsInvisible_(p.State), false);
+					}
 				}
 				return _displayText;
 			}
@@ -1933,140 +1983,6 @@ new elmFinder || 5
 			});
 		}
 	}
-	
-	//In some cases used to deadlock, therefore tried to move all elm functions to other thread.
-	//But it did not solve the problem, and added other problems, eg can reenter. Need full async/await, but it's too difficult.
-	//After improvements in other places now does no deadlock.
-#if true
-	//This code runs in same thread.
-	TRet _RunElmTask<TRet, TParam>(int timeoutMS, TParam param, Func<TParam, TRet> f, [CallerMemberName] string m_ = null) {
-		return f(param);
-	}
-#elif true
-	//This code should work well, but has 2 problems.
-	//	1. Deadlocks anyway, although maybe temporarily.
-	//	2. Can reenter easily, eg on WM_PAINT, because .NET 'wait' functions get/dispatch too many messages.
-	//This code is unfinished. Used only for testing.
-	TRet _RunElmTask<TRet, TParam>(int timeoutMS, TParam param, Func<TParam, TRet> f, [CallerMemberName] string m_ = null) {
-		//using var p1 = perf.local();
-		//using var whook = WindowsHook.ThreadGetMessage(k => { print.it(*k.msg); });
-		//var hs = PresentationSource.FromVisual(this) as System.Windows.Interop.HwndSource;
-		//System.Windows.Interop.HwndSourceHook hook = (nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) => { WndUtil.PrintMsg((wnd)hwnd, msg, 0, 0); return default; };
-		//hs?.AddHook(hook); using var removeHook = new UsingEndAction(() => hs?.RemoveHook(hook));
-		////The windowshook shows that by default .NET gets many posted messages (WM_PAINT, WM_TIMER, WM_USER+, registered, but didn't notice input messages eg WM_MOUSEMOVE), and don't know what it does with them.
-		////The hwndsource hook receives some posted messages (WM_PAINT but not others listed above) and (some or all?) sent messages.
-		////Sometimes this func reenters on WM_PAINT when treeview wants to get elm properties to display.
-		////No messages with NoPumpSynchronizationContext_. But then deadlocks.
-
-		//using var noPump = new NoPumpSynchronizationContext_.Scope(); //fast
-
-		//p1.Next();
-		//Debug_.PrintIf(_threadWorking, $"working. Recursive: {_inRET}. Stack: {new StackTrace(true)}", m_: m_);
-		Debug_.PrintIf(_threadWorking, $"working. Recursive: {_inRET}.", m_: m_);
-		//if (_inRET > 0) return default;
-		//if (_threadWorking) return default; //todo: not for all?
-		_inRET++;
-		try {
-			var task = Task.Factory.StartNew(() => {
-				//todo: return now if already timed out
-				_threadWorking = true;
-				try { return f(param); }
-				catch (Exception e1) { Debug_.Print(e1); return default; }
-				finally { _threadWorking = false; }
-			}, default, 0, _threadS);
-			bool ok = task.Wait(timeoutMS);
-			//p1.Next(); //the Task/Wait code without calling invoke is 40/100 mcs hot/cold. Not too slow.
-			if (ok) return task.Result;
-		}
-		finally { _inRET--; }
-		Debug_.Print("timeout", m_: m_);
-		return default;
-	}
-	StaTaskScheduler_ _threadS = new(1); //actually don't need STA, but need a scheduler that can have only 1 thread
-
-	Task _StartElmTask<TParam>(TParam param, Action<TParam> action) {
-		return Task.Factory.StartNew(() => {
-			try { action(param); }
-			catch (Exception e1) { Debug_.Print(e1); return; }
-		}, default, 0, _threadS);
-	}
-
-	Task<TRet> _StartElmTask<TRet, TParam>(TParam param, Func<TParam, TRet> f) {
-		return Task.Factory.StartNew(() => {
-			try { return f(param); }
-			catch (Exception e1) { Debug_.Print(e1); return default; }
-		}, default, 0, _threadS);
-	}
-
-	protected override void OnClosed(EventArgs e) {
-		_threadS.Dispose();
-		base.OnClosed(e);
-	}
-
-	bool _threadWorking; int _inRET;
-#else
-	//This code uses SendMessageTimeout. It pumps less messages.
-	//	Deadlocks too, eg when using UIA. Didn't notice reentering.
-	//This code is unfinished. Used only for testing.
-	TRet _RunElmTask<TRet, TParam>(int timeoutMS, TParam param, Func<TParam, TRet> f, [CallerMemberName] string m_ = null) {
-		if (_et.thread == null) {
-			var thread = run.thread(_ETThread, sta: false); //must not be STA, else fails non-UIA
-			while (_et.w.Is0) { Thread.Sleep(10); if (!thread.IsAlive) return default; } //not ManualResetEvent because it pumps messages and can reenter
-			_et.thread = thread;
-		}
-
-		//Debug_.PrintIf(_threadWorking, $"working. Recursive: {_inRET}. Stack: {new StackTrace(true)}", m_: m_);
-		Debug_.PrintIf(_threadWorking, $"working. Recursive: {_inRET}.", m_: m_);
-		//if (_inRET > 0) return default;
-		//if (_threadWorking) return default; //todo: not for all?
-
-		try {
-			_inRET++;
-			TRet r = default;
-			_et.action = () => { r = f(param); };
-			long t0 = Environment.TickCount64;//todo
-			bool ok = _et.w.SendTimeout(timeoutMS, out nint rr, Api.WM_USER);
-			_et.action = null;
-			if (ok && rr == 1) return r;
-			Debug_.Print($"timeout, {timeoutMS}, {Environment.TickCount64-t0}", m_: m_);
-			return default;
-		}
-		finally { _inRET--; }
-	}
-
-	(WNDPROC wndProc, wnd w, Thread thread, Action action) _et;
-
-	void _ETThread() {
-		_et.w = WndUtil.CreateWindowDWP_(messageOnly: true, _et.wndProc = (w, m, wp, lp) => {
-			//WndUtil.PrintMsg(w, m, wp, lp);
-
-			if (m == Api.WM_USER) {
-				var a = _et.action; if (a == null) return 0;
-				_threadWorking = true;
-				//if (keys.isScrollLock) 700.ms();//todo
-				try { a(); }
-				catch (Exception e1) { Debug_.Print(e1); return 0; }
-				finally { _threadWorking = false; }
-				return 1;
-			}
-
-			return Api.DefWindowProc(w, m, wp, lp);
-		});
-		while (Api.GetMessage(out var k, default, 0, 0) > 0) Api.DispatchMessage(k);
-		Api.DestroyWindow(_et.w);
-		_et = default;
-		//print.it("thread ended");
-	}
-
-	protected override void OnClosed(EventArgs e) {
-		if (!_et.w.Is0) _et.w.Post(Api.WM_QUIT);
-		base.OnClosed(e);
-	}
-
-	bool _threadWorking; int _inRET;
-#endif
-	
-	wnd _GetWndContainer() => _RunElmTask(1000, _elm, static e => e.WndContainer);
 	
 	static bool _RoleIsLinkOrButton(ERole role) => role is ERole.LINK
 			or ERole.BUTTON or ERole.BUTTONMENU or ERole.BUTTONDROPDOWN or ERole.BUTTONDROPDOWNGRID

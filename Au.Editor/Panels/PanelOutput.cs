@@ -1,4 +1,4 @@
-//TODO: multiple output controls in the Output panel. Eg compiler output should be separated, and cleared without clearing common output text.
+//TODO2: multiple output controls in the Output panel. Eg compiler output should be separated, and cleared without clearing common output text.
 //	Alternatively, allow to clear certain parts of output text, eg compiler output.
 
 using System.Windows.Controls;

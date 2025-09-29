@@ -248,7 +248,7 @@ public unsafe partial class KTreeView {
 		
 		void _Timer(timer t) {
 			if (_avi != _tv._avi || _i != _tv._hotIndex) { t.Stop(); return; }
-			if (Environment.TickCount - Api.GetLastInputTime() < _td) return;
+			if (Environment.TickCount64 - Api.GetLastInputTime() < _td) return;
 			t.Stop();
 			_tt ??= new ToolTip() {
 				PlacementTarget = _tv, //need for correct DPI in non-primary screen

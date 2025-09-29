@@ -123,6 +123,11 @@ namespace Au {
 		}
 		
 		/// <summary>
+		/// Like <see cref="RoleInt"/>, but returns 0 if int role not available (does not go to get it).
+		/// </summary>
+		internal ERole RoleInt_ => (ERole)_misc.roleByte;
+		
+		/// <summary>
 		/// Gets standard or custom role, as string.
 		/// </summary>
 		/// <returns><c>""</c> if failed. Supports <see cref="lastError"/>.</returns>

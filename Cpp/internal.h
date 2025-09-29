@@ -33,10 +33,10 @@ ENABLE_BITMASK_OPERATORS(eAF2);
 struct RECTWH { long L; long T; long W; long H; };
 
 //AccFindCallback return type.
-enum class eAccFindCallbackResult { Continue, StopFound, StopNotFound };
+enum class eAccFindCallbackResult { Continue, SkipChildren, StopFound, StopNotFound };
 
 //Type of callback functor that receives results of the AO finder.
-using AccFindCallback = const std::function <eAccFindCallbackResult(Cpp_Acc a)>;
+using AccFindCallback = const std::function <eAccFindCallbackResult(Cpp_Acc a, int state, int nSiblings)>;
 
 //STR name and str::Wildex value.
 struct NameValue {
@@ -258,7 +258,7 @@ public:
 	}
 
 	//Removes removeFlags flags and adds addFlags.
-	static void Set(HWND w, eWinFlags addFlags, eWinFlags removeFlags = (eWinFlags)0) {
+	static void Set(HWND w, eWinFlags addFlags, eWinFlags removeFlags = {}) {
 		auto inst = _Inst();
 		CComCritSecLock<CComAutoCriticalSection> lock(inst._cs);
 		eWinFlags t = Get(w), t0 = t;

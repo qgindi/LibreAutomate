@@ -1652,12 +1652,27 @@ static unsafe partial class Api {
 	
 	struct LASTINPUTINFO {
 		public int cbSize;
-		public int dwTime;
+		public uint dwTime;
 	}
 	
-	internal static int GetLastInputTime() {
+	/// <summary>
+	/// Calls API <see cref="GetLastInputInfo"/> and makes the result 64-bit.
+	/// </summary>
+	internal static long GetLastInputTime() {
 		var r = new LASTINPUTINFO { cbSize = 8 };
-		return GetLastInputInfo(ref r) ? r.dwTime : 0;
+		if (!GetLastInputInfo(ref r)) return 0;
+		return TickCount32To64(r.dwTime);
+	}
+	
+	/// <summary>
+	/// Extends a 32-bit tick count (like from many Windows API) into the 64-bit tick count space.
+	/// </summary>
+	/// <param name="tick32">32-bit time, like from API <c>GetTickCount</c>. Must not be in the future.</param>
+	internal static long TickCount32To64(uint tick32) {
+		long now64 = Environment.TickCount64;
+		long r = (now64 & ~0xffffffffL) | tick32;
+		if (r > now64) r -= 0x1_0000_0000L;
+		return r;
 	}
 }
 

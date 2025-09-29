@@ -305,18 +305,9 @@ static partial class TUtil {
 	/// <param name="capt">If used, temporarily hides its on-screen rect etc.</param>
 	public static string MakeScreenshot(POINT p, CapturingWithHotkey capt = null) {
 		if (LA.App.Settings.edit_noImages) return null;
-		bool v1 = false, v2 = false;
-		if (capt != null) {
-			if (v1 = capt._osr.Visible) capt._osr.Hwnd.ShowL(false);
-			if (v2 = capt._ost.Visible) capt._ost.Hwnd.ShowL(false);
-		}
+		using var thr = capt?.TempHideRect();
 		const int sh = 30;
-		var s = ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh));
-		if (capt != null) {
-			if (v1) capt._osr.Hwnd.ShowL(true);
-			if (v2) capt._ost.Hwnd.ShowL(true);
-		}
-		return s;
+		return ColorQuantizer.MakeScreenshotComment(new(p.x - sh, p.y - sh / 2, sh * 2, sh));
 	}
 	
 	#endregion

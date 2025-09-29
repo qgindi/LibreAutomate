@@ -105,8 +105,8 @@ class DPwnd : UserControl {
 	void _cCapture_CheckedChanged() {
 		_capt ??= new(
 			_cCapture,
-			p => (wnd.fromXY(p, WXYFlags.NeedWindow).Rect, null),
-			(LA.App.Settings.delm.hk_capture, _Capture)
+			o => o.wTL.GetRect(out o.resultRect),
+			new(LA.App.Settings.delm.hk_capture, _Capture)
 			);
 		_capt.Capturing = _cCapture.IsChecked;
 	}
