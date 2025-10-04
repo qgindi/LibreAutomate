@@ -6,6 +6,7 @@ namespace Au.More;
 /// <summary>
 /// Data hash functions.
 /// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)] //obsolete as public, but still used internally. Created before the easy and fast .NET hash classes existed.
 public static unsafe class Hash {
 	#region FNV1
 	
@@ -14,40 +15,32 @@ public static unsafe class Hash {
 	/// Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
 	/// </summary>
 	public static int Fnv1(RStr data) {
-		fixed (char* p = data) return Fnv1(p, data.Length);
-	}
-	
-	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
-	public static int Fnv1(char* data, int lengthChars) {
-		if (data == null) return 0;
+		if (data.IsNull()) return 0;
 		
 		uint hash = 2166136261;
-		for (int i = 0; i < lengthChars; i++)
+		for (int i = 0; i < data.Length; i++)
 			hash = (hash * 16777619) ^ data[i];
 		return (int)hash;
-		
-		//note: using i is slightly faster than pointers. Compiler knows how to optimize.
 	}
+	
+	/// <inheritdoc cref="Fnv1(RStr)"/>
+	public static int Fnv1(char* data, int lengthChars) => Fnv1(new RStr(data, lengthChars));
 	
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
-	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
+	/// <inheritdoc cref="Fnv1(RStr)"/>
 	public static int Fnv1(RByte data) {
-		fixed (byte* p = data) return Fnv1(p, data.Length);
-	}
-	
-	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
-	public static int Fnv1(byte* data, int lengthBytes) {
-		if (data == null) return 0;
+		if (data.IsNull()) return 0;
 		
 		uint hash = 2166136261;
-		for (int i = 0; i < lengthBytes; i++)
+		for (int i = 0; i < data.Length; i++)
 			hash = (hash * 16777619) ^ data[i];
 		return (int)hash;
-		
-		//note: could be void* data, then callers don't have to cast other types to byte*, but then can accidentally pick wrong overload when char*. Also now it's completely clear that it hashes bytes, not the passed type directly (like the char* overload does).
 	}
 	
-	/// <inheritdoc cref="Fnv1(ReadOnlySpan{char})"/>
+	/// <inheritdoc cref="Fnv1(RStr)"/>
+	public static int Fnv1(byte* data, int lengthBytes) => Fnv1(new RByte(data, lengthBytes));
+	
+	/// <inheritdoc cref="Fnv1(RStr)"/>
 	public static int Fnv1<T>(T data) where T : unmanaged
 			=> Fnv1((byte*)&data, sizeof(T));
 	
@@ -55,42 +48,36 @@ public static unsafe class Hash {
 	/// 64-bit FNV-1 hash.
 	/// </summary>
 	public static long Fnv1Long(RStr data) {
-		fixed (char* p = data) return Fnv1Long(p, data.Length);
+		if (data.IsNull()) return 0;
+		
+		ulong hash = 14695981039346656037;
+		for (int i = 0; i < data.Length; i++)
+			hash = (hash * 1099511628211) ^ data[i];
+		return (long)hash;
 	}
 	
 	/// <summary>
 	/// 64-bit FNV-1 hash.
 	/// </summary>
-	public static long Fnv1Long(char* data, int lengthChars) {
-		if (data == null) return 0;
-		
-		ulong hash = 14695981039346656037;
-		for (int i = 0; i < lengthChars; i++)
-			hash = (hash * 1099511628211) ^ data[i];
-		return (long)hash;
-		
-		//speed: ~4 times slower than 32-bit
-	}
+	public static long Fnv1Long(char* data, int lengthChars) => Fnv1(new RStr(data, lengthChars));
 	
 	/// <summary>
 	/// 64-bit FNV-1 hash.
 	/// </summary>
 	/// <param name="data">Data. See also: <see cref="MemoryMarshal.AsBytes"/>, <see cref="CollectionsMarshal.AsSpan"/>.</param>
 	public static long Fnv1Long(RByte data) {
-		fixed (byte* p = data) return Fnv1Long(p, data.Length);
+		if (data.IsNull()) return 0;
+		
+		ulong hash = 14695981039346656037;
+		for (int i = 0; i < data.Length; i++)
+			hash = (hash * 1099511628211) ^ data[i];
+		return (long)hash;
 	}
 	
 	/// <summary>
 	/// 64-bit FNV-1 hash.
 	/// </summary>
-	public static long Fnv1Long(byte* data, int lengthBytes) {
-		if (data == null) return 0;
-		
-		ulong hash = 14695981039346656037;
-		for (int i = 0; i < lengthBytes; i++)
-			hash = (hash * 1099511628211) ^ data[i];
-		return (long)hash;
-	}
+	public static long Fnv1Long(byte* data, int lengthBytes) => Fnv1(new RByte(data, lengthBytes));
 	
 	/// <summary>
 	/// 64-bit FNV-1 hash.
@@ -101,6 +88,7 @@ public static unsafe class Hash {
 	/// <summary>
 	/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
 	/// </summary>
+	[Obsolete] //unused
 	public static int Fast(char* data, int lengthChars) {
 		if (data == null) return 0;
 		
@@ -133,6 +121,7 @@ public static unsafe class Hash {
 	/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
 	/// </summary>
 	/// <param name="s">String. Can be <c>null</c>.</param>
+	[Obsolete] //unused
 	public static int Fast(RStr s) {
 		fixed (char* p = s) return Fast(p, s.Length);
 	}
@@ -146,8 +135,7 @@ public static unsafe class Hash {
 	/// Call an <see cref="Add"/> method one or more times. Finally use <see cref="Hash"/> to get result.
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
-	public struct MD5Context //MD5_CTX + _state
-	{
+	public struct MD5Context { //MD5_CTX + _state
 		[FieldOffset(88)] MD5Result _result;
 		[FieldOffset(104)] long _state; //1 inited/added, 2 finalled
 		

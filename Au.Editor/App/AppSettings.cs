@@ -170,8 +170,9 @@ record AppSettings : JSettings {
 	public int ci_rename;
 	
 	//AI
-	public string ai_modelDocSearch, ai_modelDocChat, ai_modelIconSearch, ai_modelIconImprove;
 	public readonly DictionaryI_<string> ai_ak = new();
+	public string ai_modelDocSearch, ai_modelDocChat;
+	//public string ai_modelIconSearch, ai_modelIconImprove;
 	
 	//panel Files
 	public bool files_multiSelect;

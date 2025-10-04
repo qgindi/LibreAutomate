@@ -39,7 +39,7 @@ public unsafe partial class KTreeView {
 	
 	void _SetDpiAndItemSize(int dpi) {
 		_dpi = dpi;
-		_imageSize = _dpi / 6;
+		_imageSize = _DpiScale(_logicalImageSize);
 		_imageMarginX = _DpiScale(4);
 		_marginLeft = _DpiScale(ItemMarginLeft);
 		_marginRight = _DpiScale(ItemMarginRight);
@@ -60,6 +60,23 @@ public unsafe partial class KTreeView {
 	
 	///
 	public int Dpi => _dpi;
+	
+	/// <summary>
+	/// Logical image size.
+	/// Can be changed before or after creating handle.
+	/// </summary>
+	public int ImageSize {
+		get => _logicalImageSize;
+		set {
+			if (value == _logicalImageSize) return;
+			_logicalImageSize = value;
+			if (_hasHwnd) {
+				_SetDpiAndItemSize(_dpi);
+				_MeasureClear(true);
+			}
+		}
+	}
+	int _logicalImageSize = 16;
 	
 	void _SetVisibleItems(bool init) {
 		bool wasEmpty = _avi.NE_();

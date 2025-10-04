@@ -24,7 +24,7 @@ static partial class App {
 //		print.clear();
 		
 //		args = ["/tool", "0", "Dwnd", "0", "0"];
-		args = ["/tool", "0", "Delm"];
+		//args = ["/tool", "0", "Delm"];
 //		//args = ["/tool", "0", "Duiimage", "0"];
 //		//args = ["/tool", "0", "Docr"];
 #endif

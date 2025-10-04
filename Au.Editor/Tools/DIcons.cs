@@ -1,3 +1,5 @@
+//TODO: doc.
+
 using System.Security.Authentication;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,6 +23,7 @@ class DIcons : KDialogWindow {
 		CopyXaml,
 		ExportXaml,
 		ExportIcon,
+		_DebugCopyPng,
 	}
 	
 	List<_Item> _a;
@@ -44,7 +47,7 @@ class DIcons : KDialogWindow {
 Part of icon name, or wildcard expression.
 Examples: part, Part (match case), start*, *end, **rc regex case-sensitive.
 Can be Pack.Icon, like Material.Folder.");
-		b.xAddButtonIcon("*RemixIcon.GeminiLine" + EdIcons.blue, _ => _AiSearch(), "Use AI to find icons by name.\nFinds synonyms, understands languages, etc.");
+		b.xAddButtonIcon(EdIcons.AiSearch, _ => _AiSearch(), "Use AI to find icons.\nCan search by name or/and image.\nType what you want in the text box or/and copy an icon image (for example in web browser, PNG format). Then click this button.");
 		b.Row(-1).xAddInBorder(out _tv);
 		_tv.ImageBrush = System.Drawing.Brushes.White;
 		b.End();
@@ -95,6 +98,9 @@ Can be Pack.Icon, like Material.Folder.");
 		b.AddButton(out var bExportXaml, ".xaml", _ => _InsertCodeOrExport(_Action.ExportXaml)).Disabled();
 		b.AddButton(out var bExportIco, ".ico", _ => _InsertCodeOrExport(_Action.ExportIcon)).Disabled();
 		b.Add("sizes", out iconSizes, "16,20,24,28,32,48,64");
+//#if DEBUG
+//		b.R.AddButton("[debug] Copy PNG", _ => _InsertCodeOrExport(_Action._DebugCopyPng));
+//#endif
 		b.End();
 		
 		b.StartStack<Expander>("Custom icon string", vertical: true);
@@ -126,9 +132,17 @@ Can be Pack.Icon, like Material.Folder.");
 		b.End();
 		
 		b.StartGrid<Expander>("Options");
-		b.Add("List background", out ComboBox cBackground)
-			.Items("White|Black|Dark|Control")
-			.Select(Math.Clamp(App.Settings.dicons_listColor, 0, 3));
+		
+		var darkContrast = b.R.xAddCheckText("High contrast color", App.Settings.dicons_contrastColor, check: App.Settings.dicons_contrastUse);
+		b.Tooltip("Append this color, like \"*Pack.Name selectedColor|thisColor\". This color is for high contrast dark theme. Can be #RRGGBB or color name.");
+		darkContrast.c.CheckChanged += (_, _) => App.Settings.dicons_contrastUse = darkContrast.c.IsChecked;
+		darkContrast.t.TextChanged += (_, _) => {
+			var s = darkContrast.t.TextOrNull();
+			if (s != null) for (int i = 0; i < 2; i++) { try { System.Windows.Media.ColorConverter.ConvertFromString(s); } catch { s = i == 0 ? "#" + s : null; } }
+			App.Settings.dicons_contrastColor = s;
+		};
+		
+		b.R.Add("List background", out ComboBox cBackground).Items("White|Black|Dark|Control").Select(Math.Clamp(App.Settings.dicons_listColor, 0, 3));
 		cBackground.SelectionChanged += (o, e) => {
 			App.Settings.dicons_listColor = cBackground.SelectedIndex;
 			_SetListIconBrush();
@@ -138,20 +152,14 @@ Can be Pack.Icon, like Material.Folder.");
 		void _SetListIconBrush() {
 			_tv.ImageBrush = App.Settings.dicons_listColor switch { 0 => System.Drawing.Brushes.White, 1 => System.Drawing.Brushes.Black, 2 => System.Drawing.Brushes.DimGray, _ => System.Drawing.SystemBrushes.Control }; ;
 		}
-		var darkContrast = b.xAddCheckText("High contrast color", App.Settings.dicons_contrastColor, check: App.Settings.dicons_contrastUse);
-		b.Tooltip("Append this color, like \"*Pack.Name selectedColor|thisColor\". This color is for high contrast dark theme. Can be #RRGGBB or color name.");
-		darkContrast.c.CheckChanged += (_, _) => App.Settings.dicons_contrastUse = darkContrast.c.IsChecked;
-		darkContrast.t.TextChanged += (_, _) => {
-			var s = darkContrast.t.TextOrNull();
-			if (s != null) for (int i = 0; i < 2; i++) { try { System.Windows.Media.ColorConverter.ConvertFromString(s); } catch { s = i == 0 ? "#" + s : null; } }
-			App.Settings.dicons_contrastColor = s;
+		
+		b.R.Add("List image size", out KTextBox tIconSize, "16");
+		tIconSize.TextChanged += (_, _) => {
+			int k = tIconSize.Text.ToInt();
+			if (k < 7 || k > 256) return;
+			_tv.ImageSize = k;
 		};
 		
-		//b.Add(out KCheckBox cCollection, "Collection");
-		//cCollection.CheckChanged += (_, _) => {
-		//	_withCollection = cCollection.IsChecked == true;
-		//	tv.Redraw();
-		//};
 		b.End();
 		
 		b.Row(-1);
@@ -278,6 +286,7 @@ Can be Pack.Icon, like Material.Folder.");
 				case _Action.CopyXaml: clipboard.text = xaml; break;
 				case _Action.ExportXaml: _Export(false); break;
 				case _Action.ExportIcon: _Export(true); break;
+				case _Action._DebugCopyPng: _DebugCopyPng(); break;
 				}
 				
 				void _Export(bool ico) {
@@ -287,13 +296,21 @@ Can be Pack.Icon, like Material.Folder.");
 					if (ico) {
 						var sizes = iconSizes.Text.Split_(',').Select(o => o.ToInt()).ToArray();
 						var e = ImageUtil.LoadWpfImageElement(xaml);
-						ImageUtil.ConvertWpfImageElementToIcon(path, e, sizes);
+						ImageUtil.ConvertWpfImageElementToIcon_(path, e, sizes);
 					} else {
 						filesystem.saveText(path, xaml);
 					}
 					var fn = App.Model.ImportFileFromWorkspaceDir(path, new(folder, folder.Parent == null ? FNInsert.First : FNInsert.Last));
 					if (fn == null) print.it("failed");
 					else print.it($"<>Exported to <open>{fn.ItemPath}<>");
+				}
+				
+				void _DebugCopyPng() { //note: this is only for debug. Ignores DPI.
+					int size = _tv.ImageSize;
+					var path = xaml.RxReplace(@"^.+?(<Path.+)</Viewbox>", "$1");
+					var conv = AI.XamlIconConverter_.GetConverter(path);
+					var png = conv.ToPng(size, 96, System.Windows.Media.Brushes.White);
+					new clipboardData().AddBinary(png, ClipFormats.Png).SetClipboard();
 				}
 			}
 			
@@ -357,25 +374,41 @@ Can be Pack.Icon, like Material.Folder.");
 	
 	async void _AiSearch() {
 		string query = _tName.Text;
-		if (query.NE()) return;
+		byte[] png = _GetPngFromClipboard();
 		
-		AI.AiModel.ApiKeys = App.Settings.ai_ak;
-		var emModel = AI.AiModel.Models.OfType<AI.AiEmbeddingModel>().FirstOrDefault(o => o.isCompact && o.DisplayName == App.Settings.ai_modelIconSearch);
-		if (emModel == null) {
-			_AiSettingsError($"Please go to Options > AI and select models for icon search.");
+		if (query.NE() && png == null) {
+			dialog.show("How to use AI to find icons", "Can search by icon name or/and image. Type what you want in the text box or/and copy an icon image (for example in web browser, PNG format). Then click the AI search button.\n\nAI embedding model: voyage-multimodal-3.", owner: this);
 			return;
 		}
 		
-		AI.AiChatModel chatModel = null;
-		if (App.Settings.ai_modelIconImprove is { } mii) {
-			chatModel = AI.AiModel.Models.OfType<AI.AiChatModel>().FirstOrDefault(o => o.DisplayName == mii);
-			if (chatModel == null) {
-				_AiSettingsError($"Please go to Options > AI and select a model for icon improve.");
-				return;
+		static byte[] _GetPngFromClipboard() {
+			byte[] png;
+			if (clipboardData.getBinary(ClipFormats.Png) is { } b) png = b;
+			else if (clipboardData.getFiles() is { Length: 1 } a && a[0].Ends(".png", true)) png = filesystem.loadBytes(a[0]);
+			else return null;
+			
+			//remove alpha. The Voyage model does not support it.
+			using var msIn = new MemoryStream(png);
+			using var src = new System.Drawing.Bitmap(msIn);
+			using var dst = new System.Drawing.Bitmap(src.Width, src.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			using (var g = System.Drawing.Graphics.FromImage(dst)) {
+				g.Clear(System.Drawing.Color.White);
+				g.DrawImage(src, 0, 0, src.Width, src.Height);
 			}
+			using var msOut = new MemoryStream();
+			dst.Save(msOut, System.Drawing.Imaging.ImageFormat.Png);
+			return msOut.ToArray();
 		}
 		
-		bool inChat = false;
+		AI.AiModel.ApiKeys = App.Settings.ai_ak;
+		
+		var emModel = new AI.ModelVoyageEmbedImage();
+		//var emModel = AI.AiModel.Models.OfType<AI.AiEmbeddingModel>().First(o => o.isMultimodal /*&& o.DisplayName == App.Settings.ai_modelIconSearch*/);
+		//if (emModel == null) {
+		//	_AiSettingsError($"Please go to Options > AI and select models for icon search.");
+		//	return;
+		//}
+		
 		this.IsEnabled = false;
 		try {
 			_ctsTask?.Cancel();
@@ -384,128 +417,19 @@ Can be Pack.Icon, like Material.Folder.");
 			var cancel = _ctsTask.Token;
 			
 			var em = new AI.Embeddings(emModel);
-			var ems = await Task.Run(() => em.GetIconsEmbeddings(cancel));
+			var ems = await Task.Run(() => em.GetIconsEmbeddings(true, cancel));
 			
 			using var osd = osdText.showText("Searching.\nClick to cancel.", -1, PopupXY.Mouse, showMode: OsdMode.ThisThread);
 			osd.ResizeWhenContentChanged = true;
 			
-			var queryVector = await Task.Run(() => em.CreateEmbedding(query, cancel));
-			var topMatches = em.GetTopMatches(queryVector, ems, take: 500).Select(o => o.f.name).ToArray();
-			
-			void _Test() {
-				var a1 = _a.Select(o => o._name).Where(o => o.Contains("Hourglass")).Distinct().ToArray();
-				var a2 = topMatches.Where(o => o.Contains("Hourglass")).ToArray();
-				print.it(a1.Length, a2.Length, a1.Except(a2));
-			}
-			print.it("---");//TODO
-			_Test();
-			
-			_DisplayResults();
-			
-			if (chatModel != null) {
-				inChat = true;
-				var b = new StringBuilder();
-				
-				bool test = keys.isNumLock;
-				if (test) {
-					b.Append($$""""
-## Instructions for AI
-
-The `## Query` section contains a search phrase provided by the user. The user wants to find an icon by name. The query can be in any language.
-
-The `## List` section contains icon names. All names are in English.
-
-For each icon in the `## List`:
-- Return a relevance score between 0.0 and 1.0, measuring how well the icon name matches the query.
-- Keep the same order as the input list.
-- Output exactly one number per line.
-- Do not include icon names.
-- Do not include any text, labels, or markup before or after the list or list items.
-
-Do not remove items. The returned list must contain exactly {{topMatches.Length}} items.
-
-## Query
-
-{{query}}
-
-## List
-
-"""");
-				} else {
-					b.Append($$""""
-## Instructions for AI
-
-The `## Query` section contains a search phrase provided by the user. The user wants to find an icon by name. The query can be in any language.
-
-The `## List` section contains icon names. All names are in English.
-
-Return a ranked and filtered list of icon names, in the format:
-
-```
-Name
-Name
-Name
-...
-```
-
-Exclude icons unrelated to the search query. When unsure - include.
-
-Do not add any extra text before or after the list. Do not enclose in fences. Return just raw list.
-
-## Query
-
-{{query}}
-
-## List
-
-"""");
-					
-				}
-				
-				
-				foreach (var name in topMatches) {
-					b.Append($"\n{name}");
-				}
-				var message = b.ToString();
-				//print.it(message);
-				
-				osd.Text = "Improving results.\nClick to cancel.";
-				osd.Clicked += (o, mb) => { _ctsTask.Cancel(); };
-				
-				string system = """
-You are an AI assistant that improves the quality of icon search results.
-""";
-				var post = chatModel.GetPostData(system, [new(AI.ACMRole.user, message)]);
-				perf.first();
-				var json = await Task.Run(() => chatModel.Post(post, chatModel.GetHeaders(), cancel).Json());
-				perf.nw();
-				
-				if (test) {
-					print.it(json.ToJsonString());
-					return;
-				}
-				
-				var s = chatModel.GetAnswer(json).text;
-				topMatches = s.Lines().Distinct().ToArray(); //sometimes AI returns duplicates even if asked to make sure there are no duplicates
-				
-				_Test();//TODO
-				
-				_DisplayResults();
-			}
-			
-			void _DisplayResults() {
-				var d = _a.ToLookup(o => o._name);
-				var a = new List<_Item>(topMatches.Length * 3);
-				foreach (var name in topMatches) {
-					a.AddRange(d[name]);
-				}
-				
-				_tv.SetItems(a);
-			}
+			AI.EmInput input = new(png == null ? [query] : query.NE() ? [png] : [query, png]);
+			var queryVector = await Task.Run(() => em.CreateEmbedding(input, cancel));
+			var a = em.GetTopMatches(queryVector, ems, take: 300).Select(o => new _Item(this, o.f.name)).ToArray();
+			_tv.SetItems(a);
 		}
 		catch (OperationCanceledException etc) { if (etc.InnerException is TimeoutException) print.it(etc.Message); }
 		catch (InvalidCredentialException) {
-			var api = inChat ? chatModel.api : emModel.api;
+			var api = emModel.api;
 			_AiSettingsError($"Please go to Options > AI and set the API key for {api}.\nYou can create an API key in your account on the {api} website.");
 		}
 		catch (Exception e1) { print.it(e1); }
@@ -541,6 +465,12 @@ You are an AI assistant that improves the quality of icon search results.
 			_table = table; _name = name;
 		}
 		
+		public _Item(DIcons dialog, string tableDotName) {
+			_dialog = dialog;
+			int i = tableDotName.IndexOf('.');
+			_table = tableDotName[..i]; _name = tableDotName[++i..];
+		}
+		
 		//string ITreeViewItem.DisplayText => s_dialog._withCollection ? (_name + new string(' ', Math.Max(8, 40 - _name.Length * 2)) + "(" + _table + ")") : _name;
 		string ITreeViewItem.DisplayText => _name + new string(' ', Math.Max(8, 40 - _name.Length * 2)) + "(" + _table + ")";
 		
@@ -551,7 +481,8 @@ You are an AI assistant that improves the quality of icon search results.
 					//using var p1 = perf.local();
 					if (_GetIconViewboxXamlFromDB(out string xaml, _table, _name, _dialog._ItemColor(this))) {
 						//p1.Next('d');
-						return ImageUtil.LoadGdipBitmapFromXaml(xaml, _dialog._dpi, (16, 16));
+						int size = _dialog._tv.ImageSize;
+						return ImageUtil.LoadGdipBitmapFromXaml(xaml, _dialog._dpi, (size, size));
 					}
 				}
 				catch (Exception ex) { Debug_.Print(ex); }

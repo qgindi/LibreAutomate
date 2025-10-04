@@ -2,7 +2,19 @@
 
 ### Editor
 
-Documentation improvements. New articles.
+Documentation prepared for AI-based search.
+
+New features in the **Icons** tool:
+- Use AI to find icons by name or/and image.
+- Can display bigger icons. Look in the **Options** expander.
+
+Improved UI element capturing (tool **Find UI element**) in some apps and modes.
+
+Tools like **Find UI element** now run in separate process.
+
+Menu **Edit > Assist > Insert new line before ) ] ;**. Temporarily disables statement auto-completion on `Enter`. And toolbar button.
+
+New code editor feature: continue a vertical method chain by typing `.` on the next line after the `;`.
 
 Added commands in menu **Edit > Find**:
 - **Find next** (`F3` or click the **Find** button).
@@ -10,17 +22,7 @@ Added commands in menu **Edit > Find**:
 - **Next found** (`F4`). Selects next item in the **Found** panel.
 - **Previous found** (`Shift+F4`).
 
-Menu **Edit > Assist > Insert new line before ) ] ;**. Temporarily disables statement auto-completion on `Enter`. And toolbar button.
-
-New code editor feature: continue a vertical method chain by typing `.` on the next line after the `;`.
-
 Quickly hide toolbar buttons using the context menu (in LA window).
-
-Updated PCRE regex library to v10.46.
-
-Tools like **Find UI element** now run in separate process.
-
-Improved UI element capturing (tool **Find UI element**) in some apps and modes.
 
 Several small improvements.
 
@@ -28,6 +30,8 @@ Fixed bugs:
 - .
 
 ### Library
+Updated PCRE regex library to v10.46.
+
 New classes:
 - .
 
@@ -39,9 +43,9 @@ New members:
 New parameters:
 - .
 
-New features:
-- `dialog`: easier to add links.
-- `dialog`: supports XAML icons.
+New `dialog` features:
+- easier to add links.
+- supports XAML icons.
 
 Improved:
 - .

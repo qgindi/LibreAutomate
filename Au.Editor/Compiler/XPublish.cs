@@ -260,7 +260,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 				var file = _csprojDir + @"\icon.ico";
 				try {
 					var e = ImageUtil.LoadWpfImageElement(xaml);
-					ImageUtil.ConvertWpfImageElementToIcon(file, e, [16, 24, 32, 48, 64]);
+					ImageUtil.ConvertWpfImageElementToIcon_(file, e, [16, 24, 32, 48, 64]);
 					_Add(xpg, "ApplicationIcon", file);
 				}
 				catch (Exception e1) { print.it(e1); }

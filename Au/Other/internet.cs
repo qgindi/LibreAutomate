@@ -542,6 +542,7 @@ namespace Au.Types {
 		/// <param name="progress">Calls this callback function to report the progress. If <c>null</c>, shows standard progress dialog.</param>
 		/// <param name="cancel">Can be used to cancel.</param>
 		/// <param name="disposeStream">Call <c>stream.Dispose();</c>.</param>
+		/// <param name="progressText1">Progress dialog heading text. Default: <c>"Downloading"</c>.</param>
 		/// <returns><c>false</c> if canceled.</returns>
 		/// <exception cref="HttpRequestException">Failed HTTP request.</exception>
 		/// <exception cref="Exception">Other exceptions.</exception>
@@ -552,7 +553,7 @@ namespace Au.Types {
 		/// - The HTTP server uses chunked transfer encoding.
 		/// - The HTTP server uses content compression and the <see cref="HttpClient"/> is configured to automatically decompress (for example <see cref="internet.http"/>). Instead of <c>internet.http</c> create a <see cref="HttpClient"/> and optionally set header <c>"Accept-Encoding: br, gzip, deflate"</c>. This function will decompress.
 		/// </remarks>
-		public static bool Download(this HttpResponseMessage t, Stream stream, Action<ProgressArgs> progress = null, CancellationToken cancel = default, bool disposeStream = false) {
+		public static bool Download(this HttpResponseMessage t, Stream stream, Action<ProgressArgs> progress = null, CancellationToken cancel = default, bool disposeStream = false, string progressText1 = null) {
 			dialog pd = null;
 			Stream decomp = null;
 			try {
@@ -573,7 +574,7 @@ namespace Au.Types {
 				string _DialogText(long bytes) => $"{filename}\n{bytes / 1048576d:0.#} MB";
 				if (progress == null) {
 					filename = pathname.getName(t.RequestMessage.RequestUri.AbsolutePath);
-					pd = dialog.showProgress(size == 0, "Downloading", _DialogText(size));
+					pd = dialog.showProgress(size == 0, progressText1 ?? "Downloading", _DialogText(size));
 				}
 				
 				Stream stream1 = s1, stream2 = stream;
@@ -638,23 +639,23 @@ namespace Au.Types {
 		/// Downloads content to file and provides the progress.
 		/// </summary>
 		/// <param name="file">File path. The function uses <see cref="pathname.normalize"/>. Creates parent directory if need.</param>
-		/// <inheritdoc cref="Download(HttpResponseMessage, Stream, Action{ProgressArgs}, CancellationToken, bool)"/>
+		/// <inheritdoc cref="Download(HttpResponseMessage, Stream, Action{ProgressArgs}, CancellationToken, bool, string)"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// if (!internet.http.Get(url, true).Download(zip)) return;
 		/// ]]></code>
 		/// </example>
-		public static bool Download(this HttpResponseMessage t, string file, Action<ProgressArgs> progress = null, CancellationToken cancel = default) {
+		public static bool Download(this HttpResponseMessage t, string file, Action<ProgressArgs> progress = null, CancellationToken cancel = default, string progressText1 = null) {
 			t.EnsureSuccessStatusCode();
 			filesystem.createDirectoryFor(file = pathname.normalize(file));
-			return Download(t, File.Create(file), progress, cancel, disposeStream: true);
+			return Download(t, File.Create(file), progress, cancel, disposeStream: true, progressText1);
 		}
 		
 		/// <summary>
-		/// The async version of <see cref="Download(HttpResponseMessage, Stream, Action{ProgressArgs}, CancellationToken, bool)"/>.
+		/// The async version of <see cref="Download(HttpResponseMessage, Stream, Action{ProgressArgs}, CancellationToken, bool, string)"/>.
 		/// </summary>
-		/// <inheritdoc cref="Download(HttpResponseMessage, Stream, Action{ProgressArgs}, CancellationToken, bool)"/>
-		public static Task<bool> DownloadAsync(this HttpResponseMessage t, Stream stream, Action<ProgressArgs> progress = null, CancellationToken cancel = default, bool disposeStream = false) {
+		/// <inheritdoc cref="Download(HttpResponseMessage, Stream, Action{ProgressArgs}, CancellationToken, bool, string)"/>
+		public static Task<bool> DownloadAsync(this HttpResponseMessage t, Stream stream, Action<ProgressArgs> progress = null, CancellationToken cancel = default, bool disposeStream = false, string progressText1 = null) {
 			if (stream == null || !t.IsSuccessStatusCode) {
 				if (disposeStream) stream.Dispose();
 				ArgumentNullException.ThrowIfNull(stream, nameof(stream));
@@ -677,13 +678,13 @@ namespace Au.Types {
 				//note: don't use Progress<T>. With default synccontext it calls in random thread pool thread.
 				//	This code works like Progress<T> with other synccontexts.
 			}
-			return Task.Run(() => Download(t, stream, progress, cancel, disposeStream));
+			return Task.Run(() => Download(t, stream, progress, cancel, disposeStream, progressText1));
 		}
 		
 		/// <summary>
-		/// The async version of <see cref="Download(HttpResponseMessage, string, Action{ProgressArgs}, CancellationToken)"/>.
+		/// The async version of <see cref="Download(HttpResponseMessage, string, Action{ProgressArgs}, CancellationToken, string)"/>.
 		/// </summary>
-		/// <inheritdoc cref="Download(HttpResponseMessage, string, Action{ProgressArgs}, CancellationToken)"/>
+		/// <inheritdoc cref="Download(HttpResponseMessage, string, Action{ProgressArgs}, CancellationToken, string)"/>
 		public static Task<bool> DownloadAsync(this HttpResponseMessage t, string file, Action<ProgressArgs> progress = null, CancellationToken cancel = default) {
 			t.EnsureSuccessStatusCode();
 			filesystem.createDirectoryFor(file = pathname.normalize(file));

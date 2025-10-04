@@ -1,3 +1,5 @@
+//#define ADD_ALL_COMPACT_EMBEDDING_MODELS
+
 using System.Text.Json.Nodes;
 using System.Security.Authentication;
 using System.Net.Http;
@@ -13,32 +15,42 @@ abstract record class AiModel(string api, string url, string model, AMLimits lim
 	static AiModel() {
 		Models = [
 			new ModelMistralEmbed(),
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 			new ModelMistralEmbed2(),
+#endif
 			new ModelMistralChat("mistral-medium-latest"),
 			new ModelMistralChat("mistral-large-latest"),
 			new ModelMistralChat("codestral-latest"),
 			
 			new ModelOpenaiEmbed(),
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 			new ModelOpenaiEmbed2(),
+#endif
 			new ModelOpenaiChat("gpt-5"),
 			new ModelOpenaiChat("gpt-5-mini"),
 			//new ModelOpenaiCompletionsChat("gpt-5"),
 			//new ModelOpenaiCompletionsChat("gpt-5-mini"),
 			
 			new ModelGeminiEmbed(),
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 			new ModelGeminiEmbed2(),
+#endif
 			new ModelGeminiChat("gemini-2.5-flash"),
 			new ModelGeminiChat("gemini-2.5-flash-lite"),
 			
 			
 			new ModelCohereEmbed(),
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 			new ModelCohereEmbed2(),
+#endif
 			new ModelCohereChat("command-a-03-2025"),
 			new ModelCohereRerank("rerank-v3.5"),
 			new ModelCohereRerank("rerank-english-v3.0"),
 			
 			new ModelVoyageEmbed(),
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 			new ModelVoyageEmbed2(),
+#endif
 			new ModelVoyageRerank("rerank-2.5"),
 			new ModelVoyageRerank("rerank-2.5-lite"),
 			
@@ -120,17 +132,13 @@ abstract record class AiEmbeddingModel(string api, string url, string model, int
 	
 	public bool isCompact { get; protected set; }
 	
-	public abstract object GetPostData(IList<string> input, bool isQuery);
+	public bool isMultimodal { get; protected set; }
+	
+	public abstract object GetPostData(IList<EmInput> input, bool isQuery);
 	
 	public abstract IEnumerable<JsonNode> GetVectors(JsonNode j);
 	
 	public abstract int GetTokens(JsonNode j);
-}
-
-abstract record class AiImageEmbeddingModel(string api, string url, string model, int dimensions, string emType, AMLimits limits)
-	: AiEmbeddingModel(api, url, model, dimensions, emType, limits) {
-	
-	public abstract object GetPostData(IList<object[]> input, bool isQuery);
 }
 
 abstract record class AiChatModel(string api, string url, string model, AMLimits limits)
@@ -160,7 +168,7 @@ record class ModelMistralEmbed : AiEmbeddingModel {
 	public ModelMistralEmbed() : base("Mistral", "https://api.mistral.ai/v1/embeddings", "codestral-embed", 1536, "float", new(32000, 256, requestPeriod: 1100)) { }
 	//"mistral-embed" (only 1024 dim float), "codestral-embed"
 	
-	public override object GetPostData(IList<string> input, bool isQuery)
+	public override object GetPostData(IList<EmInput> input, bool isQuery)
 		=> new { model, input, output_dimension = dimensions, output_dtype = emType };
 	
 	public override IEnumerable<JsonNode> GetVectors(JsonNode j)
@@ -170,9 +178,11 @@ record class ModelMistralEmbed : AiEmbeddingModel {
 		=> (int)j["usage"]["total_tokens"];
 }
 
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 record class ModelMistralEmbed2 : ModelMistralEmbed {
 	public ModelMistralEmbed2() { isCompact = true; dimensions = 384; emType = "int8"; }
 }
+#endif
 
 record class ModelMistralChat : AiChatModel {
 	public ModelMistralChat(string model) : base("Mistral", "https://api.mistral.ai/v1/chat/completions", model, new(32000, 256, requestPeriod: 1500)) { }
@@ -196,7 +206,7 @@ record class ModelMistralChat : AiChatModel {
 record class ModelOpenaiEmbed : AiEmbeddingModel {
 	public ModelOpenaiEmbed() : base("OpenAI", "https://api.openai.com/v1/embeddings", "text-embedding-3-small", 1536, null, new(100000, 2048)) { }
 	
-	public override object GetPostData(IList<string> input, bool isQuery)
+	public override object GetPostData(IList<EmInput> input, bool isQuery)
 		=> new { model, input, dimensions, encoding_format = "base64" };
 	
 	public override IEnumerable<JsonNode> GetVectors(JsonNode j)
@@ -206,9 +216,11 @@ record class ModelOpenaiEmbed : AiEmbeddingModel {
 		=> (int)j["usage"]["total_tokens"];
 }
 
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 record class ModelOpenaiEmbed2 : ModelOpenaiEmbed {
 	public ModelOpenaiEmbed2() { isCompact = true; dimensions = 384; }
 }
+#endif
 
 record class ModelOpenaiChat : AiChatModel {
 	public ModelOpenaiChat(string model) : base("OpenAI", "https://api.openai.com/v1/responses", model, new(100000, 2048)) { apiSuffix = " responses"; }
@@ -282,11 +294,11 @@ record class ModelGeminiEmbed : AiEmbeddingModel {
 	
 	private protected override IEnumerable<string> _GetHeaders(string apiKey) => ["x-goog-api-key: " + apiKey];
 	
-	public override object GetPostData(IList<string> input, bool isQuery)
+	public override object GetPostData(IList<EmInput> input, bool isQuery)
 		=> new {
 			requests = (object[])[input.Select(o => new {
 				model = "models/" + model,
-				content = new { parts = (object[])[new { text = o }] },
+				content = new { parts = (object[])[new { text = o.Text }] },
 				outputDimensionality = dimensions,
 				task_type = isQuery ? "RETRIEVAL_QUERY" : "RETRIEVAL_DOCUMENT"
 			})]
@@ -298,9 +310,11 @@ record class ModelGeminiEmbed : AiEmbeddingModel {
 	public override int GetTokens(JsonNode j) => 0;
 }
 
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 record class ModelGeminiEmbed2 : ModelGeminiEmbed {
 	public ModelGeminiEmbed2() { isCompact = true; dimensions = 384; }
 }
+#endif
 
 record class ModelGeminiChat : AiChatModel {
 	public ModelGeminiChat(string model) : base("Gemini", $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", model, new(8000, 100)) { }
@@ -329,7 +343,7 @@ record class ModelGeminiChat : AiChatModel {
 record class ModelCohereEmbed : AiEmbeddingModel {
 	public ModelCohereEmbed() : base("Cohere", "https://api.cohere.ai/v2/embed", "embed-v4.0", 1536, "base64", new(100000, 96, requestPeriod: 1000, maxSize: 256000)) { }
 	
-	public override object GetPostData(IList<string> texts, bool isQuery)
+	public override object GetPostData(IList<EmInput> texts, bool isQuery)
 		=> new { model, texts, output_dimension = dimensions, embedding_types = (string[])[emType], input_type = isQuery ? "search_query" : "search_document" };
 	
 	public override IEnumerable<JsonNode> GetVectors(JsonNode j)
@@ -339,9 +353,11 @@ record class ModelCohereEmbed : AiEmbeddingModel {
 		=> (int)j["meta"]["billed_units"]["input_tokens"];
 }
 
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 record class ModelCohereEmbed2 : ModelCohereEmbed {
 	public ModelCohereEmbed2() { isCompact = true; dimensions = 512; emType = "int8"; }
 }
+#endif
 
 record class ModelCohereChat : AiChatModel {
 	public ModelCohereChat(string model) : base("Cohere", "https://api.cohere.com/v2/chat", model, new(0, 96, maxSize: 256000)) { } //doc: max content length 256k (chars or tokens?)
@@ -381,7 +397,7 @@ record class ModelVoyageEmbed : AiEmbeddingModel {
 	//public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-3.5", 1024, "float", new(3300, 1000, requestPeriod: 20500)) { } //free tier rate: 10000 TPM, 3 RPM
 	public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-3.5", 1024, "float", new(32000, 1000, requestPeriod: 1000)) { } //rate: 2000000 TPM, 2000 RPM
 	
-	public override object GetPostData(IList<string> input, bool isQuery)
+	public override object GetPostData(IList<EmInput> input, bool isQuery)
 		=> new {
 			model, //voyage-3.5, voyage-3.5-lite
 			input,
@@ -398,19 +414,22 @@ record class ModelVoyageEmbed : AiEmbeddingModel {
 		=> (int)j["usage"]["total_tokens"];
 }
 
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
 record class ModelVoyageEmbed2 : ModelVoyageEmbed {
 	public ModelVoyageEmbed2() { isCompact = true; dimensions = 512; emType = "int8"; }
 }
+#endif
 
-record class ModelVoyageEmbedImage : AiImageEmbeddingModel {
-	public ModelVoyageEmbedImage() : base("Voyage", "https://api.voyageai.com/v1/multimodalembeddings", "voyage-multimodal-3", 1024, null, new(32000, 1000, requestPeriod: 1000)) { isCompact = true; }
+record class ModelVoyageEmbedImage : AiEmbeddingModel {
+	public ModelVoyageEmbedImage() : base("Voyage", "https://api.voyageai.com/v1/multimodalembeddings", "voyage-multimodal-3", 1024, null, new(32000, 1000, requestPeriod: 1000)) { isMultimodal = isCompact = true; }
+	//With every 560 pixels of an image being counted as a token, each input in the list must not exceed 32,000 tokens, and the total number of tokens across all inputs must not exceed 320,000.
 	
-	public override object GetPostData(IList<object[]> input, bool isQuery) {
+	public override object GetPostData(IList<EmInput> input, bool isQuery) {
 		List<object> a = new(input.Count);
 		List<object> aItem = [];
-		foreach (var oa in input) {
+		foreach (var d in input) {
 			aItem.Clear();
-			foreach (var o in oa) {
+			foreach (var o in d.Multimodal) {
 				if (o is string s) aItem.Add(new { type = "text", text = s });
 				else if (o is byte[] png) aItem.Add(new { type = "image_base64", image_base64 = "data:image/png;base64," + Convert.ToBase64String(png) });
 				else throw new ArgumentException();
@@ -425,14 +444,6 @@ record class ModelVoyageEmbedImage : AiImageEmbeddingModel {
 			input_type = isQuery ? "query" : "document"
 		};
 	}
-	
-	public override object GetPostData(IList<string> input, bool isQuery)
-		=> new {
-			model,
-			input = input.Select(s => new { content = (object[])[new { type = "text", text = s }] }),
-			output_encoding = "base64",
-			input_type = isQuery ? "query" : "document"
-		};
 	
 	public override IEnumerable<JsonNode> GetVectors(JsonNode j)
 		=> j["data"].AsArray().Select(o => o["embedding"]);

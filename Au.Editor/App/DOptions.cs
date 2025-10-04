@@ -698,9 +698,10 @@ Example:
 		//b.R.StartGrid<KGroupBox>("Chat model settings");
 		//b.End();
 		
-		b.xAddGroupSeparator("Models for icon search in the Icons tool");
-		b.R.Add("Search", out ComboBox modelIconSearch).Tooltip("AI embedding model for icon search");
-		b.Skip().Add("Improve", out ComboBox modelIconImprove).Tooltip("AI chat model for filtering/reranking AI search results");
+		//rejected. Currently using Voyage multimodal. It supports text and images.
+		//b.xAddGroupSeparator("Models for icon search in the Icons tool");
+		//b.R.Add("Search", out ComboBox modelIconSearch).Tooltip("AI embedding model for icon search");
+		//b.Skip().Add("Improve", out ComboBox modelIconImprove).Tooltip("AI chat model for filtering/reranking AI search results");
 		
 		b.AddSeparator(false);
 		b.R.AddButton("...", _ => _MoreMenu()).Align(HorizontalAlignment.Left).Span(1);
@@ -740,8 +741,8 @@ Example:
 			
 			_InitModelCombo(modelDocSearch, o => o is AI.AiEmbeddingModel { isCompact: false }, App.Settings.ai_modelDocSearch);
 			_InitModelCombo(modelDocChat, o => o is AI.AiChatModel, App.Settings.ai_modelDocChat);
-			_InitModelCombo(modelIconSearch, o => o is AI.AiEmbeddingModel { isCompact: true }, App.Settings.ai_modelIconSearch);
-			_InitModelCombo(modelIconImprove, o => o is AI.AiChatModel, App.Settings.ai_modelIconImprove, true);
+			//_InitModelCombo(modelIconSearch, o => o is AI.AiEmbeddingModel { isCompact: true }, App.Settings.ai_modelIconSearch);
+			//_InitModelCombo(modelIconImprove, o => o is AI.AiChatModel, App.Settings.ai_modelIconImprove, true);
 			void _InitModelCombo(ComboBox c, Func<AI.AiModel, bool> predicate, string select, bool optional = false) {
 				var e = AI.AiModel.Models.Where(predicate).Select(o => o.DisplayName);
 				if (optional) e = e.Prepend("none");
@@ -760,8 +761,8 @@ Example:
 				
 				App.Settings.ai_modelDocSearch = _GetModelCombo(modelDocSearch);
 				App.Settings.ai_modelDocChat = _GetModelCombo(modelDocChat);
-				App.Settings.ai_modelIconSearch = _GetModelCombo(modelIconSearch);
-				App.Settings.ai_modelIconImprove = _GetModelCombo(modelIconImprove);
+				//App.Settings.ai_modelIconSearch = _GetModelCombo(modelIconSearch);
+				//App.Settings.ai_modelIconImprove = _GetModelCombo(modelIconImprove);
 				string _GetModelCombo(ComboBox c) => c.SelectedItem is string s && s != "none" ? s : null;
 			};
 		};

@@ -155,6 +155,11 @@ public static unsafe class osVersion {
 	public static bool minWin11_24H2 => _win10build >= 26100;
 
 	/// <summary>
+	/// <c>true</c> if Windows 11 version 25H2 or later.
+	/// </summary>
+	public static bool minWin11_25H2 => _win10build >= 26200;
+
+	/// <summary>
 	/// <c>true</c> if this process is ARM64.
 	/// </summary>
 	/// <value><c>RuntimeInformation.ProcessArchitecture == Architecture.Arm64</c></value>

@@ -1,8 +1,8 @@
 using System.Windows;
-using System.Windows.Media.Imaging;
 using System.Windows.Markup;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Au.More;
 
@@ -179,75 +179,6 @@ public static partial class ImageUtil {
 		return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
 	}
 	
-	//This unfinished version creates icon element without XAML parser, if possible.
-	//	That part then 5 times faster, and whole function 2 times faster (1500 -> 750 mcs).
-	//	But in reality this speed improvement isnt' very useful. Eg loading WPF is much slower than loading icons, although slightly faster without XAML reader. Better use a good cache.
-	//public static System.Drawing.Bitmap LoadGdipBitmapFromXaml(string image, int dpi, SIZE? size = null) {
-	//	using var p1 = perf.local();
-	//	if (keys.isScrollLock) {
-	//		var e = LoadWpfImageElement(image);
-	//		p1.Next('X');
-	//		return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
-	//	} else {
-	//		FrameworkElement e = _GetPathFaster(image, size ?? new(16, 16));
-	//		p1.Next();
-	//		e ??= LoadWpfImageElement(image);
-	//		p1.Next('x');
-	//		//s_cwt.Add(e, new());
-	//		return ConvertWpfImageElementToGdipBitmap(e, dpi, size);
-	//	}
-	
-	//	static FrameworkElement _GetPathFaster(string image, SIZE size) {
-	//		//if (!image.Starts('<')) return null;
-	//		//int i = image.Find("<Path "); if (i < 0) return null;
-	//		//if (i > 0) {
-	//		//	int j = image.LastIndexOf("></") + 1;
-	//		//	if (j <= i) return null;
-	//		//	image = image[i..j];
-	//		//}
-	//		if (!image.Starts("<Path ")) return null;
-	//		try {
-	//			var x = XElement.Parse(image);
-	//			bool flip = false;
-	//			if (x.HasElements) {
-	//				flip = true;//todo
-	//			}
-	//			var g = Geometry.Parse(x.Attr("Data"));
-	//			var e = new System.Windows.Shapes.Path {
-	//				Data = g,
-	//				Stretch = Stretch.Uniform,
-	//			};
-	//			if (x.Attr(out string fill, "Fill")) {
-	//				e.Fill = s_brushConverter.ConvertFromInvariantString(fill) as Brush;
-	//				e.SnapsToDevicePixels = true;
-	//				e.UseLayoutRounding = true;
-	//			} else if (x.Attr(out string stroke, "Stroke")) {
-	//				e.Stroke = s_brushConverter.ConvertFromInvariantString(stroke) as Brush;
-	//				if (x.Attr(out double sThick, "StrokeThickness")) e.StrokeThickness = sThick;
-	//				if (x.Attr(out string sStartCap, "StrokeStartLineCap")) e.StrokeStartLineCap = Enum.Parse<PenLineCap>(sStartCap);
-	//				if (x.Attr(out string sEndCap, "StrokeEndLineCap")) e.StrokeEndLineCap = Enum.Parse<PenLineCap>(sEndCap);
-	//				if (x.Attr(out string sJoin, "StrokeLineJoin")) e.StrokeLineJoin = Enum.Parse<PenLineJoin>(sJoin);
-	//			}
-	//			if (flip) e.LayoutTransform = new ScaleTransform(1, -1, 0.5, 0.5);
-	//			if (x.HasAttr("Width") || x.HasAttr("Height")) {
-	//				if (x.Attr(out double wid, "Width")) e.Width = wid;
-	//				if (x.Attr(out double hei, "Height")) e.Height = hei;
-	//				return new Viewbox { Width = size.width, Height = size.height, Child = e };
-	//			}
-	//			e.Width = size.width;
-	//			e.Height = size.height;
-	//			return e;
-	//		}
-	//		catch (Exception e1) { Debug_.Print(e1); }
-	//		return null;
-	//	}
-	//}
-	
-	//static readonly BrushConverter s_brushConverter = new();
-	
-	//static ConditionalWeakTable<FrameworkElement, _DebugGC> s_cwt = new();
-	//class _DebugGC { ~_DebugGC() { print.it("~"); } }
-	
 	/// <summary>
 	/// Converts WPF image element to GDI+ image.
 	/// </summary>
@@ -297,7 +228,7 @@ public static partial class ImageUtil {
 	/// <param name="sizes">Sizes of icon images to add. For example 16, 24, 32, 48, 64. Sizes can be 1 to 256 inclusive.</param>
 	/// <exception cref="ArgumentOutOfRangeException">An invalid size.</exception>
 	/// <exception cref="Exception"></exception>
-	public static unsafe void ConvertWpfImageElementToIcon(Stream stream, FrameworkElement e, int[] sizes) {
+	internal static unsafe void ConvertWpfImageElementToIcon_(Stream stream, FrameworkElement e, int[] sizes) {
 		stream.Position = Math2.AlignUp(sizeof(Api.NEWHEADER) + sizeof(Api.ICONDIRENTRY) * sizes.Length, 4);
 		var a = stackalloc Api.ICONDIRENTRY[sizes.Length];
 		for (int i = 0; i < sizes.Length; i++) {
@@ -320,11 +251,11 @@ public static partial class ImageUtil {
 	/// <summary>
 	/// Converts WPF image element to native icon file.
 	/// </summary>
-	/// <inheritdoc cref="ConvertWpfImageElementToIcon(Stream, FrameworkElement, int[])"/>
-	public static void ConvertWpfImageElementToIcon(string icoFile, FrameworkElement e, int[] sizes) {
+	/// <inheritdoc cref="ConvertWpfImageElementToIcon_(Stream, FrameworkElement, int[])"/>
+	internal static void ConvertWpfImageElementToIcon_(string icoFile, FrameworkElement e, int[] sizes) {
 		icoFile = pathname.NormalizeMinimally_(icoFile);
 		using var stream = File.OpenWrite(icoFile);
-		ConvertWpfImageElementToIcon(stream, e, sizes);
+		ConvertWpfImageElementToIcon_(stream, e, sizes);
 	}
 	
 	/// <summary>
@@ -337,7 +268,7 @@ public static partial class ImageUtil {
 		try {
 			var e = ImageUtil.LoadWpfImageElement(s);
 			var ms = new MemoryStream();
-			ImageUtil.ConvertWpfImageElementToIcon(ms, e, [size]);
+			ImageUtil.ConvertWpfImageElementToIcon_(ms, e, [size]);
 			ms.Position = 0;
 			return new System.Drawing.Icon(ms);
 		}
