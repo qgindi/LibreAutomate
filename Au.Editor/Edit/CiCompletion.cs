@@ -373,9 +373,6 @@ partial class CiCompletion {
 			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;
 			uint kinds = 0; bool hasNamespaces = false;
 			foreach (var ci_ in r.ItemsList) {
-				//FUTURE: test with new Roslyn, maybe this fixed (in VS works well):
-				//	The list contains only types if after `is`. Example: `bool ok = m is C.`. Here C is a class that contains inner types and int constants.
-				
 				var ci = ci_;
 				if (unimported) {
 					//if (ci.Flags.Has(CompletionItemFlags.Expanded)) { //now instead used CompletionOptions.ExpandedCompletionBehavior
@@ -661,37 +658,38 @@ partial class CiCompletion {
 					//print.it("----");
 					//foreach(var v in g) print.it(v.Item1, v.Item2.Count);
 					
-					if (hasNamespaces && _GetFilters(model, out var filters)) {
-						foreach (var (ns, a) in g) { //for each namespace in completion list
-							if (ns.NE() || !filters.TryGetValue(ns, out var k)) continue;
-							foreach (var i in a) { //for each type in that namespace in completion list
-								var sym = d.items[i].FirstSymbol;
-								if (sym is not INamedTypeSymbol nt) {
-									if (sym is IFieldSymbol fs) nt = fs.ContainingType; //enum member
-									else continue;
-								}
-								var s = nt.Name;
-								string opt = k[0];
-								bool found = k.Length == 1 || (k.Length == 2 && k[1] == "*");
-								if (!found) {
-									for (int j = 1; j < k.Length; j++) { //for each type in filter, including additional options, like [-~ T1 T2 - T3 T4]
-										var t = k[j];
-										if (t[0] is '+' or '-') { opt = t; continue; }
-										//if (s.Like(u)) { found = true; break; }
-										if (t[0] == '*') found = s.Ends(t.AsSpan(1..));
-										else if (t[^1] == '*') found = s.Starts(t.AsSpan(..^1));
-										else found = s == t;
-										if (found) break;
-									}
-								}
-								if (found == (opt[0] == '-')) {
-									var ci = d.items[i];
-									if (opt.Eq(1, '~')) ci.moveDown |= CiComplItemMoveDownBy.Name;
-									else ci.hidden |= CiComplItemHiddenBy.Always;
-								}
-							}
-						}
-					}
+					//rejected: completion list filters, like global using Namespace; //[filters]
+					//if (hasNamespaces && _GetFilters(model, out var filters)) {
+					//	foreach (var (ns, a) in g) { //for each namespace in completion list
+					//		if (ns.NE() || !filters.TryGetValue(ns, out var k)) continue;
+					//		foreach (var i in a) { //for each type in that namespace in completion list
+					//			var sym = d.items[i].FirstSymbol;
+					//			if (sym is not INamedTypeSymbol nt) {
+					//				if (sym is IFieldSymbol fs) nt = fs.ContainingType; //enum member
+					//				else continue;
+					//			}
+					//			var s = nt.Name;
+					//			string opt = k[0];
+					//			bool found = k.Length == 1 || (k.Length == 2 && k[1] == "*");
+					//			if (!found) {
+					//				for (int j = 1; j < k.Length; j++) { //for each type in filter, including additional options, like [-~ T1 T2 - T3 T4]
+					//					var t = k[j];
+					//					if (t[0] is '+' or '-') { opt = t; continue; }
+					//					//if (s.Like(u)) { found = true; break; }
+					//					if (t[0] == '*') found = s.Ends(t.AsSpan(1..));
+					//					else if (t[^1] == '*') found = s.Starts(t.AsSpan(..^1));
+					//					else found = s == t;
+					//					if (found) break;
+					//				}
+					//			}
+					//			if (found == (opt[0] == '-')) {
+					//				var ci = d.items[i];
+					//				if (opt.Eq(1, '~')) ci.moveDown |= CiComplItemMoveDownBy.Name;
+					//				else ci.hidden |= CiComplItemHiddenBy.Always;
+					//			}
+					//		}
+					//	}
+					//}
 				}
 				if (keywordsGroup != null) g.Add(("keywords", keywordsGroup));
 				if (snippetsGroup != null) g.Add((isDot ? "" : "snippets", snippetsGroup));
@@ -728,34 +726,35 @@ partial class CiCompletion {
 			if (cancelTS == _cancelTS) _cancelTS = null;
 		}
 		
-		static bool _GetFilters(SemanticModel model, out Dictionary<string, string[]> filters) {
-			//using var p2 = perf.local(); //~50 mcs
-			var stCurrent = model.SyntaxTree;
-			filters = null;
-			foreach (var st in model.Compilation.SyntaxTrees) {
-				//print.it(st.FilePath);
-				foreach (var u in st.GetCompilationUnitRoot().Usings) {
-					if (u.GlobalKeyword.RawKind == 0 && st != stCurrent) break;
-					if (u.Alias != null || u.StaticKeyword.RawKind != 0) continue;
-					//print.it(u);
-					var tt = u.GetTrailingTrivia().FirstOrDefault(o => o.IsKind(SyntaxKind.SingleLineCommentTrivia));
-					if (tt.RawKind != 0) {
-						var text = tt.ToString(); //print.it((object)text==tt.ToString()); //true, fast
-						if (text[^1] == ']') {
-							int i = text.LastIndexOf('[') + 1;
-							if (i > 0 && text[i] is '+' or '-') {
-								var a = text[i..^1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
-								filters ??= new();
-								filters[u.Name.ToString()] = a;
-								continue;
-							}
-						}
-					}
-					filters?.Remove(u.Name.ToString());
-				}
-			}
-			return filters != null;
-		}
+		//rejected: completion list filters, like global using Namespace; //[filters]
+		//static bool _GetFilters(SemanticModel model, out Dictionary<string, string[]> filters) {
+		//	//using var p2 = perf.local(); //~50 mcs
+		//	var stCurrent = model.SyntaxTree;
+		//	filters = null;
+		//	foreach (var st in model.Compilation.SyntaxTrees) {
+		//		//print.it(st.FilePath);
+		//		foreach (var u in st.GetCompilationUnitRoot().Usings) {
+		//			if (u.GlobalKeyword.RawKind == 0 && st != stCurrent) break;
+		//			if (u.Alias != null || u.StaticKeyword.RawKind != 0) continue;
+		//			//print.it(u);
+		//			var tt = u.GetTrailingTrivia().FirstOrDefault(o => o.IsKind(SyntaxKind.SingleLineCommentTrivia));
+		//			if (tt.RawKind != 0) {
+		//				var text = tt.ToString(); //print.it((object)text==tt.ToString()); //true, fast
+		//				if (text[^1] == ']') {
+		//					int i = text.LastIndexOf('[') + 1;
+		//					if (i > 0 && text[i] is '+' or '-') {
+		//						var a = text[i..^1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+		//						filters ??= new();
+		//						filters[u.Name.ToString()] = a;
+		//						continue;
+		//					}
+		//				}
+		//			}
+		//			filters?.Remove(u.Name.ToString());
+		//		}
+		//	}
+		//	return filters != null;
+		//}
 	}
 	
 	static void _FilterItems(_Data d) {
@@ -901,9 +900,9 @@ partial class CiCompletion {
 				//Workaround for bug in new Roslyn: does not select enum when the target type is enum.
 				//	The same after keyword 'new'.
 				//	Never mind: does not prefer the target type when typed eg single letter and the list also contains static fields or props of that type like "Type.Member". It never worked.
-				//	VS works well in all cases. Maybe it does not use this Roslyn API, or uses different Roslyn version.
+				//	VS works well in all cases.
 				//	FUTURE: test after updating Roslyn, maybe fixed.
-				foreach (var v in _data.items) {
+				foreach (var v in visibleListItems) {
 					//if (v.ci is var j && j.DisplayText.Starts("DEdit")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
 					//if (j.ci is var j && j.Properties.ContainsKey("Symbols")) print.it(j.DisplayText, j.Flags, j.Span, j.Tags, j.Properties, j.IsPreferredItem());
 					if (v.kind is CiItemKind.Enum or CiItemKind.Class or CiItemKind.Structure or CiItemKind.Delegate && v.GetCI().Properties.ContainsKey("Symbols")) { //TODO3: unreliable

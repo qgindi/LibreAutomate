@@ -85,7 +85,7 @@ partial class AuDocs {
 		filesystem.delete(siteDir);
 		filesystem.createDirectory(siteDir);
 		var files = filesystem.enumFiles(siteDirTemp, flags: FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath).ToArray();
-		Parallel.ForEach(files, f => { //faster: 26 s -> 14 s; without code styling 8 s -> 3 s
+		Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount - 2 }, f => { //faster: 26 s -> 11 s; without code styling 8 s -> 3 s; however without MaxDegreeOfParallelism very slow (creates too many threads).
 			var name = f.Name;
 			var file2 = siteDir + name;
 			if (name.Ends(".html") && !name.Ends(@"\toc.html")) {

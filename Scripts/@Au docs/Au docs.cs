@@ -97,7 +97,7 @@ void _Build() {
 			//print.it($"<><script Au docs.cs|/upload>Upload Au docs...<>");
 			print.it("""
 <>DONE. Now <script LA docs doc-ai.db.cs>create doc-ai.db<>.
-To upload the created website, click `Upload...` in the main toolbar.
+To upload the created website, click `Docs > Upload website...` in the main toolbar.
 """);
 		}
 	}

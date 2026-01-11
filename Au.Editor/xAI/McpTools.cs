@@ -118,7 +118,7 @@ Example of a BAD query: "activate Chrome window send keys Ctrl+L LibreAutomate".
 			var em = new Embeddings(emModel);
 			var ems = em.GetDocsEmbeddings();
 			
-			Parallel.For(0, lines.Length, i => _QueryLine(lines[i], aResults[i] = []));
+			Parallel.For(0, lines.Length, new ParallelOptions { MaxDegreeOfParallelism = 7 }, i => _QueryLine(lines[i], aResults[i] = []));
 			
 			void _QueryLine(string query, List<(string name, string text)> results) {
 				int takePlus = Math.Min(20, query.Count(c => c is <= ' ' or ',' or '.' or ';' or '?'));

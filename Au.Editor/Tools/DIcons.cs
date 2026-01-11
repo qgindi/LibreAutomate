@@ -194,7 +194,7 @@ Can be Pack.Icon, like Material.Folder.");
 					table = x.pack;
 					name = x.name;
 					f = o => o._name == name && o._table == table;
-					colors.Color = x.color is ['#', ..] ? x.color[1..].ToInt(0, STIFlags.IsHexWithout0x) : 0;
+					colors.Color = !x.color.NE() && System.Windows.Media.Color.TryParse(x.color.RxReplace(@"^(#\w+)\|.*", "$1"), out var color) ? ((ColorInt)color).argb : 0;
 				} else {
 					if (name.RxMatch(@"^(\w+)\.(.+)", out var m)) (table, name) = (m[1].Value, m[2].Value);
 					wildex wild = null;

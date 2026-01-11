@@ -886,7 +886,6 @@ partial class FilesModel {
 				break;
 			//case 2:
 			//	if(f.IsFolder) continue;
-			//	//FUTURE
 			//	break;
 			case 3:
 				run.itSafe(path);

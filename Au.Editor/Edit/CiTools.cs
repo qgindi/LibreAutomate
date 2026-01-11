@@ -6,9 +6,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Windows.Controls;
 
-//FUTURE: Color tool. Eg to set toolbar colors.
-//	Now can select in the Icons dialog or capture with Duiimage.
-
 namespace LA;
 
 class CiTools {

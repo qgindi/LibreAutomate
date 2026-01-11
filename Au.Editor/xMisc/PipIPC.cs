@@ -186,7 +186,7 @@ class PipIPC {
 		if (await Task.Run(_Run) is string r) {
 			if (!r.Starts("\a")) print.warning($"Failed to run script {f.SciLink()} in PiP session. {r}", -1);
 		} else {
-			print.warning($"Failed to run script {f.SciLink()} in PiP session. Make sure LibreAutomate is running in PiP session too.", -1);
+			print.warning($"Failed to run script {f.SciLink()} in PiP session. Make sure LibreAutomate (another instance) is running there.", -1);
 		}
 	}
 }

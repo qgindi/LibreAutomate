@@ -95,6 +95,8 @@ class PanelEdit {
 			UpdateUI_EditEnabled_();
 			ActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
+			
+			if (f.Name.Eqi("global.cs") && f == f.Model.FindGlobalCs(silent: true)) _GlobalCsOpened();
 		}
 		
 		if (focusNow) _activeDoc.Focus();
@@ -227,7 +229,7 @@ class PanelEdit {
 			//nameof(Menus.Run.Debugger),
 			//and not Properties, Rename, Delete, More, because users can right-click in the Files panel
 			];
-		foreach (string v in a1) if (v!=null) App.Commands[v].Enable(enable);
+		foreach (string v in a1) if (v != null) App.Commands[v].Enable(enable);
 	}
 	bool _uiDisabled_IsOpen;
 	
@@ -270,5 +272,17 @@ class PanelEdit {
 		Redo = 2,
 		Cut = 4,
 		Copy = 8,
+	}
+	
+	void _GlobalCsOpened() {
+		//remove obsolete comments
+		var s = _activeDoc.aaaText;
+		if (!s.Contains("[-~]")) return;
+		s = s.RxReplace(@"(?m)^global using [\w\.]+;\K *//(?:.*?\[[-+].*?]|automation|types of parameters etc|\.NET types used everywhere|List, Dictionary and other collections|extension methods for collections|thread-safe collections|file, directory|zip)$", "");
+		s = s.RxReplace(@"\R//The //\[comments\].+(?:\R//.*)+", "", 1);
+		s = s.RxReplace(@"(?m)\R/// 	Edit completion list filters.+", "", 1);
+		s = s.RxReplace(@"(?m)\R//less important namespaces$", "", 1);
+		//print.it(s);
+		_activeDoc.aaaText = s;
 	}
 }

@@ -749,7 +749,7 @@ internal static unsafe class SLApi {
 	static extern SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize, nint nTransient);
 	
 	internal static SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize)
-		=> sqlite3_bind_blob64(stmt, index, value, nSize, -1); //SQLITE_TRANSIENT //FUTURE: somehow avoid copying if large data. Eg if array or List, can use callback and GCHandle.
+		=> sqlite3_bind_blob64(stmt, index, value, nSize, -1); //SQLITE_TRANSIENT
 	
 	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 	internal static extern SLError sqlite3_bind_double(IntPtr stmt, int index, double value);

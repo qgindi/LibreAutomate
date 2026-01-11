@@ -81,12 +81,6 @@ bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 /// Deletes Au.Editor.*.json files.
 int EditorPostBuild() {
 	//perf.first();
-	string exe1 = "Au.Editor.exe", exe2 = "Au.Task.exe";
-	if (script.testing) {
-		exe1 = "Au.Editor2.exe"; exe2 = "Au.Task2.exe";
-		print.ignoreConsole = true;
-		//todo: Environment.CurrentDirector = 
-	}
 	var dirOut = solutionDirBS + @"_\";
 
 #if !true //copy output files from `$(ProjectDir)$(OutDir)` to dirOut. Bad: can't start LA from VS (no program path setting in UI; VS ignores executablePath in launchsettings.json).
@@ -100,6 +94,25 @@ int EditorPostBuild() {
 #else //use `<OutDir>`. Bad: VS adds unwanted files to dirOut. Eg from NuGet packages may add native dlls for many unused OS/platforms.
 	filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));
 #endif
+
+	//make sure `.git\hooks\pre-push` exists. See `PrePushHook` in `GitBinaryFiles.cs`.
+	var prePush = solutionDirBS + @".git\hooks\pre-push";
+	if (!filesystem.exists(prePush, true)) {
+		filesystem.saveText(prePush, """
+#!/bin/sh
+
+"Other/BuildEvents/bin/Debug/BuildEvents.exe" "gitPrePushHook"
+exit $?
+
+""");
+	}
+
+	string exe1 = "Au.Editor.exe", exe2 = "Au.Task.exe";
+	if (script.testing) {
+		exe1 = "Au.Editor2.exe"; exe2 = "Au.Task2.exe";
+		print.ignoreConsole = true;
+		//todo: Environment.CurrentDirector = 
+	}
 
 	using var rk = Registry.CurrentUser.CreateSubKey(@"Software\Au\BuildEvents");
 	var verResFile1 = folders.ThisApp + $"{exe1}.res";

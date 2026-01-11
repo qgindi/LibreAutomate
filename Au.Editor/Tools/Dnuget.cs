@@ -182,7 +182,7 @@ class DNuget : KDialogWindow {
 		if (!await _Build(folder, package)) return false;
 		um.success = true;
 		
-		_AddToTreeOrUpdate(folder, package, updating);//TODO: review and test how when failed
+		_AddToTreeOrUpdate(folder, package, updating);
 		
 		return true;
 		
@@ -933,7 +933,7 @@ class DNuget : KDialogWindow {
 		await Task.Run(() => {
 			foreach (var v in _sources) v.InitPackageBaseUrl();
 			
-			Parallel.ForEach(a, t => {
+			Parallel.ForEach(a, new ParallelOptions { MaxDegreeOfParallelism = 20 }, t => {
 				t.Updates = null;
 				try {
 #if true
@@ -1091,7 +1091,7 @@ class DNuget : KDialogWindow {
 		void _GetIcons() {
 			foreach (var v in _sources) v.InitPackageBaseUrl();
 			
-			Parallel.ForEach(a, t => {
+			Parallel.ForEach(a, new ParallelOptions { MaxDegreeOfParallelism = 15 }, t => {
 				try {
 					t.Icon = c_defaultIcon;
 					var so = t.Source ?? _sources[0];

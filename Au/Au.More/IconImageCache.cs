@@ -194,7 +194,6 @@ public sealed class IconImageCache : IDisposable {
 			//		Non-WPF process uses much more memory (because loads WPF), eg 14 -> 28 MB.
 			//	Bad: when trying to find icons, users try many icons, colors, sizes. Then the cache is full of garbage.
 			//		TODO3: remove from cache if not using anymore. Or add only if frequently using.
-			//FUTURE: to make loading XAML icons faster etc, try Windows.UI.Xaml.Markup.XamlReader.Load. Use Microsoft.Windows.SDK.NET.dll, or directly COM if possible. When the library will not support Win7/8.
 			
 			bool useFile = _dir != null && useHash;
 			if (useFile) {

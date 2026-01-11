@@ -711,6 +711,3 @@ public partial class keys {
 		new keys(opt.key).AddText(text, html).SendNow();
 	}
 }
-
-//FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); keys.send("!password", "Shift+Tab", "user", "Enter");
-//public static void FocusPasswordField()

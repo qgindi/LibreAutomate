@@ -1,7 +1,5 @@
 //note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
 
-using System.Drawing;
-using System.Drawing.Imaging;
 using Microsoft.Win32;
 
 namespace Au.Types;
@@ -9,7 +7,6 @@ namespace Au.Types;
 /// <summary>
 /// Adds extension methods for some .NET types.
 /// </summary>
-[DebuggerStepThrough]
 public static unsafe partial class ExtMisc {
 	#region value types
 	
@@ -54,9 +51,9 @@ public static unsafe partial class ExtMisc {
 	/// Converts to <c>Color</c>. Makes opaque (alpha 0xff).
 	/// Can be used like <c>0x123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
 	/// </summary>
-	internal static Color ToColor_(this int t, bool bgr = false) {
+	internal static System.Drawing.Color ToColor_(this int t, bool bgr = false) {
 		if (bgr) t = ColorInt.SwapRB(t);
-		return Color.FromArgb(unchecked(0xff << 24 | t));
+		return System.Drawing.Color.FromArgb(unchecked(0xff << 24 | t));
 	}
 	
 	/// <summary>
@@ -117,8 +114,8 @@ public static unsafe partial class ExtMisc {
 	/// <summary>
 	/// Returns <c><![CDATA[(this >= min && this <= max) ? this : defaultValue]]></c>.
 	/// </summary>
-    internal static int EnsureValid_(this int t, int min, int max, int defaultValue = 0)
-        => (t >= min && t <= max) ? t : defaultValue;
+	internal static int EnsureValid_(this int t, int min, int max, int defaultValue = 0)
+		=> (t >= min && t <= max) ? t : defaultValue;
 	
 	//rare
 	///// <summary>
@@ -498,7 +495,7 @@ public static unsafe partial class ExtMisc {
 		if (v == null && a == null && o != null) throw new ArgumentException("bad type");
 		return r;
 	}
-
+	
 #if true
 	/// <summary>
 	/// Returns <c>Length</c>, or 0 if <c>null</c>.
@@ -520,7 +517,7 @@ public static unsafe partial class ExtMisc {
 	/// Returns <c>true</c> if <c>null</c> or <c>Count</c> == 0.
 	/// </summary>
 	internal static bool NE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
-#else //still too early to use `extension` in this library. Eg then the XML file contains duplicate names (then exception in _DocumentationProvider.Create). Probably DocFX would not get it too.
+#else //DocFX does not support it
 	extension<T>(T[] t) { //with System.Collections.ICollection slower, as well as Array
 		/// <summary>
 		/// Returns <c>Length</c>, or 0 if <c>null</c>.
@@ -545,7 +542,7 @@ public static unsafe partial class ExtMisc {
 		internal bool NE_ => (t?.Count ?? 0) == 0;
 	}
 #endif
-
+	
 	/// <summary>
 	/// Efficiently recursively gets descendants of this tree.
 	/// <see href="https://stackoverflow.com/a/30441479/2547338"/>
@@ -615,7 +612,7 @@ public static unsafe partial class ExtMisc {
 		}
 	}
 	
-#endregion
+	#endregion
 	
 	#region StringBuilder
 	
@@ -678,9 +675,9 @@ public static unsafe partial class ExtMisc {
 	/// <param name="r"></param>
 	/// <param name="outset">Draw outset.</param>
 	/// <remarks>
-	/// Calls <see cref="Graphics.DrawRectangle"/> with arguments corrected so that it draws inside or outside <i>r</i>. Does not use <see cref="System.Drawing.Drawing2D.PenAlignment"/>, it is unreliable.
+	/// Calls <see cref="System.Drawing.Graphics.DrawRectangle"/> with arguments corrected so that it draws inside or outside <i>r</i>. Does not use <see cref="System.Drawing.Drawing2D.PenAlignment"/>, it is unreliable.
 	/// </remarks>
-	public static void DrawRectangleInset(this Graphics t, Pen pen, RECT r, bool outset = false) {
+	public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Pen pen, RECT r, bool outset = false) {
 		if (r.NoArea) return;
 		//pen.Alignment = PenAlignment.Inset; //no. Eg ignored if 1 pixel width.
 		//	MSDN: "A Pen that has its alignment set to Inset will yield unreliable results, sometimes drawing in the inset position and sometimes in the centered position.".
@@ -702,16 +699,16 @@ public static unsafe partial class ExtMisc {
 	/// <remarks>
 	/// Creates pen and calls other overload.
 	/// </remarks>
-	public static void DrawRectangleInset(this Graphics t, Color penColor, int penWidth, RECT r, bool outset = false) {
-		using var pen = new Pen(penColor, penWidth);
+	public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Color penColor, int penWidth, RECT r, bool outset = false) {
+		using var pen = new System.Drawing.Pen(penColor, penWidth);
 		DrawRectangleInset(t, pen, r, outset);
 	}
 	
 	/// <summary>
-	/// Creates solid brush and calls <see cref="Graphics.FillRectangle"/>.
+	/// Creates solid brush and calls <see cref="System.Drawing.Graphics.FillRectangle"/>.
 	/// </summary>
-	public static void FillRectangle(this Graphics t, Color color, RECT r) {
-		using var brush = new SolidBrush(color);
+	public static void FillRectangle(this System.Drawing.Graphics t, System.Drawing.Color color, RECT r) {
+		using var brush = new System.Drawing.SolidBrush(color);
 		t.FillRectangle(brush, r);
 	}
 	
@@ -719,15 +716,15 @@ public static unsafe partial class ExtMisc {
 	/// Calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <c>Dispose</c>.
 	/// </summary>
 	internal struct BitmapData_ : IDisposable {
-		Bitmap _b;
-		BitmapData _d;
+		System.Drawing.Bitmap _b;
+		System.Drawing.Imaging.BitmapData _d;
 		
-		public BitmapData_(Bitmap b, ImageLockMode mode, PixelFormat? pf = null) {
+		public BitmapData_(System.Drawing.Bitmap b, System.Drawing.Imaging.ImageLockMode mode, System.Drawing.Imaging.PixelFormat? pf = null) {
 			_b = b;
 			_d = _b.LockBits(new(default, b.Size), mode, pf ?? _b.PixelFormat);
 		}
 		
-		public BitmapData_(Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null) {
+		public BitmapData_(System.Drawing.Bitmap b, System.Drawing.Rectangle r, System.Drawing.Imaging.ImageLockMode mode, System.Drawing.Imaging.PixelFormat? pf = null) {
 			_b = b;
 			_d = _b.LockBits(r, mode, pf ?? _b.PixelFormat);
 		}
@@ -741,7 +738,7 @@ public static unsafe partial class ExtMisc {
 		public int Width => _d.Width;
 		public int Height => _d.Height;
 		public int Stride => _d.Stride;
-		public PixelFormat PixelFormat => _d.PixelFormat;
+		public System.Drawing.Imaging.PixelFormat PixelFormat => _d.PixelFormat;
 		public IntPtr Scan0 => _d.Scan0;
 	}
 	
@@ -749,14 +746,14 @@ public static unsafe partial class ExtMisc {
 	/// Creates a <c>BitmapData_</c> object that calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <c>Dispose</c>.
 	/// </summary>
 	/// <param name="pf">If <c>null</c>, uses <c>b.PixelFormat</c>.</param>
-	internal static BitmapData_ Data(this Bitmap b, ImageLockMode mode, PixelFormat? pf = null)
+	internal static BitmapData_ Data(this System.Drawing.Bitmap b, System.Drawing.Imaging.ImageLockMode mode, System.Drawing.Imaging.PixelFormat? pf = null)
 		=> new BitmapData_(b, mode, pf);
 	
 	/// <summary>
 	/// Creates a <c>BitmapData_</c> object that calls <c>b.LockBits</c> in ctor and <c>b.UnlockBits</c> in <c>Dispose</c>.
 	/// </summary>
 	/// <param name="pf">If <c>null</c>, uses <c>b.PixelFormat</c>.</param>
-	internal static BitmapData_ Data(this Bitmap b, Rectangle r, ImageLockMode mode, PixelFormat? pf = null)
+	internal static BitmapData_ Data(this System.Drawing.Bitmap b, System.Drawing.Rectangle r, System.Drawing.Imaging.ImageLockMode mode, System.Drawing.Imaging.PixelFormat? pf = null)
 		=> new BitmapData_(b, r, mode, pf);
 	
 	#endregion

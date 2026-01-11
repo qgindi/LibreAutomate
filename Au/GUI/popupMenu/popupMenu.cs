@@ -331,17 +331,18 @@ public unsafe partial class popupMenu : MTBase {
 		
 		WindowsHook hKey = null, hMouse = null;
 		timer timer = null;
+		var wFore = wnd.active;
+		
 		try {
-			var wFore = wnd.active;
 			bool foreground = wFore.IsOfThisThread;
 			
-			//to close with mouse use timer. Mouse hook may not work because of UAC.
-			int mouseState = _GetMouseState();
+			//to close with mouse use timer. Mouse hook may not work because of UAC. In foreground thread could use SetCapture instead, but this is easier.
+			int mouseState = -1;
 			timer = new(t => { //close if mouse clicked a non-menu window or if activated another window
 				int ms = _GetMouseState();
-				bool clicked = ms != mouseState;
+				bool clicked = ms != mouseState && mouseState != -1;
 				mouseState = ms;
-				if (clicked) _CloseIfClickedNotMenu(wnd.fromMouse(WXYFlags.Raw));
+				if (clicked) _CloseIfClickedNotMenu();
 				else if (wnd.active != wFore) Close();
 			});
 			timer.Every(30);
@@ -353,13 +354,6 @@ public unsafe partial class popupMenu : MTBase {
 				;
 			//note: use only toggled state. Pressed state may change to "no" when mouse is already in a non-menu window although was in a menu window at the time of the mouse event.
 			//note: in some cases toggled state may not change when clicked. Eg when clicked a taskbar button that activates another window. Then helps if (wnd.active!=wFore) Close();.
-			
-			void _CloseIfClickedNotMenu(wnd w) {
-				//if(!w.Get.Owners(andThisWindow: true).Contains(_w)) Close(); //no, user may want nested root menus, although it is rare
-				if (!_IsMenuWindow(w)) Close();
-			}
-			
-			bool _IsMenuWindow(wnd w) => w == _w || w.ClassNameIs("Au.popupMenu");
 			
 			if (!foreground) {
 				//never mind: hooks don't work if the active window has higher UAC IL. Then use timer and mouse/Esc toggle state.
@@ -435,7 +429,7 @@ public unsafe partial class popupMenu : MTBase {
 						if (m.message == Api.WM_QUIT) return; //let outer loop get the message (tested)
 						bool handled = false;
 						if (m.message is Api.WM_LBUTTONDOWN or Api.WM_RBUTTONDOWN or Api.WM_MBUTTONDOWN or Api.WM_NCLBUTTONDOWN or Api.WM_NCRBUTTONDOWN or Api.WM_NCMBUTTONDOWN) {
-							_CloseIfClickedNotMenu(m.hwnd);
+							_CloseIfClickedNotMenu();
 							if (_w.Is0) return; //let outer loop get the message
 						} else if (m.message is Api.WM_KEYDOWN or Api.WM_SYSKEYDOWN) {
 							handled = _WmKeydown(m);
@@ -472,6 +466,14 @@ public unsafe partial class popupMenu : MTBase {
 		}
 		
 		return R;
+		
+		void _CloseIfClickedNotMenu() {
+			var w = wnd.fromMouse(WXYFlags.Raw);
+			//if(!w.Get.Owners(andThisWindow: true).Contains(_w)) Close(); //no, user may want nested root menus, although it is rare
+			if (!_IsMenuWindow(w)) Close();
+		}
+		
+		bool _IsMenuWindow(wnd w) => w == _w || w.ClassNameIs("Au.popupMenu");
 	}
 	
 	/// <summary>
@@ -531,7 +533,7 @@ public unsafe partial class popupMenu : MTBase {
 		RECT cr = default;
 		bool byCaret = flags.Has(PMFlags.ByCaret);
 		if (byCaret) {
-			if (caretRectFunc is {  } crf) {
+			if (caretRectFunc is { } crf) {
 				var r1 = crf();
 				if (r1 is null) byCaret = false; else cr = r1.Value;
 			} else byCaret = miscInfo.getTextCursorRect(out cr, out _);

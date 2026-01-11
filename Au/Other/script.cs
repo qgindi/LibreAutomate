@@ -335,7 +335,7 @@ public static class script {
 	[ThreadStatic] static WNDPROC t_eocWP;
 	
 	/// <summary>
-	/// Ensures that multiple processes that call this function don't run simultaneously. Like C# <c>lock</c> keyword for threads.
+	/// Ensures that multiple processes that call this function don't run simultaneously.
 	/// </summary>
 	/// <param name="mutex">Mutex name. If another process called this function with this mutex name, this process cannot run, and this function calls <c>Environment.Exit(3);</c>.</param>
 	/// <param name="wait">Milliseconds to wait until this process can run. No timeout if -1.</param>
@@ -347,8 +347,6 @@ public static class script {
 	/// </remarks>
 	/// <seealso cref="AppSingleInstance"/>
 	public static void single(string mutex = "Au-mutex-script.single", int wait = 0, bool silent = false, Action ifCantRun = null) {
-		//FUTURE: parameter bool endOther. Like meta ifRunning restart.
-		
 		var m = Api.CreateMutex(null, false, mutex ?? "Au-mutex-script.single"); //tested: don't need Api.SECURITY_ATTRIBUTES.ForLowIL
 		if (default != Interlocked.CompareExchange(ref s_singleMutex, m, default)) { Api.CloseHandle(m); throw new InvalidOperationException(); }
 		var r = Api.WaitForSingleObject(s_singleMutex, wait);

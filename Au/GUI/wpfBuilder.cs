@@ -2537,19 +2537,6 @@ public class wpfBuilder {
 		return this;
 	}
 	
-	//FUTURE: need a numeric input control. This code is for WinForms NumericUpDown.
-	//	public wpfBuilder Number(decimal? value = null, decimal? min = null, decimal? max=null, decimal? increment=null, int? decimalPlaces=null, bool? thousandsSeparator=null, bool? hex =null) {
-	//		var c = Last as NumericUpDown ?? throw new NotSupportedException("Number(): Last added must be NumericUpDown");
-	//		if(min!=null) c.Minimum=min.Value;
-	//		if(max!=null) c.Maximum=max.Value;
-	//		if(increment!=null) c.Increment=increment.Value;
-	//		if(decimalPlaces!=null) c.DecimalPlaces=decimalPlaces.Value;
-	//		if(thousandsSeparator!=null) c.ThousandsSeparator=thousandsSeparator.Value;
-	//		if(hex!=null) c.Hexadecimal=hex.Value;
-	//		if(value!=null) c.Value=value.Value; else c.Text=null;
-	//		return this;
-	//	}
-	
 	#endregion
 	
 	#region nested panel

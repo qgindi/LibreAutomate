@@ -160,6 +160,16 @@ public partial class KPanels {
 						_node._SetDockState(0);
 					}
 					break;
+				case Api.WM_NCRBUTTONUP when wParam == Api.HTCAPTION: //a better way to dock a floating stack (instead of right-click a splitter)
+					if (_node._IsStack) {
+						var m = new popupMenu();
+						m["Dock"] = o => { _node._SetDockState(0); };
+						m.Show(owner: this);
+					}
+					break;
+				case Api.WM_NCRBUTTONDOWN when wParam == Api.HTCAPTION: //don't eat WM_NCRBUTTONUP
+					if (_node._IsStack) handled = true;
+					break;
 				}
 				
 				return default;

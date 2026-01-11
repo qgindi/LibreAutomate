@@ -140,7 +140,6 @@ public class timer {
 		bool isSameThread = _threadId == Environment.CurrentManagedThreadId;
 		Debug.Assert(isSameThread);
 		if (!isSameThread) throw new InvalidOperationException(nameof(timer) + " used in multiple threads.");
-		//FUTURE: somehow allow other thread. It is often useful.
 	}
 	
 	//~timer() { print.it("dtor"); } //don't call Stop() here, we are in other thread

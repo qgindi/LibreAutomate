@@ -112,4 +112,14 @@ static class EdExt {
 		}
 	}
 	static List<(FileNode f, KDialogWindow d)> s_singleDialog = new();
+	
+	extension(System.Windows.Media.Color) {
+		public static bool TryParse(string s, out System.Windows.Media.Color color) {
+			try {
+				color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(s);
+				return true;
+			}
+			catch { color = default; return false; }
+		}
+	}
 }

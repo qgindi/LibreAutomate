@@ -3,6 +3,7 @@
 /// 3. Adds the native dlls to the package.
 /// 4. Prints links.
 
+using System.IO.Compression;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
@@ -12,8 +13,7 @@ var auProj_nuget = auDir + @"\+Au.csproj";
 
 var x = XElement.Load(auDir + @"\Au.csproj");
 var tf = x.XPathSelectElement("/PropertyGroup/TargetFramework");
-tf.ReplaceWith(new XElement("TargetFrameworks", tf.Value + ";net8.0-windows"));
-//tf.ReplaceWith(new XElement("TargetFrameworks", tf.Value + ";net8.0-windows;net6.0-windows")); //rejected. Too many places in code use API that are unavailable in .NET 6. And .NET 6 LTS ended. If somebody needs it, can find an older version of the library on NuGet.
+tf.ReplaceWith(new XElement("TargetFrameworks", tf.Value + ";net9.0-windows"));
 x.XPathSelectElement("/PropertyGroup/Version").Value = typeof(osVersion).Assembly.GetName().Version.ToString(3);
 x.XPathSelectElement("/PropertyGroup/Copyright").Value = $"Copyright (c) Gintaras Didžgalvis {DateTime.Now.Year}";
 //x.XPathSelectElement("/Target[@Name='PreBuild']/Exec").Remove();
@@ -32,9 +32,8 @@ if (r != 0) return;
 
 filesystem.delete(auProj_nuget);
 filesystem.delete(auDir + @"\obj");
+filesystem.delete(auDir + @"\bin\Release\net10.0-windows");
 filesystem.delete(auDir + @"\bin\Release\net9.0-windows");
-filesystem.delete(auDir + @"\bin\Release\net8.0-windows");
-//filesystem.delete(auDir + @"\bin\Release\net6.0-windows");
 
 s.RxMatch(@"Successfully created package '(.+?)'", 1, out string path);
 if (!filesystem.exists(path)) throw null;

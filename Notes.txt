@@ -77,7 +77,6 @@ Download and test the setup file.
 Sometimes test whether others can build and run the repo.
 	Eg when some new files added to the `_` dir.
 	Generated or downloaded files in `_` dir/subdirs must be gitignored, unless very small non-binary. Instead specify them in `GitBinaryFiles.cs` in project `BuildEvents`.
-	Make sure this file exists: `.git\hooks\pre-push`. More info in `GitBinaryFiles.cs`.
 
 Test the setup file at virustotal.com. And separately other files (even data files).
 	Always will be several false positives. Even with an empty Inno Setup project. Never mind.

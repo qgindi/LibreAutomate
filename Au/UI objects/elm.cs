@@ -48,8 +48,6 @@ namespace Au;
 /// </example>
 [StructLayout(LayoutKind.Sequential)]
 public unsafe sealed partial class elm : IDisposable {
-	//FUTURE: elm.more.EnableElmInChromeWebPagesWhenItStarts
-	//FUTURE: elm.more.EnableElmInJavaWindows (see JavaEnableJAB in QM2)
 	//FUTURE: add functions to marshal to another thread.
 
 	internal struct Misc_ {

@@ -1,5 +1,3 @@
-//FUTURE: now in intellisense RStr methods are mixed with that of string. Many of them are not useful. Maybe .NET 10 or later will add an attribute to clean it up.
-
 using System.Buffers;
 
 namespace Au.Types;
@@ -576,7 +574,7 @@ public static unsafe partial class ExtString {
 	[EditorBrowsable(EditorBrowsableState.Never)] //renamed
 	public static StartEnd[] Split(this string t, Range range, StringSplitOptions flags, ReadOnlySpan<string> separators) => SplitAnySE(t, range, separators, flags);
 #endif
-	
+
 	/// <summary>
 	/// Splits this string span into substrings as start/end offsets.
 	/// </summary>
@@ -1070,7 +1068,7 @@ public static unsafe partial class ExtString {
 	/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 	/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 	/// <remarks>
-	/// Calls <see cref="double.TryParse(RStr, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
+	/// Calls <see cref="double.TryParse(RStr, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo.InvariantCulture"/>.
 	/// Fails if the string is <c>null</c> or <c>""</c> or isn't a valid floating-point number.
 	/// Examples of valid numbers: <c>"12"</c>, <c>" -12.3 "</c>, <c>".12"</c>, <c>"12."</c>, <c>"12E3"</c>, <c>"12.3e-45"</c>, <c>"1,234.5"</c> (with <i>style</i> <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like <c>"2text"</c> is invalid, unless <i>range</i> is <c>0..1</c>.
 	/// </remarks>
@@ -1090,7 +1088,7 @@ public static unsafe partial class ExtString {
 	/// Converts this string or its part to float number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="float.TryParse(RStr, NumberStyles, IFormatProvider, out float)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
+	/// Calls <see cref="float.TryParse(RStr, NumberStyles, IFormatProvider, out float)"/> with <see cref="CultureInfo.InvariantCulture"/>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out float result, Range? range = null, NumberStyles style = NumberStyles.Float) {
@@ -1101,7 +1099,7 @@ public static unsafe partial class ExtString {
 	/// Converts this string or its part to <c>int</c> number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="int.TryParse(RStr, NumberStyles, IFormatProvider, out int)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
+	/// Calls <see cref="int.TryParse(RStr, NumberStyles, IFormatProvider, out int)"/> with <see cref="CultureInfo.InvariantCulture"/>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out int result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
@@ -1116,7 +1114,7 @@ public static unsafe partial class ExtString {
 	/// Converts this string or its part to <c>uint</c> number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="uint.TryParse(RStr, NumberStyles, IFormatProvider, out uint)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
+	/// Calls <see cref="uint.TryParse(RStr, NumberStyles, IFormatProvider, out uint)"/> with <see cref="CultureInfo.InvariantCulture"/>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out uint result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
@@ -1127,7 +1125,7 @@ public static unsafe partial class ExtString {
 	/// Converts this string or its part to <c>long</c> number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="long.TryParse(RStr, NumberStyles, IFormatProvider, out long)"/> with <see cref="CultureInfo"/> <c>InvariantCulture</c>.
+	/// Calls <see cref="long.TryParse(RStr, NumberStyles, IFormatProvider, out long)"/> with <see cref="CultureInfo.InvariantCulture"/>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out long result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
@@ -1138,7 +1136,7 @@ public static unsafe partial class ExtString {
 	/// Converts this string or its part to <c>ulong</c> number.
 	/// </summary>
 	/// <remarks>
-	/// Calls <see cref="ulong.TryParse(RStr, NumberStyles, IFormatProvider, out ulong)"/>. Uses <see cref="CultureInfo.InvariantCulture"/> if the string range contains only ASCII characters, else uses current culture.
+	/// Calls <see cref="ulong.TryParse(RStr, NumberStyles, IFormatProvider, out ulong)"/> with <see cref="CultureInfo.InvariantCulture"/>.
 	/// </remarks>
 	/// <inheritdoc cref="ToNumber(string, out double, Range?, NumberStyles)"/>
 	public static bool ToNumber(this string t, out ulong result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
@@ -1153,7 +1151,6 @@ public static unsafe partial class ExtString {
 
 		//Workaround for .NET 5 preview 7 bug: if current user culture is eg Norvegian or Lithuanian,
 		//	'number to/from string' functions use '−' (Unicode minus), not '-' (ASCII hyphen), even if in Control Panel is ASCII hyphen.
-		//	Tested: no bug in .NET Core 3.1.
 		//Also, in some cultures eg Arabic there are more chars.
 		if (!t.AsSpan(start, len).IsAscii()) ci = CultureInfo.CurrentCulture;
 
@@ -1444,7 +1441,7 @@ public static unsafe partial class ExtString {
 
 		//tested: string.Create slower.
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if does not contain non-ASCII characters.
 	/// </summary>
@@ -1540,10 +1537,12 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
-	public static bool Starts(this RStr t, RStr s, bool ignoreCase = false) => t.StartsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+	[EditorBrowsable(EditorBrowsableState.Never)] //2025-12-17. Bad for string intellisense. Rarely used.
+	public static bool Starts(this RStr t, RStr s, bool ignoreCase = false)
+		=> t.StartsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
 	/// <summary>
-	/// Returns <c>true</c> if starts with string <i>s</i>.
+	/// Returns <c>true</c> if ends with string <i>s</i>.
 	/// </summary>
 	/// <param name="t">This span.</param>
 	/// <param name="s">Other string.</param>
@@ -1551,13 +1550,16 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
-	public static bool Ends(this RStr t, RStr s, bool ignoreCase = false) => t.EndsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+	[EditorBrowsable(EditorBrowsableState.Never)] //2025-12-17. Bad for string intellisense. Rarely used.
+	public static bool Ends(this RStr t, RStr s, bool ignoreCase = false)
+		=> t.EndsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 	
 	/// <summary>
 	/// Finds character <i>c</i> in this span, starting from <i>startIndex</i>.
 	/// </summary>
 	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	[EditorBrowsable(EditorBrowsableState.Never)] //2025-12-17. Bad for string intellisense.
 	public static int IndexOf(this RStr t, int startIndex, char c) {
 		int i = t[startIndex..].IndexOf(c);
 		return i < 0 ? i : i + startIndex;
@@ -1568,6 +1570,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	[EditorBrowsable(EditorBrowsableState.Never)] //2025-12-17. Bad for string intellisense. Rarely used.
 	public static int IndexOf(this RStr t, Range range, char c) {
 		int i = t[range].IndexOf(c);
 		if (i < 0) return i;
@@ -1580,6 +1583,7 @@ public static unsafe partial class ExtString {
 	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
+	[EditorBrowsable(EditorBrowsableState.Never)] //2025-12-17. Bad for string intellisense.
 	public static int IndexOf(this RStr t, int startIndex, RStr s, bool ignoreCase = false) {
 		if (s.IsNull()) throw new ArgumentNullException();
 		int i = t[startIndex..].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -1592,6 +1596,7 @@ public static unsafe partial class ExtString {
 	/// <returns>Character index in this span, or -1 if not found.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	/// <exception cref="ArgumentNullException"><i>s</i> is <c>null</c>.</exception>
+	[EditorBrowsable(EditorBrowsableState.Never)] //2025-12-17. Bad for string intellisense. Rarely used.
 	public static int IndexOf(this RStr t, Range range, RStr s, bool ignoreCase = false) {
 		if (s.IsNull()) throw new ArgumentNullException();
 		int i = t[range].IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);

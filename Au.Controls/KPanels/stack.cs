@@ -235,7 +235,7 @@ public partial class KPanels
 				});
 			}
 			timer.after(100, _ => Mouse.SetCursor(Cursors.Arrow)); //workaround. 30 too small, 50 ok
-			m.Show();
+			m.Show(owner: this.Elem);
 		}
 
 		void _SplitterContextMenu_Unit(popupMenu m, string s1) {

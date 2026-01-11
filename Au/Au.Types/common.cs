@@ -16,8 +16,6 @@ namespace Au.Types {
 		//Or for it could use an attribute. But this base class easily solves 2 problems:
 		//	1. In 'new' expression does not show completion list (with types from winapi DB) if the winapi class still does not have types inside. Because the completion service then returns null. Now it is solved, because this class has nested types.
 		//	2. If class with attributes is after top-level statements, code info often does not work when typing directly above it. Works better if without attributes.
-		//FUTURE: Also add attribute. Then can specify an alternative DB or text file with declarations. Maybe also some settings.
-		//	But use this class as base too, like now. Eg could add protected util functions. Could use this class as both (base and attribute), but Attribute has static members.
 		
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		

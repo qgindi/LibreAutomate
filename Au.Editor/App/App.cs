@@ -321,28 +321,6 @@ static partial class App {
 		if (IsPortable) {
 			print.it($"<>Info: <help editor/Portable app>portable mode<>. Using <link {folders.PortableData_}>data<> folder.");
 		} else {
-			//in v0.12 changed some spec folders from "...\Au" to "...\LibreAutomate\_script"
-			//	FUTURE: delete this code.
-			_Folder(folders.Documents, "folders.ThisAppDocuments");
-			_Folder(folders.LocalAppData, "folders.ThisAppDataLocal");
-			static void _Folder(string dir, string name) {
-				var dir1 = dir + @"\Au";
-				if (filesystem.exists(dir1, useRawPath: true)) {
-					var dir2 = dir + @"\LibreAutomate\_script";
-					if (!filesystem.exists(dir2, useRawPath: true)) {
-						try {
-							filesystem.copy(dir1, dir2);
-							print.it($"""
-							<>Note: in this program version has been changed <help>{name}<> path.
-								Old: <explore>{dir1}<>. The folder is no longer used. You can delete it.
-								New: <explore>{dir2}<>. The old folder has been copied here.
-							""");
-						}
-						catch { }
-					}
-				}
-			}
-			
 			if (_raaResult is not (WinScheduler.RResult.None or WinScheduler.RResult.ArgN)) {
 				var s1 = _raaResult == WinScheduler.RResult.TaskNotFound ? null : $"\r\n\tFailed to run as administrator. Error: {_raaResult}.";
 				var s = $"""

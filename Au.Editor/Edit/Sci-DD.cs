@@ -80,7 +80,10 @@ partial class SciCode {
 		void _Drop(POINT xy, int effect) {
 			//activate the window. Most apps activate self on drop. Also eg the Windows 11 Drag Tray may activate it and close the menu.
 			var wAct = _sci.AaWnd.Window;
-			if (!wAct.IsActive) wAct.ActivateL();
+			if (!wAct.IsActive) {
+				wAct.ActivateL();
+				wait.doEvents(30); //less chances that something will close the menu
+			}
 			
 			_GetDropPos(ref xy, out _);
 			var z = new Sci_DragDropData { x = xy.x, y = xy.y };

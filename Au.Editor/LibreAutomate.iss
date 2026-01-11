@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.15.0"
+#define MyAppVersion "1.16.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"

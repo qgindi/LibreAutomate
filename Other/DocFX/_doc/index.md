@@ -39,7 +39,7 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.15.0, 2025-12-08
+[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.16.0, 2026-01-11
 
 Or download from [GitHub](https://github.com/qgindi/LibreAutomate) Releases.
 

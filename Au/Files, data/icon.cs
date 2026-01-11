@@ -593,7 +593,6 @@ namespace Au {
 			}
 			return null;
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
-			//FUTURE: look for a faster way.
 		}
 		
 		/// <summary>

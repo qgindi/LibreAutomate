@@ -598,8 +598,6 @@ namespace Au {
 		/// </remarks>
 		public Image BackgroundImage { get; set; }
 		
-		//public ImageLayout BackgroundImageLayout { get; set; } //FUTURE
-		
 		/// <summary>
 		/// When used <see cref="BackgroundImage"/>, the OSD window has the same size as the image, plus borders.
 		/// Else OSD window size is calculated from sizes of text and icon. Then image is displayed scaled or clipped if need.

@@ -756,5 +756,4 @@ public unsafe class SciTags {
 	public Func<string, byte[]> CodeStylesProvider;
 	
 	//FUTURE: add control-tags, like <clear> (clear output), <scroll> (ensure line visible), <mark x> (add some marker etc).
-	//FUTURE: let our links be accessible objects.
 }

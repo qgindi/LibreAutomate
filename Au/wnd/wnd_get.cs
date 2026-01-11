@@ -507,10 +507,6 @@ public partial struct wnd {
 			//tested: with COM (IShellWindows -> IShellBrowser -> IShellView.GetWindow) slower 17 times.
 		}
 
-		//FUTURE:
-		//public static wnd editorWindow =>
-		//public static wnd editorCodeControl =>
-
 		#endregion
 	}
 

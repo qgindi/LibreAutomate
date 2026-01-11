@@ -199,7 +199,7 @@ internal static class Debug_ {
 	///// </summary>
 	//public struct NoGcRegion : IDisposable {
 	//	bool _restore, _print;
-		
+	
 	//	/// <summary>
 	//	/// Suspends GC collections if possible.
 	//	/// Does nothing in 32-bit process.
@@ -215,7 +215,7 @@ internal static class Debug_ {
 	//		try { _restore = GC.TryStartNoGCRegion(memSize); }
 	//		catch (InvalidOperationException ex) { Debug_.Print(ex); }
 	//	}
-		
+	
 	//	/// <summary>
 	//	/// Restores suspended GC collections.
 	//	/// </summary>
@@ -251,4 +251,31 @@ internal static class Debug_ {
 			//var stack = new Stack<string>();
 		}
 	}
+	
+#if DEBUG
+	/// <summary>
+	/// Use to limit the number of threads of <c>Parallel</c> loops.
+	/// <c>Dispose</c> prints perf time and used thread count.
+	/// Example: <c>using var pp = new Debug_.ParallelPerf(); Parallel.ForEach(... pp.Loop();</c>
+	/// Too many threads can make much slower. Then add argument like <c>new ParallelOptions { MaxDegreeOfParallelism = 7 }</c>
+	/// </summary>
+	public struct ParallelPerf : IDisposable {
+		perf.Instance _perf;
+		ConcurrentDictionary<int, int> _hs;
+		
+		public ParallelPerf() {
+			_hs = [];
+			_perf = perf.local();
+		}
+		
+		public void Loop() {
+			_hs.TryAdd(Environment.CurrentManagedThreadId, 0);
+		}
+		
+		public void Dispose() {
+			_perf.Dispose();
+			print.it(_hs.Count);
+		}
+	}
+#endif
 }
