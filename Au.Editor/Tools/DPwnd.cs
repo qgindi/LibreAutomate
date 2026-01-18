@@ -106,7 +106,7 @@ class DPwnd : UserControl {
 		_capt ??= new(
 			_cCapture,
 			o => o.wTL.GetRect(out o.resultRect),
-			new(LA.App.Settings.delm.hk_capture, _Capture)
+			new(_Capture)
 			);
 		_capt.Capturing = _cCapture.IsChecked;
 	}
@@ -168,10 +168,9 @@ class DPwnd : UserControl {
 	TUtil.CommonInfos _commonInfos;
 	void _InitInfo() {
 		_commonInfos = new TUtil.CommonInfos(_info);
-		string s1 = _wnd.Is0 ? "C" : "You can c", s = $@"{s1}apture a window with <+hotkey>hotkey<> <b>{LA.App.Settings.delm.hk_capture}<>.";
+		string s1 = _wnd.Is0 ? "C" : "You can c", s = $@"{s1}apture a window with hotkey <b>{LA.App.Settings.delm.hk_capture}<>.";
 		_info.aaaText = s;
 		_info.AaAddElem(this, s);
-		TUtil.CapturingWithHotkey.RegisterLink_DialogHotkey(_info);
 		_k.InitInfo(_info);
 	}
 	

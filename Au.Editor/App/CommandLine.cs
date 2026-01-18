@@ -54,6 +54,13 @@ static class CommandLine {
 			
 			if (args.Length > 0 && args[0] is var s && !s.NE()) {
 				if (s[0] is '/' or '-') {
+				} else if (s.Starts("la-link:")) {
+					var w = wnd.findFast(null, ScriptEditor.c_msgWndClassName, true);
+					if (!w.Is0) {
+						w.Send(Api.WM_USER, 0, 1); //auto-creates, shows and activates main window
+						WndCopyData.Send<char>(w, 9, s.AsSpan(8));
+					}
+					return true;
 				} else if (!pathname.isFullPath(s)) {
 					exitCode = _LetEditorRunScript(args, argN);
 					return true;
@@ -142,9 +149,9 @@ static class CommandLine {
 			w.Send(Api.WM_USER, 0, 1); //auto-creates, shows and activates main window
 			
 			if (cmd != 0) {
-				Thread.Sleep(100);
-				
 				if (cmd > 0) { //pass string
+					if (cmd <= 3) Thread.Sleep(100);
+					
 					if (cmd == 3) s = string.Join("\0", args); //import files
 					WndCopyData.Send<char>(w, cmd, s);
 				} else {
@@ -308,6 +315,9 @@ static class CommandLine {
 			break;
 		case 5 or 6: //script.end(name) or script.isRunning(name)
 			return _ScriptAction(action);
+		case 9: //URI protocol
+			PanelRead.UriProtocol_(s);
+			break;
 		case 10: //ScriptEditor.GetIcon
 			s = DIcons.GetIconString(s, (EGetIcon)action2);
 			return s == null ? 0 : WndCopyData.Return<char>(s, wparam);
@@ -331,7 +341,10 @@ static class CommandLine {
 			PanelHelp.OpenRecipe(s);
 			return 1;
 		case 19:
-			return PathInfo.FromWindow((wnd)s.ToInt()) is {  } pathInfo ? WndCopyData.Return<char>(pathInfo.FormatCode(PathCode.Run), wparam) : 0;
+			return PathInfo.FromWindow((wnd)s.ToInt()) is { } pathInfo ? WndCopyData.Return<char>(pathInfo.FormatCode(PathCode.Run), wparam) : 0;
+		//case 20: //open Options and select tab. Currently not used.
+		//	DOptions.AaShow(s.NE() ? null : Enum.Parse<DOptions.EPage>(s));
+		//	return 1;
 		case 100: //script.run/runWait
 		case 101: //run script from command line
 		case 102: //script.runInPip

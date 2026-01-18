@@ -113,9 +113,9 @@ class PanelRead {
 			
 			core.NavigationStarting += (_, e) => {
 				var url = e.Uri;
-				if (url.Starts("nuget:")) {
+				if (url.Starts("la-link:nuget/")) {
 					e.Cancel = true;
-					DNuget.ShowSingle(Uri.UnescapeDataString(url[6..]));
+					DNuget.ShowSingle(Uri.UnescapeDataString(url[14..]));
 				} else if (!_IsDocsUrl(url, _localBaseUri)) {
 					e.Cancel = true;
 					run.itSafe(url);
@@ -136,7 +136,7 @@ class PanelRead {
 	void _OpenInWebBrowser() {
 		if (_wv.Source is { } uri) {
 			var url = uri.ToString();
-			if (_IsDocsUrl(url, _localBaseUri)) url = c_laWebsiteBaseUri + url[_localBaseUri.Length..];
+			if (App.Settings.doc_web_la) if (_IsDocsUrl(url, _localBaseUri)) url = c_laWebsiteBaseUri + url[_localBaseUri.Length..];
 			run.itSafe(url);
 		}
 	}
@@ -308,6 +308,10 @@ window.scrollToTop = function() {
 """;
 	}
 #endif
+	
+	internal static void UriProtocol_(string s) {
+		if (s.Starts("nuget/")) DNuget.ShowSingle(Uri.UnescapeDataString(s[6..]));
+	}
 }
 
 /// <summary>
@@ -319,21 +323,30 @@ class DocsHttpServer : HttpServerSession {
 	static int s_port;
 	
 	public static void StartOrSwitch() {
-		if (App.Settings.doc_web || s_running) {
+		if ((App.Settings.doc_web & App.Settings.doc_web_la) || s_running) {
 			_Switch();
 		} else {
 			s_running = true;
 			run.thread(() => {
+				int port = 59472; //prefer a stable port. Useful for bookmarks and URI scheme. If taken, retry with a random auto-assigned port, never mind.
+#if IDE_LA
+				port++;
+#endif
+				g1:
 				try {
-					Listen<DocsHttpServer>(0, "127.0.0.1", listener => {
+					Listen<DocsHttpServer>(port, "127.0.0.1", listener => {
 						s_port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
 						_Switch();
 					});
 				}
 				catch (Exception ex) {
+					if (port != 0 && ex is System.Net.Sockets.SocketException { SocketErrorCode: System.Net.Sockets.SocketError.AddressAlreadyInUse }) {
+						port = 0;
+						goto g1;
+					}
 					print.warning(ex);
 				}
-				App.Settings.doc_web = true;
+				App.Settings.doc_web = App.Settings.doc_web_la = true;
 				_Switch();
 				s_running = false;
 			}, sta: false);
@@ -343,17 +356,22 @@ class DocsHttpServer : HttpServerSession {
 	public static string LocalBaseUri { get; private set; }
 	
 	static void _Switch() {
-		if (App.Settings.doc_web) {
+		if (App.Settings.doc_web & App.Settings.doc_web_la) {
 			LocalBaseUri = null;
 			HelpUtil.AuHelpEvent_ -= _AuHelpEvent;
-		} else {
+		} else if (LocalBaseUri == null) {
 			LocalBaseUri = $"http://127.0.0.1:{s_port}/";
 			HelpUtil.AuHelpEvent_ += _AuHelpEvent;
 		}
 		
 		static void _AuHelpEvent(HelpUtil.AuHelpEventArgs_ e) {
 			e.Cancel = true;
-			Panels.Read.OpenDocUrl(e.Url);
+			var url = e.Url;
+			if (App.Settings.doc_web) {
+				run.itSafe(string.Concat(LocalBaseUri, url.AsSpan(30)));
+			} else {
+				Panels.Read.OpenDocUrl(url);
+			}
 		}
 	}
 	
@@ -400,5 +418,27 @@ class DocsHttpServer : HttpServerSession {
 				r.Status = System.Net.HttpStatusCode.NotFound;
 			}
 		}
+		
+		if (!s_schemeRegistered) {
+			s_schemeRegistered = true;
+			_RegisterUriScheme();
+		}
 	}
+	
+	static void _RegisterUriScheme() {
+		if (App.IsPortable || miscInfo.isChildSession) return;
+		
+		try {
+			string scheme = "la-link", exePath = process.thisExePath;
+			
+			using var key = Registry.CurrentUser.CreateSubKey($@"Software\Classes\{scheme}");
+			key.SetValue("", $"URL:{scheme} Protocol");
+			key.SetValue("URL Protocol", "");
+			
+			using var commandKey = key.CreateSubKey(@"shell\open\command");
+			commandKey.SetValue("", $"\"{exePath}\" \"%1\"");
+		}
+		catch { }
+	}
+	static bool s_schemeRegistered;
 }

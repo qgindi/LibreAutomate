@@ -9,9 +9,7 @@ public static class HelpUtil {
 	/// </summary>
 	/// <param name="topic">Topic file name, like <c>"wnd.find"</c> or <c>"Au.Types.RECT"</c> or <c>"articles/Wildcard expression"</c>.</param>
 	public static void AuHelp(string topic) {
-#pragma warning disable CS0612 //Type or member is obsolete
 		var url = AuHelpUrl(topic);
-#pragma warning restore CS0612 //Type or member is obsolete
 		if (AuHelpEvent_ is { } e) {
 			var k = new AuHelpEventArgs_ { Url = url };
 			e(k);

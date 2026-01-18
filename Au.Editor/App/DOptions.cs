@@ -660,6 +660,18 @@ Example:
 		b.R.Add("Capture wnd and show tool", out TextBox captureDwnd, App.Settings.hotkeys.tool_wnd).xValidateHotkey();
 		b.R.Add("Capture elm and show tool", out TextBox captureDelm, App.Settings.hotkeys.tool_elm).xValidateHotkey();
 		b.R.Add("Capture image and show tool", out TextBox captureDuiimage, App.Settings.hotkeys.tool_uiimage).xValidateHotkey();
+		
+		b.R.xAddGroupSeparator("Temporary hotkeys for wnd and elm capturing tools");
+		b.R.StartGrid().Columns(-3, -1);
+		b.R.StartGrid();
+		b.R.Add("Capture", out TextBox capture, LA.App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true);
+		b.R.Add("Insert elm code", out TextBox insert, LA.App.Settings.delm.hk_insert).xValidateHotkey();
+		b.R.Add("Set elm capturing method", out TextBox smaller, LA.App.Settings.delm.hk_smaller).xValidateHotkey();
+		b.End();
+		b.xAddInfoBlockT("After changing these hotkeys please restart tool windows that use them.");
+		b.End();
+		
+		if (!uacInfo.isAdmin) b.R.xAddInfoBlockT("Note: Hotkeys don't work when the active window belongs to an admin process, because this process isn't admin.");
 		b.End();
 		
 		_b.OkApply += e => {
@@ -674,6 +686,10 @@ Example:
 				RegHotkeys.UnregisterPermanent();
 				RegHotkeys.RegisterPermanent();
 			}
+			
+			LA.App.Settings.delm.hk_capture = capture.Text;
+			LA.App.Settings.delm.hk_insert = insert.TextOrNull();
+			LA.App.Settings.delm.hk_smaller = smaller.TextOrNull();
 		};
 	}
 	
@@ -815,7 +831,10 @@ Or clone an existing model configuration and change some properties. Example:
 
 	void _Other() {
 		var b = _Page("Other");
-		b.R.Add("Documentation", out ComboBox localHelp).Items("Local docs of this app version, in Read panel|Online docs of the latest version, in web browser").Select(App.Settings.doc_web ? 1 : 0);
+		b.R.StartStack<GroupBox>("Documentation");
+		b.Add(out KCheckBox helpInBrowser, "Open in web browser").Checked(App.Settings.doc_web);
+		b.Add(out KCheckBox helpLaWebsite, "In browser use libreautomate.com").Checked(App.Settings.doc_web_la); //the old way; keep this option, because maybe some users have bookmarks
+		b.End();
 		b.R.Add("Internet search URL", out TextBox internetSearchUrl, App.Settings.internetSearchUrl);
 		b.R.Add(out CheckBox minimalSdk, "Use minimal .NET SDK").Checked(App.Settings.minimalSDK, threeState: true).Tooltip("The SDK is used to install NuGet packages and for the Publish feature.\nIndeterminate - use full SDK if installed, else minimal.");
 		b.R.Add(out CheckBox printCompiled, "Always print \"Compiled\"").Checked(App.Settings.comp_printCompiled, threeState: true)
@@ -824,8 +843,9 @@ Or clone an existing model configuration and change some properties. Example:
 		
 		b.Loaded += () => {
 			_b.OkApply += e => {
-				if ((localHelp.SelectedIndex == 1) != App.Settings.doc_web) {
-					App.Settings.doc_web ^= true;
+				if (helpInBrowser.IsChecked != App.Settings.doc_web || helpLaWebsite.IsChecked != App.Settings.doc_web_la) {
+					App.Settings.doc_web = helpInBrowser.IsChecked;
+					App.Settings.doc_web_la = helpLaWebsite.IsChecked;
 					DocsHttpServer.StartOrSwitch();
 				}
 				App.Settings.internetSearchUrl = internetSearchUrl.TextOrNull();

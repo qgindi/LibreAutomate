@@ -63,10 +63,12 @@ partial class MainWindow : Window {
 		DocsHttpServer.StartOrSwitch();
 		
 #if DEBUG
+		int focusedInvisible = 0;
 		App.Timer1s += () => {
 			var e = Keyboard.FocusedElement as FrameworkElement;
-			Debug_.PrintIf(e != null && !e.IsVisible, "focused invisible");
-			//print.it(e, FocusManager.GetFocusedElement(App.Wmain));
+			if (e != null && !e.IsVisible) {
+				if (++focusedInvisible == 2) print.warning($"focused invisible: {e}");
+			} else focusedInvisible = 0;
 		};
 #endif
 	}

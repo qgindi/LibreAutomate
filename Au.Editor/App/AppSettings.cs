@@ -153,7 +153,7 @@ record AppSettings : JSettings {
 	
 	//Options > Other
 	public string internetSearchUrl { get => field ?? "https://www.google.com/search?q="; set { field = value.NullIfEmpty_(); } }
-	public bool doc_web;
+	public bool doc_web, doc_web_la;
 	public bool? comp_printCompiled = false;
 	
 	//code editor

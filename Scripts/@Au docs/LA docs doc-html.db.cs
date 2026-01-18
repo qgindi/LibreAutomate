@@ -220,7 +220,7 @@ string _ProcessHtml(string path, string uri) {
 #if IEWB
 			v.AddClass("nuget");
 #else
-			v.SetAttributeValue("href", "nuget:" + v.InnerText);
+			v.SetAttributeValue("href", "la-link:nuget/" + v.InnerText);
 #endif
 		}
 	}

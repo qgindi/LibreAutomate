@@ -78,7 +78,9 @@ public class csvTable {
 	/// <exception cref="FormatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static unsafe csvTable parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true) {
-		if (csv.NE()) return new csvTable();
+		int csvEnd = csv.Lenn();
+		if (trimSpaces) while (csvEnd > 0 && csv[csvEnd - 1] is ' ' or '\t') csvEnd--;
+		if (csvEnd == 0) return new();
 		
 		var a = new List<string[]>();
 		var tempRow = new List<string>(8);
@@ -88,11 +90,11 @@ public class csvTable {
 			char* s = s0, se = s0 + csv.Length;
 			int nCol = 0;
 			
-			for (; s < se; s++) {
+			for (; s < se || (s == se && s[-1] == separator); s++) {
 				//Read a field.
 				string field = "";
 				if (trimSpaces) { //ltrim
-					while (*s == ' ' || *s == '\t') if (++s == se) goto g1;
+					while (*s is ' ' or '\t') if (++s == se) goto g1;
 				}
 				char* f, e; //field beginning and end, not including spaces
 				bool hasEscapedQuote = false;

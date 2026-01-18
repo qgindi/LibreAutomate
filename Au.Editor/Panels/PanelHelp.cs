@@ -15,7 +15,7 @@ using ToolLand;
 namespace LA;
 
 class PanelHelp {
-	KTreeView _tv;
+	KTreeView _tv, _tvFavorites;
 	KTextBox _search;
 	_Item _root;
 	_Item _selectedItem;
@@ -40,7 +40,9 @@ class PanelHelp {
 		b.And(0).xAddButtonIcon(out buttons_.copyResults, "*Material.ContentCopy" + EdIcons.black, _CopyResultsForAiChat, "Copy results for AI chat\n\nYou can paste it in ChatGPT, Gemini, etc.\nThen the AI can answer your question better.\nPaste it anywhere in your message.").Hidden(null);
 		
 		_tv = new() { Name = "Help_TOC", SingleClickActivate = true, HotTrack = true, BackgroundColor = 0xf0f8e8, SmallIndent = true };
-		b.Row(-1).Add(_tv);
+		b.Row(-1).Add(_tv).Span(-1);
+		_tvFavorites = new() { Name = "Help_Favorites", SingleClickActivate = true, HotTrack = true, BackgroundColor = 0xf0f8e8, SmallIndent = true };
+		b.And(0).Add(_tvFavorites).Hidden();
 		
 		var tb = b.R.xAddToolBar(hideOverflow: true);
 		buttons_.toolbar = tb.Parent as ToolBarTray;
@@ -49,32 +51,32 @@ class PanelHelp {
 		
 		b.End();
 		
-		Panels.PanelManager["Help"].DontActivateFloating = e => e == _tv;
+		Panels.PanelManager["Help"].DontActivateFloating = e => e is KTreeView;
 		
 		P.IsVisibleChanged += (_, e) => {
 			if ((bool)e.NewValue && _root == null) {
 				_Load();
-				_tv.ItemActivated += e => _OpenItem(e.Item as _Item, false);
+				_MouseRM(_tv);
+				_MouseRM(_tvFavorites);
+				
+				void _MouseRM(KTreeView tv) {
+					tv.ItemActivated += e => _OpenItem(e.Item as _Item, false);
+					tv.ItemClick += e => {
+						if (e.Button == MouseButton.Right) _ContextMenu(e.Item as _Item);
+						if (e.Button == MouseButton.Middle) _FavoritesToggle();
+					};
+					tv.RightClickInEmptySpace += () => _ContextMenu(null);
+					tv.MiddleClickInEmptySpace += () => _FavoritesToggle();
+				}
 			}
 		};
-		
-		//#if DEBUG
-		//		_tv.ItemClick += e => {
-		//			if (e.Button == MouseButton.Right) {
-		//				var m = new popupMenu();
-		//				m.Add("DEBUG", disable: true);
-		//				//m["Print name words"] = o => _DebugGetWords();
-		//				m.Show();
-		//			}
-		//		};
-		//#endif
 	}
 	
 	public UserControl P { get; }
 	
 	void _Load() {
 		try {
-			_root = new _Item(null, _DocKind.Folder);
+			_root = new _Item(true, null, _DocKind.Folder);
 			_TOC(folders.ThisAppBS + "toc.json", _root);
 			
 			var cookbookRoot = _root.FirstChild;
@@ -97,13 +99,13 @@ class PanelHelp {
 					string name = (string)j["name"], href = (string)j["href"], symKind = null;
 					if (docKind == _DocKind.Api) symKind = (string)j["kind"];
 					if (j["items"] is JsonArray { Count: > 0 } ja) {
-						var i = new _Item(name, _DocKind.Folder, symKind, href);
+						var i = new _Item(true, name, docKind == _DocKind.Api && href != null ? docKind : _DocKind.Folder, symKind, href);
 						ip.AddChild(i);
 						foreach (var v in ja) {
 							_Add(v, i, docKind);
 						}
 					} else {
-						ip.AddChild(new _Item(name, docKind, symKind, href));
+						ip.AddChild(new _Item(false, name, docKind, symKind, href));
 					}
 				}
 			}
@@ -117,26 +119,30 @@ class PanelHelp {
 	
 	void _OpenItem(_Item item, bool select) {
 		if (item == null) return;
-		if (item.dir) {
-			if (item.href == null) {
-				_tv.Expand(item, null);
-				return;
-			} else if (!item.isExpanded) {
-				_tv.Expand(item, true);
-			}
-		}
+		if (select && _favoritesView) _FavoritesToggle();
 		
-		if (_showingResults) {
-			_selectedItem = item.clonedFrom;
-		} else {
-			if (select) {
-				_openingItem = true;
-				_search.Text = "";
-				_openingItem = false;
-				_tv.Select(item);
+		if (!_favoritesView) {
+			if (item.dir) {
+				if (item.href == null) {
+					_tv.Expand(item, null);
+					return;
+				} else if (!item.isExpanded) {
+					_tv.Expand(item, true);
+				}
 			}
 			
-			_selectedItem = item;
+			if (_showingResults) {
+				_selectedItem = item.clonedFrom;
+			} else {
+				if (select) {
+					_openingItem = true;
+					_search.Text = "";
+					_openingItem = false;
+					_tv.Select(item);
+				}
+				
+				_selectedItem = item;
+			}
 		}
 		
 		var s1 = item.docKind switch { _DocKind.Cookbook => "cookbook/", _DocKind.Editor => "editor/", _DocKind.Article => "articles/", _ => "api/" };
@@ -145,6 +151,8 @@ class PanelHelp {
 	}
 	
 	void _SearchInNameOnSearchTextChanged() {
+		if (_favoritesView) _FavoritesToggle();
+		
 		if (_aiResults != null) {
 			_aiResults = null;
 			buttons_.aiSearch.Visibility = Visibility.Visible;
@@ -171,11 +179,9 @@ class PanelHelp {
 			_Item R = null;
 			for (var n = parent.FirstChild; n != null; n = n.Next) {
 				_Item r = null;
-				if (n.dir) {
-					r = _SearchContains(n);
-				}
-				if (!n.dir || n.href != null) {
-					if (n.name.Contains(s, StringComparison.OrdinalIgnoreCase)) r ??= n.Clone();
+				if (n.dir) r = _SearchContains(n);
+				if ((!n.dir || n.href != null) && r == null) {
+					if (n.name.Contains(s, StringComparison.OrdinalIgnoreCase)) r = n.Clone();
 				}
 				if (r != null) {
 					if (R == null) {
@@ -198,9 +204,7 @@ class PanelHelp {
 				_Item R = null;
 				for (var n = parent.FirstChild; n != null; n = n.Next) {
 					_Item r = null;
-					if (n.dir) {
-						r = _SearchFuzzy(n);
-					}
+					if (n.dir) r = _SearchFuzzy(n);
 					if (!n.dir || n.href != null) {
 						n.stemmedName ??= _Stem(n.name);
 						bool allFound = true;
@@ -253,6 +257,8 @@ class PanelHelp {
 	(Libs.Porter2Stemmer.EnglishPorter2Stemmer stemmer, List<string> a, regexp rx) _stem;
 	
 	async void _AiSearch() {
+		if (_favoritesView) _FavoritesToggle();
+		
 		var query = _search.Text.Trim();
 		if (query.Length < 2) return;
 		
@@ -325,7 +331,7 @@ class PanelHelp {
 				if (s.Starts("[cookbook]")) {
 					s = s[11..];
 					if (_FindRecipe(s, true) is { } r) {
-						a.Add(r.Clone());
+						a.Add(r.Clone(notDir: true));
 					} else {
 						Debug_.Print(s);
 					}
@@ -341,7 +347,7 @@ class PanelHelp {
 						r = r.Children().First(o => o.name == ns);
 						r = r.Descendants().First(o => o.ApiFullNameEquals(s));
 						s = s[(i + 1)..];
-						r = r.Clone(s);
+						r = r.Clone(s, notDir: true);
 					} else {
 						string name = s = s[(s.IndexOf(' ') + 1)..], section = null;
 						int i = s.Find(" | ");
@@ -363,7 +369,7 @@ class PanelHelp {
 							s = r.name;
 						}
 						
-						r = new(s, r.docKind, null, href, r);
+						r = new(false, s, r.docKind, null, href, r);
 					}
 					a.Add(r);
 				}
@@ -416,7 +422,7 @@ Articles are separated by `--- Article kind: KIND ---` lines, where KIND is one 
 				_DocKind.Cookbook => "[cookbook] " + name,
 				_DocKind.Editor => "[editor] " + name,
 				_DocKind.Article => "[articles] " + name,
-				_ => v.Level == 3 ? $"{v.Parent.name}.{name}" : $"{v.Parent.Parent.name}.{v.Parent.name}.{name}"
+				_ => v.FullName
 			};
 			
 			if (!db.Get(out string text, "SELECT text FROM doc WHERE name=?", dbName)) { Debug_.Print(dbName); continue; }
@@ -503,6 +509,90 @@ Articles are separated by `--- Article kind: KIND ---` lines, where KIND is one 
 		}
 	}
 	
+	void _ContextMenu(_Item item) {
+		var m = new popupMenu();
+		
+		if (item is { docKind: not _DocKind.Folder }) {
+			_FavoritesLoad(out var csv);
+			var item0 = item; if (item.clonedFrom is { } orig) item = orig;
+			
+			string kind = item.docKind switch { _DocKind.Cookbook => "C", _DocKind.Article => "A", _DocKind.Editor => "E", _ => "L" };
+			string name = item.FullName;
+			int iFavorite = csv?.Rows.FindIndex(o => o[1] == name && o[0] == kind) ?? -1;
+			m.AddCheck("Favorite", iFavorite >= 0, k => {
+				if (iFavorite < 0) {
+					csv ??= new();
+					csv.AddRow(kind, name);
+				} else {
+					csv.RemoveRow(iFavorite);
+					if (_favoritesView) {
+						_favorites.Remove(item0);
+						_tvFavorites.SetItems(_favorites);
+					}
+				}
+				try { csv.Save(_favoritesFile); } catch (Exception ex) { print.it(ex); return; }
+				Panels.Editor.SyncEditorTextIfFileIs(_favoritesFile, false);
+			});
+		}
+		//bool fileExists = filesystem.exists(_favoritesFile, true).File;
+		//m["Edit favorites", disable: !fileExists] = o => { App.Model.ImportLinkOrOpen(_favoritesFile); }; //probably don't need. Not fully implemented: _FavoritesToggle should update the UI favorites list if the file was modified.
+		m.AddCheck("Show favorites\tM-click", _favoritesView, o => _FavoritesToggle());
+		
+		m.Show();
+	}
+	
+	void _FavoritesToggle() {
+		if (_favoritesView ^= true) {
+			if (_FavoritesLoad(out var csv)) {
+				List<_Item> a = new(csv.Rows.Count);
+				foreach (var n in _root.Descendants()) {
+					if (n.docKind == _DocKind.Folder) continue;
+					char kind = n.docKind switch { _DocKind.Cookbook => 'C', _DocKind.Article => 'A', _DocKind.Editor => 'E', _ => 'L' };
+					foreach (var v in csv.Rows) {
+						string s0 = v[0]; if (s0.Length != 1 || s0[0] != kind) continue;
+						if (n.docKind == _DocKind.Api) {
+							if (!n.ApiFullNameEquals(v[1])) continue;
+						} else {
+							if (n.name != v[1]) continue;
+						}
+						a.Add(n);
+						break;
+					}
+				}
+				bool same = _favorites != null && a.SequenceEqual(_favorites.Select(o => o.clonedFrom));
+				if (!same) {
+					_favorites = new(a.Count);
+					foreach (var n in a) {
+						var name = n.name; if (n.docKind == _DocKind.Api && n.Level == 4) name = n.Parent.name + "." + name;
+						_favorites.Add(n.Clone(name, notDir: true));
+					}
+					_tvFavorites.SetItems(_favorites, true);
+				}
+			} else {
+				_tvFavorites.SetItems(null);
+			}
+			_tv.Visibility = Visibility.Hidden;
+			_tvFavorites.Visibility = Visibility.Visible;
+		} else {
+			_tvFavorites.Visibility = Visibility.Hidden;
+			_tv.Visibility = Visibility.Visible;
+		}
+	}
+	
+	bool _favoritesView;
+	List<_Item> _favorites;
+	static readonly string _favoritesFile = AppSettings.DirBS + "Help favorites.csv";
+	
+	static bool _FavoritesLoad(out csvTable csv) {
+		csv = null;
+		Panels.Editor.SyncEditorTextIfFileIs(_favoritesFile, true);
+		if (!filesystem.exists(_favoritesFile, true).File) return false;
+		try { csv = csvTable.load(_favoritesFile); }
+		catch (Exception ex) { print.warning(ex); return false; }
+		if (csv.ColumnCount < 2) { csv = null; return false; }
+		return true;
+	}
+	
 	//#if DEBUG
 	//	void _DebugGetWords() {
 	//		print.clear();
@@ -524,10 +614,12 @@ Articles are separated by `--- Article kind: KIND ---` lines, where KIND is one 
 		internal readonly string symKind;
 		internal readonly string href;
 		internal readonly _Item clonedFrom;
+		internal readonly bool dir;
 		internal bool isExpanded;
 		internal string[] stemmedName;
 		
-		public _Item(string name, _DocKind docKind, string symKind = null, string href = null, _Item clonedFrom = null) {
+		public _Item(bool dir, string name, _DocKind docKind, string symKind = null, string href = null, _Item clonedFrom = null) {
+			this.dir = dir;
 			this.name = name;
 			this.docKind = docKind;
 			this.symKind = symKind;
@@ -535,9 +627,7 @@ Articles are separated by `--- Article kind: KIND ---` lines, where KIND is one 
 			this.clonedFrom = clonedFrom;
 		}
 		
-		public _Item Clone(string newName = null) => new(newName ?? name, docKind, symKind, href, this);
-		
-		internal bool dir => docKind == _DocKind.Folder;
+		public _Item Clone(string newName = null, bool notDir = false) => new(dir & !notDir, newName ?? name, docKind, symKind, href, this);
 		
 		#region ITreeViewItem
 		
@@ -545,12 +635,10 @@ Articles are separated by `--- Article kind: KIND ---` lines, where KIND is one 
 		
 		object ITreeViewItem.Image
 			=> docKind switch {
-				_DocKind.Folder => symKind != null ? _KindIcon : EdIcons.FolderArrow(isExpanded),
 				_DocKind.Cookbook => name == "Documentation" ? EdIcons.Help : "*BoxIcons.RegularCookie" + EdIcons.darkYellow,
-				_DocKind.Api => _KindIcon,
 				_DocKind.Editor => "*Material.ApplicationOutline" + EdIcons.blue,
 				_DocKind.Article => "*PhosphorIcons.Article" + EdIcons.black,
-				_ => null
+				_ => symKind != null ? _KindIcon : EdIcons.FolderArrow(isExpanded),
 			};
 		
 		string _KindIcon => symKind switch {
@@ -577,6 +665,11 @@ Articles are separated by `--- Article kind: KIND ---` lines, where KIND is one 
 		bool ITreeViewItem.IsFolder => dir;
 		
 		#endregion
+		
+		/// <summary>
+		/// If Api, returns <c>"Namespace.Type.name"</c> or <c>"Namespace.name"</c>, else <c>"name"</c>.
+		/// </summary>
+		public string FullName => docKind != _DocKind.Api ? name : Level == 4 ? $"{Parent.Parent.name}.{Parent.name}.{name}" : $"{Parent.name}.{name}";
 		
 		public bool ApiFullNameEquals(string s) {
 			if (!s.Ends(name)) return false;

@@ -312,7 +312,7 @@ class Dwnd : KDialogWindow {
 		_capt ??= new(
 			_cCapture,
 			o => (_noControl ? o.wTL : wnd.fromXY(o.p)).GetRect(out o.resultRect),
-			new(LA.App.Settings.delm.hk_capture, _Capture)
+			new(_Capture)
 			);
 		_capt.Capturing = _cCapture.IsChecked;
 	}
@@ -641,7 +641,6 @@ class Dwnd : KDialogWindow {
 		
 		_info.aaaText = _dialogInfo;
 		_info.AaAddElem(this, _dialogInfo);
-		TUtil.CapturingWithHotkey.RegisterLink_DialogHotkey(_info);
 		
 		_k.InitInfo(_info);
 		_info.InfoCT(idC, "Control id.");
@@ -673,15 +672,16 @@ For example, if 1, gets the second matching control.");
 		//");
 	}
 	
-	string _dialogInfo =
-$@"This tool creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
-1. Move the mouse to a window or control. Press <+hotkey>hotkey<> <b>{LA.App.Settings.delm.hk_capture}<>.
+	string _dialogInfo = $"""
+This tool creates code to find <help wnd.find>window<> or <help wnd.Child>control<>.
+1. Move the mouse to a window or control. Press hotkey <b>{LA.App.Settings.delm.hk_capture}<>.
 2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields or select another window/control.
 4. Click Insert. Click Close, or capture/insert again.
 5. If need, edit the code in editor. For example rename variables, delete duplicate wnd.find lines, replace part of window name with *. Add code to use the window or control. Examples: w.Activate(); var s = w.Name;.
 
-{(uacInfo.isAdmin ? "" : "If the hotkey does not work when the target window is active, probably its process is admin and this process isn't.")}";
+You can change hotkeys in <b>Options > Hotkeys<>.{(uacInfo.isAdmin ? "" : "\r\nIf the hotkey does not work when the target window is active, probably its process is admin and this process isn't.")}
+""";
 	
 	#endregion
 }

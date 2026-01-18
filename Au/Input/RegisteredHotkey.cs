@@ -95,15 +95,16 @@ public struct RegisteredHotkey : IDisposable {
 	/// </summary>
 	/// <remarks>
 	/// Called implicitly when disposing this variable.
-	/// Must be called from the same thread as when registering, and the window must be still alive.
-	/// If fails, calls <see cref="print.warning"/>.
+	/// Must be called from the same thread as when registering.
 	/// </remarks>
 	public void Unregister() {
 		if (_id != null) {
 			if (!Api.UnregisterHotKey(_w, _id.Value)) {
-				var es = lastError.message;
-				print.warning($"Failed to unregister hotkey, id={_id.Value}. {es}");
-				return;
+				if (lastError.code != Api.ERROR_INVALID_WINDOW_HANDLE) { //it's OK if the window destroyed
+					var es = lastError.message;
+					print.warning($"Failed to unregister hotkey, id={_id.Value}. {es}");
+					return;
+				}
 			}
 			_id = null;
 			_w = default;

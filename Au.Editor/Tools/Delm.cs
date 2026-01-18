@@ -612,9 +612,8 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	void _InitCapturingWithHotkey() {
 		_capt = new(_cCapture,
 			_GetCapturingRect,
-			new(LA.App.Settings.delm.hk_capture, _Capture),
-			new(LA.App.Settings.delm.hk_insert, () => _Insert(hotkey: true)),
-			new(LA.App.Settings.delm.hk_smaller, _CaptureSmallerToggle));
+			new(_Capture, () => _Insert(hotkey: true), _CaptureSmallerToggle),
+			isElm: true);
 		_cCapture.IsChecked = true;
 	}
 	
@@ -2000,7 +1999,6 @@ new elmFinder || 5
 		_info.AaAddElem(this, _dialogInfo);
 		_info.AaTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 		_info.AaTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
-		TUtil.CapturingWithHotkey.RegisterLink_DialogHotkey(_info);
 		
 		//note: for Test button etc it's better to use tooltip, not _info.
 		
@@ -2029,8 +2027,9 @@ If unchecked, returns null.");
 		//The ""find window"" part can be edited directly.");
 	}
 	
-	string _dialogInfo = $@"This tool creates code to find <help elm>UI element<> in <help wnd.find>window<>.
-1. Move the mouse to a UI element. Press <+hotkey>hotkey<> <b>{LA.App.Settings.delm.hk_capture}<>.
+	string _dialogInfo = $"""
+This tool creates code to find <help elm>UI element<> in <help wnd.find>window<>.
+1. Move the mouse to a UI element. Press hotkey <b>{LA.App.Settings.delm.hk_capture}<>.
 2. Click the Test button to see how the 'find' code works.
 3. If need, change some fields or select another element.
 4. Click Insert. Click Close, or capture/insert again.
@@ -2038,7 +2037,10 @@ If unchecked, returns null.");
 
 How to find UI elements that don't have a name or other property with unique constant value? Capture another UI element near it, and use <b>navig<> to get it. Or try <b>skip<>. Or path.
 
-If the wanted element is ""behind"" a bigger element, try <+hotkey>hotkey<> <b>{LA.App.Settings.delm.hk_smaller}<>.";
+If the wanted element is "behind" a bigger element, try hotkey <b>{LA.App.Settings.delm.hk_smaller}<>.
+
+You can change hotkeys in <b>Options > Hotkeys<>.
+""";
 	
 	const string c_infoJava = "If there are no UI elements in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help>elm<> help.";
 	

@@ -10,13 +10,14 @@ static partial class TUtil {
 	/// Common code for tools that capture UI objects with F3.
 	/// </summary>
 	public class CapturingWithHotkey {
-		public record struct Hothey(string hotkey, Action a);
+		public record struct HotkeyActions(Action capture, Action insert = null, Action smaller = null);
 		
 		readonly bool _isElm;
 		readonly wnd _wDialog;
 		readonly KCheckBox _captureCheckbox;
 		readonly Func<GetRectArgs, bool> _getRect;
-		readonly Hothey _hkCapture, _hkInsert, _hkSmaller;
+		HotkeyActions _hkActions;
+		List<int> _hkUnregister = [];
 		HwndSource _hs;
 		timer _timer;
 		osdRect _osr;
@@ -29,14 +30,12 @@ static partial class TUtil {
 		
 		/// <param name="captureCheckbox">Checkbox that turns on/off capturing.</param>
 		/// <param name="getRect">Called to get rectangle of object from mouse. Receives mouse position. Can return default to hide the rectangle.</param>
-		public CapturingWithHotkey(KCheckBox captureCheckbox, Func<GetRectArgs, bool> getRect, Hothey capture, Hothey insert = default, Hothey smaller = default) {
+		public CapturingWithHotkey(KCheckBox captureCheckbox, Func<GetRectArgs, bool> getRect, HotkeyActions hkActions, bool isElm = false) {
 			_wDialog = captureCheckbox.Hwnd();
 			_captureCheckbox = captureCheckbox;
 			_getRect = getRect;
-			_hkCapture = capture;
-			_hkInsert = insert;
-			_hkSmaller = smaller;
-			_isElm = smaller.a != null;
+			_hkActions = hkActions;
+			_isElm = isElm;
 		}
 		
 		/// <summary>
@@ -56,9 +55,8 @@ static partial class TUtil {
 			_timer.Stop();
 			_HideRect();
 			_hs.RemoveHook(_WndProc);
-			Api.UnregisterHotKey(_wDialog, c_hotkeyCapture);
-			if (_hkInsert.hotkey != null) Api.UnregisterHotKey(_wDialog, c_hotkeyInsert);
-			if (_hkSmaller.hotkey != null) Api.UnregisterHotKey(_wDialog, c_hotkeySmaller);
+			foreach (var v in _hkUnregister) Api.UnregisterHotKey(_wDialog, v);
+			_hkUnregister.Clear();
 			_wDialog.Prop.Remove(c_propName);
 		}
 		
@@ -71,20 +69,31 @@ static partial class TUtil {
 			_wDialog.Prop.Set(c_propName, 1);
 			
 			//register hotkeys
-			bool _RegisterHotkey(int id, string hotkey) {
+			bool _RegisterHotkey(int id) {
+				string hotkey = id switch {
+					c_hotkeyCapture => LA.App.Settings.delm.hk_capture,
+					c_hotkeyInsert => LA.App.Settings.delm.hk_insert,
+					c_hotkeySmaller => LA.App.Settings.delm.hk_smaller,
+					_ => null
+				};
+				if (hotkey.NE()) return false;
 				string es = null;
 				try {
 					var (mod, key) = RegisteredHotkey.Normalize_(hotkey);
-					if (Api.RegisterHotKey(_wDialog, id, mod, key)) return true;
+					if (Api.RegisterHotKey(_wDialog, id, mod, key)) {
+						_hkUnregister.Add(id);
+						return true;
+					}
 					es = "Failed to register.";
 				}
 				catch (Exception e1) { es = e1.Message; }
-				dialog.showError("Hotkey " + hotkey, es + "\nClick the hotkey link to set another hotkey.", owner: _wDialog);
+				
+				dialog.showWarning("Hotkey " + hotkey, es + "\nYou can change hotkeys in Options > Hotkeys.", owner: _wDialog);
 				return false;
 			}
-			if (!_RegisterHotkey(c_hotkeyCapture, _hkCapture.hotkey)) return;
-			if (_hkInsert.hotkey != null) _RegisterHotkey(c_hotkeyInsert, _hkInsert.hotkey);
-			if (_hkSmaller.hotkey != null) _RegisterHotkey(c_hotkeySmaller, _hkSmaller.hotkey);
+			if (!_RegisterHotkey(c_hotkeyCapture)) return;
+			if (_hkActions.insert != null) _RegisterHotkey(c_hotkeyInsert);
+			if (_hkActions.smaller != null) _RegisterHotkey(c_hotkeySmaller);
 			
 			//hook wndproc
 			if (_hs == null) {
@@ -218,38 +227,13 @@ static partial class TUtil {
 				_captureCheckbox.IsChecked = false;
 			} else if (msg == Api.WM_HOTKEY && (wParam is c_hotkeyCapture or c_hotkeyInsert or c_hotkeySmaller)) {
 				handled = true;
-				if (wParam == c_hotkeyInsert) _hkInsert.a();
-				else if (wParam == c_hotkeySmaller) _hkSmaller.a();
-				else _hkCapture.a();
+				if (wParam == c_hotkeyInsert) _hkActions.insert();
+				else if (wParam == c_hotkeySmaller) _hkActions.smaller();
+				else _hkActions.capture();
 			}
 			return default;
 		}
-		
-		/// <summary>
-		/// Adds link +hotkey that shows dialog "Hotkeys" and updates LA.App.Settings.delm.hk_x.
-		/// </summary>
-		public static void RegisterLink_DialogHotkey(KSciInfoBox sci) {
-			if (sci.AaTags.HasLinkTag("+hotkey")) return;
-			sci.AaTags.AddLinkTag("+hotkey", _ => {
-				var b = new wpfBuilder("Hotkey");
-				b.R.xAddGroupSeparator("In wnd and elm tools");
-				b.R.Add("Capture", out TextBox capture, LA.App.Settings.delm.hk_capture).xValidateHotkey(errorIfEmpty: true).Focus();
-				b.R.xAddGroupSeparator("In elm tool");
-				b.R.Add("Insert code", out TextBox insert, LA.App.Settings.delm.hk_insert).xValidateHotkey();
-				b.R.Add("Capturing method", out TextBox smaller, LA.App.Settings.delm.hk_smaller).xValidateHotkey();
-				b.R.AddSeparator(false);
-				b.R.xAddInfoBlockT("After changing hotkeys please restart the tool window.");
-				if (!uacInfo.isAdmin) b.R.xAddInfoBlockT("Hotkeys don't work when the active window is admin,\nbecause this process isn't admin.");
-				b.R.AddOkCancel();
-				b.End();
-				if (b.ShowDialog(Window.GetWindow(sci))) {
-					LA.App.Settings.delm.hk_capture = capture.Text;
-					LA.App.Settings.delm.hk_insert = insert.TextOrNull();
-					LA.App.Settings.delm.hk_smaller = smaller.TextOrNull();
-				}
-			});
-		}
-		
+
 		public UsingEndAction TempHideRect() {
 			bool v1, v2;
 			if (v1 = _osr.Visible) _osr.Hwnd.ShowL(false);

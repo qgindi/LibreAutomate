@@ -99,7 +99,8 @@ public unsafe partial class KTreeView : HwndHost {
 					if (!HitTest(Math2.NintToPOINT(lParam), out _)) RightClickInEmptySpace?.Invoke();
 				break;
 			case Api.WM_MBUTTONUP:
-				_OnMouseUp(System.Windows.Input.MouseButton.Middle);
+				if (!_OnMouseUp(System.Windows.Input.MouseButton.Middle))
+					if (!HitTest(Math2.NintToPOINT(lParam), out _)) MiddleClickInEmptySpace?.Invoke();
 				break;
 			case Api.WM_MOUSEMOVE:
 				_OnMouseMove(wParam);

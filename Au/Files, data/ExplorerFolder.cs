@@ -3,6 +3,9 @@ namespace Au.More;
 /// <summary>
 /// File Explorer folder window functions.
 /// </summary>
+/// <remarks>
+/// Uses shell COM API, therefore must be used in STA threads. LibreAutomate script threads are STA.
+/// </remarks>
 public class ExplorerFolder {
 	api.IWebBrowser2 _b;
 	wnd _w, _cTab;
@@ -41,6 +44,8 @@ public class ExplorerFolder {
 	}
 	
 	static IEnumerable<api.IWebBrowser2> _EnumShellWindows() {
+		if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA) print.warning("ExplorerFolder should be used in STA threads."); //GetWindow fails
+		
 		//var sw = new _Api.ShellWindows() as _Api.IShellWindows; //4 times slower than in C++. CoCreateInstance 3 times slower.
 		if (0 != Api.CoCreateInstance(new("9BA05972-F6A8-11CF-A442-00A0C90A8F39"), 0, 4, typeof(api.IShellWindows).GUID, out var o)) throw new AuException();
 		var sw = o as api.IShellWindows;

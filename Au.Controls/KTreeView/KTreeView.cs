@@ -532,6 +532,11 @@ public unsafe partial class KTreeView {
 	/// </summary>
 	public event Action RightClickInEmptySpace;
 	
+	/// <summary>
+	/// Middle-click non on an item.
+	/// </summary>
+	public event Action MiddleClickInEmptySpace;
+	
 	#endregion
 	
 	#region selection, focus, checkboxes

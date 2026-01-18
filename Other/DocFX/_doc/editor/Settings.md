@@ -88,12 +88,11 @@ Select AI models for LibreAutomate features that use AI. Set API keys.
 More info: [LA and AI](xref:ai).
 
 ### Other
-#### Documentation
-Which version of documentation to use and where to display.
-- **Local** - documentation installed with the app. Displays articles in the **Read** panel.
-- **Online** - online documentation. Displays articles in the web browser. The documentation is of the latest program version, which may be not the same as your installed program version.
+#### Documentation > Open in web browser
+Always display LA documentation articles in the web browser (never in the **Read** panel).
 
-In any case, the **Help** panel displays the table of contents of the local documentation.
+#### Documentation > In browser use libreautomate.com
+When opening a LA documentation article in a web browser, use the online version. The online documentation always matches the latest program version and may differ from the version you have installed. In any case, the **Help** panel displays the table of contents of the local documentation.
 
 #### Internet search URL
 The Internet search URL used by this app, without the search string. Default: `https://www.google.com/search?q=`.
