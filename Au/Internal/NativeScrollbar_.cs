@@ -171,19 +171,27 @@ internal /*abstract*/ class NativeScrollbar_ {
 	/// </summary>
 	/// <param name="i">Current focused item index. Can be -1.</param>
 	/// <param name="k"></param>
+	/// <param name="isMenu"></param>
 	/// <remarks>
 	/// This scrollbar must be vertical. Asserts.
 	/// Returns unchanged <i>i</i> (even if -1) if <i>k</i> isn't a navigation key or if cannot change focused item.
 	/// Works like standard list controls.
 	/// </remarks>
-	public int KeyNavigate(int i, KKey k) {
+	public int KeyNavigate(int i, KKey k, bool isMenu = false) {
 		Debug.Assert(_vertical);
 		if (!_vertical || _nItems == 0) return i;
 		switch (k) {
 		case KKey.Home: i = 0; break;
 		case KKey.End: i = int.MaxValue; break;
-		case KKey.Down: i++; break;
-		case KKey.Up: if (i < 0) i = int.MaxValue; else i--; break;
+		case KKey.Down:
+			if (isMenu && i == _nItems - 1) i = 0; //cycle
+			else i++;
+			break;
+		case KKey.Up:
+			if (isMenu && i == 0) i = int.MaxValue; //cycle
+			else if (i < 0) i = int.MaxValue;
+			else i--;
+			break;
 		case KKey.PageDown when i < _nItems - 1:
 		case KKey.PageUp when i > 0:
 			int clientHeight = _w.ClientRect.Height;

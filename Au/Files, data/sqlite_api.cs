@@ -11,18 +11,18 @@ namespace Au.Types;
 /// </summary>
 [Flags]
 public enum SLFlags {
-	/// <summary>Default flags. <sqlite>SQLITE_OPEN_READWRITE</sqlite> and <sqlite>SQLITE_OPEN_CREATE</sqlite>.</summary>
-	ReadWriteCreate = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-	
+    /// <summary>Default flags. <sqlite>SQLITE_OPEN_READWRITE</sqlite> and <sqlite>SQLITE_OPEN_CREATE</sqlite>.</summary>
+    ReadWriteCreate = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-	SQLITE_OPEN_READONLY = 0x1,
-	SQLITE_OPEN_READWRITE = 0x2,
-	SQLITE_OPEN_CREATE = 0x4,
-	SQLITE_OPEN_URI = 0x40,
-	SQLITE_OPEN_NOMUTEX = 0x8000,
-	SQLITE_OPEN_FULLMUTEX = 0x10000,
-	SQLITE_OPEN_SHAREDCACHE = 0x20000,
-	SQLITE_OPEN_PRIVATECACHE = 0x40000,
+    SQLITE_OPEN_READONLY = 0x1,
+    SQLITE_OPEN_READWRITE = 0x2,
+    SQLITE_OPEN_CREATE = 0x4,
+    SQLITE_OPEN_URI = 0x40,
+    SQLITE_OPEN_NOMUTEX = 0x8000,
+    SQLITE_OPEN_FULLMUTEX = 0x10000,
+    SQLITE_OPEN_SHAREDCACHE = 0x20000,
+    SQLITE_OPEN_PRIVATECACHE = 0x40000,
 #pragma warning restore CS1591
 }
 
@@ -30,135 +30,135 @@ public enum SLFlags {
 /// SQLite API error codes. Also two success codes - Row and Done.
 /// </summary>
 public enum SLError {
-	/// <summary>
-	/// Successful result
-	/// </summary>
-	Ok /* 0 */,
-	/// <summary>
-	/// SQL error or missing database
-	/// </summary>
-	Error /* 1 */,
-	/// <summary>
-	/// Internal logic error in SQLite
-	/// </summary>
-	Internal /* 2 */,
-	/// <summary>
-	/// Access permission denied
-	/// </summary>
-	Perm /* 3 */,
-	/// <summary>
-	/// Callback routine requested an abort
-	/// </summary>
-	Abort /* 4 */,
-	/// <summary>
-	/// The database file is locked
-	/// </summary>
-	Busy /* 5 */,
-	/// <summary>
-	/// A table in the database is locked
-	/// </summary>
-	Locked /* 6 */,
-	/// <summary>
-	/// A malloc() failed
-	/// </summary>
-	NoMem /* 7 */,
-	/// <summary>
-	/// Attempt to write a readonly database
-	/// </summary>
-	ReadOnly /* 8 */,
-	/// <summary>
-	/// Operation terminated by <c>sqlite3_interrupt</c>
-	/// </summary>
-	Interrupt /* 9 */,
-	/// <summary>
-	/// Some kind of disk I/O error occurred
-	/// </summary>
-	IoErr /* 10 */,
-	/// <summary>
-	/// The database disk image is malformed
-	/// </summary>
-	Corrupt /* 11 */,
-	/// <summary>
-	/// Unknown opcode in <c>sqlite3_file_control</c>
-	/// </summary>
-	NotFound /* 12 */,
-	/// <summary>
-	/// Insertion failed because database is full
-	/// </summary>
-	Full /* 13 */,
-	/// <summary>
-	/// Unable to open the database file
-	/// </summary>
-	CantOpen /* 14 */,
-	/// <summary>
-	/// Database lock protocol error
-	/// </summary>
-	Protocol /* 15 */,
-	/// <summary>
-	/// Database is empty
-	/// </summary>
-	Empty /* 16 */,
-	/// <summary>
-	/// The database schema changed
-	/// </summary>
-	Schema /* 17 */,
-	/// <summary>
-	/// String or BLOB exceeds size limit
-	/// </summary>
-	TooBig /* 18 */,
-	/// <summary>
-	/// Abort due to constraint violation
-	/// </summary>
-	Constraint /* 19 */,
-	/// <summary>
-	/// Data type mismatch
-	/// </summary>
-	Mismatch /* 20 */,
-	/// <summary>
-	/// Library used incorrectly
-	/// </summary>
-	Misuse /* 21 */,
-	/// <summary>
-	/// Uses OS features not supported on host
-	/// </summary>
-	NoLfs /* 22 */,
-	/// <summary>
-	/// Authorization denied
-	/// </summary>
-	Auth /* 23 */,
-	/// <summary>
-	/// Auxiliary database format error
-	/// </summary>
-	Format /* 24 */,
-	/// <summary>
-	/// 2nd parameter to <c>sqlite3_bind</c> out of range
-	/// </summary>
-	Range /* 25 */,
-	/// <summary>
-	/// File opened that is not a database file
-	/// </summary>
-	NotADb /* 26 */,
-	/// <summary>
-	/// Notifications from <c>sqlite3_log</c>
-	/// </summary>
-	Notice /* 27 */,
-	/// <summary>
-	/// Warnings from <c>sqlite3_log</c>
-	/// </summary>
-	Warning /* 28 */,
-	/// <summary>
-	/// <c>sqlite3_step</c> has another row ready
-	/// </summary>
-	Row = 100,
-	/// <summary>
-	/// <c>sqlite3_step</c> has finished executing
-	/// </summary>
-	Done /* 101 */,
-	///// <summary>
-	///// Used to mask off extended result codes
-	///// </summary>
-	//NonExtendedMask = 0xFF,
-	
+    /// <summary>
+    /// Successful result
+    /// </summary>
+    Ok /* 0 */,
+    /// <summary>
+    /// SQL error or missing database
+    /// </summary>
+    Error /* 1 */,
+    /// <summary>
+    /// Internal logic error in SQLite
+    /// </summary>
+    Internal /* 2 */,
+    /// <summary>
+    /// Access permission denied
+    /// </summary>
+    Perm /* 3 */,
+    /// <summary>
+    /// Callback routine requested an abort
+    /// </summary>
+    Abort /* 4 */,
+    /// <summary>
+    /// The database file is locked
+    /// </summary>
+    Busy /* 5 */,
+    /// <summary>
+    /// A table in the database is locked
+    /// </summary>
+    Locked /* 6 */,
+    /// <summary>
+    /// A malloc() failed
+    /// </summary>
+    NoMem /* 7 */,
+    /// <summary>
+    /// Attempt to write a readonly database
+    /// </summary>
+    ReadOnly /* 8 */,
+    /// <summary>
+    /// Operation terminated by <c>sqlite3_interrupt</c>
+    /// </summary>
+    Interrupt /* 9 */,
+    /// <summary>
+    /// Some kind of disk I/O error occurred
+    /// </summary>
+    IoErr /* 10 */,
+    /// <summary>
+    /// The database disk image is malformed
+    /// </summary>
+    Corrupt /* 11 */,
+    /// <summary>
+    /// Unknown opcode in <c>sqlite3_file_control</c>
+    /// </summary>
+    NotFound /* 12 */,
+    /// <summary>
+    /// Insertion failed because database is full
+    /// </summary>
+    Full /* 13 */,
+    /// <summary>
+    /// Unable to open the database file
+    /// </summary>
+    CantOpen /* 14 */,
+    /// <summary>
+    /// Database lock protocol error
+    /// </summary>
+    Protocol /* 15 */,
+    /// <summary>
+    /// Database is empty
+    /// </summary>
+    Empty /* 16 */,
+    /// <summary>
+    /// The database schema changed
+    /// </summary>
+    Schema /* 17 */,
+    /// <summary>
+    /// String or BLOB exceeds size limit
+    /// </summary>
+    TooBig /* 18 */,
+    /// <summary>
+    /// Abort due to constraint violation
+    /// </summary>
+    Constraint /* 19 */,
+    /// <summary>
+    /// Data type mismatch
+    /// </summary>
+    Mismatch /* 20 */,
+    /// <summary>
+    /// Library used incorrectly
+    /// </summary>
+    Misuse /* 21 */,
+    /// <summary>
+    /// Uses OS features not supported on host
+    /// </summary>
+    NoLfs /* 22 */,
+    /// <summary>
+    /// Authorization denied
+    /// </summary>
+    Auth /* 23 */,
+    /// <summary>
+    /// Auxiliary database format error
+    /// </summary>
+    Format /* 24 */,
+    /// <summary>
+    /// 2nd parameter to <c>sqlite3_bind</c> out of range
+    /// </summary>
+    Range /* 25 */,
+    /// <summary>
+    /// File opened that is not a database file
+    /// </summary>
+    NotADb /* 26 */,
+    /// <summary>
+    /// Notifications from <c>sqlite3_log</c>
+    /// </summary>
+    Notice /* 27 */,
+    /// <summary>
+    /// Warnings from <c>sqlite3_log</c>
+    /// </summary>
+    Warning /* 28 */,
+    /// <summary>
+    /// <c>sqlite3_step</c> has another row ready
+    /// </summary>
+    Row = 100,
+    /// <summary>
+    /// <c>sqlite3_step</c> has finished executing
+    /// </summary>
+    Done /* 101 */,
+    ///// <summary>
+    ///// Used to mask off extended result codes
+    ///// </summary>
+    //NonExtendedMask = 0xFF,
+
 #if false
 	/////////////////////////////////////////////////////////////////////////
 	// BEGIN EXTENDED RESULT CODES
@@ -566,435 +566,443 @@ internal enum TypeAffinity
 #region functions
 
 internal static unsafe class SLApi {
-	const string SQLITE_DLL = "winsqlite3.dll";
-	
-	static SLApi() {
-		//Windows 10 and 11 have winsqlite3.dll. On other OS download from www.sqlite.org.
-		if (!NativeLibrary.TryLoad(SQLITE_DLL, out _)) _LoadDownloaded();
-		
-		static void _LoadDownloaded() {
-			string path = folders.ThisAppDataLocal; if (path.Ends(@"\_script", true)) path = path[..^8];
-			path += $@"\download\{SQLITE_DLL}";
-			//print.it(path, filesystem.exists(path));
-			if (!filesystem.exists(path)) {
-				gRetry:
-				try {
-					_Download(path);
-				}
-				catch (Exception ex) {
-					int r = dialog.showError("Failed to download missing files", $"Your OS does not have this file: {SQLITE_DLL}.\r\nThis program tried to download it from www.sqlite.org, but failed.", "1 Retry|0 Cancel", expandedText: ex.ToString());
-					if (r == 1) goto gRetry;
-					Environment.Exit(0);
-				}
-			}
-			NativeLibrary.Load(path);
-			
-			static void _Download(string path) {
-				//Get the download URL of the last sqlite version for this OS. This way is documented in https://www.sqlite.org/download.html.
-				var html = internet.http_.Get("https://www.sqlite.org/download.html").Text();
-				//print.it(html);
-				if (!html.RxMatch(@"(?s)<!-- Download product data for scripts to read\s+(.+)\s+-->", 1, out string csv)) throw new AuException();
-				//print.it(csv);
-				var x = csvTable.parse(csv);
-				string s = $"sqlite-dll-win-{RuntimeInformation.ProcessArchitecture.ToString().Lower()}";
-				string url = x.Rows.First(o => o[2].Contains(s, StringComparison.OrdinalIgnoreCase))[2];
-				url = "https://www.sqlite.org/" + url;
-				//print.it(url);
-				
-				//Download and extract.
-				var bytes = internet.http_.Get(url).Bytes();
-				using var za = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
-				var e = za.GetEntry("sqlite3.dll");
-				filesystem.createDirectoryFor(path);
-				e.ExtractToFile(path, true);
-			}
-		}
-	}
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_close_v2(IntPtr db);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_create_function(IntPtr db, byte[] strName, int nArgs, int nType, IntPtr pvUser, SQLiteCallback func, SQLiteCallback fstep, SQLiteFinalCallback ffinal);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_finalize(IntPtr stmt);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_backup_finish(IntPtr backup);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_reset(IntPtr stmt);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern byte* sqlite3_bind_parameter_name(IntPtr stmt, int index);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern byte* sqlite3_column_database_name(IntPtr stmt, int index);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern byte* sqlite3_column_decltype(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern byte* sqlite3_column_name(IntPtr stmt, int index);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern byte* sqlite3_column_origin_name(IntPtr stmt, int index);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern byte* sqlite3_column_table_name(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern byte* sqlite3_column_text(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern char* sqlite3_column_text16(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern byte* sqlite3_errmsg(IntPtr db);
-	
-	internal static string Errmsg(IntPtr db) => Convert2.Utf8Decode(sqlite3_errmsg(db));
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_prepare16_v3(IntPtr db, char* sql, int nBytes, int prepFlags, ref IntPtr stmt, char** ptrRemain);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_table_column_metadata(IntPtr db, byte[] dbName, byte[] tblName, byte[] colName, byte** ptrDataType, byte** ptrCollSeq, ref int notNull, ref int primaryKey, ref int autoInc);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern byte* sqlite3_value_text(IntPtr p);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern byte* sqlite3_libversion();
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_libversion_number();
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern byte* sqlite3_sourceid();
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_compileoption_used(byte[] zOptName);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern byte* sqlite3_compileoption_get(int N);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_enable_shared_cache(int enable);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_enable_load_extension(IntPtr db, int enable);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_load_extension(IntPtr db, byte[] fileName, byte[] procName, byte** pError);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_overload_function(IntPtr db, byte[] zName, int nArgs);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_win32_set_directory16(uint type, string value);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_win32_reset_heap();
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_win32_compact_heap(ref uint largest);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void* sqlite3_malloc(int n);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void* sqlite3_malloc64(ulong n);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void* sqlite3_realloc(void* p, int n);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void* sqlite3_realloc64(void* p, ulong n);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern ulong sqlite3_msize(void* p);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern void sqlite3_free(void* p);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_open_v2(byte[] filename, ref IntPtr db, SLFlags flags, byte[] vfsName);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_interrupt(IntPtr db);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern long sqlite3_last_insert_rowid(IntPtr db);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern int sqlite3_changes(IntPtr db);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern long sqlite3_memory_used();
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern long sqlite3_memory_highwater(int resetFlag);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_shutdown();
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_busy_timeout(IntPtr db, int ms);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_clear_bindings(IntPtr stmt);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	static extern SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize, nint nTransient);
-	
-	internal static SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize)
-		=> sqlite3_bind_blob64(stmt, index, value, nSize, -1); //SQLITE_TRANSIENT
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_bind_double(IntPtr stmt, int index, double value);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_bind_int(IntPtr stmt, int index, int value);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_bind_int64(IntPtr stmt, int index, long value);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_bind_null(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	static extern SLError sqlite3_bind_text16(IntPtr stmt, int index, string value, int nlen, nint nTransient);
-	
-	internal static SLError sqlite3_bind_text16(IntPtr stmt, int index, string value, int nlen)
-		=> sqlite3_bind_text16(stmt, index, value, nlen, -1); //SQLITE_TRANSIENT
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_bind_zeroblob(IntPtr stmt, int index, int n);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_bind_parameter_count(IntPtr stmt);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern int sqlite3_bind_parameter_index(IntPtr stmt, byte[] strName);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern int sqlite3_column_count(IntPtr stmt);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_step(IntPtr stmt);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_stmt_readonly(IntPtr stmt);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern double sqlite3_column_double(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern int sqlite3_column_int(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern long sqlite3_column_int64(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern void* sqlite3_column_blob(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern int sqlite3_column_bytes(IntPtr stmt, int index);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern int sqlite3_column_bytes16(IntPtr stmt, int index);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern TypeAffinity sqlite3_column_type(IntPtr stmt, int index);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_create_collation(IntPtr db, byte[] strName, int nType, IntPtr pvUser, SQLiteCollation func);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void* sqlite3_value_blob(IntPtr p);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_value_bytes(IntPtr p);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_value_bytes16(IntPtr p);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern double sqlite3_value_double(IntPtr p);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_value_int(IntPtr p);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern long sqlite3_value_int64(IntPtr p);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern TypeAffinity sqlite3_value_type(IntPtr p);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_blob(IntPtr context, byte[] value, int nSize, IntPtr pvReserved);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_double(IntPtr context, double value);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_error(IntPtr context, byte[] strErr, int nLen);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_error_code(IntPtr context, SLError value);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_error_toobig(IntPtr context);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_error_nomem(IntPtr context);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_value(IntPtr context, IntPtr value);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_zeroblob(IntPtr context, int nLen);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_int(IntPtr context, int value);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_int64(IntPtr context, long value);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_null(IntPtr context);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_aggregate_context(IntPtr context, int nBytes);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_error16(IntPtr context, string strName, int nLen);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_result_text16(IntPtr context, string strName, int nLen, IntPtr pvReserved);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_progress_handler(IntPtr db, int ops, SQLiteProgressCallback func, IntPtr pvUser);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_set_authorizer(IntPtr db, SQLiteAuthorizerCallback func, IntPtr pvUser);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_update_hook(IntPtr db, SQLiteUpdateCallback func, IntPtr pvUser);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_commit_hook(IntPtr db, SQLiteCommitCallback func, IntPtr pvUser);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_trace(IntPtr db, SQLiteTraceCallback func, IntPtr pvUser);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_trace_v2(IntPtr db, SQLiteTraceFlags mask, SQLiteTraceCallback2 func, IntPtr pvUser);
-	
-	// Since sqlite3_config() takes a variable argument list, we have to overload declarations
-	// for all possible calls that we want to use.
-	//[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_config_none(Config op);
-	
-	//[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_config_int(Config op, int value);
-	
-	////[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
-	////internal static extern SLError sqlite3_config_log(Config op, SQLiteLogCallback func, IntPtr pvUser);
-	
-	//[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_db_config_charptr(IntPtr db, ConfigDb op, IntPtr charPtr);
-	
-	//[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_db_config_int_refint(IntPtr db, ConfigDb op, int value, ref int result);
-	
-	//[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_db_config_intptr_two_ints(IntPtr db, ConfigDb op, IntPtr ptr, int int0, int int1);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_db_status(IntPtr db, SQLiteStatusOpsEnum op, ref int current, ref int highwater, int resetFlag);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_rollback_hook(IntPtr db, SQLiteRollbackCallback func, IntPtr pvUser);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_db_handle(IntPtr stmt);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_db_release_memory(IntPtr db);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_db_filename(IntPtr db, byte[] dbName);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_db_readonly(IntPtr db, IntPtr dbName);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_next_stmt(IntPtr db, IntPtr stmt);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_exec(IntPtr db, byte[] strSql, IntPtr pvCallback, IntPtr pvParam, byte** errMsg);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_release_memory(int nBytes);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern int sqlite3_get_autocommit(IntPtr db);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_extended_result_codes(IntPtr db, int onoff);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern SLError sqlite3_errcode(IntPtr db);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_extended_errcode(IntPtr db);
-	
-	[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	internal static extern byte* sqlite3_errstr(SLError rc);
-	
-	internal static string Errstr(SLError r) => Convert2.Utf8Decode(sqlite3_errstr(r));
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern void sqlite3_log(SLError iErrCode, byte[] zFormat);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_file_control(IntPtr db, byte[] zDbName, int op, IntPtr pArg);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern IntPtr sqlite3_backup_init(IntPtr destDb, byte[] zDestName, IntPtr sourceDb, byte[] zSourceName);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_backup_step(IntPtr backup, int nPage);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_backup_remaining(IntPtr backup);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_backup_pagecount(IntPtr backup);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_blob_close(IntPtr blob);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern int sqlite3_blob_bytes(IntPtr blob);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_blob_open(IntPtr db, byte[] dbName, byte[] tblName, byte[] colName, long rowId, int flags, ref IntPtr ptrBlob);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_blob_read(IntPtr blob, [MarshalAs(UnmanagedType.LPArray)] byte[] buffer, int count, int offset);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_blob_reopen(IntPtr blob, long rowId);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_blob_write(IntPtr blob, [MarshalAs(UnmanagedType.LPArray)] byte[] buffer, int count, int offset);
-	
-	//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
-	//internal static extern SLError sqlite3_declare_vtab(IntPtr db, byte[] zSQL);
-	
+    const string SQLITE_DLL = "winsqlite3.dll";
+
+    static SLApi() {
+        //Windows 10 and 11 have winsqlite3.dll. On other OS download from www.sqlite.org.
+        if (!NativeLibrary.TryLoad(SQLITE_DLL, out _)) _LoadDownloaded();
+
+        static void _LoadDownloaded() {
+            string path = folders.ThisAppDataLocal; if (path.Ends(@"\_script", true)) path = path[..^8];
+            path += $@"\download\{SQLITE_DLL}";
+            //print.it(path, filesystem.exists(path));
+            gRetry:
+            if (!filesystem.exists(path)) {
+                try {
+                    _Download(path);
+                }
+                catch (Exception ex) {
+                    int r = dialog.showError("Failed to download missing files", $"""
+Your OS does not have this file: {SQLITE_DLL}.
+This program tried to download it from www.sqlite.org, but failed.
+
+How to get it:
+From https://www.sqlite.org/download.html
+Download sqlite-dll-win-{RuntimeInformation.ProcessArchitecture.ToString().Lower()}-<VERSION>.zip
+Extract sqlite3.dll -> {path}
+""", "1 Retry|0 Cancel", expandedText: ex.ToString());
+                    if (r == 1) goto gRetry;
+                    Environment.Exit(0);
+                }
+            }
+            NativeLibrary.Load(path);
+
+            static void _Download(string path) {
+                //Get the download URL of the last sqlite version for this OS. This way is documented in https://www.sqlite.org/download.html.
+                var html = internet.http_.Get("https://www.sqlite.org/download.html").Text();
+                //print.it(html);
+                if (!html.RxMatch(@"(?s)<!-- Download product data for scripts to read\s+(.+)\s+-->", 1, out string csv)) throw new AuException();
+                //print.it(csv);
+                var x = csvTable.parse(csv);
+                string s = $"sqlite-dll-win-{RuntimeInformation.ProcessArchitecture.ToString().Lower()}";
+                string url = x.Rows.First(o => o[2].Contains(s, StringComparison.OrdinalIgnoreCase))[2];
+                url = "https://www.sqlite.org/" + url;
+                //print.it(url);
+
+                //Download and extract.
+                var bytes = internet.http_.Get(url).Bytes();
+                using var za = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
+                var e = za.GetEntry("sqlite3.dll");
+                filesystem.createDirectoryFor(path);
+                e.ExtractToFile(path, true);
+            }
+        }
+    }
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_close_v2(IntPtr db);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_create_function(IntPtr db, byte[] strName, int nArgs, int nType, IntPtr pvUser, SQLiteCallback func, SQLiteCallback fstep, SQLiteFinalCallback ffinal);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_finalize(IntPtr stmt);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_backup_finish(IntPtr backup);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_reset(IntPtr stmt);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern byte* sqlite3_bind_parameter_name(IntPtr stmt, int index);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern byte* sqlite3_column_database_name(IntPtr stmt, int index);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern byte* sqlite3_column_decltype(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern byte* sqlite3_column_name(IntPtr stmt, int index);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern byte* sqlite3_column_origin_name(IntPtr stmt, int index);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern byte* sqlite3_column_table_name(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern byte* sqlite3_column_text(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern char* sqlite3_column_text16(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern byte* sqlite3_errmsg(IntPtr db);
+
+    internal static string Errmsg(IntPtr db) => Convert2.Utf8Decode(sqlite3_errmsg(db));
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_prepare16_v3(IntPtr db, char* sql, int nBytes, int prepFlags, ref IntPtr stmt, char** ptrRemain);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_table_column_metadata(IntPtr db, byte[] dbName, byte[] tblName, byte[] colName, byte** ptrDataType, byte** ptrCollSeq, ref int notNull, ref int primaryKey, ref int autoInc);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern byte* sqlite3_value_text(IntPtr p);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern byte* sqlite3_libversion();
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_libversion_number();
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern byte* sqlite3_sourceid();
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_compileoption_used(byte[] zOptName);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern byte* sqlite3_compileoption_get(int N);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_enable_shared_cache(int enable);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_enable_load_extension(IntPtr db, int enable);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_load_extension(IntPtr db, byte[] fileName, byte[] procName, byte** pError);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_overload_function(IntPtr db, byte[] zName, int nArgs);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_win32_set_directory16(uint type, string value);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_win32_reset_heap();
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_win32_compact_heap(ref uint largest);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void* sqlite3_malloc(int n);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void* sqlite3_malloc64(ulong n);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void* sqlite3_realloc(void* p, int n);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void* sqlite3_realloc64(void* p, ulong n);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern ulong sqlite3_msize(void* p);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void sqlite3_free(void* p);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_open_v2(byte[] filename, ref IntPtr db, SLFlags flags, byte[] vfsName);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_interrupt(IntPtr db);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern long sqlite3_last_insert_rowid(IntPtr db);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int sqlite3_changes(IntPtr db);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern long sqlite3_memory_used();
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern long sqlite3_memory_highwater(int resetFlag);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_shutdown();
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_busy_timeout(IntPtr db, int ms);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_clear_bindings(IntPtr stmt);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    static extern SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize, nint nTransient);
+
+    internal static SLError sqlite3_bind_blob64(IntPtr stmt, int index, void* value, long nSize)
+        => sqlite3_bind_blob64(stmt, index, value, nSize, -1); //SQLITE_TRANSIENT
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_bind_double(IntPtr stmt, int index, double value);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_bind_int(IntPtr stmt, int index, int value);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_bind_int64(IntPtr stmt, int index, long value);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_bind_null(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    static extern SLError sqlite3_bind_text16(IntPtr stmt, int index, string value, int nlen, nint nTransient);
+
+    internal static SLError sqlite3_bind_text16(IntPtr stmt, int index, string value, int nlen)
+        => sqlite3_bind_text16(stmt, index, value, nlen, -1); //SQLITE_TRANSIENT
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_bind_zeroblob(IntPtr stmt, int index, int n);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_bind_parameter_count(IntPtr stmt);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int sqlite3_bind_parameter_index(IntPtr stmt, byte[] strName);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int sqlite3_column_count(IntPtr stmt);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_step(IntPtr stmt);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_stmt_readonly(IntPtr stmt);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern double sqlite3_column_double(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int sqlite3_column_int(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern long sqlite3_column_int64(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern void* sqlite3_column_blob(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int sqlite3_column_bytes(IntPtr stmt, int index);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int sqlite3_column_bytes16(IntPtr stmt, int index);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern TypeAffinity sqlite3_column_type(IntPtr stmt, int index);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_create_collation(IntPtr db, byte[] strName, int nType, IntPtr pvUser, SQLiteCollation func);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void* sqlite3_value_blob(IntPtr p);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_value_bytes(IntPtr p);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_value_bytes16(IntPtr p);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern double sqlite3_value_double(IntPtr p);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_value_int(IntPtr p);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern long sqlite3_value_int64(IntPtr p);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern TypeAffinity sqlite3_value_type(IntPtr p);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_blob(IntPtr context, byte[] value, int nSize, IntPtr pvReserved);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_double(IntPtr context, double value);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_error(IntPtr context, byte[] strErr, int nLen);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_error_code(IntPtr context, SLError value);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_error_toobig(IntPtr context);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_error_nomem(IntPtr context);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_value(IntPtr context, IntPtr value);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_zeroblob(IntPtr context, int nLen);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_int(IntPtr context, int value);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_int64(IntPtr context, long value);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_null(IntPtr context);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_aggregate_context(IntPtr context, int nBytes);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_error16(IntPtr context, string strName, int nLen);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_result_text16(IntPtr context, string strName, int nLen, IntPtr pvReserved);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_progress_handler(IntPtr db, int ops, SQLiteProgressCallback func, IntPtr pvUser);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_set_authorizer(IntPtr db, SQLiteAuthorizerCallback func, IntPtr pvUser);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_update_hook(IntPtr db, SQLiteUpdateCallback func, IntPtr pvUser);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_commit_hook(IntPtr db, SQLiteCommitCallback func, IntPtr pvUser);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_trace(IntPtr db, SQLiteTraceCallback func, IntPtr pvUser);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_trace_v2(IntPtr db, SQLiteTraceFlags mask, SQLiteTraceCallback2 func, IntPtr pvUser);
+
+    // Since sqlite3_config() takes a variable argument list, we have to overload declarations
+    // for all possible calls that we want to use.
+    //[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_config_none(Config op);
+
+    //[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_config_int(Config op, int value);
+
+    ////[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
+    ////internal static extern SLError sqlite3_config_log(Config op, SQLiteLogCallback func, IntPtr pvUser);
+
+    //[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_db_config_charptr(IntPtr db, ConfigDb op, IntPtr charPtr);
+
+    //[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_db_config_int_refint(IntPtr db, ConfigDb op, int value, ref int result);
+
+    //[DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_db_config_intptr_two_ints(IntPtr db, ConfigDb op, IntPtr ptr, int int0, int int1);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_db_status(IntPtr db, SQLiteStatusOpsEnum op, ref int current, ref int highwater, int resetFlag);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_rollback_hook(IntPtr db, SQLiteRollbackCallback func, IntPtr pvUser);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_db_handle(IntPtr stmt);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_db_release_memory(IntPtr db);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_db_filename(IntPtr db, byte[] dbName);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_db_readonly(IntPtr db, IntPtr dbName);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_next_stmt(IntPtr db, IntPtr stmt);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_exec(IntPtr db, byte[] strSql, IntPtr pvCallback, IntPtr pvParam, byte** errMsg);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_release_memory(int nBytes);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int sqlite3_get_autocommit(IntPtr db);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_extended_result_codes(IntPtr db, int onoff);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern SLError sqlite3_errcode(IntPtr db);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_extended_errcode(IntPtr db);
+
+    [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern byte* sqlite3_errstr(SLError rc);
+
+    internal static string Errstr(SLError r) => Convert2.Utf8Decode(sqlite3_errstr(r));
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern void sqlite3_log(SLError iErrCode, byte[] zFormat);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_file_control(IntPtr db, byte[] zDbName, int op, IntPtr pArg);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern IntPtr sqlite3_backup_init(IntPtr destDb, byte[] zDestName, IntPtr sourceDb, byte[] zSourceName);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_backup_step(IntPtr backup, int nPage);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_backup_remaining(IntPtr backup);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_backup_pagecount(IntPtr backup);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_blob_close(IntPtr blob);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern int sqlite3_blob_bytes(IntPtr blob);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_blob_open(IntPtr db, byte[] dbName, byte[] tblName, byte[] colName, long rowId, int flags, ref IntPtr ptrBlob);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_blob_read(IntPtr blob, [MarshalAs(UnmanagedType.LPArray)] byte[] buffer, int count, int offset);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_blob_reopen(IntPtr blob, long rowId);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_blob_write(IntPtr blob, [MarshalAs(UnmanagedType.LPArray)] byte[] buffer, int count, int offset);
+
+    //[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    //internal static extern SLError sqlite3_declare_vtab(IntPtr db, byte[] zSQL);
+
 }
 
 #endregion

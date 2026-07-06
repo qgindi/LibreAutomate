@@ -214,8 +214,8 @@ static class Menus {
 			public static void Git_setup() { LA.Git.Setup(); }
 		}
 		
-		[Command(separator = true, target = "", keysText = "Alt+F4")]
-		public static void Close_window() { if (App.Settings.runHidden) App.Wmain.Hide_(); else App.Wmain.Close(); }
+		[Command(separator = true, target = "")]
+		public static void Hide_window() { App.Wmain.Hide_(); }
 		
 		[Command(target = "")]
 		public static void Exit() { Application.Current.Shutdown(); }

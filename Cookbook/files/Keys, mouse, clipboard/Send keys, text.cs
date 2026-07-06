@@ -1,13 +1,17 @@
-/// To quickly insert <see cref="keys.send"/> code, use snippet <.x>kkKeysSendSnippet<>: type `kk` and select from the list. Or click toolbar button <b>Keys<> or <b>Input recorder<>.
+/// Activate a window before sending keys or text to it.
 
-var w = wnd.find(1, "*- Notepad", "Notepad").Activate();
-keys.send("Alt+E P");
+var w = wnd.find(1, "*- Notepad++").Activate();
+//or: wnd.switchActiveWindow();
 
-/// To send text use <see cref="keys.sendt"/> or <.x>keys.send<>. To quickly insert code, use snippet <.x>ktKeysSendSnippet<>.
+/// To send keys, use <see cref="keys.send"/>. To quickly insert code, use snippet <.x>kkKeysSendSnippet<>: type `kk` and select from the list. Or click toolbar button <b>Keys<> or <b>Input recorder<>.
 
-keys.sendt("Text."); //send text as characters, or paste if very long
-keys.send("!Text."); //the same
-keys.send("^Text."); //send text as hardware keys
+keys.send("Alt+E P Enter"); //note: the string contains key names, not any text
+
+/// To send text, use prefix `!`. Or <see cref="keys.sendt"/> (snippet <.x>ktKeysSendSnippet<>).
+
+keys.send("!Text.");
+keys.sendt("Text."); //the same
+keys.send("^Text."); //send text using keys if possible, eg keys Shift+T for uppercase T
 
 /// Send keys and text.
 
@@ -30,6 +34,10 @@ keys.send("_**20"); //character * 20 times
 
 keys.send("Alt*down E P Alt*up");
 keys.send("Alt+(E P)"); //the same
+
+/// The best way to send menu access characters:
+
+keys.send("Alt+^ep");
 
 /// `Ctrl`+click.
 

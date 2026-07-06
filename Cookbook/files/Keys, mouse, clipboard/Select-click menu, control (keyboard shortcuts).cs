@@ -1,12 +1,13 @@
 /// Usually the best way to select/click a menu item is hotkey or `Alt+keys`. It can be recorded with the Input recorder.
 
-wnd.find(0, "*- Notepad", "Notepad").Activate();
+wnd.find(0, "*- Notepad++").Activate();
 keys.send("Ctrl+V"); //hotkey
 keys.send("Alt+E P"); //Alt+keys
 
-/// Actually with `Alt` should be used characters, not keys, because keys may not work with other keyboard layouts.
+/// Actually with `Alt` should be used characters, not keys, because keys may not work with other keyboard layouts. Use operator `_` or `^`.
 
-keys.send("Alt+^ep"); //Alt+characters
+keys.send("Alt+(_e_p)"); //Alt+characters
+keys.send("Alt+^ep"); //the same
 
 /// To select menu items also can be used arrow keys, `Home`, `End`, finally `Enter`. To activate menu bar, use `Alt` or `F10`. To show context menu, use `Apps/Menu` or `Shift+F10`.
 

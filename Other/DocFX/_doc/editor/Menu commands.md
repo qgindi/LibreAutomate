@@ -78,7 +78,7 @@ uid: menu_commands
     - GitHub sign out
     - Maintenance...
     - Git setup...
-  - Close window
+  - Hide window
   - Exit
 - Edit
   - Clipboard

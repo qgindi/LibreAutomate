@@ -377,6 +377,7 @@ public static class script {
 	/// <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
 	/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="script.run"/>).</param>
 	/// <param name="f_">[](xref:caller_info). Don't use. Or set = <c>null</c> to disable script editing via the tray icon.</param>
+	/// <returns>A <c>trayIcon</c> variable that will manage the icon.</returns>
 	/// <remarks>
 	/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="timer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
 	/// 
@@ -396,18 +397,22 @@ public static class script {
 	/// ]]></code>
 	/// </example>
 	/// <seealso cref="Au.trayIcon"/>
-	public static void trayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
-		if (role == SRole.EditorExtension) return;
+	public static trayIcon trayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
+		if (delay < 0) throw new ArgumentException();
+		if (role == SRole.EditorExtension) return null;
 		if (!s_appModuleInit) AppModuleInit_(auCompiler: false);
-		_TrayIcon(delay, init, menu, f_);
+		return _TrayIcon(delay, init, menu, f_);
 	}
 	
-	static void _TrayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
-		s_auxThread.QueueAPC(() => timer.after(delay, _Delayed));
+	static trayIcon _TrayIcon(int delay = 500, Action<trayIcon> init = null, Action<trayIcon, popupMenu> menu = null, [CallerFilePath] string f_ = null) {
+		var ti = new trayIcon();
+		s_auxThread.QueueAPC(() => timer.after(delay, _ => { if (!ti.IsDisposed) _Delayed(); }));
+		return ti;
 		
-		void _Delayed(timer t_) {
-			var ti = new trayIcon { Tooltip = script.name };
+		void _Delayed() {
 			init?.Invoke(ti);
+			if (ti.IsDisposed) return;
+			ti.Tooltip ??= script.name;
 			ti.Icon ??= icon.trayIcon();
 			bool canEdit = f_ != null && ScriptEditor.Available;
 			if (canEdit) ti.Click += _ => ScriptEditor.Open(f_);

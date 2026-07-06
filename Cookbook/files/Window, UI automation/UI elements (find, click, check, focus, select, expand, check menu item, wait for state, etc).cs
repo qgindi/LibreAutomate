@@ -36,27 +36,27 @@ var w5 = wnd.find(1, "Font", "#32770").Activate();
 var e5 = w5.Elm["COMBOBOX", "Script:"].Find(1);
 e5.ComboSelect("Baltic");
 
-/// To select a menu item, need to find and click each intermediate menu item. However usually it's better to use hotkeys and `Alt`+keys.
+/// To select a menu item, need to find and click each intermediate menu item. However usually it's better to use hotkeys or `Alt`+keys.
 
 //hotkey and Alt+keys
-wnd.find(0, "*- Notepad", "Notepad").Activate();
+wnd.find(0, "*- Notepad++").Activate();
 keys.send("Ctrl+V");
-keys.send("Alt+E P");
+keys.send("Alt+^ep", "Enter");
 
 //the same with elm functions
-var wNotepad = wnd.find(0, "*- Notepad", "Notepad").Activate();
+var wNotepad = wnd.find(0, "*- Notepad++").Activate();
 var eEdit = wNotepad.Elm["MENUITEM", "Edit"].Find(0);
 eEdit.Invoke();
 var wMenu = wnd.find(1, "", "#32768", wNotepad);
-var ePaste = wMenu.Elm["MENUITEM", "Paste\tCtrl+V"].Find(1);
+var ePaste = wMenu.Elm["MENUITEM", "Paste*"].Find(1);
 ePaste.Invoke();
 
 /// Use <.x>elm<> functions to get menu item state (checked, disabled). This code checks menu <b>Format > Word Wrap<>. 
 
-var wNotepad2 = wnd.find(0, "*- Notepad", "Notepad").Activate();
-keys.send("Alt+O"); //Format
+var wNotepad2 = wnd.find(0, "*- Notepad++").Activate();
+keys.send("Alt+V"); //View
 var wMenu2 = wnd.find(3, "", "#32768", wNotepad2);
-var eWW = wMenu2.Elm["MENUITEM", "Word Wrap"].Find(1);
+var eWW = wMenu2.Elm["MENUITEM", "Word wrap"].Find(1);
 keys.send(eWW.IsChecked ? "Esc*2" : "W");
 
 /// Wait until button <b>Apply<> isn't disabled.

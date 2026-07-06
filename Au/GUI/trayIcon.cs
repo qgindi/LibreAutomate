@@ -50,8 +50,13 @@ namespace Au {
 		///
 		protected virtual void Dispose(bool disposing) { _Delete(disposing: true); }
 		
+		///
+		public bool IsDisposed { get; private set; }
+		
 		void _Delete(bool disposing = false) {
 			lock (this) {
+				if (IsDisposed) return;
+				if (disposing) IsDisposed = true;
 				if (_visible) {
 					Api.Shell_NotifyIcon(Api.NIM_DELETE, _NewND());
 					_visible = false;
@@ -130,9 +135,11 @@ namespace Au {
 			return d;
 		}
 		
-		bool _Update(bool icon = false, bool tooltip = false, _Notification n = null, bool taskbarCreated = false) {
-			if (script.Exiting_) return false;
+		bool? _Update(bool icon = false, bool tooltip = false, _Notification n = null, bool taskbarCreated = false) {
+			if (script.Exiting_) return null;
 			lock (this) {
+				if (IsDisposed) return null;
+				
 				if (_w.Is0) {
 					if (_disposeOnExit) process.thisProcessExit += _ => _Delete();
 					_w = WndUtil.CreateWindow(WndProc, true, "trayIcon", script.name, WS.POPUP, WSE.NOACTIVATE);
@@ -191,7 +198,7 @@ namespace Au {
 		/// Users may choose to not show notifications, depending on various conditions. Look in Windows <b>Settings > System > Notifications</b>.
 		/// </remarks>
 		public void ShowNotification(string title, string text, TINFlags flags = 0, icon icon = default) {
-			if (!_Update(n: new(title, text, flags, icon))) print.warning("ShowNotification() failed. " + lastError.message);
+			if (false == _Update(n: new(title, text, flags, icon))) print.warning("ShowNotification() failed. " + lastError.message);
 		}
 		
 		record class _Notification(string title, string text, TINFlags flags, icon icon);
@@ -220,11 +227,11 @@ namespace Au {
 		/// Activates taskbar and makes the tray icon focused for keyboard.
 		/// </summary>
 		/// <remarks>
-		/// If the tray icon is in hidden overflow area, makes the area button focused.
+		/// If the tray icon is in the hidden overflow area, makes the area button focused.
 		/// </remarks>
 		public void Focus() {
 			lock (this) {
-				Api.Shell_NotifyIcon(Api.NIM_SETFOCUS, _NewND());
+				if (_visible) Api.Shell_NotifyIcon(Api.NIM_SETFOCUS, _NewND());
 			}
 		}
 		

@@ -942,7 +942,7 @@ public unsafe partial class popupMenu : MTBase {
 	}
 	
 	void _KeyNavigate(KKey k) { //called for top menu
-		int i = _scroll.KeyNavigate(_iHot, k); if (i == _iHot) return;
+		int i = _scroll.KeyNavigate(_iHot, k, isMenu: true); if (i == _iHot) return;
 		while ((uint)i < _a.Count && _a[i].IsSeparator) i += k is KKey.Home or KKey.Down or KKey.PageDown ? 1 : -1;
 		_SetHotItem(Math.Clamp(i, 0, _a.Count - 1), ensureVisible: true);
 	}

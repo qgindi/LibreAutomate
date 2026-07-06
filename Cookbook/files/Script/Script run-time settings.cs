@@ -23,7 +23,7 @@ dialog.show("");
 opt.mouse.MoveSpeed = 30;
 opt.key.TextSpeed = 50;
 
-var w = wnd.find(1, "*- Notepad", "Notepad");
+var w = wnd.find(1, "*- Notepad++");
 mouse.click(w, .5f, .5f);
 keys.sendt("Slow text");
 
