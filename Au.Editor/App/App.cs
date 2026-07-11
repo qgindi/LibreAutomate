@@ -105,7 +105,6 @@ static partial class App {
 		_envVarUpdater = new();
 		
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
-		AssemblyLoadContext.Default.ResolvingUnmanagedDll += _UnmanagedDll_Resolving;
 		
 		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose }; //before LoadWorkspace etc, because need _app.Dispatcher ASAP
 		SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext()); //some code may use await before Application.Run. Without this it would continue in a TP thread.
@@ -226,40 +225,17 @@ static partial class App {
 	
 	private static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
 		if (0 == an.Name.Starts(false, "NuGet.", "Microsoft.Web.WebView2.")) {
-			var dlls = _arDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
+			var dlls = _arRoslynDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
 				.ToDictionary(o => o.Name[..^4], o => o.FullPath);
 			if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
 			
-			if (_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveAssemblyFromRefPathsAttribute_(alc, an, asm);
-			
 			Debug_.Print(an.FullName);
 			//print.qm2.write(an);
+			return null;
 		}
 		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 	}
-	static Dictionary<string, string> _arDlls;
-	
-	private static IntPtr _UnmanagedDll_Resolving(Assembly _, string name) {
-		//print.it("_UnmanagedDll_Resolving", name);
-		
-		//resolve native dlls used by meta pr libraries that are used by editorExtension scripts.
-		//	These libraries are loaded in default context.
-		//	editorExtension assemblies are loaded in other contexts.
-		//	Dlls directly used by editorExtension assemblies are resolved in RunAssembly.Run.
-		if (_FindEditorExtensionInStack(out var asm)) return MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
-		return default;
-	}
-	
-	static bool _FindEditorExtensionInStack(out Assembly asm) {
-		var st = new StackTrace(2); //not too slow
-		for (int i = 0; ; i++) {
-			var f = st.GetFrame(i); if (f == null) break;
-			asm = f.GetMethod()?.DeclaringType?.Assembly;
-			if (asm != null && asm.GetName().Name.Contains('|')) return true; //ScriptName|GUID
-		}
-		asm = null;
-		return false;
-	}
+	static Dictionary<string, string> _arRoslynDlls;
 	
 	internal static void InitThisAppFoldersEtc_(string[] args = null) {
 		dialog.options.defaultTitle = AppName + " message";

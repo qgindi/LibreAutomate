@@ -109,7 +109,7 @@ static void _Load() {
 	b1.R.AddButton("Button", _ => { print.it("Button clicked"); });
 	b1.End();
 	
-	Grid grid = Panels.Cookbook.P.Content as Grid;
+	Grid grid = Panels.Help.P.Content as Grid;
 	int row = grid.RowDefinitions.Count;
 	if (grid.Children.OfType<Panel>().FirstOrDefault(o => o.Tag is string s1 && s1 == tag) is Panel oldPanel) { row = Grid.GetRow(oldPanel); grid.Children.Remove(oldPanel); } else grid.AddRows(0);
 	grid.AddChild(b1.Panel, row, 0, columnSpan: 9);

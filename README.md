@@ -19,7 +19,7 @@ Some features of the script editor app:
 - Also you can use .NET and other libraries. Tools and databases for NuGet, Windows API, icons.
 - Can create independent .exe programs and .NET libraries.
 
-More info and download: https://www.libreautomate.com/
+More info: https://www.libreautomate.com/
 
 Editor window
 

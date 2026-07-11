@@ -1,4 +1,4 @@
-# Version 1..0 (2026-)
+# Version 1.17.0 (2026-)
 
 ## Editor
 
@@ -12,7 +12,7 @@ Improved:
 - .
 
 Fixed bugs:
-- .
+- Fails to load some dependencies in `editorExtension` scripts.
 
 ## Library
 

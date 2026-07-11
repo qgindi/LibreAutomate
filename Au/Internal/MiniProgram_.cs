@@ -146,12 +146,12 @@ static unsafe class MiniProgram_ {
 		folders.Workspace = new(a[5]);
 		
 		if (0 != (flags & MPFlags.RefPaths))
-			AssemblyLoadContext.Default.Resolving += (alc, an)
-				=> ResolveAssemblyFromRefPathsAttribute_(alc, an, AssemblyUtil_.GetEntryAssembly());
+			AssemblyLoadContext.Default.Resolving += (_, an)
+				=> s_depResolverForMiniProgram.ResolveManaged(null, an);
 		
 		if (0 != (flags & MPFlags.NativePaths))
 			AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
-				=> ResolveUnmanagedDllFromNativePathsAttribute_(dll, AssemblyUtil_.GetEntryAssembly());
+				=> s_depResolverForMiniProgram.ResolveUnmanaged(null, dll);
 		
 		if (0 != (flags & MPFlags.MTA))
 			process.ThisThreadSetComApartment_(ApartmentState.MTA);
@@ -171,30 +171,57 @@ static unsafe class MiniProgram_ {
 		//print.TaskEvent_("TS", s_started);
 	}
 	
-	//for assemblies used in miniProgram and editorExtension scripts
-	internal static Assembly ResolveAssemblyFromRefPathsAttribute_(AssemblyLoadContext alc, AssemblyName an, Assembly scriptAssembly) {
-		//print.it("managed", an);
-		//note: don't cache GetCustomAttribute/split results. It's many times faster than LoadFromAssemblyPath and JIT.
-		var attr = scriptAssembly.GetCustomAttribute<RefPathsAttribute>();
-		if (attr != null) {
-			string name = an.Name;
-			foreach (var v in attr.Paths.Split('|')) {
-				//print.it(v);
-				int iName = v.Length - name.Length - 4;
-				if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, name, true)) continue;
-				if (!filesystem.exists(v).File) continue;
-				return alc.LoadFromAssemblyPath_(v);
+	/// <summary>
+	/// Loads dependencies of scripts that have role miniProgram or editorExtension.
+	/// Dependency paths are specified in an attribute of the script assembly (added by our compiler).
+	/// </summary>
+	internal struct DependencyResolverForMiniProgramAndEditorExtensionScripts {
+		string[] _aManaged, _aUnmanaged;
+		
+		public Assembly ResolveManaged(AssemblyLoadContext alc /*null for miniProgram*/, AssemblyName an) {
+			_aManaged ??= _ScriptAssembly(alc).GetCustomAttribute<RefPathsAttribute>()?.Paths.Split('|') ?? Array.Empty<string>();
+			if (_aManaged.Length > 0) {
+				string name = an.Name;
+				foreach (var v in _aManaged) {
+					//print.it("ResolveManaged", v);
+					int iName = v.Length - name.Length - 4;
+					if (!v.Eq(iName, name, true) || !v.Eq(iName - 1, '\\')) continue;
+					if (!filesystem.exists(v).File) continue;
+					return (alc ?? AssemblyLoadContext.Default)._LoadFromAssemblyPath(v);
+				}
 			}
+			return null;
 		}
-		return null;
+		
+		public nint ResolveUnmanaged(AssemblyLoadContext alc /*null for miniProgram*/, string name) {
+			//print.it(name);
+			//using var p1 = perf.local();
+			_aUnmanaged ??= _ScriptAssembly(alc).GetCustomAttribute<NativePathsAttribute>()?.Paths.Split('|') ?? Array.Empty<string>();
+			if (_aUnmanaged.Length > 0) {
+				bool dllExt = name.Ends(".dll", true);
+				foreach (var v in _aUnmanaged) {
+					//print.it("ResolveUnmanaged", v);
+					int iName = v.Length - name.Length - (dllExt ? 0 : 4);
+					if (!v.Eq(iName, name, true) || !v.Eq(iName - 1, '\\')) continue;
+					//p1.Next();
+					if (NativeLibrary.TryLoad(v, out var h)) return h; //never mind: calls LoadLibraryEx for each used DllImport. Fast if already loaded.
+				}
+			}
+			return default;
+		}
+		
+		static Assembly _ScriptAssembly(AssemblyLoadContext alc) => alc?.Assemblies.First() ?? AssemblyUtil_.GetEntryAssembly();
 	}
 	
-	internal static Assembly LoadFromAssemblyPath_(this AssemblyLoadContext t, string path) {
+	static DependencyResolverForMiniProgramAndEditorExtensionScripts s_depResolverForMiniProgram;
+	
+	static Assembly _LoadFromAssemblyPath(this AssemblyLoadContext t, string path) {
 		try { return t.LoadFromAssemblyPath(path); }
 		catch { }
 		//catch (FileLoadException e1) {
 		//	Debug_.Print("alc.LoadFromAssemblyPath failed. Will retry with s_alc. " + e1);
 		//}
+		
 		//If the assembly has the same name as one of TPA assemblies (probably it's a newer version),
 		//	the above LoadFromAssemblyPath ignores the path and tries to load the TPA assembly, and fails.
 		//	Workaround: Then try to load to another AssemblyLoadContext.
@@ -203,20 +230,6 @@ static unsafe class MiniProgram_ {
 		return s_alc.LoadFromAssemblyPath(path);
 	}
 	static AssemblyLoadContext s_alc;
-	
-	//for assemblies used in miniProgram and editorExtension scripts
-	internal static IntPtr ResolveUnmanagedDllFromNativePathsAttribute_(string name, Assembly scriptAssembly) {
-		var attr = scriptAssembly.GetCustomAttribute<NativePathsAttribute>();
-		if (attr != null) {
-			if (!name.Ends(".dll", true)) name += ".dll";
-			foreach (var v in attr.Paths.Split('|')) {
-				//print.it(v);
-				if (!v.Ends(name, true) || !v.Eq(v.Length - name.Length - 1, '\\')) continue;
-				if (NativeLibrary.TryLoad(v, out var h)) return h;
-			}
-		}
-		return default;
-	}
 	
 	/// <summary>
 	/// Used by <c>exeProgram</c>.
@@ -285,7 +298,7 @@ static unsafe class MiniProgram_ {
 		
 		if (dr != null) AssemblyLoadContext.Default.Resolving += (alc, an) => {
 			if (!dr.TryGetValue(an.Name, out var path)) return null;
-			return alc.LoadFromAssemblyPath_(path);
+			return alc._LoadFromAssemblyPath(path);
 		};
 		if (dn != null) AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, name) => {
 			if (name.Ends(".dll", true)) name = name[..^4];

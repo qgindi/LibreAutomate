@@ -327,6 +327,7 @@ class CiGoTo {
 			b.R.Add("Type", out TextBox tType, $@"\b{_prefix}\s+{_type}\b"); //note: don't use unescaped space. Then splits into too: "\b{_prefix}" and "{_type}\b"
 			b.R.Add("Member", out TextBox tMember);
 			if (_member.NE()) b.Hidden(); else tMember.Text = 0 != (_flags & 2) ? $@"\bpublic\s.+?\s{_member}\b" : $@"\b{_member}\b";
+			//TODO: support `protected` too, not only `public`
 			b.R.Add(out KCheckBox cText, "Text").Add(out TextBox tText, $@"\bnamespace\s+{Regex.Escape(_namespace)}\b").LabeledBy().Tooltip("The code must also match this regex"); ;
 			//b.R.Add(out KCheckBox cText, "Text", out TextBox tText, $@"\bnamespace\s+{Regex.Escape(_namespace)}\b").Tooltip("The code must also match this regex"); ;
 			b.R.Add(out KCheckBox cFile, "File").Add(out TextBox tFile, _type).LabeledBy().Tooltip("The file name or path must match this regex");

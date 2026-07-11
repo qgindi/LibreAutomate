@@ -224,7 +224,7 @@ public partial class KPanels {
 		if (where == null) {
 			where = _rootStack.LastChild as ILeaf;
 			after = true;
-			print.it($"Info: added new {(toolbar ? "toolbar" : "panel")} {name}. It is at the bottom of the window. Right-click its header and move it to a better place.");
+			print.it($"Info: added new {(toolbar ? "toolbar" : "panel")} {name}. Right-click its header and move it to a better place.");
 		}
 		return where.AddSibling(after, toolbar ? LeafType.Toolbar : LeafType.Panel, name, canClose: false, isExtension: true);
 	}

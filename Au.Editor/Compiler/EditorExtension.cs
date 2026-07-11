@@ -25,7 +25,7 @@ public static class EditorExtension {
 			_LoadedScriptAssembly lsa = default;
 			var (asm, loaded) = lsa.Find(asmFile);
 			if (asm == null) {
-				var alc = new AssemblyLoadContext(null, isCollectible: true);
+				var alc = new _AssemblyLoadContext();
 				//p1.Next();
 				
 #if STREAM
@@ -74,12 +74,6 @@ public static class EditorExtension {
 				//p1.Next('L');
 				
 				lsa.Add(asmFile, asm);
-				
-				//this event will be here for editorExtension assemblies only.
-				//	Libraries used by editorExtension scripts are loaded by AssemblyLoadContext.Default.
-				//	Dlls used by meta pr libraries are resolved in app project -> _UnmanagedDll_Resolving.
-				//	Don't need alc.Resolving here. Libraries are always loaded in default context.
-				alc.ResolvingUnmanagedDll += (asm, name) => MiniProgram_.ResolveUnmanagedDllFromNativePathsAttribute_(name, asm);
 			}
 			
 			var entryPoint = asm.EntryPoint ?? throw new InvalidOperationException("assembly without entry point (function Main)");
@@ -102,6 +96,34 @@ public static class EditorExtension {
 		}
 		catch (Exception e1) when (handleExceptions) {
 			print.it(e1 is TargetInvocationException te ? te.InnerException : e1);
+		}
+	}
+	
+	/// <summary>
+	/// Loads an editorExtension script and its dependencies.
+	/// Dependency paths are specified in an attribute of the script assembly (added by our compiler).
+	/// </summary>
+	class _AssemblyLoadContext : AssemblyLoadContext {
+		MiniProgram_.DependencyResolverForMiniProgramAndEditorExtensionScripts _depResolver;
+
+		public _AssemblyLoadContext() : base(isCollectible: true) { }
+		
+		protected override Assembly Load(AssemblyName assemblyName) {
+			//print.qm2.write(assemblyName.Name);
+		
+			if (assemblyName.Name is "Au" or "System.Runtime" //stack overflow
+				or "Au.Controls" or "Au.Editor" //LA assemblies
+				) return null;
+		
+			return _depResolver.ResolveManaged(this, assemblyName);
+			
+			//note: don't use the Resolving event. Somehow at first it is raised on default context. Also it's better to intercept assembly loading sooner than later, where possible.
+		}
+		
+		protected override nint LoadUnmanagedDll(string unmanagedDllName) {
+			//print.qm2.write(unmanagedDllName);
+		
+			return _depResolver.ResolveUnmanaged(this, unmanagedDllName);
 		}
 	}
 	

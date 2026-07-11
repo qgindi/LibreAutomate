@@ -39,9 +39,7 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 Windows 7, 8, 8.1, 10, 11.
 
 ### Download
-[Download](https://www.libreautomate.com/LibreAutomateSetup.exe) v1.16.0, 2026-07-06
-
-Or download from [GitHub](https://github.com/qgindi/LibreAutomate) Releases.
+Download `LibreAutomateSetup.exe` from [GitHub](https://github.com/qgindi/LibreAutomate/releases).
 
 The setup program is ~40 MB. It may also install .NET 10 (~60 MB download).
 

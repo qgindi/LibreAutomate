@@ -15,6 +15,7 @@ Also may need to update year in LICENSE.txt.
 
 All significant changes of that version must be documented in Other/DocFX/_doc/changes/vMajor.Minor.md. Do it whenever making changes.
 
+---------------------------------------------------------
 
 HOW TO RELEASE A NEW VERSION
 
@@ -62,11 +63,6 @@ Github commit all and push. The message could be like v1.2.3.
 
 Create a GitHub Release. Upload the setup file.
 
-Upload the setup file to https://www.libreautomate.com. For example with WinSCP.
-	Backup the old setup file at first: in WinSCP move the old file to the "download" folder and rename (add version).
-		Don't backup if changed only patch version. Simply replace.
-		Optional if using GitHub Releases.
-
 Upload the website created by script "Au docs". To find the script: main toolbar > "Docs" menu.
 
 Review web pages. Github too.
@@ -78,19 +74,37 @@ Sometimes test whether others can build and run the repo.
 	Eg when some new files added to the `_` dir.
 	Generated or downloaded files in `_` dir/subdirs must be gitignored, unless very small non-binary. Instead specify them in `GitBinaryFiles.cs` in project `BuildEvents`.
 
-Test the setup file at virustotal.com. And separately other files (even data files).
-	Always will be several false positives. Even with an empty Inno Setup project. Never mind.
+Scan the setup file at virustotal.com. Either manually, or run script "Virustotal false positives.cs" (it also runs once/day).
+	Always will be one or several false positives. Even with an empty Inno Setup project. Never mind.
 
 Release NuGet package:
 	Run script "Create NuGet package.cs". It builds Au using a modified temp csproj, creates package and adds native dlls.
 	Upload to NuGet. The script prints links.
 
-Run script "Update version.txt.cs". It updates _\version.txt and uploads to public_html.
+Run script "Update version.txt.cs". It updates _\version.txt and uploads to the LA website.
+	CONSIDER: use `/repos/qgindi/LibreAutomate/releases/latest`. But: 1. still need version.txt for users of older LA; 2. GitHub rate limit 60 requests/hour/IP.
 
-No more:
-	Announce in forum.
-	If not beta, occasionally review/update in some download websites. Edit and upload the PAD file.
+---------------------------------------------------------
 
+LATER
+
+Periodically check false positives on virustotal. Script "Virustotal false positives.cs" does it every day.
+	Also sometimes test whether Chromium still allows to download.
+	Because v1.15 after some time had these problems: many false positives, and Chromium blocks the download.
+
+
+---------------------------------------------------------
+
+NO MORE
+
+Upload the setup file to https://www.libreautomate.com.
+	No more, because now (2026-07-06) Chrome/Brave blocks it. Does not block GitHub downloads, except v1.15.
+	If not using GitHub Releases: backup the old setup file at first: in WinSCP move the old file to the "download" folder and rename (add version).
+		Don't backup if changed only patch version. Simply replace.
+
+Announce in forum.
+
+If not beta, occasionally review/update in some download websites. Edit and upload the PAD file.
 
 ---------------------------------------------------------
 
