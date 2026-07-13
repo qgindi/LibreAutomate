@@ -101,6 +101,15 @@ public static class script {
 		if (s_appModuleInit) return;
 		s_appModuleInit = true;
 		
+		if (auCompiler) { //if attaching debugger, wait until it is initialized
+			Api.GetStartupInfo(out var si);
+			if (si.dwXCountChars == 1703529821) {
+				var he = Api.OpenEvent(Api.SYNCHRONIZE, false, "Au.event.Debugger");
+				if (he == 0 || 0 != Api.WaitForSingleObject(he, 30000)) Environment.Exit(-1);
+				Api.CloseHandle(he);
+			}
+		}
+		
 		process.thisProcessCultureIsInvariant = true;
 		
 		Cpp.Cpp_UEF(true); //2 ms. Loads the C++ dll.

@@ -92,7 +92,7 @@ int EditorPostBuild() {
 		if (filesystem.exists(sd1)) run.console("robocopy.exe", $"{sd1} {dirOut + rtd} /s /xf *.json *.exe");
 	}
 #else //use `<OutDir>`. Bad: VS adds unwanted files to dirOut. Eg from NuGet packages may add native dlls for many unused OS/platforms.
-	filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));
+	//filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));
 #endif
 
 	//make sure `.git\hooks\pre-push` exists. See `PrePushHook` in `GitBinaryFiles.cs`.

@@ -315,10 +315,8 @@ namespace Au {
 				}
 				catch { Debug_.Print("exception"); }
 				//Shell extensions may throw.
-				//By default .NET does not allow to handle eg access violation exceptions.
-				//	Previously we would add [HandleProcessCorruptedStateExceptions], but Core ignores it.
-				//	Now our AppHost sets environment variable COMPlus_legacyCorruptedStateExceptionsPolicy=1 before loading runtime.
-				//	Or could move the API call to the C++ dll.
+				//	.NET does not allow to handle corrupted state exceptions, unless env var COMPlus_legacyCorruptedStateExceptionsPolicy=1 is set before loading the runtime.
+				//	TODO: move the API call to the C++ dll.
 			}
 			if (index < 0) return null;
 			

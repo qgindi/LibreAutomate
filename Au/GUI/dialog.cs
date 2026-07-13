@@ -841,7 +841,10 @@ public partial class dialog {
 			_LockUnlock(true);
 			
 			for (int i = 0; i < 10; i++) { //see the API bug workaround comment
-				hr = _CallTDI(out rNativeButton, out rRadioButton, out rIsChecked);
+				hr = TaskDialogIndirect(in _c, out rNativeButton, out rRadioButton, out rIsChecked);
+				//note: The API throws 'access violation' exception if some value is invalid (eg unknown flags in dwCommonButtons) or it does not like something.
+				//	.NET does not allow to handle corrupted state exceptions, unless env var COMPlus_legacyCorruptedStateExceptionsPolicy=1 is set before loading the runtime.
+				//	Or could move the API call to the C++ dll.
 				
 				//if(hr != 0) print.it("0x" + hr.ToString("X"), !_dlg.Is0);
 				if (hr == 0 //succeeded
@@ -880,27 +883,6 @@ public partial class dialog {
 		if (hr != 0) throw new Win32Exception(hr);
 		
 		return _result;
-	}
-	
-	int _CallTDI(out int pnButton, out int pnRadioButton, out int pChecked) {
-		//#if DEBUG
-		//			//Debug_.PrintIf("1" != Environment.GetEnvironmentVariable("COMPlus_legacyCorruptedStateExceptionsPolicy"), "no env var COMPlus_legacyCorruptedStateExceptionsPolicy=1");
-		//			pnButton = pnRadioButton = pChecked = 0;
-		//			try {
-		//#endif
-		return TaskDialogIndirect(in _c, out pnButton, out pnRadioButton, out pChecked);
-		//#if DEBUG
-		//			}
-		//			catch (Exception e) {
-		//				throw new Win32Exception("_CallTDI: " + e.ToStringWithoutStack()); //note: not just throw;, and don't add inner exception
-		//			}
-		
-		//			//The API throws 'access violation' exception if some value is invalid (eg unknown flags in dwCommonButtons) or it does not like something.
-		//			//By default .NET does not allow to handle eg access violation exceptions.
-		//			//	Previously we would add [HandleProcessCorruptedStateExceptions], but Core ignores it.
-		//			//	Now our AppHost sets environment variable COMPlus_legacyCorruptedStateExceptionsPolicy=1 before loading runtime.
-		//			//	Or could move the API call to the C++ dll.
-		//#endif
 	}
 	
 	void _LockUnlock(bool on) {

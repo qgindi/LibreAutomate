@@ -507,7 +507,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		//Print("NATIVE_DLL_SEARCH_DIRECTORIES:"); Print("%s", propertyValues[1]);
 		//Print("APP_CONTEXT_BASE_DIRECTORY:"); Print("%s", propertyValues[2]);
 
-		SetEnvironmentVariableW(L"COMPlus_legacyCorruptedStateExceptionsPolicy", L"1");
+		//SetEnvironmentVariableW(L"COMPlus_legacyCorruptedStateExceptionsPolicy", L"1");
 
 		//QueryPerformanceCounter(&t2); //all above code 6 ms cold, 3.6 hot
 
@@ -518,15 +518,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 
 		//QueryPerformanceCounter(&t3); //22 ms cold, 16 hot
 	} //free temp strings eg tpaList 30000
-
-	//attaching debugger? Note, this must be after coreclr_initialize, else fails to attach.
-	STARTUPINFOW si = {};
-	GetStartupInfoW(&si);
-	if (si.dwXCountChars == 1703529821) {
-		auto he = OpenEventW(SYNCHRONIZE, false, L"Au.event.Debugger");
-		if (!he || 0 != WaitForSingleObject(he, 30000)) return -1;
-		CloseHandle(he);
-	}
 
 	unsigned int ec = 0;
 	if (p.isEditorOrTaskExe == 2) { //Au.Task.exe (task process for a script with role miniProgram)
