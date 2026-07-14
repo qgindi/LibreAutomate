@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
+using System.Text.Json.Nodes;
 
 namespace LA;
 
@@ -264,6 +265,8 @@ partial class Compiler {
 				//copy dlls to the output directory
 				_CopyDlls(asmStream, need64: need.x64, needArm: need.arm64, need32: need.x86);
 				//p1.Next('d');
+				
+				_CreateDepsJson(asmName, fileName);
 			}
 			
 			if (!_meta.Console && _meta.Role is MCRole.miniProgram or MCRole.exeProgram && !addMetaFlags.Has(MCFlags.Publish)) {
@@ -424,7 +427,7 @@ partial class Compiler {
 					if (refs[k].Properties.EmbedInteropTypes || MetaReferences.IsNuget(refs[k])) continue; //com or nuget
 					
 					if (m.References.NoCopyRefs is { } ncr && _meta.Role == MCRole.exeProgram) {
-						if(ncr.Contains(refs[k])) continue;
+						if (ncr.Contains(refs[k])) continue;
 					}
 					
 					var path = refs[k].FilePath;
@@ -608,6 +611,103 @@ partial class Compiler {
 		return s_sDefTPA;
 	}
 	static string s_sDefTPA;
+	
+	void _CreateDepsJson(string asmName, string fileName) {
+#if false
+		var netVersion = Environment.Version.ToString(2);
+		var appVersion = "1.0.0"; //not used
+		
+		var jRoot = JsonObject.Parse($$"""
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v{{netVersion}}",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v{{netVersion}}": {
+      "{{asmName}}/{{appVersion}}": {
+        "runtime": {
+          "{{fileName}}": {}
+        }
+      },
+      "Au/{{Au_.Version}}": {
+        "runtime": {
+          "Au.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "{{asmName}}/{{appVersion}}": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Au/{{Au_.Version}}": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
+""");
+		
+		if (_dr == null && _dn == null) return;
+		var targets = jRoot["targets"][0].AsObject();
+		
+		//targets.Print();
+		
+		if (_dr != null) {
+			var libraries = jRoot["libraries"].AsObject();
+			foreach (var v in _dr) {
+				string relPath = v.Key[1..], name = Path.GetFileNameWithoutExtension(relPath);
+				//print.it(name);
+				//print.it(v.Key, v.Value);
+				
+				var j = new JsonObject();
+				if (relPath.Starts(@"runtimes\")) {
+					int i1 = relPath.IndexOf('\\', 9);
+					j.Add("runtimeTargets", new JsonObject {
+						[relPath.Replace('\\', '/')] = new JsonObject {
+							["rid"] = relPath[9..i1],
+							["assetType"] = "runtime"
+						}
+					});
+				} else {
+					j.Add("runtime", new JsonObject {
+						[relPath] = new JsonObject()
+					});
+				}
+				targets.Add(name, j);
+				
+				j = new JsonObject {
+					["type"] = "reference",
+					["serviceable"] = "false",
+					["sha512"] = ""
+				};
+				libraries.Add(name, j);
+			}
+		}
+		
+		if (_dn != null) {
+			var dlls = new JsonObject();
+			targets[0].AsObject().Add("runtimeTargets", dlls);
+			foreach (var v in _dn) {
+				string relPath = v.Key[1..].Replace('\\', '/');
+				int i1 = relPath.IndexOf('/', 9);
+				dlls.Add(relPath, new JsonObject {
+					["rid"] = relPath[9..i1],
+					["assetType"] = "native"
+				});
+			}
+		}
+		
+		jRoot.Print();
+		
+#else
+#endif
+	}
 	
 	List<ResourceDescription> _CreateManagedResources(string asmName, CSharpSyntaxTree[] trees) {
 		List<ResourceDescription> R = null;

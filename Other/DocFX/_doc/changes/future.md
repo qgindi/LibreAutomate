@@ -12,7 +12,7 @@ Improved:
 - .
 
 Fixed bugs:
-- Fails to load some dependencies in `editorExtension` scripts.
+- 
 
 ## Library
 

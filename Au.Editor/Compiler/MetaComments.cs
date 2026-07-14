@@ -725,6 +725,9 @@ class MetaComments {
 			_ErrorN("unknown meta comment option");
 			break;
 		}
+		
+		//TODO
+		if (name is "platform" or "bit32" && Platform == MCPlatform.x86) _ErrorV("platform x86 currently not supported. Try menu Run > Publish.");
 	}
 	
 	#region util

@@ -786,5 +786,12 @@ public static unsafe partial class ExtMisc {
 	/// </summary>
 	internal static T Result_<T>(this Task<T> t) => t.GetAwaiter().GetResult();
 	
+	/// <summary>
+	/// Prints formatted JSON.
+	/// </summary>
+	public static void Print(this System.Text.Json.Nodes.JsonNode j) {
+		print.it(j.ToJsonString(new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+	}
+	
 	#endregion
 }

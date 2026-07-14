@@ -10,7 +10,6 @@ To update version info of dll files (Au, Au.Editor, Au.Controls):
 	Also may need to update year in AssemblyCopyright attribute (it's displayed in About info).
 To update version info of the setup file:
 	Open the .iss file in Inno Script Studio and edit MyAppVersion.
-Also in index.md update version, date, filesize. It is part of the help website.
 Also may need to update year in LICENSE.txt.
 
 All significant changes of that version must be documented in Other/DocFX/_doc/changes/vMajor.Minor.md. Do it whenever making changes.
@@ -34,7 +33,7 @@ May need to delete test code. Or use #if DEBUG, like in Tests.cs.
 
 May need to add new OS version to class osVersion. Usually once/year.
 
-Change version info (see above) in global2.cs and index.md.
+Change version info (see above) in global2.cs.
 
 Build solution in config Release, all platforms.
 	NOTE: use the "Rebuild solution" command, else VS may not update something.
@@ -56,7 +55,6 @@ Review the md file of current version.
 
 Open the .iss file in Inno Script Studio. Change MyAppVersion. Review. Compile.
 	Run the setup file to test. Let it run LA. Test on other OS too. Occasionally uninstall/install, not just upgrade.
-	May need to update the setup file size in the download webpage (index.md).
 
 Github commit all and push. The message could be like v1.2.3.
 	Note: do it now. Need for upload to GitHub. Also uploads the "changes" doc.
