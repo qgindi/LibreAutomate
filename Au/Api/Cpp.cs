@@ -39,7 +39,7 @@ static unsafe partial class Cpp {
 			if (NativeLibrary.TryLoad(s1, out h)) return h;
 		}
 
-		//like [DllImport]. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which was built at startup by our AppHost or from deps.json.
+		//like [DllImport]. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which was built at startup by apphost, eg from deps.json.
 		//	Also finds in temp dir when <PublishSingleFile>+<IncludeNativeLibrariesForSelfExtract>.
 		if (NativeLibrary.TryLoad(fileName, asm, null, out h)) return h;
 

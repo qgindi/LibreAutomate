@@ -135,8 +135,6 @@ public static class script {
 			
 			int pidEditor = 0;
 			if (auCompiler) {
-				MiniProgram_.ResolveNugetRuntimes_(AppContext.BaseDirectory);
-				
 				var cd = Environment.CurrentDirectory;
 				const string c_ep = "\\Roslyn\\.exeProgram";
 				if (cd.Ends(c_ep, true)) { //started from editor

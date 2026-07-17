@@ -266,7 +266,7 @@ partial class Compiler {
 				_CopyDlls(asmStream, need64: need.x64, needArm: need.arm64, need32: need.x86);
 				//p1.Next('d');
 				
-				_CreateDepsJson(asmName, fileName);
+				_CreateDepsJsonAndRuntimeconfigJson(asmName, fileName);
 			}
 			
 			if (!_meta.Console && _meta.Role is MCRole.miniProgram or MCRole.exeProgram && !addMetaFlags.Has(MCFlags.Publish)) {
@@ -406,9 +406,9 @@ partial class Compiler {
 	
 	//Gets paths of used managed and unmanaged dlls (meta nuget, r, com, pr).
 	//Sets: _dr - managed dlls, _dn - other dlls. If compiling exeProgram, _dn also contains other files from nuget.
-	//	Full paths are in dictionary values. Keys contain filenames or nuget relative paths, and for callers almost not useful.
+	//	Full paths are in dictionary values. Keys contain filenames or relative paths (with prefix @"\" if nuget).
 	//Called when:
-	//	Compiling exeProgram. The files will be copied to the output.
+	//	Compiling exeProgram. The files will be copied to the output. Will be created deps.json.
 	//	Compiling miniProgram or editorExtension. Dll paths will be added to an assembly attribute. At run time will use it to find dlls.
 	//Depending on meta properties, filters out unused dlls, eg 32-bit or dlls for other OS versions.
 	void _GetDllPaths() {
@@ -577,47 +577,15 @@ partial class Compiler {
 		//print.it("dn");
 		//print.it(dn);
 		
-		if (_meta.Role == MCRole.exeProgram) {
-			_tpa = _GetDefaultTPA();
-			if (dr != null) {
-				//remove replaced defaults. Rare.
-				foreach (var v in dr.Keys) {
-					var fn = pathname.getNameNoExt(v);
-					int i = _tpa.Find_(fn, static (s, from, to) => s[from - 1] == '|' && (to == s.Length || s[to] == '|'), true);
-					if (i > 0) _tpa = _tpa.Remove(i - 1, fn.Length + 1);
-				}
-				
-				StringBuilder b = null;
-				foreach (var v in dr.Keys) {
-					if (v.Starts(@"\runtimes\", true)) continue; //managed by ResolveNugetRuntimes_, because difficult in C++
-					b ??= new(_tpa);
-					int bs = v[0] == '\\' ? 1 : 0;
-					b.Append('|').Append(v, bs, v.Length - 4 - bs);
-				}
-				if (b != null) _tpa = b.ToString();
-			}
-		}
-		
 		_dr = dr;
 		_dn = dn;
 	}
 	
-	static string _GetDefaultTPA() {
-		if (s_sDefTPA == null) {
-			var s = _NativeResources.LoadNativeResourceUtf8String_(220, 1);
-			int i = s.LastIndexOf("|Au|") + 3; //remove Au.Controls etc
-			s_sDefTPA = s[..i];
-		}
-		return s_sDefTPA;
-	}
-	static string s_sDefTPA;
-	
-	void _CreateDepsJson(string asmName, string fileName) {
-#if false
-		var netVersion = Environment.Version.ToString(2);
-		var appVersion = "1.0.0"; //not used
+	void _CreateDepsJsonAndRuntimeconfigJson(string asmName, string fileName) {
+		Debug_.PrintIf(this._meta.Role != MCRole.exeProgram); //currently used/tested only with exeProgram, but maybe in the future also will use with miniProgram
 		
-		var jRoot = JsonObject.Parse($$"""
+		var netVersion = Environment.Version.ToString(2);
+		var json = $$"""
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v{{netVersion}}",
@@ -626,156 +594,167 @@ partial class Compiler {
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v{{netVersion}}": {
-      "{{asmName}}/{{appVersion}}": {
+      "{{asmName}}/1.0.0": {
         "runtime": {
           "{{fileName}}": {}
         }
       },
-      "Au/{{Au_.Version}}": {
+      "Au/1.0.0": {
         "runtime": {
           "Au.dll": {}
+        },
+        "runtimeTargets": {
+          "64/AuCpp.dll": {
+            "rid": "win-x64",
+            "assetType": "native"
+          },
+          "64/ARM/AuCpp.dll": {
+            "rid": "win-arm64",
+            "assetType": "native"
+          },
+          "32/AuCpp.dll": {
+            "rid": "win-x86",
+            "assetType": "native"
+          }
         }
       }
     }
   },
   "libraries": {
-    "{{asmName}}/{{appVersion}}": {
+    "{{asmName}}/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Au/{{Au_.Version}}": {
+    "Au/1.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""
     }
   }
 }
-""");
+""";
 		
-		if (_dr == null && _dn == null) return;
-		var targets = jRoot["targets"][0].AsObject();
-		
-		//targets.Print();
-		
-		if (_dr != null) {
-			var libraries = jRoot["libraries"].AsObject();
-			foreach (var v in _dr) {
-				string relPath = v.Key[1..], name = Path.GetFileNameWithoutExtension(relPath);
-				//print.it(name);
-				//print.it(v.Key, v.Value);
-				
-				var j = new JsonObject();
-				if (relPath.Starts(@"runtimes\")) {
-					int i1 = relPath.IndexOf('\\', 9);
-					j.Add("runtimeTargets", new JsonObject {
-						[relPath.Replace('\\', '/')] = new JsonObject {
-							["rid"] = relPath[9..i1],
-							["assetType"] = "runtime"
+		if (!(_dr == null && _dn == null)) {
+			var jRoot = JsonObject.Parse(json);
+			var targets = jRoot["targets"][0].AsObject();
+			
+			if (_dr != null) {
+				var g = _dr.Keys.ToLookup(Path.GetFileName, StringComparer.OrdinalIgnoreCase);
+				var libraries = jRoot["libraries"].AsObject();
+				foreach (var v in g) {
+					var name = Path.GetFileNameWithoutExtension(v.Key) + "/1.0.0";
+					JsonObject jLib = new(), runtimeTargets = null;
+					foreach (var s1 in v) {
+						string relPath = (s1[0] == '\\' ? s1[1..] : s1).Replace('\\', '/');
+						if (relPath.Starts("runtimes/")) {
+							if (runtimeTargets == null) jLib.Add("runtimeTargets", runtimeTargets = new());
+							runtimeTargets.Add(relPath, new JsonObject {
+								["rid"] = relPath[9..relPath.IndexOf('/', 9)],
+								["assetType"] = "runtime"
+							});
+						} else {
+							jLib.Add("runtime", new JsonObject {
+								[relPath] = new JsonObject()
+							});
 						}
-					});
-				} else {
-					j.Add("runtime", new JsonObject {
-						[relPath] = new JsonObject()
+					}
+					targets.Add(name, jLib);
+					
+					//Discovered from https://github.com/dotnet/runtime/tree/main/src/native/corehost/hostpolicy:
+					//	In runtime and runtimeTargets:
+					//		assemblyVersion and fileVersion are optional.
+					//		Also there is optional localPath.
+					//	Version in "assembly/version" is used only for trace. But must be the same in "targets" and "libraries".
+					//	Ignores "dependencies".
+					
+					jLib = new JsonObject {
+						["type"] = "reference",
+						["serviceable"] = "false",
+						["sha512"] = ""
+					};
+					libraries.Add(name, jLib);
+				}
+			}
+			
+			if (_dn != null) {
+				var dlls = new JsonObject();
+				foreach (var v in _dn) {
+					if (!v.Key.Like(@"\runtimes\*\native\*.dll", true)) continue; //dn can contain any files to be added to exe dir
+					string relPath = v.Key[1..].Replace('\\', '/');
+					int i1 = relPath.IndexOf('/', 9);
+					dlls.Add(relPath, new JsonObject {
+						["rid"] = relPath[9..i1],
+						["assetType"] = "native"
 					});
 				}
-				targets.Add(name, j);
+				if (dlls.Count > 0) targets[0].AsObject().Add("runtimeTargets", dlls);
 				
-				j = new JsonObject {
-					["type"] = "reference",
-					["serviceable"] = "false",
-					["sha512"] = ""
-				};
-				libraries.Add(name, j);
+				//This code is for native dlls from NuGet. The runtime will add the directories to the native dll search paths for DllImport.
+				//See also the Au/runtimeTargets/64/AuCpp.dll etc in the JSON template. It adds search directories for dlls specified in meta like `file x.dll /64`.
 			}
+			
+			json = jRoot.ToJsonString(new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+			//print.it(json);
 		}
 		
-		if (_dn != null) {
-			var dlls = new JsonObject();
-			targets[0].AsObject().Add("runtimeTargets", dlls);
-			foreach (var v in _dn) {
-				string relPath = v.Key[1..].Replace('\\', '/');
-				int i1 = relPath.IndexOf('/', 9);
-				dlls.Add(relPath, new JsonObject {
-					["rid"] = relPath[9..i1],
-					["assetType"] = "native"
-				});
-			}
-		}
+		var pathNoExt = $@"{_meta.OutputPath}\{fileName[..^4]}";
 		
-		jRoot.Print();
+		filesystem.saveText(pathNoExt + ".deps.json", json);
 		
-#else
-#endif
+		var runtimeconfig = $$"""
+{
+  "runtimeOptions": {
+    "tfm": "net{{netVersion}}",
+    "frameworks": [
+      {
+        "name": "Microsoft.NETCore.App",
+        "version": "{{netVersion}}.0"
+      },
+      {
+        "name": "Microsoft.WindowsDesktop.App",
+        "version": "{{netVersion}}.0"
+      }
+    ],
+    "configProperties": {
+      "System.Reflection.Metadata.MetadataUpdater.IsSupported": false,
+      "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false,
+      "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS": false
+    }
+  }
+}
+""";
+		filesystem.saveText(pathNoExt + ".runtimeconfig.json", runtimeconfig);
 	}
 	
-	List<ResourceDescription> _CreateManagedResources(string asmName, CSharpSyntaxTree[] trees) {
-		List<ResourceDescription> R = null;
-		if (CompilerUtil.CreateManagedResources(_meta, asmName, trees, _ResourceException, o => { (R ??= new()).Add(new ResourceDescription(o.name, () => o.stream, true)); })) return R;
-		return null;
-	}
-	
-	void _ResourceException(Exception e, FileNode curFile) {
-		var em = e.ToStringWithoutStack();
-		var err = _meta.Errors;
-		var f = _meta.MainFile.f;
-		if (curFile == null) err.AddError(f, "Failed to add resources. " + em);
-		else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
-	}
-	
-	Stream _CreateNativeResources() {
-#if true
-		if (_meta.Role is MCRole.exeProgram or MCRole.classLibrary) //add only version. If exe, will add icon and manifest to apphost exe. //rejected: support adding icons to dll; VS allows it.
-			return _compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
-		
-		if (_meta.IconFile != null) { //add only icon. No version, no manifest.
-			Stream icoStream = null;
-			FileNode curFile = null;
-			try {
-				//if(_meta.ResFile != null) return File.OpenRead((curFile = _meta.ResFile).FilePath);
-				icoStream = File.OpenRead((curFile = _meta.IconFile).FilePath);
-				curFile = null;
-				return _compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, icoStream);
-			}
-			catch (Exception e) {
-				icoStream?.Dispose();
-				_ResourceException(e, curFile);
-			}
-		} else if (_GetMainFileIcon(out var stream)) {
-			return _compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, stream);
-		}
-		
-		return null;
-#else
-			var manifest = _meta.ManifestFile;
-
-			string manifestPath = null;
-			if(manifest != null) manifestPath = manifest.FilePath;
-			else if(_meta.Role == MetaRole.exeProgram /*&& _meta.ResFile == null*/) manifestPath = folders.ThisAppBS + "default.exe.manifest"; //don't: uac
-
-			Stream manStream = null, icoStream = null;
-			FileNode curFile = null;
-			try {
-				//if(_meta.ResFile != null) return File.OpenRead((curFile = _meta.ResFile).FilePath);
-				if(manifestPath != null) { curFile = manifest; manStream = File.OpenRead(manifestPath); }
-				if(_meta.IconFile != null) icoStream = File.OpenRead((curFile = _meta.IconFile).FilePath);
-				curFile = null;
-				return _compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: manifestPath == null, manStream, icoStream);
-			}
-			catch(Exception e) {
-				manStream?.Dispose();
-				icoStream?.Dispose();
-				_ResourceException(e, curFile);
-				return null;
-			}
-#endif
-	}
+	//TODO apphost:
+	//	Automate copying apphost.exe from SDK.
+	//	Portable LA: the filesystem layout must be like in Program Files (<app>\dotnet\shared\two folders\version\files).
+	//For exeProgram only:
+	//	In portable LA, use env var to specify the private runtime dir.
+	//If LA uses standard apphost:
+	//	How will find the runtime in portable LA? And there are x64 and arm64 versions.
+	//		Option 1:
+	//			In apphost.exe find-replace a placeholder string for app-relative .NET runtime.
+	//			Set first byte=2, second 0, then zero-terminated UTF-8 "dotnet" or "dotnetARM".
+	//			See C:\code-other\runtime-main\src\native\corehost\apphost\standalone
+	//			The filesystem layout must be like in Program Files (<app>\dotnet\shared\two folders\version\files). But hostfxr.dll must be directly in <app>\dotnet.
+	//			This is undocumented, but used by documented VS/dotnet features.
+	//			See `#if TEST_DOTNET_IN_APP_SUBFOLDER` below.
+	//		Option 2:
+	//			The x64 runtime must be in the LA dir; impossible in subdir, unless using a launcher that sets an env var.
+	//			The arm64 runtime - in subdir (like now).
+	//			On arm64 computer runs Au.Editor.exe (in x64 mode) as a launcher for Au.Editor-arm.exe (like now). It sets env var DOTNET_ROOT_ARM64. Let Au.Editor-arm.exe delete the env var to avoid inheritance.
+	//			Alternatively let the portable Au.Editor.exe be a tiny launcher (maybe .NET 4.x) that sets DOTNET_ROOT_X64/DOTNET_ROOT_ARM64 and starts Au.Editor-x64.exe/Au.Editor-arm64.exe.
+	//	Review BuildEvents project.
+	//	Delete all A.AppHost.exe. Else delete only the 32-bit.
+	//	Delete dotnet_ref_x files. Also from Inno.
 	
 	string _AppHost(string outFile, string fileName, MCPlatform platform) {
 		//A .NET Core+ exe actually is a managed dll hosted by a native exe file known as apphost.
-		//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\sdk\version\AppHostTemplate\apphost.exe"
-		//	and modifies it, eg copies native resources from the dll.
-		//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
+		//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\packs\...\apphost.exe" or NuGet cache
+		//	and modifies it, eg sets dll name and copies native resources from the dll.
+		//LA has apphost.exe copied from there. This function copies it and modifies in a similar way like VS does.
 		
 		//var p1 = perf.local();
 		string exeFile = DllNameToExeName(outFile, platform != _meta.Platform ? platform : default);
@@ -788,15 +767,28 @@ partial class Compiler {
 		//delete old "program-64.exe" if now x64, or "program-arm.exe" if now arm64. It may exist if user switched meta platform x64/arm64.
 		if (platform is MCPlatform.x64 or MCPlatform.arm64) Api.DeleteFile(exeFile.Insert(^4, platform is MCPlatform.x64 ? "-64" : "-arm"));
 		
-		var appHost = folders.ThisAppBS + platform switch { MCPlatform.x86 => "32", MCPlatform.arm64 => @"64\ARM", _ => "64" } + @"\Au.AppHost.exe";
+		var appHost = folders.ThisAppBS + platform switch { MCPlatform.x86 => "32", MCPlatform.arm64 => @"64\ARM", _ => "64" } + @"\apphost.exe";
+		
 		bool done = false;
 		try {
 			var b = File.ReadAllBytes(appHost);
 			//p1.Next();
-			//write assembly name in placeholder memory. In AppHost.cpp: char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
-			int i = b.AsSpan().IndexOf("hi7yl8kJNk+gqwTDFi7ekQ"u8) - 1;
+			//write filename in placeholder memory, which is 1025 bytes starting with this string (64-bytes)
+			int i = b.AsSpan().IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8);
 			i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
-			b[i] = 0;
+			b.AsSpan(i, 64).Clear();
+			
+			//TODO
+#if TEST_DOTNET_IN_APP_SUBFOLDER
+			i = b.AsSpan().IndexOf("\0\019ff3e9c3602ae8e841925bb461a0adb064a1f1903667a5e0d87e8f608f425ac"u8);
+			//print.it(i);
+			b[i] = 2;
+			i += 2;
+			var netDir = @"publish\release_x64";
+			i += Encoding.UTF8.GetBytes(netDir, 0, netDir.Length, b, i);
+			b.AsSpan(i, 64).Clear();
+#endif
+
 			
 			var res = new _NativeResources();
 			if (_meta.IconFile != null) {
@@ -819,7 +811,6 @@ partial class Compiler {
 				res.AddIcon(stream.ToArray(), ref ic);
 			}
 			res.AddVersion(outFile);
-			res.AddTpa(_tpa);
 			
 			string manifest = null;
 			if (_meta.ManifestFile != null) manifest = _meta.ManifestFile.FilePath;
@@ -835,25 +826,6 @@ partial class Compiler {
 		finally { if (!done) Api.DeleteFile(exeFile); }
 		
 		return exeFile;
-	}
-	
-	bool _GetMainFileIcon(out MemoryStream ms) {
-		try {
-			if (DIcons.TryGetIconFromDB(_meta.MainFile.f.CustomIconName, out string xaml)) {
-				_GetIconFromXaml(xaml, out ms);
-				return true;
-			}
-		}
-		catch (Exception e1) { _ResourceException(e1, null); }
-		ms = null;
-		return false;
-	}
-	
-	static void _GetIconFromXaml(string xaml, out MemoryStream ms) {
-		ms = new MemoryStream();
-		var e = ImageUtil.LoadWpfImageElement(xaml);
-		ImageUtil.ConvertWpfImageElementToIcon_(ms, e, [16, 24, 32, 48, 64]);
-		ms.Position = 0;
 	}
 	
 	void _CopyDlls(Stream asmStream, bool need64, bool needArm, bool need32) {
@@ -874,7 +846,7 @@ partial class Compiler {
 		//copy managed dlls, including from nuget
 		if (_dr != null) {
 			foreach (var v in _dr) {
-				CompilerUtil.CopyFileIfNeed(v.Value, _meta.OutputPath + "\\" + v.Key);
+				CompilerUtil.CopyFileIfNeed(v.Value, pathname.combine(_meta.OutputPath, v.Key));
 				
 				//if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) usesSqlite = CompilerUtil.UsesSqlite(v.Value);
 			}
@@ -883,7 +855,7 @@ partial class Compiler {
 		//copy other files from nuget
 		if (_dn != null) {
 			foreach (var v in _dn) {
-				CompilerUtil.CopyFileIfNeed(v.Value, _meta.OutputPath + v.Key);
+				CompilerUtil.CopyFileIfNeed(v.Value, pathname.combine(_meta.OutputPath, v.Key));
 			}
 		}
 		
@@ -896,6 +868,63 @@ partial class Compiler {
 		
 		//copy meta 'file' files
 		CompilerUtil.CopyMetaFileFilesOfAllProjects(_meta, _meta.OutputPath);
+	}
+	
+	List<ResourceDescription> _CreateManagedResources(string asmName, CSharpSyntaxTree[] trees) {
+		List<ResourceDescription> R = null;
+		if (CompilerUtil.CreateManagedResources(_meta, asmName, trees, _ResourceException, o => { (R ??= new()).Add(new ResourceDescription(o.name, () => o.stream, true)); })) return R;
+		return null;
+	}
+	
+	void _ResourceException(Exception e, FileNode curFile) {
+		var em = e.ToStringWithoutStack();
+		var err = _meta.Errors;
+		var f = _meta.MainFile.f;
+		if (curFile == null) err.AddError(f, "Failed to add resources. " + em);
+		else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
+	}
+	
+	Stream _CreateNativeResources() {
+		if (_meta.Role is MCRole.exeProgram or MCRole.classLibrary) //add only version. If exe, will add icon and manifest to apphost exe. //rejected: support adding icons to dll; VS allows it.
+			return _compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
+		
+		if (_meta.IconFile != null) { //add only icon. No version, no manifest.
+			Stream icoStream = null;
+			FileNode curFile = null;
+			try {
+				//if(_meta.ResFile != null) return File.OpenRead((curFile = _meta.ResFile).FilePath);
+				icoStream = File.OpenRead((curFile = _meta.IconFile).FilePath);
+				curFile = null;
+				return _compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, icoStream);
+			}
+			catch (Exception e) {
+				icoStream?.Dispose();
+				_ResourceException(e, curFile);
+			}
+		} else if (_GetMainFileIcon(out var stream)) {
+			return _compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, stream);
+		}
+		
+		return null;
+	}
+	
+	bool _GetMainFileIcon(out MemoryStream ms) {
+		try {
+			if (DIcons.TryGetIconFromDB(_meta.MainFile.f.CustomIconName, out string xaml)) {
+				_GetIconFromXaml(xaml, out ms);
+				return true;
+			}
+		}
+		catch (Exception e1) { _ResourceException(e1, null); }
+		ms = null;
+		return false;
+	}
+	
+	static void _GetIconFromXaml(string xaml, out MemoryStream ms) {
+		ms = new MemoryStream();
+		var e = ImageUtil.LoadWpfImageElement(xaml);
+		ImageUtil.ConvertWpfImageElementToIcon_(ms, e, [16, 24, 32, 48, 64]);
+		ms.Position = 0;
 	}
 	
 	bool _RunPrePostBuildScript(bool post, string outFile) {

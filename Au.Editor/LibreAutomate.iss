@@ -55,11 +55,9 @@ Source: "runtimes\win-x64\native\WebView2Loader.dll"; DestDir: "{app}\runtimes\w
 Source: "runtimes\win-arm64\native\WebView2Loader.dll"; DestDir: "{app}\runtimes\win-arm64\native"; Flags: ignoreversion
 Source: "NuGet.*.dll"; DestDir: "{app}"; Flags: ignoreversion
 
-Source: "64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
-Source: "64\ARM\Au.AppHost.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
-
-; TODO
-; Source: "32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
+Source: "64\apphost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
+Source: "64\ARM\apphost.exe"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
+Source: "32\apphost.exe"; DestDir: "{app}\32"; Flags: ignoreversion
 
 Source: "64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "64\ARM\AuCpp.dll"; DestDir: "{app}\64\ARM"; Flags: ignoreversion
