@@ -81,9 +81,7 @@ static partial class App {
 			if (m == c_msgNotify) _Notified(wParam, lParam);
 			else if (m == s_msgTaskbarCreated) _Add(true); //when explorer restarted or taskbar DPI changed
 			else if (m == Api.WM_DESTROY) _Exit();
-			else if (m == Api.WM_DISPLAYCHANGE) {
-				Tasks.OnWM_DISPLAYCHANGE();
-			} else if (m == Api.WM_SETTINGCHANGE) {
+			else if (m == Api.WM_SETTINGCHANGE) {
 				if (lParam != 0) {
 					string s = null;
 					try { s = new((char*)lParam); }

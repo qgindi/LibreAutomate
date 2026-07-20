@@ -27,7 +27,7 @@ static unsafe partial class Cpp {
 	/// </remarks>
 	public static nint LoadAuNativeDll(string fileName) {
 		//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
-		
+
 		nint h = 0;
 		string rel = (RuntimeInformation.ProcessArchitecture switch { Architecture.X86 => @"32\", Architecture.Arm64 => @"64\ARM\", _ => @"64\" }) + fileName;
 		//rejected: use standard NuGet "runtimes" folder instead. I did not find info whether it can be used.
@@ -236,9 +236,6 @@ static unsafe partial class Cpp {
 
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern void Cpp_UEF(bool on);
-
-	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	internal static extern void Cpp_InactiveWindowWorkaround(bool on);
 
 	/// <returns>0 failed, 1 x86, 2 x64, 3 arm64</returns>
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -1,6 +1,6 @@
 ﻿#define MyAppName "LibreAutomate"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.16.1"
+#define MyAppVersion "1.17.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -40,8 +40,19 @@ Source: "Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor-arm.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Editor.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Au.Task-x64.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Editor.deps.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Editor-arm.deps.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Editor.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Editor-arm.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
+
+Source: "Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Task-arm.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Task.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Task.deps.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Task-arm.deps.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Task.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Au.Task-arm.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
+
 Source: "Au.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -117,7 +128,9 @@ Type: filesandordirs; Name: "{app}\Default"
 Type: filesandordirs; Name: "{app}\Templates"
 
 //FUTURE: remove this code
-Type: files; Name: "{app}\Au.Task.exe"
+Type: files; Name: "{app}\Au.Task-x64.exe"
+Type: files; Name: "{app}\dotnet_ref_editor.txt"
+Type: files; Name: "{app}\dotnet_ref_task.txt"
 Type: files; Name: "{autoprograms}\LibreAutomate C#.lnk"
 
 [Icons]
@@ -264,8 +277,8 @@ begin
   if (Length(urls) < 2) then
   begin
     SetLength(urls, 2);
-    urls[0] := 'https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.9/windowsdesktop-runtime-10.0.9-win-x64.exe';
-    urls[1] := 'https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.9/windowsdesktop-runtime-10.0.9-win-arm64.exe';
+    urls[0] := 'https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.10/windowsdesktop-runtime-10.0.10-win-x64.exe';
+    urls[1] := 'https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.10/windowsdesktop-runtime-10.0.10-win-arm64.exe';
   end;
 	
 	if IsArm64 then url := urls[1] else url := urls[0];

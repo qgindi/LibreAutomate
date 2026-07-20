@@ -1,6 +1,6 @@
 /// Examples of some automation functions and C# language syntax.
 /// To run this script, click the Run button (green triangle).
-/// Look for more examples in the Cookbook panel.
+/// Look for more examples in the Help panel.
 
 //print text in the Output panel
 print.it("Example");

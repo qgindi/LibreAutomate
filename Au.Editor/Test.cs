@@ -1,3 +1,5 @@
+//---------
+
 #if DEBUG || IDE_LA
 extern alias CAW;
 
@@ -23,7 +25,6 @@ using System.Diagnostics.CodeAnalysis;
 using static Au.Controls.Sci;
 
 namespace LA;
-
 static class Test {
 	/// <summary>
 	/// 

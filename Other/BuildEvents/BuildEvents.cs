@@ -77,7 +77,7 @@ bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 }
 
 /// Creates Au.Editor.exe and Au.Task.exe for x64 and ARM64.
-/// Uses our Au.AppHost.exe as template. Adds resources.
+/// Uses our apphost.exe as template. Adds resources.
 /// Deletes Au.Editor.*.json files.
 int EditorPostBuild() {
 	//perf.first();
@@ -92,7 +92,7 @@ int EditorPostBuild() {
 		if (filesystem.exists(sd1)) run.console("robocopy.exe", $"{sd1} {dirOut + rtd} /s /xf *.json *.exe");
 	}
 #else //use `<OutDir>`. Bad: VS adds unwanted files to dirOut. Eg from NuGet packages may add native dlls for many unused OS/platforms.
-	//filesystem.delete(Directory.GetFiles(dirOut, "Au.Editor.*.json"));
+	//filesystem.delete(Directory.GetFiles(dirOut, "..."));
 #endif
 
 	//make sure `.git\hooks\pre-push` exists. See `PrePushHook` in `GitBinaryFiles.cs`.
@@ -114,6 +114,9 @@ exit $?
 		//todo: Environment.CurrentDirector = 
 	}
 
+	//This script creates both x64 and arm64 Au.Editor.exe and Au.Task.exe. Adds resources.
+	//It would be difficult or impossible in VS. Eg can't add multiple icons, can't quickly build both x64 and arm64.
+
 	using var rk = Registry.CurrentUser.CreateSubKey(@"Software\Au\BuildEvents");
 	var verResFile1 = folders.ThisApp + $"{exe1}.res";
 	var verResFile2 = folders.ThisApp + $"{exe2}.res";
@@ -126,9 +129,11 @@ exit $?
 
 	//TODO3: test https://github.com/resourcelib/resourcelib
 
+	_EnsureApphostOK(dirOut);
+
 	for (int i = 0; i < 2; i++) {
-		string appHost = $@"64\{(i == 1 ? "ARM" : "")}\Au.AppHost.exe";
-		string exe1Arch = exe1.Insert(^4, i == 0 ? "" : "-arm"), exe2Arch = exe2.Insert(^4, i == 0 ? "-x64" : "-arm");
+		string appHost = $@"64\{(i == 1 ? @"ARM\" : "")}apphost.exe";
+		string exe1Arch = exe1.Insert(^4, i == 0 ? "" : "-arm"), exe2Arch = exe2.Insert(^4, i == 0 ? "" : "-arm");
 		var s = $"""
 [FILENAMES]
 Exe={appHost}
@@ -138,14 +143,14 @@ SaveAs={exe1Arch}
 -add ..\Au.Editor\Resources\ico\app_disabled.ico, ICONGROUP,32513,0
 -add ..\Au.Editor\Resources\ico\PictureInPicture.ico, ICONGROUP,32514,0
 -addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
--add dotnet_ref_editor.txt, 220,1,0
 -add "{verResFile1}", VERSIONINFO,1,0
 
 """;
 		if (!_RunRhScript(s, exe1Arch)) return 3;
+		_PatchApphost(dirOut + exe1Arch, "Au.Editor.dll");
 
-		filesystem.getProperties(dirOut + @"64\Au.AppHost.exe", out var p1);
-		if (verChanged || !filesystem.getProperties(dirOut + exe2Arch, out var p2) || p1.LastWriteTimeUtc > p2.LastWriteTimeUtc) {
+		filesystem.getProperties(dirOut + appHost, out var p1);
+		if (verChanged || !filesystem.getProperties(dirOut + exe2Arch, out var p2) || p1.CreationTimeUtc > p2.LastWriteTimeUtc) {
 			print.it($"Creating {exe2Arch}");
 			s = $"""
 [FILENAMES]
@@ -154,15 +159,19 @@ SaveAs={exe2Arch}
 [COMMANDS]
 -add ..\Au.Editor\Resources\ico\Script.ico, ICONGROUP,32512,0
 -addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
--add dotnet_ref_task.txt, 220,1,0
 -add "{verResFile2}", VERSIONINFO,1,0
 
 """;
 			if (!_RunRhScript(s, exe2Arch)) return 4;
+			_PatchApphost(dirOut + exe2Arch, "Au.Task.dll");
 		}
 
-		_WriteEditorAssemblyName(dirOut + exe1Arch);
 	}
+
+	filesystem.copy(dirOut + "Au.Editor.deps.json", dirOut + "Au.Editor-arm.deps.json", FIfExists.Delete);
+	filesystem.copy(dirOut + "Au.Task.deps.json", dirOut + "Au.Task-arm.deps.json", FIfExists.Delete);
+	filesystem.copy(dirOut + "Au.Editor.runtimeconfig.json", dirOut + "Au.Editor-arm.runtimeconfig.json", FIfExists.Delete);
+	filesystem.copy(dirOut + "Au.Task.runtimeconfig.json", dirOut + "Au.Task-arm.runtimeconfig.json", FIfExists.Delete);
 
 	if (verChanged) {
 		rk.SetValue("version", v.FileVersion);
@@ -191,14 +200,42 @@ SaveAs={exe2Arch}
 		return false;
 	}
 
-	static void _WriteEditorAssemblyName(string path) {
+	static unsafe void _PatchApphost(string path, string name) {
+		//write dll name
 		var b = File.ReadAllBytes(path);
-		int i = b.AsSpan().IndexOf("hi7yl8kJNk+gqwTDFi7ekQ"u8);
-		b[i - 1] = 1; //1 for Au.Editor.exe, 0 for Au.Task.exe (and no assembly filename), else first char of exeProgram assembly filename
-		string asmName = "Au.Editor.dll";
-		i += Encoding.UTF8.GetBytes(asmName, 0, asmName.Length, b, i);
-		b[i] = 0;
+		int i = b.AsSpan().IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8);
+		i += Encoding.UTF8.GetBytes(name, 0, name.Length, b, i);
+		b.AsSpan(i, 64).Clear();
+
+		//set subsystem = GUI (default is console)
+		fixed (byte* p = b) {
+			uint subsystemOffset = *(uint*)(p + 0x3C) + 0x5C;
+			*(ushort*)(p + subsystemOffset) = 2;
+		}
+
 		filesystem.saveBytes(path, b);
+	}
+
+	//Copies apphost.exe of all platforms from SDK if need.
+	static bool _EnsureApphostOK(string dirOut) {
+		var packs = @"C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-";
+		var version = new DirectoryInfo(packs + "x64")
+			.GetDirectories(Environment.Version.ToString(2) + ".*")
+			.MaxBy(o => o.Name[..(o.Name.LastIndexOf('.') + 1)].ToInt())
+			.Name;
+
+		string[] platforms = ["x64", "arm64", "x86"], platforms2 = ["64", @"64\ARM", "32"];
+		foreach (var (i, plat) in platforms.Index()) {
+			var path = $@"{packs}{plat}\{version}\runtimes\win-{plat}\native\apphost.exe";
+			var path2 = dirOut + platforms2[i] + @"\apphost.exe";
+
+			if (!filesystem.getProperties(path, out var p1)) { print.it("Not found: " + path); return false; }
+			if (!filesystem.getProperties(path2, out var p2) || p1.LastWriteTimeUtc > p2.LastWriteTimeUtc) {
+				print.it("Updating " + path2);
+				filesystem.copy(path, path2, FIfExists.Delete);
+			}
+		}
+		return true;
 	}
 
 	bool _VersionInfo(string resFile, string fileName, string fileDesc) {
@@ -245,7 +282,7 @@ int RoslynPostBuild() {
 
 	var from = args[1].Trim();
 	var to = $@"{solutionDirBS}_\Roslyn";
-	
+
 	foreach (var f in filesystem.enumFiles(to)) {
 		filesystem.delete(f.FullPath, FDFlags.CanFail);
 	}

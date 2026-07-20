@@ -1,8 +1,0 @@
-﻿[FILENAMES]
-Exe=    64\Au.AppHost.exe
-SaveAs= Au.Task.exe
-Log= CONSOLE
-[COMMANDS]
--add ..\Au.AppHost\Script.ico, ICONGROUP,32512,0
--addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
--add dotnet_ref.txt, 220,1,0

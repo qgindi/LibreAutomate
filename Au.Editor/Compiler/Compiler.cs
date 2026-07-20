@@ -79,7 +79,7 @@ partial class Compiler {
 		public MCRole role;
 		public MCIfRunning ifRunning;
 		public MCUac uac;
-		public MiniProgram_.MPFlags flags;
+		public MPFlags_ flags;
 		public MCPlatform platform;
 		
 		/// <summary>The assembly is normal .exe or .dll file, not in cache. If exe, its dependencies were copied to its directory.</summary>
@@ -92,7 +92,6 @@ partial class Compiler {
 	MetaComments _meta;
 	CSharpCompilation _compilation;
 	Dictionary<string, string> _dr, _dn;
-	string _tpa;
 	
 	bool _Compile(CCReason reason, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally, Func<CanCompileArgs, bool> canCompile, MCFlags addMetaFlags) {
 		//print.it("COMPILE");
@@ -228,9 +227,9 @@ partial class Compiler {
 			if (_meta.Role == MCRole.miniProgram) {
 				//is Main with [MTAThread]? Default STA, even if Main without [STAThread].
 				//FUTURE: C# ?? [assembly: MTAThread]
-				if (_compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MiniProgram_.MPFlags.MTA;
+				if (_compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.MTAThreadAttribute") ?? false) r.flags |= MPFlags_.MTA;
 				
-				if (_meta.Console) r.flags |= MiniProgram_.MPFlags.Console;
+				if (_meta.Console) r.flags |= MPFlags_.Console;
 			}
 			
 			//create assembly file
@@ -278,14 +277,12 @@ partial class Compiler {
 				var mr = pr.GetMetadataReader();
 				foreach (var handle in mr.AssemblyReferences) {
 					var name = mr.GetString(mr.GetAssemblyReference(handle).Name);
-					if (name == "System.Console") { r.flags |= MiniProgram_.MPFlags.RedirectConsole; break; }
+					if (name == "System.Console") { r.flags |= MPFlags_.RedirectConsole; break; }
 				}
 			}
 		}
 		
 		if (_meta.PostBuild.f != null && !_RunPrePostBuildScript(true, outFile)) return false;
-		
-		if (_meta.StartFaster) r.flags |= MiniProgram_.MPFlags.Preloaded;
 		
 		if (reason != CCReason.WpfPreview && !addMetaFlags.Has(MCFlags.Publish)) {
 			if (needOutputFiles) {
@@ -325,8 +322,8 @@ partial class Compiler {
 	/// <summary>
 	/// Adds some module/assembly attributes. Also adds module initializer for role exeProgram.
 	/// </summary>
-	MiniProgram_.MPFlags _AddAttributesEtc() {
-		MiniProgram_.MPFlags rflags = 0;
+	MPFlags_ _AddAttributesEtc() {
+		MPFlags_ rflags = 0;
 		//bool needDefaultCharset = true;
 		//foreach (var v in _compilation.SourceModule.GetAttributes()) {
 		//	//print.it(v.AttributeClass.Name);
@@ -358,17 +355,17 @@ partial class Compiler {
 				_GetDllPaths();
 				if (_dr != null) { //add RefPaths attribute to resolve paths of managed dlls at run time
 					foreach (var v in _dr) {
-						sb.Append(rflags.Has(MiniProgram_.MPFlags.RefPaths) ? "|" : $"[assembly: Au.Types.RefPaths(@\"");
+						sb.Append(rflags.Has(MPFlags_.RefPaths) ? "|" : $"[assembly: Au.Types.RefPaths(@\"");
 						sb.Append(v.Value);
-						rflags |= MiniProgram_.MPFlags.RefPaths;
+						rflags |= MPFlags_.RefPaths;
 					}
 					sb.AppendLine("\")]");
 				}
 				if (_dn != null) { //add NativePaths attribute to resolve paths of native dlls at run time
 					foreach (var v in _dn) {
-						sb.Append(rflags.Has(MiniProgram_.MPFlags.NativePaths) ? "|" : $"[assembly: Au.Types.NativePaths(@\"");
+						sb.Append(rflags.Has(MPFlags_.NativePaths) ? "|" : $"[assembly: Au.Types.NativePaths(@\"");
 						sb.Append(v.Value);
-						rflags |= MiniProgram_.MPFlags.NativePaths;
+						rflags |= MPFlags_.NativePaths;
 					}
 					sb.AppendLine("\")]");
 				}
@@ -643,6 +640,7 @@ partial class Compiler {
 				var g = _dr.Keys.ToLookup(Path.GetFileName, StringComparer.OrdinalIgnoreCase);
 				var libraries = jRoot["libraries"].AsObject();
 				foreach (var v in g) {
+					if (v.Key.Eqi("Au.dll")) continue; //compiling LA
 					var name = Path.GetFileNameWithoutExtension(v.Key) + "/1.0.0";
 					JsonObject jLib = new(), runtimeTargets = null;
 					foreach (var s1 in v) {
@@ -728,7 +726,6 @@ partial class Compiler {
 	}
 	
 	//TODO apphost:
-	//	Automate copying apphost.exe from SDK.
 	//	Portable LA: the filesystem layout must be like in Program Files (<app>\dotnet\shared\two folders\version\files).
 	//For exeProgram only:
 	//	In portable LA, use env var to specify the private runtime dir.
@@ -741,14 +738,18 @@ partial class Compiler {
 	//			The filesystem layout must be like in Program Files (<app>\dotnet\shared\two folders\version\files). But hostfxr.dll must be directly in <app>\dotnet.
 	//			This is undocumented, but used by documented VS/dotnet features.
 	//			See `#if TEST_DOTNET_IN_APP_SUBFOLDER` below.
+	//			BAD: can't patch exeProgram, because it must work anywhere. For exeProgram use option 2.
 	//		Option 2:
 	//			The x64 runtime must be in the LA dir; impossible in subdir, unless using a launcher that sets an env var.
 	//			The arm64 runtime - in subdir (like now).
 	//			On arm64 computer runs Au.Editor.exe (in x64 mode) as a launcher for Au.Editor-arm.exe (like now). It sets env var DOTNET_ROOT_ARM64. Let Au.Editor-arm.exe delete the env var to avoid inheritance.
-	//			Alternatively let the portable Au.Editor.exe be a tiny launcher (maybe .NET 4.x) that sets DOTNET_ROOT_X64/DOTNET_ROOT_ARM64 and starts Au.Editor-x64.exe/Au.Editor-arm64.exe.
-	//	Review BuildEvents project.
-	//	Delete all A.AppHost.exe. Else delete only the 32-bit.
-	//	Delete dotnet_ref_x files. Also from Inno.
+	//			Alternatively let the portable Au.Editor.exe be a tiny launcher that sets DOTNET_ROOT_X64/DOTNET_ROOT_ARM64 and starts Au.Editor.exe-x64/Au.Editor-arm64.exe.
+	//			BAD: can't change UAC IL (meta uac), because then env vars are not inherited.
+	//				Never mind. Just add code that says it to the user.
+	//				Or use a tiny launcher. LA runs it with required IL and passes all info in cmdline. Lunches sets env var and runs the task proces.
+	//		Option 3:
+	//			Create both LibreAutomate and LibreAutomateARM folders.
+	//			But the same problems will be for exeProgram. And now data folder is inside. Not worth.
 	
 	string _AppHost(string outFile, string fileName, MCPlatform platform) {
 		//A .NET Core+ exe actually is a managed dll hosted by a native exe file known as apphost.
@@ -788,7 +789,7 @@ partial class Compiler {
 			i += Encoding.UTF8.GetBytes(netDir, 0, netDir.Length, b, i);
 			b.AsSpan(i, 64).Clear();
 #endif
-
+			
 			
 			var res = new _NativeResources();
 			if (_meta.IconFile != null) {

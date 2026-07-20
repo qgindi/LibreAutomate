@@ -278,12 +278,6 @@ class MetaComments {
 	public MCUac Uac { get; private set; }
 	
 	/// <summary>
-	/// Meta option 'startFaster'.
-	/// Default: false.
-	/// </summary>
-	public bool StartFaster { get; private set; }
-	
-	/// <summary>
 	/// Meta option 'platform'.
 	/// If meta not specified, this property is = <see cref="DefaultPlatform"/> if executable role, else <b>Default</b>.
 	/// </summary>
@@ -685,10 +679,6 @@ class MetaComments {
 			_Specified(MCSpecified.uac);
 			if (_Enum(out MCUac uac, value)) Uac = uac;
 			break;
-		case "startFaster": //undocumented. Likely will be removed in the future.
-			_Specified(MCSpecified.startFaster);
-			if (_TrueFalse(out bool startFaster, value)) StartFaster = startFaster;
-			break;
 		case "platform":
 			_Specified(MCSpecified.platform);
 			if (_Enum(out MCPlatform platform, value)) Platform = platform;
@@ -725,9 +715,6 @@ class MetaComments {
 			_ErrorN("unknown meta comment option");
 			break;
 		}
-		
-		//TODO
-		if (name is "platform" or "bit32" && Platform == MCPlatform.x86) _ErrorV("platform x86 currently not supported. Try menu Run > Publish.");
 	}
 	
 	#region util

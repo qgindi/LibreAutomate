@@ -100,11 +100,11 @@ partial class PanelDebug {
 						} else {
 							exp = tok.Text;
 						}
-					//} else if (sym.Kind is SymbolKind.Method && node.GetAncestor<InvocationExpressionSyntax>() is { } ies) { //for testing only
-					//	var span = ies.Span;
-					//	int i = span.Start;
-					//	if (cd.code[i] == '.') i = _FindStartOfMemberAccessOrElementAccess(ies);
-					//	exp = cd.code[i..span.End];
+						//} else if (sym.Kind is SymbolKind.Method && node.GetAncestor<InvocationExpressionSyntax>() is { } ies) { //for testing only
+						//	var span = ies.Span;
+						//	int i = span.Start;
+						//	if (cd.code[i] == '.') i = _FindStartOfMemberAccessOrElementAccess(ies);
+						//	exp = cd.code[i..span.End];
 					}
 				}
 			}
@@ -188,10 +188,14 @@ partial class PanelDebug {
 	_VAR _VarCreateL(string exp) {
 		if (_d.SendSync(100, $"-var-create - {exp}") is string s) {
 			if (s.Starts("^done,name=")) return new _MiRecord(s).Data<_VAR>();
-			Debug_.Print($"<c orange>{s}<>");
+			Debug_.Print($"<c orange>{s}<>  `{exp}`\r\n{new StackTrace(true)}");
 		}
 		return null;
 	}
+	//TODO2: sometimes, when starting debugging a script in LA, if the script throws exception, LA hangs for several s.
+	//	Prints: Debug: _VarCreateL (PD-variables.cs:191):  ^error,msg="Evaluation timed out."  `$exception.ToString()`
+	//	It depends on time. To reproduce: `wait.ms(Random.Shared.Next(0, 20)); throw new AuException();`
+	//	Could not repro with exeProgram.
 	
 	void _WatchAdd(string exp, int frame = -1) {
 		if (_VarCreate(exp, frame) is _VAR r) {

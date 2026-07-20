@@ -219,7 +219,6 @@ ModelManifest.xml
 !/_/Default/
 !/_/Templates/
 !/_/*.manifest
-!/_/dotnet_ref_*.txt
 !/_/gitBinaryRestore.csv
 
 !/_/32/

@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
+		<OutDir>$(SolutionDir)_</OutDir>
+		<LangVersion>preview</LangVersion>
+		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+		<GenerateDocumentationFile>False</GenerateDocumentationFile>
+		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+		<NoWin32Manifest>true</NoWin32Manifest>
+		<NuGetAudit>False</NuGetAudit>
+		<DebugType>embedded</DebugType>
+		<IsPublishable>True</IsPublishable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Au\Au.csproj" />
+	</ItemGroup>
+
+</Project>

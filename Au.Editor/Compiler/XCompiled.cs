@@ -77,7 +77,7 @@ partial class Compiler {
 						r.platform = (MCPlatform)value.ToInt(offs);
 						break;
 					case 'f':
-						r.flags = (MiniProgram_.MPFlags)value.ToInt(offs);
+						r.flags = (MPFlags_)value.ToInt(offs);
 						break;
 					case 'p':
 						isMultiFileProject = true;
@@ -150,7 +150,7 @@ partial class Compiler {
 		/// Called when successfully compiled script f. Saves data that next time will be used by <see cref="IsCompiled"/>.
 		/// </summary>
 		/// <param name="outFile">The output assembly.</param>
-		public void AddCompiled(FileNode f, string outFile, MetaComments m, MiniProgram_.MPFlags miniFlags) {
+		public void AddCompiled(FileNode f, string outFile, MetaComments m, MPFlags_ miniFlags) {
 			if (_data == null && !_Open()) _data = new();
 			
 			/*

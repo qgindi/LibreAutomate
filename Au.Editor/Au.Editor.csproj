@@ -18,14 +18,17 @@
 		<NoWarn>1701;1702;8002;419;8981;WFO1000</NoWarn>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 		<NoWin32Manifest>true</NoWin32Manifest>
+		<NuGetAudit>False</NuGetAudit>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <DebugType>embedded</DebugType>
+	  <IsPublishable>False</IsPublishable>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	  <DebugType>embedded</DebugType>
+	  <IsPublishable>False</IsPublishable>
 	</PropertyGroup>
 
 	<ItemGroup>

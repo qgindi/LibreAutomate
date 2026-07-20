@@ -118,12 +118,9 @@ May need to update .NET SDK version in global.json (in solution folder).
 	Note: some scripts build just the Au project. To use correct SDK, I created a symlink to the solution's global.json in the project folder. Adding as a link in VS (in csproj) does not work.
 
 In project DatabasesEtc, in file Program.cs:
-	Enable only the call to RefTxt.Create, and run.
 	Enable only the call to RefAndDoc.Create, and run.
 	Also now it's a good time to update icons: update the NuGet package, enable only Icons.CreateDB, and run.
 	NOTE: also need this when upgraded SDK RC -> final. Eg in .NET 8 SDK final some API changed.
-
-Update .NET version in the AppHost project (the #define). Build.
 
 Update MetaComments.Defines.
 

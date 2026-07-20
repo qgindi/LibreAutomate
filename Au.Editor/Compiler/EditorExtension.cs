@@ -76,7 +76,7 @@ public static class EditorExtension {
 				lsa.Add(asmFile, asm);
 			}
 			
-			var entryPoint = asm.EntryPoint ?? throw new InvalidOperationException("assembly without entry point (function Main)");
+			var entryPoint = asm.EntryPoint;
 			
 			//support async. Then EntryPoint returns some `void <Main>(string[])` that calls the true entry method and hangs.
 			bool isAsync = false;
@@ -86,7 +86,7 @@ public static class EditorExtension {
 				if (isAsync = ep2 != null) entryPoint = ep2;
 			}
 			
-			var epParams = entryPoint.GetParameters().Length != 0 ? new object[] { args ?? Array.Empty<string>() } : null;
+			var epParams = entryPoint.GetParameters().Length != 0 ? new object[] { args ?? [] } : null;
 			
 			if (isAsync) {
 				await (Task)entryPoint.Invoke(null, epParams);
@@ -104,7 +104,7 @@ public static class EditorExtension {
 	/// Dependency paths are specified in an attribute of the script assembly (added by our compiler).
 	/// </summary>
 	class _AssemblyLoadContext : AssemblyLoadContext {
-		MiniProgram_.DependencyResolverForMiniProgramAndEditorExtensionScripts _depResolver;
+		DependencyResolverForMiniProgramAndEditorExtensionScripts_ _depResolver;
 
 		public _AssemblyLoadContext() : base(isCollectible: true) { }
 		

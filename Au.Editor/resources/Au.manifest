@@ -51,6 +51,4 @@
 </assembly>
 <!--
 This manifest is used in Au.Editor and Au.Task.
-Added to the C++ apphost in post-build event.
-Note: VS does not recompile project after modifying this file, unless some other file is modified of "Copy if newer" is set.
 -->
