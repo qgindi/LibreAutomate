@@ -2,15 +2,19 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using Au.Controls;
-using System.IO.Compression;
 
 namespace LA;
 
 class DPortable : KDialogWindow {
 	public static void ShowSingle() {
 		if (App.IsPortable) {
-			dialog.showError("Portable mode", "Please restart this program in non-portable mode.", owner: App.Wmain);
+			dialog.showError("Cannot install portable LA", "Now LA is in portable mode. Please restart it in non-portable mode.", owner: App.Wmain);
 			return;
+		}
+		if (filesystem.more.comparePaths(folders.ThisApp, folders.NetRuntime) != CPResult.None) {
+			dialog.showError("Cannot install portable LA", "Now LA uses private .NET runtime. It must use shared .NET runtime.", owner: App.Wmain);
+			return;
+			//TODO2: download all .NET runtimes
 		}
 		ShowSingle(() => new DPortable());
 	}
@@ -42,7 +46,6 @@ class DPortable : KDialogWindow {
 	
 	DPortable() {
 		if (App.Settings.portable_dir.NE() && folders.RemovableDrive0.Path is string drive) App.Settings.portable_dir = drive + @"PortableApps\LibreAutomate";
-		if (filesystem.more.comparePaths(folders.ThisApp, _dirNet) is CPResult.Same or CPResult.AContainsB) _dirNet = _dirNetDesktop = null;
 		if (App.Settings.portable_skip.Lenn_() != 6) App.Settings.portable_skip = ["\\SDK\r\n\\Git", ".git\r\n\\exe", "", "", ".git", ""];
 		
 		InitWinProp("Portable LibreAutomate setup", App.Wmain);
@@ -117,19 +120,26 @@ class DPortable : KDialogWindow {
 		Action portableWsPathSetting = _WsPathInPortableSettings();
 		
 		if (_dApp.copy || !_exists) {
-			_Copy(_dApp, "/mir /xf unins* /xd dotnet data");
+			_Copy(_dApp, "/mir /xf unins* /xd dotnet dotnetARM data");
+			_PatchApphosts();
 			
 			bool isArm = osVersion.isArm64Process;
 			if (isArm) _RenameArm64();
 			
-			if (_dirNet != null) {
-				var dotnet = App.Settings.portable_dir + (isArm ? @"\dotnetARM" : @"\dotnet");
-				_Copy2(_dirNet, dotnet, "/e");
-				_Copy2(_dirNetDesktop, dotnet, "/e");
-			}
+			//.NET runtimes
 			
+			string version = Environment.Version.ToString();
+			string toDotnet = App.Settings.portable_dir + (!isArm ? @"\dotnet" : @"\dotnetARM");
+			string toDotnetOther = App.Settings.portable_dir + (isArm ? @"\dotnet" : @"\dotnetARM");
+			
+			filesystem.delete(toDotnet);
+			_Copy2(_dirNet, toDotnet + @"\shared\Microsoft.NETCore.App\" + version, "/e");
+			_Copy2(_dirNetDesktop, toDotnet + @"\shared\Microsoft.WindowsDesktop.App\" + version, "/e");
+			_Copy2(pathname.normalize($@"{_dirNet}\..\..\..\host\fxr\{version}"), toDotnet + @"\host\fxr\" + version, "/e");
+			
+			//download .NET runtime for other CPU architecture
 			try {
-				DotnetUtil.DownloadNetRuntimesForOtherArch(_dApp.portable, true);
+				DotnetUtil.DownloadNetRuntimes(isArm ? "x64" : "arm64", toDotnetOther);
 			}
 			catch (Exception ex) {
 				string arch = isArm ? "x64" : "Arm64";
@@ -208,6 +218,23 @@ class DPortable : KDialogWindow {
 				}
 			}
 		}
+		
+		//Writes the app-relative path of the portable .NET runtime into program files that will use it.
+		static void _PatchApphosts() {
+			foreach (string s in new string[] { "Au.Editor.exe", "Au.Editor-arm.exe", "Au.Task.exe", "Au.Task-arm.exe" }) {
+				var path = App.Settings.portable_dir + @"\" + s;
+				var b = filesystem.loadBytes(path);
+				
+				int i = b.AsSpan().IndexOf("\0\019ff3e9c3602ae8e841925bb461a0adb064a1f1903667a5e0d87e8f608f425ac"u8); //C:\code-other\runtime-main\src\native\corehost\apphost\standalone\hostfxr_resolver.cpp
+				b[i] = 2;
+				i += 2;
+				var dotnet = @"dotnet" + (s.Contains("-arm") ? "ARM" : "");
+				i += Encoding.UTF8.GetBytes(dotnet, 0, dotnet.Length, b, i);
+				b.AsSpan(i, 64).Clear();
+				
+				filesystem.saveBytes(path, b);
+			}
+		}
 	}
 	
 	static string _RobocopyArgs(bool log, string dir, string dirTo, string how, string skipDirs) {
@@ -256,7 +283,7 @@ class DPortable : KDialogWindow {
 		static async Task<long> _GetDirSize(_Dir d, string how = "/mir") => await _GetDirSize2(d.local, how, d.Skip);
 		
 		long sizeApp = await _GetDirSize(_dApp);
-		long sizeNet = _dirNet == null ? 0 : await _GetDirSize2(_dirNet) + await _GetDirSize2(_dirNetDesktop);
+		long sizeNet = await _GetDirSize2(_dirNet) + await _GetDirSize2(_dirNetDesktop);
 		long sizeWs = await _GetDirSize(_dWs);
 		long sizeSett = await _GetDirSize(_dSett);
 		long sizeScript = await _GetDirSize(_dScript);

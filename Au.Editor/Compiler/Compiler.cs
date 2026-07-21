@@ -725,32 +725,6 @@ partial class Compiler {
 		filesystem.saveText(pathNoExt + ".runtimeconfig.json", runtimeconfig);
 	}
 	
-	//TODO apphost:
-	//	Portable LA: the filesystem layout must be like in Program Files (<app>\dotnet\shared\two folders\version\files).
-	//For exeProgram only:
-	//	In portable LA, use env var to specify the private runtime dir.
-	//If LA uses standard apphost:
-	//	How will find the runtime in portable LA? And there are x64 and arm64 versions.
-	//		Option 1:
-	//			In apphost.exe find-replace a placeholder string for app-relative .NET runtime.
-	//			Set first byte=2, second 0, then zero-terminated UTF-8 "dotnet" or "dotnetARM".
-	//			See C:\code-other\runtime-main\src\native\corehost\apphost\standalone
-	//			The filesystem layout must be like in Program Files (<app>\dotnet\shared\two folders\version\files). But hostfxr.dll must be directly in <app>\dotnet.
-	//			This is undocumented, but used by documented VS/dotnet features.
-	//			See `#if TEST_DOTNET_IN_APP_SUBFOLDER` below.
-	//			BAD: can't patch exeProgram, because it must work anywhere. For exeProgram use option 2.
-	//		Option 2:
-	//			The x64 runtime must be in the LA dir; impossible in subdir, unless using a launcher that sets an env var.
-	//			The arm64 runtime - in subdir (like now).
-	//			On arm64 computer runs Au.Editor.exe (in x64 mode) as a launcher for Au.Editor-arm.exe (like now). It sets env var DOTNET_ROOT_ARM64. Let Au.Editor-arm.exe delete the env var to avoid inheritance.
-	//			Alternatively let the portable Au.Editor.exe be a tiny launcher that sets DOTNET_ROOT_X64/DOTNET_ROOT_ARM64 and starts Au.Editor.exe-x64/Au.Editor-arm64.exe.
-	//			BAD: can't change UAC IL (meta uac), because then env vars are not inherited.
-	//				Never mind. Just add code that says it to the user.
-	//				Or use a tiny launcher. LA runs it with required IL and passes all info in cmdline. Lunches sets env var and runs the task proces.
-	//		Option 3:
-	//			Create both LibreAutomate and LibreAutomateARM folders.
-	//			But the same problems will be for exeProgram. And now data folder is inside. Not worth.
-	
 	string _AppHost(string outFile, string fileName, MCPlatform platform) {
 		//A .NET Core+ exe actually is a managed dll hosted by a native exe file known as apphost.
 		//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\packs\...\apphost.exe" or NuGet cache
@@ -772,24 +746,12 @@ partial class Compiler {
 		
 		bool done = false;
 		try {
-			var b = File.ReadAllBytes(appHost);
+			var b = filesystem.loadBytes(appHost);
 			//p1.Next();
 			//write filename in placeholder memory, which is 1025 bytes starting with this string (64-bytes)
 			int i = b.AsSpan().IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8);
 			i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
 			b.AsSpan(i, 64).Clear();
-			
-			//TODO
-#if TEST_DOTNET_IN_APP_SUBFOLDER
-			i = b.AsSpan().IndexOf("\0\019ff3e9c3602ae8e841925bb461a0adb064a1f1903667a5e0d87e8f608f425ac"u8);
-			//print.it(i);
-			b[i] = 2;
-			i += 2;
-			var netDir = @"publish\release_x64";
-			i += Encoding.UTF8.GetBytes(netDir, 0, netDir.Length, b, i);
-			b.AsSpan(i, 64).Clear();
-#endif
-			
 			
 			var res = new _NativeResources();
 			if (_meta.IconFile != null) {

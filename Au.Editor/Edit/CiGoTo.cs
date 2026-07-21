@@ -34,10 +34,14 @@ class CiGoTo {
 	List<_SourceLocation> _sourceLocations;
 	//if in metadata
 	string _assembly, _repo, _type, _kind, _prefix, _member, _namespace, _alt;
+	
+	/// <summary>
+	/// <br/>• 1 - with github can use symbol: with member; eg github supported only methods (now not only).
+	/// <br/>• 2 - can use "public ... Member"; eg cannot for interface and enum.
+	/// <br/>• 4 - with github can use symbol: with type; eg github supports only class and struct.
+	/// <br/>• 8 - protected (else public)
+	/// </summary>
 	int _flags;
-	//1 with github can use symbol: with member; eg github supports only methods.
-	//2 can use "public ... Member"; eg cannot for interface and enum.
-	//4 with github can use symbol: with type; eg github supports only class and struct.
 	
 	/// <summary>
 	/// true if can go to the symbol source. Then caller eg can add link to HTML.
@@ -74,7 +78,7 @@ class CiGoTo {
 				Debug_.PrintIf(_repo.NE(), s);
 			}
 			
-			//Unfortunately the github search engine is so bad. Gives lots of garbage. Randomly returns not all results.
+			//The github search engine used to be so bad. Gives lots of garbage. Randomly returns not all results. Later improved.
 			//To remove some garbage, can include namespace, filename, path (can be partial, without filename).
 			//There is no best way for all casses. GoTo() will show UI, and users can try several alternatives.
 			//Also tried github API. Can get search results, but not always can find the match in the garbage.
@@ -86,6 +90,7 @@ class CiGoTo {
 			//2023-07-02: GitHub search improved. Supports regex and partially symbol: (symbol definitions). It seems always shows all results.
 			//	Tested: Supports symbol: for: class, interface, method.
 			//		Not for: property, event, delegate, enum, struct. For namespace only if NS{} but not if NS.NS{} or NS;.
+			//2026-07-21: Also supports property, struct, enum. Still not event, delegate.
 			
 			if (sym is not INamedTypeSymbol ts) {
 				ts = sym.ContainingType;
@@ -94,13 +99,15 @@ class CiGoTo {
 				if (_member.Starts('.')) _member = null; //".ctor"
 				else {
 					if (sym is IMethodSymbol ims && ims.MethodKind is MethodKind.Ordinary or MethodKind.ReducedExtension) _flags |= 1;
+					else if (sym.Kind is SymbolKind.Property /*or SymbolKind.Event*/) _flags |= 1;
 					if (ts.TypeKind is TypeKind.Class or TypeKind.Struct) _flags |= 2;
+					if (sym.DeclaredAccessibility is Microsoft.CodeAnalysis.Accessibility.Protected) _flags |= 8;
 				}
 			}
 			ts = ts.OriginalDefinition; //eg List<int> -> List<T>
 			
 			_type = ts.Name; //get name like Int32 or List. GetShortName gets eg int, but we need Int32.
-			if (ts.TypeKind is TypeKind.Class or TypeKind.Interface && !ts.IsRecord) _flags |= 4;
+			if (ts.TypeKind is TypeKind.Class or TypeKind.Interface or TypeKind.Struct or TypeKind.Enum /*or TypeKind.Delegate*/ && !ts.IsRecord) _flags |= 4;
 			
 #if SG_SYMBOL
 			if (sym is INamedTypeSymbol) {
@@ -326,8 +333,7 @@ class CiGoTo {
 			
 			b.R.Add("Type", out TextBox tType, $@"\b{_prefix}\s+{_type}\b"); //note: don't use unescaped space. Then splits into too: "\b{_prefix}" and "{_type}\b"
 			b.R.Add("Member", out TextBox tMember);
-			if (_member.NE()) b.Hidden(); else tMember.Text = 0 != (_flags & 2) ? $@"\bpublic\s.+?\s{_member}\b" : $@"\b{_member}\b";
-			//TODO: support `protected` too, not only `public`
+			if (_member.NE()) b.Hidden(); else tMember.Text = 0 != (_flags & 2) ? $@"\b{(0 != (_flags & 8) ? "protected" : "public")}\s.+?\s{_member}\b" : $@"\b{_member}\b";
 			b.R.Add(out KCheckBox cText, "Text").Add(out TextBox tText, $@"\bnamespace\s+{Regex.Escape(_namespace)}\b").LabeledBy().Tooltip("The code must also match this regex"); ;
 			//b.R.Add(out KCheckBox cText, "Text", out TextBox tText, $@"\bnamespace\s+{Regex.Escape(_namespace)}\b").Tooltip("The code must also match this regex"); ;
 			b.R.Add(out KCheckBox cFile, "File").Add(out TextBox tFile, _type).LabeledBy().Tooltip("The file name or path must match this regex");
@@ -370,7 +376,7 @@ class CiGoTo {
 			b.R.Add("Type", out TextBox tType, 0 != (_flags & 4) && _member.NE() ? $@"symbol:/(?-i)\b{_type}\b/ /(?-i)\b{_prefix} {_type}\b/" : $@"/(?-i)\b{_prefix} {_type}\b/");
 			b.R.Add("Member", out TextBox tMember).Hidden(_member.NE());
 			if (!_member.NE()) tMember.Text = 0 != (_flags & 1) ? $@"symbol:/(?-i)\b{_member}\b/"
-											: 0 != (_flags & 2) ? $@"/(?-i)\bpublic .+? {_member}\b/" //member of class or struct
+											: 0 != (_flags & 2) ? $@"/(?-i)\b{(0 != (_flags & 8) ? "protected" : "public")} .+? {_member}\b/" //member of class or struct
 											: $@"/(?-i)\b{_member}\b/"; //member of interface or enum
 			b.R.Add(out KCheckBox cText, "Text").Add(out TextBox tText, $"\"namespace {_namespace}\"").LabeledBy().Tooltip("Append this to the query");
 			b.R.Add(out KCheckBox cFile, "File").Add(out TextBox tFile, _type).LabeledBy().Tooltip("The file name or path must contain this text or match /regex/");

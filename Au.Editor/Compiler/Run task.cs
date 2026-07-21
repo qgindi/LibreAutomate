@@ -30,25 +30,25 @@ static class CompileRun {
 #if TEST_STARTUP_SPEED
 		args = new string[] { perf.ms.ToString() }; //and in script use this code: print.it(perf.ms-Convert.ToInt64(args[0]));
 #endif
-
+		
 		App.Model.Save.TextNowIfNeed(onlyText: true);
 		App.Model.Save.WorkspaceNowIfNeed(); //because the script may kill editor, eg if runs in editor thread
-
+		
 		if (!Compile(run, ref f, out var r)) return 0;
 		if (!run) return 1;
-
+		
 		if (r.role == MCRole.editorExtension) {
 			if (debugAttach != null) { print.it("Cannot debug scripts with role editorExtension."); return 0; }
-
+			
 			EditorExtension.Run_(r.file, args, handleExceptions: true);
 			return (int)script.RunResult_.editorThread;
 		}
-
+		
 		if (ifRunning != null) r.ifRunning = ifRunning.Value;
-
+		
 		return App.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor, debugAttach: debugAttach);
 	}
-
+	
 	/// <summary>
 	/// Gets correct file for run or compile (project-main etc), and compiles.
 	/// </summary>
@@ -60,7 +60,7 @@ static class CompileRun {
 		r = null;
 		if (f == null) return false;
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
-
+		
 		//can be set to run other script instead.
 		//	Useful for library projects. Single files have other alternatives - move to a script project or move code to a script file.
 		if (forRun && f.TestScript is { } f2) {
@@ -68,41 +68,41 @@ static class CompileRun {
 			else if (projMain != f) f = projMain;
 			else { print.it($"<>The test script {f2.SciLink()} cannot be in the project folder {projFolder.SciLink()}"); return false; }
 		}
-
+		
 		if (!f.IsCodeFile) return false;
-
+		
 		bool ok = Compiler.Compile(forRun ? CCReason.Run : CCReason.CompileAlways, out r, f, projFolder);
-
+		
 		if (forRun && r.role is MCRole.classFile or MCRole.classLibrary) { //info: if classFile, compiler sets r.role and returns false (does not compile)
 			_OnRunClassFile(f, projFolder);
 			return false;
 		}
-
+		
 		return ok;
 	}
-
+	
 	public static void RunWpfPreview(FileNode f, Func<CanCompileArgs, bool> canCompile) {
 		if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
-
+		
 		//If f is a class file, run it as a script.
 		//	Ignore its test script. For a library it wouldn't work. For a simple projectless class file usually don't need.
-
+		
 		bool ok = Compiler.Compile(CCReason.WpfPreview, out var r, f, projFolder, canCompile: canCompile);
 		if (!ok) return;
-
+		
 		int pid = App.Tasks.RunCompiled(f, r, new string[] { "WPF_PREVIEW", s_wpfPreview.pid.ToS(), s_wpfPreview.time.ToS() });
 		Api.GetSystemTimeAsFileTime(out long time);
 		s_wpfPreview = (pid, time);
 	}
 	static (int pid, long time) s_wpfPreview;
-
+	
 	static void _OnRunClassFile(FileNode f, FileNode projFolder) {
 		if (!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
 		var s2 = projFolder != null || f.Name.Eqi("global.cs") ? "" : $" or project (<+runClass 2|{ids}>create<>). Or <+runClass 1|{ids}>change<> file type or role";
 		print.it($"<>Cannot run '{f.Name}'. It is a <help editor/Class files, projects>class file<>. Need a test script (<+runClass 3|{ids}>create<>){s2}.");
 	}
-
+	
 	static void _SciLink_RunClassFile(string s) {
 		int action = s.ToInt(); //1 change role, 2 create Script project, 3 create new test script and set "run" attribute
 		var f = App.Model.Find(s[2..]); if (f == null) return;
@@ -118,12 +118,12 @@ static class CompileRun {
 				if (!_NewItem(out f2, "Script.cs", "test " + f.Name)) return;
 				f.TestScript = f2;
 			}
-
+			
 			//Creates new item above f or f's project folder.
 			bool _NewItem(out FileNode ni, string template, string name = null) {
 				bool isProject = f.FindProject(out var target, out _);
 				if (!isProject) target = f;
-
+				
 				//extract code from /// <example>
 				string example = null;
 				if (f.GetCurrentText(out var s) && s.RxMatch(@"(?m)^\h*/// *<example>\h*\R((\h*/// ?.*\R)+?)^\h*/// *</example>", 1, out RXGroup g)) {
@@ -131,7 +131,7 @@ static class CompileRun {
 						example = g.Value.RxReplace(@"(?m)^\h*/// ?", "");
 					}
 				}
-
+				
 				var text = new NewFileText();
 				if (action == 2) {
 					text.text = example ?? "//Class1.Function1();\r\n";
@@ -139,7 +139,7 @@ static class CompileRun {
 					text.meta = $"{(isProject ? "pr" : "c")} {f.ItemPath};";
 					text.text = example ?? $"//{(isProject ? "Library." : "")}Class1.Function1();\r\n";
 				}
-
+				
 				ni = App.Model.NewItem(template, new(target, FNInsert.Before), name, text: text);
 				return ni != null;
 			}
@@ -157,17 +157,17 @@ class RunningTask : ITreeViewItem {
 	public readonly FileNode f;
 	public readonly int taskId;
 	public readonly int processId;
-
+	
 	static int s_taskId;
-
+	
 	public RunningTask(FileNode f, WaitHandle hProcess, int processId) {
 		taskId = ++s_taskId;
 		this.f = f;
 		_process = hProcess;
 		this.processId = processId;
-
+		
 		RecentTT.TaskEvent(true, this);
-
+		
 		RegisteredWaitHandle rwh = null;
 		rwh = ThreadPool.RegisterWaitForSingleObject(_process, (context, wasSignaled) => {
 			rwh.Unregister(_process);
@@ -177,12 +177,12 @@ class RunningTask : ITreeViewItem {
 			App.Tasks.TaskEnded1(taskId, ec);
 		}, null, -1, true);
 	}
-
+	
 	/// <summary>
 	/// False if task is already ended or still not started.
 	/// </summary>
 	public bool IsRunning => _process is { } p && Api.WaitForSingleObject(p.SafeWaitHandle.DangerousGetHandle(), 0) == Api.WAIT_TIMEOUT;
-
+	
 	/// <summary>
 	/// Ends this task (kills process), if running.
 	/// Returns false if fails, unlikely.
@@ -191,18 +191,18 @@ class RunningTask : ITreeViewItem {
 	public bool End(bool onProgramExit) {
 		if (_process is { } p) {
 			var h = p.SafeWaitHandle.DangerousGetHandle();
-
+			
 			int pid = process.processIdFromHandle(h);
 			if (pid != 0) {
 				if (Panels.Debug?.EndIfDebugging(pid) == true) return true;
-
+				
 				//let it call Environment.Exit. It removes tray icons etc.
 				var w1 = wnd.findFast(pid.ToS(), script.c_auxWndClassName, messageOnly: true);
 				if (!w1.Is0 && w1.Post(Api.WM_CLOSE)) {
 					if (0 == Api.WaitForSingleObject(h, 1000)) return true;
 				}
 			}
-
+			
 			if (_process != null) {
 				bool ok = Api.TerminateProcess(h, -1);
 				if (onProgramExit) return true;
@@ -219,25 +219,25 @@ class RunningTask : ITreeViewItem {
 		return true;
 		//TODO3: release pressed keys.
 	}
-
+	
 	#region ITreeViewItem
-
+	
 	string ITreeViewItem.DisplayText => f.DisplayName;
-
+	
 	object ITreeViewItem.Image => f.Image;
-
+	
 	//TVCheck ITreeViewItem.CheckState { get; }
-
+	
 	//bool ITreeViewItem.IsDisabled { get; }
-
+	
 	//bool ITreeViewItem.IsBold { get; }
-
+	
 	//bool ITreeViewItem.IsSelectable { get; }
-
+	
 	//int ITreeViewItem.Color { get; }
-
+	
 	//int ITreeViewItem.TextColor => 0xff0000;
-
+	
 	#endregion
 }
 
@@ -249,45 +249,45 @@ class RunningTasks {
 		public readonly FileNode f;
 		public readonly Compiler.CompResults r;
 		public readonly string[] args;
-
+		
 		public _WaitingTask(FileNode f, Compiler.CompResults r, string[] args) {
 			this.f = f; this.r = r; this.args = args;
 		}
 	}
-
+	
 	readonly List<RunningTask> _a = new();
 	readonly List<_WaitingTask> _q = new(); //not Queue because may need to remove item at any index
 	bool _updateUI;
 	volatile bool _disposed;
-
+	
 	/// <summary>
 	/// Gets running tasks.
 	/// Order: the last started is the first in the list.
 	/// </summary>
 	public IReadOnlyList<RunningTask> Items => _a;
-
+	
 	public RunningTasks() {
 		App.Timer1sOr025s += _TimerUpdateUI;
 	}
-
+	
 	public void OnWorkspaceClosed() {
 		bool onExit = App.Loaded >= AppState.Unloading;
-
+		
 		if (onExit) {
 			_disposed = true;
 			App.Timer1sOr025s -= _TimerUpdateUI;
 		}
-
+		
 		for (int i = _a.Count; --i >= 0;) {
 			_EndTask(_a[i], onExit: onExit);
 		}
-
+		
 		if (onExit) _a.Clear();
 		_q.Clear();
-
+		
 		if (!onExit) _UpdatePanels();
 	}
-
+	
 	/// <summary>
 	/// Adds a started task to the 'running' list.
 	/// Must be called in the main thread.
@@ -298,7 +298,7 @@ class RunningTasks {
 		_a.Insert(0, rt);
 		_updateUI = true;
 	}
-
+	
 	/// <summary>
 	/// Called in a threadpool thread when a task process exited.
 	/// </summary>
@@ -307,26 +307,26 @@ class RunningTasks {
 		if (_disposed) return;
 		CommandLine.MsgWnd.Post(WM_TASK_ENDED, taskId, exitCode);
 	}
-
+	
 	/// <summary>
 	/// When task ended, this message is posted to CommandLine.MsgWnd, with wParam=taskId.
 	/// </summary>
 	public const int WM_TASK_ENDED = Api.WM_USER + 900;
-
+	
 	/// <summary>
 	/// Removes an ended task from the 'running' list. If a task is queued and can run, starts it.
 	/// When task ended, TaskEnded1 posts message WM_TASK_ENDED with task id in wParam to the message window, which calls this function.
 	/// </summary>
 	internal void TaskEnded2(nint wParam, nint lParam) {
 		if (_disposed) return;
-
+		
 		int taskId = (int)wParam;
 		int i = _Find(taskId);
 		if (i < 0) { Debug_.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
-
+		
 		RecentTT.TaskEvent(false, _a[i], (int)lParam);
 		_a.RemoveAt(i);
-
+		
 		for (int j = _q.Count; --j >= 0;) {
 			var t = _q[j];
 			if (_CanRunNow(t.f, t.r, out _)) {
@@ -335,27 +335,27 @@ class RunningTasks {
 				break;
 			}
 		}
-
+		
 		_updateUI = true;
 	}
-
+	
 	void _TimerUpdateUI() {
 		if (!_updateUI) return;
 		if (!App.Hmain.IsVisible) return;
 		_UpdatePanels();
 	}
-
+	
 	void _UpdatePanels() {
 		_updateUI = false;
 		Panels.Tasks.UpdateList();
 	}
-
+	
 	/// <summary>
 	/// Returns true if one or more tasks of file f are running.
 	/// </summary>
 	/// <param name="f">Can be null.</param>
 	public bool IsRunning(FileNode f) => null != _GetRunning(f);
-
+	
 	RunningTask _GetRunning(FileNode f) {
 		for (int i = 0; i < _a.Count; i++) {
 			var r = _a[i];
@@ -363,7 +363,7 @@ class RunningTasks {
 		}
 		return null;
 	}
-
+	
 	//currently not used
 	///// <summary>
 	///// Returns all running files.
@@ -378,12 +378,12 @@ class RunningTasks {
 	//	}
 	//	return a;
 	//}
-
+	
 	public RunningTask TaskFromProcessId(int processId) {
 		foreach (var v in _a) if (v.processId == processId) return v;
 		return null;
 	}
-
+	
 	/// <summary>
 	/// Ends all tasks of file f.
 	/// Returns true if was running.
@@ -401,26 +401,26 @@ class RunningTasks {
 		}
 		return wasRunning;
 	}
-
+	
 	/// <summary>
 	/// Ends a task, if still running.
 	/// </summary>
 	public void EndTask(RunningTask rt) {
 		if (_a.Contains(rt)) _EndTask(rt);
 	}
-
+	
 	bool _EndTask(RunningTask rt, bool onExit = false) {
 		Debug.Assert(_a.Contains(rt));
 		return rt.End(onExit);
 	}
-
+	
 	bool _CanRunNow(FileNode f, Compiler.CompResults r, out RunningTask running, bool runFromEditor = false) {
 		running = null;
 		if (r.ifRunning == MCIfRunning.run || (r.ifRunning == MCIfRunning.run_restart && !runFromEditor)) return true;
 		running = _GetRunning(f);
 		return running == null;
 	}
-
+	
 	/// <summary>
 	/// Executes the compiled assembly in new process.
 	/// Returns: process id if started now, 0 if failed, (int)script.RunResult_.deferred if scheduled to run later.
@@ -435,7 +435,7 @@ class RunningTasks {
 	/// <param name="debugAttach">Will attach the debugger.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
 		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false, Func<int, bool> debugAttach = null) {
-
+		
 		g1:
 		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
 			var ifRunning = r.ifRunning;
@@ -461,7 +461,7 @@ class RunningTasks {
 			}
 			return 0;
 		}
-
+		
 		_SpUac uac = _SpUac.normal;
 		if (!uacInfo.isUacDisabled) {
 			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
@@ -486,10 +486,10 @@ class RunningTasks {
 				}
 			}
 		}
-
+		
 		bool exeProgram = r.notInCache, debugger = debugAttach != null;
 		string exeFile, argsString;
-
+		
 		if (exeProgram) { //meta role exeProgram
 			exeFile = Compiler.DllNameToExeName(r.file, default);
 			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
@@ -497,20 +497,20 @@ class RunningTasks {
 			if (debugger) {
 				if (uac == _SpUac.elevate) { print.it("Cannot debug this script. Remove /*/ uac admin; /*/, or run LA as admin."); return 0; }
 			}
-
+			
 			exeFile = folders.ThisAppBS + $"Au.Task{(osVersion.isArm64Process ? "-arm" : "")}.exe";
-
+			
 			var f1 = r.flags;
 			if (runFromEditor) f1 |= MPFlags_.FromEditor;
 			if (App.IsPortable) f1 |= MPFlags_.IsPortable;
-
+			
 			byte[] taskParams = Serializer_.Serialize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, (int)f.Id, process.thisProcessId, (int)CommandLine.MsgWnd);
 			argsString = Convert.ToBase64String(taskParams);
 		}
-
+		
 		int pid = 0; WaitHandle hProcess = null;
 		try {
-			(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, exeProgram, runFromEditor, f.Id, debugAttach, r.flags.Has(MPFlags_.RedirectConsole));
+			(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, exeProgram, runFromEditor, f.Id, debugAttach, r);
 			if (pid == 0) return 0; //failed to start debugging
 			Api.AllowSetForegroundWindow(pid);
 		}
@@ -519,12 +519,12 @@ class RunningTasks {
 			//hProcess?.Dispose();
 			return 0;
 		}
-
+		
 		var rt = new RunningTask(f, hProcess, pid);
 		_Add(rt);
 		return pid;
 	}
-
+	
 	/// <summary>
 	/// How _StartProcess must start process.
 	/// Note: it is not UAC IL of the process.
@@ -535,18 +535,19 @@ class RunningTasks {
 		userFromAdmin, //start user process from this admin process
 		uiAccess, //start uiAccess process from this uiAccess process
 	}
-
+	
 	/// <summary>
 	/// Starts task process.
 	/// Returns (processId, processHandle). Throws if failed. Returns 0 if failed to attach debugger.
 	/// </summary>
-	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach, bool redirectConsoleInExe) {
+	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach, Compiler.CompResults cr) {
 		if (s_inSP) throw new AuException("_StartProcess: can't reenter"); //starting the debugger. See wait.forHandle below. Very rare, never mind.
 		s_inSP = true;
 		try {
 			(int pid, WaitHandle hProcess) r;
 			string cwd;
-
+			using TempEnvVar tev = default;
+			
 			if (exeProgram) {
 				if (s_cwdExe == null) {
 					//Pass this working directory to let the exe know it was launched from editor.
@@ -564,7 +565,7 @@ class RunningTasks {
 					cwd = s_cwdExe;
 					Api.ResetEvent(s_event1);
 				}
-
+				
 				var p = &SharedMemory_.Ptr->script;
 				p->pidEditor = process.thisProcessId;
 				p->hwndMsg = (int)CommandLine.MsgWnd;
@@ -573,11 +574,19 @@ class RunningTasks {
 				if (runFromEditor) flags |= 2;
 				if (App.IsPortable) flags |= 4;
 				if (wrPipeName != null) { flags |= 8; p->pipe = wrPipeName; }
-				if (redirectConsoleInExe) flags |= 16;
+				if (cr.flags.Has(MPFlags_.RedirectConsole)) flags |= 16;
 				p->flags = flags;
 				p->workspace = folders.Workspace;
+				
+				if (App.IsPortable && !(
+					cr.platform == MCPlatform.x86 //will use the shared 32-bit .NET Runtime, if installed. Portable LA does not have a private 32-bit runtime.
+					|| uac is _SpUac.elevate or _SpUac.userFromAdmin //will use the shared .NET Runtime, if installed. Can't pass environment variables. Never mind: could use an intermediate process, eg LA with certain cmdline.
+					)) {
+					bool arm64 = cr.platform == MCPlatform.arm64;
+					tev.Set(arm64 ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64", folders.ThisAppBS + (arm64 ? "dotnetARM" : "dotnet"));
+				}
 			} else cwd = folders.ThisApp;
-
+			
 			if (uac == _SpUac.elevate) {
 				var k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, cwd);
 				r = (k.ProcessId, k.ProcessHandle);
@@ -585,15 +594,15 @@ class RunningTasks {
 				//	Normally editor runs as admin in admin user account, and don't need to go through this.
 			} else {
 				var ps = new ProcessStarter_(exeFile, args, cwd, rawExe: true);
-
+				
 				if (debugAttach != null) ps.si.dwXCountChars = 1703529821; //let the process wait for "debugger attached" event
-
+				
 				var need = ProcessStarter_.Result.Need.WaitHandle;
 				var psr = uac == _SpUac.userFromAdmin
 					? ps.StartUserIL(need)
 					: ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
 				r = (psr.pid, psr.waitHandle);
-
+				
 				if (debugAttach != null) {
 					if (!debugAttach(psr.pid)) {
 						Api.TerminateProcess(psr.waitHandle.SafeWaitHandle.DangerousGetHandle(), 0);
@@ -602,7 +611,7 @@ class RunningTasks {
 					}
 				}
 			}
-
+			
 			if (exeProgram) {
 				nint hProc = r.hProcess.SafeWaitHandle.DangerousGetHandle();
 				if (debugAttach != null) {
@@ -610,12 +619,21 @@ class RunningTasks {
 					wait.forHandle(0, WHFlags.DoEvents, s_event1, hProc);
 				} else { //better low-level than wait.forHandle with flags 0
 					nint* ha = stackalloc nint[2] { s_event1, hProc };
-					Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
+					int signaled = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
+					if (signaled == 1) {
+						Api.GetExitCodeProcess(hProc, out int ec);
+						var se = $"Process `{pathname.getName(exeFile)}` ended before starting to execute managed code.\r\n\tExit code: {ec}";
+						if (App.IsPortable) {
+							if (cr.platform == MCPlatform.x86) se += "\r\n\tMake sure the 32-bit .NET Desktop Runtime is installed on this computer. Or in Properties select another platform. Portable LibreAutomate does not have a private 32-bit runtime.";
+							else if (uac is _SpUac.elevate or _SpUac.userFromAdmin) se += "\r\n\tMake sure the .NET Desktop Runtime is installed on this computer. Or in Properties select another uac or role miniProgram. Now the process cannot use the private .NET runtime bundled with portable LibreAutomate.";
+						}
+						print.warning(se, -1);
+					}
 				}
-
+				
 				Api.ResetEvent(s_event1);
 			}
-
+			
 			return r;
 		}
 		finally { s_inSP = false; }
@@ -623,7 +641,7 @@ class RunningTasks {
 	static IntPtr s_event1;
 	static string s_cwdExe;
 	static bool s_inSP;
-
+	
 	int _Find(int taskId) {
 		for (int i = 0; i < _a.Count; i++) {
 			if (_a[i].taskId == taskId) return i;

@@ -183,23 +183,24 @@ static class DotnetUtil {
 	public static string SdkDir { get; private set; }
 	
 	/// <summary>
-	/// Downloads and extracts both .NET runtimes (core and desktop) for CPU architecture x64/ARM64 other than of this process.
-	/// Run in a background thread.
+	/// Downloads and extracts .NET core and desktop runtimes for specified CPU architecture.
 	/// </summary>
-	/// <param name="extractDir">Extract both to this directory.</param>
-	/// <param name="portable">Extract to <i>dir</i> subdirectory <c>"dotnet"</c> (if x64) or <c>"dotnetARM"</c> (if ARM64). Delete old subdirectory.</param>
+	/// <param name="arch">"x64" or "arm64".</param>
+	/// <param name="dotnetDir">Extract to this directory. At first deletes this directory.
+	/// The layout will be the same as of the shared runtime:
+	/// - folder `shared` (both runtimes inside);
+	/// - folder `host` (hostfxr.dll deep inside);
+	/// </param>
+	/// <remarks>
+	/// Version = `Environment.Version`.
+	/// If already downloaded (in temp dir), just extracts. Deletes old downloaded zip files.
+	/// Run in a background thread.
+	/// </remarks>
 	/// <exception cref="OperationCanceledException">User-canceled.</exception>
 	/// <exception cref="Exception">Failed.</exception>
-	public static void DownloadNetRuntimesForOtherArch(string extractDir, bool portable) {
-		bool forArm = !osVersion.isArm64Process;
+	public static void DownloadNetRuntimes(string arch, string dotnetDir) {
+		filesystem.delete(dotnetDir);
 		
-		if (portable) {
-			extractDir = extractDir + "\\dotnet" + (forArm ? "ARM" : null);
-			filesystem.delete(extractDir);
-			filesystem.createDirectory(extractDir);
-		}
-		
-		string arch = forArm ? "arm64" : "x64";
 		string version = Environment.Version.ToString();
 		
 		_ClearOld();
@@ -220,14 +221,12 @@ static class DotnetUtil {
 			}
 			
 			print.it("Extracting " + filename);
-			var starts = $"shared/Microsoft.{(desktop ? "WindowsDesktop" : "NETCore")}.App/{version}/";
 			using var z = ZipFile.OpenRead(zip);
 			foreach (var e in z.Entries) {
 				var relPath = e.FullName;
-				if (!relPath.Starts(starts, true)) continue;
-				relPath = relPath[starts.Length..];
-				var s = extractDir + "\\" + relPath;
-				if (relPath.Contains('/')) filesystem.createDirectoryFor(s);
+				if (!relPath.Contains('/')) continue;
+				var s = dotnetDir + "\\" + relPath;
+				filesystem.createDirectoryFor(s);
 				e.ExtractToFile(s, overwrite: true);
 			}
 		}
@@ -561,6 +560,25 @@ class WindowDisabler {
 			_disposed = true;
 			if (--_d._count == 0)
 				_d._window.IsEnabled = true;
+		}
+	}
+}
+
+/// <summary>
+/// Sets an environment variable of this process. Clears/restores when disposing.
+/// </summary>
+struct TempEnvVar : IDisposable {
+	string _name, _prevValue;
+	public void Set(string name, string value) {
+		if (_name != null) throw new InvalidOperationException();
+		_prevValue = Environment.GetEnvironmentVariable(name);
+		Environment.SetEnvironmentVariable(_name = name, value);
+	}
+	
+	public void Dispose() {
+		if (_name != null) {
+			Environment.SetEnvironmentVariable(_name, null);
+			_name = null;
 		}
 	}
 }
