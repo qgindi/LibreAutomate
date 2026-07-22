@@ -15,10 +15,18 @@
 		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
 		<GenerateDocumentationFile>False</GenerateDocumentationFile>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
-		<NoWin32Manifest>true</NoWin32Manifest>
+		<Win32Resource>$(SolutionDir)Au.Editor\resources\Au.Task.exe.res</Win32Resource>
 		<NuGetAudit>False</NuGetAudit>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DebugType>embedded</DebugType>
-		<IsPublishable>True</IsPublishable>
+		<IsPublishable>False</IsPublishable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DebugType>embedded</DebugType>
+		<IsPublishable>False</IsPublishable>
 	</PropertyGroup>
 
 	<ItemGroup>

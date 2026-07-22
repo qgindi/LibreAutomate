@@ -1,4 +1,4 @@
-//---------
+//-----------
 
 #if DEBUG || IDE_LA
 extern alias CAW;

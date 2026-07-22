@@ -19,7 +19,6 @@ static class GitBinaryFiles {
 				(null, "xrefmap.yml", false),
 				("Roslyn", "*.dll", false),
 				("Debugger", "**m *.dll||*.exe", true),
-				(@"..\Other\BuildEvents\.tools", "ResourceHacker.exe", false),
 			];
 
 		List<FEFile> aFiles = new();
@@ -97,8 +96,6 @@ static class GitBinaryFiles {
 
 			int r = run.console(out string so, solutionDirBS + @"_\32\7za.exe", $@"x ""{zipFile}"" -aoa", laDir);
 			if (r != 0) throw new AuException("Failed to extract LaBinary.7z. " + so);
-
-			filesystem.moveTo(laDir + "ResourceHacker.exe", solutionDirBS + @"Other\BuildEvents\.tools");
 
 			filesystem.delete(restoreFile);
 		}

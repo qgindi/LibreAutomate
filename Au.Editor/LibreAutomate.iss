@@ -1,4 +1,4 @@
-﻿#define MyAppName "LibreAutomate"
+#define MyAppName "LibreAutomate"
 #define MyAppNameShort "LibreAutomate"
 #define MyAppVersion "1.17.0"
 #define MyAppPublisher "Gintaras Didžgalvis"
@@ -129,8 +129,6 @@ Type: filesandordirs; Name: "{app}\Templates"
 
 //FUTURE: remove this code
 Type: files; Name: "{app}\Au.Task-x64.exe"
-Type: files; Name: "{app}\dotnet_ref_editor.txt"
-Type: files; Name: "{app}\dotnet_ref_task.txt"
 Type: files; Name: "{autoprograms}\LibreAutomate C#.lnk"
 
 [Icons]

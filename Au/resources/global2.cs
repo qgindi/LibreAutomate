@@ -41,6 +41,6 @@ namespace Au.More;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class Au_ {
 	///
-	public const string Version = "1.17.0";
+	public const string Version = "1.17.0"; //Don't edit here. Run script "LA version and resources.cs". It changes version everywhere and creates .res files.
 }
 #endif

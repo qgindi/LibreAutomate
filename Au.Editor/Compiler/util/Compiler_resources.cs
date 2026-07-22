@@ -123,7 +123,7 @@ partial class Compiler {
 				long ishOffset = (byte*)ish - pBase; if (ishOffset <= 512 || ishOffset > 1024 - sizeof(IMAGE_SECTION_HEADER)) _Throw();
 				
 				//write IMAGE_SECTION_HEADER of .rsrc section
-				for (int i = 0; i < 5; i++) ish->Name[i] = (byte)".rsrc"[i];
+				".rsrc"u8.CopyTo(new(ish->Name, 8));
 				ish->VirtualSize = resSize;
 				ish->VirtualAddress = resRva;
 				ish->SizeOfRawData = Math2.AlignUp(resSize, fileAlignment);

@@ -4,13 +4,16 @@ The program version format is major.minor.build, like 1.20.5.
 	Minor: changed when added some significant features.
 	Build: changed when fixed bugs between minor versions. Also may have some new features.
 
-To update version info of dll files (Au, Au.Editor, Au.Controls):
-	Open global2.cs and edit Au_.Version. Single global2.cs is used by all these projects.
-	It's important to update Au version info whenever something changed in Au or its dependencies (AuCpp etc).
-	Also may need to update year in AssemblyCopyright attribute (it's displayed in About info).
-To update version info of the setup file:
-	Open the .iss file in Inno Script Studio and edit MyAppVersion.
-Also may need to update year in LICENSE.txt.
+To update version info everywhere, run script "LA version and resources.cs".
+	It also creates .res files for Au.Editor and Au.Task.
+	When building Au.Task and Au.Editor, VS adds the .res to x64 exe files. The BuildEvents project creates arm64 exe files.
+	It also updates year in copyright texts.
+The following is how to update everything (except .res) manually. Don't do it.
+	To *manually* update version info of dll files (Au, Au.Editor, Au.Controls):
+		Open global2.cs and edit Au_.Version. Single global2.cs is used by all these projects.
+		Also may need to update year in AssemblyCopyright attribute (it's displayed in About info). Don't update year in LICENSE.txt.
+	To *manually* update version info of the setup file:
+		Open the .iss file in Inno Script Studio and edit MyAppVersion.
 
 All significant changes of that version must be documented in Other/DocFX/_doc/changes/vMajor.Minor.md. Do it whenever making changes.
 
@@ -33,7 +36,7 @@ May need to delete test code. Or use #if DEBUG, like in Tests.cs.
 
 May need to add new OS version to class osVersion. Usually once/year.
 
-Change version info (see above) in global2.cs.
+Run script "LA version and resources.cs".
 
 Build solution in config Release, all platforms.
 	NOTE: use the "Rebuild solution" command, else VS may not update something.
@@ -53,7 +56,7 @@ May need to update some info in README.md for github. Eg the screenshot and "how
 Review the md file of current version.
 	If it's still "future.md", rename ( RENAME!!! ) to "v1.x.md".
 
-Open the .iss file in Inno Script Studio. Change MyAppVersion. Review. Compile.
+Open the .iss file in Inno Script Studio. Review. Compile.
 	Run the setup file to test. Let it run LA. Test on other OS too. Occasionally uninstall/install, not just upgrade.
 
 Github commit all and push. The message could be like v1.2.3.

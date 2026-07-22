@@ -1,6 +1,7 @@
 // Build event script for Au.Editor and Cpp projects.
 
 using Microsoft.Win32;
+using Vestris.ResourceLib;
 
 script.setup(exception: UExcept.Dialog | UExcept.Print);
 
@@ -80,20 +81,7 @@ bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 /// Uses our apphost.exe as template. Adds resources.
 /// Deletes Au.Editor.*.json files.
 int EditorPostBuild() {
-	//perf.first();
 	var dirOut = solutionDirBS + @"_\";
-
-#if !true //copy output files from `$(ProjectDir)$(OutDir)` to dirOut. Bad: can't start LA from VS (no program path setting in UI; VS ignores executablePath in launchsettings.json).
-	var dirBin = args[2][..^1];
-	int rce = run.console(out string rco, "robocopy.exe", $"{dirBin} {dirOut} /s /xd runtimes /xf *.json *.exe");
-	if (rce >= 8) { print.it(rco); return 10; }
-	foreach (var rtd in new string[] { @"\runtimes\win-x64", @"\runtimes\win-arm64" }) {
-		var sd1 = dirBin + rtd;
-		if (filesystem.exists(sd1)) run.console("robocopy.exe", $"{sd1} {dirOut + rtd} /s /xf *.json *.exe");
-	}
-#else //use `<OutDir>`. Bad: VS adds unwanted files to dirOut. Eg from NuGet packages may add native dlls for many unused OS/platforms.
-	//filesystem.delete(Directory.GetFiles(dirOut, "..."));
-#endif
 
 	//make sure `.git\hooks\pre-push` exists. See `PrePushHook` in `GitBinaryFiles.cs`.
 	var prePush = solutionDirBS + @".git\hooks\pre-push";
@@ -107,104 +95,47 @@ exit $?
 """);
 	}
 
-	string exe1 = "Au.Editor.exe", exe2 = "Au.Task.exe";
-	if (script.testing) {
-		exe1 = "Au.Editor2.exe"; exe2 = "Au.Task2.exe";
-		print.ignoreConsole = true;
-		//todo: Environment.CurrentDirector = 
-	}
-
-	//This script creates both x64 and arm64 Au.Editor.exe and Au.Task.exe. Adds resources.
-	//It would be difficult or impossible in VS. Eg can't add multiple icons, can't quickly build both x64 and arm64.
+	//How native resources (version info, icons, manifest) are added to LA program files:
+	//1. To change LA/Au version, run script "LA version and resources.cs".
+	//		It changes Au_.Version in global2.cs, and using rc.exe creates .res files for Au.Editor and Au.Task projects. These files are specified in project properties.
+	//2. Build Au.Editor project. Because of dependencies and build order, it at first builds Au, then Au.Task, then Au.Editor.
+	//		Now we have Au.dll with new Au_.Version, Au.Task.exe with new resources, and Au.Editor.exe with new resources.
+	//3. This code runs in Au.Editor post-build.
+	//		If version changed or an arm64 file does not exist:
+	//			Copies the arm64 apphost.exe to Au.Editor-arm.exe and Au.Task.exe, patches them, and copies resources into them from the x64 exe files.
+	//			Also copies json files for the arm64 programs.
 
 	using var rk = Registry.CurrentUser.CreateSubKey(@"Software\Au\BuildEvents");
-	var verResFile1 = folders.ThisApp + $"{exe1}.res";
-	var verResFile2 = folders.ThisApp + $"{exe2}.res";
-
-	var v = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor.dll");
-	bool verChanged = !(rk.GetValue("version") is string s1 && s1 == v.FileVersion);
-	//verChanged = true;
-	if (verChanged || !filesystem.exists(verResFile1)) if (!_VersionInfo(verResFile1, exe1, "LibreAutomate")) return 1;
-	if (verChanged || !filesystem.exists(verResFile2)) if (!_VersionInfo(verResFile2, exe2, "LibreAutomate miniProgram")) return 2;
-
-	//TODO3: test https://github.com/resourcelib/resourcelib
+	bool verChanged = rk.GetValue("version") as string != Au_.Version;
+	verChanged = true;//TODO
+	if (!verChanged && filesystem.exists(dirOut + "Au.Editor-arm.exe") && filesystem.exists(dirOut + "Au.Task-arm.exe")) return 0;
+	print.it("Creating arm64 exe files.");
 
 	_EnsureApphostOK(dirOut);
+	_CreateArmExe(true);
+	_CreateArmExe(false);
 
-	for (int i = 0; i < 2; i++) {
-		string appHost = $@"64\{(i == 1 ? @"ARM\" : "")}apphost.exe";
-		string exe1Arch = exe1.Insert(^4, i == 0 ? "" : "-arm"), exe2Arch = exe2.Insert(^4, i == 0 ? "" : "-arm");
-		var s = $"""
-[FILENAMES]
-Exe={appHost}
-SaveAs={exe1Arch}
-[COMMANDS]
--add ..\Au.Editor\Resources\ico\app.ico, ICONGROUP,32512,0
--add ..\Au.Editor\Resources\ico\app_disabled.ico, ICONGROUP,32513,0
--add ..\Au.Editor\Resources\ico\PictureInPicture.ico, ICONGROUP,32514,0
--addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
--add "{verResFile1}", VERSIONINFO,1,0
+	void _CreateArmExe(bool editor) {
+		string fn = editor ? "Au.Editor" : "Au.Task";
+		string armExe = dirOut + fn + "-arm.exe";
 
-""";
-		if (!_RunRhScript(s, exe1Arch)) return 3;
-		_PatchApphost(dirOut + exe1Arch, "Au.Editor.dll");
+		filesystem.copy(dirOut + @"64\arm\apphost.exe", armExe, FIfExists.Delete);
+		_PatchApphost(armExe, fn + ".dll");
 
-		filesystem.getProperties(dirOut + appHost, out var p1);
-		if (verChanged || !filesystem.getProperties(dirOut + exe2Arch, out var p2) || p1.CreationTimeUtc > p2.LastWriteTimeUtc) {
-			print.it($"Creating {exe2Arch}");
-			s = $"""
-[FILENAMES]
-Exe={appHost}
-SaveAs={exe2Arch}
-[COMMANDS]
--add ..\Au.Editor\Resources\ico\Script.ico, ICONGROUP,32512,0
--addoverwrite ..\Au.Editor\Resources\Au.manifest, MANIFEST,1,0
--add "{verResFile2}", VERSIONINFO,1,0
+		_CopyResources(dirOut + fn + ".exe", armExe);
 
-""";
-			if (!_RunRhScript(s, exe2Arch)) return 4;
-			_PatchApphost(dirOut + exe2Arch, "Au.Task.dll");
-		}
-
+		filesystem.copy(dirOut + fn + ".deps.json", dirOut + fn + "-arm.deps.json", FIfExists.Delete);
+		filesystem.copy(dirOut + fn + ".runtimeconfig.json", dirOut + fn + "-arm.runtimeconfig.json", FIfExists.Delete);
 	}
 
-	filesystem.copy(dirOut + "Au.Editor.deps.json", dirOut + "Au.Editor-arm.deps.json", FIfExists.Delete);
-	filesystem.copy(dirOut + "Au.Task.deps.json", dirOut + "Au.Task-arm.deps.json", FIfExists.Delete);
-	filesystem.copy(dirOut + "Au.Editor.runtimeconfig.json", dirOut + "Au.Editor-arm.runtimeconfig.json", FIfExists.Delete);
-	filesystem.copy(dirOut + "Au.Task.runtimeconfig.json", dirOut + "Au.Task-arm.runtimeconfig.json", FIfExists.Delete);
-
-	if (verChanged) {
-		rk.SetValue("version", v.FileVersion);
-	}
-
-	//perf.nw();
+	rk.SetValue("version", Au_.Version);
 	return 0;
 
-	bool _RunRhScript(string s, string fileName) {
-		var exePath = dirOut + fileName;
-		filesystem.delete(exePath);
-		using var tf = new TempFile();
-		filesystem.saveText(tf, s);
-		if (!_RunCL($"-script \"{tf.File}\"")) return false;
-		var dt = DateTime.UtcNow;
-		File.SetCreationTimeUtc(exePath, dt);
-		File.SetLastWriteTimeUtc(exePath, dt);
-		return true;
-	}
-
-	bool _RunCL(string cl) {
-		var rh = solutionDirBS + @"Other\BuildEvents\.tools\ResourceHacker";
-		int r = run.console(rh + ".exe", cl, dirOut);
-		if (r == 0) return true;
-		print.it(File.ReadAllText(rh + ".log", Encoding.Unicode)); //RH is not a console program and we cannot capture its console output.
-		return false;
-	}
-
-	static unsafe void _PatchApphost(string path, string name) {
+	static unsafe void _PatchApphost(string path, string dllFilename) {
 		//write dll name
 		var b = File.ReadAllBytes(path);
 		int i = b.AsSpan().IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8);
-		i += Encoding.UTF8.GetBytes(name, 0, name.Length, b, i);
+		i += Encoding.UTF8.GetBytes(dllFilename, 0, dllFilename.Length, b, i);
 		b.AsSpan(i, 64).Clear();
 
 		//set subsystem = GUI (default is console)
@@ -238,41 +169,15 @@ SaveAs={exe2Arch}
 		return true;
 	}
 
-	bool _VersionInfo(string resFile, string fileName, string fileDesc) {
-		print.it($"Creating version resource for {fileName}");
-		var rc = $$"""
-
-1 VERSIONINFO
-FILEVERSION {{v.FileMajorPart}},{{v.FileMinorPart}},{{v.FileBuildPart}},{{v.FilePrivatePart}}
-PRODUCTVERSION {{v.ProductMajorPart}},{{v.ProductMinorPart}},{{v.ProductBuildPart}},{{v.ProductPrivatePart}}
-FILEOS 0x4
-FILETYPE 0x1
-{
-BLOCK "StringFileInfo"
-{
-	BLOCK "000004b0"
-	{
-		VALUE "CompanyName", "{{v.CompanyName}}"
-		VALUE "FileDescription", "{{fileDesc}}"
-		VALUE "FileVersion", "{{v.FileVersion}}"
-		VALUE "InternalName", "{{fileName[..^4]}}"
-		VALUE "LegalCopyright", "Copyright 2020-{{DateTime.UtcNow.Year}} Gintaras Didžgalvis"
-		VALUE "OriginalFilename", "{{fileName}}"
-		VALUE "ProductName", "{{v.ProductName}}"
-		VALUE "ProductVersion", "{{v.ProductVersion}}"
-	}
-}
-
-BLOCK "VarFileInfo"
-{
-	VALUE "Translation", 0x0000 0x04B0  
-}
-}
-
-""";
-		using var rcFile = new TempFile(".rc");
-		filesystem.saveText(rcFile, rc, encoding: Encoding.UTF8);
-		return _RunCL($"""-open "{rcFile}" -save "{resFile}" -action compile""");
+	static void _CopyResources(string from, string to) {
+		var vi = new ResourceInfo();
+		vi.Load(from);
+		foreach (ResourceId rt in vi.ResourceTypes) {
+			if (rt.Id == 3) continue; //ICON
+			foreach (Resource resource in vi.Resources[rt]) {
+				resource.SaveTo(to);
+			}
+		}
 	}
 }
 
