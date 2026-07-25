@@ -340,4 +340,75 @@ static partial class CompilerUtil {
 			}
 		}
 	}
+	
+	public static class Apphost {
+		/// <summary>
+		/// Writes the managed dll name to an exeProgram apphost.
+		/// </summary>
+		/// <param name="b">All bytes of apphost. Must not be already patched.</param>
+		/// <param name="fileName">Like <c>"x.dll"</c>.</param>
+		public static void PatchExeProgram_DllName(Span<byte> b, string fileName) {
+			//write filename in placeholder memory, which is 1025 bytes starting with this string (64-bytes)
+			int i = b.IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8);
+			i += Encoding.UTF8.GetBytes(fileName, b[i..]);
+			b.Slice(i, 64).Clear();
+		}
+		
+		/// <summary>
+		/// Writes relative dotnet directory path to a portable LA exe file. Called by DPortable (portable LA setup).
+		/// </summary>
+		/// <param name="apphostPath">Apphost path. The apphost must not be already patched.</param>
+		/// <param name="dotnetDir">Dotnet directory path relative to the apphost.</param>
+		public static void PatchPortableLA_DotnetPath(string apphostPath, string dotnetDir) {
+			Span<byte> b = filesystem.loadBytes(apphostPath);
+			
+			//see C:\code-other\runtime-main\src\native\corehost\apphost\standalone\hostfxr_resolver.cpp
+			int i = b.IndexOf("\0\019ff3e9c3602ae8e841925bb461a0adb064a1f1903667a5e0d87e8f608f425ac"u8);
+			b[i] = 2; //search only dotnetDir
+			i += 2;
+			i += Encoding.UTF8.GetBytes(dotnetDir, b[i..]);
+			b.Slice(i, 64).Clear();
+			
+			filesystem.saveBytes(apphostPath, b);
+		}
+		
+		/// <summary>
+		/// Writes relative dotnet directory path to a portable exeProgram apphost. Called in portable LA.
+		/// If already patched, updates if need.
+		/// </summary>
+		/// <param name="bytes">If not empty, writes to it, else loads/saves file <i>apphostPath</i>. Uses <i>apphostPath</i> in any case.</param>
+		/// <returns><c>false</c> if cannot patch. Either <i>apphostPath</i> is in different drive than portable LA, or apphost bytes invalid.</returns>
+		public static bool PatchPortableExeProgram_DotnetPath(string apphostPath, bool arm64, Span<byte> bytes = default) {
+			var dotnet = Path.GetRelativePath(pathname.getDirectory(apphostPath), folders.ThisApp);
+			if (pathname.isFullPath(dotnet)) return false; //different drive, can't get relative path
+			dotnet += (arm64 ? @"\dotnetARM" : @"\dotnet");
+			
+			bool load = bytes.IsEmpty;
+			Span<byte> b = load ? filesystem.loadBytes(apphostPath) : bytes;
+			
+			var find = "\0\019ff3e9c3602ae8e841925bb461a0adb064a1f1903667a5e0d87e8f608f425a"u8; //without 'c' or '_' at the end
+			int i = b.IndexOf(find);
+			if (i < 0) return false; //somebody modified it. Let it silently fail to run.
+			
+			//already patched?
+			byte last = b[i + find.Length];
+			if (last == (byte)'_') { //already patched
+				var dn8 = dotnet.ToUTF8();
+				int j = i - dn8.Length;
+				var s = b[j..i];
+				if (s.SequenceEqual(dn8) && b[j - 2] == 15 && b[j - 1] == 0) return true; //same path and flags
+				i = b[0..i].LastIndexOf((byte)0) - 1;
+			} //else 'c'
+			
+			b[i] = 15; //search app dir, then dotnetDir, env var, global
+			i += 2;
+			i += Encoding.UTF8.GetBytes(dotnet, b[i..]);
+			
+			find.CopyTo(b[i..]);
+			b[i + find.Length] = (byte)'_';
+			
+			if (load) filesystem.saveBytes(apphostPath, b);
+			return true;
+		}
+	}
 }

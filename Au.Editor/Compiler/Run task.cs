@@ -546,7 +546,7 @@ class RunningTasks {
 		try {
 			(int pid, WaitHandle hProcess) r;
 			string cwd;
-			using TempEnvVar tev = default;
+			using _Portable portable = default;
 			
 			if (exeProgram) {
 				if (s_cwdExe == null) {
@@ -578,12 +578,9 @@ class RunningTasks {
 				p->flags = flags;
 				p->workspace = folders.Workspace;
 				
-				if (App.IsPortable && !(
-					cr.platform == MCPlatform.x86 //will use the shared 32-bit .NET Runtime, if installed. Portable LA does not have a private 32-bit runtime.
-					|| uac is _SpUac.elevate or _SpUac.userFromAdmin //will use the shared .NET Runtime, if installed. Can't pass environment variables. Never mind: could use an intermediate process, eg LA with certain cmdline.
-					)) {
-					bool arm64 = cr.platform == MCPlatform.arm64;
-					tev.Set(arm64 ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64", folders.ThisAppBS + (arm64 ? "dotnetARM" : "dotnet"));
+				if (App.IsPortable) {
+					portable.Before(exeFile, cr.platform, out bool clearEnvVar);
+					if (clearEnvVar) p->flags |= 32;
 				}
 			} else cwd = folders.ThisApp;
 			
@@ -591,7 +588,6 @@ class RunningTasks {
 				var k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, cwd);
 				r = (k.ProcessId, k.ProcessHandle);
 				//note: don't try to start task without UAC consent. It is not secure.
-				//	Normally editor runs as admin in admin user account, and don't need to go through this.
 			} else {
 				var ps = new ProcessStarter_(exeFile, args, cwd, rawExe: true);
 				
@@ -623,10 +619,7 @@ class RunningTasks {
 					if (signaled == 1) {
 						Api.GetExitCodeProcess(hProc, out int ec);
 						var se = $"Process `{pathname.getName(exeFile)}` ended before starting to execute managed code.\r\n\tExit code: {ec}";
-						if (App.IsPortable) {
-							if (cr.platform == MCPlatform.x86) se += "\r\n\tMake sure the 32-bit .NET Desktop Runtime is installed on this computer. Or in Properties select another platform. Portable LibreAutomate does not have a private 32-bit runtime.";
-							else if (uac is _SpUac.elevate or _SpUac.userFromAdmin) se += "\r\n\tMake sure the .NET Desktop Runtime is installed on this computer. Or in Properties select another uac or role miniProgram. Now the process cannot use the private .NET runtime bundled with portable LibreAutomate.";
-						}
+						if (App.IsPortable) portable.Failed(ref se, cr.platform, uac);
 						print.warning(se, -1);
 					}
 				}
@@ -647,5 +640,34 @@ class RunningTasks {
 			if (_a[i].taskId == taskId) return i;
 		}
 		return -1;
+	}
+	
+	struct _Portable : IDisposable {
+		string _evName, _evValue;
+		
+		public void Before(string exeFile, MCPlatform platform, out bool clearEnvVar) {
+			clearEnvVar = false;
+			if (platform == MCPlatform.x86) return; //sorry, we don't have the runtime
+			
+			bool arm64 = platform == MCPlatform.arm64;
+			if (!CompilerUtil.Apphost.PatchPortableExeProgram_DotnetPath(exeFile, arm64)) { //in portable LA, compiler calls this too, but now may need to patch programs copied from non-portable workspace or moved etc
+				_evName = arm64 ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64";
+				_evValue = Environment.GetEnvironmentVariable(_evName);
+				Environment.SetEnvironmentVariable(_evName, folders.ThisAppBS + (arm64 ? "dotnetARM" : "dotnet"));
+				clearEnvVar = true;
+				
+				//If will be changed UAC IL, the process will not inherit environment variables. Then it will use the shared .NET Runtime, or exit if not installed. Never mind, it's rare.
+				//Temporarily changing env var in registy works too, but dangerous. During the UAC prompt, this process may end without restoring the env var, or other .NET processes may start.
+			}
+		}
+		
+		public void Failed(ref string se, MCPlatform platform, _SpUac uac) {
+			if (platform == MCPlatform.x86) se += "\r\n\tMake sure the 32-bit .NET Desktop Runtime is installed on this computer. Or in Properties select another platform. Portable LA does not have a private 32-bit runtime.";
+			else if (uac is _SpUac.elevate or _SpUac.userFromAdmin) se += "\r\n\tMake sure the .NET Desktop Runtime is installed on this computer. Or in Properties select another uac or role miniProgram. Or let the output path be in the portable LA drive. Now the process cannot use the private .NET runtime bundled with portable LA.";
+		}
+		
+		public void Dispose() {
+			if (_evName != null) Environment.SetEnvironmentVariable(_evName, _evValue);
+		}
 	}
 }

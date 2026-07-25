@@ -100,7 +100,7 @@ partial class Compiler {
 		
 		public void WriteAll(string exeFile, byte[] exeData, MCPlatform platform, bool console) {
 			fixed (byte* pBase = exeData) {
-				IMAGE_NT_HEADERS64* nth = ImageNtHeader(pBase); if (nth == null) _Throw();
+				var nth = (IMAGE_NT_HEADERS64*)(pBase + *(uint*)(pBase + 0x3C)); //or IMAGE_NT_HEADERS64* nth = ImageNtHeader(pBase);
 				var oh = &nth->OptionalHeader;
 				uint fileAlignment = oh->FileAlignment;
 				uint resRva = oh->SizeOfImage;
@@ -265,9 +265,6 @@ partial class Compiler {
 		
 		[DllImport("kernel32.dll")]
 		internal static extern int SizeofResource(IntPtr hModule, IntPtr hResInfo);
-		
-		[DllImport("dbghelp.dll")]
-		internal static extern IMAGE_NT_HEADERS64* ImageNtHeader(byte* Base);
 		
 #pragma warning disable 649 //field never assigned
 		

@@ -6,16 +6,22 @@
 print.it("Example");
 
 //show message box. Exit if Cancel.
-if (!dialog.showOkCancel("Run Notepad?")) return;
+if (!dialog.showOkCancel("Run File Explorer?")) return;
 
-//run Notepad
-run.it(@"notepad.exe");
+//open a folder in File Explorer
+run.it(@"C:\Program Files");
 
-//wait 1 s
-1.s();
+//wait 3 s
+3.s();
 
-//create string variable s
+//The above is the simplest run-and-wait code. Try hotkey Ctrl+Shift+Q to create code that waits for window.
+
+//send keys
+keys.send("Ctrl+L"); //focus the address bar
+
+//create two variables
 string s = "text";
+bool undo = true; //or false
 
 //repeat 5 times
 for (int i = 0; i < 5; i++) {
@@ -25,6 +31,8 @@ for (int i = 0; i < 5; i++) {
 	//wait 500 ms
 	500.ms();
 	
-	//send keys
-	keys.send("Ctrl+Z"); //Undo
+	//if variable undo is true, execute statements in the { }
+	if (undo) {
+		keys.send("Ctrl+Z"); //Undo
+	}
 }

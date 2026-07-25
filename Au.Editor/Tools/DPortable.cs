@@ -121,10 +121,15 @@ class DPortable : KDialogWindow {
 		
 		if (_dApp.copy || !_exists) {
 			_Copy(_dApp, "/mir /xf unins* /xd dotnet dotnetARM data");
-			_PatchApphosts();
 			
 			bool isArm = osVersion.isArm64Process;
 			if (isArm) _RenameArm64();
+			
+			//write the app-relative path of the portable .NET runtime into program files that will use it
+			foreach (string s in new[] { "Au.Editor.exe", "Au.Editor-arm.exe", "Au.Task.exe", "Au.Task-arm.exe" }) {
+				var path = App.Settings.portable_dir + @"\" + s;
+				CompilerUtil.Apphost.PatchPortableLA_DotnetPath(path, @"dotnet" + (s.Contains("-arm") ? "ARM" : ""));
+			}
 			
 			//.NET runtimes
 			
@@ -206,6 +211,7 @@ class DPortable : KDialogWindow {
 			};
 		}
 		
+		//the LA setup on arm64 renames Au.Editor.exe to Au.Editor-x64.exe, and Au.Editor-arm.exe to Au.Editor.exe. Now restore the original filenames of portable LA files.
 		void _RenameArm64() {
 			var dir = _dApp.portable;
 			_Rename("Au.Editor.exe");
@@ -216,23 +222,6 @@ class DPortable : KDialogWindow {
 					filesystem.rename(s1, fileName.Insert(^4, "-arm"));
 					filesystem.rename(s2, fileName);
 				}
-			}
-		}
-		
-		//Writes the app-relative path of the portable .NET runtime into program files that will use it.
-		static void _PatchApphosts() {
-			foreach (string s in new string[] { "Au.Editor.exe", "Au.Editor-arm.exe", "Au.Task.exe", "Au.Task-arm.exe" }) {
-				var path = App.Settings.portable_dir + @"\" + s;
-				var b = filesystem.loadBytes(path);
-				
-				int i = b.AsSpan().IndexOf("\0\019ff3e9c3602ae8e841925bb461a0adb064a1f1903667a5e0d87e8f608f425ac"u8); //C:\code-other\runtime-main\src\native\corehost\apphost\standalone\hostfxr_resolver.cpp
-				b[i] = 2;
-				i += 2;
-				var dotnet = @"dotnet" + (s.Contains("-arm") ? "ARM" : "");
-				i += Encoding.UTF8.GetBytes(dotnet, 0, dotnet.Length, b, i);
-				b.AsSpan(i, 64).Clear();
-				
-				filesystem.saveBytes(path, b);
 			}
 		}
 	}

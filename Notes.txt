@@ -36,12 +36,12 @@ May need to delete test code. Or use #if DEBUG, like in Tests.cs.
 
 May need to add new OS version to class osVersion. Usually once/year.
 
-Run script "LA version and resources.cs".
+If need to change version, run script "LA version and resources.cs".
 
 Build solution in config Release, all platforms.
 	NOTE: use the "Rebuild solution" command, else VS may not update something.
 
-Review menu Help -> About. May need to update C# version, .NET version, used libraries.
+Review menu Help -> About. May need to update C# version, used libraries.
 
 Run script "Au docs".
 	Fix errors if need. More info in AuDocs.txt.

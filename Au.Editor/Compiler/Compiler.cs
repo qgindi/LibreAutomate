@@ -748,10 +748,9 @@ partial class Compiler {
 		try {
 			var b = filesystem.loadBytes(appHost);
 			//p1.Next();
-			//write filename in placeholder memory, which is 1025 bytes starting with this string (64-bytes)
-			int i = b.AsSpan().IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8);
-			i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
-			b.AsSpan(i, 64).Clear();
+			
+			CompilerUtil.Apphost.PatchExeProgram_DllName(b, fileName);
+			if (App.IsPortable && platform != MCPlatform.x86) CompilerUtil.Apphost.PatchPortableExeProgram_DotnetPath(exeFile, platform == MCPlatform.arm64, b);
 			
 			var res = new _NativeResources();
 			if (_meta.IconFile != null) {

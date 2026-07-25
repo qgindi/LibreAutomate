@@ -871,8 +871,6 @@ namespace Au {
 			
 			//This is undocumented, but works if we set ApartmentState.Unknown at first.
 			//With [STAThread] slower, and the process initially used to have +2 threads.
-			//Speed when called to set STA at startup: 1.7 ms. If apphost calls OleInitialize, 1.5 ms.
-			//tested: OleUninitialize in apphost does not make GetApartmentState return MTA.
 		}
 		
 		#endregion

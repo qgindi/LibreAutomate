@@ -563,22 +563,3 @@ class WindowDisabler {
 		}
 	}
 }
-
-/// <summary>
-/// Sets an environment variable of this process. Clears/restores when disposing.
-/// </summary>
-struct TempEnvVar : IDisposable {
-	string _name, _prevValue;
-	public void Set(string name, string value) {
-		if (_name != null) throw new InvalidOperationException();
-		_prevValue = Environment.GetEnvironmentVariable(name);
-		Environment.SetEnvironmentVariable(_name = name, value);
-	}
-	
-	public void Dispose() {
-		if (_name != null) {
-			Environment.SetEnvironmentVariable(_name, null);
-			_name = null;
-		}
-	}
-}

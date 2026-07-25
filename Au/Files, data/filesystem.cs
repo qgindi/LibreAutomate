@@ -1403,11 +1403,19 @@ public static partial class filesystem {
 	/// <inheritdoc cref="save"/>
 	public static void saveBytes(string file, byte[] bytes, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000) {
 		Not_.Null(bytes);
-		_Save(file, bytes, backup, tempDirectory, lockedWaitMS);
+		_Save(file, null, backup, tempDirectory, lockedWaitMS, span: bytes);
 	}
-	//TODO2: ReadOnlySpan.
 	
-	static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null) {
+	/// <summary>
+	/// Writes data to a file in a safe way (like <see cref="save"/>), using <see cref="File.WriteAllBytes"/>.
+	/// </summary>
+	/// <param name="bytes">Data to write.</param>
+	/// <inheritdoc cref="save"/>
+	public static void saveBytes(string file, RByte bytes, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000) {
+		_Save(file, null, backup, tempDirectory, lockedWaitMS, span: bytes);
+	}
+	
+	static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null, RByte span = default) {
 		file = _PreparePath(file);
 		
 		string s1 = file;
@@ -1427,15 +1435,15 @@ public static partial class filesystem {
 		try {
 			switch (data) {
 			case string text:
-				//File.WriteAllText(temp, text, encoding ?? Encoding.UTF8); //no, it saves with BOM
+				//File.WriteAllText(temp, text, encoding ?? Encoding.UTF8); //no, it saves with BOM. Even with Encoding.Default it's not exactly the same.
 				if (encoding != null) File.WriteAllText(temp, text, encoding);
 				else File.WriteAllText(temp, text);
 				break;
-			case byte[] bytes:
-				File.WriteAllBytes(temp, bytes);
-				break;
 			case Action<string> func:
 				func(temp);
+				break;
+			default:
+				File.WriteAllBytes(temp, span);
 				break;
 			}
 		}

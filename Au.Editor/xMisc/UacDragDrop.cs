@@ -88,7 +88,7 @@ class UacDragDrop {
 				if (!w.IsOfThisProcess) return;
 				_isProcess2 = true;
 				_wWindow = w;
-				new ProcessStarter_("Au.Editor.exe", "/dd " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
+				new ProcessStarter_("Au.Editor.exe", $"/dd {CommandLine.MsgWnd.Handle}").StartUserIL();
 			} else if (!_wTransparent.Is0 && w != _wTransparent) {
 				_wWindow = w;
 				_SetTransparentSizeZorder();
@@ -96,7 +96,7 @@ class UacDragDrop {
 		}
 		
 		wnd _wTransparent; //our transparent non-admin window
-		wnd _wWindow; //current our top-level admin window covered by _wTransparent
+		wnd _wWindow; //top-level window from mouse. Either the current our admin window covered by _wTransparent, or a window of another process.
 		
 		//Called in admin process. Non-admin process may not be able to zorder its window above admin windows.
 		void _SetTransparentSizeZorder() {
@@ -106,7 +106,7 @@ class UacDragDrop {
 				bool ok = _wTransparent.ZorderL_(_wWindow, before: true);
 				Debug_.PrintIf(!ok, $"ZorderL_ failed. {lastError.message}. _wWindow={_wWindow}");
 			} else {
-				_wTransparent.MoveL(0, 0, 0, 0);
+				if (!_wTransparent.Rect.Is0) _wTransparent.MoveL(0, 0, 0, 0);
 			}
 		}
 		
@@ -153,8 +153,8 @@ class UacDragDrop {
 				_wTargetControl = default;
 			}
 			if (!w.Is0 && w.IsOfThisProcess && w.IsEnabled(true)) {
-				if (ev != 0 && _wTargetControl.Is0) {
-					if (ev == DDEvent.Over) ev = 0;
+				if (ev != DDEvent.Enter && _wTargetControl.Is0) {
+					if (ev == DDEvent.Over) ev = DDEvent.Enter;
 					else _InvokeDT(w, DDEvent.Enter, effect, keyState, pt);
 				}
 				ef = _InvokeDT(_wTargetControl = w, ev, effect, keyState, pt);
@@ -177,36 +177,33 @@ class UacDragDrop {
 		
 		unsafe int _InvokeDropTarget(wnd w, DDEvent ev, int effect, int keyState, POINT pt) {
 			nint dt = w.Prop["OleDropTargetInterface"];
-			if (dt == 0 && w != _wWindow) { //if w is of a HwndHost that does not register drop target, use that of the main window
+			if (dt == 0 && w != _wWindow && _wWindow.IsOfThisProcess) { //if w is of a HwndHost that does not register drop target, use that of the main window
 				w = _wWindow;
 				dt = w.Prop["OleDropTargetInterface"];
 			}
 			if (dt == 0) return 0;
 			
-#pragma warning disable CS0168 // Variable is declared but never used
-			try {
-				nint* vtbl = *(nint**)dt + 3;
-				int hr = ev switch {
-					DDEvent.Enter or DDEvent.Drop => ((delegate* unmanaged<nint, IDataObject, int, POINT, ref int, int>)vtbl[ev == DDEvent.Drop ? 3 : 0])(dt, _data, keyState, pt, ref effect),
-					DDEvent.Over => ((delegate* unmanaged<nint, int, POINT, ref int, int>)vtbl[1])(dt, keyState, pt, ref effect),
-					_ => ((delegate* unmanaged<nint, int>)vtbl[2])(dt)
-				};
-				if (hr != 0) effect = 0;
-			}
-			catch (Exception ex) { //once: exception "access violation". Can't repro. To call IDropTarget methods easily, then was used a C++ helper function, not C# delegate*.
-#if DEBUG
-				print.it("_InvokeDropTarget", dt, _data, w);
-				print.it(ex);
-#endif
-				return 0;
-			}
-#pragma warning restore CS0168 // Variable is declared but never used
+			//print.qm2.write(ev, dt, process.thisThreadId, w.ThreadId, w.IsOfThisThread, w.IsOfThisProcess, w, new StackTrace(true).ToString().Replace("\r\n", "  @@  "));
+			
+			nint* vtbl = *(nint**)dt + 3;
+			int hr = ev switch {
+				DDEvent.Enter or DDEvent.Drop =>
+					((delegate* unmanaged<nint, IDataObject, int, POINT, ref int, int>)
+					vtbl[ev == DDEvent.Drop ? 3 : 0])(dt, _data, keyState, pt, ref effect),
+				DDEvent.Over =>
+					((delegate* unmanaged<nint, int, POINT, ref int, int>)
+					vtbl[1])(dt, keyState, pt, ref effect),
+				_ =>
+					((delegate* unmanaged<nint, int>)
+					vtbl[2])(dt)
+			};
+			if (hr != 0) effect = 0;
 			return effect;
 		}
 	}
 	
 	//Drag-drop events.
-	public enum DDEvent { Enter, Over, Drop, Leave } //don't change, used in C++
+	public enum DDEvent { Enter, Over, Drop, Leave }
 	
 	//A window in non-admin process that accepts drag-drop events and relays to the admin process.
 	//Covers our admin window. Almost transparent.

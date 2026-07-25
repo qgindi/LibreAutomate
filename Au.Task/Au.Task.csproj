@@ -37,4 +37,8 @@
 		<ProjectReference Include="..\Au\Au.csproj" />
 	</ItemGroup>
 
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+	  <Exec Command="$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe taskPreBuild" />
+	</Target>
+
 </Project>

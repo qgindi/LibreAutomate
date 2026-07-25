@@ -29,5 +29,9 @@ If non-portable LibreAutomate is installed on that computer:
 - Portable and non-portable programs cannot run simultaneously.
 - Portable and non-portable programs don't share data and settings.
 
+Role `exeProgram` programs, if compiled or once executed in portable LA and are in the same drive and later not moved, use the .NET runtime of portable LA. They can run even when started not from LA, without shared .NET runtime installed on that computer.
+
+Portable LA can't launch a role `exeProgram` script task with a different UAC integrity level (when using the `uac` property) if the program is not in the portable LA drive, unless shared .NET runtime is installed on that computer.
+
 ## PortableApps.com
 If you use the PortableApps.com platform, install portable LibreAutomate in its folder, for example `D:\PortableApps\LibreAutomate`. Then **LibreAutomate** will be in its menu (the first time may need to click **Apps > Refresh**). By default it is in category **Other**. You can right click it and move to an existing or new category. You can right click it and click **Run as administrator** or check **Start automatically**. The menu contains all exe files found in the LibreAutomate folder, but other files are not useful in the menu, and you can hide them.

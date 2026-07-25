@@ -25,7 +25,7 @@ var year = DateTime.Now.AddMonths(1).Year.ToS();
 var global2Cs = solutionDirBS + @"Au\resources\global2.cs";
 var s1 = filesystem.loadText(global2Cs);
 if (0 == s1.RxReplace(@"(?m)^\tpublic const string Version = ""\K[\d\.]+", sVer, out s1, 1)) throw null; //change Au_.Version
-if (0 == s1.RxReplace(@"Copyright 2020-\K[\d]+", year, out s1, 1)) throw null; //change year if need
+if (0 == s1.RxReplace(@"Copyright 20\d\d-\K[\d]+", year, out s1, 1)) throw null; //change year if need
 filesystem.saveText(global2Cs, s1);
 
 //modify LibreAutomate.iss

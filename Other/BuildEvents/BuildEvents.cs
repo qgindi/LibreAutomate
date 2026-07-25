@@ -1,6 +1,6 @@
 // Build event script for Au.Editor and Cpp projects.
 
-using Microsoft.Win32;
+using Org.BouncyCastle.Utilities;
 using Vestris.ResourceLib;
 
 script.setup(exception: UExcept.Dialog | UExcept.Print);
@@ -22,6 +22,7 @@ return args[0] switch {
 	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
 	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	"dllPostBuild" => DllPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
+	"taskPreBuild" => TaskPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe taskPreBuild
 	"roslynPostBuild" => RoslynPostBuild(),
 	"gitPrePushHook" => GitBinaryFiles.PrePushHook(),
 	_ => 1
@@ -48,6 +49,12 @@ int DllPostBuild() {
 	_ExitEditor();
 	var toDir = $@"{solutionDirBS}_\{args[2] switch { "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}";
 	filesystem.copyTo(args[1], toDir, FIfExists.Delete);
+	return 0;
+}
+
+/// Exits editor.
+int TaskPreBuild() {
+	_ExitEditor();
 	return 0;
 }
 
@@ -105,15 +112,26 @@ exit $?
 	//			Copies the arm64 apphost.exe to Au.Editor-arm.exe and Au.Task.exe, patches them, and copies resources into them from the x64 exe files.
 	//			Also copies json files for the arm64 programs.
 
-	using var rk = Registry.CurrentUser.CreateSubKey(@"Software\Au\BuildEvents");
-	bool verChanged = rk.GetValue("version") as string != Au_.Version;
-	verChanged = true;//TODO
-	if (!verChanged && filesystem.exists(dirOut + "Au.Editor-arm.exe") && filesystem.exists(dirOut + "Au.Task-arm.exe")) return 0;
+	bool _VersionChanged() {
+		try {
+			var v = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor.exe");
+			var v2 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor-arm.exe");
+			var v3 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Task-arm.exe");
+			return !(v2.FileVersion == v.FileVersion && v3.FileVersion == v.FileVersion);
+		}
+		catch (FileNotFoundException) { return true; }
+
+		//This is fast enough. Don't use Au_.Version, because we use Au.dll from NuGet, not the newest one (it would cause circular reference).
+	}
+
+	if (!_VersionChanged()) return 0;
 	print.it("Creating arm64 exe files.");
 
-	_EnsureApphostOK(dirOut);
+	if (!_EnsureApphostOK(dirOut)) return 1;
 	_CreateArmExe(true);
 	_CreateArmExe(false);
+
+	return 0;
 
 	void _CreateArmExe(bool editor) {
 		string fn = editor ? "Au.Editor" : "Au.Task";
@@ -128,15 +146,13 @@ exit $?
 		filesystem.copy(dirOut + fn + ".runtimeconfig.json", dirOut + fn + "-arm.runtimeconfig.json", FIfExists.Delete);
 	}
 
-	rk.SetValue("version", Au_.Version);
-	return 0;
-
 	static unsafe void _PatchApphost(string path, string dllFilename) {
 		//write dll name
-		var b = File.ReadAllBytes(path);
-		int i = b.AsSpan().IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8);
-		i += Encoding.UTF8.GetBytes(dllFilename, 0, dllFilename.Length, b, i);
-		b.AsSpan(i, 64).Clear();
+		var bytes = filesystem.loadBytes(path);
+		Span<byte> b = bytes;
+		int i = b.IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8);
+		i += Encoding.UTF8.GetBytes(dllFilename, b[i..]);
+		b.Slice(i, 64).Clear();
 
 		//set subsystem = GUI (default is console)
 		fixed (byte* p = b) {
@@ -144,7 +160,7 @@ exit $?
 			*(ushort*)(p + subsystemOffset) = 2;
 		}
 
-		filesystem.saveBytes(path, b);
+		filesystem.saveBytes(path, bytes);
 	}
 
 	//Copies apphost.exe of all platforms from SDK if need.
@@ -164,6 +180,10 @@ exit $?
 			if (!filesystem.getProperties(path2, out var p2) || p1.LastWriteTimeUtc > p2.LastWriteTimeUtc) {
 				print.it("Updating " + path2);
 				filesystem.copy(path, path2, FIfExists.Delete);
+
+				Span<byte> b = filesystem.loadBytes(path2);
+				if (b.IndexOf("c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"u8) < 0) { print.it("String 1 not found in " + path2); return false; }
+				if (b.IndexOf("\0\019ff3e9c3602ae8e841925bb461a0adb064a1f1903667a5e0d87e8f608f425ac"u8) < 0) { print.it("String 2 not found in " + path2); return false; }
 			}
 		}
 		return true;
