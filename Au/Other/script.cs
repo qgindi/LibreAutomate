@@ -136,28 +136,32 @@ public static class script {
 			int pidEditor = 0;
 			if (auCompiler) {
 				var cd = Environment.CurrentDirectory;
-				const string c_ep = "\\Roslyn\\.exeProgram";
-				if (cd.Ends(c_ep, true)) { //started from editor
+				const string c_ep = @"\Roslyn";
+				if (cd.Ends(c_ep, true) && SharedMemory_.Mapping.TryOpenExisting("Au.SM.exeProgram-" + Path.GetFileName(Environment.ProcessPath), out var sm)) { //started from editor
 					Environment.CurrentDirectory = folders.ThisApp;
 					
-					var p = &SharedMemory_.Ptr->script;
+					var p = (MiniProgramAndExeProgramStartupSharedMemoryData_*)sm.Mem;
 					pidEditor = p->pidEditor;
-					s_wndEditorMsg = (wnd)p->hwndMsg;
-					s_idMainFile = p->idMainFile;
-					if (0 != (p->flags & 2)) script.testing = true;
-					if (0 != (p->flags & 4)) {
+					var flags = (EPFlags_)p->flags;
+					if (flags.Has(EPFlags_.FromEditor)) script.testing = true;
+					if (flags.Has(EPFlags_.IsPortable)) {
 						ScriptEditor.IsPortable = true;
-						if (0 != (p->flags & 32)) { //clear the env var, else child processes would inherit it
+						if (flags.Has(EPFlags_.ClearEnvVar)) { //clear the env var, else child processes would inherit it
 							var ev = osVersion.isArm64Process ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64";
 							Environment.SetEnvironmentVariable(ev, Environment.GetEnvironmentVariable(ev, EnvironmentVariableTarget.User) ?? Environment.GetEnvironmentVariable(ev, EnvironmentVariableTarget.Machine));
 						}
 					}
-					if (0 != (p->flags & 8)) s_wrPipeName = p->pipe;
-					if (0 != (p->flags & 16)) RedirectConsole_();
-					folders.Editor = new(cd[..^c_ep.Length]);
+					s_idMainFile = p->idMainFile;
+					s_wndEditorMsg = (wnd)p->hwndMsg;
+					s_wrPipeName = p->pipe;
 					folders.Workspace = new(p->workspace);
+					folders.Editor = new(cd[..^c_ep.Length]);
+
+					if (flags.Has(EPFlags_.RedirectConsole)) RedirectConsole_();
 					
-					var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.exeProgram.1");
+					sm.Dispose();
+					
+					var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.taskStart");
 					if (!Api.SetEvent(hevent)) Environment.Exit(4);
 					Api.CloseHandle(hevent);
 				}
@@ -218,34 +222,6 @@ public static class script {
 		//		Anyway, moved Cpp_UEF here. It's better to load the dll sync, not at a random time later.
 		//	Never mind. This workaround solves the biggest problem for this library. Maybe future .NET will fix it.
 		Api.SetErrorMode(Api.SEM_NOGPFAULTERRORBOX | Api.SEM_FAILCRITICALERRORS);
-	}
-	
-	[StructLayout(LayoutKind.Sequential, Size = 256 + 1024)] //note: this struct is in shared memory. Size must be same in all library versions.
-	internal unsafe struct SharedMemoryData_ {
-		public int flags; //1 not received (let editor wait), 2 testing, 4 isPortable, 8 has pipe
-		public int pidEditor;
-		public int hwndMsg;
-		public uint idMainFile;
-		int _pipeLen;
-		fixed char _pipeData[64];
-		int _workspaceLen;
-		fixed char _workspaceData[1024];
-		
-		public string pipe {
-			get { fixed (char* p = _pipeData) return new(p, 0, _pipeLen); }
-			set {
-				fixed (char* p = _pipeData) value.AsSpan().CopyTo(new Span<char>(p, 64));
-				_pipeLen = value.Length;
-			}
-		}
-		
-		public string workspace {
-			get { fixed (char* p = _workspaceData) return new(p, 0, _workspaceLen); }
-			set {
-				fixed (char* p = _workspaceData) value.AsSpan().CopyTo(new Span<char>(p, 1024));
-				_workspaceLen = value.Length;
-			}
-		}
 	}
 	
 	/// <summary>

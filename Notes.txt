@@ -21,6 +21,8 @@ All significant changes of that version must be documented in Other/DocFX/_doc/c
 
 HOW TO RELEASE A NEW VERSION
 
+If need to change version, run script "LA version and resources.cs".
+
 Review all TODO. Occasionally review TODO2, FUTURE, CONSIDER.
 	TODO2 means "low priority TODO". If after a long time it still seems low priority, delete the comment or replace with TODO3.
 
@@ -35,8 +37,6 @@ May need to delete test code. Or use #if DEBUG, like in Tests.cs.
 	Review perf and print.
 
 May need to add new OS version to class osVersion. Usually once/year.
-
-If need to change version, run script "LA version and resources.cs".
 
 Build solution in config Release, all platforms.
 	NOTE: use the "Rebuild solution" command, else VS may not update something.

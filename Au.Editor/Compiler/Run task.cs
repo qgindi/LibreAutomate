@@ -488,24 +488,16 @@ class RunningTasks {
 		}
 		
 		bool exeProgram = r.notInCache, debugger = debugAttach != null;
-		string exeFile, argsString;
+		string exeFile, argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		
 		if (exeProgram) { //meta role exeProgram
 			exeFile = Compiler.DllNameToExeName(r.file, default);
-			argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		} else {
 			if (debugger) {
 				if (uac == _SpUac.elevate) { print.it("Cannot debug this script. Remove /*/ uac admin; /*/, or run LA as admin."); return 0; }
 			}
 			
 			exeFile = folders.ThisAppBS + $"Au.Task{(osVersion.isArm64Process ? "-arm" : "")}.exe";
-			
-			var f1 = r.flags;
-			if (runFromEditor) f1 |= MPFlags_.FromEditor;
-			if (App.IsPortable) f1 |= MPFlags_.IsPortable;
-			
-			byte[] taskParams = Serializer_.Serialize(r.name, r.file, (int)f1, args, wrPipeName, (string)folders.Workspace, (int)f.Id, process.thisProcessId, (int)CommandLine.MsgWnd);
-			argsString = Convert.ToBase64String(taskParams);
 		}
 		
 		int pid = 0; WaitHandle hProcess = null;
@@ -540,7 +532,7 @@ class RunningTasks {
 	/// Starts task process.
 	/// Returns (processId, processHandle). Throws if failed. Returns 0 if failed to attach debugger.
 	/// </summary>
-	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach, Compiler.CompResults cr) {
+	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string argsString, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach, Compiler.CompResults cr) {
 		if (s_inSP) throw new AuException("_StartProcess: can't reenter"); //starting the debugger. See wait.forHandle below. Very rare, never mind.
 		s_inSP = true;
 		try {
@@ -548,48 +540,58 @@ class RunningTasks {
 			string cwd;
 			using _Portable portable = default;
 			
+			using var sm = SharedMemory_.Mapping.CreateOrOpen(exeProgram ? "Au.SM.exeProgram-" + Path.GetFileName(exeFile) : "Au.SM.miniProgram", 16 * 1024);
+			var p = (MiniProgramAndExeProgramStartupSharedMemoryData_*)sm.Mem;
+			p->pidEditor = process.thisProcessId;
+			p->hwndMsg = (int)CommandLine.MsgWnd;
+			p->idMainFile = idMain;
+			p->pipe = wrPipeName;
+			p->workspace = folders.Workspace;
+			
+			if (s_event1 == 0) s_event1 = Api.CreateEvent2(default, true, false, "Au.event.taskStart");
+			else Api.ResetEvent(s_event1);
+			
 			if (exeProgram) {
 				if (s_cwdExe == null) {
 					//Pass this working directory to let the exe know it was launched from editor.
 					//	Then its AppModuleInit_ will read from shared memory and set the event.
 					//There are no other ways to pass data when using shellexecute(runas) when cannot use command line args.
-					//This empty hidden directory is created by the setup program. This code creates it if missing.
-					cwd = folders.ThisApp.Path + "\\Roslyn\\.exeProgram";
-					if (!filesystem.exists(cwd).Directory) {
-						filesystem.createDirectory(cwd);
-						File.SetAttributes(cwd, FileAttributes.Directory | FileAttributes.Hidden);
-					}
+					cwd = folders.ThisApp.Path + @"\Roslyn";
 					s_cwdExe = cwd;
-					s_event1 = Api.CreateEvent2(default, true, false, "Au.event.exeProgram.1");
 				} else {
 					cwd = s_cwdExe;
-					Api.ResetEvent(s_event1);
 				}
 				
-				var p = &SharedMemory_.Ptr->script;
-				p->pidEditor = process.thisProcessId;
-				p->hwndMsg = (int)CommandLine.MsgWnd;
-				p->idMainFile = idMain;
-				int flags = 0;
-				if (runFromEditor) flags |= 2;
-				if (App.IsPortable) flags |= 4;
-				if (wrPipeName != null) { flags |= 8; p->pipe = wrPipeName; }
-				if (cr.flags.Has(MPFlags_.RedirectConsole)) flags |= 16;
-				p->flags = flags;
-				p->workspace = folders.Workspace;
+				EPFlags_ flags = 0;
+				if (runFromEditor) flags |= EPFlags_.FromEditor;
+				if (cr.flags.Has(MPFlags_.RedirectConsole)) flags |= EPFlags_.RedirectConsole;
 				
 				if (App.IsPortable) {
+					flags |= EPFlags_.IsPortable;
 					portable.Before(exeFile, cr.platform, out bool clearEnvVar);
-					if (clearEnvVar) p->flags |= 32;
+					if (clearEnvVar) flags |= EPFlags_.ClearEnvVar;
 				}
-			} else cwd = folders.ThisApp;
+				
+				p->flags = (int)flags;
+			} else {
+				cwd = folders.ThisApp;
+				
+				MPFlags_ flags = cr.flags;
+				if (runFromEditor) flags |= MPFlags_.FromEditor;
+				if (App.IsPortable) flags |= MPFlags_.IsPortable;
+				p->flags = (int)flags;
+				
+				var mp = (MiniProgramStartupSharedMemoryData_*)(p + 1);
+				mp->scriptName = cr.name;
+				mp->assemblyPath = cr.file;
+			}
 			
 			if (uac == _SpUac.elevate) {
-				var k = run.it(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, cwd);
+				var k = run.it(exeFile, argsString, RFlags.Admin | RFlags.NeedProcessHandle, cwd);
 				r = (k.ProcessId, k.ProcessHandle);
 				//note: don't try to start task without UAC consent. It is not secure.
 			} else {
-				var ps = new ProcessStarter_(exeFile, args, cwd, rawExe: true);
+				var ps = new ProcessStarter_(exeFile, argsString, cwd, rawExe: true);
 				
 				if (debugAttach != null) ps.si.dwXCountChars = 1703529821; //let the process wait for "debugger attached" event
 				
@@ -608,24 +610,21 @@ class RunningTasks {
 				}
 			}
 			
-			if (exeProgram) {
-				nint hProc = r.hProcess.SafeWaitHandle.DangerousGetHandle();
-				if (debugAttach != null) {
-					//can't block, because need to communicate with netcoredbg.exe
-					wait.forHandle(0, WHFlags.DoEvents, s_event1, hProc);
-				} else { //better low-level than wait.forHandle with flags 0
-					nint* ha = stackalloc nint[2] { s_event1, hProc };
-					int signaled = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
-					if (signaled == 1) {
-						Api.GetExitCodeProcess(hProc, out int ec);
-						var se = $"Process `{pathname.getName(exeFile)}` ended before starting to execute managed code.\r\n\tExit code: {ec}";
-						if (App.IsPortable) portable.Failed(ref se, cr.platform, uac);
-						print.warning(se, -1);
-					}
+			nint hProc = r.hProcess.SafeWaitHandle.DangerousGetHandle();
+			if (debugAttach != null) {
+				//can't block, because need to communicate with netcoredbg.exe
+				wait.forHandle(0, WHFlags.DoEvents, s_event1, hProc);
+			} else { //better low-level than wait.forHandle with flags 0
+				nint* ha = stackalloc nint[2] { s_event1, hProc };
+				int signaled = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
+				if (signaled == 1) {
+					Api.GetExitCodeProcess(hProc, out int ec);
+					var se = $"Process `{pathname.getName(exeFile)}` ended before starting to execute managed code.\r\n\tExit code: {ec}";
+					if (App.IsPortable && exeProgram) portable.Failed(ref se, cr.platform, uac);
+					print.warning(se, -1);
 				}
-				
-				Api.ResetEvent(s_event1);
 			}
+			Api.ResetEvent(s_event1);
 			
 			return r;
 		}

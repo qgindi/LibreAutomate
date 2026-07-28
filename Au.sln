@@ -60,6 +60,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Au.Task", "Au.Task\Au.Task.
 		{8662DF62-3B21-4D23-806D-4590F6091918} = {8662DF62-3B21-4D23-806D-4590F6091918}
 	EndProjectSection
 EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "LibreAutomateSetup", "LibreAutomateSetup\LibreAutomateSetup.wixproj", "{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -219,6 +221,15 @@ Global
 		{4807A904-07A3-468C-A27A-068ED11ABCB0}.Release|ARM64.ActiveCfg = Release|Any CPU
 		{4807A904-07A3-468C-A27A-068ED11ABCB0}.Release|x64.ActiveCfg = Release|Any CPU
 		{4807A904-07A3-468C-A27A-068ED11ABCB0}.Release|x86.ActiveCfg = Release|Any CPU
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Debug|x64.ActiveCfg = Debug|x64
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Debug|x86.ActiveCfg = Debug|x86
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Release|Any CPU.ActiveCfg = Release|x64
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Release|ARM64.ActiveCfg = Release|ARM64
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Release|x64.ActiveCfg = Release|x64
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Release|x64.Build.0 = Release|x64
+		{9718958A-1F66-4DB7-9E9D-4CC3B891EB70}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

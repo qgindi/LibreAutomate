@@ -1,6 +1,6 @@
 #define MyAppName "LibreAutomate"
 #define MyAppNameShort "LibreAutomate"
-#define MyAppVersion "1.16.2"
+#define MyAppVersion "1.16.3"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.libreautomate.com/"
 #define MyAppExeName "Au.Editor.exe"
@@ -128,6 +128,7 @@ Type: filesandordirs; Name: "{app}\Default"
 Type: filesandordirs; Name: "{app}\Templates"
 
 //FUTURE: remove this code
+Type: files; Name: "{app}\cookbook.db"
 Type: files; Name: "{app}\Au.Task-x64.exe"
 Type: files; Name: "{autoprograms}\LibreAutomate C#.lnk"
 

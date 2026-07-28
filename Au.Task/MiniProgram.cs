@@ -3,7 +3,7 @@ using System.Runtime.Loader;
 static class MiniProgram {
 	[MethodImpl(MethodImplOptions.NoOptimization)]
 	//[StackTraceHidden] //ignored for entry point //TODO2: remove MiniProgram.Main from stack traces displayed in LA, where possible.
-	static int Main(string[] args) {
+	static unsafe int Main(string[] args) {
 		//print.qm2.use = true;
 		//var p1 = perf.local();
 
@@ -14,54 +14,64 @@ static class MiniProgram {
 		//p1.Next('m');
 		//Debug_.PrintLoadedAssemblies(true, true);
 
-		var b = Convert.FromBase64String(args[0]);
-		var a = Serializer_.Deserialize(b); //tested: BinaryReader much slower here
+		string assemblyPath;
+		MPFlags_ flags;
+		{
+			if (!SharedMemory_.Mapping.TryOpenExisting("Au.SM.miniProgram", out var sm)) return -1;
+			var p = (MiniProgramAndExeProgramStartupSharedMemoryData_*)sm.Mem;
+			var mp = (MiniProgramStartupSharedMemoryData_*)(p + 1);
 
-		var flags = (MPFlags_)(int)a[2];
-		//p1.Next('d');
+			flags = (MPFlags_)p->flags;
+			if (flags.Has(MPFlags_.FromEditor)) script.testing = true;
+			if (flags.Has(MPFlags_.IsPortable)) ScriptEditor.IsPortable = true;
 
-		script.s_idMainFile = (uint)(int)a[6];
-		script.s_wndEditorMsg = (wnd)(int)a[8];
-		script.s_wrPipeName = a[4];
+			script.s_idMainFile = p->idMainFile;
+			script.s_wndEditorMsg = (wnd)p->hwndMsg;
+			script.s_wrPipeName = p->pipe;
+			folders.Workspace = new(p->workspace);
+			folders.Editor = new(folders.ThisApp);
 
-		if (0 != (flags & MPFlags_.FromEditor)) script.testing = true;
-		if (0 != (flags & MPFlags_.IsPortable)) ScriptEditor.IsPortable = true;
+			if (!flags.Has(MPFlags_.MTA))
+				process.ThisThreadSetComApartment_(ApartmentState.STA);
 
-		folders.Editor = new(folders.ThisApp);
-		folders.Workspace = new(a[5]);
+			if (flags.Has(MPFlags_.Console)) {
+				Api.AllocConsole();
+			} else {
+				if (flags.Has(MPFlags_.RedirectConsole)) script.RedirectConsole_();
+				//Compiler adds this flag if the script uses System.Console assembly.
+				//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
+			}
 
-		//p1.Next();
-		var asm = AssemblyLoadContext.Default.LoadFromAssemblyPath((string)a[1]);
-		Assembly.SetEntryAssembly(asm);
-		//p1.Next('a');
+			script.Starting_(mp->scriptName, p->pidEditor);
+			//p1.Next('s');
+
+			assemblyPath = mp->assemblyPath;
+
+			sm.Dispose();
+
+			var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.taskStart");
+			if (!Api.SetEvent(hevent)) return -2;
+			Api.CloseHandle(hevent);
+		}
 
 		DependencyResolverForMiniProgramAndEditorExtensionScripts_ defRes = default;
 
-		if (0 != (flags & MPFlags_.RefPaths))
+		if (flags.Has(MPFlags_.RefPaths))
 			AssemblyLoadContext.Default.Resolving += (_, an)
 				=> defRes.ResolveManaged(null, an);
 
-		if (0 != (flags & MPFlags_.NativePaths))
+		if (flags.Has(MPFlags_.NativePaths))
 			AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
 				=> defRes.ResolveUnmanaged(null, dll);
 
-		if (0 == (flags & MPFlags_.MTA))
-			process.ThisThreadSetComApartment_(ApartmentState.STA);
-
-		if (0 != (flags & MPFlags_.Console)) {
-			Api.AllocConsole();
-		} else {
-			if (0 != (flags & MPFlags_.RedirectConsole)) script.RedirectConsole_();
-			//Compiler adds this flag if the script uses System.Console assembly.
-			//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
-		}
-
-		script.Starting_(a[0], a[7]);
-		//p1.Next('s');
+		//p1.Next();
+		var asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
+		Assembly.SetEntryAssembly(asm);
+		//info: module initializers run later
+		//p1.Next('a');
 
 		var entryPoint = asm.EntryPoint;
-		string[] taskArgs = a[3];
-		string[] epParams = entryPoint.GetParameters().Length != 0 ? taskArgs ?? [] : null;
+		string[] epParams = entryPoint.GetParameters().Length != 0 ? args : null;
 		int ret = 0;
 		if (entryPoint.ReturnType == typeof(int)) {
 			if (epParams != null) {
