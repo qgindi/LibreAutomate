@@ -99,14 +99,10 @@ namespace Au {
 		public static FolderPath Profile => _Get(0x5E6C858F, 0x0E224760, 0x9AFEEA33, 0x17B67173);
 		public static FolderPath ProgramData => _Get(0x62AB5D82, 0xFDC14DC3, 0xA9DD070D, 0x1D495D97);
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFiles => new(__ProgramFiles ??= _ProgramFiles);
-		static string __ProgramFiles;
-		static FolderPath _ProgramFiles => _Get(0x905e63b6, 0xc1bf494e, 0xb29c65b7, 0x32d3d21a);
+		public static FolderPath ProgramFiles => _Get(0x905e63b6, 0xc1bf494e, 0xb29c65b7, 0x32d3d21a);
 		//broken static FolderPath ProgramFilesX64 => _Get(0x6D809377, 0x6AF0444b, 0x8957A377, 0x3F02200E);
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFilesX86 => new(__ProgramFilesX86 ??= _ProgramFilesX86);
-		static string __ProgramFilesX86;
-		static FolderPath _ProgramFilesX86 => _Get(0x7C5A40EF, 0xA0FB4BFC, 0x874AC0F2, 0xE0B9FA8E);
+		public static FolderPath ProgramFilesX86 => _Get(0x7C5A40EF, 0xA0FB4BFC, 0x874AC0F2, 0xE0B9FA8E);
 		/// <summary>More info in class help.</summary>
 		public static FolderPath ProgramFilesCommon => _Get(0xF7F1ED05, 0x9F6D47A2, 0xAAAE29D3, 0x17C6F066);
 		//broken static FolderPath ProgramFilesCommonX64 => _Get(0x6365D5A7, 0x0F0D45E5, 0x87F60DA5, 0x6B6A4F7D);
@@ -153,9 +149,7 @@ namespace Au {
 		public static FolderPath StartMenu => _Get(0x625B53C3, 0xAB484EC1, 0xBA1FA1EF, 0x4146FC19);
 		public static FolderPath Startup => _Get(0xB97D20BB, 0xF46A4C97, 0xBA105E36, 0x08430854);
 		/// <summary>More info in class help.</summary>
-		public static FolderPath System => new(__System ??= _System);
-		static string __System;
-		static FolderPath _System => _Get(0x1AC14E77, 0x02E74E5D, 0xB7442EB1, 0xAE5198B7);
+		public static FolderPath System => _Get(0x1AC14E77, 0x02E74E5D, 0xB7442EB1, 0xAE5198B7);
 		/// <summary>More info in class help.</summary>
 		public static FolderPath SystemX86 => _Get(0xD65231B0, 0xB2F14857, 0xA4CEA8E7, 0xC6EA7D27);
 		public static FolderPath Templates => _Get(0xA63293E8, 0x664E48DB, 0xA079DF75, 0x9E0509F7);
@@ -165,9 +159,7 @@ namespace Au {
 		public static FolderPath UserProgramFilesCommon => _Get(0xBCBD3057, 0xCA5C4622, 0xB42DBC56, 0xDB0AE516);
 		public static FolderPath Videos => _Get(0x18989B1D, 0x99B5455B, 0x841CAB7C, 0x74E4DDFC);
 		public static FolderPath VideosLibrary => _Get(0x491E922F, 0x56434AF4, 0xA7EB4E7A, 0x138D8174);
-		public static FolderPath Windows => new(__Windows ??= _Windows);
-		static string __Windows;
-		static FolderPath _Windows => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23);
+		public static FolderPath Windows => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23);
 		
 		/// <summary>
 		/// Gets <ms>ITEMIDLIST</ms> of known/special virtual folders (eg Control Panel), as string like <c>":: 12345678..."</c> or as <see cref="Pidl"/>.
@@ -229,8 +221,7 @@ namespace Au {
 		/// <summary>
 		/// Temp folder (temporary files) of this user account.
 		/// </summary>
-		public static FolderPath Temp => new(__temp ??= Path.GetTempPath().TrimEnd('\\'));
-		static string __temp;
+		public static FolderPath Temp => !field.IsNull ? field : field = new(Path.GetTempPath().TrimEnd('\\'));
 		
 		/// <summary>
 		/// Folder containing assemblies of this app.
@@ -239,8 +230,7 @@ namespace Au {
 		/// Uses <see cref="AppContext.BaseDirectory"/>.
 		/// </remarks>
 		/// <seealso cref="process.thisExePath"/>
-		public static FolderPath ThisApp => new(__thisApp ??= ThisAppBS.TrimEnd('\\'));
-		static string __thisApp;
+		public static FolderPath ThisApp => !field.IsNull ? field : field = new(ThisAppBS.TrimEnd('\\'));
 		
 		/// <summary>
 		/// <see cref="ThisApp"/> with appended backslash character.
@@ -248,8 +238,7 @@ namespace Au {
 		/// <remarks>
 		/// Uses <see cref="AppContext.BaseDirectory"/>.
 		/// </remarks>
-		public static string ThisAppBS => __thisAppBS ??= AppContext.BaseDirectory; //info: AppDomain.CurrentDomain.BaseDirectory calls it
-		static string __thisAppBS;
+		public static string ThisAppBS => field ??= AppContext.BaseDirectory;
 		//Can change: AppDomain.CurrentDomain.SetData("APP_CONTEXT_BASE_DIRECTORY", "C:\\");
 		
 		#region set auto/once
@@ -299,8 +288,7 @@ namespace Au {
 			return baseDir + (ee ? @"\LibreAutomate" : @"\LibreAutomate\_script");
 		}
 		
-		internal static string PortableData_ => __portableData ??= GetPortableDataDir_(Editor.Path);
-		static string __portableData;
+		internal static string PortableData_ => field ??= GetPortableDataDir_(Editor.Path);
 		
 		static internal string GetPortableDataDir_(string appPath) {
 			var s = appPath + @"\data";
@@ -440,9 +428,7 @@ namespace Au {
 		/// <remarks>
 		/// See <see cref="Path.GetPathRoot"/>.
 		/// </remarks>
-		public static string ThisAppDriveBS => __thisAppDrive ??= pathname.GetRootBS_(ThisAppBS);
-		static string __thisAppDrive;
-		//public static FolderPath ThisAppDrive => new(__thisAppDrive ??= Path.GetPathRoot(ThisAppBS));
+		public static string ThisAppDriveBS => field ??= pathname.GetRootBS_(ThisAppBS);
 		
 		/// <summary>
 		/// Gets folder of the script editor.
@@ -517,41 +503,34 @@ namespace Au {
 		/// </remarks>
 		/// <seealso cref="FileSystemRedirection"/>
 		/// <seealso cref="osVersion.is32BitProcessAnd64BitOS"/>
-		public static FolderPath SystemX64 => new(__SystemX64 ??= osVersion.is32BitProcessAnd64BitOS ? Windows + "Sysnative" : System);
-		static string __SystemX64;
+		public static FolderPath SystemX64 => new(osVersion.is32BitProcessAnd64BitOS ? Windows + "Sysnative" : System);
 		
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFilesX64 => new(__ProgramFilesX64 ??= osVersion.is32BitProcessAnd64BitOS ? envVar("ProgramW6432") : ProgramFiles);
-		static string __ProgramFilesX64;
+		public static FolderPath ProgramFilesX64 => new(osVersion.is32BitProcessAnd64BitOS ? envVar("ProgramW6432") : ProgramFiles);
 		
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFilesCommonX64 => new(__ProgramFilesCommonX64 ??= osVersion.is32BitProcessAnd64BitOS ? envVar("CommonProgramW6432") : ProgramFilesCommon);
-		static string __ProgramFilesCommonX64;
+		public static FolderPath ProgramFilesCommonX64 => new(osVersion.is32BitProcessAnd64BitOS ? envVar("CommonProgramW6432") : ProgramFilesCommon);
 		//The normal retrieving method for these folders is broken. Fails even on 64-bit OS if process is 32-bit.
 		
 		/// <summary>
 		/// Gets .NET runtime folder, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.6</c>.
 		/// </summary>
-		public static FolderPath NetRuntime => new(__netRuntime ??= NetRuntimeBS.TrimEnd('\\'));
-		static string __netRuntime;
+		public static FolderPath NetRuntime => !field.IsNull ? field : field = new(NetRuntimeBS.TrimEnd('\\'));
 		
 		/// <summary>
 		/// Gets .NET runtime folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.6\</c>.
 		/// </summary>
-		public static string NetRuntimeBS => __netRuntimeBS ??= RuntimeEnvironment.GetRuntimeDirectory();
-		static string __netRuntimeBS;
+		public static string NetRuntimeBS => field ??= RuntimeEnvironment.GetRuntimeDirectory();
 		
 		/// <summary>
 		/// Gets .NET runtime desktop folder, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\8.0.6</c>.
 		/// </summary>
-		public static FolderPath NetRuntimeDesktop => new(__netRuntimeDesktop ??= NetRuntimeDesktopBS.TrimEnd('\\'));
-		static string __netRuntimeDesktop;
+		public static FolderPath NetRuntimeDesktop => !field.IsNull ? field : field = new(NetRuntimeDesktopBS.TrimEnd('\\'));
 		
 		/// <summary>
 		/// Gets .NET runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\8.0.6\</c>.
 		/// </summary>
-		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= _NetRuntimeDesktopBS();
-		static string __netRuntimeDesktopBS;
+		public static string NetRuntimeDesktopBS => field ??= _NetRuntimeDesktopBS();
 		
 		static string _NetRuntimeDesktopBS() {
 			var s = typeof(Accessibility.IAccessible).Assembly.Location;

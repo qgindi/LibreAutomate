@@ -2,30 +2,24 @@
 /// If still not scanned, uploads and waits until scanned, then prints results.
 /// Can be run directly at any time (the Run button) or periodically (from the timer script).
 
+/*/ role exeProgram; outputPath %folders.Workspace%\exe\Virustotal false positives; /*/
+
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-string file = folders.Editor + "LibreAutomateSetup.exe";
+//string trueFile = folders.Editor + "LibreAutomateSetup.exe";
+string trueFile = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
+string file = trueFile;
 
 if (script.testing) {
 	print.clear();
-	//file = @"C:\Temp\Au\AV\LibreAutomateSetup.exe";
-	//file = @"C:\Temp\Au\AV\unpack\LibreAutomateSetup.exe";
-	//file = @"C:\Temp\Au\AV\unpack\app\32\Au.AppHost.exe";
-	//file = @"C:\Temp\Au\AV\unpack\app\Debugger\x64\netcoredbg.exe";
-	//file = @"C:\Temp\Au\AV\unpack\app\Au.Task-x64.exe";
-	//file = @"C:\Temp\Au\AV\unpack\app\Au.dll";
-	//file = @"C:\Temp\Au\AV\unpack\app\Au.Controls.dll";
-	//file = folders.ProgramFiles + @"dotnet\packs\Microsoft.NETCore.App.Host.win-x86\10.0.5\runtimes\win-x86\native\apphost.exe";
 	//file = folders.Editor + @"64\AuCpp.dll";
-	//file = folders.Editor + "Au.Editor.exe"; //0
-	//file = folders.Editor + "Au.Task.exe"; //1 (the same)
-	//file = folders.Editor + @"64\Au.DllHost.exe"; //3
-	//file = @"C:\code\Test\Tests\bin\Release\net10.0-windows\Au.Tests.exe"; //
-	//file = @"C:\Temp\Au\AV\unpack\mysetup.exe";
-	file = @"C:\Temp\Au\AV\unpack\test-SetupFiles\test.msi"; //0
-	//file = @"C:\Temp\Au\AV\unpack\test-SetupFiles\test.exe"; //4, MS
+	//file = folders.Editor + @"64\Au.DllHost.exe";
+	file = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
+	//file = folders.Editor + @"..\Setup\bin\Release\net48\vt-1.zip";
+	//file = folders.Editor + @"..\Setup\bin\Release\net48\offline-1.zip.lzma";
+	//file = folders.Downloads + "LibreAutomateSetup.exe";
 }
 
 var apikey = Environment.GetEnvironmentVariable("API_VIRUSTOTAL");
@@ -42,14 +36,14 @@ bool uploadedNow = false;
 var id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file)));
 
 //make sure that the local setup exe is the same as the GitHub latest release
-if (file == folders.Editor + "LibreAutomateSetup.exe") {
+if (file == trueFile) {
 	var r1 = internet.http.Get("https://api.github.com/repos/qgindi/LibreAutomate/releases/latest");
 	var j1 = r1.Json(true)["assets"][0];
 	//_PrintJson(j1);
 	var digest = (string)j1["digest"];
 	digest = digest[7..]; //prefix "sha256:"
 	if (digest != id) {
-		int button = dialog.show("Which LibreAutomateSetup.exe to use?", "The local setup file is different than the GitHub latest release (different hash).", "1 GitHub latest release\nIf still not scanned - local.|2 The local setup file|3 Download and use the GitHub latest release\nWill replace the local|0 Cancel", flags: DFlags.CommandLinks);
+		int button = dialog.show("Which LibreAutomate-setup.exe to use?", "The local setup file is different than the GitHub latest release (different hash).", "1 GitHub latest release\nIf still not scanned - local.|2 The local setup file|3 Download and use the GitHub latest release\nWill replace the local|0 Cancel", flags: DFlags.CommandLinks);
 		switch (button) {
 		case 1: id = digest; break;
 		case 2: break;
@@ -75,7 +69,7 @@ if (r.IsSuccessStatusCode) {
 	//print.it("-------");
 	
 	int nFP = (int)j["data"]["attributes"]["last_analysis_stats"]["malicious"];
-	int nIgnore = (!script.testing && !uploadedNow && file == folders.Editor + "LibreAutomateSetup.exe") ? 2 : 0;
+	int nIgnore = (!script.testing && !uploadedNow && file == trueFile) ? 0 : 0;
 	if (nFP > nIgnore) {
 		print.it($"<><lc #FFC977>Virustotal: {nFP} false positives for {filename}<>");
 		foreach (var (av, n) in j["data"]["attributes"]["last_analysis_results"].AsObject().Where(kv => (string)kv.Value["category"] == "malicious")) {

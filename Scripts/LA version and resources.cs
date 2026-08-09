@@ -28,13 +28,6 @@ if (0 == s1.RxReplace(@"(?m)^\tpublic const string Version = ""\K[\d\.]+", sVer,
 if (0 == s1.RxReplace(@"Copyright 20\d\d-\K[\d]+", year, out s1, 1)) throw null; //change year if need
 filesystem.saveText(global2Cs, s1);
 
-//modify LibreAutomate.iss
-
-var iss = solutionDirBS + @"Au.Editor\LibreAutomate.iss";
-s1 = filesystem.loadText(iss);
-if (0 == s1.RxReplace(@"(?m)^#define MyAppVersion ""\K[\d\.]+", sVer, out s1, 1)) throw null; //change version
-filesystem.saveText(iss, s1);
-
 //create res files
 
 _CompileRc(true);

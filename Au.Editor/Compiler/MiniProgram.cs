@@ -3,7 +3,8 @@ using System.Runtime.Loader;
 static class MiniProgram {
 	[MethodImpl(MethodImplOptions.NoOptimization)]
 	//[StackTraceHidden] //ignored for entry point //TODO2: remove MiniProgram.Main from stack traces displayed in LA, where possible.
-	static unsafe int Main(string[] args) {
+	[StackTraceHidden]
+	public static unsafe int Run(string[] args) {
 		//print.qm2.use = true;
 		//var p1 = perf.local();
 
@@ -65,6 +66,9 @@ static class MiniProgram {
 				=> defRes.ResolveUnmanaged(null, dll);
 
 		//p1.Next();
+#if !true
+		return script.RunMiniProgram_(assemblyPath, args);
+#else //FP
 		var asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
 		Assembly.SetEntryAssembly(asm);
 		//info: module initializers run later
@@ -93,6 +97,7 @@ static class MiniProgram {
 		}
 
 		return ret;
+#endif
 	}
 }
 

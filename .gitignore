@@ -245,6 +245,3 @@ ModelManifest.xml
 *.res
 /Au/global.json
 /Other/DocFX/_doc/cookbook
-
-# TODO: re-include
-/LibreAutomateSetup/

@@ -1,5 +1,6 @@
 //This file is used by several projects: Au, Au.Controls, Au.Editor.
 
+#if NET
 global using Au;
 global using Au.Types;
 global using Au.More;
@@ -23,9 +24,17 @@ global using RByte = System.ReadOnlySpan<byte>;
 global using System.ComponentModel;
 global using IEnumerable = System.Collections.IEnumerable;
 global using IEnumerator = System.Collections.IEnumerator;
+#else
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.ComponentModel;
+using Au.More;
+#endif
 
 [module: DefaultCharSet(CharSet.Unicode)]
 [assembly: ComVisible(false)]
+
+[assembly: AssemblyMetadata("RepositoryUrl", "https://github.com/qgindi/LibreAutomate")]
 
 [assembly: AssemblyCompany("Gintaras Didžgalvis")]
 [assembly: AssemblyProduct("LibreAutomate")]
@@ -34,13 +43,13 @@ global using IEnumerator = System.Collections.IEnumerator;
 
 [assembly: AssemblyVersion(Au_.Version)]
 
-#if AU
+#if AU || !NET
 namespace Au.More;
 
 ///
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class Au_ {
 	///
-	public const string Version = "1.16.3"; //Don't edit here. Run script "LA version and resources.cs". It changes version everywhere and creates .res files.
+	public const string Version = "1.16.4"; //Don't edit here. Run script "LA version and resources.cs". It changes version everywhere and creates .res files.
 }
 #endif

@@ -758,7 +758,7 @@ public static class clipboard {
 		//	Temporarily stop service "Clipboard User Service_xxxxxxx". Tested. Disables CH completely.
 		//		Would be simple and fast, but need to find service name, it is with random suffix.
 		//		But need to run as admin.
-		//		When pasting, OS autotarts it again after 400-500 ms.
+		//		When pasting, OS autostarts it again after 400-500 ms.
 		//		Pausing fails, but can stop/start.
 		//		OS does not allow to set startup type "Disabled". And auto-starts when eg the Settings page opened.
 		//	Inject a dll into the target process and hook OpenClipboard, let it wait until succeeds. Too crazy.

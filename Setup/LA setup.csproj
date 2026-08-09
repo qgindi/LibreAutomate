@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<LangVersion>preview</LangVersion>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
+		<ApplicationIcon>..\Au.Editor\resources\ico\app.ico</ApplicationIcon>
+		<ApplicationManifest>..\Au.Editor\resources\Au.manifest</ApplicationManifest>
+		<AssemblyName>LA-setup</AssemblyName>
+		<Configurations>Release</Configurations>
+		<NuGetAudit>False</NuGetAudit>
+		<PreferNativeArm64>True</PreferNativeArm64>
+		<IsPublishable>False</IsPublishable>
+		<GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+		<DebugType>none</DebugType>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\Au\resources\global2.cs" Link="global2.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="System.IO.Compression" />
+	  <Reference Include="System.Net.Http" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="LZMA\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="PolySharp" Version="1.16.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+
+</Project>

@@ -22,7 +22,7 @@ using (var client = new SftpClient(host, port, user, password)) {
 	}
 	
 	//download
-	using (var stream = File.OpenWrite(file2)) {
+	using (var stream = File.Create(file2)) {
 		client.DownloadFile(pathname.getName(file), stream);
 	}
 	

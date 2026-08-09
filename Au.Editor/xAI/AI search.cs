@@ -657,7 +657,7 @@ class XamlIconConverter_ {
 	
 	public void ToIcon(string icoFile, FrameworkElement e, int[] sizes) {
 		icoFile = pathname.NormalizeMinimally_(icoFile);
-		using var stream = File.OpenWrite(icoFile);
+		using var stream = File.Create(icoFile);
 		ToIcon(stream, sizes);
 	}
 	

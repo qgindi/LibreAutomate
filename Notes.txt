@@ -5,15 +5,12 @@ The program version format is major.minor.build, like 1.20.5.
 	Build: changed when fixed bugs between minor versions. Also may have some new features.
 
 To update version info everywhere, run script "LA version and resources.cs".
-	It also creates .res files for Au.Editor and Au.Task.
-	When building Au.Task and Au.Editor, VS adds the .res to x64 exe files. The BuildEvents project creates arm64 exe files.
+	It also creates .res files for Au.Editor.exe and Au.Task.exe.
+	When building Au.Editor, VS adds the .res to the exe file (x64). The BuildEvents project creates Au.Task.exe and arm64 exe files.
 	It also updates year in copyright texts.
 The following is how to update everything (except .res) manually. Don't do it.
-	To *manually* update version info of dll files (Au, Au.Editor, Au.Controls):
-		Open global2.cs and edit Au_.Version. Single global2.cs is used by all these projects.
-		Also may need to update year in AssemblyCopyright attribute (it's displayed in About info). Don't update year in LICENSE.txt.
-	To *manually* update version info of the setup file:
-		Open the .iss file in Inno Script Studio and edit MyAppVersion.
+	Open global2.cs and edit Au_.Version. Single global2.cs is used by all C# projects.
+	Also may need to update year in AssemblyCopyright attribute (it's displayed in About info). Don't update year in LICENSE.txt.
 
 All significant changes of that version must be documented in Other/DocFX/_doc/changes/vMajor.Minor.md. Do it whenever making changes.
 
@@ -56,27 +53,33 @@ May need to update some info in README.md for github. Eg the screenshot and "how
 Review the md file of current version.
 	If it's still "future.md", rename ( RENAME!!! ) to "v1.x.md".
 
-Open the .iss file in Inno Script Studio. Review. Compile.
-	Run the setup file to test. Let it run LA. Test on other OS too. Occasionally uninstall/install, not just upgrade.
+Run script "Create LA setup files.cs".
+	It creates 2 .lzma files containing LA files, and the setup .exe file (builds the setup project). All 3 files are in the same folder; opens it.
+	Run the setup file to test. Let it run LA. Occasionally uninstall/install, not just upgrade.
+	Test on other OS too. And on Windows arm64.
+	The setup will use the .lzma files. If want to test downloading, run it later, after creating GitHub release, without the .lzma files in the folder.
+
+Scan the setup file at virustotal.com. Either manually, or run script "Virustotal false positives.cs" (it also runs once/day).
+	The create-setup script also creates file vt-1.zip. Sometimes scan it too.
+	Never mind if there are 1-2 false positives from less known AV.
+	When creating setup, I scanned it often. Randomly was Microsoft FP. Try to change something, eg togge `#define USE_RESTARTMANAGER` in Util.cs.
 
 Github commit all and push. The message could be like v1.2.3.
 	Note: do it now. Need for upload to GitHub. Also uploads the "changes" doc.
 
-Create a GitHub Release. Upload the setup file.
+Create a GitHub Release. Upload the setup .exe file and the .lzma files.
 
 Upload the website created by script "Au docs". To find the script: main toolbar > "Docs" menu.
 
 Review web pages. Github too.
 
 Download and test the setup file.
+	It will download 1 or 2 .lzma files from the GitHub release, unless you first manually download them to the same folder.
 	Occasionally test it on all OS. Observe SmartScreen/antivirus behavior.
 
 Sometimes test whether others can build and run the repo.
 	Eg when some new files added to the `_` dir.
 	Generated or downloaded files in `_` dir/subdirs must be gitignored, unless very small non-binary. Instead specify them in `GitBinaryFiles.cs` in project `BuildEvents`.
-
-Scan the setup file at virustotal.com. Either manually, or run script "Virustotal false positives.cs" (it also runs once/day).
-	Always will be one or several false positives. Even with an empty Inno Setup project. Never mind.
 
 Release NuGet package:
 	Run script "Create NuGet package.cs". It builds Au using a modified temp csproj, creates package and adds native dlls.
@@ -100,8 +103,6 @@ NO MORE
 
 Upload the setup file to https://www.libreautomate.com.
 	No more, because now (2026-07-06) Chrome/Brave blocks it. Does not block GitHub downloads, except v1.15.
-	If not using GitHub Releases: backup the old setup file at first: in WinSCP move the old file to the "download" folder and rename (add version).
-		Don't backup if changed only patch version. Simply replace.
 
 Announce in forum.
 
@@ -113,7 +114,7 @@ UPDATING .NET
 
 VS must support that .NET version. Install the .NET SDK if need.
 
-Update .NET version in all C# projects (.csproj) except Au.Net4.
+Update .NET version in all C# projects (.csproj). Except those using .NET 4.8 (LA setup, Au.Net4).
 
 May need to update .NET SDK version in global.json (in solution folder).
 	Used it to force VS to use .NET 8 SDK.
@@ -127,18 +128,13 @@ In project DatabasesEtc, in file Program.cs:
 
 Update MetaComments.Defines.
 
+Find-replace .NET major version, like "NET 10", "NET10", "net10" and "10" everywhere, including:
+- Hardcoded.cs (setup).
+- README.md (GitHub).
+
 Build solution.
 
 Run editor.
-
-In LibreAutomate.iss (Inno Setup) replace the .NET Desktop Runtime download URL. Also .NET major version in several places.
-
-Find-replace "NET 8", "NET8", "net8" and "8" everywhere, including:
-- LibreAutomate.iss (Inno Setup).
-- README.md (GitHub).
-
-Create-upload https://www.libreautomate.com/download/net-X-url.txt. Here X is .NET major version, eg 10.
-	The file must contain the .NET Desktop Runtime download URLs for x64 and arm64 (the same as in LibreAutomate.iss).
 
 Run script "Minimal .NET SDK". Upload.
 

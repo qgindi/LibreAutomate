@@ -20,6 +20,10 @@ static partial class App {
 	
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
+		if (Path.GetFileName(Environment.ProcessPath)[^5] == 'k') { //"Au.Task.exe"
+			return MiniProgram.Run(args);
+		}
+
 #if IDE_LA //test tools
 		//		print.clear();
 		
@@ -56,11 +60,11 @@ static partial class App {
 		InitThisAppFoldersEtc_(args);
 		
 		//This would make startup faster eg 900 ms -> 700 ms.
-		//	Unfortunately can't use it. It tries to optimize editorExtension asseblies too. Then exception because can't load.
+		//	Unfortunately can't use it. It tries to also optimize assemblies manually loaded in default ALC by editorExtension scripts. Then exception because can't load. Normally editorExtension asseblies and their dependencies are loaded in a custom ALC, but their scripts or used libraries may manually load assemblies in default ALC.
 		//	Never mind: possible workaround: load it in _Assembly_Resolving().
 		//try {
 		//	var poDir = folders.ThisAppDataLocal + "optimization";
-		//	if (!Directory.Exists(poDir)) Directory.CreateDirectory(poDir);
+		//	Directory.CreateDirectory(poDir);
 		//	AssemblyLoadContext.Default.SetProfileOptimizationRoot(poDir);
 		//	AssemblyLoadContext.Default.StartProfileOptimization("main");
 		//}

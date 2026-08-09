@@ -158,16 +158,16 @@ static unsafe partial class Cpp {
 	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	internal static extern int Cpp_AccGetProps(Cpp_Acc a, string props, out BSTR sResult);
 
-	/// <param name="flags">1 - wait less.</param>
-	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-	internal static extern void Cpp_Unload(uint flags);
-
 #if DEBUG
 	internal static void DebugUnload() {
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
 		Cpp_Unload(0);
 	}
+
+	/// <param name="flags">1 - wait less.</param>
+	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+	internal static extern void Cpp_Unload(uint flags);
 
 //	[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 //	internal static extern IInterface Cpp_GetInterface();
