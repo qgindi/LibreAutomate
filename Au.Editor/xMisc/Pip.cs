@@ -51,10 +51,7 @@ static class Pip {
 		
 		_wMsg = WndUtil.CreateMessageOnlyWindow("#32770", "Au.PiP-msg");
 		
-		if (!osVersion.minWin8_1) return _Error("Requires Windows 8.1 or later."); //tested: on 8.0 error "class not registered"
-		if (miscInfo.isChildSession) return _Error("Can't start another PiP session from PiP session.");
-		if (Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ProductName", null) is string sPN && sPN.Contains(" Home"))
-			return _Error($"PiP does not work on Windows Home editions. Your OS is {sPN}.");
+		if (PipIPC.WhyCantUsePip() is string cantUse) return _Error(cantUse);
 		
 		if (api.WTSIsChildSessionsEnabled(out bool y) && !y) {
 			bool isAdmin = uacInfo.isAdmin;
@@ -69,7 +66,6 @@ static class Pip {
 			return 1;
 		}
 		
-		AssemblyLoadContext.Default.Resolving += static (alc, an) => alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 		Application.Run(new PipWindow());
 		return 0;
 	}

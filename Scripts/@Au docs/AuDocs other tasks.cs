@@ -12,7 +12,7 @@ partial class AuDocs {
 	}
 	
 	static void _Compress(string siteDir, string tarDir) {
-		var sevenZip = folders.ThisAppBS + @"32\7za.exe";
+		var sevenZip = folders.Editor + @"32\7za.exe";
 		
 		var tar = tarDir + @"\site.tar";
 		filesystem.delete(tar);
@@ -54,9 +54,8 @@ partial class AuDocs {
 		void _Cmd2(string s, bool silent = false) => _Cmd($"cd {ftpDir} && {s}", silent);
 		
 		filesystem.delete(localFile);
-		var downl = $"download/doc/{Au_.Version}.tar.bz2";
-		if(ftp.Exists(downl)) ftp.DeleteFile(downl);
-		ftp.RenameFile("site.tar.bz2", downl);
+		
+		ftp.DeleteFile("site.tar.bz2");
 		
 		print.it("<>Extracted to <link>https://www.libreautomate.com/</link>");
 	}

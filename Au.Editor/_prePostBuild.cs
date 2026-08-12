@@ -4,7 +4,7 @@ if (args[0] == "post") {
 	var outputPath = args[1];
 	
 	var source = @"C:\code\au\_";
-	run.console(out var so, "robocopy.exe", $"\"{source}\" \"{outputPath}\" /e /sj /sl /r:2 /w:1 /xd Git SDK Workspace .compiled .temp .state /xf *.pdb Au.dll Au.Controls.dll Au.Editor.dll LibreAutomate-setup.exe");
+	run.console(out var so, "robocopy.exe", $"\"{source}\" \"{outputPath}\" /e /sj /sl /r:2 /w:1 /xd Git SDK Workspace .compiled .temp .state /xf *.pdb Au.dll Au.Controls.dll Au.Editor.dll *.deps.json *.runtimeconfig.json Microsoft.Web.WebView2.* NuGet.*");
 	
 	//compiler always copies the true Au.dll to outputPath. Let's replace it with our Au.dll.
 	filesystem.copyTo(@"C:\code\ok\dll\Au.dll", outputPath, FIfExists.Delete);

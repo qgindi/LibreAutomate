@@ -20,10 +20,10 @@ static partial class App {
 	
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
 	static int Main(string[] args) {
-		if (Path.GetFileName(Environment.ProcessPath)[^5] == 'k') { //"Au.Task.exe"
+		if (Path.GetFileName(Environment.ProcessPath)[^5] is 'k' or 'K') { //"Au.Task.exe"
 			return MiniProgram.Run(args);
 		}
-
+		
 #if IDE_LA //test tools
 		//		print.clear();
 		
@@ -228,16 +228,14 @@ static partial class App {
 	}
 	
 	private static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
-		if (0 == an.Name.Starts(false, "NuGet.", "Microsoft.Web.WebView2.")) {
-			var dlls = _arRoslynDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
+		var dlls = _arRoslynDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
 				.ToDictionary(o => o.Name[..^4], o => o.FullPath);
-			if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
-			
-			Debug_.Print(an.FullName);
-			//print.qm2.write(an);
-			return null;
-		}
-		return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
+		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
+		
+		Debug_.Print(an.FullName);
+		//print.qm2.write(an);
+		return null;
+		//return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 	}
 	static Dictionary<string, string> _arRoslynDlls;
 	

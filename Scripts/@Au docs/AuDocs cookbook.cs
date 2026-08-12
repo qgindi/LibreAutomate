@@ -12,7 +12,7 @@ partial class AuDocs {
 		else filesystem.createDirectory(dirTo);
 		if (!filesystem.exists(dirToLink).IsNtfsLink) filesystem.more.createSymbolicLink(dirToLink, dirTo, CSLink.Directory);
 		
-		var dirFrom = folders.ThisAppBS + @"..\Cookbook\files";
+		var dirFrom = folders.Editor + @"..\Cookbook\files";
 		var xr = XmlUtil.LoadElem(dirFrom + ".xml");
 		
 		_AddItems(xr, 1, dirFrom);

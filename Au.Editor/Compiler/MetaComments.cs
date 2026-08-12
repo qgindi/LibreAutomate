@@ -180,7 +180,11 @@ class MetaComments {
 	/// </summary>
 	public string[] Defines { get; private set; }
 	List<string> _defines;
-	static readonly string[] s_defaultDefines = ["NET10_0"/*delete when updating .NET*/, "NET10_0_OR_GREATER", "NET9_0_OR_GREATER", "NET8_0_OR_GREATER", "NET7_0_OR_GREATER", "NET6_0_OR_GREATER", "NET5_0_OR_GREATER", "NETCOREAPP3_1_OR_GREATER", "NETCOREAPP3_0_OR_GREATER", "NETCOREAPP", "NET", "WINDOWS", "WINDOWS7_0_OR_GREATER"]; //and no WINDOWS10_0_17763_0_OR_GREATER etc (see VS intellisense at #if Ctrl+Space)
+
+	/// <summary>
+	/// Default defines, such as <c>NET</c>. No <c>DEBUG</c>, <c>TRACE</c>.
+	/// </summary>
+	public static readonly string[] DefaultDefines = ["NET10_0"/*delete when updating .NET*/, "NET10_0_OR_GREATER", "NET9_0_OR_GREATER", "NET8_0_OR_GREATER", "NET7_0_OR_GREATER", "NET6_0_OR_GREATER", "NET5_0_OR_GREATER", "NETCOREAPP3_1_OR_GREATER", "NETCOREAPP3_0_OR_GREATER", "NETCOREAPP", "NET", "WINDOWS", "WINDOWS7_0_OR_GREATER"]; //and no WINDOWS10_0_17763_0_OR_GREATER etc (see VS intellisense at #if Ctrl+Space)
 	
 	/// <summary>
 	/// Meta option 'warningLevel'.
@@ -405,7 +409,7 @@ class MetaComments {
 				if (!_defines.Contains("TRACE")) _defines.Add("TRACE");
 			}
 			//if(Role == MCRole.exeProgram && !_defines.Contains("EXE")) _defines.Add("EXE"); //rejected
-			Defines = [.. s_defaultDefines, .. _defines];
+			Defines = [.. DefaultDefines, .. _defines];
 			
 			if (_flags.Has(MCFlags.ForFindReferences)) return true;
 			

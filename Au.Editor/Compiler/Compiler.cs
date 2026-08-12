@@ -393,7 +393,7 @@ partial class Compiler {
 			}
 			
 			string code = sb.ToString(); //print.it(code);
-			var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
+			var tree = CSharpSyntaxTree.ParseText(code, CiUtil.DefaultParseOptions) as CSharpSyntaxTree;
 			//insert as first, else user's module initializers would run before. Same speed.
 			//_compilation = _compilation.AddSyntaxTrees(tree);
 			_compilation = _compilation.RemoveAllSyntaxTrees().AddSyntaxTrees(_compilation.SyntaxTrees.Insert(0, tree));

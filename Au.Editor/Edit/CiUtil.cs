@@ -849,7 +849,7 @@ static class CiUtil {
 		}
 	}
 	public static readonly CompletionListSortComparer SortComparer = new();
-	
+
 	#endregion
 	
 	#region create a syntax tree, document, etc
@@ -866,7 +866,7 @@ static class CiUtil {
 		DocumentId documentId = DocumentId.CreateNewId(projectId);
 		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, "l", "l", LanguageNames.CSharp, null, null,
 			new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true),
-			new CSharpParseOptions(LanguageVersion.Preview),
+			DefaultParseOptions, //TODO2: when called by CodeExporter, should parse project's meta comments and get all defines.
 			metadataReferences: needSemantic ? new MetaReferences().Refs : null //tested: does not make slower etc
 			);
 		var sol = ws.CurrentSolution.AddProject(pi);
@@ -908,8 +908,14 @@ global using System.Windows.Media;
 	/// Calls <b>CSharpSyntaxTree.ParseText</b> and returns <b>CompilationUnitSyntax</b>.
 	/// </summary>
 	public static CompilationUnitSyntax CreateSyntaxTree(string code) {
-		return CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)).GetCompilationUnitRoot();
+		return CSharpSyntaxTree.ParseText(code, DefaultParseOptions).GetCompilationUnitRoot();
 	}
+	
+	/// <summary>
+	/// <c>CSharpParseOptions</c> with default defines (such as <c>NET</c>) and <c>DEBUG</c>/<c>TRACE</c>.
+	/// </summary>
+	public static readonly CSharpParseOptions DefaultParseOptions
+		= new CSharpParseOptions(LanguageVersion.Preview, preprocessorSymbols: [..MetaComments.DefaultDefines, "DEBUG", "TRACE"]);
 	
 	#endregion
 	

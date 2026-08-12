@@ -42,7 +42,7 @@ public static class AuDocsShared {
 	public static void Test() {
 		print.clear();
 		//var mdFile = folders.Editor + @"..\Cookbook\files\Filesystem\Create folder.cs";
-		var mdFile = folders.ThisAppBS + @"..\Cookbook\files\Filesystem\Zip files (compress, extract).cs";
+		var mdFile = folders.Editor + @"..\Cookbook\files\Filesystem\Zip files (compress, extract).cs";
 		var code = filesystem.loadText(mdFile);
 		var name = pathname.getNameNoExt(mdFile);
 		var html = RecipeCodeToHtml(name, code);
@@ -136,7 +136,7 @@ public static class AuDocsShared {
 			case "help":
 				//print.it(name, attr);
 				if (attr.Contains('/')) { //info: <help> is used only for "articles\x" and "editor\x"
-					if (!filesystem.exists(folders.ThisAppBS + @"..\Other\DocFX\_doc\" + attr + ".md")) break;
+					if (!filesystem.exists(folders.Editor + @"..\Other\DocFX\_doc\" + attr + ".md")) break;
 					return $"<a href=\"/{UrlEscapePath(attr)}.html\">{s}</a>";
 				}
 				break;
@@ -176,7 +176,7 @@ public static class AuDocsShared {
 	
 	static string _FindRecipe(string s) {
 		if (_aFR == null) {
-			var xr = XmlUtil.LoadElem(folders.ThisAppBS + @"..\Cookbook\files.xml");
+			var xr = XmlUtil.LoadElem(folders.Editor + @"..\Cookbook\files.xml");
 			_aFR = xr.Descendants("s").Select(x => {
 				var name = x.Attr("n")[..^3];
 				return (name, name + ".html");

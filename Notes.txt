@@ -74,7 +74,7 @@ Upload the website created by script "Au docs". To find the script: main toolbar
 Review web pages. Github too.
 
 Download and test the setup file.
-	It will download 1 or 2 .lzma files from the GitHub release, unless you first manually download them to the same folder.
+	It will download/use/delete 1 or 2 .lzma files from the GitHub release, unless you first manually download them to the same folder as the setup file.
 	Occasionally test it on all OS. Observe SmartScreen/antivirus behavior.
 
 Sometimes test whether others can build and run the repo.

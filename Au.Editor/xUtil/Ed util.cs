@@ -287,7 +287,7 @@ static class EdDatabases {
 	public static sqlite OpenWinapi() => _Open("winapi.db");
 	
 	static sqlite _Open(string name) {
-		var path = folders.ThisAppBS + name;
+		var path = folders.Editor + name;
 		//if (App.IsAuHomePC) { //no. Instead exit editor before running DatabasesEtc project. And it does not lock winapi.db.
 		//	var pathNew = path + ".new";
 		//	if (filesystem.exists(pathNew)) filesystem.move(pathNew, path, FIfExists.Delete);

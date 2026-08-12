@@ -40,7 +40,9 @@ While LibreAutomate is running in both PiP and main session:
 ## Issues and other info
 LibreAutomate uses the Windows [child sessions](https://learn.microsoft.com/en-us/windows/win32/termserv/child-sessions) feature, which uses the Remote Desktop technology. Instead of connecting to another computer it creates a new session of the current user of this computer. You can work with the PiP window like with another computer in a Remote Desktop Connection window.
 
-When the child sessions feature is used the first time on a computer, it asks for credentials. Enter the user name and password of your Windows user account. If asks for credentials every time when connecting: sign off the child session, then sign off the main session, and sign in again. If your account does not have a password, you can either create new password or suffer the credentials prompt every time.
+When the child sessions feature is used the first time on a computer, it asks for credentials. Enter the user name and password of your Windows user account. Use local account, not Microsoft account. On Windows 11 the setting is in `Settings > Accounts > Your info > Account settings`.
+
+If asks for credentials every time when connecting: sign off the child session, then sign off the main session, and sign in again.
 
 Also the first time need to enable the child sessions feature. LibreAutomate automatically enables it. If you'll ever want to disable it, run this in Windows Terminal or cmd running as administrator: `Au.Editor.exe /pip /disablecs`.
 

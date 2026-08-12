@@ -1,3 +1,5 @@
+//TODO: download all optional components from GitHub, not LA. Minimal SDK, icon embeddings, version, LaBinary. Allow users to download manually.
+
 using System.Security.Authentication;
 using System.Windows;
 using System.Windows.Controls;
@@ -180,7 +182,7 @@ Can be Pack.Icon, like Material.Folder.");
 					_a.Add(k);
 				}
 			}
-			_a.Sort((a, b) => string.Compare(a._name, b._name, StringComparison.OrdinalIgnoreCase));
+			_a.Sort();
 			if (randomizeColors) _RandomizeColors();
 			_tv.SetItems(_a);
 		};
@@ -208,9 +210,9 @@ Can be Pack.Icon, like Material.Folder.");
 					if (name != null) f = o => (table == null || o._table.Eqi(table)) && (wild?.Match(o._name) ?? o._name.Contains(name, comp));
 				}
 			}
-			var e = f == null ? _a : _a.Where(f);
+			IReadOnlyList<_Item> e = f == null ? _a : _a.Where(f).ToArray();
 			_tv.SetItems(e);
-			if (select && (select = e.Count() == 1)) _tv.Select(0);
+			if (select && (select = e.Count == 1)) _tv.Select(0);
 			_EnableControls();
 		};
 		
@@ -434,7 +436,10 @@ Can be Pack.Icon, like Material.Folder.");
 			
 			AI.EmInput input = new(png == null ? [query] : query.NE() ? [png] : [query, png]);
 			var queryVector = await Task.Run(() => em.CreateEmbedding(input, cancel));
-			var a = em.GetTopMatches(queryVector, ems, take: 300).Select(o => new _Item(this, o.f.name)).ToArray();
+			var a = em.GetTopMatches(queryVector, ems, take: 300)
+				.Select(v => _a[_a.BinarySearch(new _Item(this, v.f.name))])
+				.ToArray();
+			
 			_tv.SetItems(a);
 		}
 		catch (OperationCanceledException etc) { if (etc.InnerException is TimeoutException) print.it(etc.Message); }
@@ -466,7 +471,7 @@ Can be Pack.Icon, like Material.Folder.");
 		base.OnDpiChanged(oldDpi, newDpi);
 	}
 	
-	class _Item : ITreeViewItem {
+	class _Item : ITreeViewItem, IComparable<_Item> {
 		DIcons _dialog;
 		public string _table, _name;
 		public int _color;
@@ -499,6 +504,17 @@ Can be Pack.Icon, like Material.Folder.");
 				catch (Exception ex) { Debug_.Print(ex); }
 				return null;
 			}
+		}
+		
+		//IComparable<_Item>
+		
+		int IComparable<_Item>.CompareTo(_Item other) {
+			int r = string.Compare(_name, other._name, StringComparison.OrdinalIgnoreCase);
+			if (r == 0) {
+				r = string.CompareOrdinal(_table, other._table);
+				if (r == 0) r = string.CompareOrdinal(_name, other._name);
+			}
+			return r;
 		}
 	}
 	

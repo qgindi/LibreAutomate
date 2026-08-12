@@ -1,6 +1,6 @@
 static class Hardcoded {
 	public const string DotnetVersionXX = "10.0"; //updated manually once/year
-	public const string DotnetVersionXXX = "10.0.10"; //updated by script "Check for new .NET version.cs"
+	public const string DotnetVersionXXX = "10.0.11"; //updated by script "Check for new .NET version.cs"
 	
 	//these are updated by script "Create LA setup files.cs"
 	public const string HashOfLzmaFile1 = "2f7a2f4ac54d851d1f34a6561e2d52471cea949df02ceb72699e9ade988bea8b";

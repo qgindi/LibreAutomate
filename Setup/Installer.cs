@@ -282,7 +282,7 @@ No - replace after reboot. Please don't run the app until reboot.
 		_log(_progressPrefix = "Getting the .NET download URL");
 		var url = DotnetInfo.GetDownloadUrl();
 		
-		var filename = Path.GetFileName(url);
+		var filename = "~" + Path.GetFileName(url);
 		var file = folders.Downloads + filename; //not temp, because sometimes FP
 		
 		try {

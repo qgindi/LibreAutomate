@@ -123,24 +123,24 @@ class PipIPC {
 		catch (Exception ex) { print.it(ex); }
 	}
 	
-	///// <summary>
-	///// Returns true if child sessions supported (Win8.1+, not Home edition, not in child session).
-	///// </summary>
-	//public static bool CanUsePip => s_canUsePip ??= osVersion.minWin8_1 && !miscInfo.isChildSession && !(Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ProductName", null) is string sPN && sPN.Contains(" Home"));
-	//static bool? s_canUsePip;
+	/// <summary>
+	/// Returns null if child sessions supported (Win8.1+, not Home edition, not in child session). Else returns an error string.
+	/// </summary>
+	public static string WhyCantUsePip() {
+		if (!osVersion.minWin8_1) return "Requires Windows 8.1 or later."; //tested: on 8.0 error "class not registered"
+		if (miscInfo.isChildSession) return "Can't start another PiP session from PiP session.";
+		if (Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ProductName", null) is string sPN && sPN.Contains(" Home"))
+			return $"PiP does not work on Windows Home editions. Your OS is {sPN}.";
+		return null;
+	}
 	
 	static bool _CanUsePip() {
-		if (!osVersion.minWin8_1) return _Error("Requires Windows 8.1 or later."); //tested: on 8.0 error "class not registered"
-		if (miscInfo.isChildSession) return _Error("Can't start another PiP session from PiP session.");
-		if (Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion", "ProductName", null) is string sPN && sPN.Contains(" Home"))
-			return _Error($"PiP does not work on Windows Home editions. Your OS is {sPN}.");
-		return true;
-		//the pip exe will auto-enable child sessions
-		
-		static bool _Error(string s) {
+		if (WhyCantUsePip() is string s) {
 			dialog.showError("PiP error", s, owner: App.Hmain);
 			return false;
 		}
+		return true;
+		//the pip exe will auto-enable child sessions
 	}
 	
 	public static void StartPip() {

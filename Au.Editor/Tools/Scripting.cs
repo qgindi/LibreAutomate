@@ -37,7 +37,7 @@ static class Scripting {
 			//print.it(code);
 		}
 		
-		var parseOpt = new CSharpParseOptions(LanguageVersion.Preview);
+		var parseOpt = LA.CiUtil.DefaultParseOptions;
 		
 		SyntaxTree treeGlobal = null;
 		if (addGlobalCs) {

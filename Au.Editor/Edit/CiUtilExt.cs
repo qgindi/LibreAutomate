@@ -508,7 +508,7 @@ static class CiUtilExt {
 	/// </summary>
 	public static void AppendCodeWithIndent(this StringBuilder t, string s, int indent, bool andNewline) {
 		if (indent > 0) {
-			var cu = CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(LanguageVersion.Preview)).GetCompilationUnitRoot();
+			var cu = CSharpSyntaxTree.ParseText(s, CiUtil.DefaultParseOptions).GetCompilationUnitRoot();
 			var a = s.Lines(..); int i = 0;
 			foreach (var v in a) {
 				bool canIndent = true;

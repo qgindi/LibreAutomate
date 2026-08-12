@@ -43,7 +43,7 @@ if (file == trueFile) {
 	var digest = (string)j1["digest"];
 	digest = digest[7..]; //prefix "sha256:"
 	if (digest != id) {
-		int button = dialog.show("Which LibreAutomate-setup.exe to use?", "The local setup file is different than the GitHub latest release (different hash).", "1 GitHub latest release\nIf still not scanned - local.|2 The local setup file|3 Download and use the GitHub latest release\nWill replace the local|0 Cancel", flags: DFlags.CommandLinks);
+		int button = dialog.show("Which setup exe to use?", "The local setup file is different than the GitHub latest release (different hash).", "1 GitHub latest release\nIf still not scanned - local.|2 The local setup file|3 Download and use the GitHub latest release\nWill replace the local|0 Cancel", flags: DFlags.CommandLinks);
 		switch (button) {
 		case 1: id = digest; break;
 		case 2: break;

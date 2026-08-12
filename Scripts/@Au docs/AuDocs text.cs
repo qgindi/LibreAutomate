@@ -266,6 +266,6 @@ partial class AuDocs {
 			b.Append(m);
 		}
 		
-		filesystem.saveText(folders.ThisAppBS + "xrefmap.yml", b.ToString());
+		filesystem.saveText(folders.Editor + "xrefmap.yml", b.ToString());
 	}
 }

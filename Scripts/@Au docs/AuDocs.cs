@@ -60,7 +60,7 @@ partial class AuDocs {
 		
 		//info: currently there are no excluded .cs files. Would need to parse Au.csproj.
 		
-		var parseOpt = new CSharpParseOptions(LanguageVersion.Preview, DocumentationMode.Parse);
+		var parseOpt = LA.CiUtil.DefaultParseOptions;
 		var trees = new List<CSharpSyntaxTree>();
 		var files = new List<(string path, string code)>();
 		
@@ -601,8 +601,4 @@ partial class AuDocs {
 		var loc = sym.Locations[0];
 		return $@"<open C:\code\au\Au{loc.SourceTree.FilePath}||{loc.SourceSpan.Start}>{sym}<>";
 	}
-	
-	//static readonly PortableExecutableReference[] s_refs = Au.Compiler.MetaReferences.DefaultReferences.Values.ToArray();
-	//static readonly CSharpParseOptions s_parseOpt = new CSharpParseOptions(LanguageVersion.Preview, DocumentationMode.Parse);
-	//static readonly CSharpCompilationOptions s_compOpt = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true);
 }

@@ -34,10 +34,10 @@ hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;
 </pre>
 
 ### Where can run
-Windows 7, 8, 8.1, 10, 11.
+Windows 7, 8.1, 10, 11.
 
 ### Download
-Download `LibreAutomateSetup.exe` from [GitHub](https://github.com/qgindi/LibreAutomate/releases).
+Download from [GitHub](https://github.com/qgindi/LibreAutomate/releases).
 
 ### Links
 - [Forum](https://www.libreautomate.com/forum/)
