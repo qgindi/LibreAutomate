@@ -312,7 +312,7 @@ class PanelBookmarks {
 	
 	void _TvSetItems(bool modified = false) {
 		if (_root?.Count > 0) {
-			_tv.SetItems(_root.Children(), modified);
+			_tv.SetItems(_root, modified);
 		} else {
 			_tv.SetItems(null);
 		}

@@ -110,7 +110,7 @@ class PanelHelp {
 				}
 			}
 			
-			_tv.SetItems(_root.Children());
+			_tv.SetItems(_root);
 		}
 		catch (Exception e1) { print.it(e1); }
 		
@@ -161,7 +161,7 @@ class PanelHelp {
 		
 		var s = _search.Text.Trim();
 		if (s.Length < 2) {
-			_tv.SetItems(_root.Children());
+			_tv.SetItems(_root);
 			_showingResults = false;
 			if (!_openingItem && _selectedItem != null) {
 				_tv.Select(_selectedItem);
@@ -229,7 +229,7 @@ class PanelHelp {
 			}
 		}
 		
-		_tv.SetItems(root?.Children());
+		_tv.SetItems(root);
 		_showingResults = true;
 		
 		static bool _Match(string s1, string s2) {

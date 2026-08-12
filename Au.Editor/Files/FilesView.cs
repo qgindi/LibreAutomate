@@ -23,7 +23,7 @@ partial class FilesModel {
 		}
 
 		public void SetItems() {
-			base.SetItems(App.Model.Root.Children());
+			base.SetItems(App.Model.Root);
 		}
 
 		public void SetMultiSelect(bool toggle) {

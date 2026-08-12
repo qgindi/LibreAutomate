@@ -118,7 +118,7 @@ partial class FilesModel {
 	/// <summary>
 	/// Updates control when changed number or order of visible items (added, removed, moved, etc).
 	/// </summary>
-	public void UpdateControlItems() { TreeControl.SetItems(Root.Children(), true); }
+	public void UpdateControlItems() { TreeControl.SetItems(Root, true); }
 	
 	/// <summary>
 	/// When need to redraw an item in controls that display it.

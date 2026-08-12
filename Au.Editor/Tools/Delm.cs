@@ -1265,7 +1265,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			}
 		}
 		
-		_tree.SetItems(xRoot.Children());
+		_tree.SetItems(xRoot);
 		_treeRoot = xRoot;
 		if (xSelect != null) _SelectTreeItem(xSelect);
 		

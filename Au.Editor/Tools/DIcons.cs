@@ -1,5 +1,3 @@
-//TODO: download all optional components from GitHub, not LA. Minimal SDK, icon embeddings, version, LaBinary. Allow users to download manually.
-
 using System.Security.Authentication;
 using System.Windows;
 using System.Windows.Controls;
@@ -210,9 +208,9 @@ Can be Pack.Icon, like Material.Folder.");
 					if (name != null) f = o => (table == null || o._table.Eqi(table)) && (wild?.Match(o._name) ?? o._name.Contains(name, comp));
 				}
 			}
-			IReadOnlyList<_Item> e = f == null ? _a : _a.Where(f).ToArray();
-			_tv.SetItems(e);
-			if (select && (select = e.Count == 1)) _tv.Select(0);
+			IReadOnlyList<_Item> a = f == null ? _a : _a.Where(f).ToArray();
+			_tv.SetItems(a);
+			if (select && (select = a.Count == 1)) _tv.Select(0);
 			_EnableControls();
 		};
 		

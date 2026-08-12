@@ -91,7 +91,7 @@ public unsafe partial class KTreeView {
 				if (v.IsExpanded) r += _CountVisible(v.Items);
 			}
 			return r;
-		} //TODO3: now calls v.Items 2 times (_CountVisible and _AddVisible). It can be expensive.
+		}
 		
 		if (n == 0) {
 			_avi = [];
@@ -141,13 +141,23 @@ public unsafe partial class KTreeView {
 	/// <summary>
 	/// Sets (adds, replaces or removes) all items.
 	/// </summary>
-	/// <param name="items">Items at tree root. Can be null.</param>
+	/// <param name="items">Items at tree view root. Can be null.</param>
 	/// <param name="modified">true when adding/removing one or more items in same tree/list. Preserves selection, scroll position, etc.</param>
-	public void SetItems(IEnumerable<ITreeViewItem> items, bool modified = false) {
+	public void SetItems(IReadOnlyList<ITreeViewItem> items, bool modified = false) {
 		_itemsSource = items;
 		_SetVisibleItems(!modified);
 	}
 	IEnumerable<ITreeViewItem> _itemsSource;
+	
+	/// <summary>
+	/// Sets (adds, replaces or removes) all items.
+	/// </summary>
+	/// <param name="items">The root item. This overload calls its <c>Children</c>. Can be null.</param>
+	/// <param name="modified">true when adding/removing one or more items in same tree/list. Preserves selection, scroll position, etc.</param>
+	public void SetItems<T>(TreeBase<T> items, bool modified = false) where T : TreeBase<T>, ITreeViewItem {
+		_itemsSource = items?.Children();
+		_SetVisibleItems(!modified);
+	}
 	
 	/// <summary>
 	/// Gets the number of visible items.

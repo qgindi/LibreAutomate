@@ -1,6 +1,5 @@
 /*/
 role exeProgram
-optimize true
 define IDE_LA,NO_GLOBAL,NO_DEFAULT_CHARSET_UNICODE
 noWarnings 8002,419
 testInternal Microsoft.CodeAnalysis,Microsoft.CodeAnalysis.CSharp,Microsoft.CodeAnalysis.Features,Microsoft.CodeAnalysis.CSharp.Features,Microsoft.CodeAnalysis.Workspaces,Microsoft.CodeAnalysis.CSharp.Workspaces

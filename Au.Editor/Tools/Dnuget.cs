@@ -567,7 +567,7 @@ class DNuget : KDialogWindow {
 		}
 		
 		t.Remove();
-		_tv.SetItems(_tvroot.Children(), true);
+		_tv.SetItems(_tvroot, true);
 		if (_Selected is null) _panelManage.IsEnabled = false;
 		
 		return true;
@@ -668,7 +668,7 @@ class DNuget : KDialogWindow {
 			m["Delete unused folder", disable: !_CanDeleteFolder()] = o => {
 				if (false == filesystem.delete(path, FDFlags.CanFail)) return;
 				t.Remove();
-				_tv.SetItems(_tvroot.Children(), true);
+				_tv.SetItems(_tvroot, true);
 				_folders.Remove(t.Name);
 			};
 			m.Show();
@@ -1057,7 +1057,7 @@ class DNuget : KDialogWindow {
 			}
 			_tvroot.AddChild(k);
 		}
-		_tv.SetItems(_tvroot.Children());
+		_tv.SetItems(_tvroot);
 		if (_sources != null && a.Count > 0) _DisplayIcons(a, useCache: true); //if SDK installed
 	}
 	//CONSIDER: display transitive packages too, as child nodes.
@@ -1144,7 +1144,7 @@ class DNuget : KDialogWindow {
 			if (isNew = t is null) {
 				t = new(this, pr.name, pr.version, _SourceFromUrl(pr.source));
 				tFolder.AddChild(t);
-				_tv.SetItems(_tvroot.Children(), true);
+				_tv.SetItems(_tvroot, true);
 			}
 		}
 		if (!isNew) {

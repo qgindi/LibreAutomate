@@ -141,7 +141,7 @@ class PanelOutline {
 			Panels.Editor.ActiveDocChanged += Clear;
 		}
 
-		_tv.SetItems(root.Children(), modified: changed != 4);
+		_tv.SetItems(root, modified: changed != 4);
 		return true;
 
 		//0 same, 1 changed
