@@ -1,4 +1,6 @@
 static class GitBinaryFiles {
+	const string c_zipFilename = "git-clone-LA-binary.7z";
+
 	/// <summary>
 	/// To call this when pushing LA to GitHub, add file `.git\hooks\pre-push`.
 	/// <code><![CDATA[
@@ -47,7 +49,7 @@ static class GitBinaryFiles {
 		}
 
 		if (update) {
-			var d = dialog.showProgress(true, "Updating LaBinary.7z", ".");
+			var d = dialog.showProgress(true, "Updating " + c_zipFilename, ".");
 			d.Destroyed += k => { Environment.Exit(2); };
 
 			var t = new csvTable();
@@ -63,7 +65,7 @@ static class GitBinaryFiles {
 			filesystem.saveText(listFile, b.ToString());
 
 			d.Send.ChangeText2("Compressing...", false);
-			var zipFile = folders.ThisAppTemp + "LaBinary.7z";
+			var zipFile = folders.ThisAppTemp + c_zipFilename;
 			filesystem.delete(zipFile);
 			if (0 != run.console(out string s1, laDir + @"32\7za.exe", $@"a ""{zipFile}"" @""{listFile}""", laDir)) {
 				print.it(s1);
@@ -72,7 +74,9 @@ static class GitBinaryFiles {
 			//run.it(zipFile); dialog.show("zip OK");
 
 			d.Send.ChangeText2("Uploading...", false);
-			Sftp.UploadToLA("domains/libreautomate.com/public_html/download", zipFile);
+			var rm = new GithubReleaseManager("LA-downloads");
+			rm.Init("v1.0.0");
+			rm.AddOrReplaceAsset(zipFile, "application/x-compressed");
 
 			filesystem.delete(zipFile, FDFlags.CanFail);
 		}
@@ -91,11 +95,11 @@ static class GitBinaryFiles {
 
 		string restoreFile = laDir + "gitBinaryRestore.csv";
 		if (filesystem.exists(restoreFile)) {
-			var zipFile = folders.ThisAppTemp + "LaBinary.7z";
-			internet.http.Get("https://www.libreautomate.com/download/LaBinary.7z", true).Download(zipFile);
+			var zipFile = folders.ThisAppTemp + c_zipFilename;
+			if (!internet.http.Get("https://github.com/qgindi/LA-downloads/releases/download/v1.0.0/" + c_zipFilename, true).Download(zipFile)) return 1;
 
 			int r = run.console(out string so, solutionDirBS + @"_\32\7za.exe", $@"x ""{zipFile}"" -aoa", laDir);
-			if (r != 0) throw new AuException("Failed to extract LaBinary.7z. " + so);
+			if (r != 0) throw new AuException($"Failed to extract {c_zipFilename}. " + so);
 
 			filesystem.delete(restoreFile);
 		}

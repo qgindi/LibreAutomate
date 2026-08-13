@@ -435,28 +435,23 @@ static partial class App {
 		
 		if (forceNow) b.IsEnabled = false;
 		try {
+#if true
+			var r = await internet.http.SendAsync(new(System.Net.Http.HttpMethod.Head, "https://github.com/qgindi/LibreAutomate/releases/latest"));
+			var s = r.RequestMessage.RequestUri.Segments[^1].TrimStart('v'); //redirected URL like https://github.com/qgindi/LibreAutomate/releases/tag/v1.16.4
+#else
 			var r = await internet.http.GetAsync("https://www.libreautomate.com/version.txt");
 			r.EnsureSuccessStatusCode();
 			var s = await r.Content.ReadAsStringAsync();
 			s = s.Lines()[0];
+#endif
 			if (s != Au_.Version && System.Version.TryParse(Au_.Version, out var v1) && System.Version.TryParse(s, out var v2) && v2 > v1) {
-				//Panels.Output.Scintilla.AaTags.AddLinkTag("+appUpdate", _Update);
-				//print.it($"<>{AppNameShort} {s} is available. The installed version is {Au_.Version}.  [<+appUpdate>update...<>]  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>website<>]");
-				print.it($"<>{AppName} {s} is available. The installed version is {Au_.Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes>changes<>]  [<link https://www.libreautomate.com>download<>]");
+				print.it($"<>{AppName} {s} is available. The installed version is {Au_.Version}.  [<link https://github.com/qgindi/LibreAutomate/tree/master/Other/DocFX/_doc/changes/v{v2.ToString(2)}.md>changes<>]  [<link https://github.com/qgindi/LibreAutomate/releases>download<>]");
 			} else if (forceNow) {
 				dialog.showInfo(null, $"{AppName} is up to date. Version {Au_.Version}.", owner: Hmain);
 			}
 		}
 		catch (Exception e1) { if (forceNow) print.warning(e1); }
 		finally { if (forceNow) b.IsEnabled = true; }
-		
-		//static async Task _Update(string s) {
-		//	if (!dialog.showOkCancel(null, $"This will download and install the new {AppNameShort} version.")) return;
-		//	try {
-		
-		//	}
-		//	catch (Exception e1) { print.warning(e1); }
-		//}
 	}
 }
 

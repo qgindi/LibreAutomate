@@ -683,7 +683,7 @@ More info in app help topic "Code editor".
 		public static void About() {
 			print.it($@"<>---- {App.AppName} ----
 Version: {Au_.Version}
-Download: <link>https://www.libreautomate.com/<>
+Download: <link>https://github.com/qgindi/LibreAutomate/releases<>
 Source code: <link>https://github.com/qgindi/LibreAutomate<>
 Uses C# 14, <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>, <link https://github.com/dotnet/roslyn>Roslyn<>, <link https://www.scintilla.org/>Scintilla 5.5.7<>, <link https://www.pcre.org/>PCRE 10.46<>, <link https://www.sqlite.org/index.html>SQLite<>, <link https://github.com/MahApps/MahApps.Metro.IconPacks>MahApps.Metro.IconPacks 5.1<>, <link https://github.com/dotnet/docfx>DocFX<>, <link https://github.com/Samsung/netcoredbg>Samsung/netcoredbg<>, <link https://github.com/microsoft/win32metadata>win32metadata<>, and more.
 Folders: <link {folders.Workspace}>Workspace<>, <link {folders.ThisApp}>ThisApp<>, <link {folders.ThisAppDocuments}>ThisAppDocuments<>, <link {folders.ThisAppDataLocal}>ThisAppDataLocal<>, <link {folders.ThisAppDataRoaming}>ThisAppDataRoaming<>, <link {folders.ThisAppTemp}>ThisAppTemp<>.

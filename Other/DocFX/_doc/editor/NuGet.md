@@ -12,9 +12,9 @@ In LibreAutomate, use the **NuGet packages** tool to install and manage NuGet pa
 ## How to install a NuGet package
 Find a package on the [NuGet](https://www.nuget.org/) website. Click the **Copy** button.
 
-    Note: If the package is only for **.NET Framework**, it is outdated and incompatible.
+Note: If the package is only for **.NET Framework**, it is outdated and incompatible.
 
-    Tip: There is a link to the source repository on the right side. Visit it to assess the library better. Avoid abandoned libraries (last commit years ago).
+Tip: There is a link to the source repository on the right side. Visit it to assess the library better. Avoid abandoned libraries (last commit years ago).
 
 Paste the copied text in the **NuGet packages** window. Or you can enter just the package name, and the tool will get the latest version. Or enter `Name --version 1.2.3`.
 

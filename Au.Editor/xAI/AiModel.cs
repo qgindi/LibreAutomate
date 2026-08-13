@@ -379,6 +379,7 @@ record class ModelGeminiChat : AiChatModel {
 
 #region Voyage
 
+//TODO2: maybe a newer model is available.
 record class ModelVoyageEmbed : AiEmbeddingModel {
 	//public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-3.5", 1024, "float", new(3300, 1000, requestPeriod: 20500)) { } //free tier rate: 10000 TPM, 3 RPM
 	public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-3.5", 1024, "float", new(32000, 1000, requestPeriod: 1000)) { } //rate: 2000000 TPM, 2000 RPM
@@ -410,6 +411,11 @@ record class ModelVoyageEmbedM : AiEmbeddingModel {
 	public ModelVoyageEmbedM() : base("Voyage", "https://api.voyageai.com/v1/multimodalembeddings", "voyage-multimodal-3", 1024, null, new(32000, 1000, requestPeriod: 1000)) { isMultimodal = isCompact = true; }
 	//With every 560 pixels of an image being counted as a token, each input in the list must not exceed 32,000 tokens, and the total number of tokens across all inputs must not exceed 320,000.
 	
+	//Also tested model "voyage-multimodal-3.5". It supports dimensions 256, 512, 1024, 2048.
+	//	Test results for image-only were worse (with any dimensions).
+	//	Test results for text-only and text+image were OK.
+	//	Did not test much.
+	
 	public override object GetPostData(IList<EmInput> input, bool isQuery) {
 		List<object> a = new(input.Count);
 		List<object> aItem = [];
@@ -424,9 +430,10 @@ record class ModelVoyageEmbedM : AiEmbeddingModel {
 		}
 		
 		return new {
-			model, //voyage-multimodal-3
+			model,
 			input = a,
 			output_encoding = "base64",
+			//output_dimension = dimensions, //v3.5
 			input_type = isQuery ? "query" : "document"
 		};
 	}
@@ -438,6 +445,7 @@ record class ModelVoyageEmbedM : AiEmbeddingModel {
 		=> (int)j["usage"]["total_tokens"];
 }
 
+//TODO2: maybe a newer model is available.
 record class ModelVoyageRerank : AiRerankModel {
 	//public ModelVoyageRerank(string model) : base("Voyage", "https://api.voyageai.com/v1/rerank", model, new(3300, 1000, requestPeriod: 20500)) { } //free tier
 	public ModelVoyageRerank(string model) : base("Voyage", "https://api.voyageai.com/v1/rerank", model, new(8000, 1000, requestPeriod: 1000)) { }

@@ -104,7 +104,7 @@ class Installer {
 			lzmaFile = _dirBS + lzmaFilename;
 			using var http = Util.CreateHttpClient(30 * 60);
 #if DEV
-			var url = "https://github.com/qgindi/LibreAutomate/releases/download/v1.12.0/" + lzmaFilename;
+			var url = "https://github.com/qgindi/LA-downloads/releases/download/v1.0.0/" + lzmaFilename;
 #else
 			var url = $"https://github.com/qgindi/LibreAutomate/releases/download/v{App.AppVersion}/" + lzmaFilename;
 #endif

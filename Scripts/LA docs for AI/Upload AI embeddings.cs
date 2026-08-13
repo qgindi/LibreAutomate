@@ -1,22 +1,27 @@
-/// Uploads an AI embeddings storage file to the LA website.
+/// Uploads an AI embeddings storage file to https://github.com/qgindi/LA-downloads/releases.
 /// Currently used only for icons embeddings.
 /// To run, click link printed by Embeddings._GetEmbeddings. Can't run directly because need a hash etc.
 /// It prints the link when created new embeddings. To print always when UI-searching, temporarily enable the `//emFile.PrintUploadIfAtHome`.
 
-/*/ c Sftp.cs; c Ed util shared.cs; /*/
+/*/ c Ed util shared.cs; c GithubReleaseManager.cs; /*/
 
 string file = args[0], zipName = args[1];
 //print.it(file, zipName);
 
-if (!dialog.showOkCancel("Upload AI embedding vectors", zipName)) return;
+//if (!dialog.showOkCancel("Upload AI embedding vectors")) return;
 
 string zipFile = folders.ThisAppTemp + zipName;
 try {
+	print.it("Compressing...");
 	if (!LA.SevenZip.Compress(out var errors, zipFile, file)) { print.it(errors); return; }
 	
 	//run.selectInExplorer(zipFile);
-	Sftp.UploadToLA("domains/libreautomate.com/public_html/download/ai/embedding", zipFile);
 	
-	print.it($"Uploaded: {file} -> https://www.libreautomate.com/download/ai/embedding/{zipName}");
+	print.it("Uploading...");
+	var m = new GithubReleaseManager("LA-downloads");
+	m.Init("v1.0.0");
+	m.AddOrReplaceAsset(zipFile, "application/x-compressed");
+	
+	print.it($"<>Uploaded: {zipName} to <link>https://github.com/qgindi/LA-downloads/releases<>");
 }
 finally { filesystem.delete(zipFile, FDFlags.CanFail); }

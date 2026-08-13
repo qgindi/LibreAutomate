@@ -1,15 +1,13 @@
 /// Creates minimal .NET SDK for LA NuGet and Publish features.
 /// Downloads full SDK to a temp folder, and gets only folders used by these features (tested).
 /// Each platform folder is less than 100 MB; compressed less than 30 MB (full SDK is 200).
-/// Finally prints an Upload link (https://www.libreautomate.com/download/sdk).
+/// Finally prints an Upload link, which runs this script with command line `upload`. It uploads to https://github.com/qgindi/LA-downloads/releases.
 /// LA on user computers will auto-download when need.
 /// Also installs the minimal SDK in `folders.Editor + "SDK"`. Must be x64 computer.
 
-/*/ nuget -\SSH.NET; c Sftp.cs; c Passwords.cs; /*/
+/*/ c GithubReleaseManager.cs; /*/
 
 //#define DEV
-
-using Renci.SshNet;
 
 if (args is ["upload"]) { //clicked link 'Upload'
 	MinimalSDK.Upload();
@@ -58,16 +56,17 @@ class MinimalSDK {
 	}
 	
 	public void Finally() {
-		//var site = "https://dash.cloudflare.com/";
-		var site = "https://www.libreautomate.com/download/sdk";
-		print.it($"<>-- DONE --\r\n<script {script.name}.cs|upload>Upload<> the zip files to {site} and delete temp folder <link {_TempDirBS}>net-sdk-script-data<>.");
+		print.it($"<>-- DONE --\r\n<script {script.name}.cs|upload>Upload<> to <link>https://github.com/qgindi/LA-downloads/releases<> and delete temp folder <link {_TempDirBS}>net-sdk-script-data<>.");
 	}
 	
 	public static void Upload() {
 		print.it("Uploading. Wait until DONE.");
-		var zip1 = $"{_TempDirBS}sdk-{Environment.Version.ToString(2)}-x64.zip";
-		var zip2 = $"{_TempDirBS}sdk-{Environment.Version.ToString(2)}-arm64.zip";
-		Sftp.UploadToLA("domains/libreautomate.com/public_html/download/sdk", zip1, zip2);
+		var zip1 = $"{_TempDirBS}sdk-{Environment.Version.ToString(2)}-x64.7z";
+		var zip2 = $"{_TempDirBS}sdk-{Environment.Version.ToString(2)}-arm64.7z";
+		var m = new GithubReleaseManager("LA-downloads");
+		m.Init("v1.0.0");
+		m.AddOrReplaceAsset(zip1, "application/x-compressed");
+		m.AddOrReplaceAsset(zip2, "application/x-compressed");
 		print.it("DONE");
 		if (dialog.showYesNo("Delete temp folder?", _TempDirBS)) filesystem.delete(_TempDirBS);
 	}
@@ -93,7 +92,12 @@ class MinimalSDK {
 		if (!filesystem.exists(zipFile)) {
 			print.it("Downloading SDK...");
 			string url = $"https://builds.dotnet.microsoft.com/dotnet/Sdk/{c_version}/{zipName}";
-			internet.http.Get(url, zipFile + "~");
+			//internet.http.Get(url, zipFile + "~");
+			if (!internet.http.Get(url, true).Download(zipFile + "~")) {
+				filesystem.delete(zipFile + "~");
+				print.it("Canceled");
+				Environment.Exit(1);
+			}
 			filesystem.rename(zipFile + "~", zipName);
 		}
 		
@@ -178,7 +182,7 @@ class MinimalSDK {
 	void _Create7z() {
 		print.it("Compressing...");
 		
-		var filename = $"sdk-{Environment.Version.ToString(2)}-{(_arm64 ? "arm64" : "x64")}.zip"; //note: it's 7z, but Hostinger for 7z does not set `content-length` header (no progress); also `content-type: text/plain`
+		var filename = $"sdk-{Environment.Version.ToString(2)}-{(_arm64 ? "arm64" : "x64")}.7z";
 		var zipFile = _TempDirBS + filename;
 		filesystem.delete(zipFile);
 		

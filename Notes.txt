@@ -52,6 +52,7 @@ May need to update some info in README.md for github. Eg the screenshot and "how
 
 Review the md file of current version.
 	If it's still "future.md", rename ( RENAME!!! ) to "v1.x.md".
+	Note: the md file path and name format is used in `App.CheckForUpdates`.
 
 Run script "Create LA setup files.cs".
 	It creates 2 .lzma files containing LA files, and the setup .exe file (builds the setup project). All 3 files are in the same folder; opens it.

@@ -48,7 +48,7 @@ namespace Au {
 		}
 		
 		/// <summary>
-		/// Gets a static <see cref="HttpClient"/> instance that can be used in scripts to download web pages, post web form data, etc.
+		/// Gets a static <see cref="HttpClient"/> instance that can be used in scripts to download web pages, files, post web form data, etc.
 		/// </summary>
 		/// <remarks>
 		/// Creates <see cref="HttpClient"/> only the first time; later just returns it.
@@ -56,6 +56,8 @@ namespace Au {
 		/// Sets these properties and default headers:
 		/// - <see cref="SocketsHttpHandler.AutomaticDecompression"/> = <c>All</c>.
 		/// - <c>User-Agent: Au</c>.
+		/// 
+		/// Does not change the default timeout (100 s). To download large files without a timeout, use <see cref="ExtInternet.Download"/> (or <c>DownloadAsync</c>). See example in Cookbook.
 		/// 
 		/// <c>internet.http</c> makes easier to discover and use internet get/post/etc functions when using this library. You can instead create an <see cref="HttpClient"/> instance and use its functions in the same way. See the second example. Use the same <c>HttpClient</c> instance when making multiple get/post/etc requests.
 		/// </remarks>
@@ -82,6 +84,7 @@ namespace Au {
 		static HttpClient _CreateHttpClient() {
 			var h = new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All };
 			var r = new HttpClient(h);
+			//var r = new HttpClient(h) { Timeout = Timeout.InfiniteTimeSpan }; //no. The Download method will not timeout, because the timeout is not applied to the content transfer if used HttpCompletionOption.ResponseHeadersRead.
 			r.DefaultRequestHeaders.Add("User-Agent", "Au"); //without it some servers reject requests
 			process.thisProcessExit += _ => r.Dispose();
 			return r;

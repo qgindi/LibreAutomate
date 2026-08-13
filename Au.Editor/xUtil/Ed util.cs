@@ -71,8 +71,8 @@ static class DotnetUtil {
 		static async Task<bool> _InstallMinimalSDK(TextBlock progress) {
 			var window = Window.GetWindow(progress);
 			
-			string filename = $"sdk-{Environment.Version.ToString(2)}-{(osVersion.isArm64OS ? "arm64" : "x64")}.zip";
-			string url = $"https://www.libreautomate.com/download/sdk/{filename}";
+			string filename = $"sdk-{Environment.Version.ToString(2)}-{(osVersion.isArm64OS ? "arm64" : "x64")}.7z";
+			string url = $"https://github.com/qgindi/LA-downloads/releases/download/v1.0.0/{filename}";
 			string dotnetDir = folders.ThisAppBS + "SDK";
 			using var dl = new Downloader();
 			if (!dl.PrepareDirectory(dotnetDir, failedWarningPrefix: c_errorInstallMinimalSDK)) return false;

@@ -134,9 +134,9 @@ class Embeddings(AiEmbeddingModel model) {
 	
 	public static string VectorDir { get; } = folders2.LaDataRoaming + @"AI\Embedding"; //note: don't use the common app data folder
 	
-	List<EmVector> _GetEmbeddings(string dbPath, bool compact, Func<(List<string> names, List<EmInput> datas)> getData, CancellationToken cancel) {
+	List<EmVector> _GetEmbeddings(string dbPath, bool compact, Func<(List<string> names, List<EmInput> datas)> getData, CancellationToken cancel, string filenameSuffix = null) {
 		_EmHash newHash = _Hash(dbPath), oldHash = default;
-		string emPath = VectorDir + $@"\{model.GetType()}-{pathname.getNameNoExt(dbPath)}.bin";
+		string emPath = VectorDir + $@"\{model.GetType()}-{pathname.getNameNoExt(dbPath)}{filenameSuffix}.bin";
 		var emFile = new _EmStorageFile(emPath);
 		List<EmVector> ems = null;
 		bool retried = false; gRetry:
@@ -254,8 +254,10 @@ class Embeddings(AiEmbeddingModel model) {
 	/// </summary>
 	/// <exception cref="OperationCanceledException"></exception>
 	/// <exception cref="Exception"></exception>
-	public List<EmVector> GetIconsEmbeddings(bool withImages, CancellationToken cancel = default) {
-		return _GetEmbeddings(s_dbFileIcons, true, _GetData, cancel);
+	public List<EmVector> GetIconsEmbeddings(bool withImages, CancellationToken cancel = default, string testTable = null) {
+		if (testTable != null && !withImages) throw new NotImplementedException("withImages false when testTable no null");
+		
+		return _GetEmbeddings(s_dbFileIcons, true, _GetData, cancel, filenameSuffix: testTable);
 		
 		(List<string> names, List<EmInput> texts) _GetData() {
 			var rx1 = new regexp(@"([a-z0-9])([A-Z])");
@@ -269,7 +271,11 @@ class Embeddings(AiEmbeddingModel model) {
 					db.Get(out int n, sql);
 					return n;
 				}
-				int nTotal = _TotalCount();
+				int _TestCount() {
+					db.Get(out int n, $"""SELECT COUNT(*) FROM '{testTable}';""");
+					return n;
+				}
+				int nTotal = testTable == null ? _TotalCount() : _TestCount();
 				int nn = 0, percent = 0;
 				var dp = dialog.showProgress(false, "Preparing data for AI search");
 				
@@ -278,7 +284,7 @@ class Embeddings(AiEmbeddingModel model) {
 				using var stTables = db.Statement("SELECT * FROM _tables");
 				while (stTables.Step()) {
 					var table = stTables.GetText(0);
-					//if (table!="Material") continue;
+					if (testTable != null && table != testTable) continue;
 					var templ = stTables.GetText(1);
 					var tc = XamlIconConverter_.GetConverter(templ) ?? throw new NotImplementedException("Unknown XAML: " + templ);
 					
@@ -456,7 +462,7 @@ file class _EmStorageFile(string file) {
 		if (_TryGetZipName(model, hash) is not { } zipName) return false;
 		string zipFile = file + ".7z";
 		try {
-			var r = internet.http.Get($"https://www.libreautomate.com/download/ai/embedding/{zipName}", dontWait: true);
+			var r = internet.http.Get($"https://github.com/qgindi/LA-downloads/releases/download/v1.0.0/{zipName}", dontWait: true);
 			if (!r.IsSuccessStatusCode) return false;
 			r.Download(zipFile, progressText1: "Downloading data for AI search");
 			var dir = pathname.getDirectory(file);
@@ -473,7 +479,7 @@ file class _EmStorageFile(string file) {
 		var md5 = new Hash.MD5Context();
 		md5.Add(hash.hash);
 		md5.Add(hash.modelParams);
-		return $"{pathname.getNameNoExt(file)}-{md5.Hash.ToStringBase64Url()}.zip";
+		return $"{pathname.getNameNoExt(file)}-{md5.Hash.ToStringBase64Url()}.7z";
 	}
 	
 	public void PrintUploadIfAtHome(AiEmbeddingModel model, _EmHash hash) {
