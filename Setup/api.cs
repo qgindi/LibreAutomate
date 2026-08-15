@@ -1,3 +1,4 @@
+#if !EMPTY
 
 #pragma warning disable 649, 169 //field never assigned/used
 unsafe class api
@@ -7,7 +8,7 @@ unsafe class api
 	{
 	[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesW", SetLastError = true)]
 	internal static extern FileAttributes GetFileAttributes(string lpFileName);
-
+	
 	[DllImport("kernel32.dll", EntryPoint = "MoveFileExW", SetLastError = true)]
 	internal static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, uint dwFlags);
 	
@@ -69,5 +70,9 @@ unsafe class api
 		void _2();
 		void Save([MarshalAs(UnmanagedType.LPWStr)] string pszFileName, int fRemember);
 	}
+	
+	[DllImport("user32.dll")]
+	internal static extern nint GetForegroundWindow();
 }
 #pragma warning restore 649, 169 //field never assigned/used
+#endif

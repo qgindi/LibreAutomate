@@ -1,3 +1,4 @@
+#if !EMPTY
 using System.ComponentModel;
 using System.Net.Http;
 
@@ -29,7 +30,7 @@ static class DotnetInfo {
 		string rid = Util.IsArm64 ? "arm64" : "x64";
 		string urlKnown = $"https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/{c_versionXXX}/windowsdesktop-runtime-{c_versionXXX}-win-{rid}.exe";
 		
-		using var http = Util.CreateHttpClient();
+		using var http = Util.CreateHttpClient(false);
 		
 		try { //fast but undocumented way
 			var s = http.GetStringAsync($"https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/{c_versionXX}/latest.version").GetAwaiter().GetResult().Trim();
@@ -55,3 +56,4 @@ static class DotnetInfo {
 		catch { return urlKnown; }
 	}
 }
+#endif

@@ -1,3 +1,4 @@
+#if !EMPTY
 using System.Windows.Controls;
 
 static class ExtWpf {
@@ -75,3 +76,4 @@ struct WBGridLength {
 		return new GridLength();
 	}
 }
+#endif

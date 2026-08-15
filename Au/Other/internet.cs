@@ -83,6 +83,7 @@ namespace Au {
 		
 		static HttpClient _CreateHttpClient() {
 			var h = new SocketsHttpHandler { AutomaticDecompression = DecompressionMethods.All };
+			if (osVersion.winVer == osVersion.win7) h.SslOptions = new() { EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 }; //workaround: on Win7 fails to connect to most websites
 			var r = new HttpClient(h);
 			//var r = new HttpClient(h) { Timeout = Timeout.InfiniteTimeSpan }; //no. The Download method will not timeout, because the timeout is not applied to the content transfer if used HttpCompletionOption.ResponseHeadersRead.
 			r.DefaultRequestHeaders.Add("User-Agent", "Au"); //without it some servers reject requests

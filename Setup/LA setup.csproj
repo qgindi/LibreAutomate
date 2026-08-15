@@ -21,6 +21,8 @@
 
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'" />
+
 	<ItemGroup>
 	  <Compile Include="..\Au\resources\global2.cs" Link="global2.cs" />
 	</ItemGroup>

@@ -30,6 +30,7 @@ global using System.Windows;
 
 using System.Windows.Controls;
 
+#if !EMPTY
 static class App {
 	[STAThread]
 	static int Main(string[] args) {
@@ -149,7 +150,6 @@ static class App {
 			pButtons.Children.Add(bCancel);
 			bCancel.Click += (_, _) => { w.Close(); };
 			
-			
 			var bHelp = new Button { Content = "Help", Width = 70, Height = 22, Margin = new(6, 0, 0, 0) };
 			pButtons.Children.Add(bHelp);
 			bHelp.Click += (_, _) => _Help();
@@ -183,6 +183,11 @@ static class App {
 					bInstall.Content = "Retry";
 				}
 				w.IsEnabled = true;
+			};
+
+			w.Loaded += async (_, _) => {
+				//after UAC consent etc the window may be behind other windows. Maybe this workaround does not fix it, but at least then the taskbar button flashes.
+				_ = w.Dispatcher.InvokeAsync(() => Util.ActivateWindowAsync(w));
 			};
 			
 			w.Closing += (_, e) => {
@@ -288,5 +293,10 @@ Command line switches:
 		Msgbox(s);
 	}
 }
-
-
+#else
+static class App {
+	[STAThread]
+	static void Main(string[] args) {
+	}
+}
+#endif

@@ -36,7 +36,7 @@ bool uploadedNow = false;
 var id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file)));
 
 //make sure that the local setup exe is the same as the GitHub latest release
-if (file == trueFile) {
+if (file == trueFile && !script.testing) {
 	var r1 = internet.http.Get("https://api.github.com/repos/qgindi/LibreAutomate/releases/latest");
 	var j1 = r1.Json(true)["assets"][0];
 	//_PrintJson(j1);

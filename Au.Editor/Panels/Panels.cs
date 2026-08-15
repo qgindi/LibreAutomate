@@ -39,8 +39,8 @@ static class Panels {
 				if (x.XPathSelectElement("//panel[@name='Outline']") == null) { //v0.4 added several new panels etc, and users would not know the best place for them, or even how to move
 					filesystem.delete(customLayoutPath, FDFlags.RecycleBin);
 					print.it("Info: The window layout has been reset, because several new panels have been added in this app version.\r\n\tIf you want to undo it: 1. Exit the program. 2. Restore file Layout.xml from the Recycle Bin (replace the existing file). 3. Run the program. 4. Move panels from the bottom of the window to a better place.");
-				} else if (x.XPathSelectElement("//panel[@name='Help']") == null) { //in v1.15 renamed some panels and removed the Help toolbar
-					x.XPathSelectElement("//toolbar[@name='Help']")?.Remove();
+				} else if (x.XPathSelectElement("//panel[@name='Read']") == null) { //in v1.15 renamed some panels and removed the Help toolbar
+					x.XPathSelectElement("//*[@name='Help']")?.Remove();
 					x.XPathSelectElement("//panel[@name='Cookbook']")?.SetAttributeValue("name", "Help");
 					x.XPathSelectElement("//panel[@name='Recipe']")?.SetAttributeValue("name", "Read");
 					

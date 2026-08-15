@@ -98,7 +98,7 @@ foreach (var (i, list) in lists.Index()) {
 	if (createZipForVirustotal && i is 0) {
 		var vtZip = dirSetupOutput + $"vt-{index}.zip";
 		_CreateZipFile(paths, vtZip, compressed: true);
-		run.selectInExplorer(vtZip);
+		//run.selectInExplorer(vtZip);
 	}
 }
 
@@ -162,7 +162,7 @@ static List<string> _ListToPaths(string list, string dir) {
 	
 	//all specified files exist?
 	foreach (var (i, found) in aFound.Index()) {
-		if(!found && !aLines[i].Starts("//")) throw new Exception("Missing file: " + aLines[i]);
+		if (!found && !aLines[i].Starts("//")) throw new Exception("Missing file: " + aLines[i]);
 	}
 	
 	return r;

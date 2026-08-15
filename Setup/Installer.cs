@@ -1,3 +1,4 @@
+#if !EMPTY
 using System.IO.Compression;
 
 class Installer {
@@ -102,7 +103,7 @@ class Installer {
 		
 		if (downloadLzma) {
 			lzmaFile = _dirBS + lzmaFilename;
-			using var http = Util.CreateHttpClient(30 * 60);
+			using var http = Util.CreateHttpClient(true);
 #if DEV
 			var url = "https://github.com/qgindi/LA-downloads/releases/download/v1.0.0/" + lzmaFilename;
 #else
@@ -288,7 +289,7 @@ No - replace after reboot. Please don't run the app until reboot.
 		try {
 			_log(_progressPrefix = "Downloading .NET Desktop Runtime");
 			try {
-				using var http = Util.CreateHttpClient(30 * 60);
+				using var http = Util.CreateHttpClient(true);
 				http.Download(url, file, nRetry: Silent ? 5 : 1, _progress);
 			}
 			catch (Exception ex) {
@@ -449,6 +450,18 @@ No - replace after reboot. Please don't run the app until reboot.
 			_DeleteKey(c_uninsKeyBase, c_uninsId_old); //old Inno Setup key
 			
 			Registry.SetValue(AppPathKey, null, $@"{dir}\Au.Editor.exe");
+			
+#if !NET
+			var ver = Environment.OSVersion.Version;
+			if ((ver.Major, ver.Minor) == (6, 1)) {
+				//workaround: on Win7 dotnet nuget/publish fails to connect to nuget
+				try {
+					const string c_rk = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client";
+					if (Registry.GetValue(c_rk, "DisabledByDefault", null) is null) Registry.SetValue(c_rk, "DisabledByDefault", 0);
+				}
+				catch { }
+			}
+#endif
 		}
 		
 		public static void Uninstall() {
@@ -465,3 +478,5 @@ No - replace after reboot. Please don't run the app until reboot.
 	const string c_appFilename = "Au.Editor";
 #endif
 }
+#else
+#endif

@@ -21,7 +21,6 @@ return args[0] switch {
 	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
 	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	"dllPostBuild" => DllPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
-	"taskPreBuild" => TaskPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe taskPreBuild
 	"roslynPostBuild" => RoslynPostBuild(),
 	"gitPrePushHook" => GitBinaryFiles.PrePushHook(),
 	_ => 1
@@ -48,12 +47,6 @@ int DllPostBuild() {
 	_ExitEditor();
 	var toDir = $@"{solutionDirBS}_\{args[2] switch { "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}";
 	filesystem.copyTo(args[1], toDir, FIfExists.Delete);
-	return 0;
-}
-
-/// Exits editor.
-int TaskPreBuild() {
-	_ExitEditor();
 	return 0;
 }
 
