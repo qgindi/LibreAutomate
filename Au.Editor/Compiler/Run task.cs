@@ -487,13 +487,13 @@ class RunningTasks {
 			}
 		}
 		
-		bool exeProgram = r.notInCache, debugger = debugAttach != null;
+		bool exeProgram = r.notInCache;
 		string exeFile, argsString = args == null ? null : StringUtil.CommandLineFromArray(args);
 		
 		if (exeProgram) { //meta role exeProgram
 			exeFile = Compiler.DllNameToExeName(r.file, default);
 		} else {
-			if (debugger) {
+			if (debugAttach != null) {
 				if (uac == _SpUac.elevate) { print.it("Cannot debug this script. Remove /*/ uac admin; /*/, or run LA as admin."); return 0; }
 			}
 			
@@ -503,8 +503,7 @@ class RunningTasks {
 		int pid = 0; WaitHandle hProcess = null;
 		try {
 			(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, exeProgram, runFromEditor, f.Id, debugAttach, r);
-			if (pid == 0) return 0; //failed to start debugging
-			Api.AllowSetForegroundWindow(pid);
+			if (pid == 0) return 0;
 		}
 		catch (Exception ex) {
 			print.it(ex);
@@ -531,108 +530,88 @@ class RunningTasks {
 	/// <summary>
 	/// Starts task process.
 	/// Returns (processId, processHandle). Throws if failed. Returns 0 if failed to attach debugger.
+	/// Supports reenter, eg when waiting for UAC consent dialog to close.
 	/// </summary>
 	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string argsString, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach, Compiler.CompResults cr) {
-		if (s_inSP) throw new AuException("_StartProcess: can't reenter"); //starting the debugger. See wait.forHandle below. Very rare, never mind.
-		s_inSP = true;
-		try {
-			(int pid, WaitHandle hProcess) r;
-			string cwd;
-			using _Portable portable = default;
+		(int pid, WaitHandle hProcess) r;
+		string cwd;
+		using _Portable portable = default;
+		
+		if (exeProgram) {
+			//Pass this working directory to let the exe know it was launched from editor.
+			//	Then it will read from shared memory and set the event.
+			//There are no other ways to pass data when changing UAC IL and cannot use command line args.
+			cwd = folders.ThisAppBS + @"Default\Workspace\files";
 			
-			using var sm = SharedMemory_.Mapping.CreateOrOpen(exeProgram ? "Au.SM.exeProgram-" + Path.GetFileName(exeFile) : "Au.SM.miniProgram", 16 * 1024);
-			var p = (MiniProgramAndExeProgramStartupSharedMemoryData_*)sm.Mem;
-			p->pidEditor = process.thisProcessId;
-			p->hwndMsg = (int)CommandLine.MsgWnd;
-			p->idMainFile = idMain;
-			p->pipe = wrPipeName;
-			p->workspace = folders.Workspace;
-			
-			if (s_event1 == 0) s_event1 = Api.CreateEvent2(default, true, false, "Au.event.taskStart");
-			else Api.ResetEvent(s_event1);
-			
-			if (exeProgram) {
-				if (s_cwdExe == null) {
-					//Pass this working directory to let the exe know it was launched from editor.
-					//	Then its AppModuleInit_ will read from shared memory and set the event.
-					//There are no other ways to pass data when using shellexecute(runas) when cannot use command line args.
-					cwd = folders.ThisApp.Path + @"\Roslyn";
-					s_cwdExe = cwd;
-				} else {
-					cwd = s_cwdExe;
-				}
-				
-				EPFlags_ flags = 0;
-				if (runFromEditor) flags |= EPFlags_.FromEditor;
-				if (cr.flags.Has(MPFlags_.RedirectConsole)) flags |= EPFlags_.RedirectConsole;
-				
-				if (App.IsPortable) {
-					flags |= EPFlags_.IsPortable;
-					portable.Before(exeFile, cr.platform, out bool clearEnvVar);
-					if (clearEnvVar) flags |= EPFlags_.ClearEnvVar;
-				}
-				
-				p->flags = (int)flags;
-			} else {
-				cwd = folders.ThisApp;
-				
-				MPFlags_ flags = cr.flags;
-				if (runFromEditor) flags |= MPFlags_.FromEditor;
-				if (App.IsPortable) flags |= MPFlags_.IsPortable;
-				p->flags = (int)flags;
-				
-				var mp = (MiniProgramStartupSharedMemoryData_*)(p + 1);
-				mp->scriptName = cr.name;
-				mp->assemblyPath = cr.file;
-			}
-			
-			if (uac == _SpUac.elevate) {
-				var k = run.it(exeFile, argsString, RFlags.Admin | RFlags.NeedProcessHandle, cwd);
-				r = (k.ProcessId, k.ProcessHandle);
-				//note: don't try to start task without UAC consent. It is not secure.
-			} else {
-				var ps = new ProcessStarter_(exeFile, argsString, cwd, rawExe: true);
-				
-				if (debugAttach != null) ps.si.dwXCountChars = 1703529821; //let the process wait for "debugger attached" event
-				
-				var need = ProcessStarter_.Result.Need.WaitHandle;
-				var psr = uac == _SpUac.userFromAdmin
-					? ps.StartUserIL(need)
-					: ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
-				r = (psr.pid, psr.waitHandle);
-				
-				if (debugAttach != null) {
-					if (!debugAttach(psr.pid)) {
-						Api.TerminateProcess(psr.waitHandle.SafeWaitHandle.DangerousGetHandle(), 0);
-						psr.waitHandle.Dispose();
-						return default;
-					}
-				}
-			}
-			
-			nint hProc = r.hProcess.SafeWaitHandle.DangerousGetHandle();
-			if (debugAttach != null) {
-				//can't block, because need to communicate with netcoredbg.exe
-				wait.forHandle(0, WHFlags.DoEvents, s_event1, hProc);
-			} else { //better low-level than wait.forHandle with flags 0
-				nint* ha = stackalloc nint[2] { s_event1, hProc };
-				int signaled = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
-				if (signaled == 1) {
-					Api.GetExitCodeProcess(hProc, out int ec);
-					var se = $"Process `{pathname.getName(exeFile)}` ended before starting to execute managed code.\r\n\tExit code: {ec}";
-					if (App.IsPortable && exeProgram) portable.Failed(ref se, cr.platform, uac);
-					print.warning(se, -1);
-				}
-			}
-			Api.ResetEvent(s_event1);
-			
-			return r;
+			if (App.IsPortable) portable.Before(exeFile, cr.platform);
+		} else {
+			cwd = folders.ThisApp;
 		}
-		finally { s_inSP = false; }
+		
+		if (uac == _SpUac.elevate) {
+			var k = run.it(exeFile, argsString, RFlags.Admin | RFlags.NeedProcessHandle, cwd);
+			r = (k.ProcessId, k.ProcessHandle);
+			//note: don't try to start task without UAC consent. It is not secure.
+		} else {
+			var ps = new ProcessStarter_(exeFile, argsString, cwd, rawExe: true);
+			
+			if (debugAttach != null) ps.si.dwXCountChars = 1703529821; //let the process wait for "debugger attached" event
+			
+			var need = ProcessStarter_.Result.Need.WaitHandle;
+			var psr = uac == _SpUac.userFromAdmin
+				? ps.StartUserIL(need)
+				: ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
+			r = (psr.pid, psr.waitHandle);
+		}
+		
+		Api.AllowSetForegroundWindow(r.pid);
+		
+		string pidString = r.pid.ToS();
+		using var sm = SharedMemory_.Mapping.CreateOrOpen("Au.memory.taskStart-" + pidString, sizeof(script.StartupDataInSharedMemory_));
+		var p = (script.StartupDataInSharedMemory_*)sm.Mem;
+		p->pidEditor = process.thisProcessId;
+		p->hwndMsg = (int)CommandLine.MsgWnd;
+		p->idMainFile = idMain;
+		p->WrPipe = wrPipeName;
+		p->Workspace = folders.Workspace;
+		if (exeProgram) {
+			EPFlags_ flags = 0;
+			if (runFromEditor) flags |= EPFlags_.FromEditor;
+			if (cr.flags.Has(MPFlags_.RedirectConsole)) flags |= EPFlags_.RedirectConsole;
+			if (App.IsPortable) { flags |= EPFlags_.IsPortable; if (portable.clearEnvVar) flags |= EPFlags_.ClearEnvVar; }
+			p->exeFlags = flags;
+		} else {
+			MPFlags_ flags = cr.flags;
+			if (runFromEditor) flags |= MPFlags_.FromEditor;
+			if (App.IsPortable) flags |= MPFlags_.IsPortable;
+			p->miniFlags = flags;
+			p->MiniName = cr.name;
+			p->MiniDll = cr.file;
+		}
+		
+		using EventWaitHandle event1 = new(false, EventResetMode.ManualReset, "Au.event.taskStart-" + pidString);
+		//the new process can wait until this event exists. Usually don't need to wait (this code is executed earlier).
+		
+		if (debugAttach != null) {
+			if (!debugAttach(r.pid)) {
+				Api.TerminateProcess(r.hProcess.SafeWaitHandle.DangerousGetHandle(), 0);
+				r.hProcess.Dispose();
+				return default;
+			}
+		}
+		
+		//waits until the new process reads the shared memory
+		if (1 == WaitHandle.WaitAny([event1, r.hProcess])) {
+			Api.GetExitCodeProcess(r.hProcess.SafeWaitHandle.DangerousGetHandle(), out int ec);
+			var se = $"Process `{pathname.getName(exeFile)}` ended before starting to execute managed code.\r\n\tExit code: {ec}";
+			if (App.IsPortable && exeProgram) portable.Failed(ref se, cr.platform, uac);
+			print.warning(se, -1);
+			r.hProcess.Dispose();
+			return default;
+		}
+		
+		return r;
 	}
-	static IntPtr s_event1;
-	static string s_cwdExe;
-	static bool s_inSP;
 	
 	int _Find(int taskId) {
 		for (int i = 0; i < _a.Count; i++) {
@@ -643,16 +622,20 @@ class RunningTasks {
 	
 	struct _Portable : IDisposable {
 		string _evName, _evValue;
+		public bool clearEnvVar;
 		
-		public void Before(string exeFile, MCPlatform platform, out bool clearEnvVar) {
-			clearEnvVar = false;
+		static int s_reenterCounter;
+		
+		public void Before(string exeFile, MCPlatform platform) {
 			if (platform == MCPlatform.x86) return; //sorry, we don't have the runtime
 			
 			bool arm64 = platform == MCPlatform.arm64;
 			if (!CompilerUtil.Apphost.PatchPortableExeProgram_DotnetPath(exeFile, arm64)) { //in portable LA, compiler calls this too, but now may need to patch programs copied from non-portable workspace or moved etc
 				_evName = arm64 ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64";
-				_evValue = Environment.GetEnvironmentVariable(_evName);
-				Environment.SetEnvironmentVariable(_evName, folders.ThisAppBS + (arm64 ? "dotnetARM" : "dotnet"));
+				if (0 == s_reenterCounter++) {
+					_evValue = Environment.GetEnvironmentVariable(_evName);
+					Environment.SetEnvironmentVariable(_evName, folders.ThisAppBS + (arm64 ? "dotnetARM" : "dotnet"));
+				}
 				clearEnvVar = true;
 				
 				//If will be changed UAC IL, the process will not inherit environment variables. Then it will use the shared .NET Runtime, or exit if not installed. Never mind, it's rare.
@@ -666,7 +649,7 @@ class RunningTasks {
 		}
 		
 		public void Dispose() {
-			if (_evName != null) Environment.SetEnvironmentVariable(_evName, _evValue);
+			if (_evName != null && 0 == --s_reenterCounter) Environment.SetEnvironmentVariable(_evName, _evValue);
 		}
 	}
 }

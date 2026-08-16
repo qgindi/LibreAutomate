@@ -7,34 +7,26 @@ static class MiniProgram {
 	public static unsafe int Run(string[] args) {
 		//print.qm2.use = true;
 		//var p1 = perf.local();
-
+		
 		script.role = SRole.MiniProgram;
-
+		folders.Editor = folders.ThisApp;
+		
 		script.AppModuleInit_(auCompiler: true); //5 ms (3 ms loading AuCpp.dll)
-
+		
 		//p1.Next('m');
 		//Debug_.PrintLoadedAssemblies(true, true);
-
+		
 		string assemblyPath;
-		MPFlags_ flags;
-		{
-			if (!SharedMemory_.Mapping.TryOpenExisting("Au.SM.miniProgram", out var sm)) return -1;
-			var p = (MiniProgramAndExeProgramStartupSharedMemoryData_*)sm.Mem;
-			var mp = (MiniProgramStartupSharedMemoryData_*)(p + 1);
-
-			flags = (MPFlags_)p->flags;
-			if (flags.Has(MPFlags_.FromEditor)) script.testing = true;
-			if (flags.Has(MPFlags_.IsPortable)) ScriptEditor.IsPortable = true;
-
-			script.s_idMainFile = p->idMainFile;
-			script.s_wndEditorMsg = (wnd)p->hwndMsg;
-			script.s_wrPipeName = p->pipe;
-			folders.Workspace = new(p->workspace);
-			folders.Editor = new(folders.ThisApp);
-
+		using (script.MiniProgramAndExeProgramStartup_ k = new()) {
+			if (!k.Open(true)) return -1;
+			var p = k.Mem;
+			
+			assemblyPath = p->MiniDll;
+			var flags = p->miniFlags;
+			
 			if (!flags.Has(MPFlags_.MTA))
 				process.ThisThreadSetComApartment_(ApartmentState.STA);
-
+			
 			if (flags.Has(MPFlags_.Console)) {
 				Api.AllocConsole();
 			} else {
@@ -42,38 +34,27 @@ static class MiniProgram {
 				//Compiler adds this flag if the script uses System.Console assembly.
 				//Else new users would not know how to test code examples with Console.WriteLine found on the internet.
 			}
-
-			script.Starting_(mp->scriptName, p->pidEditor);
+			
+			DependencyResolverForMiniProgramAndEditorExtensionScripts_ defRes = default;
+			
+			if (flags.Has(MPFlags_.RefPaths))
+				AssemblyLoadContext.Default.Resolving += (_, an)
+					=> defRes.ResolveManaged(null, an);
+			
+			if (flags.Has(MPFlags_.NativePaths))
+				AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
+					=> defRes.ResolveUnmanaged(null, dll);
+			
+			script.Starting_(p->pidEditor);
 			//p1.Next('s');
-
-			assemblyPath = mp->assemblyPath;
-
-			sm.Dispose();
-
-			var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.taskStart");
-			if (!Api.SetEvent(hevent)) return -2;
-			Api.CloseHandle(hevent);
 		}
-
-		DependencyResolverForMiniProgramAndEditorExtensionScripts_ defRes = default;
-
-		if (flags.Has(MPFlags_.RefPaths))
-			AssemblyLoadContext.Default.Resolving += (_, an)
-				=> defRes.ResolveManaged(null, an);
-
-		if (flags.Has(MPFlags_.NativePaths))
-			AssemblyLoadContext.Default.ResolvingUnmanagedDll += (_, dll)
-				=> defRes.ResolveUnmanaged(null, dll);
-
+		
 		//p1.Next();
-#if !true
-		return script.RunMiniProgram_(assemblyPath, args);
-#else //FP
 		var asm = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyPath);
 		Assembly.SetEntryAssembly(asm);
 		//info: module initializers run later
 		//p1.Next('a');
-
+		
 		var entryPoint = asm.EntryPoint;
 		string[] epParams = entryPoint.GetParameters().Length != 0 ? args : null;
 		int ret = 0;
@@ -95,9 +76,8 @@ static class MiniProgram {
 				d();
 			}
 		}
-
+		
 		return ret;
-#endif
 	}
 }
 

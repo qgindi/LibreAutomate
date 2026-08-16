@@ -1,6 +1,123 @@
 using System.Runtime.Loader;
 using System.Text.Json;
 
+namespace Au {
+	public static partial class script {
+		/// <summary>
+		/// Startup data for miniProgram and exeProgram processes.
+		/// </summary>
+		internal unsafe struct StartupDataInSharedMemory_ {
+			public int pidEditor;
+			public int hwndMsg;
+			public uint idMainFile;
+			public MPFlags_ miniFlags;
+			public EPFlags_ exeFlags;
+			
+			record struct _OffsetLength(int offset, int length);
+			
+			_OffsetLength _wrPipe, _workspace, _miniName, _miniDll;
+			
+			int _next;
+			fixed char _strings[32000];
+			
+			void _Set(ref _OffsetLength m, string s) {
+				if (m.length != 0) throw new InvalidOperationException("a string can be set once");
+				if (string.IsNullOrEmpty(s)) return;
+				if (_next + s.Length > 32000) throw new ArgumentException("string too long");
+				fixed (char* p = _strings) s.AsSpan().CopyTo(new(p + _next, s.Length));
+				m = new(_next, s.Length);
+				_next += s.Length;
+			}
+			
+			string _Get(_OffsetLength m) {
+				if (m.length == 0) return null;
+				fixed (char* p = _strings) return new(p, m.offset, m.length);
+			}
+			
+			public string WrPipe {
+				get => _Get(_wrPipe);
+				set => _Set(ref _wrPipe, value);
+			}
+			
+			public string Workspace {
+				get => _Get(_workspace);
+				set => _Set(ref _workspace, value);
+			}
+			
+			public string MiniName {
+				get => _Get(_miniName);
+				set => _Set(ref _miniName, value);
+			}
+			
+			public string MiniDll {
+				get => _Get(_miniDll);
+				set => _Set(ref _miniDll, value);
+			}
+		}
+		
+		/// <summary>
+		/// Common startup code of miniProgram and exeProgram processes.
+		/// </summary>
+		internal unsafe ref struct MiniProgramAndExeProgramStartup_ : IDisposable {
+			nint _event;
+			SharedMemory_.Mapping _memory;
+			StartupDataInSharedMemory_* _p;
+			
+			public StartupDataInSharedMemory_* Mem => _p;
+			
+			public bool Open(bool miniProgram) {
+				string pidString = process.thisProcessId.ToS();
+				
+				//open event. LA creates it after creating this process and filling the shared memory.
+				//	Normally don't need to wait here. Often need to wait 1 time when starting with UAC consent.
+				//	LA waits until Dispose() sets the event; then closes the shared memory and the event.
+				for (int i = 0; ;) {
+					_event = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.taskStart-" + pidString);
+					if (_event != 0) break;
+					if (++i == 1000) return false;
+					Debug_.PrintIf(i > 5, $"waiting until LA creates event, {i}, {lastError.message}");
+					Thread.Sleep(10);
+				}
+				
+				if (!SharedMemory_.Mapping.TryOpenExisting("Au.memory.taskStart-" + pidString, out _memory)) return false;
+				_p = (StartupDataInSharedMemory_*)_memory.Mem;
+				
+				script.IdMainFile_ = _p->idMainFile;
+				script.s_wndEditorMsg = (wnd)_p->hwndMsg;
+				script.s_wrPipeName = _p->WrPipe;
+				folders.Workspace = new(_p->Workspace);
+				
+				if (miniProgram) {
+					script.name = _p->MiniName;
+					var flags = _p->miniFlags;
+					if (flags.Has(MPFlags_.FromEditor)) script.testing = true;
+					if (flags.Has(MPFlags_.IsPortable)) ScriptEditor.IsPortable = true;
+				} else {
+					var flags = _p->exeFlags;
+					if (flags.Has(EPFlags_.FromEditor)) script.testing = true;
+					if (flags.Has(EPFlags_.IsPortable)) {
+						ScriptEditor.IsPortable = true;
+						if (flags.Has(EPFlags_.ClearEnvVar)) { //clear the env var, else child processes would inherit it
+							var ev = osVersion.isArm64Process ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64";
+							Environment.SetEnvironmentVariable(ev, Environment.GetEnvironmentVariable(ev, EnvironmentVariableTarget.User) ?? Environment.GetEnvironmentVariable(ev, EnvironmentVariableTarget.Machine));
+						}
+					}
+				}
+				
+				return true;
+			}
+			
+			public void Dispose() {
+				_memory.Dispose();
+				if (_event != 0) {
+					Api.SetEvent(_event);
+					Api.CloseHandle(_event);
+				}
+			}
+		}
+	}
+}
+
 namespace Au.Types {
 	/// <summary>
 	/// <see cref="script.role"/>.
@@ -179,69 +296,6 @@ namespace Au.Types {
 		
 		/// <summary>Clear env var DOTNET_ROOT_x in portable.</summary>
 		ClearEnvVar = 8,
-	}
-	
-	internal unsafe struct MiniProgramAndExeProgramStartupSharedMemoryData_ {
-		public int flags; //MPFlags_ or EPFlags_
-		public int pidEditor;
-		public int hwndMsg;
-		public uint idMainFile;
-		int _pipeLen;
-		fixed char _pipe[64];
-		int _workspaceLen;
-		fixed char _workspace[1024];
-		
-		public string pipe {
-			get {
-				if (_pipeLen == 0) return null;
-				fixed (char* p = _pipe) return new(p, 0, _pipeLen);
-			}
-			set {
-				if (value.NE()) {
-					_pipeLen = 0;
-				} else {
-					fixed (char* p = _pipe) value.AsSpan().CopyTo(new Span<char>(p, 64));
-					_pipeLen = value.Length;
-				}
-			}
-		}
-		
-		public string workspace {
-			get {
-				fixed (char* p = _workspace) return new(p, 0, _workspaceLen);
-			}
-			set {
-				fixed (char* p = _workspace) value.AsSpan().CopyTo(new Span<char>(p, 1024));
-				_workspaceLen = value.Length;
-			}
-		}
-	}
-	
-	internal unsafe struct MiniProgramStartupSharedMemoryData_ {
-		int _nameLen;
-		fixed char _name[256];
-		int _fileLen;
-		fixed char _file[1024];
-		
-		public string scriptName {
-			get {
-				fixed (char* p = _name) return new(p, 0, _nameLen);
-			}
-			set {
-				fixed (char* p = _name) value.AsSpan().CopyTo(new Span<char>(p, 256));
-				_nameLen = value.Length;
-			}
-		}
-		
-		public string assemblyPath {
-			get {
-				fixed (char* p = _file) return new(p, 0, _fileLen);
-			}
-			set {
-				fixed (char* p = _file) value.AsSpan().CopyTo(new Span<char>(p, 1024));
-				_fileLen = value.Length;
-			}
-		}
 	}
 }
 

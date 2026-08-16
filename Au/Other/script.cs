@@ -7,7 +7,7 @@ namespace Au;
 /// A script task is a running script, except if role <c>editorExtension</c>. Each script task is a separate process.
 /// </summary>
 /// <seealso cref="process"/>
-public static class script {
+public static partial class script {
 	#region properties
 	
 	/// <summary>
@@ -18,10 +18,9 @@ public static class script {
 	/// Else returns <see cref="AppDomain.FriendlyName"/>, like <c>"MainAssemblyName"</c>.
 	/// </remarks>
 	public static string name {
-		get => s_name ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 with ".exe", now without (now it is the entry assembly name)
-		internal set { s_name = value; }
+		get => field ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 with ".exe", now without (now it is the entry assembly name)
+		set { field = value; }
 	}
-	static string s_name;
 	
 	/// <summary>
 	/// Gets the script role (<c>miniProgram</c>, <c>exeProgram</c> or <c>editorExtension</c>).
@@ -63,7 +62,7 @@ public static class script {
 	/// Returns <c>true</c> if this script task was started from editor with the <b>Run</b> button or menu command.
 	/// Always <c>false</c> if role <c>editorExtension</c>.
 	/// </summary>
-	public static bool testing { get; internal set; }
+	public static bool testing { get; private set; }
 	
 	/// <summary>
 	/// Returns <c>true</c> if the build configuration of the main assembly is Debug (default). Returns <c>false</c> if Release (<c>optimize true</c>).
@@ -138,46 +137,32 @@ public static class script {
 			int pidEditor = 0;
 			if (auCompiler) {
 				var cd = Environment.CurrentDirectory;
-				const string c_ep = @"\Roslyn";
-				if (cd.Ends(c_ep, true) && SharedMemory_.Mapping.TryOpenExisting("Au.SM.exeProgram-" + Path.GetFileName(Environment.ProcessPath), out var sm)) { //started from editor
+				const string c_ep = @"\Default\Workspace\files";
+				if (cd.Ends(c_ep, true)) { //started from editor
 					Environment.CurrentDirectory = folders.ThisApp;
-					
-					var p = (MiniProgramAndExeProgramStartupSharedMemoryData_*)sm.Mem;
-					pidEditor = p->pidEditor;
-					var flags = (EPFlags_)p->flags;
-					if (flags.Has(EPFlags_.FromEditor)) script.testing = true;
-					if (flags.Has(EPFlags_.IsPortable)) {
-						ScriptEditor.IsPortable = true;
-						if (flags.Has(EPFlags_.ClearEnvVar)) { //clear the env var, else child processes would inherit it
-							var ev = osVersion.isArm64Process ? "DOTNET_ROOT_ARM64" : "DOTNET_ROOT_X64";
-							Environment.SetEnvironmentVariable(ev, Environment.GetEnvironmentVariable(ev, EnvironmentVariableTarget.User) ?? Environment.GetEnvironmentVariable(ev, EnvironmentVariableTarget.Machine));
-						}
-					}
-					s_idMainFile = p->idMainFile;
-					s_wndEditorMsg = (wnd)p->hwndMsg;
-					s_wrPipeName = p->pipe;
-					folders.Workspace = new(p->workspace);
 					folders.Editor = new(cd[..^c_ep.Length]);
-
+					
+					using MiniProgramAndExeProgramStartup_ k = new();
+					if (!k.Open(false)) Environment.Exit(-1);
+					
+					var p = k.Mem;
+					pidEditor = p->pidEditor;
+					
+					var flags = p->exeFlags;
 					if (flags.Has(EPFlags_.RedirectConsole)) RedirectConsole_();
-					
-					sm.Dispose();
-					
-					var hevent = Api.OpenEvent(Api.EVENT_MODIFY_STATE, false, "Au.event.taskStart");
-					if (!Api.SetEvent(hevent)) Environment.Exit(4);
-					Api.CloseHandle(hevent);
 				}
 			}
 			
-			Starting_(AppDomain.CurrentDomain.FriendlyName, pidEditor);
+			Starting_(pidEditor);
 		}
 	}
 	static bool s_appModuleInit;
-	static UExcept s_setupException = UExcept.Print;
-	internal static Exception s_unhandledException; //for process.thisProcessExit
 	internal static wnd s_wndEditorMsg;
 	
 	internal static bool Exiting_ { get; private set; }
+	
+	static UExcept s_setupException = UExcept.Print;
+	internal static Exception s_unhandledException; //for process.thisProcessExit
 	
 	[DebuggerNonUserCode]
 	static void _UnhandledException(object sender, UnhandledExceptionEventArgs u) {
@@ -426,8 +411,7 @@ public static class script {
 	
 	#region aux thread
 	
-	internal static void Starting_(string name, int pidEditor) {
-		s_name = name;
+	internal static void Starting_(int pidEditor) {
 		s_auxThread = new(() => _AuxThread(pidEditor));
 		//using CreateThread because need thread handle ASAP
 	}
@@ -788,7 +772,7 @@ public static class script {
 		//TODO3: optimize. Eg the app may override TextWriter.Write(char) and call this on each char in a string etc.
 		//	Now 40 mcs. Console.Write(char) 20 mcs.
 	}
-	internal static string s_wrPipeName;
+	static string s_wrPipeName;
 #else //does not work
 	public static unsafe bool writeResult(string s) {
 		if (s_wrPipeName == null) return false;
@@ -829,7 +813,7 @@ public static class script {
 	/// If this process was started by LibreAutomate, the new process will be started by LibreAutomate too. Else this function simply starts a new instance of this program.
 	/// </remarks>
 	public static int restart(params string[] args) {
-		if (s_idMainFile != 0) return _Run(4, $":{s_idMainFile}", args, out _);
+		if (IdMainFile_ != 0) return _Run(4, $":{IdMainFile_}", args, out _);
 		if (role != SRole.ExeProgram) throw new InvalidOperationException(); //editorExtension
 		
 		var ps = new ProcessStarter_(process.thisExePath, StringUtil.CommandLineFromArray(args), null, rawExe: true);
@@ -837,7 +821,7 @@ public static class script {
 		catch (Exception e1) { print.warning(e1); return -1; }
 	}
 	
-	internal static uint s_idMainFile;
+	internal static uint IdMainFile_ { get; private set; }
 	
 	/// <summary>
 	/// Starts executing a script in child session running in picture-in-picture (PiP) window. Does not wait.
@@ -933,7 +917,7 @@ public static class script {
 	/// </remarks>
 	public static bool? end([ParamString(PSFormat.CodeFile)] string name) {
 		var w = ScriptEditor.WndMsg_; if (w.Is0) throw new AuException("Editor process not found.");
-		int exceptPid = 0; if (name == "") (name, exceptPid) = ($":{s_idMainFile}", Api.GetCurrentProcessId());
+		int exceptPid = 0; if (name == "") (name, exceptPid) = ($":{IdMainFile_}", Api.GetCurrentProcessId());
 		int r = (int)WndCopyData.Send<char>(w, 5, name, exceptPid);
 		return r == 1 ? true : r == 2 ? null : false;
 	}

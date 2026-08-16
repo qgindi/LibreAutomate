@@ -23,15 +23,15 @@ static class Util {
 			api.SendMessage(_hwndQM2, api.WM_SETTEXT, -1, (nint)p);
 	}
 	static nint _hwndQM2;
-
+	
 #if NET
 	public static string ThisExePath => Environment.ProcessPath;
 #else
 	public static string ThisExePath => System.Reflection.Assembly.GetEntryAssembly()?.Location;
 #endif
-
+	
 	public static string ThisExeArgs => Regex.Replace(Environment.CommandLine, @"^(?:""[^""]+""|\S+)\s*", "");
-
+	
 	/// <summary>
 	/// Deletes a file or directory (with all descendants).
 	/// </summary>
@@ -69,7 +69,7 @@ static class Util {
 		}
 		return false;
 	}
-
+	
 	/// <summary>
 	/// Starts a console process, redirects its stdout (but not stderr), waits until it exits, and reads the stdouts.
 	/// </summary>
@@ -81,7 +81,7 @@ static class Util {
 	/// <returns>false if the exit code is not 0. Throws exception if failed (eg file does not exist).</returns>
 	public static bool RunConsole(out string output, string program, string arguments, string workingDirectory = null, Encoding encoding = null) {
 		output = null;
-
+		
 		using var p = new Process {
 			StartInfo = new ProcessStartInfo {
 				UseShellExecute = false,
@@ -93,19 +93,19 @@ static class Util {
 				CreateNoWindow = true,
 			}
 		};
-
+		
 		p.Start();
-
+		
 		var t = p.StandardOutput.ReadToEndAsync();
-
+		
 		p.WaitForExit();
 		output = t.GetAwaiter().GetResult();
-
+		
 		return p.ExitCode == 0;
 	}
-
+	
 	public static bool IsArm64 => RuntimeInformation.OSArchitecture == Architecture.Arm64;
-
+	
 	public static HttpClient CreateHttpClient(bool bigTimeout) {
 		if (!s_once1) {
 #if !NET
@@ -116,16 +116,16 @@ static class Util {
 #endif
 			s_once1 = true;
 		}
-
+		
 		var r = new HttpClient();
 		if (bigTimeout) r.Timeout = TimeSpan.FromMinutes(60);
 		r.DefaultRequestHeaders.Add("User-Agent", "LibreAutomate setup");
 		return r;
 	}
 	static bool s_once1;
-
+	
 	public delegate void DownloadProgress(long total, long downloaded);
-
+	
 	/// <summary>
 	/// Downloads a file.
 	/// Throws exception if failed.
@@ -140,13 +140,13 @@ static class Util {
 					response.EnsureSuccessStatusCode();
 					using var input = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
 					using var output = File.Create(tempFile);
-
+					
 					if (progress == null) {
 						input.CopyTo(output);
 					} else {
 						long total = response.Content.Headers.ContentLength ?? -1;
 						var buffer = new byte[81920];
-
+						
 						for (long downloaded = 0; ;) {
 							progress(total, downloaded);
 							int n = input.Read(buffer, 0, buffer.Length);
@@ -156,7 +156,7 @@ static class Util {
 						}
 					}
 				}
-
+				
 				for (int i = 10; --i >= 0;) {
 					if (api.MoveFileEx(tempFile, file, api.MOVEFILE_REPLACE_EXISTING)) return;
 					Thread.Sleep(100);
@@ -170,68 +170,71 @@ static class Util {
 		finally {
 			DeleteFileOrDir(tempFile);
 		}
-
+		
 		throw new IOException("Failed to replace file: " + file);
 	}
-
+	
 	public static bool CreateShortcut(string lnkPath, string target, string arguments = null) {
 		try {
 			var isl = new api.ShellLink() as api.IShellLinkW;
 			isl.SetPath(target);
 			if (arguments != null) isl.SetArguments(arguments);
-
+			
 			var ipf = isl as api.IPersistFile;
 			ipf.Save(lnkPath, 1);
-
+			
 			Marshal.ReleaseComObject(ipf);
 			Marshal.ReleaseComObject(isl);
 			return true;
 		}
 		catch { return false; }
 	}
-
+	
 	/// <summary>
 	/// Returns <c>true</c> if this string is <c>null</c> or empty (<c>""</c>).
 	/// </summary>
 	public static bool NE(this string t) => t == null || t.Length == 0;
-
+	
 	public static bool IsFullPath(string path) => !_IsPartiallyQualified(path);
-
+	
 	//from .NET source
 	static bool _IsPartiallyQualified(string path) {
 		if (path.Length < 2) return true;
-
+		
 		if (IsDirectorySeparator(path[0])) return !(path[1] == '?' || IsDirectorySeparator(path[1]));
-
+		
 		return !((path.Length >= 3)
 			&& (path[1] == ':')
 			&& IsDirectorySeparator(path[2])
 			&& IsValidDriveChar(path[0]));
-
+		
 		static bool IsDirectorySeparator(char c) => c is '\\' or '/';
 		static bool IsValidDriveChar(char c) => (uint)((c | 0x20) - 'a') <= (uint)('z' - 'a');
 	}
-
+	
 	/// <summary>
 	/// Creates new directory if does not exist.
 	/// Sets security attributes for auth users to modify its content.
 	/// </summary>
 	public static void CreateWritableDirectory(string path) {
 		Directory.CreateDirectory(path);
-
-		var di = new DirectoryInfo(path);
-		var security = di.GetAccessControl(); //nuget -\System.IO.FileSystem.AccessControl
-
-		security.SetAccessRule(new(
-			new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null),
-			FileSystemRights.ReadAndExecute | FileSystemRights.Write,
-			InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
-			PropagationFlags.None,
-			AccessControlType.Allow));
-
-		di.SetAccessControl(security);
+		
+		try {
+			var di = new DirectoryInfo(path);
+			var security = di.GetAccessControl(); //nuget -\System.IO.FileSystem.AccessControl
+			
+			security.SetAccessRule(new(
+				new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null),
+				FileSystemRights.ReadAndExecute | FileSystemRights.Write,
+				InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+				PropagationFlags.None,
+				AccessControlType.Allow));
+			
+			di.SetAccessControl(security);
+		}
+		catch { }
 	}
-
+	
 	/// <summary>
 	/// Gets SHA256 of one or more files, as lowercase hex string.
 	/// </summary>
@@ -242,7 +245,7 @@ static class Util {
 		try {
 			using var sha = SHA256.Create();
 			byte[] buffer = new byte[64 * 1024];
-
+			
 			foreach (string file_ in files) {
 				string file = dir is null ? file_ : Path.Combine(dir, file_);
 				if (!File.Exists(file)) return null;
@@ -252,15 +255,15 @@ static class Util {
 					sha.TransformBlock(buffer, 0, n, null, 0);
 				}
 			}
-
+			
 			sha.TransformFinalBlock([], 0, 0);
-
+			
 			return BitConverter.ToString(sha.Hash).Replace("-", "").ToLowerInvariant();
 		}
 		catch { }
 		return null;
 	}
-
+	
 	/// <summary>
 	/// Gets processes that lock specified files.
 	/// </summary>
@@ -288,7 +291,7 @@ static class Util {
 #endif
 		return null;
 	}
-
+	
 #if USE_RESTARTMANAGER
 #pragma warning disable 649, 169 //field never assigned/used
 	static unsafe class _Api {
@@ -326,7 +329,7 @@ static class Util {
 	}
 #pragma warning restore 649, 169 //field never assigned/used
 #endif
-
+	
 	public record struct ProcessNameId(int id, string name, string service/*, bool restartable //tested: most not restartable */) {
 		public override string ToString() {
 			if (service != null) return $"{name}, id={id}, service={service}";
