@@ -804,16 +804,17 @@ This setting also is used by 'Find references' etc.
 		if (!ValidateReplacement_(ttf)) return; //avoid opening files in editor when invalid regex replacement
 		if (!_CanReplaceFromFoundPanel(ttf)) return;
 		
-		bool haveExternal = files.Any(o => o.IsExternal);
-		
 		switch (dialog.show("Replace text in files", "Replaces text in all files displayed in the Found panel.",
-			haveExternal ? "1 Replace all|2 Replace all except external|0 Cancel" : "1 Replace all|0 Cancel",
+			files.Any(o => o.IsExternal) ? "1 Replace all|2 Replace all except external|0 Cancel" : "1 Replace all|0 Cancel",
 			flags: /*DFlags.CommandLinks |*/ DFlags.CenterMouse,
 			owner: App.Hmain)) {
 		case 1:
-			if (haveExternal) { //remove duplicate files (two links pointing to the same file). Else possible confusion eg disabled Undo.
-				HashSet<FileId> hs = new();
-				files = files.Where(o => !o.IsExternal || !filesystem.more.getFileId(o.FilePath, out var u) || hs.Add(u)).ToList();
+			if (files.Any(o => o.IsLink)) { //remove duplicate files (via links). Else possible confusion eg disabled Undo.
+				files = files
+					.OrderBy(o => o != Panels.Editor.ActiveDoc.EFile) //prefer the active doc
+					.ThenBy(o => o.IsLink) //then non-link
+					.DistinctBy(o => { filesystem.more.getFileId(o.FilePath, out var u); return u; })
+					.ToList();
 			}
 			break;
 		case 2:

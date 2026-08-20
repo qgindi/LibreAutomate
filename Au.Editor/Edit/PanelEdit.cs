@@ -56,19 +56,19 @@ class PanelEdit {
 		
 		if (f == _activeDoc?.EFile) return true;
 		
-		//print.it(focusEditor, new StackTrace(true));
-		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.AaWnd.IsFocused ?? false));
+		//rejected: if another filenode with same filepath is open (eg link and non-link), don't open f in new editor; just change references.
+		//	bad: then also need many changes elsewhere, eg saving bookmarks, breakpoints, folding etc.
+		//var path = f.FilePath;
+		//if (f.OpenDoc is null && _docs.FirstOrDefault(o => o.EFile.FilePath.Eqi(path)) is { } doc2) {
+		//	doc2.EFile.OpenDoc = null;
+		//	doc2.EFile = f;
+		//	f.OpenDoc = doc2;
+			
+		//	if (doc2 == _activeDoc) return true;
+		//}
 		
-		void _ShowHideActiveDoc(bool show) {
-			if (show) {
-				_activeDoc.Visibility = Visibility.Visible;
-				//Children.Add(_activeDoc);
-			} else if (_activeDoc != null) {
-				_activeDoc.Visibility = Visibility.Hidden;
-				//Children.Remove(_activeDoc);
-				_activeDoc.ETempRanges_HidingOrClosingActiveDoc_();
-			}
-		}
+		//print.it(focusEditor, new StackTrace(true));
+		bool focusNow = !newFile && (focusEditor == true || _activeDoc?.AaWnd.IsFocused == true);
 		
 		var doc = f.OpenDoc;
 		if (doc != null) {
@@ -120,6 +120,17 @@ class PanelEdit {
 		
 		Panels.Find.UpdateQuickResults();
 		return true;
+		
+		void _ShowHideActiveDoc(bool show) {
+			if (show) {
+				_activeDoc.Visibility = Visibility.Visible;
+				//Children.Add(_activeDoc);
+			} else if (_activeDoc != null) {
+				_activeDoc.Visibility = Visibility.Hidden;
+				//Children.Remove(_activeDoc);
+				_activeDoc.ETempRanges_HidingOrClosingActiveDoc_();
+			}
+		}
 	}
 	
 	/// <summary>

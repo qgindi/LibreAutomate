@@ -980,7 +980,7 @@ public static partial class filesystem {
 		if (flags.Has(FDFlags.RecycleBin)) {
 			if (_DeleteShell(path, true)) return true;
 			if (canFail) return false;
-			Debug_.Print("_DeleteShell failed");
+			Debug_.Print("_DeleteShell failed: " + path);
 		}
 		
 		int ec = 0;
@@ -1001,7 +1001,7 @@ public static partial class filesystem {
 				return true;
 			}
 			if (!canFail) {
-				Debug_.Print("Using _DeleteShell.");
+				Debug_.Print("Using _DeleteShell: " + path);
 				if (_DeleteShell(path, false)) return true;
 			}
 		} else {

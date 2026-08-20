@@ -24,14 +24,15 @@ using System.Diagnostics.CodeAnalysis;
 using static Au.Controls.Sci;
 
 namespace LA;
+
 static class Test {
-	/// <summary>
-	/// 
-	/// </summary>
 	public static void FromMenubar() {
 		//print.clear();
 		
-		print.it(Panels.Editor.ActiveDoc.aaaCurrentPos16);
+		//var path = @"C:\Users\G\Documents\LibreAutomate\URN\files\Folder1-k\bind-kk.cs";
+		//print.it(App.Model.FindByFilePath(App.Model.CurrentFile, path));
+		
+		//print.it(Panels.Editor.ActiveDoc.aaaCurrentPos16);
 		
 		//var query = Panels.Editor.ActiveDoc.aaaText.Lines()[0];
 		//var query = Panels.Editor.ActiveDoc.aaaText;

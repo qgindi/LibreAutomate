@@ -50,20 +50,18 @@ class Installer {
 	}
 	
 	void _InstallFiles() {
-		int nPacks = 2;
-		for (int i = 0; i < nPacks; i++) {
-			_GetFilesFromLzma(i + 1);
+		for (int i = 1; i <= 2; i++) {
+			_GetFilesFromLzma(i);
 		}
 		
 		_log($"Copying files");
 		DontInterrupt = true;
 		try {
-			for (int i = 1; i <= nPacks; i++) {
-				var tempZipFile = _dirBS + $"offline-{i}.zip";
-				if (i > 1 && !File.Exists(tempZipFile)) continue; //existing files are up to date
+			foreach (var tempZipFile in _aUnzip) {
 				_ExtractZip(tempZipFile);
 				_Delete(tempZipFile);
 			}
+			
 			if (Util.IsArm64) {
 				string s = _dirBS + "Au.Editor.exe";
 				api.MoveFileEx(s, _dirBS + "Au.Editor-x64.exe", api.MOVEFILE_REPLACE_EXISTING);
@@ -71,6 +69,7 @@ class Installer {
 				_hsPaths.Remove("Au.Editor-arm.exe");
 				_hsPaths.Add("Au.Editor-x64.exe");
 			}
+			
 			_DeleteOldFilesAndWriteInstalledTxt();
 		}
 		finally { DontInterrupt = false; }
@@ -78,21 +77,25 @@ class Installer {
 	
 	public static bool DontInterrupt { get; private set; }
 	
-	public static bool IsOffline => s_isOffline ??=
-		Util.HashFiles([folders.ThisAppBS + "offline-1.zip.lzma"]) == Hardcoded.HashOfLzmaFile1
-		&& Util.HashFiles([folders.ThisAppBS + "offline-2.zip.lzma"]) == Hardcoded.HashOfLzmaFile2;
-	static bool? s_isOffline;
+	static Installer() {
+		//find "offline-1.zip.lzma" of this version regardless of its filename.
+		//	Because it can be eg like "offline-1.zip (1).lzma" if downloaded while already existed.
+		foreach (var v in Directory.EnumerateFiles(folders.ThisAppBS, "offline-*.lzma")) {
+			var hash = Util.HashFiles([v]);
+			if (hash == Hardcoded.HashOfLzmaFile1) s_offlineFiles[0] = v;
+			else if (hash == Hardcoded.HashOfLzmaFile2) s_offlineFiles[1] = v;
+		}
+		IsOffline = s_offlineFiles.All(o => o != null);
+	}
 	
-	void _GetFilesFromLzma(int index) {
-		string packName = index switch { 1 => "program", 2 => "data", _ => throw null };
-		_log(_progressPrefix = $"Downloading {packName} files");
-		
-		string lzmaFilename = $"offline-{index}.zip.lzma", lzmaFile = folders.ThisAppBS + lzmaFilename;
-		bool downloadLzma = !IsOffline;
-		if (downloadLzma && index > 1) {
+	static string[] s_offlineFiles = new string[2];
+	public static readonly bool IsOffline;
+	
+	void _GetFilesFromLzma(int index) { //index 1-based
+		if (index > 1) { //don't download (or extract) if the old files are the same as the new files
 			string[] a = null;
-			if (index == 2) downloadLzma = Util.HashFiles(a = ["doc.db", "icons.db", "ref.db", "winapi.db"], _dirBS) != Hardcoded.HashOfFiles2;
-			if (!downloadLzma) {
+			if (index == 2) if (Util.HashFiles(a = ["doc.db", "icons.db", "ref.db", "winapi.db"], _dir) != Hardcoded.HashOfFiles2) a = null;
+			if (a != null) {
 				foreach (var v in a) {
 					_sizeOfInstalledFiles += new FileInfo(_dirBS + v).Length;
 					_hsPaths.Add(v); //note: if in the future will add files in a subdir, will need to add the subdir at first
@@ -101,8 +104,16 @@ class Installer {
 			}
 		}
 		
+		string packName = index switch { 1 => "program", 2 => "data", _ => throw null };
+		string lzmaFile = s_offlineFiles[index - 1];
+		bool downloadLzma = lzmaFile == null;
+		
 		if (downloadLzma) {
+			_log(_progressPrefix = $"Downloading {packName} files");
+			
+			string lzmaFilename = $"offline-{index}.zip.lzma";
 			lzmaFile = _dirBS + lzmaFilename;
+			
 			using var http = Util.CreateHttpClient(true);
 #if DEV
 			var url = "https://github.com/qgindi/LA-downloads/releases/download/v1.0.0/" + lzmaFilename;
@@ -115,8 +126,11 @@ class Installer {
 		_log($"Decompressing {packName} files");
 		var tempZipFile = _dirBS + $"offline-{index}.zip";
 		SevenZip.LzmaAlone.Decompress(lzmaFile, tempZipFile);
+		_aUnzip.Add(tempZipFile);
 		if (downloadLzma) _Delete(lzmaFile);
 	}
+	
+	List<string> _aUnzip = [];
 	
 	void _ExtractZip(string zipFile) {
 		using ZipArchive zip = ZipFile.OpenRead(zipFile);

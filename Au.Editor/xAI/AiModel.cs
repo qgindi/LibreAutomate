@@ -379,7 +379,6 @@ record class ModelGeminiChat : AiChatModel {
 
 #region Voyage
 
-//TODO2: maybe a newer model is available.
 record class ModelVoyageEmbed : AiEmbeddingModel {
 	//public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-3.5", 1024, "float", new(3300, 1000, requestPeriod: 20500)) { } //free tier rate: 10000 TPM, 3 RPM
 	public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-3.5", 1024, "float", new(32000, 1000, requestPeriod: 1000)) { } //rate: 2000000 TPM, 2000 RPM

@@ -64,23 +64,7 @@ partial class FilesModel {
 		_nameMap = new(StringComparer.OrdinalIgnoreCase);
 		
 		Root = FileNode.LoadWorkspace(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
-		
-		List<FileNode> bad = null;
-		foreach (var f in Root.Descendants()) {
-			uint id = f.Id;
-			if (id == 0 || !_idMap.TryAdd(id, f)) (bad ??= new()).Add(f); //missing or duplicate id in xml file
-			else f._WorkspaceLoaded(id, _importing);
-		}
-		if (bad != null) {
-			foreach (var f in bad) {
-				if (!_importing) print.warning($"Invalid id of {f.SciLink(true)}. Creating new.");
-				f._WorkspaceLoaded(AddGetId(f), _importing);
-			}
-			if (!_importing) {
-				filesystem.delete(WorkspaceDirectory + @"\.compiled", FDFlags.CanFail);
-				Save.WorkspaceAsync();
-			}
-		}
+		_ValidateAndRepair();
 		
 		//TreeLoaded_?.Invoke(_importing);
 		
@@ -94,6 +78,31 @@ partial class FilesModel {
 			if (filesystem.exists(dirDel, true)) filesystem.delete(dirDel, FDFlags.CanFail);
 		}
 		_initedFully = true;
+		
+		void _ValidateAndRepair() {
+			List<FileNode> badId = null, badLink = null;
+			foreach (var f in Root.Descendants()) {
+				uint id = f.Id;
+				if (id == 0 || !_idMap.TryAdd(id, f)) (badId ??= []).Add(f); //missing or duplicate id in xml file
+				else f._WorkspaceLoaded(id, _importing);
+				
+				if (f.IsLink && f.IsFolder && !f.IsLinkExternal) (badLink ??= []).Add(f); //link to internal folder; previously allowed but not fully supported
+			}
+			if (badId != null) {
+				foreach (var f in badId) {
+					if (!_importing) print.warning($"Invalid id of {f.SciLink(true)}. Creating new.");
+					f._WorkspaceLoaded(AddGetId(f), _importing);
+				}
+			}
+			if (badLink != null) {
+				foreach (var f in badLink) _DeleteBadNodeWhenWorkspaceLoaded(f);
+			}
+			if ((badId != null || badLink != null) && !_importing) {
+				filesystem.delete(WorkspaceDirectory + @"\.compiled", FDFlags.CanFail);
+				Save.WorkspaceAsync();
+			}
+			//never mind: also remove external folder links that add duplicate files, ie multiple links to the same folder or to a folder and its subfolder; previously allowed but not fully supported
+		}
 	}
 	
 	public void Dispose() {
@@ -310,20 +319,69 @@ partial class FilesModel {
 	/// </summary>
 	/// <param name="path">Full path of a file in this workspace or of a linked external file.</param>
 	/// <param name="kind"></param>
-	public FileNode FindByFilePath(string path, FNFind kind = FNFind.Any) {
+	/// <param name="all">If not <c>null</c>, clears, adds all found paths, and returns <c>null</c>.</param>
+	public FileNode FindByFilePath(string path, FNFind kind = FNFind.Any, List<FileNode> all = null) {
+		all?.Clear();
+		
 		var d = FilesDirectory;
-		if (path.PathStarts(d)) return Root.FindDescendant(path[d.Length..], kind); //is in workspace folder
+		if (path.PathStarts(d)) { //is in workspace folder
+			var r = Root.FindDescendant(path[d.Length..], kind);
+			if (r != null) {
+				if (all is null) return r;
+				all.Add(r);
+			}
+		}
 		
 		foreach (var f in Root.Descendants()) {
 			if (f.IsLink) {
-				if (path.Eqi(f.LinkTarget)) return KindFilter_(f, kind) ? f : null;
-				if (f.IsFolder) {
+				FileNode r = null;
+				if (path.Eqi(f.LinkTarget)) {
+					if (KindFilter_(f, kind)) r = f;
+				} else if (f.IsFolder) {
 					d = f.LinkTarget;
-					if (path.PathStarts(d)) return f.FindDescendant(path[d.Length..], kind);
+					if (path.PathStarts(d)) r = f.FindDescendant(path[d.Length..], kind);
+				}
+				if (r != null) {
+					if (all is null) return r;
+					all.Add(r);
 				}
 			}
 		}
 		return null;
+	}
+	
+	/// <summary>
+	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
+	/// If multiple exist, prefers the one that is logically nearest to the specified filenode.
+	/// </summary>
+	/// <param name="nearestTo">If not <c>null</c>, and multiple filenodes with the specified path exist (via links), returns the one that is in the same folder (or nearest common ancestor/descendant folder) as <c>nearestTo</c>.</param>
+	/// <param name="path">Full path of a file in this workspace or of a linked external file.</param>
+	/// <param name="kind"></param>
+	public FileNode FindByFilePath(FileNode nearestTo, string path, FNFind kind = FNFind.Any) {
+		if (nearestTo == null) return FindByFilePath(path, kind);
+		
+		List<FileNode> a = [];
+		FindByFilePath(path, kind, a);
+		if (a.Count == 0) return null;
+		if (a.Count == 1) return a[0];
+		foreach (var v in a) if (v == nearestTo) return v;
+		return a.MinBy(o => _Proximity(nearestTo, o));
+		
+		static (int negLcaLevel, int distance) _Proximity(FileNode anchor, FileNode item) {
+			var a = anchor;
+			var b = item;
+			
+			// Make the levels equal.
+			int levelA = a.Level, levelB = b.Level;
+			for (; levelA > levelB; levelA--) a = a.Parent;
+			for (; levelB > levelA; levelB--) b = b.Parent;
+			
+			// Find the lowest common ancestor.
+			while (a != b) { a = a.Parent; b = b.Parent; }
+			
+			// MinBy: smaller is better, so negate the LCA level.
+			return (-a.Level, item.Level - a.Level);
+		}
 	}
 	
 	///// <summary>
@@ -803,15 +861,15 @@ partial class FilesModel {
 		
 		foreach (var f in a) {
 			if (f.IsDeleted) continue; //deleted together with the parent folder
-			_Delete(f); //info: and saves everything, now and/or later
+			Delete_(f); //info: and saves everything, now and/or later
 		}
 		
 		Save.WorkspaceAsync();
 		CodeInfo.FilesChanged();
 	}
 	
-	/// <param name="syncing">0 - normal; 1 - syncing all a startup; 2 - filesystem watchers detected a deleted file or folder.</param>
-	bool _Delete(FileNode f, bool recycleBin = true, int syncing = 0) {
+	/// <param name="syncing">0 - normal; 1 - syncing all at startup; 2 - filesystem watchers detected a deleted file or folder.</param>
+	internal bool Delete_(FileNode f, int syncing = 0) {
 		var e = f.Descendants(true);
 		
 		CloseFiles(e);
@@ -819,11 +877,10 @@ partial class FilesModel {
 		
 		if (syncing == 0) {
 			if (f.IsLink) {
-				print.it($"<>Info: The deleted item was a link to <explore>{f.FilePath}<>");
+				if (filesystem.exists(f.LinkTarget)) print.it($"<>Info: The deleted item was a link to <explore>{f.LinkTarget}<>");
+				//TODO: if target is internal, print link to open the filenode
 			} else {
-				if (!TryFileOperation(FOSync.UserFileOp, () => filesystem.delete(f.FilePath, recycleBin ? FDFlags.RecycleBin : 0))) return false;
-				//CONSIDER: add all paths to List, and delete finally in single call.
-				//CONSIDER: move to folder '.deleted'. Moving to RB is very slow. No RB if in removable drive etc.
+				if (!TryFileOperation(FOSync.UserFileOp, () => filesystem.delete(f.FilePath, FDFlags.RecycleBin))) return false;
 			}
 		}
 		
@@ -831,13 +888,12 @@ partial class FilesModel {
 		Panels.Bookmarks.FileDeleted(e);
 		Panels.Breakpoints.FileDeleted(e);
 		foreach (var k in e) {
-			if (!k.IsFolder) {
+			if (k.IsFolder) {
+				if (k.IsExpanded) Save.StateLater();
+				if (k.IsLinkExternal) _syncWatchers?.Remove(k);
+			} else {
 				State.EditorDelete(k);
 				if (k.IsCodeFile) Compiler.Uncache(k);
-			}
-			if (k.IsLink && k.IsFolder) {
-				//_rootLF?.Remove(k);
-				_syncWatchers?.Remove(k);
 			}
 			
 			_idMap[k.Id] = null;
@@ -856,14 +912,14 @@ partial class FilesModel {
 		return true;
 	}
 	
-	//TODO3: once (2 times) crashed when deleting folder "@Triggers and toolbars".
-	//	Both times in editor was opened a class file from the folder.
-	//	First time: messagebox "exception processing message, unexpected parameters".
-	//		After restarting were deleted files and tree items. Just several warnings about not found file id.
-	//	Second time with debugger: access violation exception somewhere in DispatchMessage -> COM message processing.
-	//		After restarting were deleted files but not tree items. Tried to reopen the file, but failed, and no editor control was created.
-	//	COM wasn't used explicitly. Maybe because of Recycle Bin.
-	//	Then could not reproduce (after recompiling same code).
+	void _DeleteBadNodeWhenWorkspaceLoaded(FileNode f) {
+		foreach (var k in f.Descendants(true)) {
+			_idMap[k.Id] = null;
+			_nameMap.MultiRemove_(k.Name, k);
+			k.IsDeleted = true;
+		}
+		f.Remove();
+	}
 	
 	/// <summary>
 	/// Opens the selected item(s) in our editor or in default app or selects in Explorer.
@@ -1294,26 +1350,28 @@ partial class FilesModel {
 			int fromWorkspaceDir = 0;
 			bool isLinkToWsFile = false;
 			
-			for (int i = 0; i < a.Length; i++) {
-				var s = a[i];
-				if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
+			foreach (var path in a) {
+				if (path.Find(@"\$RECYCLE.BIN\", true) > 0) {
 					print.it($"<>Cannot import files directly from Recycle Bin.");
 					return null;
 				}
-				if (wsDirs.FirstOrDefault(o => o.PathStarts(s, orEquals: true)) is { } s2) {
-					print.it($"<>Cannot import. The folder {(s2.Eqi(s) ? "already is" : "contains a folder that is")} in the workspace. {FindByFilePath(s2)?.SciLink(true)}");
+				if (wsDirs.FirstOrDefault(o => o.PathStarts(path, orEquals: true)) is { } s2) {
+					print.it($"<>The folder {(s2.Eqi(path) ? "already is" : "contains a folder that is")} in the workspace. {FindByFilePath(s2)?.SciLink(true)}");
 					return null;
 				}
-				if (wsDirs.Any(o => s.PathStarts(o))) {
+				if (wsDirs.Any(o => path.PathStarts(o))) { //trying to import a file/folder that already is in the workspace
 					if (action != 0) return null; //unlikely
-					var f1 = FindByFilePath(s);
+					var f1 = FindByFilePath(path);
 					if (f1 != null) {
-						var sff = f1.IsFolder ? "folder" : "file";
-						if (a.Length > 1) {
-							print.it($"<>Cannot import. The {sff} already is in the workspace. {f1.SciLink(true)}. Try to import single file.");
+						if (f1.IsFolder) {
+							print.it($"<>The folder already is in the workspace. {f1.SciLink(true)}."); //info: can't create link, because links to internel folders are not supported, as well as links to external folders that already exist in the workspace
 							return null;
 						}
-						int dr = dialog.show("Import files", $"The {sff} already is in the workspace.\n\n{f1.ItemPath}", "2 Open the existing|1 Create link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
+						if (a.Length > 1) {
+							print.it($"<>The file already is in the workspace. {f1.SciLink(true)}. Try to import single file.");
+							return null;
+						}
+						int dr = dialog.show("Import files", $"The file already is in the workspace.\n\n{f1.ItemPath}", "2 Open it|1 Create link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
 						if (dr != 1) {
 							if (dr == 2) f1.Model.SetCurrentFile(f1);
 							return null;
@@ -1841,20 +1899,6 @@ partial class FilesModel {
 	#endregion
 	
 	#region other
-	
-	//public List<FileNode> RootAndLinkFolders {
-	//	get {
-	//		if (_rootLF == null) {
-	//			_rootLF = [];
-	//			_rootLF.Add(Root);
-	//			foreach (var f in Root.Descendants()) {
-	//				if (f.IsLink && f.IsFolder) _rootLF.Add(f);
-	//			}
-	//		}
-	//		return _rootLF;
-	//	}
-	//}
-	//List<FileNode> _rootLF;
 	
 	internal void ChangedFolderItemPath_() {
 		_syncWatchers?.UpdatePaths();

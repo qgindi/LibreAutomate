@@ -1,18 +1,10 @@
-//note: don't use Polyfill. It ads many unused methods and it triggers antivirus false positives. Also the only its method I tried was buggy and unusable here.
-
 /*/
 role exeProgram
 optimize true
 define DEV,NO_GLOBAL,NO_DEFAULT_CHARSET_UNICODE
 outputPath %folders.Workspace%\exe\App
-nuget -\System.IO.FileSystem.AccessControl
 c \Au.sln\@Au.Editor\resources\global2.cs
 /*/
-/*
-uac user
-manifest admin.exe.manifest
-
-*/
 
 global using System;
 global using System.Collections.Generic;
@@ -229,7 +221,7 @@ static class App {
 	public const string AppName = "LibreAutomate";
 #endif
 	
-	public static readonly string AppVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+	public static readonly string AppVersion = Au.More.Au_.Version;
 	
 	public static MessageBoxResult Msgbox(string text, MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage icon = MessageBoxImage.None) {
 		if (_window == null) return MessageBox.Show(text, c_winTitle, buttons, icon);

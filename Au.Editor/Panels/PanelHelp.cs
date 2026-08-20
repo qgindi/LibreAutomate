@@ -320,9 +320,9 @@ class PanelHelp {
 					}
 				});
 			} else {
-				float firstScore = aTop[0].v.score;
+				float minScore = aTop[0].v.score * 0.8f - .1f;
 				foreach (var v in aTop) {
-					if (v.v.score < firstScore - .2f) break;
+					if (v.v.score < minScore) break;
 					_FindAdd(v.name);
 				}
 			}

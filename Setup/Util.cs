@@ -221,7 +221,7 @@ static class Util {
 		
 		try {
 			var di = new DirectoryInfo(path);
-			var security = di.GetAccessControl(); //nuget -\System.IO.FileSystem.AccessControl
+			var security = di.GetAccessControl();
 			
 			security.SetAccessRule(new(
 				new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null),

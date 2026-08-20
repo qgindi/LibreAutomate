@@ -109,7 +109,7 @@ partial class FilesModel {
 					//bDel.Append("\r\n  ").Append(f.ItemPath);
 					//if (f.IsFolder) bDel.Append("  (folder)");
 					deleted = true;
-					_Delete(f, syncing: 1);
+					Delete_(f, syncing: 1);
 				}
 			}
 			if (rd.add != null) {
@@ -198,7 +198,7 @@ partial class FilesModel {
 			//_Add(null, _model.WorkspaceDirectory);
 			_Add(_model.Root, _model.FilesDirectory);
 			foreach (var f in _model.Root.Descendants()) {
-				if (f.IsLink && f.IsFolder) _Add(f, f.LinkTarget);
+				if (f.IsFolder && f.IsLinkExternal) _Add(f, f.LinkTarget);
 			}
 		}
 		
@@ -367,7 +367,7 @@ partial class FilesModel {
 					case WatcherChangeTypes.Deleted:
 						if (_model.FindByItemPath(x.itemPath) is { } fd && !filesystem.exists(x.e.FullPath, true)) {
 							print.it($"<><lc #FFFFB9>Deleted: {fd.ItemPath}{(fd.IsFolder ? "  (folder)" : null)}<>");
-							_model._Delete(fd, syncing: 2);
+							_model.Delete_(fd, syncing: 2);
 						}
 						break;
 					case WatcherChangeTypes.Created:
@@ -435,7 +435,7 @@ partial class FilesModel {
 		//DELETED
 		foreach (var f in dOld.Values) {
 			//print.it($"Deleted {f.Name}");
-			if (!f.IsDeleted) _Delete(f, syncing: 1);
+			if (!f.IsDeleted) Delete_(f, syncing: 1);
 		}
 		
 		//ADDED
@@ -450,7 +450,7 @@ partial class FilesModel {
 				var f = oldEnum.Current;
 				Debug.Assert(newEnum.Current.Attribute("i").Value.ToInt(out uint u) && u == f.Id);
 				if (aAdded.Contains(f)) continue;
-				f.SyncAttributes(newEnum.Current);
+				f.SyncAttributes_(newEnum.Current);
 			}
 		}
 		
@@ -471,7 +471,7 @@ partial class FilesModel {
 }
 
 partial class FileNode {
-	internal void SyncAttributes(XElement x) {
+	internal void SyncAttributes_(XElement x) {
 		var type = XmlTagToFileType(x.Name.LocalName, canThrow: true);
 		if (type != _type) {
 			if (!(IsCodeFile && type is FNType.Script or FNType.Class)) throw new ArgumentException();

@@ -158,7 +158,7 @@ partial class PanelDebug {
 		//#endif
 		
 		int arch = Cpp.Cpp_GetProcessArchitecture(processId);
-		if(arch == 1) { _Print("Cannot debug x86 processes (platform x86)."); return false; }
+		if (arch == 1) { _Print("Cannot debug x86 processes (platform x86)."); return false; }
 		
 		_restart = false;
 		_s = new(processId, attachMode) { file = file };
@@ -733,15 +733,25 @@ System.Threading.Tasks.TaskCanceledException
 	
 	bool _GoToLine(_FRAME f, bool keepMarkers = false) {
 		if (f != null) {
-			int line = f.line - 1, col = f.col - 1, line2 = f.end_line - 1, col2 = f.end_col - 1;
-			if (App.Model.OpenAndGoTo(f.fullname, line, col, activateLA: App.Settings.debug.activateLA)) {
-				if (f.level > 0) {
-					_marker2.Add(line, col, line2, col2);
-				} else {
-					_marker2.Delete();
-					_marker.Add(line, col, line2, col2);
+			//Multiple filenodes can have the same path. But debugger sends only path. Try to find the best filenode.
+			string path = f.fullname;
+			FileNode fn = null, fnActive = Panels.Editor.ActiveDoc?.EFile;
+			if (fnActive != null) { //prefer the active doc filenode or the most recently opened filenode
+				if (path.Eqi(fnActive.FilePath)) fn = fnActive;
+				else fn = App.Model.OpenFiles.FirstOrDefault(o => o.FilePathEqi(path));
+			}
+			fn ??= App.Model.FindByFilePath(fnActive, path, FNFind.CodeFile); //prefer the same folder etc
+			if (fn != null) {
+				int line = f.line - 1, col = f.col - 1, line2 = f.end_line - 1, col2 = f.end_col - 1;
+				if (App.Model.OpenAndGoTo(fn, line, col, activateLA: App.Settings.debug.activateLA)) {
+					if (f.level > 0) {
+						_marker2.Add(line, col, line2, col2);
+					} else {
+						_marker2.Delete();
+						_marker.Add(line, col, line2, col2);
+					}
+					return true;
 				}
-				return true;
 			}
 		}
 		if (!keepMarkers) {

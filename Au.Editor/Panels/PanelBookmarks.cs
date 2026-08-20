@@ -167,7 +167,6 @@ class PanelBookmarks {
 		if (removed) _TvSetItems(true);
 	}
 	
-	//_Item _FindItemOfFile(FileNode fn) => _root.Children().FirstOrDefault(o => o.file == fn); //slow, garbage
 	_Item _FindItemOfFile(FileNode fn) {
 		if (_root != null && fn != null)
 			for (var f = _root.FirstChild; f != null; f = f.Next)

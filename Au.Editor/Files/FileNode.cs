@@ -297,22 +297,28 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	}
 	
 	/// <summary>
-	/// true if is a link to an external file or folder.
-	/// See also IsExternal.
-	/// </summary>
-	public bool IsLink => _linkTarget != null;
-	
-	/// <summary>
 	/// If <see cref="IsLink"/>, returns target path, else null.
+	/// The target may be an external file or folder, or a file (not folder) in the workspace folder.
 	/// </summary>
 	public string LinkTarget => _linkTarget;
 	
 	/// <summary>
-	/// true if this or an ancestor is <see cref="IsLink"/>.
+	/// <c>true</c> if this is a link to a file or folder.
+	/// The target may be an external file or folder, or a file (not folder) in the workspace folder.
+	/// </summary>
+	public bool IsLink => _linkTarget != null;//TODO: find all. Maybe some must be IsLinkExternal.
+	
+	/// <summary>
+	/// <c>true</c> if this is a link to an external file or folder (not in the workspace folder).
+	/// </summary>
+	public bool IsLinkExternal => _linkTarget is string s && !s.PathStarts(Model.WorkspaceDirectory);
+	
+	/// <summary>
+	/// <c>true</c> if this or an ancestor is <see cref="IsLinkExternal"/> (its target is not in the workspace folder).
 	/// </summary>
 	public bool IsExternal {
 		get {
-			for (var v = this; v != null; v = v.Parent) if (v.IsLink) return true;
+			for (var v = this; v != null; v = v.Parent) if (v.IsLinkExternal) return true;
 			return false;
 		}
 	}
@@ -432,6 +438,19 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	//rejected: cache item path and file path.
 	//	When an item renamed or moved, reset cached paths of that item and of its descendants.
 	//	But creating paths is fast and not so much garbage. And not so frequently used. Keeping paths in memory isn't good too.
+	
+	/// <summary>
+	/// Returns <c>true</c> if <i>path</i> equals to <c>FilePath</c>. Case-insensitive.
+	/// In most cases faster than simply comparing <c>FilePath</c>.
+	/// </summary>
+	/// <param name="path">Full normalized path, like <c>"C:\A\B\file.cs"</c>.</param>
+	public bool FilePathEqi(string path) {
+		if (!IsLink) { //try faster way
+			int i = path.LastIndexOf('\\') + 1;
+			if (!path.AsSpan(i).Eqi(Name)) return false;
+		}
+		return path.Eqi(FilePath);
+	}
 	
 	/// <summary>
 	/// Returns <b>ItemPath</b> if exist multiple items with <b>Name</b>. Else returns <b>Name</b>.
@@ -1022,6 +1041,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// </param>
 	/// <param name="syncing">Called by the filesystem sync. The filesystem file is renamed. Need just to set item name and update everything.</param>
 	public bool FileRename(string name, bool syncing = false) {
+		var oldPath = FilePath;
+		
 		if (syncing) {
 			_SetName(name);
 		} else {
@@ -1036,6 +1057,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			if (!RenameL_(name)) return false;
 		}
 		
+		_UpdateLinksAfterRenameOrMove(oldPath, true);
 		if (IsFolder) _model.ChangedFolderItemPath_();
 		_model.Save.WorkspaceAsync();
 		FilesModel.Redraw(this, remeasure: true, renamed: true);
@@ -1050,9 +1072,6 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		}
 		_SetName(name);
 		return true;
-		
-		//CONSIDER: when renaming or moving, search all code files (except in "Garbage*" folders) and replace the old name or path in strings.
-		//	Also doc the garbage folders feature.
 	}
 	
 	/// <summary>
@@ -1088,6 +1107,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		if (ipos.f == null) ipos = new(Root, FNInsert.Last);
 		if (!CanMove(ipos)) return false;
 		
+		var oldPath = FilePath;
+		
 		var newParent = ipos.ParentFolder;
 		if (newParent != Parent) {
 			var name = CreateNameUniqueInFolder(newParent, _name, IsFolder, moving: true);
@@ -1103,6 +1124,8 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		//move tree node
 		Remove();
 		Common_MoveCopyNew(ipos, true);
+		
+		_UpdateLinksAfterRenameOrMove(oldPath, false);
 		
 		return true;
 	}
@@ -1164,6 +1187,32 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		//insert at the specified place and set to save
 		f.Common_MoveCopyNew(ipos, false);
 		return f;
+	}
+	
+	void _UpdateLinksAfterRenameOrMove(string oldPath, bool renamed) {
+		if (IsLink) return;
+		string path = FilePath;
+		if (path == oldPath) return; //reordered
+		
+		foreach (var v in Root.Descendants().Where(static o => o.IsLink)) {
+			var s = v._linkTarget;
+			if (s.Eqi(oldPath)) {
+				v._linkTarget = path;
+				if (renamed) {
+					string oldName = pathname.getName(oldPath);
+					if (v.Name.Ends(oldName, true)) {
+						v._SetName(v.Name[..^oldName.Length] + _name);
+						FilesModel.Redraw(v, remeasure: true, renamed: true);
+						Compiler.Uncache(v, andDescendants: true);
+					}
+				}
+			} else if (IsFolder && s.PathStarts(oldPath, orEquals: true)) {
+				v._linkTarget = path + v._linkTarget[oldPath.Length..];
+			}
+		}
+		
+		//CONSIDER: search all code files (except in "Garbage*" folders). Display results with links to replace the old name or path in strings.
+		//	Also doc the garbage folders feature.
 	}
 	
 	#endregion
