@@ -55,9 +55,9 @@ partial class SciCode : KScintilla {
 		Call(SCI_SETUNDOSELECTIONHISTORY, 1); //BAD: uses too much memory. Documented: >=150 / action. Tested: 270 (same when 1-char and when coalesced 10 char). Without this somehow the heap does not grow. It seems there is no easy workaround; temporarily turning off this feature clears the selection undo history.
 		
 		Call(SCI_SETLAYOUTTHREADS, Environment.ProcessorCount);
-//#if IDE_LA //works if don't need to draw images, else crashes because there is no HDC. Need to reimplement the drawing functions, to use ID2D1RenderTarget instead of HDC. Much work. The benefit would be antialiased drawing of Scintilla's markers etc, but we don't use them. Text looks differently. Uses + 25 MB of memory.
-//		Call(SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITEDC);
-//#endif
+		//#if IDE_LA //works if don't need to draw images, else crashes because there is no HDC. Need to reimplement the drawing functions, to use ID2D1RenderTarget instead of HDC. Much work. The benefit would be antialiased drawing of Scintilla's markers etc, but we don't use them. Text looks differently. Uses + 25 MB of memory.
+		//		Call(SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITEDC);
+		//#endif
 		
 		SciTheme.Current.ToScintilla(this);
 		
@@ -107,8 +107,8 @@ partial class SciCode : KScintilla {
 		else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded();
-		Panels.Bookmarks.SciLoaded(this);
-		Panels.Breakpoints.SciLoaded(this);
+		Panels.Bookmarks.SciLoadedOrActivated(this, true);
+		Panels.Breakpoints.SciLoadedOrActivated(this, true);
 		App.Model.EditGoBack.OnPosChanged(this);
 		
 		//detect \r without '\n', because it is not well supported. Also NEL, LS, PS.
@@ -139,6 +139,8 @@ partial class SciCode : KScintilla {
 	
 	internal void EOpenDocActivated() {
 		_fn._CheckModifiedExternally(this);
+		Panels.Bookmarks.SciLoadedOrActivated(this, false);
+		Panels.Breakpoints.SciLoadedOrActivated(this, false);
 		App.Model.EditGoBack.OnPosChanged(this);
 	}
 	

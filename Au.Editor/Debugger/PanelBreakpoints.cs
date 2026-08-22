@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Au.Controls;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
 using System.Xml.Linq;
 
@@ -137,20 +136,41 @@ class PanelBreakpoints {
 		_save = _save == 0 ? afterS : Math.Min(_save, afterS);
 	}
 	
-	internal void SciLoaded(SciCode doc) {
-		_LoadIfNeed();
-		var f = _FindItemOfFile(doc); if (f == null) return;
+	internal void SciLoadedOrActivated(SciCode doc, bool loaded) {
+		var fn = doc.EFile;
+		if (!fn.IsCodeFile) return;
+		if (loaded) _LoadIfNeed();
+		if (_FindItemOfFile(fn) is { } f) {
+			if (loaded) _SetMarkersInDoc(f);
+		} else if ((f = _FindOtherItemWithSameFilePath()) != null) { //move markers here
+			foreach (var b in f.Children()) b.DeleteMarkerInDoc();
+			f.file = fn;
+			_SetMarkersInDoc(f);
+			_tv.Redraw(f, true);
+			_SaveLater();
+		}
+		
+		_Item _FindOtherItemWithSameFilePath() {
+			var path = fn.FilePath;
+			for (var f = _root.FirstChild; f != null; f = f.Next)
+				if (f.file != fn && f.file.FilePathEqi(path)) return f;
+			return null;
+		}
+	}
+	
+	void _SetMarkersInDoc(_Item f) {
 		bool removed = false;
 		for (var b = f.FirstChild; b != null;) {
-			if (b.SetMarkerInDoc()) b = b.Next;
-			else {
-				var bb = b; b = b.Next;
+			var bb = b; b = b.Next;
+			if (!bb.SetMarkerInDoc()) {
 				bb.Remove();
 				removed = true;
-				_SaveLater(1);
 			}
 		}
-		if (removed) _TvSetItems(true);
+		if (removed) {
+			_TvSetItems(true);
+			_SaveLater(1);
+		}
 	}
 	
 	_Item _FindItemOfFile(FileNode fn) {
@@ -199,23 +219,6 @@ class PanelBreakpoints {
 			b.SetMarkerInDoc();
 		}
 		_SaveLater();
-	}
-	
-	internal bool SciMiddleClick_(SciCode doc, int line) {
-		if (_BreakpointFromLine(doc, line) is not { } b) return false;
-		_SetEnabled(b, !b.IsEnabled);
-		return true;
-	}
-	
-	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int line, int pos8) {
-		if (_BreakpointFromLine(doc, line) is { } b) {
-			m["Delete breakpoint", "*Material.MinusCircle @12 #EE3000"] = o => ToggleBreakpoint(pos8);
-			m["Breakpoint properties..."] = o => _BreakpointProperties(b, doc);
-			m.AddCheck("Enabled breakpoint\tM-click", b.IsEnabled, o => _SetEnabled(b, o.IsChecked));
-		} else {
-			m["Add breakpoint", "*Material.Circle @12 #EE3000"] = o => ToggleBreakpoint(pos8);
-			m["Add logpoint", "*BootstrapIcons.DiamondFill @14" + EdIcons.green2] = o => ToggleBreakpoint(pos8, true);
-		}
 	}
 	
 	void _BreakpointProperties(_Item x, DependencyObject owner) {
@@ -347,7 +350,7 @@ Not all kinds of expressions are supported.
 	
 	void _DeleteBreakpoint(SciCode doc, int line, bool sciDelete = true) {
 		if (_BreakpointFromLine(doc, line) is { } b) {
-			if (sciDelete) doc.aaaMarkerDeleteHandle(b.markerHandle);
+			if (sciDelete) b.DeleteMarkerInDoc();
 			_DeleteBreakpointL(b);
 		}
 	}
@@ -365,22 +368,8 @@ Not all kinds of expressions are supported.
 		if (b.IsFolder) {
 			foreach (var v in b.Children().ToArray()) _DeleteItem(v);
 		} else {
-			var folder = b.Parent;
-			if (b.markerHandle != 0 && folder.file.OpenDoc is { } doc) {
-				doc.aaaMarkerDeleteHandle(b.markerHandle);
-			}
+			b.DeleteMarkerInDoc();
 			_DeleteBreakpointL(b);
-		}
-	}
-	
-	internal void FileDeleted(IEnumerable<FileNode> files) {
-		foreach (var file in files) {
-			if (_FindItemOfFile(file) is { } folder) {
-				foreach (var b in folder.Children()) if (b.IsEnabled) Panels.Debug.BreakpointAddedDeleted_(b, false);
-				folder.Remove();
-				_TvSetItems(true);
-				_SaveLater();
-			}
 		}
 	}
 	
@@ -416,6 +405,34 @@ Not all kinds of expressions are supported.
 		}
 	}
 	
+	internal bool SciMiddleClick_(SciCode doc, int line) {
+		if (_BreakpointFromLine(doc, line) is not { } b) return false;
+		_SetEnabled(b, !b.IsEnabled);
+		return true;
+	}
+	
+	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int line, int pos8) {
+		if (_BreakpointFromLine(doc, line) is { } b) {
+			m["Delete breakpoint", "*Material.MinusCircle @12 #EE3000"] = o => ToggleBreakpoint(pos8);
+			m["Breakpoint properties..."] = o => _BreakpointProperties(b, doc);
+			m.AddCheck("Enabled breakpoint\tM-click", b.IsEnabled, o => _SetEnabled(b, o.IsChecked));
+		} else {
+			m["Add breakpoint", "*Material.Circle @12 #EE3000"] = o => ToggleBreakpoint(pos8);
+			m["Add logpoint", "*BootstrapIcons.DiamondFill @14" + EdIcons.green2] = o => ToggleBreakpoint(pos8, true);
+		}
+	}
+	
+	internal void FileDeleted(IEnumerable<FileNode> files) {
+		foreach (var file in files) {
+			if (_FindItemOfFile(file) is { } folder) {
+				foreach (var b in folder.Children()) if (b.IsEnabled) Panels.Debug.BreakpointAddedDeleted_(b, false);
+				folder.Remove();
+				_TvSetItems(true);
+				_SaveLater();
+			}
+		}
+	}
+	
 	internal IEnumerable<IBreakpoint> GetBreakpoints(bool disabledToo = false) {
 		for (var f = _root.FirstChild; f != null; f = f.Next) {
 			for (var b = f.FirstChild; b != null; b = b.Next) {
@@ -426,7 +443,7 @@ Not all kinds of expressions are supported.
 	
 	class _Item : TreeBase<_Item>, ITreeViewItem, IBreakpoint {
 		readonly PanelBreakpoints _view;
-		public readonly FileNode file; //if folder
+		public FileNode file; //if folder
 		public int line, markerHandle; //if breakpoint
 		public string condition, log; //if breakpoint
 		public readonly string name;
@@ -467,17 +484,24 @@ Not all kinds of expressions are supported.
 		public override string ToString() => ((ITreeViewItem)this).DisplayText;
 #endif
 		
-		public bool IsEnabledOrHasEnabledChildren => IsFolder ? Children().Any(static o => o.IsEnabledOrHasEnabledChildren) : _isEnabled;
+		public bool IsEnabledOrHasEnabledChildren => _isFolder ? Children().Any(static o => o.IsEnabledOrHasEnabledChildren) : _isEnabled;
 		
 		public bool SetMarkerInDoc() {
 			if (Parent.file.OpenDoc is { } doc) {
-				if (markerHandle != 0) { doc.aaaMarkerDeleteHandle(markerHandle); markerHandle = 0; }
+				DeleteMarkerInDoc();
 				int marker = !log.NE() ? SciTheme.Marker.BreakpointL : !condition.NE() ? SciTheme.Marker.BreakpointC : SciTheme.Marker.Breakpoint;
 				if (!_isEnabled) marker++;
 				var h = doc.aaaMarkerAdd(marker, line);
 				if (h != -1) { markerHandle = h; return true; }
 			}
 			return false;
+		}
+		
+		public void DeleteMarkerInDoc() {
+			if (markerHandle != 0 && Parent.file.OpenDoc is { } doc) {
+				doc.aaaMarkerDeleteHandle(markerHandle);
+				markerHandle = 0;
+			}
 		}
 		
 		//ITreeViewItem

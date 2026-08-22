@@ -10,20 +10,26 @@ namespace LA;
 
 static partial class App {
 	public const string AppName = "LibreAutomate";
-	
+
 	internal static PrintServer PrintServer;
 	public static AppSettings Settings;
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
 	static EnvVarUpdater _envVarUpdater;
-	
+
 	//[STAThread] //no, makes command line etc slower. Will set STA later.
+	//[StackTraceHidden] //for netcoredbg. But ignored for entry point.
+	[DebuggerHidden] //for netcoredbg when debugging a miniProgram process. It finally would step into this.
 	static int Main(string[] args) {
-		if (Path.GetFileName(Environment.ProcessPath)[^5] is 'k' or 'K') { //"Au.Task.exe"
+		if (Path.GetFileName(Environment.ProcessPath)[^5] is 'k' or 'K') //"Au.Task.exe"
 			return MiniProgram.Run(args);
-		}
-		
+
+		return _Main1(args);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static int _Main1(string[] args) {
 #if IDE_LA //test tools
 		//		print.clear();
 		
@@ -32,21 +38,21 @@ static partial class App {
 		//		//args = ["/tool", "0", "Duiimage", "0"];
 		//		//args = ["/tool", "0", "Docr"];
 #endif
-		
-#if DEBUG && !IDE_LA //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there.
+
+#if DEBUG && !IDE_LA //note: not static ctor. Eg Settings used in scripts while creating some new parts of the app. The ctor would run there. And in miniProgram processes.
 		if (!(args is ["/tool" or "/pip" or "/dd" or "/mcp", ..])) {
 			print.qm2.use = true;
 			//print.clear(); 
 			//print.redirectConsoleOutput = true; //cannot be before the CommandLine.ProgramStarted1 call.
 		}
 #endif
-		
+
 		script.role = SRole.EditorExtension; //used by the folders class
 		script.name = AppName;
 		Thread.CurrentThread.Name = "@Au.Main";
-		
+
 		if (CommandLine.ProgramStarted1(args, out int exitCode)) return exitCode;
-		
+
 		//restart as admin if started as non-admin on admin user account
 		if (args.Length > 0 && args[0] is "/n" or "-n") {
 			args = args.RemoveAt(0);
@@ -54,11 +60,11 @@ static partial class App {
 		} else if (uacInfo.ofThisProcess.Elevation == UacElevation.Limited) {
 			if (_RestartAsAdmin(args)) return 0;
 		}
-		
+
 		process.IsLaProcess_ = true;
 		process.IsLaMainThread_ = true; //[ThreadStatic]
 		InitThisAppFoldersEtc_(args);
-		
+
 		//This would make startup faster eg 900 ms -> 700 ms.
 		//	Unfortunately can't use it. It tries to also optimize assemblies manually loaded in default ALC by editorExtension scripts. Then exception because can't load. Normally editorExtension asseblies and their dependencies are loaded in a custom ALC, but their scripts or used libraries may manually load assemblies in default ALC.
 		//	Never mind: possible workaround: load it in _Assembly_Resolving().
@@ -69,23 +75,23 @@ static partial class App {
 		//	AssemblyLoadContext.Default.StartProfileOptimization("main");
 		//}
 		//catch (Exception ex) { Debug_.Print(ex); }
-		
+
 		//Debug_.PrintLoadedAssemblies(true, !true);
-		
+
 		//load settings in parallel, while Settings still not used. Saves 50 ms. After SetThisAppFoldersEtc_.
 		Task task1 = Task.Run(() => {
 			AppSettings.Load();
 			//Debug_.PrintLoadedAssemblies(true, !true);
 		});
-		
-		_Main(args, task1);
+
+		_Main2(args, task1);
 		return 0;
 	}
-	
+
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	static void _Main(string[] args, Task task1) {
+	static void _Main2(string[] args, Task task1) {
 		//Debug_.PrintLoadedAssemblies(true, !true);
-		
+
 		AppDomain.CurrentDomain.UnhandledException += _UnhandledException;
 		process.ThisThreadSetComApartment_(ApartmentState.STA);
 		process.thisProcessCultureIsInvariant = true;
@@ -93,9 +99,9 @@ static partial class App {
 		Directory.SetCurrentDirectory(folders.ThisApp); //it is c:\windows\system32 when restarted as admin
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | Api.BASE_SEARCH_PATH_PERMANENT); //let SearchPath search in current directory after system directories
 		Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
-		
+
 		if (CommandLine.ProgramStarted2(args)) return;
-		
+
 #if IDE_LA
 		PrintServer = new(miscInfo.isChildSession) { NoNewline = true };
 #else
@@ -107,41 +113,41 @@ static partial class App {
 		_RemindToBuildAllPlatforms();
 #endif
 		_envVarUpdater = new();
-		
+
 		AssemblyLoadContext.Default.Resolving += _Assembly_Resolving;
-		
+
 		_app = new() { ShutdownMode = ShutdownMode.OnMainWindowClose }; //before LoadWorkspace etc, because need _app.Dispatcher ASAP
 		SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext()); //some code may use await before Application.Run. Without this it would continue in a TP thread.
-		
+
 		Tasks = new RunningTasks();
 		ScriptEditor.IconNameToXaml_ = DIcons.GetIconString;
-		
+
 		task1.Wait(); //note: code executed before this must not use Settings
-		
+
 		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
 		CommandLine.ProgramLoaded();
 		Loaded = AppState.LoadedWorkspace;
-		
+
 		TrayIcon.Update_();
-		
+
 		_app.MainWindow = Wmain = new MainWindow();
 		if (!Settings.runHidden || CommandLine.StartVisible || (App.Settings.startVisibleIfNotAutoStarted && !CommandLine.AutoStarted)) ShowWindow();
-		
+
 		_timer = timer.every(1000, _TimerProc);
-		
+
 		_app.Dispatcher.InvokeAsync(() => {
 			AppSettings.SetReloadModifiedExternally();
 			Model.RunStartupScripts(false);
 			if (miscInfo.isChildSession) PipIPC.StartPipeServerThread(); //after RunStartupScripts. If pipe server now will start a script, it will start after startup scripts with role editorExtension.
 		});
-		
+
 		AppDomain.CurrentDomain.UnhandledException -= _UnhandledException;
 		if (!Debugger.IsAttached) {
 			_app.DispatcherUnhandledException += (_, e) => {
 				e.Handled = 1 == dialog.showError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Hmain, e.Exception.ToString());
 			};
 		}
-		
+
 		try {
 			_app.Run();
 			//Hidden app should start as fast as possible, because usually starts with Windows.
@@ -155,21 +161,21 @@ static partial class App {
 		}
 		finally { MainFinally_(); }
 	}
-	
+
 	internal static void MainFinally_() {
 		if (Loaded == AppState.Unloaded) return;
 		Loaded = AppState.Unloading;
-		
+
 		_timer.Stop(); //eg if will show a Debug.Assert dialog
-		
+
 		var fm = Model; Model = null;
 		fm.Dispose(); //stops tasks etc
-		
+
 		Loaded = AppState.Unloaded;
-		
+
 		PrintServer.Stop();
 	}
-	
+
 	class _Application : Application {
 		protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
 			base.OnSessionEnding(e);
@@ -178,47 +184,47 @@ static partial class App {
 			process.thisProcessExitInvoke(); //OS terminates this process before or during process.thisProcessExit event
 		}
 	}
-	
+
 	//public static Application Instance => _app; //Application.Current
 	static _Application _app;
-	
+
 	/// <summary>
 	/// <b>Dispatcher</b> of main thread.
 	/// </summary>
 	public static Dispatcher Dispatcher => _app?.Dispatcher;
-	
+
 	/// <summary>
 	/// true if called in the main thread.
 	/// NOTE: don't use <c>Environment.CurrentManagedThreadId == 1</c>, it's not always 1 in the main thread.
 	/// </summary>
 	public static bool IsMainThread => process.IsLaMainThread_;
-	
+
 	/// <summary>
 	/// Main window.
 	/// Not loaded if never was visible.
 	/// Use only in main thread; if other threads need <b>Dispatcher</b> of main thread, use <see cref="Dispatcher"/>.
 	/// </summary>
 	public static MainWindow Wmain { get; private set; }
-	
+
 	/// <summary>
 	/// Main window handle.
 	/// defaul(wnd) if never was visible.
 	/// </summary>
 	public static wnd Hmain { get; internal set; }
-	
+
 	public static void ShowWindow() {
 		//workaround for WPF bug: Window.Show pumps posted messages.
 		//	And crashes if a message causes to call Show again.
 		//	To reproduce, let the program start hidden, and double-click the tray icon.
 		if (_sw1) return;
-		
+
 		_sw1 = true;
 		Wmain.Show(); //auto-creates MainWindow if never was visible
 		_sw1 = false;
 		Hmain.ActivateL(true);
 	}
 	static bool _sw1;
-	
+
 	static void _UnhandledException(object sender, UnhandledExceptionEventArgs e) {
 #if DEBUG
 		print.qm2.write(e.ExceptionObject);
@@ -226,37 +232,37 @@ static partial class App {
 		dialog.showError("Exception", e.ExceptionObject.ToString(), flags: DFlags.Wider);
 #endif
 	}
-	
+
 	private static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
 		var dlls = _arRoslynDlls ??= filesystem.enumFiles(folders.ThisAppBS + "Roslyn", "*.dll", FEFlags.UseRawPath)
 				.ToDictionary(o => o.Name[..^4], o => o.FullPath);
 		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);
-		
+
 		Debug_.Print(an.FullName);
 		//print.qm2.write(an);
 		return null;
 		//return alc.LoadFromAssemblyPath(folders.ThisAppBS + an.Name + ".dll");
 	}
 	static Dictionary<string, string> _arRoslynDlls;
-	
+
 	internal static void InitThisAppFoldersEtc_(string[] args = null) {
 		dialog.options.defaultTitle = AppName + " message";
 		folders.Editor = folders.ThisApp;
-		
+
 		if (args != null) {
 			if (filesystem.exists(folders.ThisAppBS + "data")) {
 				IsPortable = true;
 				ScriptEditor.IsPortable = true;
-				
+
 				//CONSIDER: when changed portable user (SID), delete folders.ThisAppDataLocal (\data\appLocal).
 				//	LA/Au currently uses it only for the icon cache.
 				//	But some scripts may not want it.
 				//	Probably should delete folders.ThisAppTemp (\data\temp).
-				
+
 				//on ARM64, if Au.Editor.exe is x64, run Au.Editor-arm.exe instead
 				if (!osVersion.isArm64Process && osVersion.isArm64OS) _RestartArm64(args);
 			}
-			
+
 			try {
 				//create now if does not exist
 				_ = folders.ThisAppDocuments;
@@ -277,14 +283,14 @@ static partial class App {
 				dialog.showError("Failed to set app folders", e1.ToString());
 				Environment.Exit(1);
 			}
-			
+
 		} else {
 			if (filesystem.exists(folders.ThisAppBS + "data")) {
 				ScriptEditor.IsPortable = true;
 			}
 		}
 	}
-	
+
 #if DEBUG
 	static void _RemindToBuildAllPlatforms() {
 		if (IsAtHome)
@@ -294,7 +300,7 @@ static partial class App {
 			}
 	}
 #endif
-	
+
 	internal static void OnMainWindowLoaded_() {
 		if (IsPortable) {
 			print.it($"<>Info: <help editor/Portable app>portable mode<>. Using <link {folders.PortableData_}>data<> folder.");
@@ -313,18 +319,18 @@ static partial class App {
 				var name = IsAtHome ? "_Au.Editor" : "Au.Editor";
 				bool ok = 0 == WinScheduler.CreateTaskWithoutTriggers("Au", name, UacIL.System, process.thisExePath, "/s $(Arg0)", AppName);
 				if (!ok) print.warning(@"Failed to create Windows Task Scheduler task \Au\Au.Editor.", -1);
-				
+
 				//note: don't create the task in the setup program. It requires a C++ dll, and it triggers AV false positives.
 			}
 		}
 	}
-	
+
 	internal static void OnMainWindowClosed_() {
 		_timer.Stop();
 	}
-	
+
 	static WinScheduler.RResult _raaResult;
-	
+
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		bool home = IsAtHome;
@@ -340,7 +346,7 @@ static partial class App {
 		//Api.AllowSetForegroundWindow(pid); //fails and makes no sense
 		return true;
 	}
-	
+
 	/// <summary>
 	/// Restarts this program.
 	/// </summary>
@@ -353,48 +359,48 @@ static partial class App {
 		process.thisProcessExit += _ => { run.it(process.thisExePath, cl, admin ? RFlags.Admin : RFlags.InheritAdmin); };
 		_app.Shutdown(); //closes window async, with no possibility to cancel
 	}
-	
+
 	static unsafe void _RestartArm64(string[] args) {
 		var s = process.thisExePath;
 		if (!s.Ends(@"\Au.Editor.exe", true)) return;
 		s = s.Insert(^4, "-arm");
 		if (!filesystem.exists(s).File) return;
-		
+
 		var sa = StringUtil.CommandLineFromArray(args.Where(o => !(o is "/n" or "-n" or "/restart")).Prepend("/restart").Prepend("/n").ToArray());
-		
+
 		var ps = new ProcessStarter_(s, sa);
 		try { ps.Start(inheritUiaccess: true); }
 		catch { return; }
-		
+
 		Environment.Exit(0);
 	}
-	
+
 	/// <summary>
 	/// Timer with 1 s period.
 	/// </summary>
 	public static event Action Timer1s;
-	
+
 	/// <summary>
 	/// Timer with 1 s period when main window hidden and 0.25 s period when visible.
 	/// </summary>
 	public static event Action Timer1sOr025s;
-	
+
 	/// <summary>
 	/// Timer with 0.25 s period, only when main window visible.
 	/// </summary>
 	public static event Action Timer025sWhenVisible;
-	
+
 	/// <summary>
 	/// Timer with 1 s period, only when main window visible.
 	/// </summary>
 	public static event Action Timer1sWhenVisible;
-	
+
 	/// <summary>
 	/// True if Timer1sOr025s period is 0.25 s (when main window visible), false if 1 s (when hidden).
 	/// </summary>
 	public static bool IsTimer025 => _timerCounter > 0;
 	static uint _timerCounter;
-	
+
 	static void _TimerProc(timer t) {
 		Timer1sOr025s?.Invoke();
 		bool needFast = Wmain.IsVisible;
@@ -409,13 +415,13 @@ static partial class App {
 		}
 	}
 	static timer _timer;
-	
+
 	public static AppState Loaded;
-	
+
 	public static bool IsAtHome { get; } = Api.EnvironmentVariableExists("Au.Home<PC>") && folders.ThisAppBS.Eqi(@"C:\code\au\_\");
-	
+
 	public static bool IsPortable { get; private set; }
-	
+
 	/// <summary>
 	/// Calls <i>action</i> in try/catch, and manages filesystem sync (still not implemented). On exception prints message and returns false.
 	/// </summary>
@@ -426,13 +432,13 @@ static partial class App {
 		catch (Exception ex) { print.warning(ex); return false; }
 		return true;
 	}
-	
+
 	public static async void CheckForUpdates(System.Windows.Controls.Button b = null) {
 		bool forceNow = b != null;
 		int day = (int)(DateTime.Now.Ticks / 864000000000);
 		if (!forceNow && day == App.Settings.checkForUpdatesDay) return;
 		App.Settings.checkForUpdatesDay = day;
-		
+
 		if (forceNow) b.IsEnabled = false;
 		try {
 #if true
@@ -460,22 +466,22 @@ enum AppState {
 	/// Before the first workspace fully loaded.
 	/// </summary>
 	Loading,
-	
+
 	/// <summary>
 	/// The first workspace is fully loaded etc, but the main window not.
 	/// </summary>
 	LoadedWorkspace,
-	
+
 	/// <summary>
 	/// The main window is loaded and either visible now or was visible and now hidden.
 	/// </summary>
 	LoadedUI,
-	
+
 	/// <summary>
 	/// Unloading workspace, stopping everything.
 	/// </summary>
 	Unloading,
-	
+
 	/// <summary>
 	/// Main window closed, workspace unloaded, everything stopped.
 	/// </summary>

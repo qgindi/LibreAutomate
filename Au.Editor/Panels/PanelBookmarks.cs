@@ -1,9 +1,9 @@
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Au.Controls;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis;
-using System.Windows;
 
 namespace LA;
 
@@ -148,23 +148,40 @@ class PanelBookmarks {
 		_save = _save == 0 ? afterS : Math.Min(_save, afterS);
 	}
 	
-	internal void SciLoaded(SciCode doc) {
-		_LoadIfNeed();
-		var f = _FindItemOfFile(doc); if (f == null) return;
+	internal void SciLoadedOrActivated(SciCode doc, bool loaded) {
+		var fn = doc.EFile;
+		if (loaded) _LoadIfNeed();
+		if (_FindItemOfFile(fn) is { } f) {
+			if (loaded) _SetMarkersInDoc(f);
+		} else if ((f = _FindOtherItemWithSameFilePath()) != null) { //move markers here
+			foreach (var b in f.Children()) b.DeleteMarkerInDoc();
+			f.file = fn;
+			_SetMarkersInDoc(f);
+			_tv.Redraw(f, true);
+			_SaveLater();
+		}
+		
+		_Item _FindOtherItemWithSameFilePath() {
+			var path = fn.FilePath;
+			for (var f = _root.FirstChild; f != null; f = f.Next)
+				if (f.file != fn && f.file.FilePathEqi(path)) return f;
+			return null;
+		}
+	}
+	
+	void _SetMarkersInDoc(_Item f) {
 		bool removed = false;
 		for (var b = f.FirstChild; b != null;) {
-			int h = doc.aaaMarkerAdd(b.isActive ? SciTheme.Marker.Bookmark : SciTheme.Marker.BookmarkInactive, b.line);
-			if (h == -1) {
-				var bb = b; b = b.Next;
+			var bb = b; b = b.Next;
+			if (!bb.SetMarkerInDoc()) {
 				bb.Remove();
 				removed = true;
-				_SaveLater(1);
-				continue;
 			}
-			b.markerHandle = h;
-			b = b.Next;
 		}
-		if (removed) _TvSetItems(true);
+		if (removed) {
+			_TvSetItems(true);
+			_SaveLater(1);
+		}
 	}
 	
 	_Item _FindItemOfFile(FileNode fn) {
@@ -300,12 +317,8 @@ class PanelBookmarks {
 			foreach (var v in b.Children()) _SetActive(v, active);
 		} else if (b.isActive != active) {
 			b.isActive = active;
+			b.SetMarkerInDoc();
 			_tv.Redraw(b);
-			
-			if (b.Parent.file.OpenDoc is { } doc) {
-				doc.aaaMarkerDeleteHandle(b.markerHandle);
-				b.markerHandle = doc.aaaMarkerAdd(b.isActive ? SciTheme.Marker.Bookmark : SciTheme.Marker.BookmarkInactive, b.line);
-			}
 		}
 	}
 	
@@ -371,7 +384,7 @@ class PanelBookmarks {
 	
 	void _DeleteBookmark(SciCode doc, int line, bool sciDelete = true) {
 		if (_BookmarkFromLine(doc, line) is { } b) {
-			if (sciDelete) doc.aaaMarkerDeleteHandle(b.markerHandle);
+			if (sciDelete) b.DeleteMarkerInDoc();
 			_DeleteBookmarkL(b);
 		}
 	}
@@ -388,10 +401,7 @@ class PanelBookmarks {
 		if (b.IsFolder) {
 			foreach (var v in b.Children().ToArray()) _DeleteItem(v);
 		} else {
-			var folder = b.Parent;
-			if (b.markerHandle != 0 && folder.file.OpenDoc is { } doc) {
-				doc.aaaMarkerDeleteHandle(b.markerHandle);
-			}
+			b.DeleteMarkerInDoc();
 			_DeleteBookmarkL(b);
 		}
 	}
@@ -435,6 +445,12 @@ class PanelBookmarks {
 		}
 	}
 	
+	internal void SciMiddleClick_(SciCode doc, int line) {
+		if (_BookmarkFromLine(doc, line) is { } b) {
+			_SetActive(b, !b.isActive);
+		}
+	}
+	
 	internal void AddMarginMenuItems_(SciCode doc, popupMenu m, int pos8) {
 		if (_BookmarkFromLine(doc, doc.aaaLineFromPos(false, pos8)) is { } b) {
 			m["Delete bookmark", "*Material.BookmarkMinus @16" + EdIcons.darkYellow] = o => ToggleBookmark(pos8);
@@ -445,12 +461,6 @@ class PanelBookmarks {
 		}
 		m["Previous bookmark", "*JamIcons.ArrowSquareUp" + EdIcons.black] = o => NextBookmark(true);
 		m["Next bookmark", "*JamIcons.ArrowSquareDown" + EdIcons.black] = o => NextBookmark(false);
-	}
-	
-	internal void SciMiddleClick_(SciCode doc, int line) {
-		if (_BookmarkFromLine(doc, line) is { } b) {
-			_SetActive(b, !b.isActive);
-		}
 	}
 	
 	internal void FileDeleted(IEnumerable<FileNode> e) {
@@ -464,7 +474,7 @@ class PanelBookmarks {
 	}
 	
 	class _Item : TreeBase<_Item>, ITreeViewItem {
-		public readonly FileNode file; //if folder
+		public FileNode file; //if folder
 		public int line, markerHandle; //if bookmark
 		public string name;
 		readonly bool _isFolder;
@@ -487,6 +497,25 @@ class PanelBookmarks {
 		public override string ToString() => ((ITreeViewItem)this).DisplayText;
 #endif
 		
+		public bool IsActiveOrHasActiveChildren => _isFolder ? Children().Any(static o => o.isActive) : isActive;
+		
+		public bool SetMarkerInDoc() {
+			if (Parent.file.OpenDoc is { } doc) {
+				DeleteMarkerInDoc();
+				int marker = isActive ? SciTheme.Marker.Bookmark : SciTheme.Marker.BookmarkInactive;
+				var h = doc.aaaMarkerAdd(marker, line);
+				if (h != -1) { markerHandle = h; return true; }
+			}
+			return false;
+		}
+		
+		public void DeleteMarkerInDoc() {
+			if (markerHandle != 0 && Parent.file.OpenDoc is { } doc) {
+				doc.aaaMarkerDeleteHandle(markerHandle);
+				markerHandle = 0;
+			}
+		}
+		
 		#region ITreeViewItem
 		
 		public bool IsFolder => _isFolder;
@@ -507,7 +536,5 @@ class PanelBookmarks {
 			: "*Material.BookmarkOutline @14" + EdIcons.darkYellow;
 		
 		#endregion
-		
-		public bool IsActiveOrHasActiveChildren => IsFolder ? Children().Any(static o => o.isActive) : isActive;
 	}
 }

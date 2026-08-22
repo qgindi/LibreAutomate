@@ -63,7 +63,7 @@ class PanelEdit {
 		//	doc2.EFile.OpenDoc = null;
 		//	doc2.EFile = f;
 		//	f.OpenDoc = doc2;
-			
+		
 		//	if (doc2 == _activeDoc) return true;
 		//}
 		
@@ -78,7 +78,6 @@ class PanelEdit {
 			doc.EOpenDocActivated();
 			_UpdateUI_IsOpen();
 			UpdateUI_EditEnabled_();
-			ActiveDocChanged?.Invoke();
 		} else {
 			var path = f.FilePath;
 			KScintilla.aaaFileLoaderSaver fls = new();
@@ -93,11 +92,11 @@ class PanelEdit {
 			doc.EInit_(newFile, noTemplate);
 			_UpdateUI_IsOpen();
 			UpdateUI_EditEnabled_();
-			ActiveDocChanged?.Invoke();
-			//CodeInfo.FileOpened(doc);
 			
 			if (f.Name.Eqi("global.cs") && f == f.Model.FindGlobalCs(silent: true)) _GlobalCsOpened();
 		}
+		
+		ActiveDocChanged?.Invoke();
 		
 		if (focusNow) _activeDoc.Focus();
 		else if (focusEditor == null || (newFile && focusEditor == true)) {

@@ -306,7 +306,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <c>true</c> if this is a link to a file or folder.
 	/// The target may be an external file or folder, or a file (not folder) in the workspace folder.
 	/// </summary>
-	public bool IsLink => _linkTarget != null;//TODO: find all. Maybe some must be IsLinkExternal.
+	public bool IsLink => _linkTarget != null;
 	
 	/// <summary>
 	/// <c>true</c> if this is a link to an external file or folder (not in the workspace folder).

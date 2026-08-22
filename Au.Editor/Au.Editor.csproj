@@ -19,15 +19,16 @@
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 		<Win32Resource>resources\Au.Editor.exe.res</Win32Resource>
 		<NuGetAudit>False</NuGetAudit>
+		<RootNamespace>LA</RootNamespace>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <DebugType>embedded</DebugType>
+	  <DebugType>portable</DebugType>
 	  <IsPublishable>False</IsPublishable>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <DebugType>embedded</DebugType>
+	  <DebugType>portable</DebugType>
 	  <IsPublishable>False</IsPublishable>
 	</PropertyGroup>
 

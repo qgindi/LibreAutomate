@@ -1,9 +1,10 @@
 using System.Runtime.Loader;
 
-static class MiniProgram {
+namespace LA;
+
+static class MiniProgram { //don't rename. Must be "LA.MiniProgram.Run". Debugger uses it to remove from the stack view.
 	[MethodImpl(MethodImplOptions.NoOptimization)]
-	//[StackTraceHidden] //ignored for entry point //TODO2: remove MiniProgram.Main from stack traces displayed in LA, where possible.
-	[StackTraceHidden]
+	[DebuggerHidden, StackTraceHidden]
 	public static unsafe int Run(string[] args) {
 		//print.qm2.use = true;
 		//var p1 = perf.local();

@@ -55,11 +55,13 @@ partial class FilesModel {
 		DllDirectory = WorkspaceDirectory + @"\dll";
 		DllDirectoryBS = DllDirectory + @"\";
 		//ExeDirectory = WorkspaceDirectory + @"\exe";
+		
 		if (!_importing) {
 			WorkspaceSN = ++s_workspaceSN;
 			filesystem.createDirectory(FilesDirectory);
 			Save = new AutoSave(this);
 		}
+		
 		_idMap = new();
 		_nameMap = new(StringComparer.OrdinalIgnoreCase);
 		
@@ -508,7 +510,7 @@ partial class FilesModel {
 				print.warning(@"Cannot use class file 'global.cs', because multiple exist, and none of them is \Classes\global.cs (default location).", -1);
 			} else if (!_noGlobalCsWarning) {
 				_noGlobalCsWarning = true;
-				Panels.Output.Scintilla.AaTags.AddLinkTag("+restoreGlobal", _ => App.Model.AddMissingDefaultFiles(globalCs: true));
+				Panels.Output.Scintilla.AaTags.AddLinkTag("+restoreGlobal", _ => AddMissingDefaultFiles(globalCs: true));
 				print.warning("Missing class file \"global.cs\". <+restoreGlobal>Create<>.", -1, "<>");
 			}
 		}
@@ -877,8 +879,11 @@ partial class FilesModel {
 		
 		if (syncing == 0) {
 			if (f.IsLink) {
-				if (filesystem.exists(f.LinkTarget)) print.it($"<>Info: The deleted item was a link to <explore>{f.LinkTarget}<>");
-				//TODO: if target is internal, print link to open the filenode
+				if (f.IsLinkExternal) {
+					if (filesystem.exists(f.LinkTarget)) print.it($"<>Info: The deleted item was a link to <explore>{f.LinkTarget}<>");
+				} else {
+					if (FindByItemPath(f.LinkTarget[FilesDirectory.Length..]) is { } f2) print.it($"<>Info: The deleted item was a link to {f2.SciLink(true)}");
+				}
 			} else {
 				if (!TryFileOperation(FOSync.UserFileOp, () => filesystem.delete(f.FilePath, FDFlags.RecycleBin))) return false;
 			}
@@ -1220,22 +1225,28 @@ partial class FilesModel {
 		_clipboard.clipSN = Api.GetClipboardSequenceNumber();
 	}
 	
-	public void Paste() {
+	public void Paste(bool asLink = false) {
 		if (_clipboard.items != null && _clipboard.clipSN != Api.GetClipboardSequenceNumber()) Uncut();
 		var ipos = _GetInsertPos(atSelection: true);
 		if (_clipboard.items != null) {
-			_MultiCopyMove(!_clipboard.cut, _clipboard.items, ipos);
+			if (asLink) _CreateLink(_clipboard.items.Select(o => o.FilePath).ToArray());
+			else _MultiCopyMove(!_clipboard.cut, _clipboard.items, ipos);
 			Uncut();
 		} else {
 			using (new clipboard.OpenClipboard_(false)) {
 				var h = Api.GetClipboardData(Api.CF_HDROP);
 				if (h != default) {
-					var a = clipboardData.HdropToFiles_(h);
-					_DroppedOrPasted(null, a, ipos, false);
-				} else if (clipboardData.GetText_(0) is string s && s.Length > 0) {
+					var paths = clipboardData.HdropToFiles_(h);
+					if (asLink) _CreateLink(paths);
+					else _DroppedOrPasted(null, paths, ipos, false);
+				} else if (!asLink && clipboardData.GetText_(0) is string s && s.Length > 0) {
 					SciCode.EIsForumCode_(s, newFile: true);
 				}
 			}
+		}
+		
+		void _CreateLink(string[] paths) {
+			ImportFiles(paths, ipos, ImportFlags.Link | ImportFlags.DontPrint | ImportFlags.DontSelect);
 		}
 	}
 	
@@ -1344,11 +1355,13 @@ partial class FilesModel {
 				.OfType<string>() //where not null
 				.Prepend(FilesDirectory)
 				.ToArray();
+			var fileLinks = Root.Descendants()
+				.Where(o => o.IsLink && !o.IsFolder)
+				.ToArray();
 			
 			var action = flags & (ImportFlags.Copy | ImportFlags.Move | ImportFlags.Link);
 			bool dontPrint = flags.Has(ImportFlags.DontPrint);
-			int fromWorkspaceDir = 0;
-			bool isLinkToWsFile = false;
+			bool isLinkToWsFile = false, repair = false;
 			
 			foreach (var path in a) {
 				if (path.Find(@"\$RECYCLE.BIN\", true) > 0) {
@@ -1359,43 +1372,53 @@ partial class FilesModel {
 					print.it($"<>The folder {(s2.Eqi(path) ? "already is" : "contains a folder that is")} in the workspace. {FindByFilePath(s2)?.SciLink(true)}");
 					return null;
 				}
-				if (wsDirs.Any(o => path.PathStarts(o))) { //trying to import a file/folder that already is in the workspace
-					if (action != 0) return null; //unlikely
-					var f1 = FindByFilePath(path);
-					if (f1 != null) {
+				
+				//trying to import a file/folder that already is in the workspace?
+				if (wsDirs.Any(o => path.PathStarts(o))) {
+					if (FindByFilePath(path) is { } f1) {
 						if (f1.IsFolder) {
-							print.it($"<>The folder already is in the workspace. {f1.SciLink(true)}."); //info: can't create link, because links to internel folders are not supported, as well as links to external folders that already exist in the workspace
+							print.it($"<>The folder already is in the workspace. {f1.SciLink(true)}");
 							return null;
 						}
-						if (a.Length > 1) {
-							print.it($"<>The file already is in the workspace. {f1.SciLink(true)}. Try to import single file.");
-							return null;
+						if (action != ImportFlags.Link) {
+							if (!_DialogCreateLink(f1, "The", null)) return null;
 						}
-						int dr = dialog.show("Import files", $"The file already is in the workspace.\n\n{f1.ItemPath}", "2 Open it|1 Create link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
-						if (dr != 1) {
-							if (dr == 2) f1.Model.SetCurrentFile(f1);
-							return null;
-						}
-						action = ImportFlags.Link;
-						dontPrint = true;
 						isLinkToWsFile = true;
-					} else {
-						//repair workspace: import file that is in a workspace folder but not in the Files panel
-						fromWorkspaceDir++;
+					} else { //repair workspace: import file that is in a workspace folder but does not have a filenode
+						if (action != 0) return null;
+						if (_MultipleFiles()) return null;
+						repair = true;
+						action = ImportFlags.Move;
 					}
+					dontPrint = true;
+				} else if (action != ImportFlags.Link && fileLinks.FirstOrDefault(o => o.FilePathEqi(path)) is { } f2) {
+					if (!_DialogCreateLink(f2, "A link to the", " another")) return null;
+					dontPrint = true;
+				}
+				
+				bool _MultipleFiles() {
+					if (a.Length == 1) return false;
+					print.it("Please paste/drop/import single file."); //we don't know whether `action` for all files will be the same
+					return true;
+				}
+				
+				bool _DialogCreateLink(FileNode existing, string s1, string s2) {
+					if (_MultipleFiles()) return false;
+					int dr = dialog.show("Import files", $"{s1} file already is in the workspace.\n\n{existing.ItemPath}", $"2 Open it|1 Create{s2} link|0 Cancel", DFlags.CommandLinks, owner: TreeControl);
+					if (dr != 1) {
+						if (dr == 2) existing.Model.SetCurrentFile(existing);
+						return false;
+					}
+					action = ImportFlags.Link;
+					return true;
 				}
 			}
-			if (fromWorkspaceDir > 0 && fromWorkspaceDir < a.Length) return null; //some files from workspace dir and some not. Unlikely.
 			
 			if (action == 0) {
-				if (fromWorkspaceDir > 0) {
-					action = ImportFlags.Move;
-				} else {
-					var ab = new[] { "2 Copy to the workspace", "3 Move to the workspace", "1 Create link", "0 Cancel" };
-					int dr = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
-					action = dr switch { 1 => ImportFlags.Link, 2 => ImportFlags.Copy, 3 => ImportFlags.Move, _ => 0 };
-					if (action == 0) return null;
-				}
+				var ab = new[] { "2 Copy to the workspace", "3 Move to the workspace", "1 Create link", "0 Cancel" };
+				int dr = dialog.show("Import files", string.Join("\n", a), ab, DFlags.CommandLinks, owner: TreeControl, footer: GetSecurityInfo("v|"));
+				action = dr switch { 1 => ImportFlags.Link, 2 => ImportFlags.Copy, 3 => ImportFlags.Move, _ => 0 };
+				if (action == 0) return null;
 			}
 			
 			bool select = !flags.Has(ImportFlags.DontSelect) && !(ipos.Inside && !ipos.f.IsExpanded), focus = select;
@@ -1414,8 +1437,8 @@ partial class FilesModel {
 					
 					FileNode k;
 					var name = pathname.getName(path);
-					if (fromWorkspaceDir == 0) {
-						if (isLinkToWsFile) name = "Link to " + name; //prevent duplicate name. Never mind: when isDir, we'll have duplicate names inside the dir; cannot rename.
+					if (!repair) {
+						if (isLinkToWsFile) name = "Link to " + name; //avoid duplicate name
 						name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
 					}
 					
@@ -1460,7 +1483,7 @@ partial class FilesModel {
 			CodeInfo.FilesChanged();
 			
 			void _UnsafeAdd(FileNode f, bool inDir = false) {
-				if (f.IsCodeFile && fromWorkspaceDir == 0 && !isLinkToWsFile && !flags.Has(ImportFlags.DontPrint)) iren.Imported(f, inDir);
+				if (f.IsCodeFile && !dontPrint) iren.Imported(f, inDir);
 			}
 			
 			(int nf, int nd, int nc) _CountFilesFolders() {
@@ -1711,7 +1734,7 @@ partial class FilesModel {
 		try {
 			filesystem.createDirectory(filesDir);
 			foreach (var f in aSel) {
-				if (!(f.IsLink && !exportLinkTarget)) filesystem.copyTo(f.FilePath, filesDir);
+				if (!(f.IsLink && !exportLinkTarget)) filesystem.copy(f.FilePath, filesDir + "\\" + f.Name);
 			}
 			
 			if (exportLinkTarget) {
@@ -1730,7 +1753,7 @@ partial class FilesModel {
 				filesystem.createDirectory(depsDir);
 				FileNode fDeps = FileNode.CreateForExport(depsDirName);
 				foreach (var f in aDeps) {
-					if (!(f.IsLink && !exportLinkTarget)) filesystem.copyTo(f.FilePath, depsDir);
+					if (!(f.IsLink && !exportLinkTarget)) filesystem.copy(f.FilePath, depsDir + "\\" + f.Name);
 					var fe = FileNode.CreateForExport(f, exportLinkTarget);
 					fDeps.AddChild(fe);
 					if (f.IsFolder) _Enum1(fe, f.Children());
@@ -1976,7 +1999,7 @@ partial class FilesModel {
 	public EISSResult EnsureIsInStartupScripts(FileNode f, bool printAdded, bool usePath = false) {
 		string itemPath = f.ItemPath;
 		string itemPathOrName = usePath ? itemPath : f.ItemPathOrName();
-		var ss = App.Model.UserSettings.startupScripts;
+		var ss = UserSettings.startupScripts;
 		if (ss.NE()) {
 			ss = itemPathOrName;
 		} else {
@@ -2000,7 +2023,7 @@ partial class FilesModel {
 			return EISSResult.Failed;
 		}
 		
-		App.Model.UserSettings.startupScripts = ss;
+		UserSettings.startupScripts = ss;
 		if (printAdded) print.it($"<>Info: script \"{itemPathOrName}\" has been added to <+options Workspace>Options > Workspace > Startup scripts<>. If unwanted, disable the line (prefix //).");
 		return EISSResult.Added;
 	}

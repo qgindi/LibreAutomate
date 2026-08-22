@@ -180,7 +180,7 @@ class MetaComments {
 	/// </summary>
 	public string[] Defines { get; private set; }
 	List<string> _defines;
-
+	
 	/// <summary>
 	/// Default defines, such as <c>NET</c>. No <c>DEBUG</c>, <c>TRACE</c>.
 	/// </summary>
@@ -468,13 +468,11 @@ class MetaComments {
 		
 		//add global.cs
 		if (isMain) {
-			var model = f.Model;
 			if (!_flags.Has(MCFlags.ExportNoGlobal)) {
-				var glob = model.FindGlobalCs(); //fast, uses dictionary
-				if (glob != null) {
+				if (App.Model.FindGlobalCs() is { } glob) { //fast, uses dictionary
 					if (glob == f) isGlobal = true;
 					else {
-						if (_flags.Has(MCFlags.Export)) (ExportC_ ??= new()).Add(glob);
+						if (_flags.Has(MCFlags.Export)) (ExportC_ ??= []).Add(glob);
 						_ParseFile(glob, false, true, isGlobal: true);
 					}
 				}
@@ -837,7 +835,7 @@ class MetaComments {
 		s = s.TrimEnd('\\');
 		if (!pathname.isFullPathExpand(ref s)) {
 			if (s.Starts('%')) _ErrorV("relative path starts with %");
-			if (s.Starts('\\')) s = _f.f.Model.FilesDirectory + s;
+			if (s.Starts('\\')) s = App.Model.FilesDirectory + s;
 			else s = pathname.getDirectory(_f.f.FilePath, true) + s;
 		}
 		return pathname.Normalize_(s, noExpandEV: true);

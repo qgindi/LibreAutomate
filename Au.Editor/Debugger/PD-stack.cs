@@ -15,8 +15,10 @@ partial class PanelDebug {
 		if (a == null) {
 			_aStack = null;
 		} else {
-			_aStack = new _StackViewItem[a.Length];
-			for (int i = 0; i < a.Length; i++) {
+			int n = a.Length;
+			if (n > 2 && a[^2].func == "LA.MiniProgram.Run()") n -= 2; //remove the managed host methods
+			_aStack = new _StackViewItem[n];
+			for (int i = 0; i < n; i++) {
 				_aStack[i] = new(this, a[i]);
 			}
 		}

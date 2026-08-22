@@ -96,6 +96,9 @@ static class Menus {
 			[Command("Paste", keysText = "Ctrl+V")]
 			public static void Paste_file() { App.Model.Paste(); }
 			
+			[Command("Paste as link")]
+			public static void Paste_file_link() { App.Model.Paste(asLink: true); }
+			
 			[Command("Cancel Cut/Copy", keysText = "Esc")]
 			public static void CancelCutCopy_file() { App.Model.Uncut(); }
 			
