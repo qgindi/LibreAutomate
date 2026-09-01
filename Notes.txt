@@ -53,6 +53,7 @@ May need to update some info in README.md for github. Eg the screenshot and "how
 
 Review the md file of current version.
 	If it's still "future.md", rename ( RENAME!!! ) to "v1.x.md".
+	Edit the release date.
 	Note: the md file path and name format is used in `App.CheckForUpdates`.
 
 Run script "Create LA setup files.cs".
@@ -73,7 +74,7 @@ Create a GitHub Release. Upload the setup .exe file and the .lzma files.
 
 Upload the website created by script "Au docs". To find the script: main toolbar > "Docs" menu.
 
-Review web pages. Github too.
+Review web pages (LA and Github).
 
 Download and test the setup file.
 	It will download/use/delete 1 or 2 .lzma files from the GitHub release, unless you first manually download them to the same folder as the setup file.
