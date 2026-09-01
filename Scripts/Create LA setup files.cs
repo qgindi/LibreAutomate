@@ -8,6 +8,8 @@
 #define CREATE_FILES
 #define BUILD_SETUP
 
+global using System.Windows;
+
 //Files to add. Wildcard list to match relative paths.
 string[] lists = [
 """

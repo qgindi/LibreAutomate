@@ -102,7 +102,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		}
 		
 		//sometimes Explorer does not update the folder view
-		if (dirExisted) filesystem.ShellNotify_(Api.SHCNE_UPDATEDIR, outDir);
+		if (dirExisted) filesystem.more.notifyShell(SCNEvent.UPDATEDIR, outDir);
 		
 		return true;
 	}

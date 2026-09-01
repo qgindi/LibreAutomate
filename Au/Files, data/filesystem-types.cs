@@ -8,19 +8,19 @@ namespace Au.Types;
 internal enum FileIs_ {
 	/// <summary>Does not exist.</summary>
 	NotFound = 0,
-
+	
 	/// <summary>Is file, and not NTFS link.</summary>
 	File = 1,
-
+	
 	/// <summary>Is directory, and not NTFS link.</summary>
 	Directory = 2,
-
+	
 	/// <summary>Is NTFS link to file.</summary>
 	NtfsLinkFile = 5,
-
+	
 	/// <summary>Is NTFS link to directory.</summary>
 	NtfsLinkDirectory = 6,
-
+	
 	/// <summary>Exists but this process cannot access it and get attributes.</summary>
 	AccessDenied = int.MinValue,
 }
@@ -32,7 +32,7 @@ internal enum FileIs_ {
 public struct FAttr {
 	readonly FileAttributes _a;
 	readonly bool _exists, _unknown, _ntfsLink;
-
+	
 	/// <param name="attributes">Attributes, or 0 if does not exist or can't get attributes.</param>
 	/// <param name="exists">True if exists and can get attributes. False if does not exist. <c>null</c> if exists but can't get attributes.</param>
 	/// <param name="ntfsLink">Is a NTFS link, such as symbolic link or mount point.</param>
@@ -42,64 +42,64 @@ public struct FAttr {
 		_unknown = exists == null;
 		_ntfsLink = ntfsLink;
 	}
-
+	
 	/// <summary>
 	/// Returns file or directory attributes. Returns 0 if <see cref="Exists"/> <c>false</c>.
 	/// </summary>
 	public FileAttributes Attributes => _a;
-
+	
 	/// <summary>
 	/// Returns <see cref="Exists"/>.
 	/// </summary>
 	public static implicit operator bool(FAttr fa) => fa.Exists;
-
+	
 	/// <summary>
 	/// Returns 0 if !<see cref="Exists"/>, 1 if <see cref="File"/>, 2 if <see cref="Directory"/>. Can be used with switch.
 	/// </summary>
 	public static implicit operator int(FAttr fa) => !fa.Exists ? 0 : (fa.Directory ? 2 : 1);
-
+	
 	/// <summary>
 	/// Exists and is accessible (<see cref="Unknown"/> <c>false</c>).
 	/// See also <see cref="File"/>, <see cref="Directory"/>.
 	/// </summary>
 	public bool Exists => _exists;
-
+	
 	/// <summary>
 	/// Exists but this process cannot access it and get attributes (error "access denied"). Then other <c>bool</c> properties return <c>false</c>.
 	/// </summary>
 	public bool Unknown => _unknown;
-
+	
 	/// <summary>
 	/// Is file (not directory), or NTFS link to a file (if <see cref="IsNtfsLink"/> <c>true</c>).
 	/// </summary>
 	public bool File => 0 == (_a & FileAttributes.Directory) && _exists;
-
+	
 	/// <summary>
 	/// Is directory, or NTFS link to a directory (if <see cref="IsNtfsLink"/> <c>true</c>).
 	/// </summary>
 	public bool Directory => 0 != (_a & FileAttributes.Directory);
-
+	
 	/// <summary>
 	/// It is a NTFS link, such as symbolic link, junction or mount point. Don't confuse with shell links (shortcuts).
 	/// If <see cref="File"/> <c>true</c>, the target is a file. If <see cref="Directory"/> <c>true</c>, the target is a directory.
 	/// </summary>
 	public bool IsNtfsLink => _ntfsLink;
-
+	
 	/// <summary>
 	/// Has <see cref="FileAttributes.ReadOnly"/>.
 	/// </summary>
 	public bool IsReadonly => 0 != (_a & FileAttributes.ReadOnly);
-
+	
 	/// <summary>
 	/// Has <see cref="FileAttributes.Hidden"/>.
 	/// </summary>
 	public bool IsHidden => 0 != (_a & FileAttributes.Hidden);
-
+	
 	/// <summary>
 	/// Has <see cref="FileAttributes.System"/>.
 	/// </summary>
 	public bool IsSystem => 0 != (_a & FileAttributes.System);
-
+	
 	///
 	public override string ToString() {
 		return Unknown ? "unknown" : (Exists ? $"{{ Directory={Directory}, IsNtfsLink={IsNtfsLink}, Attributes={Attributes} }}" : "doesn't exist");
@@ -113,7 +113,7 @@ public struct FAttr {
 public enum FAFlags {
 	///<summary>Pass path to the API as it is, without any normalizing and validating.</summary>
 	UseRawPath = 1,
-
+	
 	///<summary>
 	///If failed, return <c>false</c> and don't throw exception.
 	///Then, if you need error info, you can use <see cref="lastError"/>. If the file/directory does not exist, it will return <ms>ERROR_FILE_NOT_FOUND</ms> or <c>ERROR_PATH_NOT_FOUND</c> or <c>ERROR_NOT_READY</c>.
@@ -128,19 +128,19 @@ public enum FAFlags {
 public record struct FileProperties {
 	///
 	public FileAttributes Attributes { get; set; }
-
+	
 	///<summary>File size. For directories it is usually 0.</summary>
 	public long Size { get; set; }
-
+	
 	///
 	public DateTime LastWriteTimeUtc { get; set; }
-
+	
 	///
 	public DateTime CreationTimeUtc { get; set; }
-
+	
 	///<summary>Note: this is unreliable. The operating system may not record this time automatically.</summary>
 	public DateTime LastAccessTimeUtc { get; set; }
-
+	
 	/// <summary>
 	/// It is a NTFS link, such as symbolic link or mount point. Don't confuse with shell links (shortcuts).
 	/// </summary>
@@ -156,46 +156,46 @@ public enum FEFlags {
 	/// Enumerate all descendants, not only direct children. Also known as "recurse subdirectories".
 	/// </summary>
 	AllDescendants = 1,
-
+	
 	/// <summary>
 	/// Also enumerate target directories of NTFS links, such as symbolic links and mount points. Use with <c>AllDescendants</c>.
 	/// </summary>
 	RecurseNtfsLinks = 2,
-
+	
 	/// <summary>
 	/// Skip files and subdirectories that have <c>Hidden</c> attribute.
 	/// </summary>
 	SkipHidden = 4,
-
+	
 	/// <summary>
 	/// Skip files and subdirectories that have <c>Hidden</c> and <c>System</c> attributes (both).
 	/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
 	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for <c>D</c> drive.
 	/// </summary>
 	SkipHiddenSystem = 8, //note: must match FCFlags
-
+	
 	/// <summary>
 	/// If fails to get the contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
 	/// Without this flag then throws exception or calls <i>errorHandler</i>.
 	/// </summary>
 	IgnoreInaccessible = 0x10, //note: must match FCFlags
-
+	
 	/// <summary>
 	/// Get only files and not subdirectories.
 	/// Note: the <i>dirFilter</i> callback function is called just to ask whether to include children.
 	/// </summary>
 	OnlyFiles = 0x20,
-
+	
 	/// <summary>
 	/// Don't call <see cref="pathname.normalize"/> and don't throw exception for non-full path.
 	/// </summary>
 	UseRawPath = 0x40,
-
+	
 	/// <summary>
 	/// Let <see cref="FEFile.Name"/> be path relative to the specified directory path. Like <c>@"\name.txt"</c> or <c>@"\subdirectory\name.txt"</c> instead of <c>"name.txt"</c>.
 	/// </summary>
 	NeedRelativePaths = 0x80,
-
+	
 	//rejected. Rarely used. Can use FileSystemRedirection, it's public.
 	///// <summary>
 	///// Temporarily disable file system redirection in this thread of this 32-bit process running on 64-bit Windows.
@@ -213,7 +213,7 @@ public enum FEFlags {
 [Flags]
 public enum FCFlags {
 	//note: these values must match the corresponding FEFlags values.
-
+	
 	/// <summary>
 	/// Skip descendant files and directories that have <c>Hidden</c> and <c>System</c> attributes (both).
 	/// They usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
@@ -221,12 +221,12 @@ public enum FCFlags {
 	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>.
 	/// </summary>
 	SkipHiddenSystem = 8,
-
+	
 	/// <summary>
 	/// If fails to get the contents of the directory or a subdirectory because of its security settings, don't throw exception but assume that the [sub]directory is empty.
 	/// </summary>
 	IgnoreInaccessible = 0x10,
-
+	
 	/// <summary>
 	/// Don't create subdirectories that after applying all filters would be empty.
 	/// </summary>
@@ -244,12 +244,12 @@ public enum FDFlags {
 	/// Note: it is much slower. To delete multiple, use <see cref="filesystem.delete(IEnumerable{string}, FDFlags)"/>.
 	/// </summary>
 	RecycleBin = 1,
-
+	
 	/// <summary>
 	/// If fails to delete, don't wait/retry and don't throw exception.
 	/// </summary>
 	CanFail = 2,
-
+	
 	//rejected. Rarely useful. Maybe in the future.
 	///// <summary>
 	///// Fail if has read-only attribute.
@@ -271,41 +271,41 @@ public class FEFile {
 		_level = (short)level;
 		ReparseTag = d.dwReserved0;
 	}
-
+	
 	/// <summary>
 	/// Gets file name. Or relative path if used <see cref="FEFlags.NeedRelativePaths"/>.
 	/// </summary>
 	public string Name { get; }
-
+	
 	/// <summary>
 	/// Gets full path.
 	/// </summary>
 	public string FullPath { get; }
-
+	
 	/// <summary>
 	/// Gets filename extension. Returns <c>""</c> if directory.
 	/// </summary>
 	public string Extension => IsDirectory ? "" : pathname.getExtension(Name); //note: if null for directory, then OrderBy throws exception
-
+	
 	/// <summary>
 	/// Returns file size. For directories it is usually 0.
 	/// </summary>
 	public long Size { get; }
-
+	
 	///
 	public DateTime LastWriteTimeUtc { get; }
-
+	
 	///
 	public DateTime CreationTimeUtc { get; }
-
+	
 	///
 	public FileAttributes Attributes { get; }
-
+	
 	/// <summary>
 	/// It is a directory. Or a NTFS link to a directory (see <see cref="IsNtfsLink"/>).
 	/// </summary>
 	public bool IsDirectory { get { return (Attributes & FileAttributes.Directory) != 0; } }
-
+	
 	/// <summary>
 	/// Descendant level.
 	/// 0 if direct child of the directory (<i>directoryPath</i>), 1 if child of child, and so on.
@@ -315,22 +315,22 @@ public class FEFile {
 		internal set { _level = (short)value; }
 	}
 	short _level;
-
+	
 	/// <summary>
 	/// It is a NTFS link, such as symbolic link or mount point. Don't confuse with shell links (shortcuts).
 	/// </summary>
 	public bool IsNtfsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
-
+	
 	/// <summary>
 	/// <ms>WIN32_FIND_DATA</ms><c>.dwReserved0</c>.
 	/// </summary>
 	public uint ReparseTag { get; }
-
+	
 	/// <summary>
 	/// Returns <see cref="FullPath"/>.
 	/// </summary>
 	public override string ToString() => FullPath;
-
+	
 	//This could be more dangerous than useful.
 	///// <summary>
 	///// Returns <c>FullPath</c>.
@@ -348,23 +348,23 @@ public class FEFile {
 public enum FIfExists {
 	/// <summary>Throw exception. Default.</summary>
 	Fail,
-
+	
 	/// <summary>Delete destination.</summary>
 	Delete,
-
+	
 	/// <summary>Rename (backup) destination.</summary>
 	RenameExisting,
-
+	
 	/// <summary>
 	/// If destination directory exists, merge the source directory into it, replacing existing files.
 	/// If destination file exists, deletes it.
 	/// If destination directory exists and source is file, fails.
 	/// </summary>
 	MergeDirectory,
-
+	
 	/// <summary>Copy/move with a different name.</summary>
 	RenameNew,
-
+	
 #if not_implemented
 	/// <summary>Display a dialog asking the user what to do.</summary>
 	Ask,
@@ -379,17 +379,17 @@ public enum FPFormat {
 	/// With long-path prefix (<c>"\\?\"</c> or <c>"\\?\UNC\"</c>) if path length > <see cref="pathname.maxDirectoryPathLength"/>. This is default.
 	/// </summary>
 	PrefixIfLong,
-
+	
 	/// <summary>
 	/// Always with long-path prefix (<c>"\\?\"</c> or <c>"\\?\UNC\"</c>).
 	/// </summary>
 	PrefixAlways,
-
+	
 	/// <summary>
 	/// Without long-path prefix, even if the path is very long.
 	/// </summary>
 	PrefixNever,
-
+	
 	/// <summary>
 	/// With volume GUID (API <ms>GetFinalPathNameByHandle</ms> flag <c>VOLUME_NAME_GUID</c>).
 	/// If it fails (eg network path), gets path with prefix, like <c>PrefixAlways</c>.
@@ -406,25 +406,25 @@ public enum CPResult {
 	/// Example: <c>pathA: @"C:\Dir1\File1.txt"</c>, <c>pathB: @"C:\Dir2\File1.txt"</c>.
 	/// </summary>
 	None,
-
+	
 	/// <summary>
 	/// Both paths are of the same file or directory.
 	/// Example: <c>pathA: @"C:\Dir1\File1.txt"</c>, <c>pathB: @"C:\Dir2\..\Dir1\File1.txt"</c>.
 	/// </summary>
 	Same,
-
+	
 	/// <summary>
 	/// <i>pathA</i> is of a directory that contains file or directory specified by <i>pathB</i>.
 	/// Example: <c>pathA: @"C:\Dir1"</c>, <c>pathB: @"C:\Dir1\Dir2\File1.txt"</c>.
 	/// </summary>
 	AContainsB,
-
+	
 	/// <summary>
 	/// <i>pathB</i> is of a directory that contains file or directory specified by <i>pathA</i>.
 	/// Example: <c>pathA: @"C:\Dir1\Dir2\File1.txt"</c>, <c>pathB: @"C:\Dir1"</c>.
 	/// </summary>
 	BContainsA,
-
+	
 	/// <summary>
 	/// Failed. Probably one (or both) of specified files does not exist.
 	/// The function supports <see cref="lastError"/>.
@@ -443,10 +443,10 @@ public record struct FileId(int VolumeSerialNumber, long FileIndex);
 public enum CSLink {
 	/// <summary>Symbolic link to file.</summary>
 	File,
-
+	
 	/// <summary>Symbolic link to directory.</summary>
 	Directory,
-
+	
 	/// <summary>
 	/// Junction to directory.
 	/// 
@@ -459,9 +459,63 @@ public enum CSLink {
 	/// Some programs interpret junctions differently. For example git adds the target directory.
 	/// </summary>
 	Junction,
-
+	
 	/// <summary>
 	/// Junction to local directory or symbolic link to network directory.
 	/// </summary>
 	JunctionOrSymlink,
 }
+
+#pragma warning disable CS1591 //Missing XML comment for publicly visible type or member
+/// <summary>
+/// Event id constants for <see cref="filesystem.more.notifyShell"/>.
+/// </summary>
+/// <remarks>
+/// The names are as in API <ms>SHChangeNotify</ms> documentation but without prefix <c>SHCNE_</c>.
+/// </remarks>
+[Flags]
+public enum SCNEvent {
+	RENAMEITEM = 0x1,
+	CREATE = 0x2,
+	DELETE = 0x4,
+	MKDIR = 0x8,
+	RMDIR = 0x10,
+	MEDIAINSERTED = 0x20,
+	MEDIAREMOVED = 0x40,
+	DRIVEREMOVED = 0x80,
+	DRIVEADD = 0x100,
+	NETSHARE = 0x200,
+	NETUNSHARE = 0x400,
+	ATTRIBUTES = 0x800,
+	UPDATEDIR = 0x1000,
+	UPDATEITEM = 0x2000,
+	SERVERDISCONNECT = 0x4000,
+	UPDATEIMAGE = 0x8000,
+	DRIVEADDGUI = 0x10000,
+	RENAMEFOLDER = 0x20000,
+	FREESPACE = 0x40000,
+	ASSOCCHANGED = 0x8000000,
+}
+
+/// <summary>
+/// Flags for <see cref="filesystem.more.notifyShell"/>.
+/// </summary>
+/// <remarks>
+/// The names are as in API <ms>SHChangeNotify</ms> documentation but without prefix <c>SHCNF_</c>.
+/// </remarks>
+[Flags]
+public enum SCNFlags {
+	//SHCNF_IDLIST = 0x0,
+	//SHCNF_DWORD = 0x3,
+	//SHCNF_PATH = 0x5,
+	//SHCNF_PRINTER = 0x6,
+	
+	/// <summary>Let Explorer process the notification without a delay. Wait until finished.</summary>
+	SHCNF_FLUSH = 0x1000,
+	
+	/// <summary>Let Explorer process the notification without a delay. Don't wait until finished.</summary>
+	SHCNF_FLUSHNOWAIT = 0x3000,
+	
+	SHCNF_NOTIFYRECURSIVE = 0x10000,
+}
+#pragma warning restore CS1591 //Missing XML comment for publicly visible type or member

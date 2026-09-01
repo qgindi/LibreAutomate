@@ -131,7 +131,7 @@ exit $?
 		string armExe = dirOut + fn + "-arm.exe";
 
 		filesystem.copy(dirOut + @"64\arm\apphost.exe", armExe, FIfExists.Delete);
-		_PatchApphost(armExe, fn + ".dll");
+		_PatchApphost(armExe, "Au.Editor.dll");
 
 		_CopyResources(dirOut + fn + ".exe", armExe);
 

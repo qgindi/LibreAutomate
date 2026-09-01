@@ -16,8 +16,7 @@ if (script.testing) {
 	print.clear();
 	//file = folders.Editor + @"64\AuCpp.dll";
 	//file = folders.Editor + @"64\Au.DllHost.exe";
-	file = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
-	//file = folders.Editor + @"..\Setup\bin\Release\net48\vt-1.zip";
+	file = folders.Editor + @"..\Setup\bin\Release\net48\vt-1.zip";
 	//file = folders.Editor + @"..\Setup\bin\Release\net48\offline-1.zip.lzma";
 	//file = folders.Downloads + "LibreAutomateSetup.exe";
 }
@@ -42,6 +41,7 @@ if (file == trueFile && !script.testing) {
 	//_PrintJson(j1);
 	var digest = (string)j1["digest"];
 	digest = digest[7..]; //prefix "sha256:"
+#if !true
 	if (digest != id) {
 		int button = dialog.show("Which setup exe to use?", "The local setup file is different than the GitHub latest release (different hash).", "1 GitHub latest release\nIf still not scanned - local.|2 The local setup file|3 Download and use the GitHub latest release\nWill replace the local|0 Cancel", flags: DFlags.CommandLinks);
 		switch (button) {
@@ -54,6 +54,9 @@ if (file == trueFile && !script.testing) {
 		default: return;
 		}
 	}
+#else
+	id = digest;
+#endif
 }
 
 //try get existing results for that file

@@ -20,7 +20,7 @@ partial class filesystem {
 				&& Api.GetFileInformationByHandle(h2, out var k2)
 				&& k1.FileIndex == k2.FileIndex && k1.dwVolumeSerialNumber == k2.dwVolumeSerialNumber;
 		}
-
+		
 		/// <summary>
 		/// Gets <see cref="FileId"/> of a file or directory.
 		/// </summary>
@@ -42,13 +42,13 @@ partial class filesystem {
 			fileId = new((int)k.dwVolumeSerialNumber, k.FileIndex);
 			return true;
 		}
-
+		
 		static Handle_ _OpenFileHandleForFileInfo(string path, bool ofSymlink = false) {
 			path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
 			return Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
 			//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
 		}
-
+		
 		/// <summary>
 		/// Gets full normalized path of an existing file or directory or symbolic link target.
 		/// </summary>
@@ -72,11 +72,11 @@ partial class filesystem {
 				s = pathname.unprefixLongPath(s);
 			result = s;
 			return true;
-
+			
 			//never mind: does not change the root if it is like @"\\ThisComputer\share" or @"\\ThisComputer\C$" or @"\\127.0.0.1\c$" or @"\\LOCALHOST\c$" and it is the same as "C:\".
 			//	Tested: getFileId returns the same value for all these.
 		}
-
+		
 		/// <summary>
 		/// Compares final paths of two existing files or directories to determine equality or relationship.
 		/// </summary>
@@ -94,7 +94,7 @@ partial class filesystem {
 		/// <seealso cref="isSameFile(string, string, bool)"/>
 		public static CPResult comparePaths(string pathA, string pathB, bool ofSymlinkA = false, bool ofSymlinkB = false)
 			=> comparePaths(ref pathA, ref pathB, ofSymlinkA, ofSymlinkB);
-
+		
 		/// <summary>
 		/// Compares final paths of two existing files or directories to determine equality or relationship.
 		/// Also gets final paths (see <see cref="getFinalPath"/>).
@@ -109,7 +109,7 @@ partial class filesystem {
 			if (pathB.Length < pathA.Length && pathA.Starts(pathB, true) && (pathA[pathB.Length] == '\\' || pathB.Ends('\\'))) return CPResult.BContainsA;
 			return CPResult.None;
 		}
-
+		
 		/// <summary>
 		/// Calls <see cref="enumerate"/> and returns the sum of all descendant file sizes.
 		/// With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
@@ -124,7 +124,7 @@ partial class filesystem {
 		public static long calculateDirectorySize(string path, FEFlags flags = FEFlags.AllDescendants | FEFlags.IgnoreInaccessible) {
 			return enumerate(path, flags).Sum(f => f.Size);
 		}
-
+		
 		/// <summary>
 		/// Empties the Recycle Bin.
 		/// </summary>
@@ -133,7 +133,7 @@ partial class filesystem {
 		public static void emptyRecycleBin(string drive = null, bool progressUI = false) {
 			Api.SHEmptyRecycleBin(default, drive, progressUI ? 1 : 7);
 		}
-
+		
 		/// <summary>
 		/// Creates a NTFS symbolic link or junction.
 		/// </summary>
@@ -159,7 +159,7 @@ partial class filesystem {
 			} else { //symlinks support relative path
 				targetPath = targetPath.Replace('/', '\\'); //rumors: the link may not work if with /
 			}
-
+			
 			string trueLinkPath = null;
 			try {
 				if (exists(linkPath, useRawPath: true) is var e && e) {
@@ -168,17 +168,17 @@ partial class filesystem {
 					trueLinkPath = linkPath;
 					linkPath = pathname.makeUnique(linkPath, true);
 				} else createDirectoryFor(linkPath);
-
+				
 				if (type is CSLink.Junction or CSLink.JunctionOrSymlink) {
 					var r = run.console(out string s, "cmd.exe", $"""/u /c "mklink /d /j "{linkPath}" "{targetPath}" """, encoding: Encoding.Unicode); //tested: UTF-16 on Win11 and Win7
 					if (r == 0) return;
 					if (!(type == CSLink.JunctionOrSymlink && s.Starts("Local volumes are required"))) throw new AuException("*to create junction. " + s.Trim());
 				}
-
+				
 				uint fl = type == CSLink.File ? 0u : 1u; //SYMBOLIC_LINK_FLAG_DIRECTORY
 				if (osVersion.minWin10_1703) fl |= 2u; //SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
 				if (Api.CreateSymbolicLink(linkPath, targetPath, fl)) return;
-
+				
 				int ec = lastError.code;
 				if (ec == Api.ERROR_PRIVILEGE_NOT_HELD && elevate && !uacInfo.isAdmin) {
 					if (dialog.showOkCancel("Create symbolic link", "Administrator rights required.\n\nTo create without admin rights, in Windows Settings enable developer mode.", icon: DIcon.Shield)) {
@@ -195,7 +195,21 @@ partial class filesystem {
 			}
 			finally { if (trueLinkPath != null && filesystem.exists(linkPath)) move(linkPath, trueLinkPath, FIfExists.Delete); }
 		}
-
+		
+		/// <summary>
+		/// Calls API <ms>SHChangeNotify</ms>.
+		/// </summary>
+		/// <param name="eventId">Parameter <i>wEventId</i> of <ms>SHChangeNotify</ms>.</param>
+		/// <param name="path">Parameter <i>dwItem1</i> of <ms>SHChangeNotify</ms>. File/folder path or <c>null</c>, depending on <i>eventId</i>.</param>
+		/// <param name="path2">Parameter <i>dwItem2</i> of <ms>SHChangeNotify</ms>.</param>
+		/// <param name="flags">Parameter <i>uFlags</i> of <ms>SHChangeNotify</ms>. This method adds <c>SHCNF_PATH</c>.</param>
+		/// <remarks>
+		/// Can be used to notify shell (File Explorer folder windows, desktop, etc) about a filesystem change in case it does not update something automatically. Or to update faster (use a flush flag).
+		/// </remarks>
+		public static void notifyShell(SCNEvent eventId, string path, string path2 = null, SCNFlags flags = 0) {
+			Api.SHChangeNotify((uint)eventId, (uint)flags | 5 /*SHCNF_PATH*/, path, path2);
+		}
+		
 		/// <summary>
 		/// Detects whether the path is on a SSD drive.
 		/// </summary>
@@ -209,13 +223,13 @@ partial class filesystem {
 				if (path.Starts(@"\\?\")) path = path[4..];
 				var di = new DriveInfo(path);
 				if (!(di.DriveType is DriveType.Fixed or DriveType.Removable) || !di.IsReady) return false;
-
+				
 				var b = stackalloc char[300];
 				if (!Api.GetVolumeNameForVolumeMountPoint(di.Name, b, 300)) return false;
 				path = new(Ptr_.ToRSpan(b).TrimEnd('\\'));
 			}
 			catch { return false; }
-
+			
 			using var h = Api.CreateFile(path, 0, Api.FILE_SHARE_READ | Api.FILE_SHARE_WRITE, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
 			if (h.Is0) return false;
 			var query = new Api.STORAGE_PROPERTY_QUERY { PropertyId = 7 };
@@ -223,9 +237,9 @@ partial class filesystem {
 			bool r = Api.DeviceIoControl(h, Api.IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(Api.STORAGE_PROPERTY_QUERY), &spt, sizeof(Api.DEVICE_SEEK_PENALTY_DESCRIPTOR), out _);
 			return r && spt.IncursSeekPenalty == 0;
 		}
-
+		
 		#region garbage
-
+		
 #if false //currently not used
 		/// <summary>
 		/// Gets HKEY_CLASSES_ROOT registry key of file type or protocol.
@@ -281,7 +295,7 @@ partial class filesystem {
 			return path;
 		}
 #endif
-
+		
 #if false
 	//this is ~300 times slower than filesystem.move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished.
 	public static void renameFileOrDirectory(string path, string newName)
@@ -420,7 +434,7 @@ partial class filesystem {
 
 	}
 #endif
-
+		
 		//rejected: unreliable. Uses registry, where many mimes are incorrect and nonconstant.
 		//	Use System.Web.MimeMapping.GetMimeMapping. It uses a hardcoded list, although too small.
 		///// <summary>
@@ -438,7 +452,7 @@ partial class filesystem {
 		//public static bool getMimeContentType(string file, out string contentType, bool canAnalyseData = false)
 		//{
 		//	if(file.Ends(".cur", true)) { contentType = "image/x-icon"; return true; } //registered without MIME or with text/plain
-
+		
 		//	int hr = Api.FindMimeFromData(default, file, null, 0, null, 0, out contentType, 0);
 		//	if(hr != 0 && canAnalyseData) {
 		//		file = pathname.normalize(file);
@@ -453,7 +467,7 @@ partial class filesystem {
 		//	//	In MSDN it is documented incorrectly: "should be freed with the operator delete function".
 		//	//	To discover it, call HeapSize(GetProcessHeap) before and after CoTaskMemFree. It returns -1 when called after.
 		//}
-
+		
 		#endregion
 	}
 }

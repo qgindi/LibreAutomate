@@ -40,6 +40,7 @@ uid: menu_commands
     - Cut
     - Copy
     - Paste
+    - Paste as link
     - Cancel Cut/Copy
     - Copy relative path  
       Path in this workspace (in the Files list), like "\Folder\File.cs".

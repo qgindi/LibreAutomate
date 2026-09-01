@@ -45,7 +45,8 @@ Run script "Au docs".
 	Don't upload now.
 	It also runs other scripts that create files for local docs.
 
-Create database for AI. To find the script: main toolbar > "Docs" menu. Also the "Au docs" script prints the link.
+Create database for AI.
+	The "Au docs" script prints the script link. Click the link, or use main toolbar > "Docs" menu.
 
 May need to update some info in README.md for github. Eg the screenshot and "how to build".
 	When an image updated, github still shows the old cached. Workaround: in the image link append #x and change x for each image version. If using CloudFlare (currently not): before run script "Purge Cloudflare CDN cache".
@@ -63,7 +64,7 @@ Run script "Create LA setup files.cs".
 Scan the setup file at virustotal.com. Either manually, or run script "Virustotal false positives.cs" (it also runs once/day).
 	The create-setup script also creates file vt-1.zip. Sometimes scan it too.
 	Never mind if there are 1-2 false positives from less known AV.
-	When creating setup, I scanned it often. Randomly was Microsoft FP. Try to change something, eg togge `#define USE_RESTARTMANAGER` in Util.cs.
+	When creating setup, I scanned it often. Randomly was Microsoft FP. Try to change something, eg change a string or toggle `#define USE_RESTARTMANAGER` in Util.cs.
 
 Github commit all and push. The message could be like v1.2.3.
 	Note: do it now. Need for upload to GitHub. Also uploads the "changes" doc.

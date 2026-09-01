@@ -997,7 +997,7 @@ public static partial class filesystem {
 			if (ec == 0) {
 				//notify shell. Else, if it was open in Explorer, it shows an error message box.
 				//Info: .NET does not notify; SHFileOperation does.
-				ShellNotify_(Api.SHCNE_RMDIR, path);
+				more.notifyShell(SCNEvent.RMDIR, path);
 				return true;
 			}
 			if (!canFail) {
@@ -1163,12 +1163,6 @@ public static partial class filesystem {
 			}
 		}
 		return true;
-	}
-	
-	internal static void ShellNotify_(uint @event, string path, string path2 = null) {
-		//ThreadPool.QueueUserWorkItem(_ => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2)); //no, this process may end soon
-		Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2);
-		//TODO3: test speed. If slow, use threadpool and the process exit event.
 	}
 	
 	/// <summary>
@@ -1454,7 +1448,7 @@ public static partial class filesystem {
 		string es = null;
 		if (exists(file, true).File) {
 			if (!Api.ReplaceFile(file, temp, back, 6)) es = "save"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
-			else if (backup) ShellNotify_(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
+			else if (backup) more.notifyShell(SCNEvent.RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
 			else if (!Api.DeleteFile(back)) Debug_.PrintNativeError(); //maybe should wait/retry if failed, but never noticed
 		} else {
 			if (!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "create";

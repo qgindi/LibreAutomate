@@ -667,40 +667,6 @@ static unsafe partial class Api {
 	[DllImport("shell32.dll", EntryPoint = "#727")]
 	internal static extern int SHGetImageList(int iImageList, in Guid riid, out IntPtr ppvObj);
 	
-	internal const uint SHCNE_RENAMEITEM = 0x1;
-	internal const uint SHCNE_CREATE = 0x2;
-	internal const uint SHCNE_DELETE = 0x4;
-	internal const uint SHCNE_MKDIR = 0x8;
-	internal const uint SHCNE_RMDIR = 0x10;
-	internal const uint SHCNE_MEDIAINSERTED = 0x20;
-	internal const uint SHCNE_MEDIAREMOVED = 0x40;
-	internal const uint SHCNE_DRIVEREMOVED = 0x80;
-	internal const uint SHCNE_DRIVEADD = 0x100;
-	internal const uint SHCNE_NETSHARE = 0x200;
-	internal const uint SHCNE_NETUNSHARE = 0x400;
-	internal const uint SHCNE_ATTRIBUTES = 0x800;
-	internal const uint SHCNE_UPDATEDIR = 0x1000;
-	internal const uint SHCNE_UPDATEITEM = 0x2000;
-	internal const uint SHCNE_SERVERDISCONNECT = 0x4000;
-	internal const uint SHCNE_UPDATEIMAGE = 0x8000;
-	internal const uint SHCNE_DRIVEADDGUI = 0x10000;
-	internal const uint SHCNE_RENAMEFOLDER = 0x20000;
-	internal const uint SHCNE_FREESPACE = 0x40000;
-	internal const uint SHCNE_EXTENDED_EVENT = 0x4000000;
-	internal const uint SHCNE_ASSOCCHANGED = 0x8000000;
-	internal const uint SHCNE_DISKEVENTS = 0x2381F;
-	internal const uint SHCNE_GLOBALEVENTS = 0xC0581E0;
-	internal const uint SHCNE_ALLEVENTS = 0x7FFFFFFF;
-	internal const uint SHCNE_INTERRUPT = 0x80000000;
-	
-	internal const uint SHCNF_IDLIST = 0x0;
-	internal const uint SHCNF_DWORD = 0x3;
-	internal const uint SHCNF_PATH = 0x5;
-	internal const uint SHCNF_PRINTER = 0x6;
-	internal const uint SHCNF_FLUSH = 0x1000;
-	internal const uint SHCNF_FLUSHNOWAIT = 0x3000;
-	internal const uint SHCNF_NOTIFYRECURSIVE = 0x10000;
-	
 	[DllImport("shell32.dll")]
 	internal static extern void SHChangeNotify(uint wEventId, uint uFlags, string dwItem1, string dwItem2);
 	

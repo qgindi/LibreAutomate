@@ -22,7 +22,7 @@ static partial class App {
 	//[StackTraceHidden] //for netcoredbg. But ignored for entry point.
 	[DebuggerHidden] //for netcoredbg when debugging a miniProgram process. It finally would step into this.
 	static int Main(string[] args) {
-		if (Path.GetFileName(Environment.ProcessPath)[^5] is 'k' or 'K') //"Au.Task.exe"
+		if (Path.GetFileName(Environment.ProcessPath)[3] is 'T' or 't') //"Au.Task.exe" or "Au.Task-arm.exe"
 			return MiniProgram.Run(args);
 
 		return _Main1(args);

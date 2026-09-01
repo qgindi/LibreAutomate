@@ -88,7 +88,7 @@ public class ExplorerFolder {
 	/// Calls <see cref="GetFolderPath"/>.
 	/// </summary>
 	public override string ToString() => GetFolderPath();
-
+	
 	/// <summary>
 	/// Gets <c>IWebBrowser2</c> interface pointer.
 	/// </summary>
@@ -151,6 +151,55 @@ public class ExplorerFolder {
 	}
 	
 	/// <summary>
+	/// Selects a single item.
+	/// </summary>
+	/// <param name="item">Filename (like <c>"example.txt"</c>) or full path.</param>
+	/// <returns><c>false</c> if failed.</returns>
+	/// <remarks>
+	/// Deselects other items. Makes the item visible (scrolls if need) and focused.
+	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// ExplorerFolder.Of(wnd.find(0, cn: "CabinetWClass")).Select(item);
+	/// ]]></code>
+	/// </example>
+	public bool Select(string item) {
+		const int SVSI_SELECT = 1;
+		const int SVSI_DESELECTOTHERS = 4;
+		const int SVSI_FOCUSED = 16;
+		const int SVSI_ENSUREVISIBLE = 8;
+		
+		if (item.NE()) throw new ArgumentException();
+		if (_b.Document is api.ShellFolderView doc) {
+			bool fullPath = pathname.isFullPath(item);
+			for (int j = 0; ++j <= 10;) { //wait until succeeds
+				var items = doc.Folder.Items();
+				int count = items.Count;
+				for (int i = 0; i < count; i++) {
+					var fi = items.Item(i);
+					string s1 = fi.Path;
+					if (!fullPath) s1 = pathname.getName(s1);
+					if (s1.Eqi(item)) {
+						_w.ActivateL(true);
+						doc.SelectItem(fi, SVSI_SELECT | SVSI_DESELECTOTHERS | SVSI_FOCUSED | SVSI_ENSUREVISIBLE);
+						return true;
+					}
+				}
+				if (j == 1) { //if just now created the file, let shell update faster
+					string path = null;
+					if (fullPath) path = item;
+					else if (GetFolderPath() is string fp && !fp.Starts(":")) path = pathname.combine(fp, item);
+					if (path != null && filesystem.exists(path)) {
+						filesystem.more.notifyShell(SCNEvent.CREATE, path, flags: SCNFlags.SHCNF_FLUSH);
+					}
+				}
+				Thread.Sleep(j * 20);
+			}
+		}
+		return false;
+	}
+	
+	/// <summary>
 	/// Opens a folder in this window/tab.
 	/// </summary>
 	/// <param name="folder">Folder path or <c>":: ITEMIDLIST"</c>. Or <c>":back"</c>, <c>":forward"</c>, <c>":up"</c>.</param>
@@ -172,42 +221,49 @@ public class ExplorerFolder {
 	/// Adds new tab in a folder window.
 	/// </summary>
 	/// <param name="w">A folder window.</param>
-	/// <param name="folder">If not null, calls <see cref="Open"/>.</param>
-	/// <returns><see cref="ExplorerFolder"/> for the new tab.</returns>
+	/// <param name="folder">If not <c>null</c>, calls <see cref="Open"/>.</param>
+	/// <returns><see cref="ExplorerFolder"/> of the new tab.</returns>
 	/// <exception cref="Exception">Failed.</exception>
 	/// <remarks>
-	/// To create new tab, activates the window and sends keys <c>Ctrl+T</c>.
+	/// This method may stop working after a windows update. Because there is no Windows API, it uses undocumented UI element names (they may change).
 	/// </remarks>
 	public static ExplorerFolder NewTab(wnd w, string folder = null) {
 		_ThrowIfNoMultipleTabs();
-		w.Activate();
 		var c1 = w.Child(cn: "ShellTabWindowClass");
+		
+#if true
+		c1.Send(Api.WM_COMMAND, 0xA21B);
+		//Bad: undocumented, found only in https://stackoverflow.com/a/78502949/26641797
+		//Good: don't need to activate window.
+		//Good: don't need to send keys. Doesn't conflict with global hotkeys of other apps.
+		//Same: async too. Need to wait.
+#else
+		w.Activate();
 		keys.send("Ctrl+T");
+#endif
+		
 		30.ms();
 		wait.until(5, () => w.Child(cn: "ShellTabWindowClass") != c1);
 		
 		var r = ExplorerFolder.Of(w);
-		if (folder != null) r.Open(@"C:\Test");
+		if (folder != null) r.Open(folder);
 		return r;
-		
-		//Alternative.
-		//	Bad: undocumented, found only in https://stackoverflow.com/a/78502949/26641797
-		//	Good: don't need to activate window.
-		//	Same: async too. Need to wait.
-		//c1.Send(api.WM_COMMAND, 0xA21B);
 	}
 	
 	/// <summary>
 	/// Makes this tab visible.
 	/// </summary>
 	/// <exception cref="Exception">Failed.</exception>
+	/// <remarks>
+	/// This method may stop working after a windows update. Because there is no Windows API, it uses undocumented UI element names (they may change).
+	/// </remarks>
 	public void SwitchToTab() {
 		_ThrowIfNoMultipleTabs();
 		var s = _cTab.Name;
 		var c = _w.ChildFast("", "Microsoft.UI.Content.DesktopChildSiteBridge");
 		Debug_.PrintIf(c.Is0);
 		if (c.Is0) c = _w;
-		var a = c.Elm["PAGETAB", s].FindAll();
+		var a = c.Elm["PAGETAB", s, flags: EFFlags.UIA].FindAll();
 		if (a.Length == 0) throw new AuException();
 		if (a.Length == 1) {
 			a[0].Invoke();
@@ -246,6 +302,14 @@ public class ExplorerFolder {
 		[ComImport, Guid("29EC8E6C-46D3-411f-BAAA-611A6C9CAC66"), InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
 		internal interface ShellFolderView {
 			FolderItems SelectedItems();
+			void SelectItem(object item, int flags);
+			Folder Folder { get; }
+		}
+		
+		[ComImport, Guid("bbcbde60-c3ff-11ce-8350-444553540000"), InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+		internal interface Folder {
+			FolderItems Items();
+			FolderItem ParseName(string bName);
 		}
 		
 		[ComImport, Guid("744129E0-CBE5-11CE-8350-444553540000"), InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
