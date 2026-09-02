@@ -130,8 +130,12 @@ public struct WndSavedRect {
 	/// <param name="saved">String created by <see cref="ToString"/>.</param>
 	/// <param name="save">If not <c>null</c>, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
 	/// <exception cref="InvalidOperationException">Window is loaded.</exception>
+	/// <remarks>
+	/// In WPF preview mode this method does nothing; returns <c>false</c>.
+	/// </remarks>
 	public static bool Restore(System.Windows.Window w, string saved, Action<string> save = null) {
 		if (w.IsLoaded) throw new InvalidOperationException("Window is loaded.");
+		if (script.isWpfPreview) return false;
 		bool ret = FromString(saved, out var v);
 		if (ret) {
 			var r = v.NormalizeRect();

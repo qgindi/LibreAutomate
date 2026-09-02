@@ -90,11 +90,11 @@ static class CompileRun {
 		bool ok = Compiler.Compile(CCReason.WpfPreview, out var r, f, projFolder, canCompile: canCompile);
 		if (!ok) return;
 		
-		int pid = App.Tasks.RunCompiled(f, r, new string[] { "WPF_PREVIEW", s_wpfPreview.pid.ToS(), s_wpfPreview.time.ToS() });
+		int pid = App.Tasks.RunCompiled(f, r, null, wpfPreview: s_wpfPreview ??= new(0, 0));
 		Api.GetSystemTimeAsFileTime(out long time);
-		s_wpfPreview = (pid, time);
+		s_wpfPreview = new(pid, time);
 	}
-	static (int pid, long time) s_wpfPreview;
+	static script.WpfPreviewData_ s_wpfPreview;
 	
 	static void _OnRunClassFile(FileNode f, FileNode projFolder) {
 		if (!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
@@ -433,8 +433,10 @@ class RunningTasks {
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
 	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	/// <param name="debugAttach">Will attach the debugger.</param>
+	/// <param name="wpfPreview">Used when called by <c>RunWpfPreview</c>.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
-		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false, Func<int, bool> debugAttach = null) {
+		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false,
+		Func<int, bool> debugAttach = null, script.WpfPreviewData_ wpfPreview = null) {
 		
 		g1:
 		if (!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
@@ -502,7 +504,7 @@ class RunningTasks {
 		
 		int pid = 0; WaitHandle hProcess = null;
 		try {
-			(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, exeProgram, runFromEditor, f.Id, debugAttach, r);
+			(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName, exeProgram, runFromEditor, f.Id, debugAttach, wpfPreview, r);
 			if (pid == 0) return 0;
 		}
 		catch (Exception ex) {
@@ -532,7 +534,7 @@ class RunningTasks {
 	/// Returns (processId, processHandle). Throws if failed. Returns 0 if failed to attach debugger.
 	/// Supports reenter, eg when waiting for UAC consent dialog to close.
 	/// </summary>
-	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string argsString, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach, Compiler.CompResults cr) {
+	static unsafe (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string argsString, string wrPipeName, bool exeProgram, bool runFromEditor, uint idMain, Func<int, bool> debugAttach, script.WpfPreviewData_ wpfPreview, Compiler.CompResults cr) {
 		(int pid, WaitHandle hProcess) r;
 		string cwd;
 		using _Portable portable = default;
@@ -587,6 +589,7 @@ class RunningTasks {
 			p->miniFlags = flags;
 			p->MiniName = cr.name;
 			p->MiniDll = cr.file;
+			if (wpfPreview != null) p->wpfPreview = (true, wpfPreview.pid, wpfPreview.time);
 		}
 		
 		using EventWaitHandle event1 = new(false, EventResetMode.ManualReset, "Au.event.taskStart-" + pidString);

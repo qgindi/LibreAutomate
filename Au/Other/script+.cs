@@ -12,6 +12,7 @@ namespace Au {
 			public uint idMainFile;
 			public MPFlags_ miniFlags;
 			public EPFlags_ exeFlags;
+			public (bool use, int pid, long time) wpfPreview;
 			
 			record struct _OffsetLength(int offset, int length);
 			

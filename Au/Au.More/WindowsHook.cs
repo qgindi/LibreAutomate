@@ -28,6 +28,8 @@ namespace Au.More {
 		readonly int _hookType; //Api.WH_
 		readonly bool _ignoreAuInjected;
 		[ThreadStatic] static List<WindowsHook> t_antiGC;
+		
+		internal IntPtr Handle_ => _hh;
 
 		/// <summary>
 		/// Sets a low-level keyboard hook (<ms>WH_KEYBOARD_LL</ms>).

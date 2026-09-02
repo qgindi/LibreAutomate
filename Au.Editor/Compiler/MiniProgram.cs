@@ -23,6 +23,7 @@ static class MiniProgram { //don't rename. Must be "LA.MiniProgram.Run". Debugge
 			var p = k.Mem;
 			
 			assemblyPath = p->MiniDll;
+			if (p->wpfPreview.use) script.s_wpfPreviewData = new(p->wpfPreview.pid, p->wpfPreview.time);
 			var flags = p->miniFlags;
 			
 			if (!flags.Has(MPFlags_.MTA))

@@ -73,19 +73,10 @@ public static partial class script {
 	/// <summary>
 	/// Returns <c>true</c> if running in WPF preview mode.
 	/// </summary>
-	public static bool isWpfPreview {
-		get {
-			if (role != SRole.MiniProgram) return false;
-			var s = Environment.CommandLine;
-			//return s.Contains(" WPF_PREVIEW ") && s.RxIsMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$"); //slower JIT
-			return s.Contains(" WPF_PREVIEW ") && _IsWpfPreview(s);
-			
-			//[MethodImpl(MethodImplOptions.NoInlining)]
-			static bool _IsWpfPreview(string s) => s.RxIsMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$");
-			
-			//don't cache. It makes JIT slower. Now fast after JIT.
-		}
-	}
+	public static bool isWpfPreview => s_wpfPreviewData != null;
+	
+	internal record class WpfPreviewData_(int pid, long time);
+	internal static WpfPreviewData_ s_wpfPreviewData;
 	
 	#endregion
 	

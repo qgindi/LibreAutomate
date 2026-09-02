@@ -9,10 +9,11 @@ New cookbook recipes:
 - .
 
 Improved:
-- .
+- In WPF preview mode, methods like `wpfBuilder.WinSaved` are disabled.
 
 Fixed bugs:
-- 
+- The WPF preview window is activated if the screen has different DPI than the primary screen.
+- And more.
 
 ## Library
 

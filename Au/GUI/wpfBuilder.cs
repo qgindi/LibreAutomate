@@ -509,6 +509,7 @@ public class wpfBuilder {
 	/// Calls <see cref="WndSavedRect.Restore"/>.
 	/// Call this function before showing the window. Don't change location/size-related window properties after that.
 	/// If you use <see cref="WinSize"/>, call it before. It is used if size is still not saved. The same if you set window position or state.
+	/// In WPF preview mode this method does nothing.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[

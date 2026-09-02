@@ -88,8 +88,7 @@ Release NuGet package:
 	Run script "Create NuGet package.cs". It builds Au using a modified temp csproj, creates package and adds native dlls.
 	Upload to NuGet. The script prints links.
 
-Run script "Update version.txt.cs". It updates _\version.txt and uploads to the LA website.
-	CONSIDER: use `/repos/qgindi/LibreAutomate/releases/latest`. But: 1. still need version.txt for users of older LA; 2. GitHub rate limit 60 requests/hour/IP.
+Run script "Update version.txt.cs". It updates _\version.txt and uploads to the LA website. Need it for users of older LA; now using GitHub instead.
 
 ---------------------------------------------------------
 

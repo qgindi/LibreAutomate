@@ -173,14 +173,14 @@ public static class ExtWpf {
 		}
 		return default;
 	}
-
+	
 	/// <summary>
 	/// Sets <see cref="Visibility"/> = <c>Hidden</c> or <c>Visible</c>.
 	/// </summary>
 	internal static void Hide_(this UIElement t, bool hide) {
 		t.Visibility = hide ? Visibility.Hidden : Visibility.Visible;
 	}
-
+	
 	/// <summary>
 	/// Sets <see cref="Visibility"/> = <c>Collapsed</c> or <c>Visible</c>.
 	/// </summary>
@@ -205,7 +205,7 @@ public static class ExtWpf {
 	
 #if true
 	//TODO3: does not work if this is called in ctor and caller sets Title afterwards.
-	static unsafe void _Move(Window t, int x, int y, in RECT r, bool andSize) {
+	static unsafe void _SetStartupRectOrXY(Window t, int x, int y, in RECT r, bool andSize) {
 		var wstate = t.WindowState;
 		if (t.IsLoaded) {
 			var w = t.Hwnd();
@@ -221,24 +221,22 @@ public static class ExtWpf {
 			bool maxInactive = wstate is WindowState.Maximized && !t.ShowActivated;
 			if (maxInactive) t.WindowState = WindowState.Normal; //WPF would throw exception, although it's easy to create maximized inactive window with CreateWindowEx
 			
-			WindowsHook.ThreadCbt(k => {
+			var hook = WindowsHook.ThreadCbt(static k => {
 				if (k.code == HookData.CbtEvent.CREATEWND) {
 					var c = k.CreationInfo->lpcs;
 					if (!c->style.Has(WS.CHILD)) {
-						var name = c->Name;
-						if (name.Length > 25 && name.StartsWith("m8KFOuCJOUmjziONcXEi3A ")) {
+						if (ParseWindowStartupNameRectOrXY_(c->Name, out RECT r, k.hook.Handle_)) {
 							k.hook.Dispose();
 							
-							var s = name[23..].ToString();
-							if (name[^1] == ';') {
-								c->x = s.ToInt(0, out int e); c->y = s.ToInt(e);
-							} else if (RECT.TryParse(s, out var r)) {
+							if (r.right == int.MinValue) {
+								c->x = r.left; c->y = r.top;
+							} else {
 								c->x = r.left; c->y = r.top; c->cx = r.Width; c->cy = r.Height;
 							}
 						}
 					}
-				} else { //didn't detect the window? Because unhooks when detects.
-					Debug_.Print($"{k.code} {k.Hwnd}");
+				} else {
+					//Debug_.Print($"{k.code} {k.Hwnd}");
 					//Debug_.PrintIf(k.code != HookData.CbtEvent.SETFOCUS, $"{k.code} {k.Hwnd}"); //sometimes SETFOCUS before CREATEWND, and it is bad
 				}
 				return false;
@@ -253,7 +251,7 @@ public static class ExtWpf {
 			
 			//temporarily change Title. I didn't find other ways to recognize the window in the hook proc. Also in title we can pass r or x y.
 			string title = t.Title, s;
-			if (andSize) s = "m8KFOuCJOUmjziONcXEi3A " + r.ToStringSimple(); else s = $"m8KFOuCJOUmjziONcXEi3A {x} {y};";
+			if (andSize) s = $"m8KFOuCJOUmjziONcXEi3A {hook.Handle_} {r.ToStringSimple()}"; else s = $"m8KFOuCJOUmjziONcXEi3A {hook.Handle_} {x} {y};";
 			t.Title = s;
 			//Need to restore Title ASAP.
 			//	In CBT hook cannot change window name in any way.
@@ -287,8 +285,25 @@ public static class ExtWpf {
 			}
 		}
 	}
+	
+	static internal bool ParseWindowStartupNameRectOrXY_(ReadOnlySpan<char> name, out RECT r, IntPtr hook = 0) {
+		r = default;
+		if (name.Starts("m8KFOuCJOUmjziONcXEi3A ")) {
+			name = name[23..];
+			if (name.ToInt_(out int hook2, out int end) && name.Eq(end, ' ') && (hook == 0 || hook2 == hook)) {
+				var s = name[++end..].ToString();
+				if (name[^1] == ';') {
+					r = RECT.FromLTRB(s.ToInt(0, out end), s.ToInt(end), int.MinValue, int.MinValue);
+				} else {
+					if (!RECT.TryParse(s, out r)) return false;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
 #elif true //does not change Title, but I don't like creating window handle before showing window
-	static void _Move(Window t, int x, int y, in RECT r, bool andSize) {
+	static void SetStartupRectOrXY_(Window t, int x, int y, in RECT r, bool andSize) {
 		var wstate=t.WindowState;
 		if(wstate!=WindowState.Normal) t.WindowState=WindowState.Normal;
 		if(t.IsLoaded) {
@@ -348,7 +363,7 @@ public static class ExtWpf {
 		}
 	}
 #else //does not work well when maximized, per-monitor DPI, etc
-	static void _Move(Window t, int x, int y, in RECT r, bool andSize) {
+	static void SetStartupRectOrXY_(Window t, int x, int y, in RECT r, bool andSize) {
 		var wstate = t.WindowState;
 		if (wstate != WindowState.Normal) t.WindowState = WindowState.Normal;
 		if (t.IsLoaded) {
@@ -410,7 +425,7 @@ public static class ExtWpf {
 	/// 
 	/// Else sets window location for normal state (not minimized/maximized). Temporarily changes <c>Title</c>. Clears <c>WindowStartupLocation</c>, <c>Left</c>, <c>Top</c>. Clears <c>ShowActivated</c> if minimized. Does not change <c>SizeToContent</c>.
 	/// </remarks>
-	public static void SetXY(this Window t, int x, int y) => _Move(t, x, y, default, false);
+	public static void SetXY(this Window t, int x, int y) => _SetStartupRectOrXY(t, x, y, default, false);
 	
 	/// <summary>
 	/// Sets window startup rectangle (location and size) before showing it first time. Also can move/resize already loaded window.
@@ -424,7 +439,7 @@ public static class ExtWpf {
 	/// 
 	/// Else sets window rectangle for normal state (not minimized/maximized). Temporarily changes <c>Title</c>. Clears <c>WindowStartupLocation</c>, <c>Left</c>, <c>Top</c>, <c>Width</c>, <c>Height</c>. Clears <c>ShowActivated</c> if minimized. Does not change <c>SizeToContent</c>.
 	/// </remarks>
-	public static void SetRect(this Window t, RECT r) => _Move(t, 0, 0, r, true);
+	public static void SetRect(this Window t, RECT r) => _SetStartupRectOrXY(t, 0, 0, r, true);
 	
 	/// <summary>
 	/// Inserts row and adjusts row indices of children that are in other rows.
@@ -643,18 +658,18 @@ public static class ExtWpf {
 	/// Shows the window in [preview mode](xref:code_editor).
 	/// </summary>
 	/// <param name="t"></param>
-	/// <exception cref="InvalidOperationException">Called not in preview mode.</exception>
+	/// <exception cref="InvalidOperationException">Called not in WPF preview mode.</exception>
 	/// <remarks>
 	/// Changes some window properties (owner window, location, activation, etc), terminates previous preview process, calls <see cref="Window.ShowDialog"/>. If closed, calls <see cref="Environment.Exit"/>.
 	/// 
 	/// If called not in preview mode, calls <see cref="Environment.Exit"/>.
 	/// </remarks>
 	public static void Preview(this Window t) {
+		if (script.s_wpfPreviewData is not { } wpd) throw new InvalidOperationException("Called not in WPF preview mode.");
 		wnd wMain = ScriptEditor.MainWindow(); if (wMain.Is0) Environment.Exit(0);
-		if (!Environment.CommandLine.RxMatch(@" WPF_PREVIEW (-?\d+) (-?\d+)$", out var m)) Environment.Exit(0);
-		int pid = m[1].Value.ToInt();
-		m[2].Value.ToInt(out long time);
+		int processId = wpd.pid;
 		
+		var prevTitle = t.Title;
 		t.Title = "WPF preview";
 		t.ShowActivated = false;
 		t.WindowStartupLocation = WindowStartupLocation.Manual;
@@ -662,21 +677,30 @@ public static class ExtWpf {
 		t.ShowInTaskbar = true;
 		t.Topmost = true;
 		
+		//move to App.Settings.wpfpreview_xy.
+		//	note: can't move after creating the window (in Loaded event handler), because of the WPF bug: on DPI change activates the window.
+		bool savedXY = (int)ScriptEditor.WndMsg_.Send(Api.WM_USER, 3) is int xy && xy != 0;
+		if (savedXY) {
+			var p = Math2.NintToPOINT(xy);
+			if (ExtWpf.ParseWindowStartupNameRectOrXY_(prevTitle, out RECT r1) && r1.right != int.MinValue) { //if was called WinRect etc, use the width and height
+				t.SetRect(new(p.x, p.y, r1.Width, r1.Height));
+			} else {
+				t.SetXY(p.x, p.y);
+			}
+		}
+		
 		t.Loaded += (_, _) => {
 			var w = t.Hwnd();
 			//unsafe { int BOOL = 1; Api.DwmSetWindowAttribute(w, Api.DWMWINDOWATTRIBUTE.DWMWA_TRANSITIONS_FORCEDISABLED, &BOOL, 0); } //does not disable the inflate/deflate animation; and don't need, with it even better
 			
-			//move to App.Settings.wpfpreview_xy or to the right side of the primary screen
-			if ((int)ScriptEditor.WndMsg_.Send(Api.WM_USER, 3) is int xy && xy != 0) {
-				var p = Math2.NintToPOINT(xy);
-				w.MoveL(p.x, p.y);
+			if (savedXY) {
 				w.EnsureInScreen();
 			} else {
-				w.MoveInScreen(^1, .5f);
+				w.MoveInScreen(^1, .5f); //move to the right side of the primary screen
 			}
 			
 			//_TerminatePrevious(); pid = 0; //async less flickering, especially when no animations, eg toolwindow
-			t.Dispatcher.InvokeAsync(() => { _TerminatePrevious(); pid = 0; }, DispatcherPriority.ApplicationIdle);
+			t.Dispatcher.InvokeAsync(() => { _TerminatePrevious(); processId = 0; }, DispatcherPriority.ApplicationIdle);
 			
 			//rejected. See the commented out workaround below. Instead set Topmost = true and ShowInTaskbar = true.
 			//	The workaround may not always work, eg for other windows.
@@ -716,10 +740,10 @@ public static class ExtWpf {
 		}
 		
 		void _TerminatePrevious() {
-			if (pid == 0) return;
-			if (process.getTimes(pid, out long tc, out _) && tc <= time) {
+			if (processId == 0) return;
+			if (process.getTimes(processId, out long tc, out _) && tc <= wpd.time) {
 				//print.it("terminate", pid, time, tc);
-				process.terminate(pid);
+				process.terminate(processId);
 			} else {
 				//print.it("bad");
 				//if previous task failed before calling this func, this wasn't called and therefore an even older task may be running. Close its window.
