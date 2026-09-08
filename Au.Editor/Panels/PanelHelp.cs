@@ -265,11 +265,11 @@ class PanelHelp {
 		AI.AiModel.ApiKeys = App.Settings.ai_ak;
 		var emModel = AI.AiModel.GetModel<AI.AiEmbeddingModel>(App.Settings.ai_modelEmbed, displayName: true);
 		if (emModel == null) {
-			_AiSettingsError($"Please go to Options > AI and select models for documentation search.");
+			_AiSettingsError($"Please go to Options > AI and select a model for documentation search.");
 			return;
 		}
-		var rrModel = AI.AiModel.GetModel<AI.AiRerankModel>(App.Settings.ai_modelRerank, displayName: true);
-		if (rrModel == null) AI.AiModel.RerankerModelWarning();
+		//var rrModel = AI.AiModel.GetModel<AI.AiRerankModel>(App.Settings.ai_modelRerank, displayName: true);
+		//if (rrModel == null) AI.AiModel.RerankerModelWarning();
 		
 		try {
 			_ctsAiSearch?.Cancel();
@@ -284,48 +284,37 @@ class PanelHelp {
 			using var osd = osdText.showText("Searching.\nClick to cancel.", -1, new(r1.right, r1.bottom), showMode: OsdMode.ThisThread);
 			osd.Clicked += (_, _) => { _ctsAiSearch?.Cancel(); };
 			
-			int takePlus = Math.Min(40, query.Count(c => c is <= ' ' or ',' or '.' or ';' or '?'));
-			int take = 15 + takePlus;
-			
 			var queryVector = await Task.Run(() => em.CreateEmbedding(query, cancel));
-			var topAll = em.GetTopMatches(queryVector, ems, rrModel == null ? 50 : 150);
-			if (topAll.Count == 0) return;
-			
-			Dictionary<string, (float score, bool summary)> dTop = [];
-			foreach (var v in topAll) {
-				var name = v.f.name;
-				bool isSum = name[0] == '+';
-				if (isSum) name = name[1..];
-				dTop.TryAdd(name, (v.score, isSum));
-			}
-			var aTop = dTop.Select(o => (name: o.Key, v: o.Value)).OrderByDescending(o => o.v.score).ToArray();
+			var aTop = em.GetTopDocs(queryVector, ems, 100);
 			
 			List<_Item> a = [];
-			if (rrModel != null) {
-				osd.Text = "Reranking.\nClick to cancel.";
-				await Task.Run(() => {
-					var names = aTop.Select(o => o.name).ToArray();
-					var texts = em.GetDocsTexts(names);
-					var headers = rrModel.GetHeaders();
-					var post = rrModel.GetPostData(query, texts);
-					var j = rrModel.Post(post, headers, cancel).Json();
-					//print.it(j.ToJsonString(new() { WriteIndented = true }));
-					var ar = rrModel.GetResults(j);
-					int i = 0;
-					float firstScore = 0;
-					foreach (var v in ar) {
-						if (i == 0) firstScore = v.score;
-						if (i++ > take || firstScore - v.score > .3f || v.score < .4f) break;
-						_FindAdd(names[v.index]);
-					}
-				});
-			} else {
-				float minScore = aTop[0].v.score * 0.8f - .1f;
+			int take = 30 + Math.Min(30, query.Count(c => c is <= ' ' or ',' or '.' or ';' or '?'));
+			//if (rrModel != null) {
+			//	take -= 10;
+			//	osd.Text = "Reranking.\nClick to cancel.";
+			//	await Task.Run(() => {
+			//		var names = aTop.Select(o => o.name).ToArray();
+			//		var texts = em.GetDocsTexts(names);
+			//		var headers = rrModel.GetHeaders();
+			//		var post = rrModel.GetPostData(query, texts);
+			//		var j = rrModel.Post(post, headers, cancel).Json();
+			//		//print.it(j.ToJsonString(new() { WriteIndented = true }));
+			//		var ar = rrModel.GetResults(j);
+			//		int i = 0;
+			//		float minScore = 0;
+			//		foreach (var v in ar) {
+			//			if (i == 0) minScore = v.score / 3;
+			//			if (i++ > take || v.score < minScore) break;
+			//			_FindAdd(names[v.index]);
+			//		}
+			//	});
+			//} else {
+				float minScore = aTop[0].score * 0.8f - .1f;
 				foreach (var v in aTop) {
-					if (v.v.score < minScore) break;
+					if (--take == 0 || (v.score < minScore && a.Count >= 20)) break;
 					_FindAdd(v.name);
 				}
-			}
+			//}
 			
 			void _FindAdd(string s) {
 				if (s.Starts("[cookbook]")) {

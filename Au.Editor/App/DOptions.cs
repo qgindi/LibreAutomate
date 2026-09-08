@@ -703,9 +703,9 @@ Example:
 		b.End();
 		
 		b.StartGrid().Columns(0, -1, -1);
-		b.R.xAddGroupSeparator("AI models for documentation search");
+		b.R.xAddGroupSeparator("AI model for documentation search");
 		b.R.Add("Embedding", out ComboBox modelEmbed).Tooltip("Embedding model is the main component of semantic search").Span(1);
-		b.R.Add("Reranker", out ComboBox modelRerank).Tooltip("Reranker model improves search results").Span(1);
+		//b.R.Add("Reranker", out ComboBox modelRerank).Tooltip("Reranker model improves search results").Span(1);
 		
 		//b.R.Add("Chat", out ComboBox modelChat).Span(1);
 		
@@ -756,7 +756,7 @@ Example:
 			});
 			
 			_InitModelCombo(modelEmbed, o => o is AI.AiEmbeddingModel { isCompact: false }, App.Settings.ai_modelEmbed);
-			_InitModelCombo(modelRerank, o => o is AI.AiRerankModel, App.Settings.ai_modelRerank, optional: true);
+			//_InitModelCombo(modelRerank, o => o is AI.AiRerankModel, App.Settings.ai_modelRerank, optional: true);
 			//_InitModelCombo(modelChat, o => o is AI.AiChatModel, App.Settings.ai_modelChat);
 			//_InitModelCombo(modelIconSearch, o => o is AI.AiEmbeddingModel { isCompact: true }, App.Settings.ai_modelIconSearch);
 			
@@ -777,7 +777,7 @@ Example:
 				}
 				
 				App.Settings.ai_modelEmbed = _GetModelCombo(modelEmbed);
-				App.Settings.ai_modelRerank = _GetModelCombo(modelRerank);
+				//App.Settings.ai_modelRerank = _GetModelCombo(modelRerank);
 				//App.Settings.ai_modelChat = _GetModelCombo(modelChat);
 				//App.Settings.ai_modelIconSearch = _GetModelCombo(modelIconSearch);
 				

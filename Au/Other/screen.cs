@@ -93,8 +93,8 @@ namespace Au {
 		/// <param name="lazy">
 		/// Create variable with <see cref="LazyFunc"/> that later will get screen handle.
 		/// Other ways to create lazy:
-		/// <br/>• use <see cref="wndFinder"/>. Example: <c>screen.of(new wndFinder("* Notepad"))</c>.
-		/// <br/>• use constructor. Example: <c>new screen(() => screen.of(wnd.findFast(cn: "Notepad")))</c>.
+		/// <br/>• use <see cref="wndFinder"/>. Example: <c>screen.of(new wndFinder("* window name"))</c>.
+		/// <br/>• use constructor. Example: <c>new screen(() => screen.of(wnd.findFast(cn: "classname")))</c>.
 		/// </param>
 		public static screen of(wnd w, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
 			=> lazy

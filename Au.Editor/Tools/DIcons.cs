@@ -435,7 +435,7 @@ Can be Pack.Icon, like Material.Folder.");
 			AI.EmInput input = new(png == null ? [query] : query.NE() ? [png] : [query, png]);
 			var queryVector = await Task.Run(() => em.CreateEmbedding(input, cancel));
 			var a = em.GetTopMatches(queryVector, ems, take: 300)
-				.Select(v => _a[_a.BinarySearch(new _Item(this, v.f.name))])
+				.Select(v => _a[_a.BinarySearch(new _Item(this, v.name))])
 				.ToArray();
 			
 			_tv.SetItems(a);

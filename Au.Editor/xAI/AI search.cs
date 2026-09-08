@@ -134,9 +134,11 @@ class Embeddings(AiEmbeddingModel model) {
 	
 	public static string VectorDir { get; } = folders2.LaDataRoaming + @"AI\Embedding"; //note: don't use the common app data folder
 	
+	public static string VectorFile(AiEmbeddingModel model, string suffix) => VectorDir + $@"\{model.GetType()}-{suffix}.bin";
+	
 	List<EmVector> _GetEmbeddings(string dbPath, bool compact, Func<(List<string> names, List<EmInput> datas)> getData, CancellationToken cancel, string filenameSuffix = null) {
 		_EmHash newHash = _Hash(dbPath), oldHash = default;
-		string emPath = VectorDir + $@"\{model.GetType()}-{pathname.getNameNoExt(dbPath)}{filenameSuffix}.bin";
+		string emPath = VectorFile(model, pathname.getNameNoExt(dbPath) + filenameSuffix);
 		var emFile = new _EmStorageFile(emPath);
 		List<EmVector> ems = null;
 		bool retried = false; gRetry:
@@ -346,15 +348,6 @@ class Embeddings(AiEmbeddingModel model) {
 	
 	#endregion
 	
-	public List<(EmVector f, float score)> GetTopMatches(float[] queryVector, List<EmVector> ems, int take) {
-		var a = ems
-			.Select(f => (f, score: CosineSimilarity(queryVector, f.vec)))
-			.OrderByDescending(x => x.score)
-			.Take(take)
-			.ToList();
-		return a;
-	}
-	
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static float CosineSimilarity(float[] query, Array saved) {
 		float dot = 0, normA = 0, normB = 0;
@@ -376,6 +369,32 @@ class Embeddings(AiEmbeddingModel model) {
 			break;
 		}
 		return dot / (MathF.Sqrt(normA) * MathF.Sqrt(normB));
+	}
+	
+	/// <summary>
+	/// From <i>ems</i> gets top <i>take</i> matches using cosine similarity, and returns names+scores.
+	/// </summary>
+	public (string name, float score)[] GetTopMatches(float[] queryVector, List<EmVector> ems, int take) {
+		var a = ems
+			.Select(f => (name: f.name, score: CosineSimilarity(queryVector, f.vec)))
+			.OrderByDescending(x => x.score)
+			.Take(take)
+			.ToArray();
+		return a;
+	}
+	
+	/// <summary>
+	/// From <i>ems</i> gets top <i>take</i> matches using cosine similarity, from summary names removes prefix "+", removes duplicates (full article and summary), and returns names+scores.
+	/// </summary>
+	public (string name, float score)[] GetTopDocs(float[] queryVector, List<EmVector> ems, int take) {
+		var a = ems
+			.Select(f => (name: f.name.TrimStart('+') /*names of summaries are like "+name"*/, score: CosineSimilarity(queryVector, f.vec)))
+			.OrderByDescending(x => x.score)
+			.Take(take)
+			.DistinctBy(o => o.name) //full or summary, which one has bigger score
+			.OrderByDescending(o => o.score)
+			.ToArray();
+		return a;
 	}
 }
 
@@ -474,7 +493,8 @@ file class _EmStorageFile(string file) {
 	}
 	
 	string _TryGetZipName(AiEmbeddingModel model, _EmHash hash) {
-		if (!(file.Ends("-icons.bin") && model.isCompact && model.GetType().Assembly == GetType().Assembly)) return null;
+		if (model.GetType().Assembly != GetType().Assembly) return null;
+		if (!((file.Ends("-icons.bin") && model.isCompact) || (model is ModelVoyageEmbed && file.Ends("-doc-ai.bin") && !model.isCompact))) return null;
 		
 		var md5 = new Hash.MD5Context();
 		md5.Add(hash.hash);

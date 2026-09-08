@@ -36,7 +36,7 @@ namespace Au;
 /// 	m["Three"] = o => print.it(o);
 /// 	m["Four"] = o => print.it(o);
 /// });
-/// m["notepad"] = o => run.itSafe(folders.System + "notepad.exe");
+/// m["x"] = o => run.itSafe(folders.System + "abc.exe");
 /// m.Show();
 /// ]]></code>
 /// </example>

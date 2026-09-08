@@ -254,7 +254,7 @@ namespace Au.Types {
 		//	Known workarounds:
 		//	1. Temporarily make the window non-topmost. But it fails for A and probably C. Fails always if this process is not admin.
 		//	2. Temporarily set partially transparent. But it is useful only for on-screen rect. Not useful for menus and toolbars. Fails if not admin. Fails with WPF windows.
-		//	3. Set window region. Too crazy. Tested, does not work with eg OSK, although works with eg Notepad.
+		//	3. Set window region. Too crazy. Tested, does not work with eg OSK.
 		//	4. Run tools in uiAccess processes. Too crazy and limited.
 		
 		internal bool TopmostWorkaround_ { get; set; }

@@ -707,7 +707,7 @@ public partial class keys {
 		}
 		//rejected: try to synchronize somehow. To work better with slow and badly synchronized apps.
 		//1. SendTimeout(WM_NULL). Although makes slower, usually does not make sync.
-		//2. Sleep if the process uses CPU eg >50% of time. Tooo slow, even with Notepad. Tried GetProcessTimes and QueryProcessCycleTime (precise).
+		//2. Sleep if the process uses CPU eg >50% of time. Tooo slow. Tried GetProcessTimes and QueryProcessCycleTime (precise).
 		//Eg UWP input processing is so slow and chaotic, impossible to sync.
 		//rejected: option to sleep 1 ms every n-th char (eg use float 0...1 or negative value). Nothing good.
 	}

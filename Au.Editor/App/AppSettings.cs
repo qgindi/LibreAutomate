@@ -42,6 +42,7 @@ record AppSettings : JSettings {
 		session.hotkeys ??= new();
 		(font_output ??= new()).Normalize("Consolas", 9);
 		(font_find ??= new()).Normalize("Consolas", 9);
+		if (ai_modelEmbed is "Voyage voyage-3.5") ai_modelEmbed = "Voyage voyage-4";
 	}
 
 	static ref string _NE(ref string s) {
@@ -170,7 +171,7 @@ record AppSettings : JSettings {
 
 	//AI
 	public readonly DictionaryI_<string> ai_ak = new();
-	public string ai_modelEmbed, ai_modelRerank/*, ai_modelChat*/;
+	public string ai_modelEmbed/*, ai_modelRerank*//*, ai_modelChat*/;
 	//public string ai_modelIconSearch;
 	public bool ai_mcp_print;
 

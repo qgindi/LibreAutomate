@@ -67,8 +67,8 @@ public abstract partial class MTBase {
 	/// </summary>
 	/// <value>Default: <see cref="toolbar"/> <c>true</c>, <see cref="popupMenu"/> with <i>name</i> <c>true</c>, <see cref="popupMenu"/> without <i>name</i> <c>false</c>.</value>
 	/// <remarks>
-	/// Gets path from code that contains a string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell or <c>@"\folder\script.cs"</c>.
-	/// Also supports code patterns like <c>folders.System + "notepad.exe"</c>, <c>folders.shell.RecycleBin</c>.
+	/// Gets path from code that contains a string like <c>@"c:\windows\system32\abc.exe"</c> or <c>@"%folders.System%\abc.exe"</c> or URL/shell or <c>@"\folder\script.cs"</c>.
+	/// Also supports code patterns like <c>folders.System + "abc.exe"</c>, <c>folders.shell.RecycleBin</c>.
 	/// 
 	/// If extracts path, also in the context menu adds item <b>Find file</b> which selects the file in Explorer or <b>Open script</b> which opens the script in editor.
 	/// </remarks>

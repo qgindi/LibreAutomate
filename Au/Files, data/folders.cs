@@ -855,7 +855,7 @@ namespace Au {
 		
 		/// <summary>
 		/// If string starts with a known/special folder path, gets folder name + relative path and returns <c>true</c>.
-		/// For example if string is <c>"C:\Windows\System32\notepad.exe"</c>, gets <c>"folders.System"</c> and <c>"notepad.exe"</c>.
+		/// For example if string is <c>"C:\Windows\System32\abc.exe"</c>, gets <c>"folders.System"</c> and <c>"abc.exe"</c>.
 		/// </summary>
 		/// <param name="path">Any string. Can be <c>null</c>. Case-insensitive. Supports <c>":: ITEMIDLIST"</c> (see <see cref="Pidl.ToHexString"/>).</param>
 		/// <param name="folder">Receives special folder string like <c>"folders.System"</c>.</param>
@@ -901,7 +901,7 @@ namespace Au {
 		
 		/// <summary>
 		/// If string starts with a known/special folder path, replaces that part with <c>%folders.FolderName%</c>. Else returns unchanged string.
-		/// For example if string is <c>"C:\Windows\System32\notepad.exe"</c>, returns <c>"%folders.System%\notepad.exe"</c>.
+		/// For example if string is <c>"C:\Windows\System32\abc.exe"</c>, returns <c>"%folders.System%\abc.exe"</c>.
 		/// </summary>
 		/// <param name="path">Any string. Can be <c>null</c>. Case-insensitive. Supports <c>":: ITEMIDLIST"</c> (see <see cref="Pidl.ToHexString"/>).</param>
 		public static string unexpandPath(string path) {

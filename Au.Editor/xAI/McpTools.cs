@@ -83,13 +83,13 @@ Names of other articles have a prefix:
 	
 	[Mcp("""
 Returns requested information about LibreAutomate API or IDE.
-Whenever you need information about LibreAutomate API or IDE, create one or more short queries and call this tool.
+Whenever you need information about LibreAutomate API or IDE, create one or several short queries and call this tool.
 This tool uses semantic search (AI embedding) to find the requested information.
 If this tool receives a list of queries (one per line), it processes them paralelley (much faster) and optimizes results.
 """)]
 	public string find_la_docs(
 		[Mcp("""
-One or more short queries for semantic search, one per line.
+One or several short queries for semantic search, one per line.
 IMPORTANT: each query must be focused on a **single** task or concept.
 Keyword lists are discouraged. Use meaningful phrases.
 Examples of good queries: "activate window", "send keys", "key names and syntax".
@@ -110,9 +110,7 @@ Example of a BAD query: "activate Chrome window send keys Ctrl+L LibreAutomate".
 		var lines = query.Lines(noEmpty: true);
 		var aResults = new List<(string name, string text)>[lines.Length];
 		
-		var emModel = AiModel.GetModel<AiEmbeddingModel>(App.Settings.ai_modelEmbed, displayName: true) ?? throw new AuException("Missing settings in LibreAutomate. Please go to Options > AI and select models for documentation search.");
-		var rrModel = AiModel.GetModel<AiRerankModel>(App.Settings.ai_modelRerank, displayName: true);
-		if (rrModel == null) AiModel.RerankerModelWarning();
+		var emModel = AiModel.GetModel<AiEmbeddingModel>(App.Settings.ai_modelEmbed, displayName: true) ?? throw new AuException("Missing settings in LibreAutomate. Please go to Options > AI and select a model for documentation search.");
 		
 		try {
 			var em = new Embeddings(emModel);
@@ -121,46 +119,18 @@ Example of a BAD query: "activate Chrome window send keys Ctrl+L LibreAutomate".
 			Parallel.For(0, lines.Length, new ParallelOptions { MaxDegreeOfParallelism = 7 }, i => _QueryLine(lines[i], aResults[i] = []));
 			
 			void _QueryLine(string query, List<(string name, string text)> results) {
-				int takePlus = Math.Min(20, query.Count(c => c is <= ' ' or ',' or '.' or ';' or '?'));
-				int take = 15 + takePlus;
-				
 				var queryVector = em.CreateEmbedding(query);
-				var topAll = em.GetTopMatches(queryVector, ems, rrModel == null ? 30 : 100);
-				if (topAll.Count == 0) return;
-				
-				Dictionary<string, (float score, bool summary)> dTop = [];
-				foreach (var v in topAll) {
-					var name = v.f.name;
-					bool isSum = name[0] == '+';
-					if (isSum) name = name[1..];
-					dTop.TryAdd(name, (v.score, isSum));
-				}
-				var aTop = dTop.Select(o => (name: o.Key, v: o.Value)).OrderByDescending(o => o.v.score).ToArray();
+				var aTop = em.GetTopDocs(queryVector, ems, 100);
 				
 				string[] names = aTop.Select(o => o.name).ToArray();
 				string[] texts = em.GetDocsTexts(names);
 				
-				if (rrModel != null) {
-					var headers = rrModel.GetHeaders();
-					var post = rrModel.GetPostData(query, texts);
-					var j = rrModel.Post(post, headers).Json();
-					//print.it(j.ToJsonString(new() { WriteIndented = true }));
-					var ar = rrModel.GetResults(j).ToArray();
-					float maxScore = ar[0].score, minScore = maxScore - (.3f + takePlus / 200f);
-					//print.it(take, maxScore, minScore, maxScore - minScore);
-					int i = 0;
-					foreach (var v in ar) {
-						if (i++ > take || v.score < minScore || v.score < .4f) break;
-						results.Add((names[v.index], texts[v.index]));
-						//print.it(v.score, names[v.index]);
-					}
-				} else {
-					int i = 0;
-					float minScore = aTop[0].v.score - (.2f + takePlus / 200f);
-					foreach (var v in aTop) {
-						if (v.v.score < minScore) break;
-						results.Add((v.name, texts[i++]));
-					}
+				int take = 30 + Math.Min(30, query.Count(c => c is <= ' ' or ',' or '.' or ';' or '?'));
+				int i = 0;
+				float minScore = aTop[0].score * 0.8f - .1f;
+				foreach (var v in aTop) {
+					if (--take == 0 || (v.score < minScore && i >= 20)) break;
+					results.Add((v.name, texts[i++]));
 				}
 			}
 		}

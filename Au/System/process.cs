@@ -11,7 +11,7 @@ namespace Au {
 	/// <seealso cref="Process"/>
 	public static unsafe class process {
 		/// <summary>
-		/// Gets process executable file name (like <c>"notepad.exe"</c>) or full path.
+		/// Gets process executable file name (like <c>"abc.exe"</c>) or full path.
 		/// </summary>
 		/// <returns><c>null</c> if failed.</returns>
 		/// <param name="processId">Process id.</param>
@@ -240,7 +240,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>Array containing zero or more elements.</returns>
 		/// <param name="processName">
-		/// Process executable file name, like <c>"notepad.exe"</c>.
+		/// Process executable file name, like <c>"abc.exe"</c>.
 		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="fullPath">
@@ -488,7 +488,7 @@ namespace Au {
 		/// </summary>
 		/// <returns>The number of successfully terminated processes.</returns>
 		/// <param name="processName">
-		/// Process executable file name (like <c>"notepad.exe"</c>) or full path.
+		/// Process executable file name (like <c>"abc.exe"</c>) or full path.
 		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="allSessions">Processes of any user session. If <c>false</c> (default), only processes of this user session.</param>
@@ -530,7 +530,7 @@ namespace Au {
 		/// <returns>The number of successfully suspended/resumed processes.</returns>
 		/// <param name="suspend"><c>true</c> suspend, <c>false</c> resume.</param>
 		/// <param name="processName">
-		/// Process executable file name (like <c>"notepad.exe"</c>) or full path.
+		/// Process executable file name (like <c>"abc.exe"</c>) or full path.
 		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// </param>
 		/// <param name="allSessions">Processes of any user session. If <c>false</c> (default), only processes of this user session.</param>
@@ -582,7 +582,7 @@ namespace Au {
 		/// </returns>
 		/// <param name="started">Trigger events: <c>true</c> - started, <c>false</c> - ended, <c>null</c> (default) - both.</param>
 		/// <param name="processName">
-		/// Process executable file name, like <c>"notepad.exe"</c>.
+		/// Process executable file name, like <c>"abc.exe"</c>.
 		/// String format: [wildcard expression](xref:wildcard_expression).
 		/// <c>null</c> matches all.
 		/// </param>
@@ -599,8 +599,8 @@ namespace Au {
 		/// 	print.it(v);
 		/// }
 		/// 
-		/// //started notepad processes in current user session
-		/// foreach (var v in process.triggers(started: <c>true</c>, "notepad.exe", ofThisSession: true)) {
+		/// //started mspaint.exe processes in current user session
+		/// foreach (var v in process.triggers(started: true, "mspaint.exe", ofThisSession: true)) {
 		/// 	print.it(v);
 		/// }
 		/// ]]></code>
@@ -879,7 +879,7 @@ namespace Au {
 
 namespace Au.Types {
 	/// <summary>
-	/// Contains process name (like <c>"notepad.exe"</c>), id and user session id.
+	/// Contains process name (like <c>"abc.exe"</c>), id and user session id.
 	/// </summary>
 	public record struct ProcessInfo(string Name, int Id, int SessionId);
 	//use record to auto-implement ==, eg for code like var a=process.allProcesses(); 5.s(); print.it(process.allProcesses().Except(a));

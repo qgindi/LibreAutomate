@@ -715,18 +715,18 @@ namespace Au {
 		}
 
 		/// <summary>
-		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%folders.System%\notepad.exe"</c> or URL/shell.
-		/// Also supports code patterns like <c>folders.System + "notepad.exe"</c> or <c>folders.shell.RecycleBin</c>.
+		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\abc.exe"</c> or <c>@"%folders.System%\abc.exe"</c> or URL/shell.
+		/// Also supports code patterns like <c>folders.System + "abc.exe"</c> or <c>folders.shell.RecycleBin</c>.
 		/// </summary>
 		/// <returns><c>null</c> if no such string/pattern.</returns>
 		/// <param name="mi"></param>
 		/// <param name="cs">The string is <c>.cs</c> filename or relative path, but not full path.</param>
 		internal static string ExtractIconPathFromCode_(MethodInfo mi, out bool cs) {
-			//support code pattern like 'folders.System + "notepad.exe"'.
-			//	Opcodes: call(folders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
+			//support code pattern like 'folders.System + "abc.exe"'.
+			//	Opcodes: call(folders.System), ldstr("abc.exe"), FolderPath.op_Addition.
 			//also code pattern like 'folders.System' or 'folders.shell.RecycleBin'.
 			//	Opcodes: call(folders.System), FolderPath.op_Implicit(FolderPath to string).
-			//also code pattern like 'run.itSafe("notepad.exe")'.
+			//also code pattern like 'run.itSafe("abc.exe")'.
 			//print.it(mi.Name);
 
 			cs = false;
@@ -748,7 +748,7 @@ namespace Au {
 						//print.it(i, patternStart);
 						if (i == patternStart + 1) filename = s;
 						else {
-							if (pathname.isFullPathExpand(ref s)) return s; //eg run.it(@"%folders.System%\notepad.exe");
+							if (pathname.isFullPathExpand(ref s)) return s; //eg run.it(@"%folders.System%\abc.exe");
 							if (pathname.IsShellPathOrUrl_(s)) return s;
 							filename = null; patternStart = -1;
 							if (i == 1) filename2 = s;

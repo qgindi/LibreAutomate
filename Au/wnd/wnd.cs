@@ -25,7 +25,7 @@ namespace Au;
 /// </remarks>
 /// <example>
 /// <code><![CDATA[
-/// wnd w = wnd.find("* - Notepad");
+/// wnd w = wnd.find("* Properties");
 /// if(w.Is0) { print.it("window not found"); return; }
 /// w.Activate();
 /// wnd c = w.Child(cn: "Button");
@@ -2405,7 +2405,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// var w = wnd.find(0, "*Notepad", "Notepad");
+	/// var w = wnd.find(0, "*Example");
 	/// w.TaskbarButton.Delete();
 	/// ]]></code>
 	/// </example>
@@ -2797,7 +2797,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	public string NameWinforms => WinformsControlNames.GetSingleControlName(this);
 	
 	/// <summary>
-	/// Gets filename of process executable file, like <c>"notepad.exe"</c>.
+	/// Gets filename of process executable file, like <c>"abc.exe"</c>.
 	/// </summary>
 	/// <returns><c>null</c> if failed.</returns>
 	/// <remarks>
@@ -2810,7 +2810,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// If window program name matches one of strings in <i>programNames</i>, returns 1-based string index. Else returns 0.
 	/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="lastError"/>.
 	/// </summary>
-	/// <param name="programNames">Program names, like <c>"notepad.exe"</c>. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be <c>null</c>.</param>
+	/// <param name="programNames">Program names, like <c>"abc.exe"</c>. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be <c>null</c>.</param>
 	public int ProgramNameIs(params ReadOnlySpan<string> programNames) {
 		string s = ProgramName; if (s == null) return 0;
 		return s.Like(true, programNames);
@@ -2860,8 +2860,8 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// <seealso cref="WaitForClosed"/>
 	/// <example>
 	/// <code><![CDATA[
-	/// //close all Notepad windows
-	/// foreach (var w in wnd.findAll("* Notepad", "Notepad")) w.Close();
+	/// //close all Properties windows
+	/// foreach (var w in wnd.findAll("* Properties")) w.Close();
 	/// ]]></code>
 	/// </example>
 	public bool Close(bool noWait = false, bool useXButton = false) {
@@ -2934,7 +2934,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	//	return (d >= milliseconds * 1000L);
 	//}
 	
-	//Rarely used. It is easy, and there is example in Close() help: foreach (var w in wnd.findAll("* Notepad", "Notepad")) w.Close();
+	//Rarely used. It is easy, and there is example in Close() help: foreach (var w in wnd.findAll("* X")) w.Close();
 	///// <summary>
 	///// Closes all matching windows.
 	///// Calls <see cref="FindAll"/>. All parameters etc are the same. Then calls <see cref="Close"/> for each found window.

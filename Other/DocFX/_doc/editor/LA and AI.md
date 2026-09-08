@@ -10,15 +10,20 @@ This article is about LA features that use AI.
 
 In the **Help** panel you can use AI-based semantic search to find LA documentation articles. Type a short meaningful search phrase or question in the search field, and press `Enter` or click the **AI search** button. The panel will display a list of LA documentation articles that contain the requested information. The results are much better than a keyword search. The list is ordered by semantic similarity to the search phrase.
 
-The list of results often is not perfect. At the top are the best matches. Items at the bottom may even be not relevant to the search phrase. The tool does not uses slow and expensive AI LLM chat models. It uses AI embedding and reranking models. Normally it takes about 2 s.
+The list of results often is not perfect. At the top are the best matches. Items at the bottom may even be not relevant to the search phrase. The tool does not uses slow and expensive AI LLM chat models. It uses an AI embedding model. Normally it takes less than 1 s.
 
 For best results, use a short and meaningful phrase or question, like `paste text` or `how to copy selected text into a variable`. It should contain a *single* task, action or concept.
 
-This feature uses AI models from Voyage or Gemini, accessed via web API. They will cost you a few cents per month, depending on usage. Create an account on that AI company's website (Voyage, Google GCP), and generate an API key there. In LibreAutomate, in **Options > AI** enter the API key and select AI models you want to use.
+This feature uses AI models from Voyage, Gemini or Mistral, accessed via web API. They will cost you a few cents per month, depending on usage. Create an account on that AI company's website (Voyage, Google GCP, Mistral), and generate an API key there. In LibreAutomate, in **Options > AI** enter the API key and select an AI model you want to use.
 
-The reranker model is optional, but recommended. It improves the results.
+LibreAutomate uses AI models that worked best when testing. But it also allows users to add other models to the list; ask about it in the LA forum or in the Discussions of the GitHub repository.
 
-LibreAutomate uses AI models that worked best when testing. But it also allows users to add other models to the list; ask about it in the LA forum or in the Dicsussions of the GitHub repository.
+The tested AI embedding models are listed below, from best to worst (for LA documentation search):
+1. Voyage `voyage-4`, Gemini `gemini-embedding-001`, Voyage `voyage-4-large`
+1. Gemini `gemini-embedding-2`
+1. Voyage `voyage-4-lite`, Mistral `codestral-embed`, Mistral `mistral-embed`, Voyage `voyage-3.5`
+1. Cohere `embed-v4.0`, Voyage `voyage-code-4`
+1. OpenAI `text-embedding-3-small`
 
 ### Improving AI chat answers and generated code
 

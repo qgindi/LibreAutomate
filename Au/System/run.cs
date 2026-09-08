@@ -13,11 +13,11 @@ namespace Au {
 		/// Examples:
 		/// <br/>• <c>@"C:\file.txt"</c>
 		/// <br/>• <c>folders.Documents</c>
-		/// <br/>• <c>folders.System + "notepad.exe"</c>
-		/// <br/>• <c>@"%folders.System%\notepad.exe"</c>
+		/// <br/>• <c>folders.System + "osk.exe"</c>
+		/// <br/>• <c>@"%folders.System%\osk.exe"</c>
 		/// <br/>• <c>@"%TMP%\file.txt"</c>
-		/// <br/>• <c>"notepad.exe"</c>
-		/// <br/>• <c>@"..\folder\x.exe"</c>
+		/// <br/>• <c>"osk.exe"</c>
+		/// <br/>• <c>@"..\folder\abc.exe"</c>
 		/// <br/>• <c>"http://a.b.c/d"</c>
 		/// <br/>• <c>"file:///path"</c>
 		/// <br/>• <c>"mailto:a@b.c"</c>
@@ -42,9 +42,9 @@ namespace Au {
 		/// Similar to <see cref="Process.Start(string, string)"/>.
 		/// 
 		/// The <i>file</i> parameter can be:
-		/// - Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>folders.Documents</c>, <c>folders.System + "notepad.exe"</c>, <c>@"%folders.System%\notepad.exe"</c>.
-		/// - Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="filesystem.searchPath"/>.
-		/// - Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+		/// - Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>folders.Documents</c>, <c>folders.System + "osk.exe"</c>, <c>@"%folders.System%\osk.exe"</c>.
+		/// - Filename of a file or directory, like <c>"abc.exe"</c>. The function calls <see cref="filesystem.searchPath"/>.
+		/// - Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"abc.exe"</c>, <c>@"subfolder\abc.exe"</c>, <c>@".\subfolder\abc.exe"</c>, <c>@"..\another folder\abc.exe"</c>.
 		/// - URL. Examples: <c>"https://www.example.com"</c>, <c>"file:///path"</c>.
 		/// - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
 		/// - Shell object's <c>ITEMIDLIST</c> like <c>":: ITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="folders.shell"/>. Can be used to open virtual folders and items like Control Panel.
@@ -62,15 +62,15 @@ namespace Au {
 		/// <seealso cref="wnd.findOrRun"/>
 		/// <seealso cref="wnd.runAndFind"/>
 		/// <example>
-		/// Run Notepad and wait for an active Notepad window.
+		/// Run mspaint.exe and wait for an active Paint window.
 		/// <code><![CDATA[
-		/// run.it("notepad.exe");
+		/// run.it("mspaint.exe");
 		/// 1.s();
-		/// wnd w = wnd.wait(10, true, "*- Notepad", "Notepad");
+		/// wnd w = wnd.wait(10, true, "*- Paint");
 		/// ]]></code>
-		/// Run Notepad or activate a Notepad window.
+		/// Run mspaint.exe or activate a Paint window.
 		/// <code><![CDATA[
-		/// wnd w = wnd.findOrRun("*- Notepad", run: () => run.it("notepad.exe"));
+		/// wnd w = wnd.findOrRun("*- Paint", run: () => run.it("mspaint.exe"));
 		/// ]]></code>
 		/// Run File Explorer and wait for new folder window. Ignores matching windows that already existed.
 		/// <code><![CDATA[
@@ -257,9 +257,9 @@ namespace Au {
 		/// </summary>
 		/// <param name="exe">
 		/// Path or name of an <c>.exe</c> or <c>.bat</c> file. Can be:
-		/// <br/>• Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>folders.System + "x.exe"</c>, <c>@"%folders.System%\x.exe"</c>.
-		/// <br/>• Filename, like <c>"x.exe"</c>. This function calls <see cref="filesystem.searchPath"/>.
-		/// <br/>• Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
+		/// <br/>• Full path. Examples: <c>@"C:\folder\abc.exe"</c>, <c>folders.System + "abc.exe"</c>, <c>@"%folders.System%\abc.exe"</c>.
+		/// <br/>• Filename, like <c>"abc.exe"</c>. This function calls <see cref="filesystem.searchPath"/>.
+		/// <br/>• Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"abc.exe"</c>, <c>@"subfolder\abc.exe"</c>, <c>@".\subfolder\abc.exe"</c>, <c>@"..\folder\abc.exe"</c>.
 		/// 
 		/// <br/>Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="pathname.expand"/>.
 		/// </param>
@@ -534,9 +534,9 @@ namespace Au.Types {
 		/// </summary>
 		/// <value><c>null</c> if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.</value>
 		/// <example>
-		/// This code does the same as <c>run.it(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
+		/// This code does the same as <c>run.it(@"mspaint.exe", flags: SRFlags.WaitForExit);</c>
 		/// <code><![CDATA[
-		/// var r = run.it(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+		/// var r = run.it(@"mspaint.exe", flags: SRFlags.NeedProcessHandle);
 		/// using(var h = r.ProcessHandle) h?.WaitOne();
 		/// ]]></code>
 		/// </example>

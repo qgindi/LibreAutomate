@@ -16,8 +16,8 @@ namespace Au.More {
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (<c>width*height*4</c> bytes).</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// var file = folders.Temp + "notepad.png";
-		/// wnd w = wnd.find("* Notepad");
+		/// var file = folders.Temp + "paint.png";
+		/// wnd w = wnd.find("* Paint");
 		/// w.GetRect(out var r, true);
 		/// using(var b = CaptureScreen.Image(r)) { b.Save(file); }
 		/// run.it(file);

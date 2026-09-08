@@ -17,16 +17,18 @@ abstract record class AiModel(string api, string url, string model, AMLimits lim
 	
 	static AiModel() {
 		Models = [
-//			new ModelOpenaiEmbed(), //don't add, because other models are much better
-//#if ADD_ALL_COMPACT_EMBEDDING_MODELS
-//			new ModelOpenaiEmbed2(),
-//#endif
 #if ADD_CHAT_MODELS
 			new ModelOpenaiChat("gpt-5"),
 			new ModelOpenaiChat("gpt-5-mini"),
 			//new ModelOpenaiCompletionsChat("gpt-5"),
 			//new ModelOpenaiCompletionsChat("gpt-5-mini"),
 #endif
+			
+			new ModelVoyageEmbed(),
+#if ADD_ALL_COMPACT_EMBEDDING_MODELS
+			new ModelVoyageEmbed2(),
+#endif
+			//new ModelVoyageRerank("rerank-3"),
 			
 			new ModelGeminiEmbed(),
 #if ADD_ALL_COMPACT_EMBEDDING_MODELS
@@ -37,13 +39,6 @@ abstract record class AiModel(string api, string url, string model, AMLimits lim
 			new ModelGeminiChat("gemini-2.5-flash-lite"),
 #endif
 			
-			new ModelVoyageEmbed(),
-#if ADD_ALL_COMPACT_EMBEDDING_MODELS
-			new ModelVoyageEmbed2(),
-#endif
-			new ModelVoyageRerank("rerank-2.5"),
-			new ModelVoyageRerank("rerank-2.5-lite"),
-			
 #if ADD_CHAT_MODELS
 			new ModelClaudeChat("claude-opus-4-1"),
 			new ModelClaudeChat("claude-sonnet-4-0"),
@@ -51,7 +46,6 @@ abstract record class AiModel(string api, string url, string model, AMLimits lim
 			new ModelDeepseekChat(),
 #endif
 			
-#if MISTRAL
 			new ModelMistralEmbed(),
 #if ADD_ALL_COMPACT_EMBEDDING_MODELS
 			new ModelMistralEmbed2(),
@@ -60,19 +54,6 @@ abstract record class AiModel(string api, string url, string model, AMLimits lim
 			new ModelMistralChat("mistral-medium-latest"),
 			new ModelMistralChat("mistral-large-latest"),
 			new ModelMistralChat("codestral-latest"),
-#endif
-#endif
-			
-#if COHERE
-			new ModelCohereEmbed(),
-#if ADD_ALL_COMPACT_EMBEDDING_MODELS
-			new ModelCohereEmbed2(),
-#endif
-#if ADD_CHAT_MODELS
-			new ModelCohereChat("command-a-03-2025"),
-			new ModelCohereRerank("rerank-v3.5"),
-			new ModelCohereRerank("rerank-english-v3.0"),
-#endif
 #endif
 		];
 	}
@@ -92,15 +73,20 @@ abstract record class AiModel(string api, string url, string model, AMLimits lim
 	/// <returns>null if not <i>model</i> found.</returns>
 	public static T GetModel<T>(string model, bool displayName = false) where T : AiModel => Models.OfType<T>().FirstOrDefault(o => (displayName ? o.DisplayName : o.model) == model);
 	
-	public static void RerankerModelWarning() {
-		if (!s_onceWarning1) s_onceWarning1 = true; else return;
-		print.it("<>Note: Select an AI reranker model in <+options AI>Options > AI<>. It improves AI search results.");
-	}
-	static bool s_onceWarning1;
+	//public static void RerankerModelWarning() {
+	//	if (!s_onceWarning1) s_onceWarning1 = true; else return;
+	//	print.it("<>Note: Select an AI reranker model in <+options AI>Options > AI<>. It improves AI search results.");
+	//}
+	//static bool s_onceWarning1;
 	
 	#endregion
 	
 	public string DisplayName => $"{api}{apiSuffix} {model}";
+	
+	/// <summary>
+	/// By default returns <see cref="model"/>. Derived classes can append some string to describe the class and make an unique model name that can be used by various tools, eg <c>"model dim2048"</c>.
+	/// </summary>
+	public virtual string ModelAltName => model;
 	
 	/// <exception cref="Exception"></exception>
 	public IEnumerable<string> GetHeaders() {
@@ -197,7 +183,7 @@ abstract record class AiRerankModel(string api, string url, string model, AMLimi
 record struct AiRerankResult(int index, float score);
 
 #region Mistral
-#if MISTRAL //waekar chat model. Embedding good, but not as good as Gemini and Voyage.
+//waekar chat model. Embedding good, but not as good as Gemini and Voyage.
 record class ModelMistralEmbed : AiEmbeddingModel {
 	public ModelMistralEmbed() : base("Mistral", "https://api.mistral.ai/v1/embeddings", "codestral-embed", 1024, "float", new(32000, 256, requestPeriod: 1100)) { }
 	//"mistral-embed" (only 1024 dim float), "codestral-embed"
@@ -232,29 +218,9 @@ record class ModelMistralChat : AiChatModel {
 	public override AiChatMessage GetAnswer(JsonNode j)
 		=> new AiChatMessage(ACMRole.assistant, (string)j["choices"][0]["message"]["content"]);
 }
-#endif
 #endregion
 
 #region OpenAI
-
-record class ModelOpenaiEmbed : AiEmbeddingModel {
-	public ModelOpenaiEmbed() : base("OpenAI", "https://api.openai.com/v1/embeddings", "text-embedding-3-small", 1024, null, new(100000, 2048)) { }
-	
-	public override object GetPostData(IList<EmInput> input, bool isQuery)
-		=> new { model, input, dimensions, encoding_format = "base64" };
-	
-	public override IEnumerable<JsonNode> GetVectors(JsonNode j)
-		=> j["data"].AsArray().Select(o => o["embedding"]);
-	
-	public override int GetTokens(JsonNode j)
-		=> (int)j["usage"]["total_tokens"];
-}
-
-#if ADD_ALL_COMPACT_EMBEDDING_MODELS
-record class ModelOpenaiEmbed2 : ModelOpenaiEmbed {
-	public ModelOpenaiEmbed2() { isCompact = true; dimensions = 384; }
-}
-#endif
 
 record class ModelOpenaiChat : AiChatModel {
 	public ModelOpenaiChat(string model) : base("OpenAI", "https://api.openai.com/v1/responses", model, new(100000, 2048)) { apiSuffix = " responses"; }
@@ -327,9 +293,8 @@ record class ModelOpenaiChat : AiChatModel {
 #region Gemini
 
 record class ModelGeminiEmbed : AiEmbeddingModel {
-	const string c_model = "gemini-embedding-001";
-	
-	public ModelGeminiEmbed() : base("Gemini", $"https://generativelanguage.googleapis.com/v1beta/models/{c_model}:batchEmbedContents", c_model, 1024, null, new(8000, 100, requestPeriod: 2000)) { }
+	public ModelGeminiEmbed() : this("gemini-embedding-001") { }
+	protected ModelGeminiEmbed(string model) : base("Gemini", $"https://generativelanguage.googleapis.com/v1beta/models/{model}:batchEmbedContents", model, 1024, null, new(8000, 100, requestPeriod: 2000)) { }
 	
 	private protected override IEnumerable<string> _GetHeaders(string apiKey) => ["x-goog-api-key: " + apiKey];
 	
@@ -380,12 +345,12 @@ record class ModelGeminiChat : AiChatModel {
 #region Voyage
 
 record class ModelVoyageEmbed : AiEmbeddingModel {
-	//public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-3.5", 1024, "float", new(3300, 1000, requestPeriod: 20500)) { } //free tier rate: 10000 TPM, 3 RPM
-	public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-3.5", 1024, "float", new(32000, 1000, requestPeriod: 1000)) { } //rate: 2000000 TPM, 2000 RPM
+	//public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-4", 1024, "float", new(3300, 1000, requestPeriod: 20500)) { } //free tier rate: 10000 TPM, 3 RPM
+	public ModelVoyageEmbed() : base("Voyage", "https://api.voyageai.com/v1/embeddings", "voyage-4", 1024, "float", new(32000, 1000, requestPeriod: 1000)) { } //rate: 2000000 TPM, 2000 RPM
 	
 	public override object GetPostData(IList<EmInput> input, bool isQuery)
 		=> new {
-			model, //voyage-3.5, voyage-3.5-lite
+			model,
 			input,
 			output_dimension = dimensions, //2048, 1024 (default), 512, and 256
 			output_dtype = emType,
@@ -444,14 +409,13 @@ record class ModelVoyageEmbedM : AiEmbeddingModel {
 		=> (int)j["usage"]["total_tokens"];
 }
 
-//TODO2: maybe a newer model is available.
 record class ModelVoyageRerank : AiRerankModel {
 	//public ModelVoyageRerank(string model) : base("Voyage", "https://api.voyageai.com/v1/rerank", model, new(3300, 1000, requestPeriod: 20500)) { } //free tier
 	public ModelVoyageRerank(string model) : base("Voyage", "https://api.voyageai.com/v1/rerank", model, new(8000, 1000, requestPeriod: 1000)) { }
 	
 	public override object GetPostData(string query, IList<string> documents, int top_n = 0)
 		=> new {
-			model, //rerank-2.5, rerank-2.5-lite
+			model,
 			query,
 			documents,
 			top_k = Math.Min(top_n > 0 ? top_n : int.MaxValue, documents.Count),
@@ -506,77 +470,4 @@ record class ModelDeepseekChat : AiChatModel {
 		=> new AiChatMessage(ACMRole.assistant, (string)j["choices"][0]["message"]["content"]);
 }
 
-#endregion
-
-#region Cohere
-#if COHERE
-record class ModelCohereEmbed : AiEmbeddingModel {
-	public ModelCohereEmbed() : base("Cohere", "https://api.cohere.ai/v2/embed", "embed-v4.0", 1024, "base64", new(100000, 96, requestPeriod: 1000, maxSize: 256000)) { }
-	
-	public override object GetPostData(IList<EmInput> texts, bool isQuery)
-		=> new { model, texts, output_dimension = dimensions, embedding_types = (string[])[emType], input_type = isQuery ? "search_query" : "search_document" };
-	
-	public override IEnumerable<JsonNode> GetVectors(JsonNode j)
-		=> j["embeddings"][emType].AsArray();
-	
-	public override int GetTokens(JsonNode j)
-		=> (int)j["meta"]["billed_units"]["input_tokens"];
-}
-
-#if ADD_ALL_COMPACT_EMBEDDING_MODELS
-record class ModelCohereEmbed2 : ModelCohereEmbed {
-	public ModelCohereEmbed2() { isCompact = true; dimensions = 512; emType = "int8"; }
-}
-#endif
-
-record class ModelCohereChat : AiChatModel {
-	public ModelCohereChat(string model = "command-a-03-2025") : base("Cohere", "https://api.cohere.com/v2/chat", model, new(0, 96, maxSize: 256000)) { } //doc: max content length 256k (chars or tokens?)
-	
-	public override object GetPostData(string systemInstruction, List<AiChatMessage> messages, double? temperature = null)
-		=> new {
-			model,
-			messages = (object[])[new { role = "assistant", content = systemInstruction }, .. messages.Select(o => new { role = o.role.ToString(), content = o.text })],
-			temperature,
-		};
-	
-	public override AiChatMessage GetAnswer(JsonNode j)
-		=> new AiChatMessage(ACMRole.assistant, (string)j["message"]["content"][0]["text"]);
-}
-
-record class ModelCohereRerank : AiRerankModel {
-	public ModelCohereRerank(string model) : base("Cohere", "https://api.cohere.com/v2/rerank", model, new(4096, 1000)) { }
-	
-	public override object GetPostData(string query, IList<string> documents, int top_n = 0)
-		=> new {
-			model, //rerank-v3.5, rerank-english-v3.0
-			query,
-			documents,
-			top_n = Math.Min(top_n > 0 ? top_n : int.MaxValue, documents.Count),
-			//max_tokens_per_doc //4096 is default and max
-		};
-	
-	public override IEnumerable<AiRerankResult> GetResults(JsonNode j)
-		=> j["results"].AsArray().Select(o => new AiRerankResult((int)o["index"], (float)o["relevance_score"]));
-}
-#endif
-#endregion
-
-#region Jina
-#if false //much worse for this task
-record class ModelJinaRerank : AiRerankModel {
-	public ModelJinaRerank(string model = "jina-reranker-v2-base-multilingual") : base("Jina", "https://api.jina.ai/v1/rerank", model, new(8000, 1000, requestPeriod: 1000)) { } //todo: limits
-	
-	public override object GetPostData(string query, IList<string> documents, int top_n = 0)
-		=> new {
-			model, //jina-reranker-v3 (error; paid only?), jina-reranker-v2-base-multilingual
-			query,
-			documents,
-			top_n = Math.Min(top_n > 0 ? top_n : int.MaxValue, documents.Count),
-			return_documents = false,
-		};
-	
-	public override IEnumerable<AiRerankResult> GetResults(JsonNode j)
-		=> j["results"].AsArray().Select(o => new AiRerankResult((int)o["index"], (float)o["relevance_score"]));
-}
-#endif
 #endregion

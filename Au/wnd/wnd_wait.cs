@@ -16,7 +16,7 @@ public partial struct wnd {
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// wnd w = wnd.wait(10, false, "* Notepad");
+	/// wnd w = wnd.wait(10, false, "* Paint");
 	/// print.it(w);
 	/// ]]></code>
 	/// Using in a WPF window with async/await.
@@ -24,8 +24,8 @@ public partial struct wnd {
 	/// using System.Windows;
 	/// var b = new wpfBuilder("Window").WinSize(250);
 	/// b.R.AddButton("Wait", async _ => {
-	/// 	  print.it("waiting for Notepad...");
-	/// 	  wnd w = await Task.Run(() => wnd.wait(-10, false, "* Notepad"));
+	/// 	  print.it("waiting for Paint...");
+	/// 	  wnd w = await Task.Run(() => wnd.wait(-10, false, "* Paint"));
 	/// 	  if(w.Is0) print.it("timeout"); else print.it(w);
 	/// });
 	/// if (!b.ShowDialog()) return;
@@ -52,7 +52,7 @@ public partial struct wnd {
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// var (i, w) = wnd.waitAny(10, true, new("* Notepad"), new("* Word"));
+	/// var (i, w) = wnd.waitAny(10, true, new("* Paint"), new("* Word"));
 	/// print.it(i, w);
 	/// ]]></code>
 	/// </example>
@@ -147,7 +147,7 @@ public partial struct wnd {
 	/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 	/// <example>
 	/// <code><![CDATA[
-	/// wnd w = wnd.find("* Notepad");
+	/// wnd w = wnd.find("* Paint");
 	/// 
 	/// //wait max 30 s until window w is active. Exception on timeout or if closed.
 	/// w.WaitFor(30, t => t.IsActive);

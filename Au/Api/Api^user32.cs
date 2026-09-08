@@ -103,7 +103,7 @@ static unsafe partial class Api {
 		//	Second or third call usually succeeds.
 		//	More often fails when there is some activity, eg when Visual Studio compiles/launches an app, or when opening/closing Notepad++.
 		//	GetLastError 0.
-		//	To reproduce, call every 2 ms, eg to find Notepad by classname.
+		//	To reproduce, call every 2 ms, eg to find a window by classname.
 		//	EnumWindows does not fail.
 		//	On Win10 never noticed and cannot reproduce.
 		//	Maybe FindWindowEx uses an unsafe loop like with GetWindow. When Z order changes, skips part of windows.

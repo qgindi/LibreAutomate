@@ -5,10 +5,7 @@
 /*/
 define SCRIPT
 testInternal Au,Au.Editor
-c AI search.cs;
-c AiModel.cs;
-c Ed util shared.cs;
-c AI script common.cs;
+c AI script common.cs
 /*/
 
 using System.Security.Cryptography;

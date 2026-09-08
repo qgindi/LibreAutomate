@@ -1,4 +1,4 @@
-//This file also can be used in scripts (meta c).
+//This file also can be used in scripts (meta c or r Au.Editor.dll).
 
 using System.Security.Cryptography;
 
@@ -12,32 +12,17 @@ static class folders2 {
 	/// <summary>
 	/// ThisApp
 	/// </summary>
-	public static FolderPath La
-#if SCRIPT
-		=> new(Environment.GetEnvironmentVariable("au_") ?? throw null);
-#else
-		=> folders.ThisApp;
-#endif
+	public static FolderPath La => !field.IsNull ? field : field = new(folders.Editor.Path ?? Environment.GetEnvironmentVariable("au_") ?? throw null);
 	
 	/// <summary>
 	/// ThisAppDataLocal
 	/// </summary>
-	public static FolderPath LaDataLocal
-#if SCRIPT
-		=> new(folders.LocalAppData + @"LibreAutomate");
-#else
-		=> folders.ThisAppDataLocal;
-#endif
+	public static FolderPath LaDataLocal => !field.IsNull ? field : field = new(folders.LocalAppData + @"LibreAutomate");
 	
 	/// <summary>
 	/// ThisAppDataRoaming
 	/// </summary>
-	public static FolderPath LaDataRoaming
-#if SCRIPT
-		=> new(folders.RoamingAppData + @"LibreAutomate");
-#else
-		=> folders.ThisAppDataRoaming;
-#endif
+	public static FolderPath LaDataRoaming => !field.IsNull ? field : field = new(folders.RoamingAppData + @"LibreAutomate");
 }
 
 /// <summary>

@@ -797,7 +797,7 @@ public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger> {
 	/// Note: the <c>Triggers</c> in examples is a field or property of type <see cref="ActionTriggers"/>.
 	/// <code><![CDATA[
 	/// Triggers.Options.ThreadNew(true);
-	/// Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
+	/// Triggers.Window[TWEvent.ActiveNew, "* Paint"] = o => o.Window.Resize(500, 200);
 	/// Triggers.Hotkey["Ctrl+T"] = o => Triggers.Window.SimulateActiveNew(wnd.active);
 	/// ]]></code>
 	/// </example>
@@ -947,7 +947,7 @@ public class WindowTriggerArgs : TriggerArgs {
 	/// <example>
 	/// Note: the <c>Triggers</c> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
-	/// Triggers.Window[TWEvent.ActiveOnce, "*- Notepad", later: TWLater.Active | TWLater.Inactive] = o => print.it(o.Later, o.Window);
+	/// Triggers.Window[TWEvent.ActiveOnce, "*- Paint", later: TWLater.Active | TWLater.Inactive] = o => { print.it(o.Later, o.Window); };
 	/// Triggers.Run();
 	/// ]]></code>
 	/// </example>

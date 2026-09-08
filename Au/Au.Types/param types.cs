@@ -56,7 +56,7 @@ public class NormalClass {
 /// mouse.move(Coord.Center, Coord.MaxInside); //x in center (left edge + 1/2), y by the bottom edge inside (Coord.Max would be outside)
 /// mouse.move(Coord.Reverse(-100), 1.1f); //right edge + 100, bottom edge + 0.1 of the rectangle
 /// 
-/// var w = wnd.find(1, "Untitled - Notepad", "Notepad");
+/// var w = wnd.find(1, "* Paint");
 /// w.Move(.5f, 100, .5f, ^200); //x = center, y = 100, width = half of screen, height = screen height - 200
 /// ]]></code>
 /// </example>

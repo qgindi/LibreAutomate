@@ -218,9 +218,9 @@ public abstract class TriggerArgs {
 /// Note: the <c>Triggers</c> in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 /// <code><![CDATA[
 /// Triggers.Hotkey["Ctrl+K"] = o => print.it("this trigger works with all windows");
-/// Triggers.Of.Window("* Notepad"); //specifies a working window for triggers added afterwards
-/// Triggers.Hotkey["Ctrl+F11"] = o => print.it("this trigger works only when a Notepad window is active");
-/// Triggers.Hotkey["Ctrl+F12"] = o => print.it("this trigger works only when a Notepad window is active");
+/// Triggers.Of.Window("* Paint"); //specifies a working window for triggers added afterwards
+/// Triggers.Hotkey["Ctrl+F11"] = o => print.it("this trigger works only when a Paint window is active");
+/// Triggers.Hotkey["Ctrl+F12"] = o => print.it("this trigger works only when a Paint window is active");
 /// var chrome = Triggers.Of.Window("* Chrome"); //specifies another working window for triggers added afterwards
 /// Triggers.Hotkey["Ctrl+F11"] = o => print.it("this trigger works only when a Chrome window is active");
 /// Triggers.Hotkey["Ctrl+F12"] = o => print.it("this trigger works only when a Chrome window is active");

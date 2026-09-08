@@ -17,7 +17,7 @@ namespace Au {
 		/// <param name="of">
 		/// Owner window, program or thread. Depends on argument type:
 		/// <br/>• <see cref="wnd"/> - owner window. Will use <see cref="IsOwnedBy(wnd, int)"/> with level 2.
-		/// <br/>• <c>string</c> - program file name, like <c>"notepad.exe"</c>. String format: [wildcard expression](xref:wildcard_expression). Cannot be <c>""</c> or path.
+		/// <br/>• <c>string</c> - program file name, like <c>"abc.exe"</c>. String format: [wildcard expression](xref:wildcard_expression). Cannot be <c>""</c> or path.
 		/// <br/>• <see cref="WOwner"/> - <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id).
 		/// 
 		/// <para>
@@ -53,27 +53,27 @@ namespace Au {
 		/// To find message-only windows use <see cref="findFast"/> instead.
 		/// </remarks>
 		/// <example>
-		/// Try to find Notepad window. Return if not found.
+		/// Try to find Paint window. Return if not found.
 		/// <code><![CDATA[
-		/// wnd w = wnd.find("* Notepad");
+		/// wnd w = wnd.find("* Paint");
 		/// if(w.Is0) { print.it("not found"); return; }
 		/// ]]></code>
-		/// Try to find Notepad window. Throw <see cref="NotFoundException"/> if not found.
+		/// Try to find Paint window. Throw <see cref="NotFoundException"/> if not found.
 		/// <code><![CDATA[
-		/// wnd w1 = wnd.find(0, "* Notepad");
+		/// wnd w1 = wnd.find(0, "* Paint");
 		/// ]]></code>
-		/// Wait for Notepad window max 3 seconds. Throw <see cref="NotFoundException"/> if not found during that time.
+		/// Wait for Paint window max 3 seconds. Throw <see cref="NotFoundException"/> if not found during that time.
 		/// <code><![CDATA[
-		/// wnd w1 = wnd.find(3, "* Notepad");
+		/// wnd w1 = wnd.find(3, "* Paint");
 		/// ]]></code>
-		/// Wait for Notepad window max 3 seconds. Return if not found during that time.
+		/// Wait for Paint window max 3 seconds. Return if not found during that time.
 		/// <code><![CDATA[
-		/// wnd w1 = wnd.find(-3, "* Notepad");
+		/// wnd w1 = wnd.find(-3, "* Paint");
 		/// if(w.Is0) { print.it("not found"); return; }
 		/// ]]></code>
-		/// Wait for Notepad window max 3 seconds. Throw <see cref="NotFoundException"/> if not found during that time. When found, wait max 1 s until becomes active, then activate.
+		/// Wait for Paint window max 3 seconds. Throw <see cref="NotFoundException"/> if not found during that time. When found, wait max 1 s until becomes active, then activate.
 		/// <code><![CDATA[
-		/// wnd w1 = wnd.find(3, "* Notepad").Activate(1);
+		/// wnd w1 = wnd.find(3, "* Paint").Activate(1);
 		/// ]]></code>
 		/// </example>
 		public static wnd find(
@@ -100,25 +100,6 @@ namespace Au {
 			[ParamString(PSFormat.Wildex)] WOwner of = default,
 			WFlags flags = 0, Func<wnd, bool> also = null, WContains contains = default
 			) => new wndFinder(name, cn, of, flags, also, contains).Find(wait);
-		
-		//rejected: probably most users will not understand/use it. It's easy and more clear to create and use wndFinder instances.
-		///// <summary>
-		///// Gets arguments and result of this thread's last call to <see cref="Find"/> or <see cref="FindAll"/>.
-		///// </summary>
-		///// <remarks>
-		///// <c>wnd.wait</c> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
-		///// </remarks>
-		///// <example>
-		///// This example is similar to what <see cref="FindOrRun"/> does.
-		///// <code><![CDATA[
-		///// wnd w = wnd.find("*- Notepad", "Notepad");
-		///// if(w.Is0) { run.it("notepad.exe"); w = wnd.waitAny(60, true, wnd.LastFind).w; }
-		///// ]]></code>
-		///// </example>
-		//[field: ThreadStatic]
-		//public static wndFinder lastFind { get; set; }
-		
-		//CONSIDER: add property: [field: ThreadStatic] public static wnd last { get; set; }
 		
 		/// <summary>
 		/// Finds all matching windows.
@@ -217,7 +198,7 @@ namespace Au {
 		/// <exception cref="AuWndException">Failed to activate.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// wnd w = wnd.findOrRun("* Notepad", run: () => run.it("notepad.exe"));
+		/// wnd w = wnd.findOrRun("* Paint", run: () => run.it("mspaint.exe"));
 		/// print.it(w);
 		/// ]]></code>
 		/// </example>
@@ -309,7 +290,7 @@ namespace Au {
 		/// <returns><c>true</c> if all specified (non-<c>null</c>/default) properties match.</returns>
 		/// <remarks>
 		/// Creates new <see cref="wndFinder"/> and calls <see cref="wndFinder.IsMatch"/>.
-		/// To compare single parameter, use more lightweight code. Examples: <c>if (w.Name.Like("* Notepad"))</c>, <c>if (w.ClassNameIs("CabinetWClass"))</c>.
+		/// To compare single parameter, use more lightweight code. Examples: <c>if (w.Name.Like("* Paint"))</c>, <c>if (w.ClassNameIs("CabinetWClass"))</c>.
 		/// </remarks>
 		/// <seealso cref="Name"/>
 		/// <seealso cref="ClassName"/>
@@ -633,7 +614,7 @@ namespace Au.Types {
 	
 	/// <summary>
 	/// Used with <see cref="wnd.find"/> and similar functions to specify an owner of the window.
-	/// Can be program name (like <c>"notepad.exe"</c>), process id (<see cref="Process"/>), thread id (<see cref="Thread"/> or <see cref="ThisThread"/>), owner window.
+	/// Can be program name (like <c>"abc.exe"</c>), process id (<see cref="Process"/>), thread id (<see cref="Thread"/> or <see cref="ThisThread"/>), owner window.
 	/// </summary>
 	public struct WOwner {
 		readonly string _s; //program
@@ -646,7 +627,7 @@ namespace Au.Types {
 		
 		WOwner(int i, byte what) { _i = i; _what = what; }
 		
-		/// <summary>Program name like <c>"notepad.exe"</c>, or <c>null</c>. See <see cref="wnd.ProgramName"/>.</summary>
+		/// <summary>Program name like <c>"abc.exe"</c>, or <c>null</c>. See <see cref="wnd.ProgramName"/>.</summary>
 		public static implicit operator WOwner([ParamString(PSFormat.Wildex)] string program) => new(program);
 		
 		/// <summary>Owner window. See <see cref="wnd.getwnd.Owner"/>. Will use <see cref="wnd.IsOwnedBy(wnd, int)"/> with level 2.</summary>

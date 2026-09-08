@@ -44,7 +44,6 @@ namespace Au.Triggers;
 /// //you can use variables if don't want to type "Triggers.Hotkey" etc for each trigger
 /// var hk = Triggers.Hotkey;
 /// var mouse = Triggers.Mouse;
-/// var win = Triggers.Window;
 /// var tt = Triggers.Autotext;
 /// 
 /// //hotkey triggers
@@ -52,7 +51,7 @@ namespace Au.Triggers;
 /// hk["Ctrl+K"] = o => print.it(o); //it means: execute code "o => print.it(o)" when I press Ctrl+K
 /// hk["Ctrl+Shift+F11"] = o => {
 /// 	print.it(o);
-/// 	var w1 = wnd.findOrRun("* Notepad", run: () => run.it(folders.System + "notepad.exe"));
+/// 	var w1 = wnd.findOrRun("* Paint", run: () => run.it(folders.System + "mspaint.exe"));
 /// 	keys.sendt("text");
 /// 	w1.Close();
 /// };
@@ -64,7 +63,7 @@ namespace Au.Triggers;
 /// hk["Ctrl+F5"] = o => print.it(o, o.Window);
 /// hk["Ctrl+F6"] = o => print.it(o, o.Window);
 /// 
-/// var notepad = Triggers.Of.Window("* Notepad"); //let the following triggers work only when a Notepad window is active
+/// var paint = Triggers.Of.Window("* Paint"); //let the following triggers work only when a Paint window is active
 /// hk["Ctrl+F5"] = o => print.it(o, o.Window);
 /// hk["Ctrl+F6"] = o => print.it(o, o.Window);
 /// 
@@ -79,16 +78,16 @@ namespace Au.Triggers;
 /// Triggers.FuncOf.NextTrigger = o => keys.isScrollLock; //example of a custom scope (aka context, condition)
 /// mouse[TMWheel.Forward] = o => print.it($"{o} while ScrollLock is on");
 /// 
-/// Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
+/// Triggers.Of.Again(paint); //let the following triggers work only when a Paint window is active
 /// mouse[TMMove.LeftRightInBottom25] = o => { print.it(o); o.Window.Close(); };
 /// Triggers.Of.AllWindows();
 /// 
 /// //window triggers. Note: window triggers don't depend on Triggers.Of.
 /// 
-/// win[TWEvent.ActiveNew, "* Notepad", "Notepad"] = o => print.it("opened Notepad window");
-/// win[TWEvent.ActiveNew, "Notepad", "#32770", contains: "Do you want to save *"] = o => {
-/// 	print.it("opened Notepad's 'Do you want to save' dialog");
-/// 	//keys.send("Alt+S"); //click the Save button
+/// Triggers.Window[TWEvent.ActiveNew, "* Paint"] = o => print.it("opened Paint window");
+/// Triggers.Window[TWEvent.ActiveNew, "Some App", "#32770", contains: "Version *"] = o => {
+/// 	print.it("opened Some App dialog containing text that starts with Version");
+/// 	//o.Window.Close(noWait: true);
 /// };
 /// 
 /// //autotext triggers
