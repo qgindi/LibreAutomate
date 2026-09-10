@@ -1,10 +1,11 @@
+
 VERSION INFO
 
 The program version format is major.minor.build, like 1.20.5.
 	Minor: changed when added some significant features.
 	Build: changed when fixed bugs between minor versions. Also may have some new features.
 
-To update version info everywhere, run script "LA version and resources.cs".
+To update version info everywhere, run script "LA version and resources.cs". Script "Release new LA version.cs" displays a link to run it.
 	It also creates .res files for Au.Editor.exe and Au.Task.exe.
 	When building Au.Editor, VS adds the .res to the exe file (x64). The BuildEvents project creates Au.Task.exe and arm64 exe files.
 	It also updates year in copyright texts.
@@ -12,83 +13,14 @@ The following is how to update everything (except .res) manually. Don't do it.
 	Open global2.cs and edit Au_.Version. Single global2.cs is used by all C# projects.
 	Also may need to update year in AssemblyCopyright attribute (it's displayed in About info). Don't update year in LICENSE.txt.
 
-All significant changes of that version must be documented in Other/DocFX/_doc/changes/vMajor.Minor.md. Do it whenever making changes.
+All significant changes of that version must be documented in DocFX/_doc/changes/vMajor.Minor.md. Do it whenever making changes.
 
 ---------------------------------------------------------
 
 HOW TO RELEASE A NEW VERSION
 
-If need to change version, run script "LA version and resources.cs".
-
-Review all TODO. Occasionally review TODO2, FUTURE, CONSIDER.
-	TODO2 means "low priority TODO". If after a long time it still seems low priority, delete the comment or replace with TODO3.
-
-May need to test something. Eg some changes could break some main features.
-	Also test new and some main features on other OS. Test on ARM-64.
-
-May need to undefine TRACE in some C++ projects.
-	Usually not using TRACE in Release config, but sometimes may use it to test Release speed etc.
-	Don't use TRACE in C# projects; it's defined by default in Debug and Release config.
-
-May need to delete test code. Or use #if DEBUG, like in Tests.cs.
-	Review perf and print.
-
-May need to add new OS version to class osVersion. Usually once/year.
-
-Build solution in config Release, all platforms.
-	NOTE: use the "Rebuild solution" command, else VS may not update something.
-
-Review menu Help -> About. May need to update C# version, used libraries.
-
-Run script "Au docs".
-	Fix errors if need. More info in AuDocs.txt.
-	Don't upload now.
-	It also runs other scripts that create files for local docs.
-
-Create database for AI.
-	The "Au docs" script prints the script link. Click the link, or use main toolbar > "Docs" menu.
-
-May need to update some info in README.md for github. Eg the screenshot and "how to build".
-	When an image updated, github still shows the old cached. Workaround: in the image link append #x and change x for each image version. If using CloudFlare (currently not): before run script "Purge Cloudflare CDN cache".
-
-Review the md file of current version.
-	If it's still "future.md", rename ( RENAME!!! ) to "v1.x.md".
-	Edit the release date.
-	Note: the md file path and name format is used in `App.CheckForUpdates`.
-
-Run script "Create LA setup files.cs".
-	It creates 2 .lzma files containing LA files, and the setup .exe file (builds the setup project). All 3 files are in the same folder; opens it.
-	Run the setup file to test. Let it run LA. Occasionally uninstall/install, not just upgrade.
-	Test on other OS too. And on Windows arm64.
-	The setup will use the .lzma files. If want to test downloading, run it later, after creating GitHub release, without the .lzma files in the folder.
-
-Scan the setup file at virustotal.com. Either manually, or run script "Virustotal false positives.cs" (it also runs once/day).
-	The create-setup script also creates file vt-1.zip. Sometimes scan it too.
-	Never mind if there are 1-2 false positives from less known AV.
-	When creating setup, I scanned it often. Randomly was Microsoft FP. Try to change something, eg change a string or toggle `#define USE_RESTARTMANAGER` in Util.cs.
-
-Github commit all and push. The message could be like v1.2.3.
-	Note: do it now. Need for upload to GitHub. Also uploads the "changes" doc.
-
-Create a GitHub Release. Upload the setup .exe file and the .lzma files.
-
-Upload the website created by script "Au docs". To find the script: main toolbar > "Docs" menu.
-
-Review web pages (LA and Github).
-
-Download and test the setup file.
-	It will download/use/delete 1 or 2 .lzma files from the GitHub release, unless you first manually download them to the same folder as the setup file.
-	Occasionally test it on all OS. Observe SmartScreen/antivirus behavior.
-
-Sometimes test whether others can build and run the repo.
-	Eg when some new files added to the `_` dir.
-	Generated or downloaded files in `_` dir/subdirs must be gitignored, unless very small non-binary. Instead specify them in `GitBinaryFiles.cs` in project `BuildEvents`.
-
-Release NuGet package:
-	Run script "Create NuGet package.cs". It builds Au using a modified temp csproj, creates package and adds native dlls.
-	Upload to NuGet. The script prints links.
-
-Run script "Update version.txt.cs". It updates _\version.txt and uploads to the LA website. Need it for users of older LA; now using GitHub instead.
+Run script "Release new LA version.cs".
+	It shows a window with all info and links to run scripts etc.
 
 ---------------------------------------------------------
 
@@ -98,21 +30,9 @@ Periodically check false positives on virustotal. Script "Virustotal false posit
 	Also sometimes test whether Chromium still allows to download.
 	Because v1.15 after some time had these problems: many false positives, and Chromium blocks the download.
 
-
 ---------------------------------------------------------
 
-NO MORE
-
-Upload the setup file to https://www.libreautomate.com.
-	No more, because now (2026-07-06) Chrome/Brave blocks it. Does not block GitHub downloads, except v1.15.
-
-Announce in forum.
-
-If not beta, occasionally review/update in some download websites. Edit and upload the PAD file.
-
----------------------------------------------------------
-
-UPDATING .NET
+UPDATING .NET MAJOR VERSION
 
 VS must support that .NET version. Install the .NET SDK if need.
 

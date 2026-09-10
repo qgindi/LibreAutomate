@@ -88,7 +88,15 @@ class HtmlToMarkdown(bool step, string startFrom) {
 			}
 			filesystem.copyTo(dbFile, @"C:\code\Au.Editor", FIfExists.Delete);
 			
-			print.it("<>DONE. Created doc-ai.db. Now <script AI summaries.cs>add summaries<>.");
+#if true
+			print.it("<>DONE. Created doc-ai.db.");
+			script.run(@"AI summaries.cs");
+#else
+			print.it("""
+<>DONE. Created doc-ai.db.
+	Now <script AI summaries.cs>add summaries<>
+""");
+#endif
 			//print.scrollToTop();
 		}
 	}

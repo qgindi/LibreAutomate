@@ -1,27 +1,43 @@
-/// Uploads an AI embeddings storage file to https://github.com/qgindi/LA-downloads/releases.
-/// Currently used only for icons embeddings.
-/// To run, click link printed by Embeddings._GetEmbeddings. Can't run directly because need a hash etc.
-/// It prints the link when created new embeddings. To print always when UI-searching, temporarily enable the `//emFile.PrintUploadIfAtHome`.
+/// If need, uploads an AI embeddings storage file to https://github.com/qgindi/LA-downloads/releases.
 
-/*/ c Ed util shared.cs; c GithubReleaseManager.cs; /*/
+/*/ testInternal Au,Au.Editor; c AI script common.cs; c GithubReleaseManager.cs; /*/
+using AI;
+if (script.testing) print.clear();
+print.it("<><lc yellowgreen>Ensuring AI embedding downloads are up to date. Wait until DONE.<>");
 
-string file = args[0], zipName = args[1];
-//print.it(file, zipName);
+AiModel.ApiKeys = App.Settings.ai_ak;
 
-//if (!dialog.showOkCancel("Upload AI embedding vectors")) return;
+var m = new GithubReleaseManager("LA-downloads", "AI-embedding");
+var assets = m.Assets;
+//assets.Print();
 
-string zipFile = folders.ThisAppTemp + zipName;
-try {
-	print.it("Compressing...");
-	if (!LA.SevenZip.Compress(out var errors, zipFile, file)) { print.it(errors); return; }
+foreach (var model in (AiEmbeddingModel[])[new ModelVoyageEmbed(), new ModelGeminiEmbed(), new ModelMistralEmbed(), new ModelVoyageEmbedM()]) {
+	print.it(model.GetType());
+	var em = new Embeddings(model);
+	if (model.isCompact) {
+		em.GetIconsEmbeddings(true);
+	} else {
+		var ev = em.GetDocsEmbeddings();
+		if (!ev.Any(o => o.name[0] == '+')) throw new Exception("<>Error: first need to <script AI summaries.cs>add summaries<>.");
+	}
+	var (file, zipName) = em.VectorFileInfoForScript;
+	//print.it(file, zipName);
+	if (zipName is null) throw new Exception("Vectors of this model are not downloadable. See `TryGetZipName` in `AI search.cs`.");
 	
-	//run.selectInExplorer(zipFile);
+	if (assets.Any(o => (string)o["name"] == zipName)) continue;
 	
-	print.it("Uploading...");
-	var m = new GithubReleaseManager("LA-downloads");
-	m.Init("v1.0.0");
-	m.AddOrReplaceAsset(zipFile, "application/x-compressed");
-	
-	print.it($"<>Uploaded: {zipName} to <link>https://github.com/qgindi/LA-downloads/releases<>");
+	string zipFile = folders.ThisAppTemp + zipName;
+	try {
+		print.it($"Compressing...");
+		if (!LA.SevenZip.Compress(out var errors, zipFile, file)) throw new Exception(errors);
+		//run.selectInExplorer(zipFile);
+		
+		print.it("Uploading...");
+		m.AddOrReplaceAsset(zipFile, "application/x-compressed");
+	}
+	finally { filesystem.delete(zipFile, FDFlags.CanFail); }
 }
-finally { filesystem.delete(zipFile, FDFlags.CanFail); }
+print.it("""
+<>DONE: <link>https://github.com/qgindi/LA-downloads/releases/tag/AI-embedding<>
+	Now optionally <script GitHub push LA docs for AI.cs>upload md files for AI<>
+""");

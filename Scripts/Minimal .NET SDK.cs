@@ -63,8 +63,7 @@ class MinimalSDK {
 		print.it("Uploading. Wait until DONE.");
 		var zip1 = $"{_TempDirBS}sdk-{Environment.Version.ToString(2)}-x64.7z";
 		var zip2 = $"{_TempDirBS}sdk-{Environment.Version.ToString(2)}-arm64.7z";
-		var m = new GithubReleaseManager("LA-downloads");
-		m.Init("v1.0.0");
+		var m = new GithubReleaseManager("LA-downloads", "v1.0.0");
 		m.AddOrReplaceAsset(zip1, "application/x-compressed");
 		m.AddOrReplaceAsset(zip2, "application/x-compressed");
 		print.it("DONE");

@@ -2092,7 +2092,7 @@ public class wpfBuilder {
 	}
 	
 	/// <summary>
-	/// Adds inlines (text, formatted text, hyperlinks, images, etc) to the last added <see cref="TextBlock"/> etc.
+	/// Adds inlines (text, formatted text, hyperlinks, images, etc) to the last added element (eg <see cref="TextBlock"/>).
 	/// </summary>
 	/// <param name="text">
 	/// Interpolated string (like <c>$"string"</c>) with tags etc. The format is XML without root element.
@@ -2125,12 +2125,11 @@ public class wpfBuilder {
 	/// <br/>• <c>&lt;</c> - <c>&amp;lt;</c>.
 	/// <br/>• <c>&amp;</c> - <c>&amp;amp;</c>.
 	/// <br/>• <c>'</c>, <c>"</c> - <c>&amp;apos;</c> in <c>'attribute'</c> or <c>&amp;quot;</c> in <c>"attribute"</c>.
-	/// <para>
-	/// </para>
+	/// <para/>
 	/// The <c>text</c> in above examples can contain nested tags and elements.
 	/// The <c>&lt;a></c> tag creates an image hyperlink if <c>text</c> is <c>{image}</c>, where image is a <see cref="UIElement"/> with image (see <see cref="ImageUtil.LoadWpfImageElement"/>) or <see cref="ImageSource"/> (see <see cref="ImageUtil.LoadWpfImage"/>, <see cref="icon.ToWpfImage"/>).
 	/// </param>
-	/// <exception cref="NotSupportedException">Unsupported type of the last added element. Or supported type but non-empty <c>Content</c> and <c>Header</c> (read Remarks).</exception>
+	/// <exception cref="NotSupportedException">Unsupported type or content of the last added element.</exception>
 	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
 	/// <exception cref="InvalidOperationException">The same <c>{Span}</c> or <c>{Inline}</c> object in multiple places.</exception>
 	/// <exception cref="FormatException">Invalid color attribute.</exception>
@@ -2138,9 +2137,10 @@ public class wpfBuilder {
 	/// <remarks>
 	/// The last added element can be of type:
 	/// <br/>• <see cref="TextBlock"/> - the function adds inlines to its <c>Inlines</c> collection.
-	/// <br/>• <see cref="ContentControl"/> (eg <see cref="Label"/> or <see cref="Button"/>) - creates new <see cref="TextBlock"/> with inlines and sets its <c>Content</c> property if it is <c>null</c>. If <see cref="HeaderedContentControl"/> (eg <see cref="GroupBox"/>) and its <c>Header</c> property is <c>null</c>, sets <c>Header</c> instead.
+	/// <br/>• <see cref="ContentControl"/> (eg <see cref="Label"/> or <see cref="Button"/>) or <see cref="HeaderedContentControl"/> (eg <see cref="GroupBox"/>) - creates new <see cref="TextBlock"/> with inlines and sets its <c>Content</c> or <c>Header</c> property. Or uses existing <c>TextBlock</c>.
 	/// <br/>• <see cref="Panel"/> whose <c>Parent</c> is <see cref="HeaderedContentControl"/> (eg <c>b.StartGrid&lt;GroupBox>(null).FormatText($"...")</c>) - uses the <see cref="HeaderedContentControl"/> like the above.
-	///
+	/// <br/>• <c>RichTextBox</c>, <c>FlowDocumentScrollViewer</c> or <c>FlowDocumentReader</c> with non-<c>null</c> <c>Document</c> - adds single <see cref="Paragraph"/> with inlines. Or uses existing single <c>Paragraph</c>.
+	/// <para/>
 	/// For elements other than the last added use <see cref="formatTextOf(object, InterpolatedString)"/> or <see cref="formattedText(InterpolatedString)"/>.
 	///
 	/// To load images can be used <see cref="ImageUtil.LoadWpfImageElement"/> and <see cref="ImageUtil.LoadWpfImage"/>.
@@ -2179,8 +2179,17 @@ public class wpfBuilder {
 	/// <summary>
 	/// Adds inlines (text, formatted text, hyperlinks, images, etc) to the specified <see cref="TextBlock"/> etc.
 	/// </summary>
-	/// <param name="obj">Object of type <see cref="TextBlock"/>, <see cref="ContentControl"/> or <see cref="InlineCollection"/>. More info in <see cref="FormatText(InterpolatedString)"/> remarks.</param>
-	/// <exception cref="NotSupportedException">Unsupported <i>obj</i> type or non-empty <c>Content</c>/<c>Header</c>.</exception>
+	/// <param name="obj">
+	/// Object of type:
+	/// <br/>• <see cref="TextBlock"/>
+	/// <br/>• <see cref="ContentControl"/>
+	/// <br/>• <c>RichTextBox</c>, <c>FlowDocumentScrollViewer</c> or <c>FlowDocumentReader</c> with non-<c>null</c> <c>Document</c>.
+	/// <br/>• <c>FlowDocument</c>, <c>Paragraph</c>, <c>Span</c>
+	/// <br/>• <c>InlineCollection</c>
+	/// 
+	/// More info in <see cref="FormatText(InterpolatedString)"/> remarks.
+	/// </param>
+	/// <exception cref="NotSupportedException">Unsupported <i>obj</i> type or content.</exception>
 	/// <exception cref="ArgumentException">Unknown <c>&lt;tag></c> or unsupported <c>{object}</c> type.</exception>
 	/// <exception cref="InvalidOperationException">The same <c>{Span}</c> or <c>{Inline}</c> object in multiple places.</exception>
 	/// <exception cref="FormatException">Invalid color attribute.</exception>
@@ -2218,18 +2227,31 @@ public class wpfBuilder {
 		return e;
 	}
 	
-	static void _FormatText(object obj, string text, List<object> a) {
+	static void _FormatText(object obj, string text, List<object> a, [CallerMemberName] string m_ = null) {
 		//print.it(text, a);
-		InlineCollection ic;
-		g1:
-		switch (obj) {
-		case TextBlock k: ic = k.Inlines; break;
-		case HeaderedContentControl k: k.Header = obj = new TextBlock(); goto g1;
-		case ContentControl k: k.Content = obj = new TextBlock(); goto g1;
-		case Panel k when k.Parent is HeaderedContentControl p1: obj = p1; goto g1; //eg b.StartGrid<GroupBox>(null).FormatText($"...")
-		case InlineCollection k: ic = k; break;
-		default: throw new NotSupportedException("Format(): unsupported element type");
+		
+		InlineCollection _Inlines(object obj) {
+			switch (obj) {
+			case InlineCollection k: return k;
+			case TextBlock k: return k.Inlines;
+			case Paragraph k: return k.Inlines;
+			case Span k: return k.Inlines;
+			case HeaderedContentControl k: return _Inlines(k.Header) ?? ((TextBlock)(k.Header = new TextBlock())).Inlines;
+			case ContentControl k: return _Inlines(k.Content) ?? ((TextBlock)(k.Content = new TextBlock())).Inlines;
+			case Panel { Parent: HeaderedContentControl k }: return _Inlines(k); //eg b.StartGrid<GroupBox>(null).FormatText($"...")
+			case FlowDocumentScrollViewer k: return _Inlines(k.Document); //rejected: create FlowDocument if Document is null. Better let the caller first set Document, because need to set its properties anyway.
+			case FlowDocumentReader k: return _Inlines(k.Document);
+			case RichTextBox k: return _Inlines(k.Document);
+			case FlowDocument k:
+				if (k.Blocks is not { Count: 1, FirstBlock: Paragraph para }) {
+					k.Blocks.Clear();
+					k.Blocks.Add(para = new());
+				}
+				return para.Inlines;
+			}
+			return null;
 		}
+		var ic = _Inlines(obj) ?? throw new NotSupportedException($"{m_}(): unsupported element type or content");
 		ic.Clear();
 		
 		var xr = XElement.Parse("<x>" + text + "</x>", LoadOptions.PreserveWhitespace);

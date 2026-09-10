@@ -134,26 +134,23 @@ class Embeddings(AiEmbeddingModel model) {
 	
 	public static string VectorDir { get; } = folders2.LaDataRoaming + @"AI\Embedding"; //note: don't use the common app data folder
 	
-	public static string VectorFile(AiEmbeddingModel model, string suffix) => VectorDir + $@"\{model.GetType()}-{suffix}.bin";
-	
 	List<EmVector> _GetEmbeddings(string dbPath, bool compact, Func<(List<string> names, List<EmInput> datas)> getData, CancellationToken cancel, string filenameSuffix = null) {
-		_EmHash newHash = _Hash(dbPath), oldHash = default;
-		string emPath = VectorFile(model, pathname.getNameNoExt(dbPath) + filenameSuffix);
-		var emFile = new _EmStorageFile(emPath);
+		_EmHash newHash = _EmHash.Create(dbPath, model), oldHash = default;
+		string emPath = VectorDir + $@"\{model.GetType()}-{pathname.getNameNoExt(dbPath) + filenameSuffix}.bin";
+		var emFile = new _EmStorageFile(emPath, model);
+		if (script.role is SRole.MiniProgram) VectorFileInfoForScript = (emPath, emFile.TryGetZipName(newHash));
 		List<EmVector> ems = null;
 		bool retried = false; gRetry:
 		if (filesystem.exists(emPath).File) {
 			try { ems = emFile.Load(out oldHash); }
 			catch (Exception ex) when (emFile.Reading && ex is not OutOfMemoryException) { print.warning(ex); }
-			
-			//emFile.PrintUploadIfAtHome(model, newHash);
 		}
 		bool exists = ems != null && oldHash.modelParams == newHash.modelParams;
 		if (exists && oldHash.hash == newHash.hash) return ems;
 		
 		if (!exists && !retried) {
 			retried = true;
-			if (emFile.TryDownload(model, newHash)) goto gRetry;
+			if (emFile.TryDownload(newHash)) goto gRetry;
 		}
 		
 		var (names, datas) = getData();
@@ -180,7 +177,7 @@ class Embeddings(AiEmbeddingModel model) {
 		
 		if (names.Count > 250 && !retried) {
 			retried = true;
-			if (emFile.TryDownload(model, newHash)) goto gRetry;
+			if (emFile.TryDownload(newHash)) goto gRetry;
 		}
 		
 		var vectors = CreateEmbeddings(datas, forDatabase: true, getInt8: compact, cancel);
@@ -191,15 +188,14 @@ class Embeddings(AiEmbeddingModel model) {
 		
 		emFile.Save(names, vectors, datas, newHash);
 		
-		emFile.PrintUploadIfAtHome(model, newHash);
-		
 		return emFile.Load(out _);
-		
-		_EmHash _Hash(string file) {
-			var hash = System.Security.Cryptography.SHA256.HashData(filesystem.loadBytes(file));
-			return new(Base64Url.EncodeToString(hash), $"{model.model};{model.dimensions};{model.emType}");
-		}
 	}
+	
+	/// <summary>
+	/// This is set by <see cref="GetDocsEmbeddings"/> and <see cref="GetIconsEmbeddings"/> if <c>script.role is SRole.MiniProgram</c>.
+	/// <c>zipFileName</c> is set only if the vectors file can be uploaded/downloaded to/from GitHub releases.
+	/// </summary>
+	public (string localFilePath, string zipFileName) VectorFileInfoForScript { get; private set; }
 	
 	#region docs
 	
@@ -400,7 +396,7 @@ class Embeddings(AiEmbeddingModel model) {
 
 record struct EmVector(string name, Array vec);
 
-file class _EmStorageFile(string file) {
+file class _EmStorageFile(string file, AiEmbeddingModel model) {
 	public void Save(List<string> names, List<Array> ems, List<EmInput> datas, _EmHash hash) {
 		filesystem.createDirectoryFor(file);
 		using var w = new BinaryWriter(File.Create(file));
@@ -474,14 +470,12 @@ file class _EmStorageFile(string file) {
 		return d;
 	}
 	
-	public bool TryDownload(AiEmbeddingModel model, _EmHash hash) {
-		//#if !SCRIPT
-		//		if (App.IsAtHome) return false;
-		//#endif
-		if (_TryGetZipName(model, hash) is not { } zipName) return false;
+	public bool TryDownload(_EmHash hash) {
+		return false;//TODO
+		if (TryGetZipName(hash) is not { } zipName) return false;
 		string zipFile = file + ".7z";
 		try {
-			var r = internet.http.Get($"https://github.com/qgindi/LA-downloads/releases/download/v1.0.0/{zipName}", dontWait: true);
+			var r = internet.http.Get($"https://github.com/qgindi/LA-downloads/releases/download/AI-embedding/{zipName}", dontWait: true);
 			if (!r.IsSuccessStatusCode) return false;
 			r.Download(zipFile, progressText1: "Downloading data for AI search");
 			var dir = pathname.getDirectory(file);
@@ -492,26 +486,30 @@ file class _EmStorageFile(string file) {
 		return true;
 	}
 	
-	string _TryGetZipName(AiEmbeddingModel model, _EmHash hash) {
-		if (model.GetType().Assembly != GetType().Assembly) return null;
-		if (!((file.Ends("-icons.bin") && model.isCompact) || (model is ModelVoyageEmbed && file.Ends("-doc-ai.bin") && !model.isCompact))) return null;
+	public string TryGetZipName(_EmHash hash) {
+		switch (model) {
+		case ModelVoyageEmbed or ModelGeminiEmbed or ModelMistralEmbed:
+			if (!file.Ends("-doc-ai.bin")) return null;
+			break;
+		case ModelVoyageEmbedM:
+			if (!file.Ends("-icons.bin")) return null;
+			break;
+		default: return null;
+		}
 		
 		var md5 = new Hash.MD5Context();
 		md5.Add(hash.hash);
 		md5.Add(hash.modelParams);
-		return $"{pathname.getNameNoExt(file)}-{md5.Hash.ToStringBase64Url()}.7z";
-	}
-	
-	public void PrintUploadIfAtHome(AiEmbeddingModel model, _EmHash hash) {
-#if !SCRIPT
-		if (!App.IsAtHome) return;
-#endif
-		if (_TryGetZipName(model, hash) is not { } zipName) return;
-		print.it($"<><script Upload AI embeddings.cs|{file}|{zipName}>Upload<> AI embedding vectors.");
+		return $"{model.GetType().Name}-{md5.Hash.ToStringBase64Url()}.7z";
 	}
 }
 
-file record struct _EmHash(string hash, string modelParams);
+file record struct _EmHash(string hash, string modelParams) {
+	public static _EmHash Create(string dbPath, AiEmbeddingModel model) {
+		var hash = System.Security.Cryptography.SHA256.HashData(filesystem.loadBytes(dbPath));
+		return new(Base64Url.EncodeToString(hash), $"{model.model};{model.dimensions};{model.emType}");
+	}
+}
 
 [JsonConverter(typeof(_JsonConverter))]
 record struct EmInput {

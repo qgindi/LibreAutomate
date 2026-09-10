@@ -156,7 +156,10 @@ using (var dbDoc = new sqlite(folders.ThisApp + "doc-ai.db")) {
 }
 filesystem.copyTo(dbFile, @"C:\code\Au.Editor", FIfExists.Delete);
 
-print.it("DONE. Added summaries to doc-ai.db.");
+print.it("""
+<>DONE. Added summaries to doc-ai.db.
+	Now <script Upload AI embeddings.cs>upload vectors to GitHub<>
+""");
 
 #endif
 

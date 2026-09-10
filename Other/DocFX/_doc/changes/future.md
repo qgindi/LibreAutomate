@@ -28,7 +28,7 @@ New parameters:
 - .
 
 Improved:
-- .
+- `wpfBuilder.FormatText` and similar methods support more element types.
 
 Fixed bugs:
 - Methods that set WPF window startup position don't work well in some cases (rare).
