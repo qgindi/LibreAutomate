@@ -471,7 +471,6 @@ file class _EmStorageFile(string file, AiEmbeddingModel model) {
 	}
 	
 	public bool TryDownload(_EmHash hash) {
-		return false;//TODO
 		if (TryGetZipName(hash) is not { } zipName) return false;
 		string zipFile = file + ".7z";
 		try {
