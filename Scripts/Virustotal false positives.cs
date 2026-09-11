@@ -8,11 +8,13 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+_Mode mode = script.testing ? _Mode.Testing : args is ["/silent"] ? _Mode.Silent : args is ["/release"] ? _Mode.Release : throw null;
+
 //string trueFile = folders.Editor + "LibreAutomateSetup.exe";
 string trueFile = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
 string file = trueFile;
 
-if (script.testing) {
+if (mode is _Mode.Testing) {
 	print.clear();
 	//file = folders.Editor + @"64\AuCpp.dll";
 	//file = folders.Editor + @"64\Au.DllHost.exe";
@@ -34,29 +36,12 @@ bool uploadedNow = false;
 
 var id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file)));
 
-//make sure that the local setup exe is the same as the GitHub latest release
-if (file == trueFile && !script.testing) {
+if (mode is _Mode.Silent) { //from the timer script. Use the remote LA setup file.
 	var r1 = internet.http.Get("https://api.github.com/repos/qgindi/LibreAutomate/releases/latest");
 	var j1 = r1.Json(true)["assets"][0];
 	//_PrintJson(j1);
 	var digest = (string)j1["digest"];
-	digest = digest[7..]; //prefix "sha256:"
-#if !true
-	if (digest != id) {
-		int button = dialog.show("Which setup exe to use?", "The local setup file is different than the GitHub latest release (different hash).", "1 GitHub latest release\nIf still not scanned - local.|2 The local setup file|3 Download and use the GitHub latest release\nWill replace the local|0 Cancel", flags: DFlags.CommandLinks);
-		switch (button) {
-		case 1: id = digest; break;
-		case 2: break;
-		case 3:
-			internet.http.Get((string)j1["browser_download_url"], true).Download(file);
-			id = digest;
-			break;
-		default: return;
-		}
-	}
-#else
-	id = digest;
-#endif
+	id = digest[7..]; //prefix "sha256:"
 }
 
 //try get existing results for that file
@@ -148,3 +133,5 @@ static bool _HttpOK(HttpResponseMessage r, bool exception) {
 static void _PrintJson(JsonNode j) {
 	print.it(j.ToJsonString(new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
 }
+
+enum _Mode { Testing, Release, Silent }

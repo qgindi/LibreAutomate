@@ -325,6 +325,9 @@ partial class FilesModel {
 	public FileNode FindByFilePath(string path, FNFind kind = FNFind.Any, List<FileNode> all = null) {
 		all?.Clear();
 		
+		if (path.NE()) return null;
+		path = path.Replace('/', '\\');
+		
 		var d = FilesDirectory;
 		if (path.PathStarts(d)) { //is in workspace folder
 			var r = Root.FindDescendant(path[d.Length..], kind);

@@ -66,7 +66,7 @@ Review the <a {() => { _OpenVersionMd(); }}>md file of current version</a>.
 	Test on other OS too. And on Windows arm64.
 	The setup will use the .lzma files. If want to test downloading, run it later, after creating GitHub release, without the .lzma files in the folder.
 
-<a {() => _Script("Virustotal false positives.cs")}>#Scan the setup file at virustotal.com</a>. The script also runs once/day.
+<a {() => _Script("Virustotal false positives.cs", "/release")}>#Scan the setup file at virustotal.com</a>. The script also runs once/day.
 	The create-setup script also creates file vt-1.zip. Sometimes scan it too.
 	Never mind if there are 1-2 false positives from less known AV.
 	When creating setup, I scanned it often. Randomly was Microsoft FP. Try to change something, eg change a string or toggle `#define USE_RESTARTMANAGER` in Util.cs.

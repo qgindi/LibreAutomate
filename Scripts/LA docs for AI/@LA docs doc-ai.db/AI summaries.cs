@@ -128,9 +128,9 @@ using (var dbDoc = new sqlite(folders.ThisApp + "doc-ai.db")) {
 		if (dHash.TryGetValue(name, out var hash2) && hash2.SequenceEqual(hash)) continue;
 		
 		print.it(name);
-		perf.first();
+		//perf.first();
 		var sum = _GenerateSummary(name, text, model, false);
-		perf.nw();
+		//perf.nw();
 		//print.it(sum);
 		
 		staTempInsert.BindAll(name, sum, hash);

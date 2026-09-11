@@ -732,9 +732,9 @@ System.Threading.Tasks.TaskCanceledException
 	}
 	
 	bool _GoToLine(_FRAME f, bool keepMarkers = false) {
-		if (f != null) {
+		//print.it("path", f.fullname);
+		if (f?.fullname is { } path && pathname.isFullPath(path)) {
 			//Multiple filenodes can have the same path. But debugger sends only path. Try to find the best filenode.
-			string path = f.fullname;
 			FileNode fn = null, fnActive = Panels.Editor.ActiveDoc?.EFile;
 			if (fnActive != null) { //prefer the active doc filenode or the most recently opened filenode
 				if (path.Eqi(fnActive.FilePath)) fn = fnActive;
