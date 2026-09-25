@@ -8,19 +8,25 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-_Mode mode = script.testing ? _Mode.Testing : args is ["/silent"] ? _Mode.Silent : args is ["/release"] ? _Mode.Release : throw null;
+_Mode mode = script.testing ? _Mode.Testing : args is ["/github"] ? _Mode.Github : args is ["/release"] ? _Mode.Release : throw null;
 
-//string trueFile = folders.Editor + "LibreAutomateSetup.exe";
-string trueFile = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
-string file = trueFile;
+//string file = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
+string file = folders.Editor + "LibreAutomate.msi";
 
 if (mode is _Mode.Testing) {
-	print.clear();
+	//print.clear();
 	//file = folders.Editor + @"64\AuCpp.dll";
 	//file = folders.Editor + @"64\Au.DllHost.exe";
-	file = folders.Editor + @"..\Setup\bin\Release\net48\vt-1.zip";
+	//file = folders.Editor + @"..\Setup\bin\Release\net48\vt-1.zip";
 	//file = folders.Editor + @"..\Setup\bin\Release\net48\offline-1.zip.lzma";
-	//file = folders.Downloads + "LibreAutomateSetup.exe";
+	//file = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
+	//file = folders.Workspace + @"exe\App\App.dll";
+	//file = folders.Workspace + @"exe\App\publish\release_x64\App.exe";
+	//file = folders.Workspace + @"exe\Script3\publish\release_x64\Script3.exe";
+	//file = folders.Editor + @"..\Setup_\SetupMsi\bin\x64\Release\en-US\SetupMsi.msi";
+	//file = @"C:\code\Test\Rust\hello-rust\target\release\hello-rust.exe";
+	//file = folders.Editor + "LibreAutomate.msi";
+	
 }
 
 var apikey = Environment.GetEnvironmentVariable("API_VIRUSTOTAL");
@@ -36,7 +42,7 @@ bool uploadedNow = false;
 
 var id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file)));
 
-if (mode is _Mode.Silent) { //from the timer script. Use the remote LA setup file.
+if (mode is _Mode.Github) { //from the timer script
 	var r1 = internet.http.Get("https://api.github.com/repos/qgindi/LibreAutomate/releases/latest");
 	var j1 = r1.Json(true)["assets"][0];
 	//_PrintJson(j1);
@@ -57,7 +63,7 @@ if (r.IsSuccessStatusCode) {
 	//print.it("-------");
 	
 	int nFP = (int)j["data"]["attributes"]["last_analysis_stats"]["malicious"];
-	int nIgnore = (!script.testing && !uploadedNow && file == trueFile) ? 0 : 0;
+	int nIgnore = 0;
 	if (nFP > nIgnore) {
 		print.it($"<><lc #FFC977>Virustotal: {nFP} false positives for {filename}<>");
 		foreach (var (av, n) in j["data"]["attributes"]["last_analysis_results"].AsObject().Where(kv => (string)kv.Value["category"] == "malicious")) {
@@ -69,6 +75,7 @@ if (r.IsSuccessStatusCode) {
 	}
 } else if (r.StatusCode == System.Net.HttpStatusCode.NotFound && !uploadedNow) {
 	id = _Upload();
+	sound.speak("Analysing finished");
 	goto g1;
 } else {
 	_HttpOK(r, false);
@@ -111,6 +118,7 @@ string _Upload() {
 			//if (!dialog.showYesNo("Continue polling?")) return;
 		}
 	}
+	
 }
 
 string _GetLargeFileUploadUrl() {
@@ -134,4 +142,4 @@ static void _PrintJson(JsonNode j) {
 	print.it(j.ToJsonString(new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
 }
 
-enum _Mode { Testing, Release, Silent }
+enum _Mode { Testing, Release, Github }

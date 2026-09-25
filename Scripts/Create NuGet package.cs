@@ -29,7 +29,6 @@ var x = XElement.Load(auDir + @"\Au.csproj");
 var tf = x.XPathSelectElement("/PropertyGroup/TargetFramework");
 tf.ReplaceWith(new XElement("TargetFrameworks", tf.Value + ";net9.0-windows"));
 x.XPathSelectElement("/PropertyGroup/Version").Value = Au_.Version;
-x.XPathSelectElement("/PropertyGroup/Copyright").Value = $"Copyright (c) Gintaras Didžgalvis {DateTime.Now.Year}";
 //x.XPathSelectElement("/Target[@Name='PreBuild']/Exec").Remove();
 //print.it(x);
 //return;

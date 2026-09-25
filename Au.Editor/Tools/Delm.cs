@@ -37,7 +37,7 @@ class Delm : KDialogWindow {
 	bool _wndNoActivate;
 	string _wndName;
 	string _screenshot;
-	
+
 	KSciInfoBox _info;
 	Button _bTest, _bInsert, _bWindow;
 	ComboBox _cbAction;
@@ -48,21 +48,21 @@ class Delm : KDialogWindow {
 	Border _pageBorder;
 	KSciCodeBoxWnd _code;
 	KTreeView _tree;
-	
+
 	partial class _PropPage {
 		Delm _dlg;
-		
+
 		public KCheckTextBox roleA, nameA, uiaidA, uiacnA, idA, classA, valueA, descriptionA, actionA, keyA, helpA, urlA, elemA, stateA, rectA, alsoA, skipA, navigA, notinA, maxccA, levelA;
 		public KCheckBox inPath, hiddenTooA, reverseA, uiaA, notInprocA, clientAreaA, menuTooA;
 		public Border htmlAttr;
 		public Grid panel;
 		public _TreeItem ti;
-		
+
 		//elm properties, other parameters, search settings
 		public _PropPage(Delm dlg) {
 			//print.it("_PropPage");
 			_dlg = dlg;
-			
+
 			var b = new wpfBuilder().Height(180).Columns(-2, 0, -1);
 			panel = b.Panel as Grid;
 			//elm properties (left side)
@@ -107,14 +107,14 @@ class Delm : KDialogWindow {
 			b.R.Skip(2).AddSeparator(vertical: false).Margin("T9 B9");
 			b.Row(-1).Skip(2).Add(out inPath, "Add to path").Margin("1");
 			b.End();
-			
+
 			_InitInfo();
 		}
 	}
-	
+
 	public Delm(POINT? p = null) {
 		Title = "Find UI element";
-		
+
 		var b = new wpfBuilder(this).WinSize((500, 440..), (600, 500..)).Columns(-1, 0);
 		b.R.Add(out _info).Height(60);
 		b.R.StartGrid().Columns(76, 76, 130, 0, 70, -1);
@@ -134,14 +134,21 @@ class Delm : KDialogWindow {
 		b.xAddButtonIcon("*EvaIcons.Options2" + LA.EdIcons.green, _ => _ToolSettings(), "Tool settings");
 		b.AddSeparator(true);
 		b.Add(out _cUIA, "UIA").Checked(LA.App.Settings.delm.def_UIA, threeState: true).Tooltip("What API to use to capture UI elements:\nChecked - UI Automation\nUnchecked - MSAA\nIndeterminate - auto");
-		
+
 		b.End();
 		//row 2
-		b.R.AddButton(out _bTest, "Test", _ => _Test()).Tooltip("Execute the 'find' part of the code now and show the rectangle.\r\nRight-click for more options.");
+		b.R.AddButton(out _bTest, "Test", _ => _Test())
+			.Tooltip("Execute the 'find' part of the code now and show the rectangle.\r\nRight-click for more options.");
 		_bTest.ContextMenuOpening += _bTest_ContextMenuOpening;
-		b.AddButton(out _bInsert, "Insert", _ => _Insert(hotkey: false)).Tooltip($"Insert code in editor.\nHotkey {LA.App.Settings.delm.hk_insert} (while capturing).");
+		
+		b.AddButton(out _bInsert, "Insert", _ => _Insert(hotkey: false))
+			.Tooltip($"Insert code in editor.\nHotkey {LA.App.Settings.delm.hk_insert} (while capturing).\nDouble-click to insert and close this window.");
+		_bInsert.MouseDoubleClick += (_, _) => Close();
+		
 		b.Add(out _cbAction).Tooltip("Action. Call this function when found. Or instead of Find call FindAll or create new elmFinder.");
-		_xy = b.xAddCheckText("x, y", noR: true, check: _Opt.Has(_EOptions.MouseXY)); b.Span(1).Height(18); _xy.t.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+		_xy = b.xAddCheckText("x, y", noR: true, check: _Opt.Has(_EOptions.MouseXY));
+		b.Span(1);
+		_xy.t.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
 		b.Add(out _cScroll, "Scroll").Checked(_Opt.Has(_EOptions.MouseScroll));
 		//row 3
 		b.R.StartStack();
@@ -150,57 +157,57 @@ class Delm : KDialogWindow {
 		_wait = b.xAddCheckText("Wait", LA.App.Settings.delm.def_wait ?? "1", check: !_Opt.Has(_EOptions.NoWait)); b.Width(48);
 		b.xAddCheck(out _cException, "Fail if not found").Checked();
 		b.End();
-		
+
 		b.End();
 		_ActionInit();
 		_EnableDisableTopControls(false);
-		
+
 		b.R.AddSeparator(false);
 		_commonPage = new(this);
 		b.R.Add(out _pageBorder).Margin("LR").Height(_commonPage.panel.Height);
 		b.R.AddSeparator(false);
-		
+
 		//code
 		b.Row(80).xAddInBorder(out _code, "B");
-		
+
 		//tree
 		b.xAddSplitterH(span: -1);
 		b.Row(-1).xAddInBorder(out _tree, "T");
-		
+
 		b.End();
-		
+
 		_InitTree();
-		
+
 		if (p != null) _ElmFromPoint(p.Value, ctor: true); //will call _SetElm in OnSourceInitialized
-		
+
 		b.WinProperties(
 			topmost: true,
 			showActivated: _elm != null ? false : null //eg if captured a popup menu item, activating this window closes the menu and we cannot get properties
 			);
-		
+
 		WndSavedRect.Restore(this, LA.App.Settings.wndpos.elm, o => LA.App.Settings.wndpos.elm = o);
 	}
-	
+
 	static Delm() {
 		TUtil.OnAnyCheckTextBoxValueChanged<Delm>((d, o) => d._AnyCheckTextBoxValueChanged(o), comboToo: true);
 	}
-	
+
 	protected override void OnSourceInitialized(EventArgs e) {
 		base.OnSourceInitialized(e);
-		
+
 		if (_elm != null) _SetElm(false);
 		_InitInfo();
 		_InitCapturingWithHotkey();
 	}
-	
+
 	protected override void OnClosing(CancelEventArgs e) {
 		_cCapture.IsChecked = false;
 		base.OnClosing(e);
 	}
-	
+
 	protected override void OnClosed(EventArgs e) {
 		base.OnClosed(e);
-		
+
 		//release COM objects. Else later can't unload the C++ dll from processes where used UIA etc.
 		_tree.SetItems(null);
 		foreach (var f in typeof(Delm).GetFields(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)) {
@@ -209,15 +216,15 @@ class Delm : KDialogWindow {
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
 	}
-	
+
 	void _SetElm(bool captured) {
 		wnd c = _elm.WndContainer, w = c.Window;
 		if (w.Is0) return;
-		
+
 		string wndName = w.NameTL_;
 		bool sameWnd = captured && w == _wnd && wndName == _wndName;
 		_wndName = wndName;
-		
+
 		bool useCon = _useCon && captured && sameWnd && c == _con;
 		//search in control by default in these cases:
 		//	1. It is in other thread. Then would be slow because cannot use inproc. Except in known windows.
@@ -226,14 +233,14 @@ class Delm : KDialogWindow {
 			if (c.ThreadId != w.ThreadId) useCon = 0 == c.ClassNameIs(Api.string_IES, "Windows.UI.Core.CoreWindow");
 			else useCon = w.ClassNameIs("SunAwt*") && c.ClassNameIs("SunAwt*");
 		}
-		
+
 		_SetWndCon(w, c, useCon);
-		
+
 		if (!_FillPropertiesTreeAndCode(true, sameWnd)) return;
-		
+
 		if (_IsAutoTest) timer.after(1, _ => _Test(captured: true, testAction: _cAutoTestAction.IsChecked));
 	}
-	
+
 	void _SetWndCon(wnd w, wnd con, bool useCon = false) {
 		_wnd = w;
 		_con = con == w ? default : con;
@@ -242,19 +249,19 @@ class Delm : KDialogWindow {
 		using var nevc = new _NoeventValueChanged(this);
 		_cControl.IsChecked = _useCon; _cControl.IsEnabled = !_con.Is0;
 	}
-	
+
 	//Called when: 1. _SetElm. 2. The Window button changed window. 3. The Control checkbox checked/unchecked.
 	bool _FillPropertiesTreeAndCode(bool setElm = false, bool sameWnd = false) {
 		//_nodeCaptured = null;
-		
+
 		//perf.first();
 		_TreeItem ti = null;
 		bool sameTree = sameWnd && _TrySelectInSameTree(out ti);
 		//perf.next();
-		
+
 		if (!sameTree) _ClearTree();
 		else if (ti != null && _PathSetPageWhenTreeItemSelected(ti)) return true;
-		
+
 		if (!_FillProperties(out var p)) return false;
 		if (!sameTree) {
 			Mouse.SetCursor(Cursors.Wait);
@@ -262,7 +269,7 @@ class Delm : KDialogWindow {
 			Mouse.SetCursor(Cursors.Arrow);
 		}
 		_FormatCode();
-		
+
 		if (p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_elm.MiscFlags.Has(EMiscFlags.Java) /*&& !osVersion.is32BitOS*/) {
 			timer.every(50, t => {
 				if (_testing) return;
@@ -274,12 +281,12 @@ class Delm : KDialogWindow {
 			});
 		}
 		//_info.aaaText = c_infoJava;
-		
+
 		//_nodeCaptured = _tree.SelectedItem as _TreeItem; //print.it(_nodeCaptured?.e);
 		//perf.nw();
 		return true;
 	}
-	
+
 	//Called when: 1. Captured, or window/control changed (_FillPropertiesTreeAndCode). 2. A tree item clicked.
 	bool _FillProperties(out EProperties p) {
 		bool propOK = _elm.GetProperties("Rnuvdakh@srwU", out var pr);
@@ -294,17 +301,17 @@ class Delm : KDialogWindow {
 		}
 		_page ??= _commonPage ??= new(this);
 		_pageBorder.Child = _page.panel;
-		
+
 		using var nevc = new _NoeventValueChanged(this);
-		
+
 		bool isWeb = browser != 0;
 		_isWebIE = browser == _BrowserEnum.IE;
-		
+
 		var role = p.Role; if (isWeb) role = "web:" + role;
 		_SetHideIfEmpty(_page.roleA, role, check: true, escape: false);
 		//CONSIDER: path too. But maybe don't encourage, because then the code depends on window/page structure.
 		bool noName = !_SetHideIfEmpty(_page.nameA, p.Name, check: true, escape: true, dontHide: true);
-		
+
 		bool haveCon = !isWeb && !_con.Is0;
 		bool uncheckCon = haveCon && !_con.IsVisible; //eg in Photos window
 		if (haveCon && !uncheckCon && p.UiaId.ToInt(out int i1) && i1 == _con.ControlId) { //don't use uiaid if == control id
@@ -313,13 +320,13 @@ class Delm : KDialogWindow {
 			//never mind: possibly incorrect p.Rect of DPI-scaled window.
 		}
 		if (_SetHideIfEmpty(_page.uiaidA, p.UiaId, check: noName, escape: true)) noName = false;
-		
+
 		if (haveCon && !uncheckCon && !p.UiaCN.NE() && p.UiaCN.Eqi(_con.ClassName)) { //don't use uiacn if == control class
 			if (_con.GetWindowAndClientRectInScreen(out var rw1, out var rc1))
 				if (rc1 == p.Rect || rw1 == p.Rect) p.UiaCN = null;
 		}
 		if (_SetHideIfEmpty(_page.uiacnA, p.UiaCN, check: false, escape: true)) noName = false;
-		
+
 		//control
 		bool isClassId = haveCon && !_useCon;
 		_page.idA.Visible = isClassId;
@@ -330,14 +337,14 @@ class Delm : KDialogWindow {
 			_Set(_page.classA, TUtil.StripWndClassName(_con.ClassName, true), check: !hasId);
 			if (uncheckCon) _page.classA.c.IsChecked = _page.idA.c.IsChecked = false;
 		}
-		
+
 		_SetHideIfEmpty(_page.valueA, p.Value, check: false, escape: true);
 		if (_SetHideIfEmpty(_page.descriptionA, p.Description, check: noName, escape: true)) noName = false;
 		_SetHideIfEmpty(_page.actionA, p.DefaultAction, check: false, escape: true);
 		if (_SetHideIfEmpty(_page.keyA, p.KeyboardShortcut, check: noName, escape: true)) noName = false;
 		if (_SetHideIfEmpty(_page.helpA, p.Help, check: noName, escape: true)) noName = false;
 		_SetHideIfEmpty(_page.urlA, propUrl, check: true, escape: false);
-		
+
 		if (p.HtmlAttributes.Count > 0) {
 			var b = new wpfBuilder(_page.htmlAttr).Columns((0, ..100), -1).Options(modifyPadding: false, margin: new());
 			foreach (var attr in p.HtmlAttributes) {
@@ -351,30 +358,30 @@ class Delm : KDialogWindow {
 			}
 			b.End();
 		} else _page.htmlAttr.Child = null;
-		
+
 		int item = _elm.Item;
 		_page.elemA.Visible = item != 0;
 		if (item != 0) {
 			_Set(_page.elemA, item.ToS());
 			if (noName && role is "BUTTON" or "CHECKBOX") { noName = false; _page.elemA.c.IsChecked = true; } //buttons in some toolbars don't have Name
 		}
-		
+
 		_Set(_page.stateA, p.State.ToString());
 		_Set(_page.rectA, $"{{W={p.Rect.Width} H={p.Rect.Height}}}");
-		
+
 		_page.alsoA.c.IsChecked = false;
 		_page.skipA.c.IsChecked = false;
 		_page.navigA.c.IsChecked = false;
 		if (isWeb && !_waitAutoCheckedOnce) _wait.c.IsChecked = _waitAutoCheckedOnce = true;
 		_page.uiaA.IsChecked = _elm.MiscFlags.Has(EMiscFlags.UIA);
-		
+
 		return true;
-		
+
 		void _Set(KCheckTextBox ct, string value, bool check = false) {
 			ct.t.Text = value;
 			ct.c.IsChecked = check;
 		}
-		
+
 		bool _SetHideIfEmpty(KCheckTextBox ct, string value, bool check, bool escape, bool dontHide = false, bool hideIfNull = false) {
 			bool empty = hideIfNull ? value == null : value.NE();
 			ct.Visible = !empty || dontHide;
@@ -385,7 +392,7 @@ class Delm : KDialogWindow {
 			return !empty;
 		}
 	}
-	
+
 	private void _bWnd_Click(WBButtonClickArgs e) {
 		var wPrev = _WndSearchIn;
 		bool captCheck = _cCapture.IsChecked;
@@ -395,7 +402,7 @@ class Delm : KDialogWindow {
 		_SetWndCon(r.w, r.con, r.useCon);
 		if (_WndSearchIn != wPrev) _FillPropertiesTreeAndCode();
 	}
-	
+
 	//when checked/unchecked any checkbox, and when text changed of any textbox
 	void _AnyCheckTextBoxValueChanged(object source) {
 		if (source == _cCapture) {
@@ -418,23 +425,23 @@ class Delm : KDialogWindow {
 			} else if (source is TextBox t && t.Tag is KCheckTextBox k) {
 				k.CheckIfTextNotEmpty();
 			}
-			
+
 			_FormatCode();
 		}
 	}
-	
+
 	int _noeventValueChanged;
 	ref struct _NoeventValueChanged {
 		Delm _d;
 		public _NoeventValueChanged(Delm d) { _d = d; _d._noeventValueChanged++; }
 		public void Dispose() { _d._noeventValueChanged--; }
 	}
-	
+
 	KPopup _ttRecapture;
-	
+
 	(string code, string wndVar) _FormatCode(bool test = false) {
 		if (_page == null) return default; //failed to get UI element props
-		
+
 		var action = _CurrentAction;
 		bool isFinder = !test && action.IsFinder;
 		bool isFindAll = !test && action.IsFindAll;
@@ -442,7 +449,7 @@ class Delm : KDialogWindow {
 		bool orThrow = !(test | isFinder | isFindAll) && _cException.IsChecked;
 		bool isAction = !test && action.code != null;
 		bool isVar = !(test | isFinder | isFindAll /*|| (isAction && orThrow && _Opt.Has(_EOptions.Compact))*/);
-		
+
 		var b = new StringBuilder();
 		string wndCode = null, wndVar = null;
 		if (isFinder) {
@@ -454,7 +461,7 @@ class Delm : KDialogWindow {
 			else if (isFindAll) b.Append(iFindAll switch { 1 => "foreach (var e in ", 5 => "var rows = ", _ => "var a = " });
 			b.Append(wndVar).Append(".Elm");
 		}
-		
+
 		bool isInPath = _page != _commonPage;
 		int nPathPages = isInPath ? _path.Count : 1;
 		for (int iPathPage = 0; iPathPage < nPathPages; iPathPage++) {
@@ -463,10 +470,10 @@ class Delm : KDialogWindow {
 			page.roleA.GetText(out var role, emptyToo: true);
 			if (iPathPage > 0 && !role.NE()) role = role[(role.IndexOf(':') + 1)..];
 			b.AppendStringArg(role);
-			
+
 			bool isName = page.nameA.GetText(out var name, emptyToo: true);
 			if (isName) b.AppendStringArg(name);
-			
+
 			int nProp = 0, propStart = 0;
 			void _AppendProp(KCheckTextBox k, bool emptyToo = false) {
 				if (!k.GetText(out var va, emptyToo)) return;
@@ -493,7 +500,7 @@ class Delm : KDialogWindow {
 				}
 				b.Append('"');
 			}
-			
+
 			_AppendProp(page.uiaidA, true);
 			_AppendProp(page.uiacnA, true);
 			if (iPathPage == 0) {
@@ -514,7 +521,7 @@ class Delm : KDialogWindow {
 			_AppendProp(page.maxccA);
 			_AppendProp(page.levelA);
 			if (nProp > 0) b.Append(']');
-			
+
 			if (TUtil.FormatFlags(out var s1,
 				(page.hiddenTooA, EFFlags.HiddenToo),
 				(page.reverseA, EFFlags.Reverse),
@@ -523,13 +530,13 @@ class Delm : KDialogWindow {
 				(iPathPage == 0 ? page.clientAreaA : null, EFFlags.ClientArea),
 				(page.menuTooA, EFFlags.MenuToo)
 				)) b.AppendOtherArg(s1, (isName && nProp > 0) ? null : "flags");
-			
+
 			if (page.alsoA.GetText(out var also)) b.AppendOtherArg(also, "also");
 			if (page.skipA.GetText(out var skip)) b.AppendOtherArg(skip, "skip");
 			if (page.navigA.GetText(out var navig)) b.AppendStringArg(navig, "navig");
 			b.Append(']');
 		}
-		
+
 		if (isFinder) {
 			b.Append(';');
 			b.Append(_screenshot);
@@ -597,18 +604,18 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			}
 #endif
 		}
-		
+
 		var R = b.ToString();
-		
+
 		if (!test) _code.AaSetText(R, wndCode.Lenn());
-		
+
 		return (R, wndVar);
 	}
-	
+
 	#region capture
-	
+
 	TUtil.CapturingWithHotkey _capt;
-	
+
 	void _InitCapturingWithHotkey() {
 		_capt = new(_cCapture,
 			_GetCapturingRect,
@@ -616,43 +623,43 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			isElm: true);
 		_cCapture.IsChecked = true;
 	}
-	
+
 	//Called repeatedly while capturing to display rectangles of elements from mouse.
 	bool _GetCapturingRect(TUtil.CapturingWithHotkey.GetRectArgs k) {
 		//don't show rects when a mouse button is pressed. With some apps then hangs. Eg Word > Insert > Symbol, click a symbol; notinproc too, but not UIA.
 		if (mouse.isPressed()) return false;
-		
+
 		if (_smaller is { } sm && sm.Window == k.wTL) {
 			return sm.GetRect(k);
 		}
-		
+
 		var p = k.p;
-		
+
 		var flags = _GetXYFlags();
 		//using var pe1 = perf.local();
 		var (e_, w) = _ElmFromPointRaw(p, flags);
 		//pe1.Next('e');
 		if (e_ == null) return false;
-		
+
 		using var e = e_;
 		var r = e.Rect;
 		//pe1.Next('r');
-		
+
 		if (_CaptureSmallerChromeWorkaround(e, w, r)) {
 			return _smaller.GetRect(k);
 		}
-		
+
 		k.resultRect = r;
 		k.resultText = e.Role;
 		return true;
 	}
-	
+
 	void _Capture() {
 		_ttRecapture?.Close();
 		_info.aaaText = _IsAutoTest ? "" : _dialogInfo; //clear error/info from previous test etc. If with auto-test options, make empty to reduce flickering.
-		
+
 		if (!_ElmFromPoint(mouse.xy)) return;
-		
+
 		_testedAction = _aActions[0];
 		_SetElm(true);
 		var w = this.Hwnd();
@@ -661,7 +668,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			w.ActivateL();
 		}
 	}
-	
+
 	EXYFlags _GetXYFlags() {
 		var flags = EXYFlags.PreferLink;
 		switch (_cUIA.IsChecked) { case true: flags |= EXYFlags.UIA; break; case null: flags |= EXYFlags.OrUIA; break; }
@@ -670,7 +677,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		}
 		return flags;
 	}
-	
+
 	static EXYFlags _AdjustXYFlagsForWindow(wnd wFP, wnd wTL, EXYFlags flags) {
 		if (flags.HasAny(EXYFlags.OrUIA | EXYFlags.UIA)) {
 			if (!flags.Has(EXYFlags.UIA)) {
@@ -682,7 +689,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 					"WinUIDesktopWin32WindowClass", //WinUI (UIA faster/better). Eg WinUI3 Gallery, Microsoft PowerToys.
 					"GlassWndClass*" //JavaFX (no MSAA)
 					)) return flags | EXYFlags.UIA;
-				
+
 				if (!wTL.Child(cn: "Windows.UI.Input.InputSite.WindowClass", flags: WCFlags.HiddenToo).Is0) return flags | EXYFlags.UIA; //eg Win11 taskbar, terminal, taskmanager. MSAA bug: intermediate hidden child window; from-point API does not work; for find/enum may need hiddentoo flag.
 				if (wFP != wTL) { //maybe need UIA flag only for part of window, eg Win11 explorer's ribbon. With UIA much slower to find.
 					if (wFP.ClassNameIs("Microsoft.UI.Content.DesktopChildSiteBridge")) flags |= EXYFlags.UIA; //eg Win11 mspaint, explorer's ribbon, notepad. No MSAA.
@@ -694,7 +701,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		}
 		return flags;
 	}
-	
+
 	static (elm e, wnd w) _ElmFromPointRaw(POINT p, EXYFlags flags) {
 		wnd w = default;
 		elm e = elm.fromXY_(p, flags, (flags, wFP, wTL) => {
@@ -703,21 +710,21 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		});
 		return (e, w);
 	}
-	
+
 	//Called only when capturing, not to display rectangles of elements from mouse.
 	bool _ElmFromPoint(POINT p, bool ctor = false) {
 		_capturingMenu?.Close();
-		
+
 		var flags = _GetXYFlags();
-		
+
 		var a = _smaller is { } sm && sm.Window == wnd.fromXY(p, WXYFlags.NeedWindow)
 			? sm.GetElm(p)
 			: _GetElm(p, flags, ctor);
 		if (a.NE_()) return false;
 		var e = a[0];
-		
+
 		_screenshot = TUtil.MakeScreenshot(p, _capt);
-		
+
 		if (a.Length > 1) {
 			var m = new popupMenu();
 			for (int i = 0; i < a.Length;) {
@@ -732,21 +739,21 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			int k = _ShowMenu(m, e.rect, osd: true) - 1;
 			_capturingMenu = null;
 			if (k < 0) return false;
-			
+
 			//some objects become invalid while showing the menu (or in any case when mouse moved out). Eg STATICTEXT in icons in VSCode left toolbar.
 			while (!a[k].e.GetRect(out _, raw: true)) if (++k == a.Length) return false;
-			
+
 			e = a[k];
 		}
-		
+
 		//set x y field always, not only when a mouse action selected, because may select a mouse action afterwards
 		_noeventValueChanged++;
 		_xy.t.Text = $"{p.x - e.rect.left}, {p.y - e.rect.top}";
 		_noeventValueChanged--;
-		
+
 		_elm = e.e;
 		return true;
-		
+
 		_CapturedElm[] _GetElm(POINT p, EXYFlags flags, bool ctor) {
 			if (ctor) {
 				//workaround for: Chrome may give wrong element at first. Eg youtube right list -> "x months ago".
@@ -756,16 +763,16 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				_ElmFromPointRaw(p, flags);
 				100.ms();
 			}
-			
+
 			var (e, w) = _ElmFromPointRaw(p, flags);
 			if (!uacInfo.isAdmin && w.UacAccessDenied) print.warning("The target process is admin; this process isn't. Can't use its UI elements.", -1); //not _info.InfoError, it's unreliable here, even with timer
 			if (e == null) return null;
-			
+
 			//the same workaround as in _GetCapturingRect
 			if (ctor && _CaptureSmallerChromeWorkaround(e, w)) {
 				return _smaller.GetElm(p);
 			}
-			
+
 			//If e probably does not support Invoke or Focus, show menu with e and the first ancestor that supports it.
 			//	In some cases use the ancestor without a menu (if LINK or BUTTON etc).
 			//	This code is similar to the C++ code in _FromPoint_GetLink, but covers more cases.
@@ -807,7 +814,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 						if (r1 == ERole.COMBOBOX || (r1 == ERole.WINDOW && ((ep = ep.Parent)?.RoleInt ?? 0) == ERole.COMBOBOX)) e2 = ep;
 					}
 				}
-				
+
 				static bool _IsInteractive(elm e, bool orig, out bool stop) {
 					stop = false;
 					if (e.Item != 0) return true;
@@ -832,32 +839,32 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 					return e.DefaultAction is not (null or "" or "click ancestor" /*Chrome*/ or "Collapse" /*WPF expander*/);
 				}
 			}
-			
+
 			if (e2 == null) return [new(e, null, null, e.Rect)];
 			return [new(e, e.Role, tt1, e.Rect), new(e2, e2.Role, tt2, e2.Rect)];
 		}
 	}
 	bool _waitAutoCheckedOnce; //if user unchecks, don't check next time
 	popupMenu _capturingMenu;
-	
+
 	record class _CapturedElm(elm e, string role, string tt, RECT rect);
-	
+
 	class _CaptureSmaller {
 		Delm _d;
 		wnd _w;
 		(elm e, RECT rect)[] _a;
 		long _timeUpdated, _updatePeriod;
-		
+
 		public _CaptureSmaller(Delm d, wnd w) {
 			_d = d;
 			_w = w;
 		}
-		
+
 		public wnd Window => _w;
-		
+
 		public bool Update() {
 			if (_d._capturingMenu != null || _d._actionMenu != null) return false;
-			
+
 			EFFlags flags = 0;
 			if (_d._page is { } page) {
 				if (page.notInprocA.IsChecked) flags |= EFFlags.NotInProc;
@@ -866,7 +873,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			EXYFlags xyFlags = _AdjustXYFlagsForWindow(wnd.fromMouse(WXYFlags.Raw), _w, _d._GetXYFlags());
 			if (xyFlags.Has(EXYFlags.UIA)) flags |= EFFlags.UIA;
 			if (xyFlags.Has(EXYFlags.NotInProc)) flags |= EFFlags.NotInProc;
-			
+
 			_timeUpdated = long.MaxValue;
 			try {
 				var aOld = _a;
@@ -874,25 +881,25 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				_a = elmFinder.GetAllWithRect_(_w, flags).ToArray();
 				long t2 = Environment.TickCount64;
 				long t3 = t2 - t1;
-				
+
 				if (t3 < 3000) (_timeUpdated, _updatePeriod) = (t2, 2000 + t3 * 2);
-				
+
 				//Release old COM objects.
 				//	Old test results, now can't repro:
 				//		Else may become slower, and the target process memory grows, until next GC.
 				//		Eg Chrome the "get all" time normally is ~32 ms, but without this grows until 80-120 ms.
 				if (aOld != null) Task.Delay(1000).ContinueWith(t => { GC.Collect(); });
-				
+
 				//rejected: auto switch to UIA when need. Eg if CLIENT empty.
 				//	Difficult to reliably detect whether it's better.
 				//	Anyway does not improve all cases. Eg when need UIA only for a single child window, eg HtmlHelp tree.
 			}
 			catch (Exception e1) { Debug_.Print(e1); return false; }
-			
+
 			//Task.Run(() => { using (osdText.showTransparentText("updated", 1, PopupXY.Mouse)) 500.ms(); });
 			return true;
 		}
-		
+
 		public bool GetRect(TUtil.CapturingWithHotkey.GetRectArgs k) {
 			long timeNow = Environment.TickCount64;
 			bool update = timeNow - _timeUpdated >= _updatePeriod;
@@ -901,14 +908,14 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				update = liTime > _timeUpdated && timeNow - liTime > 600;
 			}
 			if (update) Update();
-			
+
 			var a = GetElm(k.p);
 			if (a.Length == 0) return false;
 			k.resultRect = a[0].rect;
 			k.resultText = a[0].role + " *";
 			return true;
 		}
-		
+
 		public _CapturedElm[] GetElm(POINT p) {
 			//get objects whose rect contains p. Get only tree leaves.
 			List<_CapturedElm> r = [];
@@ -929,34 +936,34 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 	}
 	_CaptureSmaller _smaller;
 	wnd _noAutoSmaller;
-	
+
 	void _CaptureSmallerToggle() {
 		var w = wnd.fromMouse(WXYFlags.NeedWindow);
 		//var w = wnd.fromMouse(); //no, it can be a ghost child window. Eg "Intermediate D3D Window" in Chrome; GetAll hangs if UIA.
-		
+
 		if (w.IsOfThisThread) {
 			dialog.showInfo(null, "Use this hotkey when the mouse is in the window where you want to capture an element.", flags: DFlags.CenterMouse, owner: this);
 			return;
 		}
-		
+
 		_CaptureSmallerToggle(w);
 	}
-	
+
 	void _CaptureSmallerToggle(wnd w) {
 		bool smaller = _smaller?.Window == w;
 		smaller = !smaller && !w.Is0;
 		_smaller = null;
-		
+
 		if (smaller) {
 			var sm = new _CaptureSmaller(this, w);
 			if (sm.Update()) _smaller = sm; else smaller = false;
 		} else {
 			_noAutoSmaller = w;
 		}
-		
+
 		osdText.showText(smaller ? "Using alternative elm capturing method in this window" : "Using default elm capturing method", smaller ? 3 : 2, PopupXY.Mouse);
 	}
-	
+
 	//workaround for Chromium bug (now fixed in browsers): can't capture links etc in acc mode.
 	//	On mouse-move over a link, Chrome shows the URL at the bottom. While the URL is visible, acc elm-from-point API doesn't work.
 	//	Similar in some other cases, eg when shows a tab thumbnail. Then uia API don't work too (never mind).
@@ -973,12 +980,12 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			}
 		}
 		return false;
-		
+
 		//CONSIDER: auto-switch to smaller mode in any window. Or just inform about it. To detect:
 		//	If acc rect == window rect or control rect (client):
 		//	Enum direct acc children to find one at that point. If found, switch.
 		//	Can detect it in C++ acc-from-point code and return a flag "has a child at that point". Then in the role tooltip display "ROLE (Shift+F3 to show smaller elements)".
-		
+
 		//[old] rejected: if big etc, inform about 'Smaller'
 		//if (r.Width * r.Height > 5000) {
 		//	var ri = e.RoleInt;
@@ -997,51 +1004,40 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		//	}
 		//}
 	}
-	
+
 	#endregion
-	
+
 	#region Insert, Test
-	
+
 	///// <summary>
 	///// When OK clicked, contains C# code. Else null.
 	///// </summary>
 	//public string aaResultCode { get; private set; }
-	
+
 	void _Insert(bool hotkey) {
-		if (_close && !hotkey) {
-			base.Close();
-		} else if (_code.aaaText.NullIfEmpty_() is string s) {
+		if (_code.aaaText.NullIfEmpty_() is string s) {
 			if (_Opt.Has(_EOptions.Activate) && !_wndNoActivate && !_CurrentAction.IsFinder) {
 				s = s.RxReplace(@"^.+?\bwnd\.find\(.+[^(]\)\K;\r", ".Activate();\r", 1);
 			}
-			
+
 			(string oldName, string newName)[] rename_e = null;
 			if (_Opt.Has(_EOptions.VarRole) && !(_CurrentAction.IsFinder || _CurrentAction.IsFindAll)) {
 				if (s.RxMatch(@"(?m)^var e = w\.Elm\[""(?:[a-z]+:)?([a-zA-Z][\w ]+\w)""", out var m)) rename_e = [("e", m[1].Value.Lower().Replace(' ', '_'))];
 			}
-			
+
 			LA.InsertCode.Statements(new(s, makeVarName1: true, renameVars: rename_e));
-			if (!hotkey) {
-				_close = true;
-				_bInsert.Content = "Close";
-				_bInsert.MouseLeave += (_, _) => {
-					_close = !true;
-					_bInsert.Content = "Insert";
-				};
-			}
 		}
 	}
-	bool _close;
-	
+
 	void _Test(bool captured = false, bool testAction = false, bool actWin = false) {
 		if (_page == null) return;
-		
+
 		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;
 		var elmSelected = _page == _commonPage ? _elm : _path[^1].ti.e;
-		
+
 		if (testAction) testAction = !_CurrentAction.NoTest;
 		bool autoInsert = captured && _cAutoInsert.IsChecked;
-		
+
 		_testing = true;
 		var restoreOwner = new int[1];
 		try {
@@ -1058,7 +1054,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				int diff = elmFoundBN.MiscFlags.Has(EMiscFlags.InProc) == elmSelected.MiscFlags.Has(EMiscFlags.InProc) ? 0 : 2;
 				bad = (!RECT.EqualFuzzy_(r1, r2, diff) || elmFoundBN.Role != elmSelected.Role);
 			}
-			
+
 			if (elmFound == null) {
 				string osd;
 				if (rr.info == null) _info.InfoError(osd = "Timeout", "Not found in 10 s.");
@@ -1095,12 +1091,12 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				return;
 			}
 			_info.InfoErrorOrInfo(rr.info);
-			
+
 			//if (quickOK && r.speed < 1_000_000) {
 			//	//timer.after(1000, _ => _bOK.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent)));
 			//	return;
 			//}
-			
+
 			if (testAction) {
 				string aCode = _ActionGetCode(test: true);
 				if (aCode != null) {
@@ -1114,7 +1110,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 					restoreOwner[0] = 1000;
 				}
 			}
-			
+
 			if (autoInsert) {
 				_Insert(hotkey: true);
 				_Osd("Inserted", false);
@@ -1124,16 +1120,16 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			if (restoreOwner[0] == 0) restoreOwner[0] = 1;
 			_testing = false;
 		}
-		
+
 		void _Osd(string s, bool error) {
 			if (!captured) return;
 			osdText.showTransparentText(s, 2, PopupXY.Mouse, error ? 0xFF6040 : 0x00C000, showMode: OsdMode.ThisThread);
 		}
 	}
 	bool _testing;
-	
+
 	bool _IsAutoTest => _Opt.HasAny(_EOptions.AutoTest) || _cAutoTestAction.IsChecked || _cAutoInsert.IsChecked;
-	
+
 	void _bTest_ContextMenuOpening(object sender, ContextMenuEventArgs e) {
 		var m = new popupMenu();
 		//bool isAction = _page != null && _ActionCanTest();
@@ -1143,19 +1139,19 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		m["Activate window and test", disable: _page == null] = _ => _Test(actWin: true);
 		m.Show(owner: this);
 	}
-	
+
 	#endregion
-	
+
 	#region tree
-	
+
 	_TreeItem _treeRoot;
 	//_TreeItem _nodeCaptured;
 	bool _isWebIE; //_FillProperties sets it; then _FillTree uses it.
-	
+
 	void _InitTree() {
 		_tree.SingleClickActivate = true;
 		_tree.ItemActivated += e => _ItemActivated(e.Item as _TreeItem);
-		
+
 		void _ItemActivated(_TreeItem ti) {
 			_elm = ti.e;
 			//_screenshot = null;
@@ -1166,7 +1162,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			_FormatCode();
 			TUtil.ShowOsdRect(_elm.Rect);
 		}
-		
+
 		_tree.ItemClick += e => {
 			if (e.Button == MouseButton.Right) {
 				var ti = e.Item as _TreeItem;
@@ -1184,27 +1180,27 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			}
 		};
 	}
-	
+
 	void _ClearTree() {
 		_tree.SetItems(null);
 		_treeRoot = null;
 		_PathClear();
 	}
-	
+
 	(_TreeItem xRoot, _TreeItem xSelect) _CreateTreeModel(wnd w, EProperties p, bool skipWINDOW) {
 		EFFlags flags = Enum_.EFFlags_Mark | EFFlags.HiddenToo | EFFlags.MenuToo;
 		if (_page.uiaA.IsChecked) flags |= EFFlags.UIA;
 		if (!_elm.MiscFlags.Has(EMiscFlags.InProc)) flags |= EFFlags.NotInProc; //if captured notinproc in DPI-scaled, would fail to select in tree if tree elems retrieved inproc, because would compare with non-scaled rects
-		
+
 		var us = (uint)p.State;
 		var prop = $"rect={p.Rect}\0state=0x{us:X},!0x{~us:X}";
 		if (skipWINDOW) prop += $"\0notin=WINDOW";
 		var role = p.Role.NullIfEmpty_();
-		
+
 		_TreeItem xRoot = new(this), xSelect = null;
 		var stack = new Stack<_TreeItem>(); stack.Push(xRoot);
 		int level = 0;
-		
+
 		try {
 			w.Elm[role, "**tc " + p.Name, prop, flags, also: o => {
 				_TreeItem x = new(this);
@@ -1226,7 +1222,7 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				return false;
 			}
 			].Exists();
-			
+
 			return (xRoot, xSelect);
 		}
 		catch (Exception ex) {
@@ -1234,15 +1230,15 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			return default;
 		}
 	}
-	
+
 	void _FillTree(EProperties p) {
 		Debug.Assert(_treeRoot == null); Debug.Assert(_path == null); //_ClearTree must be called before
-		
+
 		var w = _WndSearchIn;
 		if (_isWebIE && !_useCon && !_con.Is0) w = _con; //if IE, don't display whole tree. Could be very slow, because cannot use in-proc for web pages (and there may be many tabs with large pages), because its control is in other thread.
 		var (xRoot, xSelect) = _CreateTreeModel(w, p, false);
 		if (xRoot == null) return;
-		
+
 		if (xSelect == null && w.IsAlive) {
 			//IAccessible of some controls are not connected to the parent.
 			//	Also, WndContainer then may get the top-level window.
@@ -1264,18 +1260,18 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				}
 			}
 		}
-		
+
 		_tree.SetItems(xRoot);
 		_treeRoot = xRoot;
 		if (xSelect != null) _SelectTreeItem(xSelect);
-		
+
 		GC.Collect(1); //release old COM objects. Else may become slower.
 	}
-	
+
 	void _SelectTreeItem(_TreeItem x) {
 		_tree.SelectSingle(x);
 	}
-	
+
 	//Tries to find and select _elm in current tree when captured from same window.
 	//Usually faster than recreating tree, but in some cases can be slower. Slower when fails to find.
 	bool _TrySelectInSameTree(out _TreeItem ti) {
@@ -1283,14 +1279,14 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		if (_treeRoot == null) return false;
 		var a = _treeRoot.Descendants().ToArray();
 		if (a.Length == 0) return false;
-		
+
 		if (_elm.MiscFlags.Has(EMiscFlags.UIA) != _page.uiaA.IsChecked //different tree
 			|| _elm.MiscFlags.Has(EMiscFlags.InProc) != a[0].e.MiscFlags.Has(EMiscFlags.InProc) //different rects if DPI-scaled window
 			) {
 			_ClearTree();
 			return false;
 		}
-		
+
 		ti = _Find(_elm, a);
 		static _TreeItem _Find(elm e, _TreeItem[] a) {
 			if (!e.GetProperties("rn", out var p)) return null;
@@ -1309,16 +1305,16 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			}
 			return null;
 		}
-		
+
 		if (ti != null) _SelectTreeItem(ti);
 		else Debug_.Print("recreating tree of same window");
 		return ti != null;
-		
+
 		//Other ways to compare elm:
 		//IAccIdentity. Unavailable in web pages.
 		//IUIAutomationElement. Very slow ElementFromIAccessible. In Firefox can be 30 ms.
 	}
-	
+
 	class _TreeItem : TreeBase<_TreeItem>, ITreeViewItem {
 		readonly Delm _dlg;
 		public elm e;
@@ -1326,13 +1322,13 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		bool _isFailed;
 		bool _isInvisible;
 		bool _isExpanded;
-		
+
 		public _TreeItem(Delm dlg) {
 			_dlg = dlg;
 		}
-		
+
 		#region ITreeViewItem
-		
+
 		string ITreeViewItem.DisplayText {
 			get {
 				if (_displayText == null) {
@@ -1359,35 +1355,35 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 				return _displayText;
 			}
 		}
-		
+
 		void ITreeViewItem.SetIsExpanded(bool yes) { _isExpanded = yes; }
-		
+
 		bool ITreeViewItem.IsExpanded => _isExpanded;
-		
+
 		IEnumerable<ITreeViewItem> ITreeViewItem.Items => base.Children();
-		
+
 		bool ITreeViewItem.IsFolder => _IsFolder;
 		bool _IsFolder => base.HasChildren;
-		
+
 		object ITreeViewItem.Image => _IsFolder ? LA.EdIcons.FolderArrow(_isExpanded) : null;
-		
+
 		int ITreeViewItem.TextColor(TVColorInfo ci)
 			=> _isFailed ? 0xff0000
 			: _isInvisible ? ColorInt.SwapRB(Api.GetSysColor(Api.COLOR_GRAYTEXT))
 			: -1;
-		
+
 		int ITreeViewItem.BorderColor(TVColorInfo ci)
 			=> _dlg._PathFind(this) >= 0 ? 0x00C000 : -1;
-		
+
 		#endregion
 	}
-	
+
 	#endregion
-	
+
 	#region path
-	
+
 	List<(_TreeItem ti, _PropPage page)> _path;
-	
+
 	void _PathAddRemove() {
 		if (_tree.SelectedItem is not _TreeItem ti) return;
 		bool add = _page.inPath.IsChecked;
@@ -1421,11 +1417,11 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 			_page.ti = null;
 			_commonPage = _page;
 		}
-		
+
 		_tree.Redraw();
 		//then _FormatCode will be called
 	}
-	
+
 	bool _PathSetPageWhenTreeItemSelected(_TreeItem ti) {
 		//print.it(ti.e);
 		if (_path == null || _page == null) return false;
@@ -1435,24 +1431,24 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		if (i >= 0) _pageBorder.Child = _page.panel;
 		return i >= 0;
 	}
-	
+
 	int _PathFind(_TreeItem ti) {
 		if (_path != null) {
 			for (int i = 0; i < _path.Count; i++) if (_path[i].ti == ti) return i;
 		}
 		return -1;
 	}
-	
+
 	bool _PathIsIntermediate() {
 		if (_path == null || _page == null) return false;
 		return (uint)_PathFind(_page.ti) < _path.Count - 1;
 	}
-	
+
 	//int _PathFind() {
 	//	if (_path != null && _tree.SelectedItem is _TreeItem ti) return _PathFind(ti);
 	//	return -1;
 	//}
-	
+
 	void _PathClear() {
 		if (_path == null) return;
 		if (_page?.ti != null) {
@@ -1463,11 +1459,11 @@ for (int ir = 0; ir < rows.Length; ir++) { //for each row
 		}
 		_path = null;
 	}
-	
+
 	#endregion
-	
+
 	#region action
-	
+
 	const string c_actions = """
 No action
 Invoke | Invoke()
@@ -1537,28 +1533,28 @@ FindAll
 	Help - table | ?table | 3
 new elmFinder || 5
 """;
-	
+
 	record class _Action(string name, string code, int _flags, bool isSubmenu, bool inSubmenu, bool separatorBefore, bool isNone) {
 		public bool NoTest => 0 != (_flags & 1);
 		public bool IsFindAll => 0 != (_flags & 2);
 		public bool IsFinder => 0 != (_flags & 4);
 		public bool IsMouse => code?.Contains('%') == true;
 	}
-	
+
 	List<_Action> _aActions; //for menu
 	_Action _selectedAction, _testedAction;
-	
+
 	_Action _CurrentAction => !_selectedAction.isNone ? _selectedAction : _testedAction;
-	
+
 	_Action _ActionFind(string name) => _aActions.FirstOrDefault(o => o.name == name && !o.isSubmenu) ?? _aActions[0];
-	
+
 	void _ActionInit() {
 		_cbAction.Items.Add("");
 		_cbAction.DropDownOpened += (o, e) => {
 			_cbAction.IsDropDownOpen = false;
 			_ActionMenu(false);
 		};
-		
+
 		_aActions = new();
 		var a = c_actions.Lines();
 		bool separatorBefore = false;
@@ -1576,11 +1572,11 @@ new elmFinder || 5
 			}
 			separatorBefore = false;
 		}
-		
+
 		_testedAction = _aActions[0];
 		_ActionChange(_ActionFind(LA.App.Settings.delm.def_action));
 	}
-	
+
 	void _ActionChange(_Action action) {
 		_selectedAction = action;
 		_cbAction.Items[0] = action.name;
@@ -1588,7 +1584,7 @@ new elmFinder || 5
 		_ActionSetControlsVisibility();
 		if (_page != null) _FormatCode();
 	}
-	
+
 	_Action _ActionMenu(bool test) {
 		var m = new popupMenu();
 		for (int i = test ? 1 : 0; i < _aActions.Count; i++) {
@@ -1602,7 +1598,7 @@ new elmFinder || 5
 			} else {
 				_Add(m, i);
 			}
-			
+
 			void _Add(popupMenu m, int i) {
 				var x = _aActions[i];
 				if (test && x.code is ['#' or '?', ..]) return;
@@ -1610,7 +1606,7 @@ new elmFinder || 5
 				m.Add(i + 1, x.name);
 			}
 		}
-		
+
 		_actionMenu?.Close(); _actionMenu = m; //prevent multiple instances on capture+test
 		int ia;
 		if (test) { //called when testing if no action selected
@@ -1622,10 +1618,10 @@ new elmFinder || 5
 		_actionMenu = null;
 		if (--ia < 0) return _aActions[0];
 		var action = _aActions[ia];
-		
+
 		if (!test) {
 			_testedAction = _aActions[0];
-			
+
 			if (action.code is string s1) {
 				if (s1.Starts('#')) {
 					if (!_ActionInputStringArg(s1, out string selectAction)) return _aActions[0];
@@ -1640,7 +1636,7 @@ new elmFinder || 5
 				}
 			}
 		}
-		
+
 		if (!test) {
 			_ActionChange(action);
 		} else if (!ReferenceEquals(action, _testedAction)) {
@@ -1651,12 +1647,12 @@ new elmFinder || 5
 		return action;
 	}
 	popupMenu _actionMenu;
-	
+
 	string _ActionGetCode(bool test) {
 		var action = !test ? _CurrentAction : !_selectedAction.isNone ? _selectedAction : _ActionMenu(true);
-		
+
 		if (test && action.name == "WebInvoke") action = _ActionFind("Invoke"); //avoid waiting
-		
+
 		var s = action.code;
 		if (s != null) {
 			int j = s.IndexOf('%'); //mouse x y placeholder
@@ -1672,7 +1668,7 @@ new elmFinder || 5
 					if (scroll) s = s.Insert(j, "scroll: 50");
 				}
 			}
-			
+
 			if (s.Starts("Expand(true")) {
 				if (_actionExpandPath != null) s = s.ReplaceAt(7, 4, _actionExpandPath.Escape(quote: true));
 			} else if (s.Starts("ComboSelect(^")) {
@@ -1688,7 +1684,7 @@ new elmFinder || 5
 		return s;
 	}
 	string _actionExpandPath, _actionComboSelectItem;
-	
+
 	bool _ActionInputStringArg(string what, out string selectAction) {
 		selectAction = null;
 		switch (what) {
@@ -1700,14 +1696,14 @@ new elmFinder || 5
 			return _Dialog(ref _actionExpandPath, "Expand path", "Tree node path for Expand actions.\nExample: Folder1|Folder2|Folder3\nPath parts are wildcard expressions.");
 		}
 		return false; //impossible
-		
+
 		bool _Dialog(ref string r, string text1, string text2) {
 			if (!dialog.showInput(out string s, text1, text2, editText: r, owner: this)) return false;
 			r = s.NullIfEmpty_();
 			return true;
 		}
 	}
-	
+
 	void _ActionSetControlsVisibility() {
 		var action = _CurrentAction;
 		bool isMouse = action.IsMouse;
@@ -1717,11 +1713,11 @@ new elmFinder || 5
 		_wait.Visible = isFind;
 		_cException.Visibility = isFind ? Visibility.Visible : Visibility.Hidden;
 	}
-	
+
 	#endregion
-	
+
 	#region misc
-	
+
 	void _ToolSettings() {
 		var m = new popupMenu();
 		var cAT = m.AddCheck("Auto test find", _Opt.Has(_EOptions.AutoTest)); cAT.Tooltip = "Test find when captured";
@@ -1752,7 +1748,7 @@ new elmFinder || 5
 		_SetOpt(_EOptions.Activate, cWA.IsChecked);
 		_SetOpt(_EOptions.VarRole, cVR.IsChecked);
 	}
-	
+
 	[Flags]
 	enum _EOptions {
 		AutoTest = 1,
@@ -1764,12 +1760,12 @@ new elmFinder || 5
 		VarRole = 1 << 6,
 		//and don't save autotestaction, autoinsert
 	}
-	
+
 	static _EOptions _Opt {
 		get => (_EOptions)LA.App.Settings.delm.flags;
 		set => LA.App.Settings.delm.flags = (int)value;
 	}
-	
+
 	static bool _SetOpt(_EOptions opt, bool on) {
 		_EOptions f = _Opt;
 		if (f.Has(opt) == on) return false;
@@ -1777,7 +1773,7 @@ new elmFinder || 5
 		_Opt = f;
 		return true;
 	}
-	
+
 	//Builds navig path from the selected tree node to *to*. Sets control text and checkbox.
 	void _NavigateTo(_TreeItem to) {
 		if (_tree.SelectedItem is not _TreeItem from) return;
@@ -1794,12 +1790,12 @@ new elmFinder || 5
 				//find common ancestor
 				var aTo = to.AncestorsFromRoot(andSelf: true);
 				for (i = Math.Min(aFrom.Length, aTo.Length); --i >= 0;) if (aFrom[i] == aTo[i]) break;
-				
+
 				if (++i < aFrom.Length) {
 					_AppendPa();
 					_AppendNePr(aFrom[i], aTo[i]);
 				} else i--;
-				
+
 				while (++i < aTo.Length) {
 					var v = aTo[i]; var p = aTo[i].Parent;
 					var s = v == p.FirstChild ? "fi" : v == p.LastChild ? "la" : null;
@@ -1808,13 +1804,13 @@ new elmFinder || 5
 					else a.Add((s, 1));
 				}
 			}
-			
+
 			void _AppendPa() {
 				int n = aFrom.Length - i - 1;
 				if (n > 0) a.Add(("pa", n)); //else common parent with a 'to' ancestor
 			}
 		}
-		
+
 		void _AppendNePr(_TreeItem from, _TreeItem to) {
 			if (to == from) return;
 			int n = to.Index - from.Index;
@@ -1822,7 +1818,7 @@ new elmFinder || 5
 			//never mind: n may be incorrect because some UI elements skip invisible siblings. Eg standard WINDOW elements.
 			//	We could detect it and either display a warning or use pa ch instead (can be unreliable).
 		}
-		
+
 		var b = new StringBuilder();
 		foreach (var (s, n) in a) {
 			if (b.Length > 0) b.Append(' ');
@@ -1830,10 +1826,10 @@ new elmFinder || 5
 			if (n > 1) b.Append(n);
 		}
 		var navig = b.ToString();
-		
+
 		_page.navigA.Set(navig.Length > 0, navig);
 	}
-	
+
 	public static class Java {
 		/// <summary>
 		/// Calls <see cref="EnableDisableJab"/>. Before it shows dialog "enable/disable". After it shows dialog with results.
@@ -1848,14 +1844,14 @@ new elmFinder || 5
 			var (ok, results) = EnableDisableJab(enable);
 			dialog.show(null, results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.CenterOwner);
 		}
-		
+
 		/// <summary>
 		/// Enables or disables Java Access Bridge for current user.
 		/// Returns: ok = false if failed or canceled. results = null if canceled.
 		/// </summary>
 		public static (bool ok, string results) EnableDisableJab(bool enable) {
 			if (!GetJavaPath(out var path)) return (false, $"Cannot find Java {RuntimeInformation.ProcessArchitecture} (JRE or JDK). Make sure it is installed and in PATH. Need the {RuntimeInformation.ProcessArchitecture} version, not 32-bit or {(osVersion.isArm64Process ? "x64" : "ARM64")}. If you have other Java versions (32-bit etc), keep them too.");
-			
+
 			string sout = null;
 			string jabswitch = path + @"\jabswitch.exe";
 			if (!filesystem.exists(jabswitch).File) return (false, "Cannot find jabswitch.exe.");
@@ -1866,18 +1862,18 @@ new elmFinder || 5
 			catch (Exception ex) {
 				return (false, ex.ToStringWithoutStack());
 			}
-			
+
 			sout += "\r\nAlso may need to restart Java apps and this app.";
-			
+
 			return (true, sout);
-			
+
 			//tested: the checkbox in CP does not disable JAB. Works only enabling.
 			//	Tested on Win 10 (installed Java 64 and 32) and 7 (installed Java 64).
 			//	Tested 64-bit and 32-bit processes.
 			//	\lib\accessibility.properties is not modified, ie not enabled for all users.
 			//	This function works.
 		}
-		
+
 		/// <summary>
 		/// Gets path of the bin folder of installed Java JRE or JDK. Only of same x64/AMD64 architecture as of this process.
 		/// </summary>
@@ -1888,10 +1884,10 @@ new elmFinder || 5
 					foreach (var javaExe in where.Lines()) {
 						if (!javaExe.Ends(".exe", true)) continue;
 						run.console(out string s, javaExe, "-XshowSettings:properties");
-						
+
 						//print.it($"<><lc yellow>{javaExe}<>");
 						//print.it(s);
-						
+
 						var arch = osVersion.isArm64Process ? "aarch64" : "amd64";
 						if (s.RxIsMatch($@"(?m)^\h*os.arch *= *{arch}\b") && s.RxMatch(@"(?m)^\h*java.home *= *(.+)", 1, out s)) {
 							path = s + "\\bin";
@@ -1904,22 +1900,22 @@ new elmFinder || 5
 			return false;
 		}
 	}
-	
+
 	#endregion
-	
+
 	#region util
-	
+
 	wnd _WndSearchIn => _useCon ? _con : _wnd;
-	
+
 	//Returns nonzero browser if e is in visible web page in a browser, and not UIA.
 	//If Chrome document URL is not https/http/file, also returns the URL as wildcard.
 	static (_BrowserEnum browser, string propUrl) _IsVisibleWebPage(elm e, wnd wContainer) {
 		if (e.MiscFlags.HasAny(EMiscFlags.UIA | EMiscFlags.Java)) return default;
-		
+
 		var browser = wContainer.HasStyle(WS.CHILD)
 			? wContainer.ClassNameIs(Api.string_IES, "Chrome_RenderWidgetHostHWND") switch { 1 => _BrowserEnum.IE, 2 => _BrowserEnum.Chrome, _ => 0 }
 			: (_BrowserEnum)wContainer.ClassNameIs("Chrome*", "Mozilla*");
-		
+
 		if (browser is _BrowserEnum.Chrome or _BrowserEnum.FF) {
 			elm eDoc = null;
 			do {
@@ -1927,7 +1923,7 @@ new elmFinder || 5
 				e = e.Parent;
 			} while (e != null);
 			if (eDoc == null || eDoc.IsInvisible) return default;
-			
+
 			if (browser == _BrowserEnum.Chrome) { //see _FindDocumentCallback
 				var url = eDoc.Value;
 				if (url.NE()) return default;
@@ -1938,11 +1934,11 @@ new elmFinder || 5
 				}
 			}
 		}
-		
+
 		return (browser, null);
 	}
 	enum _BrowserEnum { Chrome = 1, FF, IE }
-	
+
 	void _EnableDisableTopControls(bool enable) {
 		_bTest.IsEnabled = enable; _bInsert.IsEnabled = enable;
 		_ActionSetControlsVisibility();
@@ -1951,7 +1947,7 @@ new elmFinder || 5
 		_bWindow.Visibility = vis;
 		_cControl.Visibility = vis;
 	}
-	
+
 	//Shows popup menu m by RECT r or by the mouse cursor, depending on r size.
 	//If r small, shows by r so that the menu does not cover the rectangle. Else shows by the mouse (else the user would not notice the menu easily).
 	//If ods, shows OSD rects for menu items with Tag = RECT.
@@ -1960,7 +1956,7 @@ new elmFinder || 5
 		var mf = byMouse ? PMFlags.Underline : PMFlags.Underline | PMFlags.AlignRectBottomTop | PMFlags.AlignCenterH;
 		if (osd) _RectTimer(m);
 		return m.Show(mf, excludeRect: byMouse ? null : r, owner: this.IsLoaded ? this : default);
-		
+
 		static void _RectTimer(popupMenu m) {
 			var osd = new osdRect { Color = 0x80C000, Thickness = 3, TopmostWorkaround_ = true };
 			PMItem pmi = null;
@@ -1982,26 +1978,26 @@ new elmFinder || 5
 			});
 		}
 	}
-	
+
 	static bool _RoleIsLinkOrButton(ERole role) => role is ERole.LINK
 			or ERole.BUTTON or ERole.BUTTONMENU or ERole.BUTTONDROPDOWN or ERole.BUTTONDROPDOWNGRID
 			or ERole.CHECKBOX or ERole.RADIOBUTTON;
-	
+
 	#endregion
-	
+
 	#region info
-	
+
 	TUtil.CommonInfos _commonInfos;
 	void _InitInfo() {
 		_commonInfos = new TUtil.CommonInfos(_info);
-		
+
 		_info.aaaText = _dialogInfo;
 		_info.AaAddElem(this, _dialogInfo);
 		_info.AaTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 		_info.AaTags.AddLinkTag("+actTest", _ => { if (_wnd.ActivateL()) _Test(); });
-		
+
 		//note: for Test button etc it's better to use tooltip, not _info.
-		
+
 		_info.InfoCT(_xy,
 @"Mouse x y in the UI element. Empty = center.
 See <help Au.Types.Coord>Coord<>. Examples:
@@ -2017,16 +2013,16 @@ The function waits max this time interval. On timeout throws exception if <b>Exc
 		_info.InfoC(_cException,
 @"Throw exception if not found.
 If unchecked, returns null.");
-		
+
 		_info.Info(_tree, "Tree view",
 @"All UI elements in the window.");
-		
+
 		//TODO3: now no info for HwndHost
 		//		_info.Info(_code, "Code",
 		//@"Code to find the UI element.
 		//The ""find window"" part can be edited directly.");
 	}
-	
+
 	string _dialogInfo = $"""
 This tool creates code to find <help elm>UI element<> in <help wnd.find>window<>.
 1. Move the mouse to a UI element. Press hotkey <b>{LA.App.Settings.delm.hk_capture}<>.
@@ -2041,9 +2037,9 @@ If the wanted element is "behind" a bigger element, try hotkey <b>{LA.App.Settin
 
 You can change hotkeys in <b>Options > Hotkeys<>.
 """;
-	
+
 	const string c_infoJava = "If there are no UI elements in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help>elm<> help.";
-	
+
 	partial class _PropPage {
 		void _InitInfo() {
 			var _info = _dlg._info;
@@ -2070,7 +2066,7 @@ Note: states can change. Use only states you need. Remove others from the list."
 			_info.InfoCT(rectA,
 @"Raw rectangle. Can be specified width (W) and/or height (H).
 Example: {W=100 H=20}");
-			
+
 			_info.InfoCT(alsoA,
 @"<help>elmFinder[]<> <i>also<> " + TUtil.CommonInfos.c_alsoParameter);
 			_info.InfoCT(skipA,
@@ -2084,7 +2080,7 @@ One or several words: <u><i>parent<> <i>child<> <i>first<> <i>last<> <i>next<> <
 Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child; -3 would be 3-rd from end.
 Note: ne/pr may skip invisible siblings.
 Some elements also support <u><i>up<> <i>down<> <i>left<> <i>right<><>.");
-			
+
 			_info.InfoC(hiddenTooA, "Flag <help>Au.Types.EFFlags<>.HiddenToo.");
 			_info.InfoC(reverseA, "Flag <help>Au.Types.EFFlags<>.Reverse (search bottom to top).");
 			_info.InfoC(uiaA,

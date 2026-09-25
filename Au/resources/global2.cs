@@ -36,9 +36,9 @@ using Au.More;
 
 [assembly: AssemblyMetadata("RepositoryUrl", "https://github.com/qgindi/LibreAutomate")]
 
-[assembly: AssemblyCompany("Gintaras Didžgalvis")]
+[assembly: AssemblyCompany("LibreAutomate")]
 [assembly: AssemblyProduct("LibreAutomate")]
-[assembly: AssemblyCopyright("Copyright 2020-2026 Gintaras Didžgalvis")]
+[assembly: AssemblyCopyright("Copyright 2020 LibreAutomate")]
 [assembly: AssemblyCulture("")]
 
 [assembly: AssemblyVersion(Au_.Version)]

@@ -2,18 +2,15 @@
 
 print.clear();
 
-const string repo = "qgindi/LibreAutomate";
-//const string repo = "qgindi/laMain"; //for script testing
+//const string repo = "qgindi/LibreAutomate";
+const string repo = "qgindi/laMain"; //for script testing
 
 if (repo.Ends("LibreAutomate")) {
 	if (!dialog.showOkCancel("Create new LA release?", $"GitHub repo: {repo}")) return;
 }
 
-var dir = pathname.normalize(folders.Editor + @"..\Setup\bin\Release\net48");
 string[] assets = [
-	$@"{dir}\LA-setup.exe",
-	$@"{dir}\offline-1.zip.lzma",
-	$@"{dir}\offline-2.zip.lzma"
+	folders.Editor + "LibreAutomate.msi"
 ];
 
 var grm = new GithubReleaseManager(repo, $"v{Au_.Version}");
@@ -24,6 +21,14 @@ string _ReleaseNotes() {
 	return $"""
 [What's new in v{verXX}](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/v{verXX}.md)
 
-Download `LA-setup.exe`. If you want to run setup while offline, also download the `.lzma` files (setup will use them).
+Download and run `LibreAutomate.msi`.
+
+Or run [msiexec](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/msiexec). Examples:
+- Run the installer in reduced UI mode: `msiexec /i "msi file path" /qr`
+- Change the app folder: `msiexec /i "msi file path" INSTALLDIR="app folder path"`.
+
+LibreAutomate uses the .NET 10 Desktop Runtime. Will prompt to install it if missing.
+
+Supported OS: Windows 10, 11. Also Windows 7+ with [.NET dependencies](https://learn.microsoft.com/en-us/dotnet/core/install/windows).
 """;
 }

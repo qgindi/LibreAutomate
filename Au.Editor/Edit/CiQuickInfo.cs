@@ -1,3 +1,6 @@
+//TODO: consider: add option to display Remarks. Now displays only for me, and only when editing solution files.
+//	Then also need to format markdown lists and paragraphs.
+
 using Microsoft.CodeAnalysis.QuickInfo;
 //using Microsoft.CodeAnalysis.CSharp.QuickInfo;
 using System.Windows.Documents;

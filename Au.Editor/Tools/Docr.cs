@@ -30,9 +30,16 @@ class Docr : KDialogWindow {
 		b.R.StartGrid().Columns(76, 76, 76, -1);
 		//row 1
 		b.R.AddButton("Window...", _ => _bWnd_Click());
-		b.AddButton(out _bTest, "Test", _Test).Disabled().Tooltip("Execute the code now (except wait/fail/mouse) and show the rectangle");
-		b.AddButton(out _bInsert, "Insert", _Insert).Disabled();
-		b.Add(out _cbAction).Align("L").Width(140).Items("|MouseMove|MouseClick|MouseClickD|MouseClickR|PostClick|waitNot|new ocrFinder").Select(2);
+		b.AddButton(out _bTest, "Test", _Test).Disabled()
+			.Tooltip("Execute the code now (except wait/fail/mouse) and show the rectangle");
+		
+		b.AddButton(out _bInsert, "Insert", _Insert).Disabled()
+			.Tooltip("Insert code in editor.\nDouble-click to insert and close this window.");
+		_bInsert.MouseDoubleClick += (_, _) => Close();
+		
+		b.Add(out _cbAction).Align("L").Width(140)
+			.Items("|MouseMove|MouseClick|MouseClickD|MouseClickR|PostClick|waitNot|new ocrFinder")
+			.Select(2);
 		//row 2
 		b.StartStack();
 		waitC = b.xAddCheckText("Wait", "1", check: true); b.Width(53);
@@ -265,25 +272,11 @@ class Docr : KDialogWindow {
 	//public string aaResultCode { get; private set; }
 
 	void _Insert(WBButtonClickArgs _1) {
-		if (_close) {
-			base.Close();
-		} else if (_code.aaaText.NullIfEmpty_() is string s) {
+		if (_code.aaaText.NullIfEmpty_() is string s) {
 			LA.InsertCode.Statements(new(s, makeVarName1: true));
-			//if (_Opt.Has(_EOptions.InsertClose)) {
-			//	base.Close();
-			//} else {
-			_close = true;
-			_bInsert.Content = "Close";
-			_bInsert.MouseLeave += (_, _) => {
-				_close = !true;
-				_bInsert.Content = "Insert";
-			};
-			//}
-
 			if (rectC.GetText(out var sRect)) TUtil.InfoRectCoord(_AreaWnd, sRect);
 		}
 	}
-	bool _close;
 
 	void _Test(WBButtonClickArgs _1) {
 		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;

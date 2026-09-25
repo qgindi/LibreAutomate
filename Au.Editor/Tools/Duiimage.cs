@@ -46,9 +46,16 @@ class Duiimage : KDialogWindow {
 		b.R.StartGrid().Columns(76, 76, 76, -1);
 		//row 1
 		b.R.AddButton(out _bCapture, "Capture", _ => _Capture());
-		b.AddButton(out _bTest, "Test", _Test).Disabled().Tooltip("Execute the code now (except wait/fail/mouse) and show the rectangle");
-		b.AddButton(out _bInsert, "Insert", _Insert).Disabled();
-		b.Add(out _cbAction).Align("L").Width(140).Items("|MouseMove|MouseClick|MouseClickD|MouseClickR|PostClick|PostClickD|PostClickR|waitNot|new uiimageFinder").Select(2);
+		b.AddButton(out _bTest, "Test", _Test).Disabled()
+			.Tooltip("Execute the code now (except wait/fail/mouse) and show the rectangle");
+		
+		b.AddButton(out _bInsert, "Insert", _Insert).Disabled()
+			.Tooltip("Insert code in editor.\nDouble-click to insert and close this window.");
+		_bInsert.MouseDoubleClick += (_, _) => Close();
+		
+		b.Add(out _cbAction).Align("L").Width(140)
+			.Items("|MouseMove|MouseClick|MouseClickD|MouseClickR|PostClick|PostClickD|PostClickR|waitNot|new uiimageFinder")
+			.Select(2);
 		//row 3
 		b.R.AddButton(out _bMore, "More ▾", _bEtc_Click).Align("L");
 		b.StartStack();
@@ -479,21 +486,11 @@ To avoid it, capture with flag WindowDC. Or try to move the window to another sc
 	//public string aaResultCode { get; private set; }
 
 	void _Insert(WBButtonClickArgs _1) {
-		if (_close) {
-			base.Close();
-		} else if (_code.aaaText.NullIfEmpty_() is string s) {
+		if (_code.aaaText.NullIfEmpty_() is string s) {
 			LA.InsertCode.Statements(new(s, makeVarName1: true));
-			_close = true;
-			_bInsert.Content = "Close";
-			_bInsert.MouseLeave += (_, _) => {
-				_close = !true;
-				_bInsert.Content = "Insert";
-			};
-
 			if (rectC.GetText(out var sRect)) TUtil.InfoRectCoord(_AreaWnd, sRect);
 		}
 	}
-	bool _close;
 
 	void _Test(WBButtonClickArgs _1) {
 		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;

@@ -300,7 +300,7 @@ static partial class App {
 			}
 	}
 #endif
-
+	
 	internal static void OnMainWindowLoaded_() {
 		if (IsPortable) {
 			print.it($"<>Info: <help editor/Portable app>portable mode<>. Using <link {folders.PortableData_}>data<> folder.");

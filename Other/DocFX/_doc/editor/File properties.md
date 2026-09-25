@@ -402,6 +402,6 @@ using System.Reflection;
 //[assembly: AssemblyCompany("Company name")]
 //[assembly: AssemblyProduct("Product name")]
 //[assembly: AssemblyInformationalVersion("1.0.0.0")] //product version
-//[assembly: AssemblyCopyright("Copyright © {{DateTime.Now.Year}} ")]
+//[assembly: AssemblyCopyright("Copyright ...")]
 //[assembly: AssemblyTrademark("Legal trademarks")]
 ```

@@ -453,7 +453,7 @@ static class CommandLine {
 	}
 	
 	//Called when command line starts with "/s". This process is running as SYSTEM in session 0.
-	//This process is started by the Task Scheduler task installed by the setup program. The task started by App._RestartAsAdmin.
+	//This process is started by the Task Scheduler task. The task started by App._RestartAsAdmin.
 	[MethodImpl(MethodImplOptions.NoOptimization)]
 	static unsafe int _RunEditorAsAdmin() {
 		var s1 = Api.GetCommandLine();

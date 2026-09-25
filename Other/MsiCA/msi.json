@@ -1,0 +1,88 @@
+{
+  "$schema": "https://www.masterpackager.com/support-master-packager-dev/mpdev-schema.json",
+  "outputTypes": [ "msi" ],
+  "outputDirectory": "_",
+  "packageName": "LibreAutomate",
+  "outputFileName": "$.packageName",
+  "version": "0",
+  "publisher": "Gintaras Didžgalvis",
+  "platform": "x64",
+  "installDir": "%ProgramFiles%\\LibreAutomate",
+
+  "fileSystemEntries": [
+    {
+      "sourcePath": "_",
+      "targetPath": "$.installDir"
+    }
+  ],
+
+  "registries": [
+    {
+      "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Au.Editor.exe",
+      "value": "$.installDir\\Au.Editor.exe"
+    },
+    {
+      "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\LibreAutomate",
+      "name": "InstallLocation",
+      "value": "$.installDir\\"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "target": "$.installDir\\Au.Editor.exe",
+      "name": "LibreAutomate"
+    }
+  ],
+
+  "msi": {
+    "upgradeCode": "{21BC47C2-741F-48C1-927A-B4169B073F30}",
+    "installDialog": {
+      "packageDescription": "LibreAutomate is a C# script editor and automation library.",
+      "publisherUrl": "https://www.libreautomate.com",
+      "primaryAccent": "#01787B",
+      "promptAppsAfterInstall": [
+        {
+          "displayName": "Launch LibreAutomate",
+          "file": "$.installDir\\Au.Editor.exe"
+        }
+      ]
+    },
+    "customActions": {
+      "dll": [
+        {
+          "name": "LA_BeforeCostFinalize",
+          "filePath": "%_MSI_SOLUTION_DIR%\\Other\\MsiCA\\bin\\MsiCA.dll",
+          "entryPoint": "LA_BeforeCostFinalize",
+          "sequence": "990",
+          "condition": "NOT UPGRADINGPRODUCTCODE",
+          "continueOnError": true
+        },
+        {
+          "name": "LA_BeforeValidate",
+          "filePath": "%_MSI_SOLUTION_DIR%\\Other\\MsiCA\\bin\\MsiCA.dll",
+          "entryPoint": "LA_BeforeValidate",
+          "sequence": "1010",
+          "condition": "NOT UPGRADINGPRODUCTCODE",
+          "continueOnError": true
+        },
+        {
+          "name": "LA_BeforeRemoveFiles",
+          "filePath": "%_MSI_SOLUTION_DIR%\\Other\\MsiCA\\bin\\MsiCA.dll",
+          "entryPoint": "LA_BeforeRemoveFiles",
+          "sequence": "3490",
+          "condition": "NOT UPGRADINGPRODUCTCODE",
+          "continueOnError": true
+        },
+        {
+          "name": "LA_AfterInstallFiles",
+          "filePath": "%_MSI_SOLUTION_DIR%\\Other\\MsiCA\\bin\\MsiCA.dll",
+          "entryPoint": "LA_AfterInstallFiles",
+          "sequence": "4010",
+          "condition": "NOT REMOVE",
+          "continueOnError": true
+        }
+      ]
+    }
+  }
+}

@@ -46,7 +46,13 @@ class Dwnd : KDialogWindow {
 		b.R.StartGrid().Columns(0, 76, 76, 0, 0, -1);
 		b.xAddCheckIcon(out _cCapture, "*Unicons.Capture" + LA.EdIcons.red, $"Enable capturing ({LA.App.Settings.delm.hk_capture}) and show window/control rectangles");
 		b.AddButton(out _bTest, "Test", _bTest_Click).Disabled().Tooltip("Execute the 'find' part of the code now and show the rectangle");
-		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled(); if (!_dontInsert) b.Tooltip("Insert code in editor");
+		
+		b.AddButton(out _bInsert, _dontInsert ? "OK" : "Insert", _Insert).Disabled();
+		if (!_dontInsert) {
+			b.Tooltip("Insert code in editor.\nDouble-click to insert and close this window.");
+			_bInsert.MouseDoubleClick += (_, _) => Close();
+		}
+		
 		b.Add(out _cbFunc).Items("find|findOrRun|runAndFind|finder").Tooltip("Function").Width(90);
 		_cbFunc.SelectionChanged += _cbFunc_SelectionChanged;
 		b.Add(out _cActivate, "Activate").Tooltip("Activate the found window");
@@ -369,19 +375,10 @@ class Dwnd : KDialogWindow {
 			
 			if (this.IsModal_() == false) Close();
 			else DialogResult = s != null;
-		} else if (_close) {
-			Close();
 		} else if (s != null) {
 			LA.InsertCode.Statements(new(s, makeVarName1: true));
-			_close = true;
-			_bInsert.Content = "Close";
-			_bInsert.MouseLeave += (_, _) => {
-				_close = !true;
-				_bInsert.Content = "Insert";
-			};
 		}
 	}
-	bool _close;
 	
 	private void _bTest_Click(WBButtonClickArgs ea) {
 		var (code, wndVar) = _FormatCode(true); if (code.NE()) return;

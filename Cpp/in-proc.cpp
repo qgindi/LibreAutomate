@@ -300,6 +300,8 @@ namespace inproc {
 
 			wchar_t name[12]; _itow(GetCurrentThreadId(), name, 10);
 			t_agentWnd = CreateWindowExW(WS_EX_NOACTIVATE, (STR)s_agentWindowClassAtom, name, WS_POPUP, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0);
+
+			ChangeWindowMessageFilter(WM_CLOSE, 1); //for the MSI installer's custom action. It can't run as admin.
 		}
 		//Printf(L"s_nAgentThreads=%i t_agentWnd=%i s_agentWindowClassAtom=%i", s_nAgentThreads, (int)t_agentWnd, s_agentWindowClassAtom);
 		return t_agentWnd;

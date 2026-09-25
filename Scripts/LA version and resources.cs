@@ -3,7 +3,6 @@
 print.clear();
 
 var solutionDirBS = @"C:\code\au\";
-var resourcesDirBS = solutionDirBS + @"Au.Editor\resources\";
 
 #if DONE
 if (!dialog.showInput(out string sVer, null, $"""
@@ -18,18 +17,27 @@ var sVer = Au_.Version;
 #endif
 
 var v = Version.Parse(sVer);
-var year = DateTime.Now.AddMonths(1).Year.ToS();
 
 //modify global2.cs
+{
+	var file = solutionDirBS + @"Au\resources\global2.cs";
+	var s1 = filesystem.loadText(file);
+	if (0 == s1.RxReplace(@"(?m)^\tpublic const string Version = ""\K[\d\.]+", sVer, out s1, 1)) throw null; //change Au_.Version
+	filesystem.saveText(file, s1);
+}
 
-var global2Cs = solutionDirBS + @"Au\resources\global2.cs";
-var s1 = filesystem.loadText(global2Cs);
-if (0 == s1.RxReplace(@"(?m)^\tpublic const string Version = ""\K[\d\.]+", sVer, out s1, 1)) throw null; //change Au_.Version
-if (0 == s1.RxReplace(@"Copyright 20\d\d-\K[\d]+", year, out s1, 1)) throw null; //change year if need
-filesystem.saveText(global2Cs, s1);
+//modify resource scripts of C++ projects
+{
+	var file = solutionDirBS + @"Cpp\Cpp.rc";
+	var s1 = filesystem.loadText(file);
+	if (2 != s1.RxReplace(@"VERSION \K[\d,]+", $"{v.Major},{v.Minor},{v.Build},0", out s1, 2)) throw null;
+	if (2 != s1.RxReplace("""Version", "\K[\d\.]+""", $"{sVer}.0", out s1, 2)) throw null;
+	filesystem.saveText(file, s1);
+}
 
 //create res files
 
+var resourcesDirBS = solutionDirBS + @"Au.Editor\resources\";
 _CompileRc(true);
 _CompileRc(false);
 
@@ -88,7 +96,7 @@ BLOCK "StringFileInfo"
 		VALUE "FileDescription", "{{fileDesc}}"
 		VALUE "FileVersion", "{{v.ToString()}}"
 		VALUE "InternalName", "{{fileName[..^4]}}"
-		VALUE "LegalCopyright", "Copyright 2020-{{year}} Gintaras Didžgalvis"
+		VALUE "LegalCopyright", "Copyright 2020 Gintaras Didžgalvis"
 		VALUE "OriginalFilename", "{{fileName}}"
 		VALUE "ProductName", "LibreAutomate"
 		VALUE "ProductVersion", "{{v.ToString()}}"

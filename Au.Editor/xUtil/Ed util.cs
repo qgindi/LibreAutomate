@@ -84,7 +84,7 @@ static class DotnetUtil {
 			return ok == true;
 		}
 		
-		//note: the minimal SDK the first time installs 3 extra packages (16 MB download). The normal SDK doesn't.
+		//note: the minimal SDK the first time installs 3 extra NuGet packages (16 MB download). The normal SDK doesn't.
 		//	It's OK. It's because the minimal SDK doesn't have the `packs` folder. Auto-downloads what's missing.
 		//	Also creates empty dir `metadata` in the minimal SDK dir.
 	}
