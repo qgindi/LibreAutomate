@@ -60,28 +60,24 @@ Review the <a {() => { _OpenVersionMd(); }}>md file of current version</a>.
 	Edit the release date.
 	Note: the md file path and name format is used in `App.CheckForUpdates`.
 
-<a {() => _Script("Create LA setup files.cs")}>#Create LA setup files</a>.
-	The script creates 2 .lzma files containing LA files, and the setup .exe file (builds the setup project). All 3 files are in the same folder; opens it.
-	Run the setup file to test. Let it run LA. Occasionally uninstall/install, not just upgrade.
+<a {() => _Script("Create LA installer.cs")}>#Create LA installer</a>.
+	The script creates msi file. Uses Master Packager Dev (must be installed).
+	Run the file to test. Let it run LA. Occasionally uninstall/install, not just upgrade.
 	Test on other OS too. And on Windows arm64.
-	The setup will use the .lzma files. If want to test downloading, run it later, after creating GitHub release, without the .lzma files in the folder.
 
-<a {() => _Script("Virustotal false positives.cs", "/release")}>#Scan the setup file at virustotal.com</a>. The script also runs once/day.
-	The create-setup script also creates file vt-1.zip. Sometimes scan it too.
+<a {() => _Script("Virustotal false positives.cs", "/release")}>#Scan the installer at virustotal.com</a>. The script also runs once/day.
 	Never mind if there are 1-2 false positives from less known AV.
-	When creating setup, I scanned it often. Randomly was Microsoft FP. Try to change something, eg change a string or toggle `#define USE_RESTARTMANAGER` in Util.cs.
 
 Github commit all and push. The message must be like v1.2.3.
 	Note: do it now. Need for upload to GitHub. Also uploads the "changes" doc.
 
-<a {() => _Script("Create LA GitHub Release.cs")}>#Create LA GitHub Release</a>. The script uploads the setup .exe file and the .lzma files.
+<a {() => _Script("Create LA GitHub Release.cs")}>#Create LA GitHub Release</a>.
 
 <a {() => _Script("Au docs.cs", "/upload")}>#Upload website</a> (created by the "#Create docs" task).
 
 Review web pages (LA and Github).
 
-Download and test the setup file.
-	It will download/use/delete 1 or 2 .lzma files from the GitHub release, unless you first manually download them to the same folder as the setup file.
+Download and test the installer.
 	Occasionally test it on all OS. Observe SmartScreen/antivirus behavior.
 
 Sometimes test whether others can build and run the repo.

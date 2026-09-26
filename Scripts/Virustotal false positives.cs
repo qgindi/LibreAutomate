@@ -26,6 +26,9 @@ if (mode is _Mode.Testing) {
 	//file = folders.Editor + @"..\Setup_\SetupMsi\bin\x64\Release\en-US\SetupMsi.msi";
 	//file = @"C:\code\Test\Rust\hello-rust\target\release\hello-rust.exe";
 	//file = folders.Editor + "LibreAutomate.msi";
+	//file = folders.Downloads + "LibreAutomateSetup.exe";
+	//file = folders.Downloads + "LibreAutomateSetup (3).exe";
+	//file = folders.Downloads + "LA-setup (2).exe";
 	
 }
 
@@ -40,14 +43,15 @@ bool uploadedNow = false;
 //	return;
 //}
 
-var id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file)));
-
+string id;
 if (mode is _Mode.Github) { //from the timer script
 	var r1 = internet.http.Get("https://api.github.com/repos/qgindi/LibreAutomate/releases/latest");
 	var j1 = r1.Json(true)["assets"][0];
 	//_PrintJson(j1);
 	var digest = (string)j1["digest"];
 	id = digest[7..]; //prefix "sha256:"
+} else {
+	id = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file)));
 }
 
 //try get existing results for that file
