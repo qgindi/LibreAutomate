@@ -43,13 +43,15 @@ using Au.More;
 
 [assembly: AssemblyVersion(Au_.Version)]
 
-#if AU || !NET
+#if AU
 namespace Au.More;
+#elif CONTROLS
+namespace Au.Controls;
+#endif
 
 ///
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class Au_ {
 	///
-	public const string Version = "1.16.6"; //Don't edit here. Run script "LA version and resources.cs". It changes version everywhere and creates .res files.
+	public const string Version = "1.16.6"; //Don't edit here. Run script "LA version.cs". It changes version everywhere.
 }
-#endif

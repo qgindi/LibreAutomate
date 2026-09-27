@@ -1734,6 +1734,10 @@ new elmFinder || 5
 			LA.App.Settings.delm.def_wait = _wait.t.Text;
 			_SetOpt(_EOptions.NoWait, !_wait.c.IsChecked);
 		}).Tooltip = "Let the tool start with current wait settings";
+		
+		//TODO: consider: improve the "Save UIA" feature. Save for each window class separately. Or at least for browsers separately.
+		//	See https://www.libreautomate.com/forum/showthread.php?tid=7958
+		
 		m.Add("Save UIA", _ => {
 			LA.App.Settings.delm.def_UIA = _cUIA.IsChecked;
 		}).Tooltip = "Let the tool start with current UIA checkbox state";

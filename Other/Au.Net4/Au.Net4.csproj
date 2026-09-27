@@ -5,8 +5,7 @@
 		<TargetFramework>net48</TargetFramework>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<AssemblyName>Au.Net4</AssemblyName>
-		<OutputPath>..\..\_\</OutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<OutDir>$(SolutionDir)_</OutDir>
 		<LangVersion>preview</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>

@@ -242,6 +242,5 @@ ModelManifest.xml
 !/Cookbook/files.xml
 
 *.bak
-*.res
 /Au/global.json
 /Other/DocFX/_doc/cookbook

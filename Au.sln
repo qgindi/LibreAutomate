@@ -19,13 +19,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{2C
 		global.json = global.json
 		LICENSE.txt = LICENSE.txt
 		Notes.txt = Notes.txt
+		.github\workflows\publish.yml = .github\workflows\publish.yml
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Au.Editor", "Au.Editor\Au.Editor.csproj", "{4B47A184-5CB7-4E78-8EAD-E458FB11A7EF}"
 	ProjectSection(ProjectDependencies) = postProject
 		{19CCA8B8-46B9-4609-B7CE-198DA19F07BD} = {19CCA8B8-46B9-4609-B7CE-198DA19F07BD}
-		{8662DF62-3B21-4D23-806D-4590F6091918} = {8662DF62-3B21-4D23-806D-4590F6091918}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Au", "Au\Au.csproj", "{B014973F-FCBB-4BC4-92E7-97AE684EA4F7}"
@@ -36,9 +36,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Au.Controls", "Au.Controls\Au.Controls.csproj", "{7A27F221-F05C-4545-B6BB-3DB0F6B9A50E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cpp", "Cpp\Cpp.vcxproj", "{10559875-C9A1-484C-BCFA-8DC53A428F1C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8662DF62-3B21-4D23-806D-4590F6091918} = {8662DF62-3B21-4D23-806D-4590F6091918}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PCRE", "Libraries\PCRE\PCRE.vcxproj", "{190BC611-EE00-4B10-87F2-A7E73B639E59}"
 EndProject

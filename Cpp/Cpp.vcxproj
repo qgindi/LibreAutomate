@@ -332,6 +332,12 @@
     <ProjectReference Include="..\Libraries\PCRE\PCRE.vcxproj">
       <Project>{190bc611-ee00-4b10-87f2-a7e73b639e59}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Other\BuildEvents\BuildEvents.csproj">
+      <Project>{8662df62-3b21-4d23-806d-4590f6091918}</Project>
+      <Private>false</Private>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="Cpp.manifest" />

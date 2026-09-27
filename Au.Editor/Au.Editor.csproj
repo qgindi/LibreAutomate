@@ -17,9 +17,10 @@
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<NoWarn>1701;1702;8002;419;8981;WFO1000</NoWarn>
 		<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
-		<Win32Resource>resources\Au.Editor.exe.res</Win32Resource>
+		<Win32Resource></Win32Resource>
 		<NuGetAudit>False</NuGetAudit>
 		<RootNamespace>LA</RootNamespace>
+		<NoWin32Manifest>true</NoWin32Manifest>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

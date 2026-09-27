@@ -35,7 +35,7 @@ x.XPathSelectElement("/PropertyGroup/Version").Value = Au_.Version;
 filesystem.saveText(auProj_nuget, x.ToString()); //not x.Save, it adds xml decl
 
 filesystem.createDirectory(outDir);
-filesystem.delete(Directory.GetFiles("LibreAutomate.*.nupkg")); //dotnet pack does nothing if the nupkg file exists
+filesystem.delete(Directory.GetFiles(outDir, "LibreAutomate.*.nupkg")); //dotnet pack does nothing if the nupkg file exists
 filesystem.delete(auDir + @"\obj");
 int r = run.console(out var s, "dotnet.exe", $@"pack ""{auProj_nuget}"" -o {outDir} -c Release --nologo", auDir); //builds the clone project and creates nuget package
 print.it(s);

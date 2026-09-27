@@ -51,6 +51,8 @@ int DllPostBuild() {
 }
 
 void _ExitEditor() {
+	if (Environment.GetEnvironmentVariable("NO_EXIT_EDITOR") != null) return;
+
 	for (int i = 2; --i >= 0;) {
 		var w = wnd.findFast(cn: "Au.Editor.TrayNotify");
 		if (!w.Is0) {
@@ -93,38 +95,37 @@ exit $?
 """);
 	}
 
-	//How native resources (version info, icons, manifest) are added to LA program files:
-	//1. To change LA/Au version, run script "LA version and resources.cs".
-	//		It changes Au_.Version in global2.cs, and using rc.exe creates .res files for Au.Editor.exe and Au.Task.exe.
-	//2. Build Au.Editor project. It adds the .res to Au.Editor.exe.
-	//3. This code runs in Au.Editor post-build.
-	//		If an exe file does not exist or its version != that of Au.Editor.exe:
-	//			Creates Au.Task.exe ands adds the .res.
-	//			Creates Au.Editor-arm.exe and Au.Task-arm.exe. Copies resources from the x64 exe files.
-	//			Also copies json files.
-
 	bool _VersionChanged() {
 		try {
-			var v = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor.exe");
-			var v2 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor-arm.exe");
-			var v3 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Task-arm.exe");
-			var v4 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Task.exe");
-			return !(v2.FileVersion == v.FileVersion && v3.FileVersion == v.FileVersion && v4.FileVersion == v.FileVersion);
+			var v = Au_.Version;
+			var v2 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor-arm.exe").FileVersion;
+			var v3 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Task-arm.exe").FileVersion;
+			var v4 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Task.exe").FileVersion;
+			return !(v2 == v && v3 == v && v4 == v);
 		}
 		catch (FileNotFoundException) { return true; }
-
-		//This is fast enough. Don't use Au_.Version, because we use Au.dll from NuGet, not the newest one (it would cause circular reference).
 	}
 
-	if (!_VersionChanged()) return 0;
-	print.it("Creating arm64 exe files and Au.Task.exe.");
+	if (_VersionChanged()) {
+		print.it("Creating arm64 exe files and Au.Task.exe.");
 
-	if (!_EnsureApphostOK(dirOut)) return 1;
-	_CreateAuTaskExe();
-	_CreateArmExe(true);
-	_CreateArmExe(false);
+		if (!_EnsureApphostOK(dirOut)) return 1;
+		_CreateAuTaskExe();
+		_CreateArmExe(true);
+		_CreateArmExe(false);
+	}
+
+	_AddResourcesToExe(dirOut + "Au.Editor.exe", true);
 
 	return 0;
+
+	void _CreateAuTaskExe() {
+		string exe = dirOut + "Au.Task.exe";
+
+		filesystem.copy(dirOut + @"64\apphost.exe", exe, FIfExists.Delete);
+		_PatchApphost(exe, "Au.Editor.dll");
+		_AddResourcesToExe(exe, false);
+	}
 
 	void _CreateArmExe(bool editor) {
 		string fn = editor ? "Au.Editor" : "Au.Task";
@@ -132,13 +133,19 @@ exit $?
 
 		filesystem.copy(dirOut + @"64\arm\apphost.exe", armExe, FIfExists.Delete);
 		_PatchApphost(armExe, "Au.Editor.dll");
-
-		_CopyResources(dirOut + fn + ".exe", armExe);
+		_AddResourcesToExe(armExe, editor);
 
 		if (editor) {
 			filesystem.copy(dirOut + fn + ".deps.json", dirOut + fn + "-arm.deps.json", FIfExists.Delete);
 			filesystem.copy(dirOut + fn + ".runtimeconfig.json", dirOut + fn + "-arm.runtimeconfig.json", FIfExists.Delete);
 		}
+	}
+
+	void _AddResourcesToExe(string exePath, bool editor) {
+		var r = new ExeResources(exePath, solutionDirBS);
+		r.AddManifest("Au.manifest");
+		if (editor) r.AddIcons("app.ico", "app_disabled.ico", "PictureInPicture.ico"); else r.AddIcons("Script.ico");
+		r.AddVersion(editor ? "LibreAutomate" : "LibreAutomate miniProgram");
 	}
 
 	static unsafe void _PatchApphost(string path, string dllFilename) {
@@ -183,52 +190,6 @@ exit $?
 		}
 		return true;
 	}
-
-	static void _CopyResources(string from, string to) {
-		var vi = new ResourceInfo();
-		vi.Load(from);
-		foreach (ResourceId rt in vi.ResourceTypes) {
-			if (rt.Id == 3) continue; //ICON
-			foreach (Resource resource in vi.Resources[rt]) {
-				resource.SaveTo(to);
-			}
-		}
-	}
-
-	static void _AddResToExe(string exePath, string resPath) {
-		string tempDir = folders.Temp + $@"\res_{Guid.NewGuid()}\";
-		Directory.CreateDirectory(tempDir);
-		try {
-			string csFile = tempDir + "empty.cs";
-			string tempDll = tempDir + "resources.dll";
-
-			File.WriteAllText(csFile, "");
-
-			string arm = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "Arm" : "";
-			string csc = folders.Windows + $@"Microsoft.NET\Framework{arm}64\v4.0.30319\csc.exe";
-			string cl = $"/target:library /out:\"{tempDll}\" /win32res:\"{resPath}\" \"{csFile}\"";
-			int ec = run.console(out var s, csc, cl);
-			if (ec != 0) throw new Exception($"csc failed.\r\n{s}");
-
-			_CopyResources(tempDll, exePath);
-
-			//Or we can add resources directly from ico etc. But may be difficult to add version resource.
-		}
-		finally {
-			try { Directory.Delete(tempDir, true); }
-			catch { }
-		}
-	}
-
-	void _CreateAuTaskExe() {
-		string fn = "Au.Task";
-		string exe = dirOut + fn + ".exe";
-
-		filesystem.copy(dirOut + @"64\apphost.exe", exe, FIfExists.Delete);
-		_PatchApphost(exe, "Au.Editor.dll");
-
-		_AddResToExe(exe, solutionDirBS + $@"Au.Editor\resources\Au.Task.exe.res");
-	}
 }
 
 //Exits editor. Copies dlls etc.
@@ -247,6 +208,45 @@ int RoslynPostBuild() {
 		filesystem.copyTo(f.FullPath, to);
 	}
 	return 0;
+}
+
+class ExeResources(string exe, string solutionDirBS) {
+	string _resDirBS = solutionDirBS + @"Au.Editor\resources\";
+
+	public void AddManifest(string file) {
+		var m = new GenericResource(new(Kernel32.ResourceTypes.RT_MANIFEST), new(1), 0); //note: ManifestResource writes XML incorrectly
+		m.Data = filesystem.loadBytes(_resDirBS + file);
+		m.SaveTo(exe);
+	}
+
+	public void AddIcons(params string[] files) {
+		int idDir = 32512, idIcon = 1;
+		foreach (var file in files) {
+			var ico = new IconFile($@"{_resDirBS}ico\{file}");
+#if false //bug: overwrites previously added icons
+			var idr = new IconDirectoryResource(ico) { Name = new(idDir++) };
+			idr.SaveTo(exe);
+#else
+			var idr = new IconDirectoryResource { Name = new(idDir++) };
+			List<IconResource> a = [];
+			foreach (var v in ico.Icons) {
+				a.Add(new(v, new(idIcon++), 0));
+			}
+			idr.Icons = a;
+			idr.SaveTo(exe);
+#endif
+		}
+	}
+
+	public void AddVersion(string description) {
+		var v = new VersionResource { Language = 0 };
+		v.LoadFrom(process.thisExePath);
+		var k = (StringFileInfo)v["StringFileInfo"];
+		k["FileDescription"] = description + "\0";
+		string fn = pathname.getName(exe);
+		k["InternalName"] = k["OriginalFilename"] = fn + "\0";
+		v.SaveTo(exe);
+	}
 }
 
 unsafe class _Api : NativeApi {

@@ -33,9 +33,6 @@ Another example of code created using tools. A hotkey trigger.
 hk<span style='color:#000000'>[</span><span style='color:#A07040'>&quot;F7&quot;</span><span style='color:#000000'>]</span> <span style='color:#0000FF'>=</span> <span style='color:#204020'>o</span> <span style='color:#0000FF'>=&gt;</span> <span style='color:#0080C0'>script</span><span style='color:#0000FF'>.</span><span style='color:#000000;font-weight: bold'>run</span><span style='color:#000000'>(</span><span style='color:#A07040'>@&quot;\My\Youtube play random.cs&quot;</span><span style='color:#000000'>);</span>
 </pre>
 
-### Where can run
-Windows 7, 8.1, 10, 11.
-
 ### Download
 Download from [GitHub](https://github.com/qgindi/LibreAutomate/releases).
 

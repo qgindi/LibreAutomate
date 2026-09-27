@@ -48,6 +48,12 @@
         }
       ]
     },
+    "properties": [
+      {
+        "name": "DISABLEADVTSHORTCUTS",
+        "value": "1"
+      }
+    ],
     "customActions": {
       "dll": [
         {
