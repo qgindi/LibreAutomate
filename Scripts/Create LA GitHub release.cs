@@ -29,6 +29,6 @@ Or run [msiexec](https://learn.microsoft.com/en-us/windows-server/administration
 
 LibreAutomate uses the .NET 10 Desktop Runtime. Will prompt to install it if missing.
 
-Runs on Windows 10 (x64) and 11 (x64, Arm64). Also Windows 7 and 8.1 (see [installing .NET](https://learn.microsoft.com/en-us/dotnet/core/install/windows)).
+Runs on Windows 10 (x64) and 11 (x64, Arm64). Also 7 and 8.1; see [installing .NET](https://learn.microsoft.com/en-us/dotnet/core/install/windows).
 """;
 }
