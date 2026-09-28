@@ -3,7 +3,8 @@
 
 name: publish LA
 
-on: workflow_dispatch
+#on: workflow_dispatch
+on: push
 
 jobs:
   build:
@@ -16,10 +17,12 @@ jobs:
       uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build Au.Editor
-      run: dotnet build -c Release --no-restore
+    - name: Build solution
+      run: |
+        $msbuild = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+        & $msbuild Au.sln -t:restore -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal
+        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal
+        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       with:

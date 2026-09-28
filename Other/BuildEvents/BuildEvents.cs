@@ -1,8 +1,14 @@
-// Build event script for Au.Editor and Cpp projects.
+// Build event script for Au.Editor and other projects.
 
 using Vestris.ResourceLib;
 
-script.setup(exception: UExcept.Dialog | UExcept.Print);
+string solutionDirBS = folders.ThisAppBS[..^28];
+
+bool atHome = solutionDirBS.Eqi(@"C:\code\au\") && Environment.GetEnvironmentVariable("Au.Home<PC>") == "1";
+bool inCI = !atHome && Environment.GetEnvironmentVariable("CI") == "true";
+//bool inGithubActions = !atHome && Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true"; //inCI true too
+
+script.setup(exception: inCI ? UExcept.Print : UExcept.Dialog | UExcept.Print);
 
 //print.ignoreConsole = true;
 //print.qm2.use = true;
@@ -14,15 +20,13 @@ script.setup(exception: UExcept.Dialog | UExcept.Print);
 //	return GitBinaryFiles.Restore(Environment.CurrentDirectory + "\\", true);
 //}
 
-string solutionDirBS = folders.ThisAppBS[..^28];
-
 return args[0] switch {
 	"cppPostBuild" => CppPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
 	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
 	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	"dllPostBuild" => DllPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
 	"roslynPostBuild" => RoslynPostBuild(),
-	"gitPrePushHook" => GitBinaryFiles.PrePushHook(),
+	"gitPrePushHook" => atHome ? GitBinaryFiles.PrePushHook() : 0,
 	_ => 1
 };
 
@@ -51,7 +55,7 @@ int DllPostBuild() {
 }
 
 void _ExitEditor() {
-	if (Environment.GetEnvironmentVariable("NO_EXIT_EDITOR") != null) return;
+	if (inCI || Environment.GetEnvironmentVariable("NO_EXIT_EDITOR") != null) return;
 
 	for (int i = 2; --i >= 0;) {
 		var w = wnd.findFast(cn: "Au.Editor.TrayNotify");
@@ -84,15 +88,17 @@ int EditorPostBuild() {
 	var dirOut = solutionDirBS + @"_\";
 
 	//make sure `.git\hooks\pre-push` exists. See `PrePushHook` in `GitBinaryFiles.cs`.
-	var prePush = solutionDirBS + @".git\hooks\pre-push";
-	if (!filesystem.exists(prePush, true)) {
-		filesystem.saveText(prePush, """
+	if (atHome) {
+		var prePush = solutionDirBS + @".git\hooks\pre-push";
+		if (!filesystem.exists(prePush, true)) {
+			filesystem.saveText(prePush, """
 #!/bin/sh
 
 "Other/BuildEvents/bin/Debug/BuildEvents.exe" "gitPrePushHook"
 exit $?
 
 """);
+		}
 	}
 
 	bool _VersionChanged() {
@@ -109,7 +115,8 @@ exit $?
 	if (_VersionChanged()) {
 		print.it("Creating arm64 exe files and Au.Task.exe.");
 
-		if (!_EnsureApphostOK(dirOut)) return 1;
+		if (atHome) //else GitBinaryFiles.Restore downloads apphosts
+			if (!_EnsureApphostOK(dirOut)) return 1;
 		_CreateAuTaskExe();
 		_CreateArmExe(true);
 		_CreateArmExe(false);

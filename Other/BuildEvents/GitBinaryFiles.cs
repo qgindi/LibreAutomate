@@ -21,9 +21,12 @@ static class GitBinaryFiles {
 				(null, "xrefmap.yml", false),
 				("Roslyn", "*.dll", false),
 				("Debugger", "**m *.dll||*.exe", true),
+				("32", "apphost.exe", false),
+				("64", "apphost.exe", false),
+				(@"64\ARM", "apphost.exe", false),
 			];
 
-		List<FEFile> aFiles = new();
+		List<FEFile> aFiles = [];
 		foreach (var v in enumFiles) {
 			foreach (var f in filesystem.enumFiles(laDir + v.dir, v.files, (v.subdirs ? FEFlags.AllDescendants : 0) | FEFlags.UseRawPath)) {
 				//if (f.Name.Like("doc-*.db")) continue; //BAD: changes too frequently
