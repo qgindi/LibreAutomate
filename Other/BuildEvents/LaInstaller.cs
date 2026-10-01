@@ -1,5 +1,6 @@
 /*/ define SCRIPT; nuget -\Microsoft.Extensions.FileSystemGlobbing; /*/
 using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Win32;
 
 #if SCRIPT
 print.clear();
