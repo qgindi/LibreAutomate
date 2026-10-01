@@ -3,4 +3,7 @@
   <ItemGroup>
     <ClCompile Include="DllHost.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Au.DllHost.rc" />
+  </ItemGroup>
 </Project>

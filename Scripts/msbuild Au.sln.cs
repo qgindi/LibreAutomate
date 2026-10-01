@@ -9,8 +9,9 @@ Environment.SetEnvironmentVariable("NO_EXIT_EDITOR", "true");
 //int r = run.console("dotnet", $"""build {solDir}\Au.sln -c Release"""); //cannot build C++ projects
 
 string msbuild = folders.ProgramFiles + @"Microsoft Visual Studio\18\Insiders\MSBuild\Current\Bin\MSBuild.exe";
-int r = run.console(msbuild, $"""{solDir}\Au.sln -t:restore -t:build -p:Configuration=Release -verbosity:minimal""");
-print.it(r);
+run.console(msbuild, $"""{solDir}\Au.sln -t:restore -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal""");
+run.console(msbuild, $"""{solDir}\Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal""");
+run.console(msbuild, $"""{solDir}\Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal""");
 
 
 void _Clone() {

@@ -28,6 +28,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="LibreAutomate" Version="1.16.0" />
+	  <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.12" />
 	  <PackageReference Include="Vestris.ResourceLib" Version="2.2.0" />
 	</ItemGroup>
 

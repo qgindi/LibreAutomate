@@ -24,4 +24,7 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<Target Name="DeleteUnwantedFiles" AfterTargets="Build">
+		<Delete Files="$(TargetPath).config" />
+	</Target>
 </Project>

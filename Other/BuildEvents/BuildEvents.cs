@@ -26,6 +26,7 @@ return args[0] switch {
 	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	"dllPostBuild" => DllPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
 	"roslynPostBuild" => RoslynPostBuild(),
+	"createInstaller" => inCI ? CreateInstaller() : 1,
 	"gitPrePushHook" => atHome ? GitBinaryFiles.PrePushHook() : 0,
 	_ => 1
 };
@@ -213,6 +214,18 @@ int RoslynPostBuild() {
 		if (0 == f.Name.Ends(true, ".dll", ".xml")) continue;
 		if (0 != f.Name.Starts(true, "System.Configuration.", "System.Security.")) continue;
 		filesystem.copyTo(f.FullPath, to);
+	}
+	return 0;
+}
+
+int CreateInstaller() {
+	try {
+		var x = new LaInstaller(solutionDirBS + @"_\", inCI: true);
+		x.Create();
+	}
+	catch (Exception ex) {
+		print.it("Failed to create installer. " + ex);
+		return 1;
 	}
 	return 0;
 }

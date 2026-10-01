@@ -8,6 +8,7 @@
   "publisher": "https://www.libreautomate.com",
   "platform": "x64",
   "installDir": "%ProgramFiles%\\LibreAutomate",
+  "icon": "%_MSI_SOLUTION_DIR%\\Au.Editor\\resources\\ico\\app.ico",
 
   "fileSystemEntries": [
     {
@@ -51,6 +52,10 @@
     "properties": [
       {
         "name": "DISABLEADVTSHORTCUTS",
+        "value": "1"
+      },
+      {
+        "name": "MSIFASTINSTALL",
         "value": "1"
       }
     ],

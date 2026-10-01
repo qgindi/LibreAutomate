@@ -76,4 +76,11 @@
 		<Compile Remove="Au.cs" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\Cpp\Cpp.vcxproj">
+	    <Private>False</Private>
+	    <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+	  </ProjectReference>
+	</ItemGroup>
+
 </Project>

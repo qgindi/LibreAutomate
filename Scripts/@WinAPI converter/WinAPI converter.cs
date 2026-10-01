@@ -1,7 +1,7 @@
 /// For Windows API declarations LA uses data from:
 /// 	Source: https://github.com/microsoft/win32metadata
 /// 	Data: https://www.nuget.org/packages/Microsoft.Windows.SDK.Win32Metadata/
-/// LA cannot use the .winmd file directly. This script converte it to winapi.db file that will be used by LA.
+/// LA cannot use the .winmd file directly. This script converts it to winapi.db file that will be used by LA.
 
 //#define SMALL
 

@@ -130,6 +130,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Au.Controls\Au.Controls.csproj" />
 		<ProjectReference Include="..\Au\Au.csproj" />
+		<ProjectReference Include="..\Libraries\scintilla\win32\Scintilla.vcxproj">
+		  <Private>False</Private>
+		  <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+		</ProjectReference>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -178,6 +182,18 @@
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)" />
+	</Target>
+
+	<Target Name="DeleteUnwantedFiles" AfterTargets="Build">
+		<Delete Files="$(TargetDir)Microsoft.Web.WebView2.WinForms.dll" />
+		<Delete Files="$(TargetDir)Microsoft.Web.WebView2.WinForms.xml" />
+
+		<ItemGroup>
+			<FilesToDelete Include="$(TargetDir)runtimes\win-x86\native\**" />
+		</ItemGroup>
+		<Delete Files="@(FilesToDelete)" />
+		<RemoveDir Directories="$(TargetDir)runtimes\win-x86\native" />
+		<RemoveDir Directories="$(TargetDir)runtimes\win-x86" />
 	</Target>
 
 </Project>

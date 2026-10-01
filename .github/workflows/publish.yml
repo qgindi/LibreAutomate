@@ -1,10 +1,18 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: publish LA
 
-#on: workflow_dispatch
-on: push
+on:
+  #push:
+  #  branches: ["master"]
+  workflow_dispatch:
+    inputs:
+      publish_github:
+        description: Create or update GitHub release
+        type: boolean
+        default: false
+      publish_nuget:
+        description: Push package to NuGet
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -12,20 +20,37 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v6
+    - name: Check out repository
+      uses: actions/checkout@v6
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.0.x
+
+    - name: Install Master Packager Dev
+      run: |
+        winget install --id=MasterPackager.MasterPackagerDev -e --accept-source-agreements --accept-package-agreements --skip-dependencies
+
+    - name: Install dependencies
+      run: dotnet restore
+
     - name: Build solution
       run: |
         $msbuild = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-        & $msbuild Au.sln -t:restore -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal
+        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal
         & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal
         & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal
+
+    - name: Create installer
+      run: |
+        Other\BuildEvents\bin\Debug\BuildEvents.exe createInstaller
+  
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       with:
         name: build-artifacts
-        path: _
+        path: _\LibreAutomate.msi
+        archive: false
+        overwrite: true
         

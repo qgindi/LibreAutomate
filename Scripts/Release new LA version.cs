@@ -60,7 +60,7 @@ Review the <a {() => { _OpenVersionMd(); }}>md file of current version</a>.
 	Edit the release date.
 	Note: the md file path and name format is used in `App.CheckForUpdates`.
 
-<a {() => _Script("Create LA installer.cs")}>#Create LA installer</a>.
+<a {() => _Script("LaInstaller.cs")}>#LaInstaller</a>.
 	The script creates msi file. Uses Master Packager Dev (must be installed).
 	Run the file to test. Let it run LA. Occasionally uninstall/install, not just upgrade.
 	Test on other OS too. And on Windows arm64.

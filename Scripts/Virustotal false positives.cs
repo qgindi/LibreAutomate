@@ -10,7 +10,6 @@ using System.Text.Json.Nodes;
 
 _Mode mode = script.testing ? _Mode.Testing : args is ["/github"] ? _Mode.Github : args is ["/release"] ? _Mode.Release : throw null;
 
-//string file = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
 string file = folders.Editor + "LibreAutomate.msi";
 
 if (mode is _Mode.Testing) {
@@ -20,15 +19,8 @@ if (mode is _Mode.Testing) {
 	//file = folders.Editor + @"..\Setup\bin\Release\net48\vt-1.zip";
 	//file = folders.Editor + @"..\Setup\bin\Release\net48\offline-1.zip.lzma";
 	//file = folders.Editor + @"..\Setup\bin\Release\net48\LA-setup.exe";
-	//file = folders.Workspace + @"exe\App\App.dll";
-	//file = folders.Workspace + @"exe\App\publish\release_x64\App.exe";
-	//file = folders.Workspace + @"exe\Script3\publish\release_x64\Script3.exe";
-	//file = folders.Editor + @"..\Setup_\SetupMsi\bin\x64\Release\en-US\SetupMsi.msi";
 	//file = @"C:\code\Test\Rust\hello-rust\target\release\hello-rust.exe";
-	//file = folders.Editor + "LibreAutomate.msi";
 	//file = folders.Downloads + "LibreAutomateSetup.exe";
-	//file = folders.Downloads + "LibreAutomateSetup (3).exe";
-	//file = folders.Downloads + "LA-setup (2).exe";
 	
 }
 
