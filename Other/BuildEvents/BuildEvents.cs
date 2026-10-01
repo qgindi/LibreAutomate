@@ -26,7 +26,7 @@ return args[0] switch {
 	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	"dllPostBuild" => DllPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
 	"roslynPostBuild" => RoslynPostBuild(),
-	"createInstaller" => inCI ? CreateInstaller() : 1,
+	"createInstaller" => CreateInstaller(),
 	"gitPrePushHook" => atHome ? GitBinaryFiles.PrePushHook() : 0,
 	_ => 1
 };
@@ -220,7 +220,7 @@ int RoslynPostBuild() {
 
 int CreateInstaller() {
 	try {
-		var x = new LaInstaller(solutionDirBS + @"_\", inCI: true);
+		var x = new LaInstaller(solutionDirBS + "_", inCI);
 		x.Create();
 	}
 	catch (Exception ex) {
