@@ -28,29 +28,8 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
-    - name: Install Master Packager Dev
-      run: |
-        winget install --id=MasterPackager.MasterPackagerDev -e --accept-source-agreements --accept-package-agreements --skip-dependencies
-
-    - name: Install dependencies
-      run: dotnet restore
-
     - name: Build solution
       run: |
         $msbuild = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal
-        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal
-        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal
-
-    - name: Create installer
-      run: |
-        Other\BuildEvents\bin\Debug\BuildEvents.exe createInstaller
-  
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v7
-      with:
-        name: build-artifacts
-        path: _\LibreAutomate.msi
-        archive: false
-        overwrite: true
+        & $msbuild Au.sln -t:restore -t:build -p:Configuration=Release -p:Platform="Any CPU"
         
