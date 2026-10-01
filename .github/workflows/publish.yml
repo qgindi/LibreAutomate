@@ -31,5 +31,5 @@ jobs:
     - name: Build solution
       run: |
         $msbuild = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-        & $msbuild Au.sln -t:restore -t:build -p:Configuration=Release -p:Platform="Any CPU"
+        & $msbuild Au.sln -t:restore -t:build -p:Configuration=Release -verbosity:minimal
         
