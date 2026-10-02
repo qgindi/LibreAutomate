@@ -220,7 +220,7 @@ int RoslynPostBuild() {
 
 int CreateInstaller() {
 	try {
-		var x = new LaInstaller(solutionDirBS + @"_\", inCI);
+		var x = new LaInstaller(solutionDirBS + @"_", inCI);
 		x.Create();
 	}
 	catch (Exception ex) {
