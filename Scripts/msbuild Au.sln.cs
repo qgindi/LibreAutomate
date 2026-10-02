@@ -10,8 +10,8 @@ Environment.SetEnvironmentVariable("NO_EXIT_EDITOR", "true");
 
 string msbuild = folders.ProgramFiles + @"Microsoft Visual Studio\18\Insiders\MSBuild\Current\Bin\MSBuild.exe";
 run.console(msbuild, $"""{solDir}\Au.sln -t:restore -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal""");
-run.console(msbuild, $"""{solDir}\Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal""");
-run.console(msbuild, $"""{solDir}\Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal""");
+//run.console(msbuild, $"""{solDir}\Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal""");
+//run.console(msbuild, $"""{solDir}\Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal""");
 
 
 void _Clone() {

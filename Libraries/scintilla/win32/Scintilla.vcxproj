@@ -164,14 +164,6 @@
   <ItemGroup>
     <ResourceCompile Include="..\win32\ScintRes.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Other\BuildEvents\BuildEvents.csproj">
-      <Project>{8662df62-3b21-4d23-806d-4590f6091918}</Project>
-      <Private>false</Private>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

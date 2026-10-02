@@ -21,12 +21,12 @@ script.setup(exception: inCI ? UExcept.Print : UExcept.Dialog | UExcept.Print);
 //}
 
 return args[0] switch {
-	"cppPostBuild" => CppPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
-	"preBuild" => EditorPreBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
-	"postBuild" => EditorPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
-	"dllPostBuild" => DllPostBuild(), //$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
+	"cppPostBuild" => CppPostBuild(), //project Cpp: $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
+	"dllPostBuild" => DllPostBuild(), //other C++ dll projects (Scintilla): $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
+	"preBuild" => EditorPreBuild(), //project Au.Editor: $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
+	"postBuild" => EditorPostBuild(), //project Au.Editor: $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	"roslynPostBuild" => RoslynPostBuild(),
-	"createInstaller" => inCI ? CreateInstaller() : 1,
+	"createInstaller" => CreateInstaller(),
 	"gitPrePushHook" => atHome ? GitBinaryFiles.PrePushHook() : 0,
 	_ => 1
 };
@@ -38,6 +38,14 @@ int CppPostBuild() {
 	return 0;
 }
 
+/// Exits editor. Copies the dll (eg Scintilla).
+int DllPostBuild() {
+	_ExitEditor();
+	var toDir = $@"{solutionDirBS}_\{args[2] switch { "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}";
+	filesystem.copyTo(args[1], toDir, FIfExists.Delete);
+	return 0;
+}
+
 /// Exits editor. If need, copies AuCpp.dll and unloads the old dll from processes.
 int EditorPreBuild() {
 	_ExitEditor();
@@ -45,14 +53,6 @@ int EditorPreBuild() {
 	_CopyAuCppDllIfNeed("x64", true);
 	_CopyAuCppDllIfNeed("ARM64", true);
 	return GitBinaryFiles.Restore(solutionDirBS);
-}
-
-/// Exits editor. Copies the dll (eg Scintilla).
-int DllPostBuild() {
-	_ExitEditor();
-	var toDir = $@"{solutionDirBS}_\{args[2] switch { "x64" => "64", "ARM64" => @"64\ARM", _ => throw new ArgumentException("platform") }}";
-	filesystem.copyTo(args[1], toDir, FIfExists.Delete);
-	return 0;
 }
 
 void _ExitEditor() {
@@ -220,7 +220,7 @@ int RoslynPostBuild() {
 
 int CreateInstaller() {
 	try {
-		var x = new LaInstaller(solutionDirBS + @"_\", inCI: true);
+		var x = new LaInstaller(solutionDirBS + @"_\", inCI);
 		x.Create();
 	}
 	catch (Exception ex) {
