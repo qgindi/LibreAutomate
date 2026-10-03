@@ -1,56 +1,91 @@
 name: publish LA
 
 on:
-  #push:
-  #  branches: ["master"]
+  push:
+    branches: ["master"]
+    tags:
+      - "v*.*.*"
   workflow_dispatch:
-    inputs:
-      publish_github:
-        description: Create or update GitHub release
-        type: boolean
-        default: false
-      publish_nuget:
-        description: Push package to NuGet
-        type: boolean
-        default: false
 
 jobs:
   build:
 
     runs-on: windows-latest
 
+    permissions:
+      contents: write
+
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v6
+      - name: Verify tag
+        if: github.ref_type != 'tag'
+        run: |
+          echo "::error::This workflow must run from a Git tag."
+          exit 1
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v6
-      with:
-        dotnet-version: 10.0.x
+      - name: Check out repository
+        uses: actions/checkout@v6
 
-    - name: Install Master Packager Dev
-      run: |
-        winget install --id=MasterPackager.MasterPackagerDev -e --accept-source-agreements --accept-package-agreements --skip-dependencies
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
 
-    - name: Install dependencies
-      run: dotnet restore
+      - name: Install dependencies
+        run: dotnet restore
 
-    - name: Build solution
-      run: |
-        $msbuild = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal
-        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal
-        & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal
+      - name: Build solution
+        run: |
+          $msbuild = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+          & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal
+          & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal
+          & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal
 
-    - name: Create installer
-      run: |
-        Other\BuildEvents\bin\Debug\BuildEvents.exe createInstaller
+      - name: Install Master Packager Dev
+        run: |
+          winget install --id=MasterPackager.MasterPackagerDev -e --accept-source-agreements --accept-package-agreements --skip-dependencies
+
+      - name: Create installer
+        run: |
+          Other\BuildEvents\bin\Debug\BuildEvents.exe createInstaller
   
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v7
-      with:
-        name: build-artifacts
-        path: _\LibreAutomate.msi
-        archive: false
-        overwrite: true
-        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-artifacts
+          path: _\LibreAutomate.msi
+          archive: false
+          overwrite: true
+
+      - name: Get release version vX.X
+        id: version
+        run: |
+          $vXX = '${{ github.ref_name }}' -replace '\.\d+$', ''
+          "vXX=$vXX" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          draft: true
+          files: _\LibreAutomate.msi
+          body: |
+            [What's new in ${{ steps.version.outputs.vXX }}](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/${{ steps.version.outputs.vXX }}.md)
+
+            <details>
+            <summary>System requirements</summary>
+
+            - Windows 10 (x64) and 11 (x64, Arm64)
+            - Windows 7 and 8.1 - see [installing .NET](https://learn.microsoft.com/en-us/dotnet/core/install/windows)
+
+            LibreAutomate uses the .NET 10 Desktop Runtime. Will prompt to install it if missing.
+            </details>
+
+            <details>
+            <summary>How to install</summary>
+
+            Download and run `LibreAutomate.msi`.
+
+            Need more options? Run [msiexec](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/msiexec) instead. Examples:
+            - Run the installer in reduced UI mode: `msiexec /i "C:\Downloads\LibreAutomate.msi" /qr`
+            - Change the app folder: `msiexec /i "C:\Downloads\LibreAutomate.msi" INSTALLDIR="app folder path"`
+
+            </details>

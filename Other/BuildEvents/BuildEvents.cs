@@ -221,13 +221,12 @@ int RoslynPostBuild() {
 int CreateInstaller() {
 	try {
 		var x = new LaInstaller(solutionDirBS + @"_", inCI);
-		x.Create();
+		return x.Create();
 	}
 	catch (Exception ex) {
 		print.it("Failed to create installer. " + ex);
 		return 1;
 	}
-	return 0;
 }
 
 class ExeResources(string exe, string solutionDirBS) {

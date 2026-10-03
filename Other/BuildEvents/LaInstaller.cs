@@ -6,11 +6,16 @@ using Microsoft.Win32;
 print.clear();
 print.qm2.clear();
 
+#if true
 var x = new LaInstaller(folders.Editor, inCI: false, testUpgrade: false);
 x.Create();
 
 //run.selectInExplorer(x.MsiFile);
 //run.it("msiexec.exe", $@"/i ""{x.MsiFile}"""); //note: not as admin, it's not good for testing
+#else
+int r = run.console(folders.Editor + @"..\Other\BuildEvents\bin\Debug\BuildEvents.exe", "createInstaller");
+print.it(r);
+#endif
 #endif
 
 class LaInstaller(string outDir, bool inCI, bool testUpgrade = false) {
@@ -18,7 +23,7 @@ class LaInstaller(string outDir, bool inCI, bool testUpgrade = false) {
 	
 	public string MsiFile { get;private set; }
 	
-	public void Create() {
+	public int Create() {
 		if (inCI) {
 			if (testUpgrade) throw new ArgumentException();
 		} else {
@@ -43,11 +48,13 @@ class LaInstaller(string outDir, bool inCI, bool testUpgrade = false) {
 		string mpdev = folders.ProgramFiles + @"Master Packager Ltd\Master Packager Dev\mpdev.exe";
 		string cl = $"""build "{jsonFile}" --properties $.outputDirectory="{outDir}" $.version={version} $.outputFileName={msiName}""";
 		int r = run.console(mpdev, cl, c_tempDir);
-		if (r != 0) { print.it("<><c red>failed<>"); return; }
+		if (r != 0) { print.it("<><c red>failed<>"); return r; }
 		
 		MsiFile = $@"{outDir}\{msiName}.msi";
 		
 		_PatchMsi();
+
+		return 0;
 	}
 	
 	void _CopyFiles() {

@@ -21,6 +21,8 @@ string _ReleaseNotes() {
 	return $"""
 [What's new in v{verXX}](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/v{verXX}.md)
 
+---
+
 Download and run `LibreAutomate.msi`.
 
 Or run [msiexec](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/msiexec). Examples:
