@@ -8,17 +8,7 @@ bool atHome = solutionDirBS.Eqi(@"C:\code\au\") && Environment.GetEnvironmentVar
 bool inCI = !atHome && Environment.GetEnvironmentVariable("CI") == "true";
 //bool inGithubActions = !atHome && Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true"; //inCI true too
 
-script.setup(exception: inCI ? UExcept.Print : UExcept.Dialog | UExcept.Print);
-
-//print.ignoreConsole = true;
-//print.qm2.use = true;
-//print.it(args);
-
-//if (args.Length == 0) { //dev
-//	Environment.CurrentDirectory = @"C:\code\au";
-//	//return GitBinaryFiles.PrePushHook();
-//	return GitBinaryFiles.Restore(Environment.CurrentDirectory + "\\", true);
-//}
+script.setup();
 
 return args[0] switch {
 	"cppPostBuild" => CppPostBuild(), //project Cpp: $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
@@ -27,7 +17,8 @@ return args[0] switch {
 	"postBuild" => EditorPostBuild(), //project Au.Editor: $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
 	"roslynPostBuild" => RoslynPostBuild(),
 	"createInstaller" => CreateInstaller(),
-	"gitPrePushHook" => atHome ? GitBinaryFiles.PrePushHook() : 0,
+	"gitPreCommitHook" => atHome ? new GitBinaryFiles(solutionDirBS).PreCommitHook() : 0,
+	"gitPrePushHook" => atHome ? new GitBinaryFiles(solutionDirBS).PrePushHook() : 0,
 	_ => 1
 };
 
@@ -52,7 +43,8 @@ int EditorPreBuild() {
 	_CopyAuCppDllIfNeed("Win32", true);
 	_CopyAuCppDllIfNeed("x64", true);
 	_CopyAuCppDllIfNeed("ARM64", true);
-	return GitBinaryFiles.Restore(solutionDirBS);
+	//return new GitBinaryFiles(solutionDirBS).Restore(test: true);
+	return new GitBinaryFiles(solutionDirBS).Restore();
 }
 
 void _ExitEditor() {
@@ -88,23 +80,9 @@ bool _CopyAuCppDllIfNeed(string platform, bool editor) {
 int EditorPostBuild() {
 	var dirOut = solutionDirBS + @"_\";
 
-	//make sure `.git\hooks\pre-push` exists. See `PrePushHook` in `GitBinaryFiles.cs`.
-	if (atHome) {
-		var prePush = solutionDirBS + @".git\hooks\pre-push";
-		if (!filesystem.exists(prePush, true)) {
-			filesystem.saveText(prePush, """
-#!/bin/sh
-
-"Other/BuildEvents/bin/Debug/BuildEvents.exe" "gitPrePushHook"
-exit $?
-
-""");
-		}
-	}
-
 	bool _VersionChanged() {
 		try {
-			var v = Au_.Version;
+			var v = Au_.Version + ".0";
 			var v2 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Editor-arm.exe").FileVersion;
 			var v3 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Task-arm.exe").FileVersion;
 			var v4 = FileVersionInfo.GetVersionInfo(dirOut + "Au.Task.exe").FileVersion;
@@ -124,6 +102,8 @@ exit $?
 	}
 
 	_AddResourcesToExe(dirOut + "Au.Editor.exe", true);
+
+	if (atHome) new GitBinaryFiles(solutionDirBS).SetHooks();
 
 	return 0;
 

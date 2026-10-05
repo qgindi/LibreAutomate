@@ -793,5 +793,31 @@ public static unsafe partial class ExtMisc {
 		print.it(j.ToJsonString(new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
 	}
 	
+	extension(System.Security.Cryptography.SHA256) {
+		/// <summary>
+		/// Computes a SHA-256 hash of one or more files (file content).
+		/// </summary>
+		/// <param name="files">One or more file paths. Can be relative paths if <i>parentDirectory</i> specified.</param>
+		/// <param name="parentDirectory">Parent directory of files.</param>
+		/// <returns>A lowercase hex string. Returns <c>null</c> if a file does not exist.</returns>
+		/// <exception cref="Exception">Failed to load an existing file or create hash.</exception>
+		public static string HashFiles(IEnumerable<string> files, string parentDirectory = null) {
+			using var sha = System.Security.Cryptography.SHA256.Create();
+			byte[] buffer = new byte[64 * 1024];
+			
+			foreach (string file_ in files) {
+				string file = parentDirectory is null ? file_ : parentDirectory / file_;
+				if (!File.Exists(file)) return null;
+				using var fs = filesystem.loadStream(file);
+				for (int n; (n = fs.Read(buffer, 0, buffer.Length)) > 0;) {
+					sha.TransformBlock(buffer, 0, n, null, 0);
+				}
+			}
+			
+			sha.TransformFinalBlock([], 0, 0);
+			
+			return Convert.ToHexStringLower(sha.Hash);
+		}
+	}
 	#endregion
 }

@@ -24,6 +24,10 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Reference Include="System.Design" />
+	</ItemGroup>
+
 	<Target Name="DeleteUnwantedFiles" AfterTargets="Build">
 		<Delete Files="$(TargetPath).config" />
 	</Target>

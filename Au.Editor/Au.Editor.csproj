@@ -139,6 +139,7 @@
 	<ItemGroup>
 		<Reference Include="AxMSTSCLib">
 		  <HintPath>..\_\AxMSTSCLib.dll</HintPath>
+		  <EmbedInteropTypes>False</EmbedInteropTypes>
 		</Reference>
 		<Reference Include="Microsoft.CodeAnalysis">
 			<HintPath>..\_\Roslyn\Microsoft.CodeAnalysis.dll</HintPath>
@@ -167,6 +168,7 @@
 		</Reference>
 		<Reference Include="MSTSCLib">
 		  <HintPath>..\_\MSTSCLib.dll</HintPath>
+		  <EmbedInteropTypes>False</EmbedInteropTypes>
 		</Reference>
 	</ItemGroup>
 

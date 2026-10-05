@@ -15,6 +15,8 @@ class Net4 {
 		switch (args) {
 		case ["/typelib", _]:
 			return TypelibConverter.Convert(args[1]);
+		case ["/ax", _, _]:
+			return AxConverter.Convert(args[1], args[2]);
 		}
 		return 1;
 	}

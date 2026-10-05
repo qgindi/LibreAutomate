@@ -10,7 +10,7 @@ using System.Text;
 
 using _TYPELIBATTR = System.Runtime.InteropServices.ComTypes.TYPELIBATTR;
 
-unsafe class TypelibConverter {
+static class TypelibConverter {
 
 	public static int Convert(string param) {
 		var a = param.Split('|');
@@ -26,14 +26,19 @@ unsafe class TypelibConverter {
 			var c = new _TypelibConverter { saveDir = asmDir };
 			c.Convert(tl);
 		}
-		catch (Exception ex) { Print($"Failed to convert type library '{comDll}'.\r\n\t{ex.Message}"); return -2; }
+		catch (Exception ex) {
+			Print($"Failed to convert type library '{comDll}'.\r\n\t{ex.Message}");
+			return -2;
+		}
 		return 0;
 	}
+
+	static void Print(object o) => Console.WriteLine(o?.ToString());
 
 	[DllImport("oleaut32.dll", EntryPoint = "#183", PreserveSig = true)]
 	static extern int LoadTypeLibEx(string szFile, int regkind, out ITypeLib pptlib);
 
-	class _TypelibConverter : ITypeLibImporterNotifySink {
+	unsafe class _TypelibConverter : ITypeLibImporterNotifySink {
 		static Dictionary<string, AssemblyBuilder> s_converted = new Dictionary<string, AssemblyBuilder>();
 
 		public string saveDir;
@@ -66,17 +71,15 @@ unsafe class TypelibConverter {
 		}
 
 		Assembly ITypeLibImporterNotifySink.ResolveRef(object typeLib) => Convert(typeLib as ITypeLib);
-	}
 
-	static void Print(object o) => Console.WriteLine(o?.ToString());
+		//code copied from Hash
+		static int _Fnv1(byte* data, int lengthBytes) {
+			uint hash = 2166136261;
 
-	//code copied from Hash
-	static int _Fnv1(byte* data, int lengthBytes) {
-		uint hash = 2166136261;
+			for (int i = 0; i < lengthBytes; i++)
+				hash = (hash * 16777619) ^ data[i];
 
-		for (int i = 0; i < lengthBytes; i++)
-			hash = (hash * 16777619) ^ data[i];
-
-		return (int)hash;
+			return (int)hash;
+		}
 	}
 }

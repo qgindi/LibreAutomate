@@ -60,7 +60,7 @@ partial class AuDocs {
 		
 		//info: currently there are no excluded .cs files. Would need to parse Au.csproj.
 		
-		var parseOpt = LA.CiUtil.DefaultParseOptions;
+		var parseOpt = new CSharpParseOptions(LanguageVersion.Preview, preprocessorSymbols: [..LA.MetaComments.DefaultDefines, "AU"]);
 		var trees = new List<CSharpSyntaxTree>();
 		var files = new List<(string path, string code)>();
 		
@@ -75,7 +75,8 @@ partial class AuDocs {
 				files.Add((f.Name, code));
 			} else if (f.Name.Eqi(@"\Au.csproj")) {
 				var s = filesystem.loadText(path);
-				s = s.RxReplace(@"(?ms)^\h*<COMReference\b.+?</COMReference>", "", 1); //mute docfx warning
+				//s = s.RxReplace(@"(?ms)^\h*<COMReference\b.+?</COMReference>", "", 1); //mute docfx warning
+				s = s.RxReplace(@"(?ms)^\h*<ProjectReference\b.+?</ProjectReference>", "", 1); //mute docfx warning for C++ project references
 				s = s.Replace("<SignAssembly>true</SignAssembly>", "");
 				s = s.RxReplace("<AssemblyOriginatorKeyFile>.+?</AssemblyOriginatorKeyFile>", "");
 				filesystem.saveText(destDir + f.Name, s);

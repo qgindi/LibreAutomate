@@ -163,7 +163,10 @@ public static partial class script {
 		var e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
 		s_unhandledException = e;
 		if (Debugger.IsAttached) return;
-		if (s_setupException.Has(UExcept.Print)) print.it(e);
+		if (s_setupException.Has(UExcept.Print)) {
+			if (!print.isWritingToConsole) print.it(e);
+			//in console process .NET writes unhandled exception to stderr
+		}
 		if (s_setupException.Has(UExcept.Dialog)) {
 			var text = e.ToStringWithoutStack();
 			var d = new dialog("Task failed", null, "Close", flags: DFlags.ExpandDown, expandedText: e.ToString());

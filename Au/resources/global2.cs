@@ -47,7 +47,7 @@ using Au.More;
 namespace Au.More;
 #elif CONTROLS
 namespace Au.Controls;
-#endif
+#endif //else project BuildEvents uses this instead of that of the NuGet library (possibly older)
 
 ///
 [EditorBrowsable(EditorBrowsableState.Never)]

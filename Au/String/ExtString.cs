@@ -1722,6 +1722,27 @@ public static unsafe partial class ExtString {
 	/// If <i>index</i> is in this string span, returns character at <i>index</i>. Else <c>'\0'</c>.
 	/// </summary>
 	internal static char At_(this RStr t, int index) => (uint)index < t.Length ? t[index] : default;
+	
+	//TODO: maybe find a better place for this
+	//TODO: now DocFX does not fail if there are extensions, but the extension members are not in the generated TOC, and probably no html file generated.
+	extension(string) {
+		/// <summary>
+		/// Calls <see cref="Path.Combine(string, string)"/>.
+		/// </summary>
+		/// <remarks>
+		/// If the second string starts with single directory separator, at first removes it.
+		/// </remarks>
+		public static string operator /(string s1, string s2) {
+			if (s2 is ['\\' or '/', ..] && s2 is not [_, '\\' or '/', ..]) s2 = s2[1..];
+			return Path.Combine(s1, s2);
+		}
+		
+		/// <summary>
+		/// Test extension methods with DocFX.
+		/// </summary>
+		/// <param name="k">Param.</param>
+		public static void TODO(int k) {  }
+	}
 }
 
 /// <summary>
