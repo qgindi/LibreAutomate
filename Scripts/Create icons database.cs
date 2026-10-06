@@ -1,5 +1,7 @@
-//In VS set this as startup project, and run. It creates file "icons-new.db" in "_" dir.
+//Creates file "icons-new.db" in "_" dir.
 //If everything OK: exit LA, delete "icons.db", rename "icons-new.db" -> "icons.db", run LA.
+
+//At first install NuGet package `MahApps.Metro.IconPacks` in folder `icons`.
 
 //Also need to update and upload the AI embedding storage file.
 //	The "AI search" button in the Icons tool should auto-update.
@@ -8,20 +10,26 @@
 #define DB //undefine when debugging, to skip database code
 
 using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.Loader;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Xml.Linq;
+using System.Reflection;
+
 //using MahApps.Metro.IconPacks;
+
+//print.clear();
+Icons.CreateDB();
+
+//Results: 36 tables, 55369 icons, skipped 83. Also added 2176 missing old icons.
 
 static class Icons {
 	public static void CreateDB() {
 		new Application();
 
 #if DB
-		string dbFile = Program.c_outputDirBS + "icons-new.db";
+		string dbFile = folders.Editor + "icons-new.db";
 		filesystem.delete(dbFile);
 
 		using var d = new sqlite(dbFile);
@@ -32,13 +40,14 @@ static class Icons {
 
 		Dictionary<string, HashSet<string>> dict = new(StringComparer.OrdinalIgnoreCase);
 		//var duplData = new Dictionary<string, string>(); int nDupl = 0;
-
+		
+		string iconsDllDir = folders.Workspace + @".nuget\icons";
 		var alc = AssemblyLoadContext.Default;
-		var asmCore = alc.LoadFromAssemblyPath(folders.ThisApp + "MahApps.Metro.IconPacks.Core.dll");
+		var asmCore = alc.LoadFromAssemblyPath(iconsDllDir / "MahApps.Metro.IconPacks.Core.dll");
 		var factoryGen = asmCore.GetType("MahApps.Metro.IconPacks.PackIconDataFactory`1");
 
 		int nTables = 0, nIcons = 0, nSkipped = 0;
-		foreach (var dll in Directory.EnumerateFiles(folders.ThisApp, "MahApps.Metro.IconPacks.?*.dll")) {
+		foreach (var dll in Directory.EnumerateFiles(iconsDllDir, "MahApps.Metro.IconPacks.?*.dll")) {
 			if (dll.Ends(".Core.dll", true)) continue;
 			//print.it(dll);
 			var asm = alc.LoadFromAssemblyPath(dll);
@@ -122,7 +131,7 @@ static class Icons {
 	//In new IconPacks versions some icons are renamed. For backward compatibility we need icons with old names too.
 	static int _AddMissingFromOldDB(sqlite d, Dictionary<string, HashSet<string>> dict) {
 		int nMissing = 0;
-		using var dOld = new sqlite(Program.c_outputDirBS + "icons.db", SLFlags.SQLITE_OPEN_READONLY);
+		using var dOld = new sqlite(folders.Editor + "icons.db", SLFlags.SQLITE_OPEN_READONLY);
 		using var stTables = dOld.Statement("SELECT name FROM _tables");
 		while (stTables.Step()) {
 			var table = stTables.GetText(0);

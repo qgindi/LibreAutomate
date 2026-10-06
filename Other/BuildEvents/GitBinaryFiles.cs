@@ -135,8 +135,6 @@ Debugger\**
 		if (test) {
 			laDirBS += @"test\";
 			filesystem.createDirectory(laDirBS);
-		} else {
-			if (laDirBS.Eqi(@"C:\code\au\_\") && Environment.GetEnvironmentVariable("Au.Home<PC>") == "1") return 0; //we at home
 		}
 		
 		//is any file missing or possibly modified?

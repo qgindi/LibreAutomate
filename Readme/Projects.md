@@ -29,10 +29,6 @@ This .NET 4.8 console app is a bridge to .NET Framework libraries that are unava
 #### BuildEvents
 This app is used as a pre/post-build event script when building other projects. Not used at run time.
 
-#### DatabasesEtc
-This app creates some databases used by LibreAutomate.
-Used when changing the used .NET major version. Not used at run time.
-
 #### MsiCA
 This unmanaged C++ dll contains MSI custom actions used by the installer (`LibreAutomate.msi`).  
 File `msi.json` contains info to build the installer with [Master Packager Dev](https://www.masterpackager.com/).
@@ -70,9 +66,6 @@ This folder contains sources of the cookbook. It's not a VS project. It's a Libr
 
 `BuildEvents`
 - `Au` from NuGet. Not a project reference because `BuildEvents` must be built before `Au`.
-
-`DatabasesEtc`
-- `Au`
 
 Other projects don't have project references.
 

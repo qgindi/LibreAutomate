@@ -44,7 +44,7 @@ int EditorPreBuild() {
 	_CopyAuCppDllIfNeed("x64", true);
 	_CopyAuCppDllIfNeed("ARM64", true);
 	//return new GitBinaryFiles(solutionDirBS).Restore(test: true);
-	return new GitBinaryFiles(solutionDirBS).Restore();
+	return atHome ? 0 : new GitBinaryFiles(solutionDirBS).Restore();
 }
 
 void _ExitEditor() {

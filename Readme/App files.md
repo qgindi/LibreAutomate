@@ -70,12 +70,12 @@ When you build the solution (platforms `Any CPU`, `ARM64` and `x86`), you get al
 
 - `doc.db`, `ref.db`  
 	.NET documentation (for intellisense) and reference assemblies.  
-	Created by project `DatabasesEtc`.  
+	Created by script `Create .NET ref and doc databases.cs`.  
 	Data taken from .NET SDK: `C:\Program Files\dotnet\packs`
 
 - `icons.db`  
 	XAML icons.  
-	Created by project `DatabasesEtc`.  
+	Created by script `Create icons database.cs`.  
 	Data taken from: https://github.com/MahApps/MahApps.Metro.IconPacks
 
 - `winapi.db`  

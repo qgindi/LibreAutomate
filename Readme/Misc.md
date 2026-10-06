@@ -21,7 +21,11 @@ Also sometimes test whether Chromium still allows to download. Because v1.15 aft
 
 ## How to change the used .NET major version
 
-VS must support that .NET version. Install the .NET SDK if need.
+Install the .NET SDK for that .NET version.
+
+VS must support that .NET version.
+
+Run script `Create .NET ref and doc databases.cs`. Select the new .NET version in the dialog. Later (after building LA for the new .NET) rename the generated db files.
 
 Update .NET version in all C# projects (`csproj`). Except those using .NET 4.8 (`Au.Net4`).
 
@@ -30,16 +34,13 @@ May need to update .NET SDK version in `global.json` (in solution folder).
 	Because: if installed .NET 9 Preview SDK, VS used it to build projects that use .NET 8. Then app crashes when starting.
 	Note: some scripts build just the `Au` project. To use correct SDK, I created a symlink to the solution's `global.json` in the project folder. Adding as a link in VS (in `csproj`) does not work.
 
-In project `DatabasesEtc`, in file `Program.cs`:
-- Enable only the call to `RefAndDoc.Create`, and run.
-- Also now it's a good time to update icons: update the NuGet package, enable only `Icons.CreateDB`, and run.
-- Note: also need this when upgraded SDK RC -> final. Eg in .NET 8 SDK final some API changed.
-
 Update `MetaComments.Defines`.
 
 Find-replace .NET major version, like `NET 10`, `NET10`, `net10` and `10` everywhere.
 
 Build solution.
+
+Rename files `ref-new.db` and `doc-new.db` to `ref.db` and `doc.db`.
 
 Run editor.
 

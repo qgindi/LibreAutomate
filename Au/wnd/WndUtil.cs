@@ -475,7 +475,7 @@ namespace Au.More {
 				if (reflect = m >= Api.WM_REFLECT && m < Api.WM_REFLECT * 2) m -= Api.WM_REFLECT; //0x2000
 				if (m >= Api.WM_USER) return ("WM_USER", m - Api.WM_USER); //0x400
 				#region switch
-				var s = m switch {
+				var s = m switch { //code created by script `Message names for PrintMsg.cs`
 					0x0 => "WM_NULL",
 					0x1 => "WM_CREATE",
 					0x2 => "WM_DESTROY",
@@ -526,10 +526,8 @@ namespace Au.More {
 					0x39 => "WM_COMPAREITEM",
 					0x3D => "WM_GETOBJECT",
 					0x41 => "WM_COMPACTING",
-					0x44 => "WM_COMMNOTIFY",
 					0x46 => "WM_WINDOWPOSCHANGING",
 					0x47 => "WM_WINDOWPOSCHANGED",
-					0x48 => "WM_POWER",
 					0x4A => "WM_COPYDATA",
 					0x4B => "WM_CANCELJOURNAL",
 					0x4E => "WM_NOTIFY",
@@ -588,6 +586,7 @@ namespace Au.More {
 					0x115 => "WM_VSCROLL",
 					0x116 => "WM_INITMENU",
 					0x117 => "WM_INITMENUPOPUP",
+					0x118 => "WM_SYSTIMER",
 					0x119 => "WM_GESTURE",
 					0x11A => "WM_GESTURENOTIFY",
 					0x11F => "WM_MENUSELECT",
@@ -647,26 +646,6 @@ namespace Au.More {
 					0x232 => "WM_EXITSIZEMOVE",
 					0x233 => "WM_DROPFILES",
 					0x234 => "WM_MDIREFRESHMENU",
-					0x238 => "WM_POINTERDEVICECHANGE",
-					0x239 => "WM_POINTERDEVICEINRANGE",
-					0x23A => "WM_POINTERDEVICEOUTOFRANGE",
-					0x240 => "WM_TOUCH",
-					0x241 => "WM_NCPOINTERUPDATE",
-					0x242 => "WM_NCPOINTERDOWN",
-					0x243 => "WM_NCPOINTERUP",
-					0x245 => "WM_POINTERUPDATE",
-					0x246 => "WM_POINTERDOWN",
-					0x247 => "WM_POINTERUP",
-					0x249 => "WM_POINTERENTER",
-					0x24A => "WM_POINTERLEAVE",
-					0x24B => "WM_POINTERACTIVATE",
-					0x24C => "WM_POINTERCAPTURECHANGED",
-					0x24D => "WM_TOUCHHITTESTING",
-					0x24E => "WM_POINTERWHEEL",
-					0x24F => "WM_POINTERHWHEEL",
-					0x251 => "WM_POINTERROUTEDTO",
-					0x252 => "WM_POINTERROUTEDAWAY",
-					0x253 => "WM_POINTERROUTEDRELEASED",
 					0x281 => "WM_IME_SETCONTEXT",
 					0x282 => "WM_IME_NOTIFY",
 					0x283 => "WM_IME_CONTROL",
@@ -713,11 +692,10 @@ namespace Au.More {
 					0x31F => "WM_DWMNCRENDERINGCHANGED",
 					0x320 => "WM_DWMCOLORIZATIONCOLORCHANGED",
 					0x321 => "WM_DWMWINDOWMAXIMIZEDCHANGE",
-					0x323 => "WM_DWMSENDICONICTHUMBNAIL",
-					0x326 => "WM_DWMSENDICONICLIVEPREVIEWBITMAP",
 					0x33F => "WM_GETTITLEBARINFOEX",
 					0x8000 => "WM_APP",
 					0x400 => "WM_USER",
+					0x2000 => "WM_REFLECT",
 					_ => null
 				};
 				#endregion
@@ -725,28 +703,6 @@ namespace Au.More {
 			}
 		}
 		[ThreadStatic] static uint s_pm_counter;
-
-#if !true //this script creates the switch { ... }
-//var a=new List<string>();
-print.clear();
-var b = new StringBuilder("var s = m switch {\r\n");
-var s1 = File.ReadAllText(@"C:\code\au\Au\Api\Api_const.cs");
-foreach (var m in s1.RxFindAll(@"(?m)^\h*internal const int (WM_\w+) *= *(\w+);")) {
-	var s = m[1].Value;
-	if (s.Ends("FIRST") || s.Ends("LAST") || s.Starts("WM_PSD_") || s.Starts("WM_DDE_") || s.Starts("WM_CHOOSEFONT_") || s == "WM_WININICHANGE") {
-		//print.it(s);
-		continue;
-	}
-	//print.it(s, m[2]);
-	//a.Add(s);
-	b.AppendFormat("{0} => \"{1}\",\r\n", m[2].Value, s);
-}
-b.Append("_ => null};\r\nreturn (s, 0);");
-//a.Sort();
-//print.it(a);
-var s2 = b.ToString();
-print.it(s2);
-#endif
 
 		/// <summary>
 		/// Writes a Windows message to the output, unless it is specified in <i>options</i>.
