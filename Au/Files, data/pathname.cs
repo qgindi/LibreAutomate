@@ -1,9 +1,9 @@
-//TODO: hide class `pathname` and either:
+//TODO2: hide class `pathname` and either:
 //- add class Path2
-//- add extensions to Path. eg `Path.normalize` or `Path.xNormalize` or `Path.Norm`.
+//- add extensions to Path. eg `Path.normalize` or `Path.xNormalize` or `Path.Norm`. When DocFX will support extension members.
 //Add not all functions. Eg don't need Combine. Add operator `/`.
 
-//tested: System.IO.Path functions improved in Core.
+//info: System.IO.Path functions improved in Core.
 //	No exceptions if path contains invalid characters. Although the exceptions are still documented in MSDN.
 //	Support long paths and file streams.
 //	Faster, etc.

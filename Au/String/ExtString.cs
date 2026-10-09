@@ -1723,7 +1723,7 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	internal static char At_(this RStr t, int index) => (uint)index < t.Length ? t[index] : default;
 	
-	//FUTURE: now DocFX (updated 2026-10-05) does not fail if there are `extension`, but skips extension members.
+	//FUTURE: test HTML doc generation after updating DocFX. Now DocFX (updated 2026-10-05) skips extension members.
 	extension(string) {
 		/// <summary>
 		/// Calls <see cref="Path.Combine(string, string)"/>.
@@ -1735,12 +1735,6 @@ public static unsafe partial class ExtString {
 			if (s2 is ['\\' or '/', ..] && s2 is not [_, '\\' or '/', ..]) s2 = s2[1..];
 			return Path.Combine(s1, s2);
 		}
-		
-		///// <summary>
-		///// Test extension methods with DocFX.
-		///// </summary>
-		///// <param name="k">Param.</param>
-		//public static void DocfxTestMethod(int k) {  }
 	}
 }
 

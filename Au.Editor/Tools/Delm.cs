@@ -133,7 +133,7 @@ class Delm : KDialogWindow {
 		b.AddSeparator(true);
 		b.xAddButtonIcon("*EvaIcons.Options2" + LA.EdIcons.green, _ => _ToolSettings(), "Tool settings");
 		b.AddSeparator(true);
-		b.Add(out _cUIA, "UIA").Checked(LA.App.Settings.delm.def_UIA, threeState: true).Tooltip("What API to use to capture UI elements:\nChecked - UI Automation\nUnchecked - MSAA\nIndeterminate - auto");
+		b.Add(out _cUIA, "UIA").Checked(null, threeState: true).Tooltip("What API to use to capture UI elements:\nChecked - UI Automation\nUnchecked - MSAA\nIndeterminate - auto");
 
 		b.End();
 		//row 2
@@ -1735,16 +1735,16 @@ new elmFinder || 5
 			_SetOpt(_EOptions.NoWait, !_wait.c.IsChecked);
 		}).Tooltip = "Let the tool start with current wait settings";
 		
-		//TODO: consider: improve the "Save UIA" feature. Save for each window class separately. Or at least for browsers separately.
-		//	See https://www.libreautomate.com/forum/showthread.php?tid=7958
+		//rejected. See https://www.libreautomate.com/forum/showthread.php?tid=7958
+		//m.Add("Save UIA", _ => {
+		//	LA.App.Settings.delm.def_UIA = _cUIA.IsChecked;
+		//}).Tooltip = "Let the tool start with current UIA checkbox state";
 		
-		m.Add("Save UIA", _ => {
-			LA.App.Settings.delm.def_UIA = _cUIA.IsChecked;
-		}).Tooltip = "Let the tool start with current UIA checkbox state";
 		//if (Java.GetJavaPath(out _)) { //moved to Options -> OS. It isn't a tool setting.
 		//	m.Separator();
 		//	m["Java..."] = o => Java.EnableDisableJabUI(this);
 		//}
+		
 		m.Show(owner: this);
 		_SetOpt(_EOptions.AutoTest, cAT.IsChecked);
 		//bool format = _SetOpt(_EOptions.Compact, cCC.IsChecked);

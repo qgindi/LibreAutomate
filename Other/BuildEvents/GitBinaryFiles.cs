@@ -233,8 +233,8 @@ class GitRepo(string repoDir) {
 	}
 }
 
-//TODO: remove after updating the used LA NuGet package
 static class Ext_ {
+	//TODO: remove after updating the used LA NuGet package
 	extension(string) {
 		public static string operator /(string s1, string s2) {
 			if (s2 is ['\\' or '/', ..] && s2 is not [_, '\\' or '/', ..]) s2 = s2[1..];
