@@ -76,6 +76,7 @@ exit $?
 	}
 	
 	string _GetNewVersionFileTextIfFilesChanged() {
+		//TODO: split into 2. Now almost each push uploads a new version of binary files, although it seems I did not change any of them.
 		string list = """
 *.db
 *MSTSCLib.dll

@@ -47,7 +47,6 @@ jobs:
         with:
           path: _\LibreAutomate.msi
           archive: false
-          overwrite: true
     
       - name: submit signing request
         uses: signpath/github-action-submit-signing-request@v3
@@ -61,10 +60,6 @@ jobs:
           output-artifact-directory: '_\signed'
           wait-for-completion-timeout-in-seconds: 3600
           skip-decompress: true
-  
-      - name: upload signed artifact
-        uses: actions/upload-artifact@v7
-        with:
-          path: _\signed\LibreAutomate.msi
-          archive: false
-          overwrite: true
+
+       # note: known bug in `upload-artifact`: fails to upload again if `archive: false` and the same filename. Then ignores `name` and `overwrite: true`.
+       #   If need the signed artifact, download it from the SignPath account.
