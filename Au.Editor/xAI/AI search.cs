@@ -511,47 +511,35 @@ file record struct _EmHash(string hash, string modelParams) {
 }
 
 [JsonConverter(typeof(_JsonConverter))]
-record struct EmInput {
-	object _o;
+union EmInput(string, object[]) {
+	public object[] Multimodal => Value as object[];
 	
-	public EmInput(string text) { _o = text; }
-	
-	public EmInput(object[] multimodal) { _o = multimodal; }
-	
-	//public bool IsMultimodal => _o is object[];
-	
-	public object[] Multimodal => _o as object[];
-	
-	public string Text => _o as string;
-	
-	public static implicit operator EmInput(string s) => new(s);
-	
-	public static implicit operator EmInput(object[] a) => new(a);
+	public string Text => Value as string;
 	
 	public int Size {
 		get {
-			if (_o is object[] a) {
+			if (Value is object[] a) {
 				int r = 0;
 				foreach (var v in a) {
 					if (v is byte[] b) r += b.Length / 3 * 4 + 4; //Base64 of image
 					else if (v is string g) r += g.Length;
 				}
 				return r;
-			} else if (_o is string s) {
+			} else if (Value is string s) {
 				return s.Length;
 			} else return 0;
 		}
 	}
 	
 	public Hash.MD5Result GetHash() {
-		if (_o is object[] a) {
+		if (Value is object[] a) {
 			var h = new Hash.MD5Context();
 			foreach (var v in a) {
 				if (v is byte[] b) h.Add(b);
 				else if (v is string g) h.Add(g);
 			}
 			return h.Hash;
-		} else if (_o is string s) {
+		} else if (Value is string s) {
 			return Hash.MD5(s);
 		} else return default;
 	}

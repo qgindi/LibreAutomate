@@ -8,9 +8,9 @@ public partial class dialog {
 	/// </summary>
 	/// <returns>Selected button id.</returns>
 	/// <param name="text1">Heading text.</param>
-	/// <param name="text2">Message text. Can be string, or string with links like <c><![CDATA[new("Text <a>link</a> text.", e => { print.it("link"); })]]></c>.</param>
+	/// <param name="text2">Message text. Can be string, or string with links like <c>new("Text &lt;a>link&lt;/a> text.", e => { print.it("link"); })</c>.</param>
 	/// <param name="buttons">
-	/// List of button names or <c>"id name"</c>. Examples: <c>"OK|Cancel"</c>, <c>"1 Yes|2 No"</c>, <c><![CDATA["1 &Save|2 Do&n't Save|0 Cancel"]]></c>, <c>["1 One", "2 Two"]</c>.
+	/// List of button names or <c>"id name"</c>. Examples: <c>"OK|Cancel"</c>, <c>"1 Yes|2 No"</c>, <c>"1 &amp;Save|2 Do&amp;n't Save|0 Cancel"</c>, <c>["1 One", "2 Two"]</c>.
 	/// Can contain common buttons (named <b>OK</b>, <b>Yes</b>, <b>No</b>, <b>Retry</b>, <b>Cancel</b>, <b>Close</b>) and/or custom buttons (any other names).
 	/// This first in the list button will be focused (aka <i>default button</i>).
 	/// More info: <see cref="Buttons"/>.
@@ -18,8 +18,8 @@ public partial class dialog {
 	/// <param name="flags"></param>
 	/// <param name="icon"></param>
 	/// <param name="owner">Owner window. See <see cref="OwnerWindow"/>.</param>
-	/// <param name="expandedText">Text in expander control. Can be string, or string with links like <c><![CDATA[new("Text <a>link</a> text.", e => { print.it("link"); })]]></c>.</param>
-	/// <param name="footer">Text at the bottom of the dialog. Can be string, or string with links like <c><![CDATA[new("Text <a>link</a> text.", e => { print.it("link"); })]]></c>. Icon can be specified like <c>"i|Text"</c>, where <c>i</c> is: <c>x</c> error, <c>!</c> warning, <c>i</c> info, <c>v</c> shield, <c>a</c> app.</param>
+	/// <param name="expandedText">Text in expander control. Can be string, or string with links like <c>new("Text &lt;a>link&lt;/a> text.", e => { print.it("link"); })</c>.</param>
+	/// <param name="footer">Text at the bottom of the dialog. Can be string, or string with links like <c>new("Text &lt;a>link&lt;/a> text.", e => { print.it("link"); })</c>. Icon can be specified like <c>"i|Text"</c>, where <c>i</c> is: <c>x</c> error, <c>!</c> warning, <c>i</c> info, <c>v</c> shield, <c>a</c> app.</param>
 	/// <param name="title">Title bar text. If omitted, <c>null</c> or <c>""</c>, uses <see cref="options.defaultTitle"/>.</param>
 	/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 	/// <param name="x">X position in screen. Default - screen center. Examples: <c>10</c>, <c>^10</c> (reverse), <c>.5f</c> (fraction).</param>
@@ -247,7 +247,7 @@ public partial class dialog {
 	/// Shows dialog with a list of command-link buttons, and returns 1-based button index or 0.
 	/// </summary>
 	/// <returns>1-based index of the selected button. Returns 0 if clicked the <b>X</b> (close window) button or pressed <c>Esc</c>.</returns>
-	/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <c>List</c>. See <see cref="Buttons"/>.</param>
+	/// <param name="list">List items (buttons). Can be like <c>"One|Two|Three"</c> or <c>["One", "Two", "Three"]</c> or string array or <c>List</c>. See <see cref="Buttons"/>.</param>
 	/// <param name="text1">Heading text.</param>
 	/// <param name="text2">Message text.</param>
 	/// <param name="flags"></param>

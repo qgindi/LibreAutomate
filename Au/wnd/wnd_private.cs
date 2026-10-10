@@ -134,24 +134,6 @@ public unsafe partial struct wnd {
 		}
 		
 		/// <summary>
-		/// Converts object to <see cref="wnd"/>.
-		/// Object can contain <c>null</c>, <see cref="wnd"/>, <c>Control</c>, or <c>System.Windows.DependencyObject</c> (must be in element 0 of <c>object[]</c>).
-		/// Avoids loading Forms and WPF dlls when not used.
-		/// </summary>
-		public static wnd FromObject(object o) => o switch {
-			null => default,
-			wnd w => w,
-			object[] a => _Wpf(a[0]),
-			_ => _Control(o)
-		};
-		
-		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading Forms dlls when don't need
-		static wnd _Control(object o) => (o as System.Windows.Forms.Control).Hwnd();
-		
-		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
-		static wnd _Wpf(object o) => (o as System.Windows.DependencyObject).Hwnd();
-		
-		/// <summary>
 		/// If <i>w</i> is handle of a WPF element (<c>Window</c>, <c>Popup</c>, <c>HwndHost</c>-ed control, <c>HwndSource.RootVisual</c>), returns that element, else <c>null</c>.
 		/// Slow if <c>HwndHost</c>-ed control.
 		/// <i>w</i> can be <c>default</c>.

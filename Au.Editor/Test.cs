@@ -28,6 +28,8 @@ namespace LA;
 static class Test {
 	public static void FromMenubar() {
 		//print.clear();
+
+
 		
 		//var path = @"C:\Users\G\Documents\LibreAutomate\URN\files\Folder1-k\bind-kk.cs";
 		//print.it(App.Model.FindByFilePath(App.Model.CurrentFile, path));

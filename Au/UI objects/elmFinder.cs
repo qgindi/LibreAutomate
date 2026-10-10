@@ -105,7 +105,7 @@ public unsafe class elmFinder {
 	/// </param>
 	/// <param name="prop">
 	/// Other UI element properties and search settings.
-	/// Examples: <c>"value=xxx|@href=yyy"</c>, <c>new("value=xxx", "@href=yyy")</c>.
+	/// Examples: <c>"value=xxx|@href=yyy"</c>, <c>["value=xxx", "@href=yyy"]</c>.
 	/// More info in Remarks.
 	/// </param>
 	/// <param name="flags"></param>
@@ -149,7 +149,7 @@ public unsafe class elmFinder {
 	/// 
 	/// <h5>About the <i>prop</i> parameter</h5>
 	/// 
-	/// Format: one or more <c>"name=value"</c> strings, like <c>new("key=xxx", "@href=yyy")</c> or <c>"key=xxx|@href=yyy"</c>. Names must match case. Values of most string properties are [wildcard expressions](xref:wildcard_expression).
+	/// Format: one or more <c>"name=value"</c> strings, like <c>["key=xxx", "@href=yyy"]</c> or <c>"key=xxx|@href=yyy"</c>. Names must match case. Values of most string properties are [wildcard expressions](xref:wildcard_expression).
 	/// 
 	/// - <c>"class"</c> - search only in child controls that have this class name (see <see cref="wnd.ClassName"/>).\
 	///   Cannot be used when searching in a UI element.

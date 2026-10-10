@@ -4,7 +4,7 @@ namespace Au.Types {
 	/// <summary>
 	/// Text for <see cref="dialog"/> functions. Supports links. Has implicit conversion from string.
 	/// </summary>
-	/// <param name="text">Text. Links can be specified like <c><![CDATA["Text <a>link</a> text."]]></c>.</param>
+	/// <param name="text">Text. Links can be specified like <c>"Text &lt;a>link&lt;/a> text."</c>.</param>
 	/// <param name="links">Link click handlers like <c>e => { print.it("link"); }</c>.</param>
 	public record class DText(string text, params Action<DEventArgs>[] links) {
 		/// <summary>

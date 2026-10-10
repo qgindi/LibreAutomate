@@ -199,9 +199,9 @@ record struct IconString_ {
 	}
 	
 	/// <summary>
-	/// If <i>s</i> is an icon string, removes parameters and returns true.
+	/// If <i>s</i> is an icon string, removes parameters and returns <c>true</c>.
 	/// <br/>Example1: <c>"*Pack.Name color"</c> -> <c>"*Pack.Name"</c>.
-	/// <br/>Example2: <c><![CDATA["*<assembly>*Pack.Name1 color; *Pack.Name2 color margin;"]]></c> -> <c>"*Pack.Name1;Pack.Name2"</c>.
+	/// <br/>Example2: <c>"*&lt;assembly>*Pack.Name1 color; *Pack.Name2 color margin;"</c> -> <c>"*Pack.Name1;Pack.Name2"</c>.
 	/// </summary>
 	public static bool DetectAndRemoveParametersForResources(RStr s, out string result) {
 		StringBuilder b = null;

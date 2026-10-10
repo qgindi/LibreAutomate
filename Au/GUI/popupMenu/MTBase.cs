@@ -354,26 +354,10 @@ public abstract class MTItem {
 /// Used for menu/toolbar function parameters to specify an image in different ways (file path, <see cref="Image"/> object, etc).
 /// </summary>
 /// <remarks>
-/// Has implicit conversions from string, <see cref="Image"/>, <see cref="icon"/>, <see cref="StockIcon"/>, <see cref="FolderPath"/>.
+/// Has implicit conversions from <c>string</c>, <see cref="Image"/>, <see cref="icon"/>, <see cref="StockIcon"/>, <see cref="FolderPath"/>.
 /// More info: <see cref="MTBase"/>.
 /// </remarks>
-public struct MTImage {
-	readonly object _o;
-	MTImage(object o) { _o = o; }
-	
-	///
-	public static implicit operator MTImage(string pathEtc) => new(pathEtc);
-	///
-	public static implicit operator MTImage(Image image) => new(image);
-	///
-	public static implicit operator MTImage(icon icon) => new(icon);
-	///
-	public static implicit operator MTImage(StockIcon icon) => new(icon);
+public union MTImage(string, Image, icon, StockIcon) {
 	///
 	public static implicit operator MTImage(FolderPath path) => new((string)path);
-	
-	/// <summary>
-	/// Gets the raw value stored in this variable. Can be <c>string</c>, <see cref="Image"/>, <see cref="icon"/>, <see cref="StockIcon"/> or <c>null</c>.
-	/// </summary>
-	public object Value => _o;
 }

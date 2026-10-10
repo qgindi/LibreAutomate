@@ -14,7 +14,7 @@ namespace Au.Types;
 /// </remarks>
 public class IFArea {
 	internal enum AreaType : byte { Screen, Wnd, Elm, Bitmap }
-
+	
 	internal AreaType Type;
 	readonly bool _hasRect, _hasCoord;
 	internal wnd W;
@@ -22,18 +22,18 @@ public class IFArea {
 	internal Bitmap B;
 	RECT _r;
 	readonly Coord _cLeft, _cTop, _cRight, _cBottom;
-
+	
 	IFArea(AreaType t) { Type = t; }
-
+	
 	/// <summary>Specifies a window or control and a rectangle in its client area.</summary>
 	public IFArea(wnd w, RECT r) { Type = AreaType.Wnd; W = w; _r = r; _hasRect = true; }
-
+	
 	/// <summary>Specifies a UI element and a rectangle in it.</summary>
 	public IFArea(elm e, RECT r) { Type = AreaType.Elm; E = e; _r = r; _hasRect = true; }
-
+	
 	//rejected. Rare etc.
 	//public IFArea(Bitmap b, RECT r) { ... }
-
+	
 	/// <summary>
 	/// Specifies a window or control and a rectangle in its client area.
 	/// The parameters are of <see cref="Coord"/> type, therefore can be easily specified reverse and fractional coordinates, like <c>^10</c> and <c>.5f</c>. Use <c>^0</c> for right or bottom edge.
@@ -47,7 +47,7 @@ public class IFArea {
 		_cBottom = bottom;
 		_hasRect = _hasCoord = true;
 	}
-
+	
 	/// <summary>
 	/// Specifies a UI element and a rectangle in it.
 	/// The parameters are of <see cref="Coord"/> type, therefore can be easily specified reverse and fractional coordinates, like <c>^10</c> and <c>.5f</c>. Use <c>^0</c> for right or bottom edge.
@@ -61,15 +61,15 @@ public class IFArea {
 		_cBottom = bottom;
 		_hasRect = _hasCoord = true;
 	}
-
+	
 	public static implicit operator IFArea(wnd w) => new(AreaType.Wnd) { W = w };
 	public static implicit operator IFArea(elm e) => new(AreaType.Elm) { E = e };
 	public static implicit operator IFArea(Bitmap b) => new(AreaType.Bitmap) { B = b };
 	public static implicit operator IFArea(RECT r) => new(AreaType.Screen) { _r = r };
-
+	
 	internal void Before_(bool windowPixels) {
 		if (windowPixels && Type is AreaType.Screen or AreaType.Bitmap) throw new ArgumentException("Invalid flags for this area type");
-
+		
 		switch (Type) {
 		case AreaType.Wnd:
 			W.ThrowIfInvalid();
@@ -83,16 +83,16 @@ public class IFArea {
 			break;
 		}
 	}
-
+	
 	internal bool GetRect_(out RECT r, out POINT resultOffset, IFFlags flags) {
 		r = default;
 		resultOffset = default;
-
+		
 		if (!W.Is0) {
 			if (!W.IsVisible || W.IsMinimized) return false;
 			if (!flags.HasAny(IFFlags.WindowDC | IFFlags.PrintWindow) && W.IsCloaked) return false;
 		}
-
+		
 		//Get area rectangle.
 		bool failed = false;
 		switch (Type) {
@@ -115,10 +115,10 @@ public class IFArea {
 			W.ThrowIfInvalid();
 			throw new AuException("*get rectangle");
 		}
-
+		
 		//r is the area from where to get pixels. If Wnd or Elm, it is relative to W client area.
 		//Intermediate results will be relative to r. Then will be added resultOffset if need.
-
+		
 		if (_hasRect) {
 			RECT rr;
 			if (_hasCoord) {
@@ -132,7 +132,7 @@ public class IFArea {
 			rr.Offset(r.left, r.top);
 			r.Intersect(rr);
 		}
-
+		
 		if (Type == AreaType.Elm) {
 			//adjust r and resultOffset,
 			//	because object rectangle may be bigger than client area (eg WINDOW object)
@@ -146,10 +146,10 @@ public class IFArea {
 			x -= r.left; y -= r.top;
 			resultOffset.x -= x; resultOffset.y -= y;
 		}
-
+		
 		return !r.NoArea; //never mind: if WaitChanged and this is the first time, immediately returns 'changed'
 	}
-
+	
 	/// <summary>
 	/// Calls <c>GetRect_</c>, and <c>CaptureScreen.Image</c> if need.
 	/// </summary>
@@ -160,7 +160,7 @@ public class IFArea {
 		b = Type == AreaType.Screen ? CaptureScreen.Image(r) : CaptureScreen.Image(W, r, flags.ToCIFlags_());
 		return true;
 	}
-
+	
 	/// <summary>
 	/// If <i>scale</i>!=0, returns <i>scale</i>. Else returns 1...2 depending on <i>engine</i> and <i>area</i> DPI.
 	/// </summary>
@@ -187,31 +187,17 @@ public class IFArea {
 /// - string that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c> - resource name; see <see cref="ResourceUtil.GetGdipBitmap"/>.
 /// - string with prefix <c>"image:"</c> - Base64 encoded <c>.png</c> image.\
 ///   Can be created with tool <b>Find image or color in window</b> or with function <c>Au.Controls.KImageUtil.ImageToString</c> (in <c>Au.Controls.dll</c>).
-/// - <see cref="ColorInt"/>, <c>int</c> or <c>uint</c> in <c>0xRRGGBB</c> color format, <see cref="Color"/> - color. Alpha isn't used.
+/// - <see cref="ColorInt"/>, <c>int</c> or <c>uint</c> in <c>0xRRGGBB</c> color format, <c>Color</c> - color. Alpha isn't used.
 /// - <see cref="Bitmap"/> - image object.
 /// - <c>IFImage[]</c> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
 /// 
 /// Icons are not supported directly; you can use <see cref="icon"/> to get icon and convert to bitmap.
 /// </remarks>
-public struct IFImage {
-	readonly object _o;
-	IFImage(object o) { _o = o; }
-
-	public static implicit operator IFImage(string pathEtc) => new(pathEtc);
-	public static implicit operator IFImage(Bitmap image) => new(image);
-	public static implicit operator IFImage(ColorInt color) => new(color);
+public union IFImage(string, Bitmap, ColorInt, IFImage[]) {
 	public static implicit operator IFImage(int color) => new((ColorInt)color);
 	public static implicit operator IFImage(uint color) => new((ColorInt)color);
 	public static implicit operator IFImage(Color color) => new((ColorInt)color);
 	public static implicit operator IFImage(System.Windows.Media.Color color) => new((ColorInt)color);
-	//public static implicit operator IFImage(IEnumerable<IFImage> list) => new(list); //error: cannot convert from interfaces
-	public static implicit operator IFImage(IFImage[] list) => new(list);
-	//public static implicit operator IFImage(List<IFImage> list) => new(list); //rare, can use ToArray()
-
-	/// <summary>
-	/// Gets the raw value stored in this variable. Can be <c>string</c>, <see cref="Bitmap"/>, <see cref="ColorInt"/>, <see cref="IFImage"/><c>[]</c>, <c>null</c>.
-	/// </summary>
-	public object Value => _o;
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
@@ -229,7 +215,7 @@ public enum IFFlags {
 	/// If the window is DPI-scaled, the image must be captured from its non-scaled version. However if used a limiting rectangle, it must contain scaled coordinates.
 	/// </summary>
 	WindowDC = 1,
-
+	
 	/// <summary>
 	/// Use API <ms>PrintWindow</ms> to get window pixels.
 	/// Like <c>WindowDC</c>, works with background windows, etc. Differences:
@@ -243,7 +229,7 @@ public enum IFFlags {
 	/// </summary>
 	PrintWindow = 2,
 	//rejected, makes no sense: /// <br/>• If used together with flag <c>WindowDC</c>, calls <c>PrintWindow</c> without flag <c>PW_RENDERFULLCONTENT</c>. Faster, less flickering, no bugs, but has the <c>WindowDC</c> problem: can't get pixels from some windows or window parts.
-
+	
 	///// <summary>
 	///// Use DWM thumbnail API to get window pixels.
 	///// Like <c>WindowDC</c>, works with background windows, etc. Differences:
@@ -253,15 +239,15 @@ public enum IFFlags {
 	///// <br/>• May not work with some windows (rare).
 	///// </summary>
 	//WindowDwm = 4,
-
+	
 	//note: the above values must be the same in CIFlags, CIUFlags, IFFlags, OcrFlags.
-
+	
 	/// <summary>
 	/// This flag can make the function faster when <i>image</i> is a list of images. To search for each image, the function will use <see cref="Parallel.For"/> instead of <c>for</c>. For example, if the CPU has 4 cores (8 threads), can search for max 8 images simultaneously. However it does not mean it will be 8 times faster. Can be max 2 or 3 times faster, depending on the number of images, flag <c>WindowDC</c>, <i>diff</i>, <i>also</i>, CPU, RAM, area size, finds or not, image position, etc. Can be even slower. To measure speed, use <see cref="perf"/>.
 	/// If used <i>also</i> callback function, it runs in any thread and any order, but one at a time (inside <c>lock() { }</c>).
 	/// </summary>
 	Parallel = 0x100
-
+	
 	//rejected: this was used in QM2. Now can use png alpha instead.
 	///// <summary>
 	///// Use the top-left pixel color of the image as transparent color (don't compare pixels that have this color).
@@ -278,43 +264,43 @@ public enum IFAlso {
 	/// Let the main function return current result.
 	/// </summary>
 	OkReturn,
-
+	
 	/// <summary>
 	/// Find more instances of current image. If used list of images, also search for other images.
 	/// Then let the main function return current result.
 	/// </summary>
 	OkFindMore,
-
+	
 	/// <summary>
 	/// Find more instances of current image. When used list of images, don't search for other images.
 	/// Then let the main function return current result.
 	/// </summary>
 	OkFindMoreOfThis,
-
+	
 	/// <summary>
 	/// If used list of images, search for other images. Don't search for more instances of current image.
 	/// Then let the main function return current result.
 	/// </summary>
 	OkFindMoreOfList,
-
+	
 	/// <summary>
 	/// Stop searching.
 	/// Let the main function return <c>null</c> or throw exception or continue waiting. But if a <c>OkFindX</c> value used previously, return that result.
 	/// </summary>
 	NotFound,
-
+	
 	/// <summary>
 	/// Find more instances of current image. If used list of images, also search for other images.
 	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <c>OkFindX</c> value used previously, return that result.
 	/// </summary>
 	FindOther,
-
+	
 	/// <summary>
 	/// Find more instances of current image. When used list of images, don't search for other images.
 	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <c>OkFindX</c> value used previously, return that result.
 	/// </summary>
 	FindOtherOfThis,
-
+	
 	/// <summary>
 	/// If used list of images, search for other images. Don't search for more instances of current image.
 	/// If not found, let the main function return <c>null</c> or throw exception or continue waiting; but if a <c>OkFindX</c> value used previously, return that result.

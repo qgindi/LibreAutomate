@@ -684,30 +684,15 @@ namespace Au.Types {
 	/// The <i>contains</i> parameter of <see cref="wnd.find"/> and similar functions.
 	/// Specifies text, image or other object that must be in the window.
 	/// </summary>
-	public struct WContains {
-		readonly object _o;
-		WContains(object o) => _o = o;
-		
-		///
-		public static implicit operator WContains(wndChildFinder f) => new(f);
-		
-		///
-		public static implicit operator WContains(elmFinder f) => new(f);
-		
-		///
-		public static implicit operator WContains(uiimageFinder f) => new(f);
-		
-		///
-		public static implicit operator WContains(ocrFinder f) => new(f);
-		
+	public union WContains(wndChildFinder, elmFinder, uiimageFinder, ocrFinder) {
 		/// <summary>
 		/// Converts from string to <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.
 		/// See <see cref="wnd.find"/>.
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of constructor of <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.</exception>
-		public static implicit operator WContains(string s) => new(_ParseString(s));
+		public static implicit operator WContains(string s) => _ParseString(s);
 		
-		static object _ParseString(string s) {
+		static WContains _ParseString(string s) {
 			if (s.NE()) return null;
 			string role = null, name = s;
 			switch (s[0]) {
@@ -725,11 +710,6 @@ namespace Au.Types {
 			}
 			return new elmFinder(role, name, flags: EFFlags.ClientArea) { ResultGetProperty = '-' };
 		}
-		
-		/// <summary>
-		/// Gets object stored in this variable. Can be <c>null</c>, <see cref="wndChildFinder"/>, <see cref="elmFinder"/>, <see cref="uiimageFinder"/> or <see cref="ocrFinder"/>.
-		/// </summary>
-		public object Value => _o;
 	}
 	
 	/// <summary>

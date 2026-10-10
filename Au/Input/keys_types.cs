@@ -258,22 +258,7 @@ public struct KKeyScan {
 /// Parameter type of <see cref="keys.send"/> and similar functions.
 /// Has implicit conversions from <c>string</c>, <see cref="clipboardData"/>, <see cref="KKey"/>, <see cref="KKeyScan"/>, <c>char</c>, <c>int</c> (sleep time) and <see cref="Action"/>.
 /// </summary>
-public struct KKeysEtc {
-	readonly object _o;
-	KKeysEtc(object o) { _o = o; }
-
-	public KKeysEtc(Action a) { _o = a; } //allows 'new(() => {})' instead of 'new Action(() => {})'
-
-	public object Value => _o;
-
-	public static implicit operator KKeysEtc(string s) => new(s);
-	public static implicit operator KKeysEtc(clipboardData cd) => new(cd);
-	public static implicit operator KKeysEtc(KKey k) => new(k);
-	public static implicit operator KKeysEtc(KKeyScan t) => new(t);
-	public static implicit operator KKeysEtc(char c) => new(c);
-	public static implicit operator KKeysEtc(int ms) => new(ms);
-	public static implicit operator KKeysEtc(Action a) => new(a);
-}
+public union KKeysEtc(string, clipboardData, KKey, KKeyScan, char, int, Action);
 
 /// <summary>
 /// <see cref="keys.Pasting"/> event data.

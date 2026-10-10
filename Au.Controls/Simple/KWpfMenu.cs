@@ -225,9 +225,9 @@ public class KWpfMenu : ContextMenu {
 	/// Returns selected item id, or 0 if canceled.
 	/// </summary>
 	/// <param name="items">
-	/// Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
-	/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
-	/// For separators use null or empty strings: "One|Two||Three|Four".
+	/// Menu items. Examples: <c>"One|Two|Three"</c>, <c>["One", "Two", "Three"]</c>.
+	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four" //1|2|100|101</c>.
+	/// For separators use <c>null</c> or empty strings: <c>"One|Two||Three|Four"</c>.
 	/// </param>
 	/// <param name="owner"><see cref="ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
 	/// <param name="byCaret">Show by caret (text cursor) position if possible.</param>

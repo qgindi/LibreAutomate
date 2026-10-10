@@ -190,7 +190,7 @@ public partial class dialog {
 	/// <summary>
 	/// Sets message text.
 	/// </summary>
-	/// <param name="text">Text. Can be string, or string with links like <c><![CDATA[new("Text <a>link</a> text.", e => { print.it("link"); })]]></c>, or <c>null</c>.</param>
+	/// <param name="text">Text. Can be string, or string with links like <c>new("Text &lt;a>link&lt;/a> text.", e => { print.it("link"); })</c>, or <c>null</c>.</param>
 	public dialog Text2(DText text) {
 		_c.pszContent = _DTextGetText(text, 0);
 		return this;
@@ -420,7 +420,7 @@ public partial class dialog {
 	/// Sets buttons.
 	/// </summary>
 	/// <param name="buttons">
-	/// List of button names or <c>"id name"</c>. Examples: <c>"OK|Cancel"</c>, <c>"1 Yes|2 No"</c>, <c><![CDATA["1 &Save|2 Do&n't Save|0 Cancel"]]></c>, <c>["1 One", "2 Two"]</c>.
+	/// List of button names or <c>"id name"</c>. Examples: <c>"OK|Cancel"</c>, <c>"1 Yes|2 No"</c>, <c>"1 &amp;Save|2 Do&amp;n't Save|0 Cancel"</c>, <c>["1 One", "2 Two"]</c>.
 	/// Can contain common buttons (named <b>OK</b>, <b>Yes</b>, <b>No</b>, <b>Retry</b>, <b>Cancel</b>, <b>Close</b>) and/or custom buttons (any other names).
 	/// This first in the list button will be focused (aka <i>default button</i>).
 	/// More info in Remarks.

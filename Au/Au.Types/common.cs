@@ -155,15 +155,30 @@ namespace Au.Types {
 	//}
 }
 
-namespace System.Runtime.CompilerServices //the attribute must be in this namespace
-{
-	///
+#pragma warning disable CS1591 //Missing XML comment for publicly visible type or member
+namespace System.Runtime.CompilerServices {
 	[NoDoc]
 	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 	public class IgnoresAccessChecksToAttribute : Attribute {
-		///
 		public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
-		///
 		public string AssemblyName { get; }
 	}
+	
+#if !NET11_0_OR_GREATER
+#nullable enable
+	[NoDoc]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+	public sealed class UnionAttribute : Attribute;
+	
+	[NoDoc]
+	public interface IUnion {
+		object? Value { get; }
+	}
+	
+	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public sealed class IsClosedTypeAttribute : Attribute {
+		public Type[]? DerivedTypes { get; set; }
+	}
+#endif
 }

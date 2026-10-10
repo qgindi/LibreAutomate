@@ -1673,7 +1673,7 @@ new elmFinder || 5
 				if (_actionExpandPath != null) s = s.ReplaceAt(7, 4, _actionExpandPath.Escape(quote: true));
 			} else if (s.Starts("ComboSelect(^")) {
 				if (test) {
-					if (_actionComboSelectItem == null || popupMenu.showSimple(new(_actionComboSelectItem, "8492 Other...")) == 8492) {
+					if (_actionComboSelectItem == null || popupMenu.showSimple([_actionComboSelectItem, "8492 Other..."]) == 8492) {
 						if (!_ActionInputStringArg("#cs", out _) || _actionComboSelectItem == null) return null;
 						_FormatCode();
 					}

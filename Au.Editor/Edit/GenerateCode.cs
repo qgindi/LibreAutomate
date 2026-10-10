@@ -64,7 +64,8 @@ static class GenerateCode {
 		if (pl != null) {
 			var b = new StringBuilder(s);
 			foreach (var p in pl.Parameters) {
-				b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
+				if (p.Identifier.Text is [_, ..] name) //else probably `union U(type1, type2)`
+					b.Append($"\r\n/// <param name=\"{name}\"></param>");
 			}
 			if ((node is MethodDeclarationSyntax met2 && !code.Eq(met2.ReturnType.Span, "void"))
 				|| node is IndexerDeclarationSyntax

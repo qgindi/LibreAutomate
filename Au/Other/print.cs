@@ -560,6 +560,7 @@ public static partial class print {
 			switch (value) {
 			case null: return "null";
 			case string t: return t;
+			case System.Runtime.CompilerServices.IUnion u: return u.Value?.ToString() ?? "null";
 			case ulong or uint or ushort or byte or nuint when !noHex:
 			case COL.IEnumerable when !value.GetType().IsCOMObject: //info: eg Excel.Range and many other Excel interfaces are IEnumerable, and this process crashes, sometimes Excel too
 			case COL.DictionaryEntry:
@@ -579,6 +580,7 @@ public static partial class print {
 			switch (value) {
 			case null: b.Append("null"); break;
 			case string s: b.Append(s); break;
+			case System.Runtime.CompilerServices.IUnion u: b.Append(u.Value?.ToString() ?? "null"); break;
 			case ulong u: _Unsigned(b, u); break;
 			case uint u: _Unsigned(b, u); break;
 			case ushort u: _Unsigned(b, u); break;

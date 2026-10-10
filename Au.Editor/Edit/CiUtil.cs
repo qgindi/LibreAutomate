@@ -758,7 +758,7 @@ static class CiUtil {
 	public static CiItemKind MemberDeclarationToKind(MemberDeclarationSyntax m) {
 		return m switch {
 			ClassDeclarationSyntax or ExtensionBlockDeclarationSyntax => CiItemKind.Class,
-			StructDeclarationSyntax => CiItemKind.Structure,
+			StructDeclarationSyntax or UnionDeclarationSyntax => CiItemKind.Structure,
 			RecordDeclarationSyntax rd => rd.IsKind(SyntaxKind.RecordStructDeclaration) ? CiItemKind.Structure : CiItemKind.Class,
 			EnumDeclarationSyntax => CiItemKind.Enum,
 			DelegateDeclarationSyntax => CiItemKind.Delegate,

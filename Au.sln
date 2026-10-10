@@ -65,6 +65,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Readme", "Readme", "{55B5FC
 		Readme\App files.md = Readme\App files.md
 		Readme\Misc.md = Readme\Misc.md
 		Readme\Projects.md = Readme\Projects.md
+		Readme\Roslyn.md = Readme\Roslyn.md
 	EndProjectSection
 EndProject
 Global

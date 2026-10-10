@@ -984,7 +984,7 @@ public unsafe partial class popupMenu : MTBase {
 	/// </summary>
 	/// <returns>id of the selected item when closed, or 0 if canceled.</returns>
 	/// <param name="items">
-	/// Menu items, like <c>"One|Two|Three"</c> or <c>new("One", "Two", "Three")</c> or string array or <c>List</c>.
+	/// Menu items, like <c>"One|Two|Three"</c> or <c>["One", "Two", "Three"]</c> or string array or <c>List</c>.
 	/// Item id can be optionally specified like <c>"1 One|2 Two|3 Three"</c>, unless <i>rawText</i> <c>true</c>. If missing, uses id of previous non-separator item + 1. Example: <c>"One|Two|100 Three Four"</c> (1|2|100|101).
 	/// For separators use <c>null</c> or empty strings: <c>"One|Two||Three|Four"</c>.
 	/// </param>

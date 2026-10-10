@@ -112,7 +112,7 @@ public static unsafe partial class ExtMisc {
 	//cref not nint.ToString because DocFX does not support it.
 	
 	/// <summary>
-	/// Returns <c><![CDATA[(this >= min && this <= max) ? this : defaultValue]]></c>.
+	/// Returns <c>(this >= min &amp;&amp; this &lt;= max) ? this : defaultValue</c>.
 	/// </summary>
 	internal static int EnsureValid_(this int t, int min, int max, int defaultValue = 0)
 		=> (t >= min && t <= max) ? t : defaultValue;

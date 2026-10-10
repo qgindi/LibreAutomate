@@ -125,7 +125,7 @@ Filters: t Type, m Member, n Namespace.
 		}
 		
 		var qname = PatternMatcher.GetNameAndContainer(query).name;
-		using var matcher = PatternMatcher.CreatePatternMatcher(qname, includeMatchedSpans: true, allowFuzzyMatching: fuzzy);
+		using var matcher = PatternMatcher.CreatePatternMatcher(qname, includeMatchedSpans: true, kind: fuzzy ? PatternMatcherKind.Fuzzy : PatternMatcherKind.Standard);
 		using var ta = TemporaryArray<PatternMatch>.Empty;
 		var b1 = new StringBuilder();
 		

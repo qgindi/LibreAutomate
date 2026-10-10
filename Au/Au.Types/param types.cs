@@ -367,82 +367,85 @@ public class PopupXY {
 }
 
 /// <summary>
-/// Used for parameters of functions that need a window handle as <see cref="wnd"/> but also accept a WPF window/element, winforms form/control and <c>IntPtr</c>.
+/// Used for parameters of functions that need a window handle as <see cref="wnd"/> but also accept a WPF window/element, winforms form/control and window handle as <c>nint</c>.
 /// </summary>
 /// <remarks>
 /// Has implicit conversions from:
+/// <br/>• <c>wnd</c> - window handle.
+/// <br/>• <c>nint</c> - window handle.
 /// <br/>• <see cref="System.Windows.DependencyObject"/> - WPF window or element.
 /// <br/>• <see cref="System.Windows.Forms.Control"/> - <c>Form</c> or control.
-/// <br/>• <c>IntPtr</c> or <c>nint</c> - window handle.
 /// </remarks>
-public struct AnyWnd {
-	readonly object _o;
-	AnyWnd(object o) { _o = o; }
-	
-	/// <summary>Assignment of a value of type <see cref="wnd"/>.</summary>
-	public static implicit operator AnyWnd(wnd w) => new(w);
-	
-	/// <summary>Assignment of a window handle as <c>IntPtr</c>.</summary>
-	public static implicit operator AnyWnd(IntPtr hwnd) => new((wnd)hwnd);
-	
-	/// <summary>Assignment of a value of type <see cref="System.Windows.Forms.Control"/> (<c>Form</c> or any control class).</summary>
-	public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new(c);
-	
-	/// <summary>Assignment of a value of type <c>System.Windows.DependencyObject</c> (WPF window or control).</summary>
-	public static implicit operator AnyWnd(System.Windows.DependencyObject c) => c != null ? new AnyWnd(new object[] { c }) : default;
-	
+public union AnyWnd(wnd, nint, System.Windows.Forms.Control, System.Windows.DependencyObject) {
 	/// <summary>
 	/// Gets the window or control handle as <see cref="wnd"/>.
 	/// </summary>
 	/// <value><c>default(wnd)</c> if not assigned.</value>
-	public wnd Hwnd => wnd.Internal_.FromObject(_o);
+	public wnd Hwnd => FromObject_(Value);
 	
 	/// <summary>
 	/// <c>true</c> if this is <c>default(AnyWnd)</c>.
 	/// </summary>
-	public bool IsEmpty => _o == null;
+	public bool IsEmpty => Value == null;
+	
+	/// <summary>
+	/// Converts object to <see cref="wnd"/>.
+	/// </summary>
+	/// <param name="o"><c>null</c> or any type supported by this union. Exception if some other type.</param>
+	internal static wnd FromObject_(object o) {
+		switch (o) {
+		case null: return default;
+		case wnd w: return w;
+		case nint w: return (wnd)w;
+		}
+		
+		//prevent loading dlls of for unused type (WPF or Winforms)
+		for (var t = o?.GetType(); t != null; t = t.BaseType) {
+			var s = t.AssemblyQualifiedName;
+			if (s.Starts("System.Windows.DependencyObject, WindowsBase, ")) return _Wpf(o);
+			if (s.Starts("System.Windows.Forms.Control, System.Windows.Forms, ")) return _Winforms(o);
+		}
+		
+		throw new ArgumentException("unsupported type");
+		
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		static wnd _Wpf(object o) => (o as System.Windows.DependencyObject).Hwnd();
+		
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		static wnd _Winforms(object o) => (o as System.Windows.Forms.Control).Hwnd();
+	}
 }
 
 /// <summary>
 /// Used for function parameters to specify multiple strings.
-/// Contains a string like <c>"One|Two|Three"</c> or <c>string[]</c> or <c>List&lt;string&gt;</c>. Has implicit conversions from these types. Can be assigned collection initializer like <c>["a", "b"]</c>.
+/// Callers can pass a string like <c>"One|Two|Three"</c> or <c>string[]</c> or <c>List&lt;string&gt;</c> or some other <c>IEnumerable&lt;string&gt;</c>.
+/// Has implicit conversions from these types. Can be assigned collection initializer like <c>["a", "b"]</c>. Can be used with <c>foreach</c>.
 /// </summary>
 [CollectionBuilder(typeof(Strings), "Create")]
-public struct Strings : IEnumerable<string> {
-	readonly object _o;
-	Strings(object o) { _o = o; }
+public union Strings(string, IEnumerable<string>) : IEnumerable<string> {
+	///
+	[NoDoc]
+	public Strings(string s1, string s2) : this([s1, s2]) { } //fbc
 	
 	///
-	public Strings(params string[] a) { _o = a; }
-	
-	///
-	public static implicit operator Strings(string s) => new((object)s);
-	
-	///
-	public static implicit operator Strings(string[] e) => new(e);
-	
-	///
-	public static implicit operator Strings(List<string> e) => new(e);
-	
-	/// <summary>
-	/// The raw value.
-	/// </summary>
-	public object Value => _o;
+	[NoDoc]
+	public Strings(string s1, string s2, params string[] a) : this([s1, s2, ..a]) { } //fbc
 	
 	/// <summary>
 	/// Converts the value to <c>string[]</c>.
 	/// Note: don't modify array elements. If the caller passed an array, this function returns it, not a copy.
 	/// </summary>
 	public string[] ToArray() {
-		return _o switch {
+		return Value switch {
 			string[] a => a,
 			string s => s.Split('|'),
 			List<string> a => a.ToArray(),
+			IEnumerable<string> a => a.ToArray(),
 			_ => [], //null
 		};
 	}
 	
-#region support collection expression
+	#region support collection expression
 	
 	//IEnumerable<string>
 	
@@ -457,7 +460,7 @@ public struct Strings : IEnumerable<string> {
 	/// </summary>
 	public static Strings Create(ReadOnlySpan<string> span) => new(span.ToArray());
 	
-#endregion
+	#endregion
 }
 
 /// <summary>

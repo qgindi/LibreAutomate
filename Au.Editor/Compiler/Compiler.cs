@@ -377,13 +377,6 @@ partial class Compiler {
 				//	Could define here, but then warning "already defined in assembly X" when compiling 2 projects (meta pr) with that attribute.
 				//	never mind: Au.dll must exist by the compiled assembly, even if not used for other purposes.
 				foreach (var v in _meta.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
-				//sb.Append(@"
-				//namespace System.Runtime.CompilerServices {
-				//[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-				//public class IgnoresAccessChecksToAttribute : Attribute {
-				//	public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
-				//	public string AssemblyName { get; }
-				//}}");
 			}
 			
 			var fm = _meta.MainFile.f;
