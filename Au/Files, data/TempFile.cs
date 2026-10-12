@@ -27,7 +27,7 @@ public sealed class TempFile : IDisposable {
 	/// <exception cref="AuException">Failed to create directory.</exception>
 	public TempFile(string ext = ".tmp", string directory = null) {
 		filesystem.createDirectory(directory ??= folders.ThisAppTemp);
-		_file = pathname.combine(directory, Guid.NewGuid().ToString()) + ext;
+		_file = directory / Guid.NewGuid().ToString() + ext;
 	}
 
 	/// <summary>

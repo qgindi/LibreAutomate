@@ -801,7 +801,7 @@ partial class Compiler {
 		//copy managed dlls, including from nuget
 		if (_dr != null) {
 			foreach (var v in _dr) {
-				CompilerUtil.CopyFileIfNeed(v.Value, pathname.combine(_meta.OutputPath, v.Key));
+				CompilerUtil.CopyFileIfNeed(v.Value, _meta.OutputPath / v.Key);
 				
 				//if (!usesSqlite && !v.Value.Starts(App.Model.NugetDirectoryBS)) usesSqlite = CompilerUtil.UsesSqlite(v.Value);
 			}
@@ -810,7 +810,7 @@ partial class Compiler {
 		//copy other files from nuget
 		if (_dn != null) {
 			foreach (var v in _dn) {
-				CompilerUtil.CopyFileIfNeed(v.Value, pathname.combine(_meta.OutputPath, v.Key));
+				CompilerUtil.CopyFileIfNeed(v.Value, _meta.OutputPath / v.Key);
 			}
 		}
 		

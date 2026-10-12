@@ -519,3 +519,21 @@ public enum SCNFlags {
 	SHCNF_NOTIFYRECURSIVE = 0x10000,
 }
 #pragma warning restore CS1591 //Missing XML comment for publicly visible type or member
+
+/// <summary>
+/// Flags for <see cref="pathname.normalize"/>.
+/// </summary>
+[Flags]
+public enum PNFlags {
+	/// <summary>Don't call API <ms>GetLongPathName</ms>.</summary>
+	DontExpandDosPath = 1,
+	
+	/// <summary>Don't call <see cref="pathname.prefixLongPathIfNeed"/>.</summary>
+	DontPrefixLongPath = 2,
+	
+	/// <summary>Don't remove <c>\</c> character at the end.</summary>
+	DontRemoveEndSeparator = 4,
+	
+	/// <summary>If path is not a file-system path but looks like URL (eg <c>"http:..."</c> or <c>"file:..."</c>) or starts with <c>"::"</c>, don't throw exception and don't process more (only expand environment variables).</summary>
+	CanBeUrlOrShell = 8,
+}

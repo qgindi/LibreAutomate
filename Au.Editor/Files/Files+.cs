@@ -81,7 +81,7 @@ class DNewWorkspace : KDialogWindow {
 				if (!filesystem.exists(s).Directory) return "Folder does not exist";
 			} else {
 				if (pathname.isInvalidName(s) || s[0] is '.' or '_') return "Invalid filename";
-				ResultPath = pathname.combine(tLocation.Text, s); //validation is when OK clicked
+				ResultPath = tLocation.Text / s; //validation is when OK clicked
 				if (filesystem.exists(ResultPath)) return s + " already exists";
 			}
 			return null;

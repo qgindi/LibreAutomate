@@ -188,7 +188,7 @@ public class ExplorerFolder {
 				if (j == 1) { //if just now created the file, let shell update faster
 					string path = null;
 					if (fullPath) path = item;
-					else if (GetFolderPath() is string fp && !fp.Starts(":")) path = pathname.combine(fp, item);
+					else if (GetFolderPath() is string fp && !fp.Starts(":")) path = fp / item;
 					if (path != null && filesystem.exists(path)) {
 						filesystem.more.notifyShell(SCNEvent.CREATE, path, flags: SCNFlags.SHCNF_FLUSH);
 					}

@@ -45,7 +45,7 @@ static unsafe partial class Cpp {
 
 		//environment variable + rel
 		if (Environment.GetEnvironmentVariable("Au.Path") is string s2)
-			if (NativeLibrary.TryLoad(pathname.combine(s2, rel), out h)) return h;
+			if (NativeLibrary.TryLoad(s2 / rel, out h)) return h;
 
 		throw new DllNotFoundException(fileName + " not found");
 	}

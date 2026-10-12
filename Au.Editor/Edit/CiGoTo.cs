@@ -493,7 +493,7 @@ class CiGoTo {
 					var f = App.Model.Find(s);
 					if (f != null) { App.Model.SetCurrentFile(f); return true; }
 					if (token.RawKind == 0 || !_GetFoldersPath(token, out var fp, null)) return false;
-					s = pathname.combine(fp, s);
+					s = fp / s;
 				}
 				var fe = filesystem.exists(s); if (!fe) return false;
 				if (fe.Directory) run.itSafe(s);

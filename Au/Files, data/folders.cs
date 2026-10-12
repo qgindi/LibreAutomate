@@ -1010,13 +1010,13 @@ namespace Au.Types {
 		public bool IsNull => _path == null;
 		
 		/// <summary>
-		/// Calls <see cref="pathname.combine"/>.
+		/// Calls <see cref="System.IO.Path.Join"/> and <see cref="pathname.prefixLongPathIfNeed"/>.
 		/// Example: <c>string s = folders.Desktop + "file.txt";</c>
 		/// </summary>
 		/// <exception cref="ArgumentException"><i>fp</i> is empty.</exception>
 		public static string operator +(FolderPath fp, string append) {
 			if (fp._path.NE()) throw new ArgumentException("No folder path.");
-			return pathname.combine(fp._path, append);
+			return fp._path / append;
 		}
 	}
 }

@@ -18,36 +18,3 @@ It shows a window with all info and links to run scripts etc.
 
 Periodically check false positives on virustotal. Script `Virustotal false positives.cs` does it every day.
 Also sometimes test whether Chromium still allows to download. Because v1.15 after some time had these problems: many false positives, and Chromium blocks the download.
-
-## How to change the used .NET major version
-
-Install the .NET SDK for that .NET version.
-
-VS must support that .NET version.
-
-Run script `Create .NET ref and doc databases.cs`. Select the new .NET version in the dialog. Later (after building LA for the new .NET) rename the generated db files.
-
-Update .NET version in all C# projects (`csproj`). Except those using .NET 4.8 (`Au.Net4`).
-
-May need to update .NET SDK version in `global.json` (in solution folder).
-	Once used it to force VS to use .NET 8 SDK.
-	Because: if installed .NET 9 Preview SDK, VS used it to build projects that use .NET 8. Then app crashes when starting.
-	Note: some scripts build just the `Au` project. To use correct SDK, I created a symlink to the solution's `global.json` in the project folder. Adding as a link in VS (in `csproj`) does not work.
-
-Update `MetaComments.Defines`.
-
-Find-replace .NET major version, like `NET 10`, `NET10`, `net10` and `10` everywhere.
-
-Build solution.
-
-Rename files `ref-new.db` and `doc-new.db` to `ref.db` and `doc.db`.
-
-Run editor.
-
-Run script `Minimal .NET SDK`. Upload.
-
-Test menu **Tools > NuGet**. Test package `Microsoft.PowerShell.SDK` (because it's the most complex I know). Test how it works in `miniProgram` and `exeProgram` scripts.
-
-Test menu **Run > Publish**.
-
-Maybe more.

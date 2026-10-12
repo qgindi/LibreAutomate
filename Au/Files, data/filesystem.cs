@@ -118,7 +118,7 @@ public static partial class filesystem {
 		attr = 0; ntfsLink = false;
 		var ec = lastError.code;
 		switch (ec) {
-		case Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND or Api.ERROR_NOT_READY: //note: no ERROR_BAD_NETPATH. Let's print, it can help to debug caller code.
+		case Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND or Api.ERROR_BAD_NET_NAME or Api.ERROR_NOT_READY:
 			return false;
 		case Api.ERROR_SHARING_VIOLATION: //eg c:\pagefile.sys. GetFileAttributes fails, but FindFirstFile succeeds.
 		case Api.ERROR_ACCESS_DENIED: //probably in a protected directory. Then FindFirstFile fails, but try anyway. Or a file marked for deletion.
@@ -141,9 +141,9 @@ public static partial class filesystem {
 			lastError.code = ec;
 			attr = (FileAttributes)(-1);
 			break;
-		default:
-			Debug_.Print(lastError.messageFor(ec));
-			break;
+		//default:
+		//	Debug_.Print(lastError.messageFor(ec));
+		//	break;
 		}
 		if (0 != (flags & FAFlags.DontThrow)) return false;
 		throw new AuException(ec, $"*get file attributes: '{path}'");
@@ -283,7 +283,7 @@ public static partial class filesystem {
 		if (dirs != null) {
 			foreach (var d in dirs) {
 				if (!pathname.isFullPathExpand(d, out s)) continue;
-				s = pathname.combine(s, path);
+				s /= path;
 				if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
 			}
 		}
@@ -1416,7 +1416,7 @@ public static partial class filesystem {
 		if (!tempDirectory.NE()) {
 			s1 = _PreparePath(tempDirectory);
 			_CreateDirectory(s1, pathIsPrepared: true);
-			s1 = pathname.combine(s1, pathname.getName(file));
+			s1 = s1 / pathname.getName(file);
 		}
 		
 		_createDirectoryForPrepared(file);

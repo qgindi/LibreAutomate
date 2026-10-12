@@ -64,8 +64,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Readme", "Readme", "{55B5FC
 	ProjectSection(SolutionItems) = preProject
 		Readme\App files.md = Readme\App files.md
 		Readme\Misc.md = Readme\Misc.md
+		Readme\netcoredbg.md = Readme\netcoredbg.md
 		Readme\Projects.md = Readme\Projects.md
 		Readme\Roslyn.md = Readme\Roslyn.md
+		Readme\Updating libraries.md = Readme\Updating libraries.md
 	EndProjectSection
 EndProject
 Global
