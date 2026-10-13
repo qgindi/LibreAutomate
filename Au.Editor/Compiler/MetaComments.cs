@@ -836,9 +836,9 @@ class MetaComments {
 		if (!pathname.isFullPathExpand(ref s)) {
 			if (s.Starts('%')) _ErrorV("relative path starts with %");
 			if (s.Starts('\\')) s = App.Model.FilesDirectory + s;
-			else s = pathname.getDirectory(_f.f.FilePath, true) + s;
+			else s = Path2.GetDirectory(_f.f.FilePath) / s;
 		}
-		return pathname.Normalize_(s, noExpandEV: true);
+		return Path2.Normalize_(s, noExpandEV: true);
 	}
 	
 	bool _CodeFilesContains(FileNode f) {

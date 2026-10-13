@@ -376,7 +376,7 @@ public enum FIfExists {
 /// </summary>
 public enum FPFormat {
 	/// <summary>
-	/// With long-path prefix (<c>"\\?\"</c> or <c>"\\?\UNC\"</c>) if path length > <see cref="pathname.maxDirectoryPathLength"/>. This is default.
+	/// With long-path prefix (<c>"\\?\"</c> or <c>"\\?\UNC\"</c>) if path length > <see cref="Path2.MaxSafeDirectoryPathLength"/>. This is default.
 	/// </summary>
 	PrefixIfLong,
 	
@@ -534,6 +534,6 @@ public enum PNFlags {
 	/// <summary>Don't remove <c>\</c> character at the end.</summary>
 	DontRemoveEndSeparator = 4,
 	
-	/// <summary>If path is not a file-system path but looks like URL (eg <c>"http:..."</c> or <c>"file:..."</c>) or starts with <c>"::"</c>, don't throw exception and don't process more (only expand environment variables).</summary>
+	/// <summary>If path is not a file-system path but looks like URI (eg <c>"http:..."</c> or <c>"file:..."</c> or <c>"shell:..."</c>) or starts with <c>"::"</c>, don't throw exception and don't process more (only expand environment variables).</summary>
 	CanBeUrlOrShell = 8,
 }

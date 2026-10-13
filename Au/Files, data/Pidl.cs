@@ -132,7 +132,7 @@ public unsafe class Pidl : IDisposable {
 	static string _Normalize(string s) {
 		s = pathname.expand(s);
 		if (!pathname.isFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
-		return pathname.Normalize_(s, PNFlags.DontPrefixLongPath, true);
+		return Path2.Normalize_(s, PNFlags.DontPrefixLongPath, true);
 	}
 	
 	/// <summary>

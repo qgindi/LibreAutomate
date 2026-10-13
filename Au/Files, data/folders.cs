@@ -428,7 +428,7 @@ namespace Au {
 		/// <remarks>
 		/// See <see cref="Path.GetPathRoot"/>.
 		/// </remarks>
-		public static string ThisAppDriveBS => field ??= pathname.GetRootBS_(ThisAppBS);
+		public static string ThisAppDriveBS => field ??= Path2.GetRootBS_(ThisAppBS);
 		
 		/// <summary>
 		/// Gets folder of the script editor.
@@ -442,7 +442,7 @@ namespace Au {
 		/// </summary>
 		public static FolderPath Workspace {
 			get => __workspace;
-			internal set { __workspace = value; WorkspaceDriveBS = pathname.GetRootBS_(value); }
+			internal set { __workspace = value; WorkspaceDriveBS = Path2.GetRootBS_(value); }
 		}
 		static FolderPath __workspace;
 		

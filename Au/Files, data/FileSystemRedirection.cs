@@ -50,7 +50,7 @@ public struct FileSystemRedirection : IDisposable {
 		string sysDir = folders.System;
 		if (!path.Starts(sysDir, true)) return 0;
 		int len = sysDir.Length;
-		if (path.Length > len && !pathname.IsSepChar_(path[len])) return 0;
+		if (path.Length > len && !Path2.IsSepChar_(path[len])) return 0;
 		return len;
 	}
 

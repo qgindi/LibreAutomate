@@ -80,7 +80,7 @@ public static partial class filesystem {
 	/// </remarks>
 	public static unsafe bool getProperties(string path, out FileProperties properties, FAFlags flags = 0) {
 		properties = new();
-		if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
+		if (0 == (flags & FAFlags.UseRawPath)) path = Path2.NormalizeMinimally_(path); //the API supports .. etc
 		if (!Api.GetFileAttributesEx(path, 0, out var d)) {
 			if (!_GetAttributesOnError(path, flags, out _, out _, &d)) return false;
 		}
@@ -107,7 +107,7 @@ public static partial class filesystem {
 	/// For NTFS links, gets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
-		if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
+		if (0 == (flags & FAFlags.UseRawPath)) path = Path2.NormalizeMinimally_(path); //the API supports .. etc
 		var a = Api.GetFileAttributes(path);
 		if (a == (FileAttributes)(-1)) return _GetAttributesOnError(path, flags, out attributes, out _);
 		attributes = a;
@@ -154,7 +154,7 @@ public static partial class filesystem {
 	/// Returns <c>false</c> if INVALID_FILE_ATTRIBUTES or if relative path. No exceptions.
 	/// </summary>
 	static unsafe bool _GetAttributes(string path, out FileAttributes attr, out bool ntfsLink, bool useRawPath) {
-		if (!useRawPath) path = pathname.NormalizeMinimally_(path, throwIfNotFullPath: false);
+		if (!useRawPath) path = Path2.NormalizeMinimally_(path, throwIfNotFullPath: false);
 		//note: NormalizeMinimally_ does not remove \ at the end. The API succeeds if "C:\x\dir\" but fails if "C:\x\file\" (it's good).
 		
 		attr = Api.GetFileAttributes(path);
@@ -180,7 +180,7 @@ public static partial class filesystem {
 	/// For NTFS links, sets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool setAttributes(string path, FileAttributes attributes, bool? add = null, FAFlags flags = 0) {
-		if (0 == (flags & FAFlags.UseRawPath)) path = pathname.NormalizeMinimally_(path); //the API supports .. etc
+		if (0 == (flags & FAFlags.UseRawPath)) path = Path2.NormalizeMinimally_(path); //the API supports .. etc
 		var a = attributes;
 		if (add != null) {
 			var v = Api.GetFileAttributes(path);
@@ -276,7 +276,7 @@ public static partial class filesystem {
 		if (path.NE()) return null;
 		
 		if (pathname.isFullPathExpand(path, out string s, strict: false)) {
-			if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
+			if (exists(s)) return Path2.Normalize_(s, noExpandEV: true);
 			return null;
 		}
 		
@@ -284,12 +284,12 @@ public static partial class filesystem {
 			foreach (var d in dirs) {
 				if (!pathname.isFullPathExpand(d, out s)) continue;
 				s /= path;
-				if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
+				if (exists(s)) return Path2.Normalize_(s, noExpandEV: true);
 			}
 		}
 		
 		s = folders.ThisApp + path;
-		if (exists(s)) return pathname.Normalize_(s, noExpandEV: true);
+		if (exists(s)) return Path2.Normalize_(s, noExpandEV: true);
 		
 		if ((s = Api.SearchPath(null, path)) != null) return s;
 		
@@ -342,7 +342,7 @@ public static partial class filesystem {
 	/// 
 	/// By default gets only direct children. Use flag <see cref="FEFlags.AllDescendants"/> to get all descendants.
 	/// 
-	/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="pathname.expand"/>), <c>".."</c>, DOS path etc. Paths longer than <see cref="pathname.maxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="pathname.prefixLongPathIfNeed"/>).
+	/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="pathname.expand"/>), <c>".."</c>, DOS path etc. Paths longer than <see cref="Path2.MaxSafeDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="pathname.prefixLongPathIfNeed"/>).
 	/// 
 	/// For NTFS links (symbolic links, mount points) gets link info, not target info.
 	/// 
@@ -391,7 +391,7 @@ public static partial class filesystem {
 			for (; ; ) {
 				if (isFirst) {
 					isFirst = false;
-					var path2 = ((path.Length <= pathname.maxDirectoryPathLength - 2) ? path : pathname.prefixLongPath(path)) + @"\*";
+					var path2 = ((path.Length <= Path2.MaxSafeDirectoryPathLength - 2) ? path : pathname.prefixLongPath(path)) + @"\*";
 #if TEST_FINDFIRSTFILEEX
 					hfind = Api.FindFirstFileEx(path2, Api.FINDEX_INFO_LEVELS.FindExInfoBasic, out d, 0, default, 0);
 					//speed: FindFirstFileEx 0-2 % slower. FindExInfoBasic makes 0-2% faster. FIND_FIRST_EX_LARGE_FETCH makes 1-50% slower.
@@ -567,12 +567,12 @@ public static partial class filesystem {
 		if (op == _FileOp.Rename) {
 			op = _FileOp.Move;
 			if (pathname.isInvalidName(path2)) throw new ArgumentException($"Invalid filename: '{path2}'");
-			path2 = pathname.Combine_(_RemoveFilename(path1), path2);
+			path2 = Path2.Join_(_RemoveFilename(path1), path2);
 		} else {
 			string path2Parent;
 			if (into) {
 				path2Parent = _PreparePath(path2);
-				path2 = pathname.Combine_(path2Parent, _GetFilename(path1));
+				path2 = Path2.Join_(path2Parent, _GetFilename(path1));
 			} else {
 				path2 = _PreparePath(path2);
 				path2Parent = _RemoveFilename(path2, true);
@@ -767,7 +767,7 @@ public static partial class filesystem {
 		/// note: path must be normalized.
 		/// </summary>
 		internal bool Rename(string path, bool dontDelete = false) {
-			if (path.Length > pathname.maxDirectoryPathLength - 10) path = pathname.prefixLongPath(path);
+			if (path.Length > Path2.MaxSafeDirectoryPathLength - 10) path = pathname.prefixLongPath(path);
 			string tempPath = null;
 			int iFN = _FindFilename(path);
 			string s1 = path[..iFN] + "old", s2 = " " + path[iFN..];
@@ -1172,7 +1172,7 @@ public static partial class filesystem {
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	static string _PreparePath(string path) {
 		if (!pathname.isFullPathExpand(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
-		return pathname.Normalize_(path, noExpandEV: true);
+		return Path2.Normalize_(path, noExpandEV: true);
 	}
 	
 	/// <summary>
@@ -1305,7 +1305,7 @@ public static partial class filesystem {
 	}
 	
 	static string _LoadIntro(string file, int ms) {
-		file = pathname.NormalizeMinimally_(file);
+		file = Path2.NormalizeMinimally_(file);
 		if (ms != 0) {
 			double t = ms > 0 ? ms / 1000d : ms == -1 ? 0d : throw new ArgumentOutOfRangeException();
 			wait.until(t, () => exists(file, useRawPath: true));

@@ -42,9 +42,9 @@ namespace Au {
 				//getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\System32\notepad.exe" and I don't know API to convert to normal
 				if (_QueryFullProcessImageName(ph, !fullPath, out var s)) {
 					R = s;
-					if (pathname.IsPossiblyDos_(R)) {
+					if (Path2.IsPossiblyDos_(R)) {
 						if (fullPath || _QueryFullProcessImageName(ph, false, out s)) {
-							R = pathname.ExpandDosPath_(s);
+							R = Path2.ExpandDosPath_(s);
 							if (!fullPath) R = _GetFileName(R);
 						}
 					}
@@ -210,10 +210,10 @@ namespace Au {
 						return null;
 					}
 					string R = new((char*)p + nameOffset, 0, nameLen);
-					if (!cannotOpen && pathname.IsPossiblyDos_(R)) {
+					if (!cannotOpen && Path2.IsPossiblyDos_(R)) {
 						using var ph = Handle_.OpenProcess(processID);
 						if (!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
-							R = _GetFileName(pathname.ExpandDosPath_(s));
+							R = _GetFileName(Path2.ExpandDosPath_(s));
 						}
 					}
 					return R;

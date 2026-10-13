@@ -252,7 +252,7 @@ public static partial class ImageUtil {
 	/// </summary>
 	/// <inheritdoc cref="ConvertWpfImageElementToIcon_(Stream, FrameworkElement, int[])"/>
 	internal static void ConvertWpfImageElementToIcon_(string icoFile, FrameworkElement e, int[] sizes) {
-		icoFile = pathname.NormalizeMinimally_(icoFile);
+		icoFile = Path2.NormalizeMinimally_(icoFile);
 		using var stream = File.Create(icoFile);
 		ConvertWpfImageElementToIcon_(stream, e, sizes);
 	}

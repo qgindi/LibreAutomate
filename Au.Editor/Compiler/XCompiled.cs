@@ -47,7 +47,7 @@ partial class Compiler {
 			string asmFile;
 			if (r.notInCache = value?.Starts("|=") ?? false) {
 				iPipe = value.IndexOf('|', 2); if (iPipe < 0) iPipe = value.Length;
-				asmFile = pathname.NormalizeMinimally_(value[2..iPipe]);
+				asmFile = Path2.NormalizeMinimally_(value[2..iPipe]);
 			} else {
 				asmFile = CacheDirectory + "\\" + f.IdString + ".dll";
 			}

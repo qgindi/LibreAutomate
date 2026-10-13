@@ -202,7 +202,7 @@ partial class SciCode {
 				if (DIcons.PossiblyIconName(s)) return ImageType.XamlIconName;
 				return default;
 			case '.':
-				return pathname.IsExtension_(s) ? ImageType.ShellIcon : default;
+				return Path2.IsExtension_(s) ? ImageType.ShellIcon : default;
 			case ':':
 				return s[1] == ':' ? ImageType.ShellIcon : default;
 			}

@@ -211,7 +211,7 @@ class MetaReferences {
 			bool isFull = pathname.isFullPathExpand(reference, out string path);
 			if (!isFull && isCOM) { isFull = true; path = App.Model.WorkspaceDirectory + @"\.interop\" + path; }
 			if (!isFull) path = folders.ThisAppBS + path;
-			path = pathname.Normalize_(path);
+			path = Path2.Normalize_(path);
 			if (!filesystem.exists(path, useRawPath: true).File) return false;
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 			

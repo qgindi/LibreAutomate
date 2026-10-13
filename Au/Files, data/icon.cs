@@ -123,8 +123,8 @@ namespace Au {
 
 			if (0 == (flags & IconGetFlags.LiteralPath)) {
 				//is ".ext" or "protocol:"?
-				isFileType = pathname.IsExtension_(file) || (isURL = pathname.IsProtocol_(file));
-				if (!isFileType) isURL = pathname.isUrl(file);
+				isFileType = Path2.IsExtension_(file) || (isURL = Path2.IsUriSchemeAndColon_(file));
+				if (!isFileType) isURL = Path2.IsUri(file);
 				if (isFileType || isURL || (isShellPath = file[0] == ':')) isPath = false;
 				if (isPath) {
 					//get icon index from "path,index" and remove ",index"
@@ -132,7 +132,7 @@ namespace Au {
 
 					if (!searchPath) {
 						if (!pathname.isFullPath(file)) file = folders.ThisAppImages + file;
-						file = pathname.Normalize_(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
+						file = Path2.Normalize_(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
 					}
 				}
 			}
@@ -749,7 +749,7 @@ namespace Au {
 						if (i == patternStart + 1) filename = s;
 						else {
 							if (pathname.isFullPathExpand(ref s)) return s; //eg run.it(@"%folders.System%\abc.exe");
-							if (pathname.IsShellPathOrUrl_(s)) return s;
+							if (Path2.IsShellPathOrUri_(s)) return s;
 							filename = null; patternStart = -1;
 							if (i == 1) filename2 = s;
 						}
