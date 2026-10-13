@@ -929,8 +929,7 @@ partial class CiCompletion {
 	RARE
 	clipboard class
 	filesystem finally/fixed
-	pathname params
-	print / process private/protected
+	print/process private/protected
 
 	*/
 	

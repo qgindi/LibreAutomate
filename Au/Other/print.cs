@@ -362,7 +362,7 @@ public static partial class print {
 					_hFile = null;
 				}
 				if (value != null) {
-					_logFile = pathname.normalize(value);
+					_logFile = Path2.Normalize(value);
 				} else _logFile = null;
 			}
 		}
@@ -385,7 +385,7 @@ public static partial class print {
 				if (_hFile == null) {
 					var e = lastError.code;
 					if (e == Api.ERROR_SHARING_VIOLATION) {
-						var u = pathname.makeUnique(_logFile, false);
+						var u = Path2.MakeUnique(_logFile, false);
 						if (u != _logFile) { _logFile = u; goto g1; }
 					}
 					var logf = _logFile;

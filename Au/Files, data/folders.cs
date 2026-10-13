@@ -292,7 +292,7 @@ namespace Au {
 		
 		static internal string GetPortableDataDir_(string appPath) {
 			var s = appPath + @"\data";
-			//if (filesystem.exists(s, true).File) return pathname.normalize(filesystem.loadText(s), appPath);
+			//if (filesystem.exists(s, true).File) return Path2.Normalize(filesystem.loadText(s), appPath);
 			return s;
 		}
 		
@@ -473,7 +473,7 @@ namespace Au {
 		
 		//note: don't use this func with any paths. It is for the above 2 funcs only.
 		static DriveType __GetDriveType(string path) {
-			path = pathname.unprefixLongPath(path);
+			path = Path2.RemoveLongPathPrefix(path);
 			if (path.Starts(@"\\")) return DriveType.Network; //GetDriveType does not support it. DriveInfo throws exception.
 			return (DriveType)Api.GetDriveType(path);
 		}
@@ -485,14 +485,14 @@ namespace Au {
 		/// <param name="f_">[](xref:caller_info)</param>
 		/// <seealso cref="CallerFilePathAttribute"/>
 		/// <seealso cref="script.sourcePath(string)"/>
-		public static FolderPath sourceCode([CallerFilePath] string f_ = null) => new(pathname.getDirectory(f_));
+		public static FolderPath sourceCode([CallerFilePath] string f_ = null) => new(Path2.GetDirectory(f_));
 		
 		/// <summary>
 		/// Gets folder path of the main source code file of this program or of a library.
 		/// </summary>
 		/// <param name="asm">An assembly compiled by LibreAutomate. If <c>null</c>, uses <see cref="Assembly.GetEntryAssembly"/>.</param>
 		/// <seealso cref="script.sourcePath(bool, Assembly)"/>
-		public static FolderPath sourceCodeMain(Assembly asm = null) => new(pathname.getDirectory(script.sourcePath(false, asm)));
+		public static FolderPath sourceCodeMain(Assembly asm = null) => new(Path2.GetDirectory(script.sourcePath(false, asm)));
 		
 		/// <summary>
 		/// Gets non-redirected path of the System32 folder.
@@ -535,7 +535,7 @@ namespace Au {
 		static string _NetRuntimeDesktopBS() {
 			var s = typeof(Accessibility.IAccessible).Assembly.Location;
 			if (s.NE()) return NetRuntimeBS; //single-file app
-			s = pathname.getDirectory(s, withSeparator: true);
+			s = Path2.GetDirectory(s, withSeparator: true);
 			Debug.Assert(s != NetRuntimeBS || s.Starts(ThisAppBS));
 			return s;
 			//note: cannot get NetRuntimeDesktopBS from NetRuntimeBS.
@@ -601,7 +601,7 @@ namespace Au {
 		/// <returns><c>null</c> if variable not found.</returns>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>
 		/// <seealso cref="Environment.SetEnvironmentVariable"/>
-		/// <seealso cref="pathname.expand"/>
+		/// <seealso cref="Path2.Expand"/>
 		public static FolderPath envVar(string envVar) => new(Api.GetEnvironmentVariable(envVar));
 		
 		#endregion
@@ -801,7 +801,7 @@ namespace Au {
 		/// <br/>• name of a property of the nested class <see cref="shell"/>, like <c>"shell.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
 		/// <br/>• known folder canonical name. See <see cref="getKnownFolders"/>. If has prefix <c>"shell."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
 		/// </param>
-		/// <seealso cref="pathname.expand"/>
+		/// <seealso cref="Path2.Expand"/>
 		public static FolderPath getFolder(string folderName) {
 			if (folderName.NE()) return default;
 			bool isVirtual = folderName.Starts("shell.");
@@ -827,7 +827,7 @@ namespace Au {
 					Marshal.FreeCoTaskMem(pidl);
 				} else {
 					if (0 != kf.GetPath(0, out R)) return default;
-					R = pathname.expand(R);
+					R = Path2.Expand(R);
 				}
 				//tested: works in MTA apartment too. And all props.
 			}
@@ -863,7 +863,7 @@ namespace Au {
 		/// <remarks>
 		/// Quite slow first time in process, eg 50 ms, because gets all folder paths. Later uses cached paths.
 		/// </remarks>
-		/// <seealso cref="pathname.expand"/>
+		/// <seealso cref="Path2.Expand"/>
 		public static bool unexpandPath(string path, out string folder, out string name) {
 			var p = path; folder = name = null;
 			if (!p.NE()) {
@@ -1010,7 +1010,7 @@ namespace Au.Types {
 		public bool IsNull => _path == null;
 		
 		/// <summary>
-		/// Calls <see cref="System.IO.Path.Join"/> and <see cref="pathname.prefixLongPathIfNeed"/>.
+		/// Calls <see cref="System.IO.Path.Join"/> and <see cref="Path2.PrefixLongPathIfNeed"/>.
 		/// Example: <c>string s = folders.Desktop + "file.txt";</c>
 		/// </summary>
 		/// <exception cref="ArgumentException"><i>fp</i> is empty.</exception>

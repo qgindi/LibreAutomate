@@ -136,7 +136,7 @@ class Embeddings(AiEmbeddingModel model) {
 	
 	List<EmVector> _GetEmbeddings(string dbPath, bool compact, Func<(List<string> names, List<EmInput> datas)> getData, CancellationToken cancel, string filenameSuffix = null) {
 		_EmHash newHash = _EmHash.Create(dbPath, model), oldHash = default;
-		string emPath = VectorDir + $@"\{model.GetType()}-{pathname.getNameNoExt(dbPath) + filenameSuffix}.bin";
+		string emPath = VectorDir + $@"\{model.GetType()}-{Path2.GetNameNoExt(dbPath) + filenameSuffix}.bin";
 		var emFile = new _EmStorageFile(emPath, model);
 		if (script.role is SRole.MiniProgram) VectorFileInfoForScript = (emPath, emFile.TryGetZipName(newHash));
 		List<EmVector> ems = null;
@@ -477,7 +477,7 @@ file class _EmStorageFile(string file, AiEmbeddingModel model) {
 			var r = internet.http.Get($"https://github.com/qgindi/LA-downloads/releases/download/AI-embedding/{zipName}", dontWait: true);
 			if (!r.IsSuccessStatusCode) return false;
 			r.Download(zipFile, progressText1: "Downloading data for AI search");
-			var dir = pathname.getDirectory(file);
+			var dir = Path2.GetDirectory(file);
 			if (!SevenZip.Extract(out var errors, zipFile, dir)) { Debug_.Print(errors); return false; }
 		}
 		catch (Exception ex) { Debug_.Print(ex); }

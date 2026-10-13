@@ -20,12 +20,12 @@ while (sta.Step()) {
 	//}
 	//n2++;
 	
-	if (pathname.isInvalidName(name)) {
+	if (Path2.IsInvalidName(name)) {
 		name = name.Replace('<', '{').Replace('>', '}');
 		name = name.Replace("*", "").Replace("/", ", ");
-		if (pathname.isInvalidName(name)) {
+		if (Path2.IsInvalidName(name)) {
 			//print.it(name);
-			name = pathname.correctName(name);
+			name = Path2.MakeValidName(name);
 		}
 	}
 	string path;

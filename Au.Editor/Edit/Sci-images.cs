@@ -210,12 +210,12 @@ partial class SciCode {
 			//file path or URL
 			//string expanded = null;
 			//if (s[0] == '%') {
-			//	expanded = pathname.expand(s.ToString(), strict: false);
+			//	expanded = Path2.Expand(s.ToString(), strict: false);
 			//	if (expanded.Length < 8 || expanded[0] == '%') return default;
 			//	s = expanded;
 			//}
 			if (s is ['/' or '\\', '/' or '\\', ..]) return default; //would hang for several s if string like "//bad/network/path", eg xpath. String like @"\\..." is dangerous here too. Also can be a mapped drive like "N:\path", but at least it's probably a path string.
-			if (pathname.isFullPath(s, orEnvVar: true)) { //is image file path?
+			if (Path2.IsFullPath(s, orEnvVar: true)) { //is image file path?
 				if (s.Length >= 8) { //can be image file. Else can be eg "C:\" or "C:\A".
 					if (s[^4] == '.') {
 						var ext = s[^3..];
@@ -229,7 +229,7 @@ partial class SciCode {
 				} else if (s.Length < 4 && s[1] != ':') return default; //eg "\\"
 			} else {
 				if (s.Length < 4) return default;
-				if (pathname.isUrl(s)) {
+				if (Path2.IsUri(s)) {
 					//display icon only for known protocols that can be used with run.it(). Ignore "web:LINK" etc and protocols with common icon (eg "http:").
 					if (!(s.Starts("shell:") || s.Starts("ms-settings:"))) return default;
 				} else if (!s.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return default;

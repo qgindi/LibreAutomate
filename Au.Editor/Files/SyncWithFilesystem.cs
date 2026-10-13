@@ -37,7 +37,7 @@ partial class FilesModel {
 		await Task.Run(() => {
 			foreach (var rd in rootDirs) {
 				RelativePath rel = new(rd.itemPath);
-				rd.tree = _Dir(new(pathname.expand(rd.fullPath)));
+				rd.tree = _Dir(new(Path2.Expand(rd.fullPath)));
 				
 				_DirTree _Dir(DirectoryInfo parent) {
 					_DirTree t = new(parent.Name) { children = new() };
@@ -359,8 +359,8 @@ partial class FilesModel {
 						if (x.e is RenamedEventArgs re) {
 							var itemPathOld = x.fw.FolderItemPathBS + re.OldName;
 							if (_model.FindByItemPath(itemPathOld) is { } fr && _model.FindByItemPath(x.itemPath) is null && !filesystem.exists(re.OldFullPath, true) && filesystem.exists(re.FullPath, true)) {
-								fr.FileRename(pathname.getName(re.Name), syncing: true);
-								print.it($"<><lc #FFFFB9>Renamed: {fr.SciLink(true)} (was {pathname.getName(re.OldName)})<>");
+								fr.FileRename(Path2.GetName(re.Name), syncing: true);
+								print.it($"<><lc #FFFFB9>Renamed: {fr.SciLink(true)} (was {Path2.GetName(re.OldName)})<>");
 							}
 						}
 						break;

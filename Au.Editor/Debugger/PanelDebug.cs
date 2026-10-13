@@ -733,7 +733,7 @@ System.Threading.Tasks.TaskCanceledException
 	
 	bool _GoToLine(_FRAME f, bool keepMarkers = false) {
 		//print.it("path", f.fullname);
-		if (f?.fullname is { } path && pathname.isFullPath(path)) {
+		if (f?.fullname is { } path && Path2.IsFullPath(path)) {
 			//Multiple filenodes can have the same path. But debugger sends only path. Try to find the best filenode.
 			FileNode fn = null, fnActive = Panels.Editor.ActiveDoc?.EFile;
 			if (fnActive != null) { //prefer the active doc filenode or the most recently opened filenode
@@ -850,7 +850,7 @@ System.Threading.Tasks.TaskCanceledException
 	
 	string _GetModuleName(_FRAME f) {
 		if (f.clr_addr.module_id.NE()) return ""; //f.func "[Native Frames]"
-		if (_s.modules.TryGetValue(f.clr_addr.module_id, out var r)) r = pathname.getName(r);
+		if (_s.modules.TryGetValue(f.clr_addr.module_id, out var r)) r = Path2.GetName(r);
 		return r;
 	}
 	

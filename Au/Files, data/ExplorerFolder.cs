@@ -171,14 +171,14 @@ public class ExplorerFolder {
 		
 		if (item.NE()) throw new ArgumentException();
 		if (_b.Document is api.ShellFolderView doc) {
-			bool fullPath = pathname.isFullPath(item);
+			bool fullPath = Path2.IsFullPath(item);
 			for (int j = 0; ++j <= 10;) { //wait until succeeds
 				var items = doc.Folder.Items();
 				int count = items.Count;
 				for (int i = 0; i < count; i++) {
 					var fi = items.Item(i);
 					string s1 = fi.Path;
-					if (!fullPath) s1 = pathname.getName(s1);
+					if (!fullPath) s1 = Path2.GetName(s1);
 					if (s1.Eqi(item)) {
 						_w.ActivateL(true);
 						doc.SelectItem(fi, SVSI_SELECT | SVSI_DESELECTOTHERS | SVSI_FOCUSED | SVSI_ENSUREVISIBLE);

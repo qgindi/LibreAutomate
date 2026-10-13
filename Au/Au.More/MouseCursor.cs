@@ -45,7 +45,7 @@ public class MouseCursor {
 	/// <param name="file"><c>.cur</c> or <c>.ani</c> file. If not full path, uses <see cref="folders.ThisAppImages"/>.</param>
 	/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI.</param>
 	public static MouseCursor Load(string file, int size = 0) {
-		file = pathname.normalize(file, folders.ThisAppImages);
+		file = Path2.Normalize(file, folders.ThisAppImages);
 		if (file == null) return null;
 		uint fl = Api.LR_LOADFROMFILE; if (size == 0) fl |= Api.LR_DEFAULTSIZE;
 		return new MouseCursor(Api.LoadImage(default, file, Api.IMAGE_CURSOR, size, size, fl));

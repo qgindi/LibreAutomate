@@ -69,7 +69,7 @@ public abstract record class JSettings : IDisposable {
 		jsOpt ??= SerializerOptions;
 		
 		JSettings R = null;
-		file = pathname.normalize(file);
+		file = Path2.Normalize(file);
 		if (filesystem.exists(file, true)) {
 			try {
 				if (useDefault) {

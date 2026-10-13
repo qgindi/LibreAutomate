@@ -158,7 +158,7 @@ class HttpServerSessionExamples : HttpServerSession {
 		//Example of how SERVER can return a file.
 		if (m.Method == "GET") {
 			var file = m.TargetPath; if (file == "/") file = "index.html";
-			file = pathname.combine(@"C:\Test\HttpServerSession", file);
+			file = Path.Join(@"C:\Test\HttpServerSession", file);
 			try {
 				r.Content = File.ReadAllBytes(file);
 				r.Headers["Content-Type"] = "text/html; charset=utf-8";

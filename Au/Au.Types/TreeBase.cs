@@ -399,7 +399,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// Loads XML file and creates tree of nodes from it.
 	/// </summary>
 	/// <returns>the root node.</returns>
-	/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
+	/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.</param>
 	/// <param name="nodeReader">Callback function that reads current XML element and creates/returns new node. See example.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="XmlReader.Create(string)"/>.</exception>
@@ -443,7 +443,7 @@ public abstract class TreeBase<T> where T : TreeBase<T> {
 	/// <summary>
 	/// Saves tree of nodes (this and descendants) to an XML file.
 	/// </summary>
-	/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
+	/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.</param>
 	/// <param name="nodeWriter">Callback function that writes node's XML start element (see <see cref="XmlWriter.WriteStartElement(string)"/>) and attributes (see <see cref="XmlWriter.WriteAttributeString(string, string)"/>). Must not write children and end element. Also should not write value, unless your reader knows how to read it.</param>
 	/// <param name="sett">XML formatting settings. Optional.</param>
 	/// <param name="children">If not <c>null</c>, writes these nodes as if they were children of this node.</param>

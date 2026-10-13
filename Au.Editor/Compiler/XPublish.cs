@@ -302,9 +302,9 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 			return _Nuget2(_meta);
 			bool _Nuget2(MetaComments m) {
 				foreach (var (p, alias) in m.NugetPackages) {
-					var dir = pathname.getDirectory(p);
+					var dir = Path2.GetDirectory(p);
 					var path = $@"{App.Model.NugetDirectoryBS}{dir}\{dir}.csproj";
-					if (XmlUtil.LoadElemIfExists(path) is not { } xproj || xproj.Desc("PackageReference", "Include", pathname.getName(p), true) is not { } x) return _Err("NuGet package not installed: " + p);
+					if (XmlUtil.LoadElemIfExists(path) is not { } xproj || xproj.Desc("PackageReference", "Include", Path2.GetName(p), true) is not { } x) return _Err("NuGet package not installed: " + p);
 					if (alias != null) _Add(x, "Aliases", alias);
 					if (!noDup.Add(x.ToString())) continue;
 					xig.Add(x);

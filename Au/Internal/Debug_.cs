@@ -10,7 +10,7 @@ namespace Au.More;
 /// </remarks>
 internal static class Debug_ {
 	static void _Print(object text, string f_, int l_, string m_) {
-		string s = print.util.toString(text), fname = pathname.getName(f_), st;
+		string s = print.util.toString(text), fname = Path2.GetName(f_), st;
 		int i = s.Find("\r\n   at ");
 		if (i >= 0) { st = s[(i + 2)..]; s = s[..i]; } else st = new StackTrace(2, true).ToString();
 		s = $"<>Debug: {m_} ({fname}:{l_}):  {s} <fold>\r\n{st}</fold>";
@@ -77,7 +77,7 @@ internal static class Debug_ {
 	[Conditional("DEBUG")]
 	public static void Dialog(object text, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
 		string s = print.util.toString(text);
-		dialog.show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{m_} ({pathname.getName(f_)}:{l_})");
+		dialog.show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{m_} ({Path2.GetName(f_)}:{l_})");
 	}
 	
 	//rejected: use if(opt.warnings.Verbose) dialog.showWarning(...). It adds stack trace.

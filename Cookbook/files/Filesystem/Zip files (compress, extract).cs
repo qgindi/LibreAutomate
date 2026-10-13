@@ -1,4 +1,5 @@
 /// Use class <see cref="ZipFile"/>.
+using System.IO.Compression;
 
 string zipFile = @"C:\Test\Z.zip";
 //filesystem.delete(zipFile);
@@ -16,7 +17,7 @@ ZipFile.ExtractToDirectory(zipFile, @"C:\Test\Folder2");
 
 string file = @"C:\Test\sqlite.db";
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create))
-	z.CreateEntryFromFile(file, pathname.getName(file));
+	z.CreateEntryFromFile(file, Path2.GetName(file));
 
 /// Create zip file and add db files from folder.
 
@@ -44,7 +45,7 @@ using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 	foreach (var f in a) {
 		switch (filesystem.exists(f)) {
 		case 1: //file
-			z.CreateEntryFromFile(f, pathname.getName(f));
+			z.CreateEntryFromFile(f, Path2.GetName(f));
 			break;
 		case 2: //folder
 			foreach (var k in filesystem.enumFiles(f, flags: FEFlags.AllDescendants | FEFlags.NeedRelativePaths))

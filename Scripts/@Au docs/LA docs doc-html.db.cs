@@ -69,7 +69,7 @@ void _AddRow(string name, object data) {
 void _AddOtherFiles() {
 	foreach (var f in filesystem.enumFiles(c_rootDir + "styles")) {
 		var path = f.FullPath;
-		object data = pathname.getExtension(f.Name) switch { ".css" => filesystem.loadText(path), ".eot" => filesystem.loadBytes(path), _ => null };
+		object data = Path.GetExtension(f.Name) switch { ".css" => filesystem.loadText(path), ".eot" => filesystem.loadBytes(path), _ => null };
 		
 #if IEWB
 		if (f.Name == "docfx.vendor.min.css") { //fix the hidden scrollbar issue

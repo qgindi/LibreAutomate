@@ -450,7 +450,7 @@ class MetaComments {
 		if (isMain) {
 			MainFile = cf;
 			
-			Name = pathname.getNameNoExt(f.Name);
+			Name = Path2.GetNameNoExt(f.Name);
 			
 			WarningLevel = DefaultWarningLevel;
 			NoWarnings = DefaultNoWarnings != null ? new(DefaultNoWarnings) : new();
@@ -795,7 +795,7 @@ class MetaComments {
 		int v = filesystem.exists(s = f.FilePath, true);
 		if (v != (f.IsFolder ? 2 : 1)) { _ErrorV("file does not exist: " + s); return null; }
 		
-		if (_flags.Has(MCFlags.Export) && s0.Contains('\\')) { _ErrorV($"must be <c green>{pathname.getName(s0)}<>. Path would be invalid when imported elsewhere."); return null; }
+		if (_flags.Has(MCFlags.Export) && s0.Contains('\\')) { _ErrorV($"must be <c green>{Path2.GetName(s0)}<>. Path would be invalid when imported elsewhere."); return null; }
 		
 		return f;
 	}
@@ -813,7 +813,7 @@ class MetaComments {
 		s = SplitArgs_(s, out var s2);
 		
 		//rejected
-		//if (orFullPathAnywhere && pathname.isFullPathExpand(ref s)) {
+		//if (orFullPathAnywhere && Path2.IsFullPathExpand(ref s)) {
 		//	//rejected: support folders or wildcard. Users can add a link to the folder to the workspace, it is supported.
 		//	if (!filesystem.exists(s).File) { _ErrorV("file does not exist: " + s); s = null; }
 		//	return new(null, s2, s);
@@ -833,7 +833,7 @@ class MetaComments {
 	
 	string _GetOutPath(string s) {
 		s = s.TrimEnd('\\');
-		if (!pathname.isFullPathExpand(ref s)) {
+		if (!Path2.IsFullPathExpand(ref s)) {
 			if (s.Starts('%')) _ErrorV("relative path starts with %");
 			if (s.Starts('\\')) s = App.Model.FilesDirectory + s;
 			else s = Path2.GetDirectory(_f.f.FilePath) / s;
@@ -906,7 +906,7 @@ class MetaComments {
 				_ErrorV(b.ToString());
 				return;
 			}
-			var dir = App.Model.NugetDirectoryBS + pathname.getDirectory(value);
+			var dir = App.Model.NugetDirectoryBS + Path2.GetDirectory(value);
 			foreach (var x in xx.Elements()) {
 				if (x.Name.LocalName is not ("r" or "ro")) continue;
 				var r = dir + x.Value;

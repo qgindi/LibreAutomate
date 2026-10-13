@@ -79,7 +79,7 @@ void _Test() {
 	s = @"C:\Temp\Au\markdown\api\Au\keys\Au.keys.send.md";
 	//s = @"";
 	
-	string name = pathname.getNameNoExt(s);
+	string name = Path2.GetNameNoExt(s);
 	string text = filesystem.loadText(s);
 	
 	_ProcessText(ref text);

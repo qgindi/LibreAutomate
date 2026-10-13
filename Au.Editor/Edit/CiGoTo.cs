@@ -470,7 +470,7 @@ class CiGoTo {
 				var code = cd.code;
 				var span = trivia.Span;
 				int from = pos, to = from;
-				static bool _IsPathOrUrlChar(char c) => !pathname.isInvalidPathChar(c) || c == '?';
+				static bool _IsPathOrUrlChar(char c) => !Path2.IsInvalidPathChar(c) || c == '?';
 				while (to < span.End && _IsPathOrUrlChar(code[to])) to++;
 				while (from > span.Start && _IsPathOrUrlChar(code[from - 1])) from--;
 				while (to > pos && code[to - 1] is <= ' ' or '.' or ';' or ',') to--; //trim right
@@ -485,11 +485,11 @@ class CiGoTo {
 		//if s is script, opens it. If file path, selects in Explorer. If folder path, opens the folder. If URL, opens the web page.
 		static bool _Open(string s, SyntaxToken token = default) {
 			if (s.NE()) return false;
-			if (pathname.isUrl(s)) {
+			if (Path2.IsUri(s)) {
 				if (0 == s.Starts(false, "http:", "https:")) return false;
 				run.itSafe(s);
 			} else {
-				if (!pathname.isFullPathExpand(ref s, strict: false)) {
+				if (!Path2.IsFullPathExpand(ref s, strict: false)) {
 					var f = App.Model.Find(s);
 					if (f != null) { App.Model.SetCurrentFile(f); return true; }
 					if (token.RawKind == 0 || !_GetFoldersPath(token, out var fp, null)) return false;

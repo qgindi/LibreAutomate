@@ -28,7 +28,7 @@ namespace Au {
 		shortcutFile(string lnkPath, uint mode) {
 			_isl = new Api.ShellLink() as Api.IShellLink;
 			_ipf = _isl as Api.IPersistFile;
-			_lnkPath = pathname.normalize(lnkPath);
+			_lnkPath = Path2.Normalize(lnkPath);
 			if (mode != Api.STGM_WRITE && (mode == Api.STGM_READ || filesystem.exists(_lnkPath).File)) {
 				AuException.ThrowIfHresultNot0(_ipf.Load(_lnkPath, mode), "*open");
 				_isOpen = true;
@@ -306,7 +306,7 @@ namespace Au {
 			if (R.NE()) return null;
 
 			if (!fixMSI) {
-				R = pathname.expand(R);
+				R = Path2.Expand(R);
 			} else if (R.Find(@"\Installer\{") > 0) {
 				//For MSI shortcuts GetPath gets like "C:\WINDOWS\Installer\{90110409-6000-11D3-8CFE-0150048383C9}\accicons.exe".
 				var product = stackalloc char[40];

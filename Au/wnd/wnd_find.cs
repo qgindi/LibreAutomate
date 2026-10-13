@@ -657,7 +657,7 @@ namespace Au.Types {
 				if (_s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
 				if (!_s.Starts("**")) { //can be regex
 					if (_s.FindAny(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
-					if (pathname.findExtension(_s) < 0 && !wildex.hasWildcardChars(_s)) print.warning("Program name without .exe.");
+					if (!Path.HasExtension(_s) && !wildex.hasWildcardChars(_s)) print.warning("Program name without .exe.");
 				}
 				program = _s;
 				break;

@@ -150,7 +150,7 @@ class DProperties : KDialogWindow {
 			if (isLibrary) m[@"%folders.ThisApp%\Libraries"] = o => outputPath.Text = o.ToString();
 			m["Browse..."] = o => {
 				var initf = _GetOutputPath(getDefault: false, expandEnvVar: true);
-				if (!isLibrary && !filesystem.exists(initf)) initf = pathname.getDirectory(initf);
+				if (!isLibrary && !filesystem.exists(initf)) initf = Path2.GetDirectory(initf);
 				filesystem.createDirectory(initf);
 				var d = new FileOpenSaveDialog(isLibrary ? "{4D1F3AFB-DA1A-45AC-8C12-41DDA5C51CDD}" : "{4D1F3AFB-DA1A-45AC-8C12-51DDA5C51CDD}") {
 					InitFolderFirstTime = initf,
@@ -532,7 +532,7 @@ class Class1 {
 	
 	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {
 		if (!getDefault && _Get(outputPath) is string r) {
-			if (expandEnvVar) r = pathname.expand(r);
+			if (expandEnvVar) r = Path2.Expand(r);
 		} else {
 			r = MetaComments.GetDefaultOutputPath(_f, _role, withEnvVar: !expandEnvVar);
 		}

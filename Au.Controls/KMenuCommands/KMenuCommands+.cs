@@ -284,7 +284,7 @@ public partial class KMenuCommands {
 					_mi.Icon = null;
 				} else {
 #if DEBUG
-					bool res = !(custom || image.Starts('*') || pathname.isFullPath(image));
+					bool res = !(custom || image.Starts('*') || Path2.IsFullPath(image));
 #else
 					bool res = !(custom || image.Starts('*'));
 #endif

@@ -226,7 +226,7 @@ static partial class CompilerUtil {
 			if (m.OtherFiles != null) {
 				foreach (var v in m.OtherFiles) {
 					var dest = outDir;
-					if (!v.s.NE()) dest = pathname.combine(dest, v.s, s2CanBeFullPath: true);
+					if (!v.s.NE()) dest = Path2.Join(dest, v.s, s2CanBeFullPath: true);
 					
 					_CopyOther(v.f, dest);
 					
@@ -235,7 +235,7 @@ static partial class CompilerUtil {
 							if (!f.Name.Ends('-')) dest = dest + "\\" + f.Name;
 							foreach (var c in f.Children()) _CopyOther(c, dest);
 						} else {
-							string from = f.FilePath, to = dest + "\\" + pathname.getName(from);
+							string from = f.FilePath, to = dest + "\\" + Path2.GetName(from);
 							if (copy != null) copy(from, to);
 							else CopyFileIfNeed(from, to);
 						}
@@ -266,7 +266,7 @@ static partial class CompilerUtil {
 		
 		if (recursive) {
 			var fs = asmStream as FileStream; Debug.Assert(fs != null);
-			var dir = pathname.getDirectory(fs.Name, withSeparator: true);
+			var dir = Path2.GetDirectory(fs.Name, withSeparator: true);
 			var hs = new HashSet<string>();
 			foreach (var arh in mr.AssemblyReferences) {
 				var ar = mr.GetAssemblyReference(arh);
@@ -296,7 +296,7 @@ static partial class CompilerUtil {
 	public static bool RunPrePostBuildScript(MetaComments m, bool post, string outFile, bool publish) {
 		var x = post ? m.PostBuild : m.PreBuild;
 		var f = m.MainFile.f;
-		string outPath = publish ? pathname.getDirectory(outFile) : m.OutputPath;
+		string outPath = publish ? Path2.GetDirectory(outFile) : m.OutputPath;
 		
 		string[] args;
 		if (x.s == null) {
@@ -379,8 +379,8 @@ static partial class CompilerUtil {
 		/// <param name="bytes">If not empty, writes to it, else loads/saves file <i>apphostPath</i>. Uses <i>apphostPath</i> in any case.</param>
 		/// <returns><c>false</c> if cannot patch. Either <i>apphostPath</i> is in different drive than portable LA, or apphost bytes invalid.</returns>
 		public static bool PatchPortableExeProgram_DotnetPath(string apphostPath, bool arm64, Span<byte> bytes = default) {
-			var dotnet = Path.GetRelativePath(pathname.getDirectory(apphostPath), folders.ThisApp);
-			if (pathname.isFullPath(dotnet)) return false; //different drive, can't get relative path
+			var dotnet = Path.GetRelativePath(Path2.GetDirectory(apphostPath), folders.ThisApp);
+			if (Path2.IsFullPath(dotnet)) return false; //different drive, can't get relative path
 			dotnet += (arm64 ? @"\dotnetARM" : @"\dotnet");
 			
 			bool load = bytes.IsEmpty;

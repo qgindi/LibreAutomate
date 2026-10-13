@@ -323,7 +323,7 @@ void _CreateCppFile(string cppFile, bool is64bit) {
 	
 	//SAL
 	
-	string catsal = pathname.getDirectory(cppFile) + @"\Au-sal.h";
+	string catsal = Path2.GetDirectory(cppFile) + @"\Au-sal.h";
 	s = """
 #define __SPECSTRINGS_STRICT_LEVEL 0 //prevent redefining _Outptr_ etc to something useless
 #undef _SA_annotes3

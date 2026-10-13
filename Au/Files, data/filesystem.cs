@@ -12,7 +12,7 @@ namespace Au;
 /// Also you can use .NET file system classes, such as <see cref="File"/> and <see cref="Directory"/> in <c>System.IO</c> namespace. In the past they were too limited and unsafe to use, for example no long paths, too many exceptions, difficult to recursively enumerate directories containing protected items. Later improved, but this class still has something they don't, for example environment variables in path, safe load/save. This class does not have low-level functions to open/read/write files.
 /// 
 /// Most functions support only full path. Most of them throw <see cref="ArgumentException"/> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
-/// Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="pathname.prefixLongPath"/>, <see cref="pathname.prefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
+/// Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="Path2.PrefixLongPath"/>, <see cref="Path2.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
 /// 
 /// Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
 /// </remarks>
@@ -38,13 +38,13 @@ public static partial class filesystem {
 	/// <summary>
 	/// Gets the last write time, size and attributes of a file or directory.
 	/// </summary>
-	/// <param name="path">Full path. The function just asserts full path and calls <see cref="pathname.prefixLongPathIfNeed"/>.</param>
+	/// <param name="path">Full path. The function just asserts full path and calls <see cref="Path2.PrefixLongPathIfNeed"/>.</param>
 	/// <param name="prop"></param>
 	/// <returns><c>false</c> if does not exist or access denied. No exceptions.</returns>
 	internal static unsafe bool GetProp_(string path, out Prop_ prop) {
-		Debug.Assert(pathname.isFullPath(path));
+		Debug.Assert(Path2.IsFullPath(path));
 		prop = default;
-		path = pathname.prefixLongPathIfNeed(path);
+		path = Path2.PrefixLongPathIfNeed(path);
 		if (!Api.GetFileAttributesEx(path, 0, out var d)) {
 			if (!_GetAttributesOnError(path, FAFlags.DontThrow, out _, out _, &d)) return false;
 		}
@@ -55,7 +55,7 @@ public static partial class filesystem {
 	/// <summary>
 	/// Gets the last write time of a file or directory.
 	/// </summary>
-	/// <param name="path">Full path. The function just asserts full path and calls <see cref="pathname.prefixLongPathIfNeed"/>.</param>
+	/// <param name="path">Full path. The function just asserts full path and calls <see cref="Path2.PrefixLongPathIfNeed"/>.</param>
 	/// <param name="time">Time UTC as <c>FILETIME</c>.</param>
 	/// <returns><c>false</c> if does not exist or access denied. No exceptions.</returns>
 	internal static bool GetTime_(string path, out long time) {
@@ -68,7 +68,7 @@ public static partial class filesystem {
 	/// Gets file or directory attributes, size and times.
 	/// </summary>
 	/// <returns><c>false</c> if the file/directory does not exist.</returns>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="Path2.Expand"/>).</param>
 	/// <param name="properties">Receives properties.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="ArgumentException">Not full path (when not used flag <c>UseRawPath</c>).</exception>
@@ -97,7 +97,7 @@ public static partial class filesystem {
 	/// Gets file or directory attributes.
 	/// </summary>
 	/// <returns><c>false</c> if the file/directory does not exist.</returns>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="Path2.Expand"/>).</param>
 	/// <param name="attributes">Receives attributes, or 0 if failed.</param>
 	/// <param name="flags"></param>
 	/// <exception cref="ArgumentException">Not full path (when not used flag <c>UseRawPath</c>).</exception>
@@ -161,7 +161,7 @@ public static partial class filesystem {
 		if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && 0 != IsNtfsLink_(path);
 		else if (!_GetAttributesOnError(path, FAFlags.DontThrow, out attr, out ntfsLink)) return false;
 		
-		if (!useRawPath && !pathname.isFullPath(path)) { lastError.code = Api.ERROR_FILE_NOT_FOUND; return false; }
+		if (!useRawPath && !Path2.IsFullPath(path)) { lastError.code = Api.ERROR_FILE_NOT_FOUND; return false; }
 		return true;
 	}
 	
@@ -169,7 +169,7 @@ public static partial class filesystem {
 	/// Sets file or directory attributes.
 	/// </summary>
 	/// <returns><c>false</c> if the file/directory does not exist.</returns>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag <c>UseRawPath</c> not used, supports environment variables (see <see cref="Path2.Expand"/>).</param>
 	/// <param name="attributes">Attributes to set, add or remove.</param>
 	/// <param name="add"><c>null</c> (default) - set; <c>true</c> - add; <c>false</c> - remove.</param>
 	/// <param name="flags"></param>
@@ -208,7 +208,7 @@ public static partial class filesystem {
 	/// <summary>
 	/// Gets file or directory attributes as <see cref="FAttr"/> that tells whether it exists, is directory, readonly, hidden, system, NTFS link. See examples.
 	/// </summary>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is <c>false</c> (default), supports environment variables (see <see cref="pathname.expand"/>). Can be <c>null</c>.</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is <c>false</c> (default), supports environment variables (see <see cref="Path2.Expand"/>). Can be <c>null</c>.</param>
 	/// <param name="useRawPath">Pass <i>path</i> to the API as it is, without any normalizing and full-path checking.</param>
 	/// <remarks>
 	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/>.
@@ -239,7 +239,7 @@ public static partial class filesystem {
 	/// Returns <c>NotFound</c> (0) if does not exist. Returns <c>AccessDenied</c> (&lt; 0) if exists but this process cannot access it and get attributes.
 	/// Calls API <ms>GetFileAttributes</ms>.
 	/// </summary>
-	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is <c>false</c> (default), supports environment variables (see <see cref="pathname.expand"/>). Can be <c>null</c>.</param>
+	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is <c>false</c> (default), supports environment variables (see <see cref="Path2.Expand"/>). Can be <c>null</c>.</param>
 	/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 	/// <remarks>
 	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/>.
@@ -275,14 +275,14 @@ public static partial class filesystem {
 	public static unsafe string searchPath(string path, params string[] dirs) {
 		if (path.NE()) return null;
 		
-		if (pathname.isFullPathExpand(path, out string s, strict: false)) {
+		if (Path2.IsFullPathExpand(path, out string s, strict: false)) {
 			if (exists(s)) return Path2.Normalize_(s, noExpandEV: true);
 			return null;
 		}
 		
 		if (dirs != null) {
 			foreach (var d in dirs) {
-				if (!pathname.isFullPathExpand(d, out s)) continue;
+				if (!Path2.IsFullPathExpand(d, out s)) continue;
 				s /= path;
 				if (exists(s)) return Path2.Normalize_(s, noExpandEV: true);
 			}
@@ -342,7 +342,7 @@ public static partial class filesystem {
 	/// 
 	/// By default gets only direct children. Use flag <see cref="FEFlags.AllDescendants"/> to get all descendants.
 	/// 
-	/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="pathname.expand"/>), <c>".."</c>, DOS path etc. Paths longer than <see cref="Path2.MaxSafeDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="pathname.prefixLongPathIfNeed"/>).
+	/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="Path2.Expand"/>), <c>".."</c>, DOS path etc. Paths longer than <see cref="Path2.MaxSafeDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="Path2.PrefixLongPathIfNeed"/>).
 	/// 
 	/// For NTFS links (symbolic links, mount points) gets link info, not target info.
 	/// 
@@ -391,7 +391,7 @@ public static partial class filesystem {
 			for (; ; ) {
 				if (isFirst) {
 					isFirst = false;
-					var path2 = ((path.Length <= Path2.MaxSafeDirectoryPathLength - 2) ? path : pathname.prefixLongPath(path)) + @"\*";
+					var path2 = ((path.Length <= Path2.MaxSafeDirectoryPathLength - 2) ? path : Path2.PrefixLongPath(path)) + @"\*";
 #if TEST_FINDFIRSTFILEEX
 					hfind = Api.FindFirstFileEx(path2, Api.FINDEX_INFO_LEVELS.FindExInfoBasic, out d, 0, default, 0);
 					//speed: FindFirstFileEx 0-2 % slower. FindExInfoBasic makes 0-2% faster. FIND_FIRST_EX_LARGE_FETCH makes 1-50% slower.
@@ -473,7 +473,7 @@ public static partial class filesystem {
 				if (0 != (flags & FEFlags.NeedRelativePaths)) name = fullPath[basePathLength..];
 				
 				//prepend @"\\?\" etc if need. Don't change fullPath length, because then would be difficult to get relative path.
-				var fp2 = pathname.prefixLongPathIfNeed(fullPath);
+				var fp2 = Path2.PrefixLongPathIfNeed(fullPath);
 				
 				var r = new FEFile(name, fp2, d, stack.Count); //never mind, don't need for dirs if no dirFilter and is flag OnlyFiles
 				
@@ -566,7 +566,7 @@ public static partial class filesystem {
 		
 		if (op == _FileOp.Rename) {
 			op = _FileOp.Move;
-			if (pathname.isInvalidName(path2)) throw new ArgumentException($"Invalid filename: '{path2}'");
+			if (Path2.IsInvalidName(path2)) throw new ArgumentException($"Invalid filename: '{path2}'");
 			path2 = Path2.Join_(_RemoveFilename(path1), path2);
 		} else {
 			string path2Parent;
@@ -608,7 +608,7 @@ public static partial class filesystem {
 						//deleted = true;
 						//copy will fail, move will succeed
 					} else if (ifExists == FIfExists.RenameNew) {
-						path2 = pathname.makeUnique(path2, existsAsDir);
+						path2 = Path2.MakeUnique(path2, existsAsDir);
 					} else if (ifExists == FIfExists.MergeDirectory && existsAsDir) {
 						if (type1 is FileIs_.Directory or FileIs_.NtfsLinkDirectory) {
 							//deleted = true;
@@ -707,7 +707,7 @@ public static partial class filesystem {
 		string prevParentDir = null;
 		foreach (var f in a) {
 			if (f == null) continue;
-			s1 = f.FullPath; s2 = pathname.prefixLongPathIfNeed(path2 + f.Name);
+			s1 = f.FullPath; s2 = Path2.PrefixLongPathIfNeed(path2 + f.Name);
 			//print.it(s2);
 			
 			//create intermediate dirs if need, eg if dirFilter returned 2 (don't include the dir but include its children)
@@ -767,7 +767,7 @@ public static partial class filesystem {
 		/// note: path must be normalized.
 		/// </summary>
 		internal bool Rename(string path, bool dontDelete = false) {
-			if (path.Length > Path2.MaxSafeDirectoryPathLength - 10) path = pathname.prefixLongPath(path);
+			if (path.Length > Path2.MaxSafeDirectoryPathLength - 10) path = Path2.PrefixLongPath(path);
 			string tempPath = null;
 			int iFN = _FindFilename(path);
 			string s1 = path[..iFN] + "old", s2 = " " + path[iFN..];
@@ -799,7 +799,7 @@ public static partial class filesystem {
 	/// <param name="newName">New name without path. Example: <c>"name.txt"</c>.</param>
 	/// <param name="ifExists"></param>
 	/// <exception cref="ArgumentException">
-	/// - <i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).
+	/// - <i>path</i> is not full path (see <see cref="Path2.IsFullPath"/>).
 	/// - <i>newName</i> is invalid filename.
 	/// </exception>
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
@@ -820,7 +820,7 @@ public static partial class filesystem {
 	/// <para>NOTE: It is not the new parent directory. See <see cref="moveTo"/>.</para>
 	/// </param>
 	/// <param name="ifExists"></param>
-	/// <exception cref="ArgumentException"><i>path</i> or <i>newPath</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
+	/// <exception cref="ArgumentException"><i>path</i> or <i>newPath</i> is not full path (see <see cref="Path2.IsFullPath"/>).</exception>
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
@@ -841,7 +841,7 @@ public static partial class filesystem {
 	/// <param name="newDirectory">Full path of the new parent directory.</param>
 	/// <param name="ifExists"></param>
 	/// <exception cref="ArgumentException">
-	/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="pathname.isFullPath"/>).
+	/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="Path2.IsFullPath"/>).
 	/// - <i>path</i> is drive. To move drive content, use <see cref="move"/>.
 	/// </exception>
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
@@ -868,7 +868,7 @@ public static partial class filesystem {
 	/// <param name="copyFlags">Options used when copying directory.</param>
 	/// <param name="fileFilter">Callback function that decides which files to copy when copying directory. See <see cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>. Note: this function uses <see cref="FEFlags.NeedRelativePaths"/>.</param>
 	/// <param name="dirFilter">Callback function that decides which subdirectories to copy when copying directory. See <see cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>. Note: this function uses <see cref="FEFlags.NeedRelativePaths"/>.</param>
-	/// <exception cref="ArgumentException"><i>path</i> or <i>newPath</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
+	/// <exception cref="ArgumentException"><i>path</i> or <i>newPath</i> is not full path (see <see cref="Path2.IsFullPath"/>).</exception>
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
@@ -888,7 +888,7 @@ public static partial class filesystem {
 	/// </summary>
 	/// <param name="newDirectory">Full path of the new parent directory.</param>
 	/// <exception cref="ArgumentException">
-	/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="pathname.isFullPath"/>).
+	/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="Path2.IsFullPath"/>).
 	/// - <i>path</i> is drive. To copy drive content, use <see cref="copy"/>.
 	/// </exception>
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
@@ -906,7 +906,7 @@ public static partial class filesystem {
 	/// <returns><c>true</c> if deleted, <c>false</c> if failed (with flag <c>CanFail</c>), <c>null</c> if did not exist.</returns>
 	/// <param name="path">Full path.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
+	/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="Path2.IsFullPath"/>).</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <remarks>
 	/// Does nothing if it does not exist (no exception).
@@ -928,7 +928,7 @@ public static partial class filesystem {
 	/// <returns><c>true</c> if deleted all, <c>false</c> if failed to delete all or some (with flag <c>CanFail</c>), <c>null</c> if none existed.</returns>
 	/// <param name="paths">string array, <c>List</c> or other collection. Full paths.</param>
 	/// <param name="flags"></param>
-	/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="pathname.isFullPath"/>).</exception>
+	/// <exception cref="ArgumentException"><i>path</i> is not full path (see <see cref="Path2.IsFullPath"/>).</exception>
 	/// <exception cref="AggregateException">Failed to delete all or some items. The exception object contains one <see cref="AuException"/> for each failed-to-delete item.</exception>
 	/// <remarks>
 	/// This overload is faster when using Recycle Bin.
@@ -1166,12 +1166,12 @@ public static partial class filesystem {
 	}
 	
 	/// <summary>
-	/// The same as <c>pathname.normalize(path)</c>.
+	/// The same as <c>Path2.Normalize(path)</c>.
 	/// Expands environment variables, throws <c>ArgumentException</c> if not full path, normalizes, etc.
 	/// </summary>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	static string _PreparePath(string path) {
-		if (!pathname.isFullPathExpand(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
+		if (!Path2.IsFullPathExpand(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
 		return Path2.Normalize_(path, noExpandEV: true);
 	}
 	
@@ -1291,7 +1291,7 @@ public static partial class filesystem {
 	/// Loads text file in a safer way.
 	/// Uses <see cref="File.ReadAllText"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
 	/// </summary>
-	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
+	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.</param>
 	/// <param name="encoding">Text encoding in file (if there is no BOM). Default UTF-8.</param>
 	/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
@@ -1317,7 +1317,7 @@ public static partial class filesystem {
 	/// Loads file in a safer way.
 	/// Uses <see cref="File.ReadAllBytes(string)"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
 	/// </summary>
-	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
+	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.</param>
 	/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
@@ -1333,7 +1333,7 @@ public static partial class filesystem {
 	/// Loads file in a safer way.
 	/// Uses <see cref="File.OpenRead(string)"/> and <see cref="waitIfLocked{T}(Func{T}, int)"/>.
 	/// </summary>
-	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
+	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.</param>
 	/// <param name="lockedWaitMS">If cannot open the file because it is opened by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <param name="missingWaitMS">If the file initially does not exist, wait max this number of milliseconds until exists. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
@@ -1349,7 +1349,7 @@ public static partial class filesystem {
 	/// Writes any data to a file in a safe way, using a callback function.
 	/// </summary>
 	/// <param name="file">
-	/// File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.
+	/// File. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.
 	/// If the file exists, this function overwrites it. If the directory does not exist, this function creates it.
 	/// </param>
 	/// <param name="writer">
@@ -1416,7 +1416,7 @@ public static partial class filesystem {
 		if (!tempDirectory.NE()) {
 			s1 = _PreparePath(tempDirectory);
 			_CreateDirectory(s1, pathIsPrepared: true);
-			s1 = s1 / pathname.getName(file);
+			s1 = s1 / Path2.GetName(file);
 		}
 		
 		_createDirectoryForPrepared(file);

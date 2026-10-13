@@ -269,7 +269,7 @@ namespace Au.More {
 		/// Uses <see cref="XElement.Load(XmlReader, LoadOptions)"/> and <see cref="filesystem.waitIfLocked"/>.
 		/// </summary>
 		/// <param name="file">
-		/// File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.
 		/// If starts with <c>'&lt;'</c>, loads from XML string instead.
 		/// </param>
 		/// <param name="options"></param>
@@ -310,7 +310,7 @@ namespace Au.More {
 		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="filesystem.waitIfLocked"/>.
 		/// </summary>
 		/// <param name="file">
-		/// File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.
 		/// If starts with <c>'&lt;'</c>, loads from XML string instead.
 		/// </param>
 		/// <param name="options"></param>

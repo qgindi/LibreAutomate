@@ -52,7 +52,7 @@ namespace Au {
 		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Example: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>. To discover the string use hotkey <c>Ctrl+Shift+Q</c> or function <see cref="WndUtil.GetWindowsStoreAppId"/> or Google.
 		/// - To open a Windows Settings page can be used <google>ms-settings</google>, like <c>"ms-settings:display"</c>. To open Settings use <c>"ms-settings:"</c>.
 		/// 
-		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="pathname.expand"/>.
+		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="Path2.Expand"/>.
 		/// 
 		/// By default the new process isn't admin even if this process is admin. It's a unique feature of this function. More info: <see cref="RFlags"/>.
 		/// 
@@ -92,7 +92,7 @@ namespace Au {
 				if (x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
 				
 				if (more.CurrentDirectory is string cd) {
-					if (cd.Length == 0) curDirFromFile = true; else cd = pathname.expand(cd);
+					if (cd.Length == 0) curDirFromFile = true; else cd = Path2.Expand(cd);
 					x.lpDirectory = cd;
 				}
 				
@@ -124,10 +124,10 @@ namespace Au {
 			} else {
 				x.lpFile = file;
 				
-				if (curDirFromFile && isFullPath) x.lpDirectory = pathname.getDirectory(file);
+				if (curDirFromFile && isFullPath) x.lpDirectory = Path2.GetDirectory(file);
 			}
 			x.lpDirectory ??= Directory.GetCurrentDirectory();
-			if (!args.NE()) x.lpParameters = pathname.expand(args);
+			if (!args.NE()) x.lpParameters = Path2.Expand(args);
 			
 			if (0 == (flags & RFlags.ShowErrorUI)) x.fMask |= Api.SEE_MASK_FLAG_NO_UI;
 			if (0 == (flags & RFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
@@ -224,21 +224,21 @@ namespace Au {
 		
 		internal static string NormalizeFile_(bool runConsole, string file, out bool isFullPath, out bool isShellPath) {
 			isShellPath = isFullPath = false;
-			file = pathname.expand(file);
+			file = Path2.Expand(file);
 			if (file.NE()) throw new ArgumentException();
 			if (runConsole || !(isShellPath = Path2.IsShellPath_(file))) {
-				if (isFullPath = pathname.isFullPath(file)) {
+				if (isFullPath = Path2.IsFullPath(file)) {
 					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;
 					file = Path2.Normalize_(file, fl, true);
 					
 					//ShellExecuteEx supports long path prefix for exe but not for documents.
 					//Process.Start supports long path prefix, except when the exe is .NET.
-					if (!runConsole) file = pathname.unprefixLongPath(file);
+					if (!runConsole) file = Path2.RemoveLongPathPrefix(file);
 					
 					if (FileSystemRedirection.IsSystem64PathIn32BitProcess(file) && !filesystem.exists(file)) {
 						file = FileSystemRedirection.GetNonRedirectedSystemPath(file);
 					}
-				} else if (!pathname.isUrl(file)) {
+				} else if (!Path2.IsUri(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.
 					//Process.Start prefers current directory.
 					var s2 = filesystem.searchPath(file);
@@ -261,14 +261,14 @@ namespace Au {
 		/// <br/>• Filename, like <c>"abc.exe"</c>. This function calls <see cref="filesystem.searchPath"/>.
 		/// <br/>• Path relative to <see cref="folders.ThisApp"/>. Examples: <c>"abc.exe"</c>, <c>@"subfolder\abc.exe"</c>, <c>@".\subfolder\abc.exe"</c>, <c>@"..\folder\abc.exe"</c>.
 		/// 
-		/// <br/>Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="pathname.expand"/>.
+		/// <br/>Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="Path2.Expand"/>.
 		/// </param>
 		/// <param name="args"><c>null</c> or command line arguments.</param>
 		/// <param name="curDir">
 		/// Initial current directory of the new process.
 		/// <br/>• If <c>null</c>, uses <c>Directory.GetCurrentDirectory()</c>.
-		/// <br/>• Else if <c>""</c>, calls <c>pathname.getDirectory(exe)</c>.
-		/// <br/>• Else calls <see cref="pathname.expand"/>.
+		/// <br/>• Else if <c>""</c>, calls <c>Path2.GetDirectory(exe)</c>.
+		/// <br/>• Else calls <see cref="Path2.Expand"/>.
 		/// </param>
 		/// <param name="encoding">
 		/// Console's text encoding.
@@ -350,7 +350,7 @@ namespace Au {
 		/// <returns><c>false</c> if failed, for example if the file does not exist.</returns>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
-		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="pathname.expand"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
+		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="Path2.Expand"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
 		/// </param>
 		public static bool selectInExplorer(string path) {
 			using var pidl = Pidl.FromString(path);

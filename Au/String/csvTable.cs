@@ -404,7 +404,7 @@ public class csvTable {
 	/// <summary>
 	/// Loads and parses a CSV file.
 	/// </summary>
-	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>.</param>
+	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>.</param>
 	/// <param name="separator">Field separator character used in CSV text. Default <c>','</c>.</param>
 	/// <param name="quote">Character used in CSV text to enclose some fields. Default <c>'"'</c>.</param>
 	/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default <c>true</c>.</param>
@@ -422,7 +422,7 @@ public class csvTable {
 	/// <summary>
 	/// Composes CSV and saves to a file.
 	/// </summary>
-	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="pathname.expand"/>. The file can exist or not; this function overwrites it.</param>
+	/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path2.Expand"/>. The file can exist or not; this function overwrites it.</param>
 	/// <param name="backup">Create backup file named <c>file + "~backup"</c>.</param>
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	/// <exception cref="Exception">Exceptions of <see cref="File.WriteAllText(string, string)"/>.</exception>

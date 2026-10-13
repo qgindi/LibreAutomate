@@ -2761,7 +2761,7 @@ public class wpfBuilder {
 	//		if(Last.Parent is TControl) throw new InvalidOperationException($"{caller}() in {typeof(TControl).Name} panel.");
 	//	}
 	
-	static string _UriNormalize(string source) => pathname.normalize(source, flags: PNFlags.CanBeUrlOrShell);
+	static string _UriNormalize(string source) => Path2.Normalize(source, flags: PNFlags.CanBeUrlOrShell);
 	
 	//static Uri _Uri(string source) => new Uri(_UriNormalize(source));
 	

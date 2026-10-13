@@ -251,8 +251,8 @@ public static unsafe class KImageUtil {
 					s = filesystem.searchPath(s, folders.ThisAppImages);
 					if (s == null) return null;
 				} else {
-					if (!pathname.isFullPathExpand(ref s)) return null;
-					s = pathname.normalize(s, folders.ThisAppImages);
+					if (!Path2.IsFullPathExpand(ref s)) return null;
+					s = Path2.Normalize(s, folders.ThisAppImages);
 					if (!filesystem.exists(s).File) return null;
 				}
 				break;

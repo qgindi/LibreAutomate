@@ -165,7 +165,7 @@ public sealed class FileWatcher : IDisposable {
 		
 		public FileWatcher Add(string file, Action modifiedExternally) {
 			lock (this) {
-				var dir = pathname.getDirectory(file);
+				var dir = Path2.GetDirectory(file);
 				_DirectoryWatcher dw = null; foreach (var v in _a) if (v.Path.Eqi(dir)) { dw = v; break; }
 				if (dw is null) {
 					try {
@@ -185,7 +185,7 @@ public sealed class FileWatcher : IDisposable {
 				}
 				
 				FileWatcher f = new(dw, file, modifiedExternally);
-				if (!dw.dFiles.TryAdd(pathname.getName(file), f)) throw new NotSupportedException($"A FileWatcher for '{file}' already exists");
+				if (!dw.dFiles.TryAdd(Path2.GetName(file), f)) throw new NotSupportedException($"A FileWatcher for '{file}' already exists");
 				
 				return f;
 			}
@@ -199,7 +199,7 @@ public sealed class FileWatcher : IDisposable {
 		public void Remove(FileWatcher f) {
 			lock (this) {
 				var dw = f._dirWatcher as _DirectoryWatcher;
-				dw.dFiles.Remove(pathname.getName(f._file));
+				dw.dFiles.Remove(Path2.GetName(f._file));
 				if (dw.dFiles.Count == 0) {
 					_a.Remove(dw);
 					dw.Dispose();

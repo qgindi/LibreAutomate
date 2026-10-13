@@ -57,7 +57,7 @@ namespace Au {
 		/// </summary>
 		/// <param name="file">
 		/// Database file. Can be:
-		/// <br/>• Full path. Supports environment variables etc, see <see cref="pathname.expand"/>
+		/// <br/>• Full path. Supports environment variables etc, see <see cref="Path2.Expand"/>
 		/// <br/>• <c>":memory:"</c> - create a private, temporary in-memory database.
 		/// <br/>• <c>""</c> - create a private, temporary on-disk database.
 		/// <br/>• Starts with <c>"file:"</c> - see <google>sqlite3_open_v2</google>.
@@ -81,7 +81,7 @@ namespace Au {
 			
 			bool isSpec = file != null && (file.Length == 0 || file == ":memory:" || file.Starts("file:"));
 			if (!isSpec) {
-				file = pathname.normalize(file);
+				file = Path2.Normalize(file);
 				if (flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !filesystem.exists(file, true).File) filesystem.createDirectoryFor(file);
 			}
 			var r = SLApi.sqlite3_open_v2(Convert2.Utf8Encode(file), ref _db, flags, null);

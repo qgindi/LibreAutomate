@@ -5,7 +5,7 @@ using System.Text.Json;
 partial class AuDocs {
 	public static void CompressAndUpload(string siteDir) {
 		if (1 != dialog.show("Upload?", "Will replace the LA home page and all docs.", "1 Yes|2 No")) return;
-		var tarDir = pathname.getDirectory(siteDir);
+		var tarDir = Path2.GetDirectory(siteDir);
 		_Compress(siteDir, tarDir);
 		_Upload(tarDir);
 		//_CloudflarePurgeCache(); //currently not using

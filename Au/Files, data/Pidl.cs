@@ -87,7 +87,7 @@ public unsafe class Pidl : IDisposable {
 	/// Converts string to <c>ITEMIDLIST</c> and creates new <see cref="Pidl"/> variable that holds it.
 	/// </summary>
 	/// <returns><c>null</c> if failed.</returns>
-	/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="pathname.expand"/>).</param>
+	/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or <c>":: ITEMIDLIST"</c> (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="Path2.Expand"/>).</param>
 	/// <param name="throwIfFailed">Throw exception if failed.</param>
 	/// <exception cref="AuException">Failed, and <i>throwIfFailed</i> is <c>true</c>. Probably invalid <i>s</i>.</exception>
 	/// <remarks>
@@ -126,12 +126,12 @@ public unsafe class Pidl : IDisposable {
 	}
 	
 	/// <summary>
-	/// The same as <see cref="pathname.normalize"/><c>(CanBeUrlOrShell|DontPrefixLongPath)</c>, but ignores non-full path (returns <i>s</i>).
+	/// The same as <see cref="Path2.Normalize"/><c>(CanBeUrlOrShell|DontPrefixLongPath)</c>, but ignores non-full path (returns <i>s</i>).
 	/// </summary>
 	/// <param name="s">File-system path or URL or <c>"::..."</c>.</param>
 	static string _Normalize(string s) {
-		s = pathname.expand(s);
-		if (!pathname.isFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
+		s = Path2.Expand(s);
+		if (!Path2.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
 		return Path2.Normalize_(s, PNFlags.DontPrefixLongPath, true);
 	}
 	

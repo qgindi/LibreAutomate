@@ -238,7 +238,7 @@ class HtmlToMarkdown(bool step, string startFrom) {
 		//print.it("----");
 		_RemoveInsignificantWhitespace(doc, file);
 		//print.it(doc.InnerHtml);
-		if (doc.InnerHtml is var sih && sih.RxReplace(@"(?s)<pre.+?</pre>", "").Contains('\n')) { print.it("----", pathname.getNameNoExt(file)); print.it(sih); }
+		if (doc.InnerHtml is var sih && sih.RxReplace(@"(?s)<pre.+?</pre>", "").Contains('\n')) { print.it("----", Path2.GetNameNoExt(file)); print.it(sih); }
 		//Environment.Exit(0);
 		
 		void _RemoveInsignificantWhitespace(HtmlNode node, string file) {
@@ -438,7 +438,7 @@ class HtmlToMarkdown(bool step, string startFrom) {
 					if (t?.Text is null or "Inheritance") continue;
 					if (pa.Name != "div") throw null;
 					if (pa.HasClass("alert")) {
-						//print.it($"{pathname.getNameNoExt(file),-40}  {h.OuterHtml}  {h.ParentNode.OuterHtml}");
+						//print.it($"{Path2.GetNameNoExt(file),-40}  {h.OuterHtml}  {h.ParentNode.OuterHtml}");
 						pa.Name = "blockquote";
 						h.Name = "b";
 						t.Text = t.Text.Upper(SUpper.FirstChar) + ":";

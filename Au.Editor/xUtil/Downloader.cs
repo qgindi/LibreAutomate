@@ -50,7 +50,7 @@ sealed class Downloader : IDisposable {
 	/// <returns><c>false</c> if failed (prints warning); <c>null</c> if canceled (no warning).</returns>
 	public async Task<bool?> DownloadAndExtract(string url, TextBlock progress, CancellationToken ct, string progressText = "Downloading", string failedWarningPrefix = "<>Warning: ") {
 		if (_dirExtract is null) throw new InvalidOperationException();
-		var ext = pathname.getExtension(url).Lower();
+		var ext = Path.GetExtension(url).Lower();
 		if (!(ext is ".zip" or ".7z")) throw new NotSupportedException("Bad file type");
 		
 		try {

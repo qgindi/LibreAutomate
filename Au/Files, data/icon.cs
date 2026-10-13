@@ -94,7 +94,7 @@ namespace Au {
 
 		static icon _OfFile(string file, int size = 16, IconGetFlags flags = 0) {
 			if (file.NE()) return null;
-			file = pathname.expand(file, strict: false);
+			file = Path2.Expand(file, strict: false);
 			return _GetFileIcon(file, size, flags);
 		}
 
@@ -131,7 +131,7 @@ namespace Au {
 					extractFromFile = parsePathIndex(file, out file, out index);
 
 					if (!searchPath) {
-						if (!pathname.isFullPath(file)) file = folders.ThisAppImages + file;
+						if (!Path2.IsFullPath(file)) file = folders.ThisAppImages + file;
 						file = Path2.Normalize_(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
 					}
 				}
@@ -142,7 +142,7 @@ namespace Au {
 					file = filesystem.searchPath(file, folders.ThisAppImages);
 					if (file == null) return null; //ignore getDefaultIfFails
 				}
-				file = pathname.unprefixLongPath(file);
+				file = Path2.RemoveLongPathPrefix(file);
 			}
 
 			if (isPath /*&& (extractFromFile || 0==(flags&IconGetFlags.Shell))*/) {
@@ -224,8 +224,8 @@ namespace Au {
 				}
 
 				if(si != null) {
-					si = pathname.expand(si);
-					if(!pathname.isFullPath(si)) si = folders.System + si;
+					si = Path2.Expand(si);
+					if(!Path2.IsFullPath(si)) si = folders.System + si;
 					vat v = _Load(si, size, index);
 					if(v != null) return v;
 				}
@@ -369,7 +369,7 @@ namespace Au {
 		/// Extracts icon directly from file.
 		/// </summary>
 		/// <returns><c>null</c> if failed.</returns>
-		/// <param name="file"><c>.ico</c>, <c>.exe</c>, <c>.dll</c> or other file that contains one or more icons. Also supports cursor files - <c>.cur</c>, <c>.ani</c>. Must be full path, without icon index. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+		/// <param name="file"><c>.ico</c>, <c>.exe</c>, <c>.dll</c> or other file that contains one or more icons. Also supports cursor files - <c>.cur</c>, <c>.ani</c>. Must be full path, without icon index. Supports environment variables (see <see cref="Path2.Expand"/>).</param>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="index">Icon index or negative icon resource id in the <c>.exe</c>/<c>.dll</c> file.</param>
 		public static icon load(string file, int size = 16, int index = 0) {
@@ -748,7 +748,7 @@ namespace Au {
 						//print.it(i, patternStart);
 						if (i == patternStart + 1) filename = s;
 						else {
-							if (pathname.isFullPathExpand(ref s)) return s; //eg run.it(@"%folders.System%\abc.exe");
+							if (Path2.IsFullPathExpand(ref s)) return s; //eg run.it(@"%folders.System%\abc.exe");
 							if (Path2.IsShellPathOrUri_(s)) return s;
 							filename = null; patternStart = -1;
 							if (i == 1) filename2 = s;
@@ -779,7 +779,7 @@ namespace Au {
 				}
 				if (filename2 != null) {
 					if (filename2.Ends(".exe", true)) return filesystem.searchPath(filename2);
-					if (cs = filename2.Ends(".cs", true) && !pathname.isFullPath(filename2, orEnvVar: true)) return filename2;
+					if (cs = filename2.Ends(".cs", true) && !Path2.IsFullPath(filename2, orEnvVar: true)) return filename2;
 				}
 			}
 			catch (Exception ex) { Debug_.Print(ex); }
@@ -826,9 +826,9 @@ namespace Au {
 
 			bool _GetPngPathFromIconLoc(out string path) {
 				path = null;
-				var dir = pathname.getDirectory(loc);
+				var dir = Path2.GetDirectory(loc);
 				if (!filesystem.exists(dir).Directory) return false;
-				var a1 = Directory.GetFiles(dir, pathname.getName(loc) + "*.png");
+				var a1 = Directory.GetFiles(dir, Path2.GetName(loc) + "*.png");
 				int nTargetsize = 0, nScale = 0;
 				for (int i = 0; i < a1.Length; i++) {
 					var v = a1[i];

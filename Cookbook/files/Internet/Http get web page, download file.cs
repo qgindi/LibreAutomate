@@ -34,7 +34,7 @@ print.it(r2.Text());
 /// Download to file.
 
 string url = "https://www.libreautomate.com/index.html";
-string file = folders.Temp + pathname.getName(url);
+string file = folders.Temp + Path2.GetName(url);
 try { internet.http.Get(url, file); }
 catch (Exception e1) { print.warning($"Failed to download. {e1.ToStringWithoutStack()}"); return; }
 print.it("downloaded");
@@ -42,7 +42,7 @@ print.it("downloaded");
 /// Download file with progress UI.
 
 string url2 = "https://www.example.com/large.exe";
-string file2 = folders.Temp + pathname.getName(url2);
+string file2 = folders.Temp + Path2.GetName(url2);
 try { if(!internet.http.Get(url2, true).Download(file2)) { print.it("canceled"); return; } }
 catch (Exception e1) { print.warning($"Failed to download. {e1.ToStringWithoutStack()}"); return; }
 print.it("downloaded");

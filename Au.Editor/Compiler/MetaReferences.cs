@@ -208,7 +208,7 @@ class MetaReferences {
 				if (cache[i].name.Eqi(reference) && _PropEq(cache[i], alias, isCOM)) goto g1;
 			}
 			
-			bool isFull = pathname.isFullPathExpand(reference, out string path);
+			bool isFull = Path2.IsFullPathExpand(reference, out string path);
 			if (!isFull && isCOM) { isFull = true; path = App.Model.WorkspaceDirectory + @"\.interop\" + path; }
 			if (!isFull) path = folders.ThisAppBS + path;
 			path = Path2.Normalize_(path);
@@ -247,7 +247,7 @@ class MetaReferences {
 			if (_refs.Contains(r)) return;
 			
 			if (k.ignoreDef) {
-				var s = pathname.getNameNoExt(k.path);
+				var s = Path2.GetNameNoExt(k.path);
 				for (int i = DefaultRefCount; --i >= 0;) {
 					if (_refs[i].Display.Eqi(s)) {
 						_refs.RemoveAt(i);
@@ -264,7 +264,7 @@ class MetaReferences {
 		//Returns true if k name matches one of default refs, unless k is any version of that ref.
 		//In the later case sets k.ignoreDef=true if k is a newer version, else sets k.ignoreThis=true.
 		bool _BadDefReplacement(_MR k) {
-			var name = pathname.getNameNoExt(k.path);
+			var name = Path2.GetNameNoExt(k.path);
 			if (!DefaultReferences.TryGetValue(name, out var def)) return false;
 			
 			if (_hsNoRef?.Contains(name) ?? false) return false;
@@ -312,7 +312,7 @@ class MetaReferences {
 				_refs.RemoveAt(i);
 				if (i < DefaultRefCount) {
 					DefaultRefCount--;
-					(_hsNoRef ??= new(StringComparer.OrdinalIgnoreCase)).Add(pathname.getNameNoExt(r.Display));
+					(_hsNoRef ??= new(StringComparer.OrdinalIgnoreCase)).Add(Path2.GetNameNoExt(r.Display));
 				}
 			}
 		}

@@ -97,7 +97,7 @@ partial class Compiler {
 						else if (value[offs] == '?') dll = string.Concat(App.Model.DllDirectoryBS, value.AsSpan((offs + 1)..v.end));
 						else {
 							dll = value[offs..v.end];
-							if (!pathname.isFullPathExpand(ref dll)) dll = folders.ThisAppBS + dll;
+							if (!Path2.IsFullPathExpand(ref dll)) dll = folders.ThisAppBS + dll;
 						}
 						if (_IsFileModified2(dll)) return false;
 						break;
@@ -132,7 +132,7 @@ partial class Compiler {
 			//Debug_.Print("compiled");
 			
 			r.file = asmFile;
-			r.name = pathname.getNameNoExt(f.Name);
+			r.name = Path2.GetNameNoExt(f.Name);
 			return true;
 			
 			bool _IsFileModified(FileNode f_) => _IsFileModified2(f_.FilePath);

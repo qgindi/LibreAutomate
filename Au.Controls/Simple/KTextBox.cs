@@ -114,10 +114,10 @@ public class KTextBoxFile : TextBox {
 		});
 		m.Submenu("Environment variables", m => {
 			foreach (var (name, path) in Environment.GetEnvironmentVariables().OfType<System.Collections.DictionaryEntry>().Select(o => (o.Key as string, o.Value as string)).OrderBy(o => o.Item1)) {
-				if (!pathname.isFullPath(path, orEnvVar: true)) continue;
-				int i = path.IndexOf(';'); if (i > 0 && pathname.isFullPath(path.AsSpan(i + 1), orEnvVar: true)) continue; //list of paths
+				if (!Path2.IsFullPath(path, orEnvVar: true)) continue;
+				int i = path.IndexOf(';'); if (i > 0 && Path2.IsFullPath(path.AsSpan(i + 1), orEnvVar: true)) continue; //list of paths
 				if (IsFolder && filesystem.exists(path).File) continue;
-				m[$"{name}\t{path.Limit(80, middle: true)}"] = o => _SetText(Unexpand ? $"%{name}%\\" : pathname.expand(path));
+				m[$"{name}\t{path.Limit(80, middle: true)}"] = o => _SetText(Unexpand ? $"%{name}%\\" : Path2.Expand(path));
 			}
 		});
 		m.Submenu("Folder windows", m => {

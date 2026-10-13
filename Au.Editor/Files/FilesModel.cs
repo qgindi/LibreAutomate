@@ -44,9 +44,9 @@ partial class FilesModel {
 	/// <exception cref="Exception">XElement.Load exceptions. And possibly more.</exception>
 	public FilesModel(string file, bool importing) {
 		_importing = importing;
-		WorkspaceFile = pathname.normalize(file);
-		WorkspaceDirectory = pathname.getDirectory(WorkspaceFile);
-		WorkspaceName = pathname.getName(WorkspaceDirectory);
+		WorkspaceFile = Path2.Normalize(file);
+		WorkspaceDirectory = Path2.GetDirectory(WorkspaceFile);
+		WorkspaceName = Path2.GetName(WorkspaceDirectory);
 		FilesDirectory = WorkspaceDirectory + @"\files";
 		//CacheDirectory = WorkspaceDirectory + @"\.cache";
 		TempDirectory = WorkspaceDirectory + @"\.temp";
@@ -152,7 +152,7 @@ partial class FilesModel {
 	
 	public static void LoadWorkspace(string wsDir = null) {
 		wsDir ??= App.Settings.workspace;
-		if (wsDir.NE()) wsDir = folders.ThisAppDocuments + "Main"; else wsDir = pathname.normalize(wsDir);
+		if (wsDir.NE()) wsDir = folders.ThisAppDocuments + "Main"; else wsDir = Path2.Normalize(wsDir);
 		
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = App.Model;
@@ -272,7 +272,7 @@ partial class FilesModel {
 			name.ToInt(out long id, 1);
 			return FindById(id);
 		}
-		if (pathname.isFullPath(name)) return FindByFilePath(name, kind);
+		if (Path2.IsFullPath(name)) return FindByFilePath(name, kind);
 		if (name[0] == '\\') return Root.FindDescendant(name, kind);
 		return _FindByName(name, kind);
 		
@@ -1439,7 +1439,7 @@ partial class FilesModel {
 					bool isDir = g.Directory;
 					
 					FileNode k;
-					var name = pathname.getName(path);
+					var name = Path2.GetName(path);
 					if (!repair) {
 						if (isLinkToWsFile) name = "Link to " + name; //avoid duplicate name
 						name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
@@ -1552,7 +1552,7 @@ partial class FilesModel {
 		try { //probably nothing can throw here, but anyway
 			if (!filesystem.exists(path, useRawPath: true).File) return null;
 			if (FindByFilePath(path) is { } f1) return f1.IsFolder ? null : f1;
-			var R = new FileNode(this, pathname.getName(path), path, isDir: false);
+			var R = new FileNode(this, Path2.GetName(path), path, isDir: false);
 			R.AddToTree(ipos);
 			Save.WorkspaceAsync();
 			CodeInfo.FilesChanged();
@@ -1565,11 +1565,11 @@ partial class FilesModel {
 		try { //probably nothing can throw here, but anyway
 			var exists = filesystem.exists(path, true);
 			if (exists && !exists.Attributes.Has(FileAttributes.Hidden | FileAttributes.System) && FindByItemPath(itemPath) is null) {
-				var parentItemPath = pathname.getDirectory(itemPath);
+				var parentItemPath = Path2.GetDirectory(itemPath);
 				var parent = parentItemPath.Length > 0 ? FindByItemPath(parentItemPath) : Root;
 				if (parent != null) {
 					FNInsertPos ipos = new(parent, parent.Id == 0 ? FNInsert.First : FNInsert.Last);
-					var R = new FileNode(this, pathname.getName(path), path, isDir: exists.Directory);
+					var R = new FileNode(this, Path2.GetName(path), path, isDir: exists.Directory);
 					R.AddToTree(ipos);
 					
 					//if folder, add descendants.
@@ -1607,14 +1607,14 @@ partial class FilesModel {
 			bool isZip = wsDirOrZip.Ends(".zip", true) && filesystem.exists(wsDirOrZip).File, notWorkspace = false;
 			
 			if (isZip) {
-				folderName = pathname.getNameNoExt(wsDirOrZip);
+				folderName = Path2.GetNameNoExt(wsDirOrZip);
 				wsDir = folders.ThisAppTemp + folderName;
 				filesystem.delete(wsDir);
 				ZipFile.ExtractToDirectory(wsDirOrZip, wsDir);
 				notWorkspace = !IsWorkspaceDirectoryOrZip(wsDir, out _);
 			} else {
 				wsDir = wsDirOrZip;
-				folderName = pathname.getName(wsDir);
+				folderName = Path2.GetName(wsDir);
 			}
 			
 			//create new folder for workspace's items
@@ -1699,7 +1699,7 @@ partial class FilesModel {
 		
 		Save.AllNowIfNeed();
 		
-		string name = aSel[0].Name; if (!aSel[0].IsFolder) name = pathname.getNameNoExt(name);
+		string name = aSel[0].Name; if (!aSel[0].IsFolder) name = Path2.GetNameNoExt(name);
 		
 		//if selected single folder, export its children without the folder
 		if (aSel.Length == 1 && aSel[0].IsFolder && aSel[0].HasChildren) aSel = aSel[0].Children().ToArray();
@@ -1874,7 +1874,7 @@ partial class FilesModel {
 		int j = 0, i = 0, n = ar?.Length ?? 0;
 		for (; i < n; i++) {
 			if (sub.Items.Count >= 15 || !filesystem.exists(ar[i]).Directory) ar[i] = null;
-			else sub.InsertCustom(++j, pathname.expand(ar[i]), LoadWorkspace);
+			else sub.InsertCustom(++j, Path2.Expand(ar[i]), LoadWorkspace);
 		}
 		if (j < i) App.Settings.recentWS = ar.Where(o => o != null).ToArray();
 	}

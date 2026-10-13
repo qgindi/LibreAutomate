@@ -261,7 +261,7 @@ static partial class Git {
 		if (!_InitCommand()) return;
 		
 		string oldPath = null;
-		if (_isPrivateGit) Environment.SetEnvironmentVariable("PATH", pathname.getDirectory(_gitExe) + ";" + (oldPath = Environment.GetEnvironmentVariable("PATH")));
+		if (_isPrivateGit) Environment.SetEnvironmentVariable("PATH", Path2.GetDirectory(_gitExe) + ";" + (oldPath = Environment.GetEnvironmentVariable("PATH")));
 		run.itSafe(folders.System + "cmd.exe", null, RFlags.InheritAdmin, _dir);
 		if (_isPrivateGit) Environment.SetEnvironmentVariable("PATH", oldPath);
 	}
@@ -493,7 +493,7 @@ This tool modifies only the .git folder, not workspace files.
 			if (!url.Ends(".git")) url += ".git";
 			
 			if (clone) {
-				var dir2 = pathname.makeUnique(_dir, isDirectory: true);
+				var dir2 = Path2.MakeUnique(_dir, isDirectory: true);
 				bool cloned = git($"clone \"{url}\" \"{dir2}\"");
 				if (cloned && !(cloned = FilesModel.IsWorkspaceDirectoryOrZip(dir2, out _))) print.it("Error. The GitHub repository does not contain a workspace.");
 				if (!cloned) { filesystem.delete(dir2); return false; }

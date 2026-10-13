@@ -44,7 +44,7 @@ public static class AuDocsShared {
 		//var mdFile = folders.Editor + @"..\Cookbook\files\Filesystem\Create folder.cs";
 		var mdFile = folders.Editor + @"..\Cookbook\files\Filesystem\Zip files (compress, extract).cs";
 		var code = filesystem.loadText(mdFile);
-		var name = pathname.getNameNoExt(mdFile);
+		var name = Path2.GetNameNoExt(mdFile);
 		var html = RecipeCodeToHtml(name, code);
 		//print.it(html);
 	}

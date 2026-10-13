@@ -43,8 +43,8 @@ Examples: part, start*, *end.cs, **r regex, **m green.cs||blue.cs.");
 			if (f.IsFolder) {
 				if (s[0] == '@') e.SelectText(1, s.Length);
 			} else if (f.IsOtherFileType) {
-				int i = pathname.findExtension(s);
-				if (i > 0) e.SelectText(0, i);
+				if (Path.GetExtension((RStr)s) is { Length: > 0 } ext)
+					e.SelectText(0, s.Length - ext.Length);
 			}
 		};
 		

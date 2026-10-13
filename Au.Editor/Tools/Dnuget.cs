@@ -67,7 +67,7 @@ class DNuget : KDialogWindow {
 		_cbFolder.SelectedIndex = 0; //probably "-"
 		
 		b.Window.AddHandler(TextBox.TextChangedEvent, new TextChangedEventHandler((_, e) => {
-			bInstall.IsEnabled = !_tPackage.Text.Trim().NE() && !pathname.isInvalidName(_cbFolder.Text);
+			bInstall.IsEnabled = !_tPackage.Text.Trim().NE() && !Path2.IsInvalidName(_cbFolder.Text);
 			if (e.Source == _tPackage) _PackageFieldTextChanged();
 		}));
 		
@@ -253,7 +253,7 @@ class DNuget : KDialogWindow {
 		public _UndoManager(string folderPath) {
 			_folderPath = folderPath;
 			_dirExists = filesystem.exists(_folderPath);
-			_undoPath = _dirExists ? pathname.makeUnique(_folderPath + "~old", true) : null;
+			_undoPath = _dirExists ? Path2.MakeUnique(_folderPath + "~old", true) : null;
 		}
 		
 		public bool Init() {
@@ -301,7 +301,7 @@ class DNuget : KDialogWindow {
 				filesystem.delete(_folderPath);
 				if (_dirExists) filesystem.move(_undoPath, _folderPath);
 				
-				if (printError != null) print.it(printError + $" No changes have been made in folder {pathname.getName(_folderPath)}.");
+				if (printError != null) print.it(printError + $" No changes have been made in folder {Path2.GetName(_folderPath)}.");
 			}
 		}
 	}
@@ -395,7 +395,7 @@ class DNuget : KDialogWindow {
 			
 			//.NET dlls
 			HashSet<string> hsLib = new(StringComparer.OrdinalIgnoreCase);
-			foreach (var group in aDllNet.ToLookup(o => pathname.getName(o.f.Name), StringComparer.OrdinalIgnoreCase)) {
+			foreach (var group in aDllNet.ToLookup(o => Path2.GetName(o.f.Name), StringComparer.OrdinalIgnoreCase)) {
 				//print.it($"<><lc #BBE3FF>{group.Key}<>");
 				var filename = group.Key;
 				int count = group.Count();
@@ -441,7 +441,7 @@ class DNuget : KDialogWindow {
 			}
 			
 			//native dlls
-			foreach (var group in aDllNative.ToLookup(o => pathname.getName(o.Name), StringComparer.OrdinalIgnoreCase)) {
+			foreach (var group in aDllNative.ToLookup(o => Path2.GetName(o.Name), StringComparer.OrdinalIgnoreCase)) {
 				XElement xGroup = null;
 				foreach (var f in group) {
 					var s = f.Name;
@@ -493,7 +493,7 @@ class DNuget : KDialogWindow {
 				if (!k.TryGetPropertyValue("compile", out var v2)) continue;
 				foreach (var (s, _) in v2.AsObject()) {
 					if (s.NE() || s.Ends("/_._")) continue;
-					var name = pathname.getName(s);
+					var name = Path2.GetName(s);
 					if (hsDotnet.Contains(name)) continue;
 					var path = (packages + nameVersion + "\\" + s).Replace('/', '\\');
 					if (!filesystem.exists(path)) {
@@ -528,7 +528,7 @@ class DNuget : KDialogWindow {
 			var h = new HashSet<string>(a.Length, StringComparer.OrdinalIgnoreCase);
 			string net1 = folders.NetRuntimeBS, net2 = folders.NetRuntimeDesktopBS;
 			foreach (var v in a) {
-				if (v.Starts(net1, true) || v.Starts(net2, true)) h.Add(pathname.getName(v));
+				if (v.Starts(net1, true) || v.Starts(net2, true)) h.Add(Path2.GetName(v));
 			}
 			return h;
 		}
@@ -596,7 +596,7 @@ class DNuget : KDialogWindow {
 		var t = _Selected;
 		
 		var otherFolders = _folders.ToList();
-		if (_cbFolder.Text.Trim() is var newFolder && !pathname.isInvalidName(newFolder) && !otherFolders.Contains(newFolder, StringComparer.OrdinalIgnoreCase)) otherFolders.Add(newFolder);
+		if (_cbFolder.Text.Trim() is var newFolder && !Path2.IsInvalidName(newFolder) && !otherFolders.Contains(newFolder, StringComparer.OrdinalIgnoreCase)) otherFolders.Add(newFolder);
 		if (otherFolders.FindIndex(o => o.Eqi(t.Parent.Name)) is int i1 && i1 >= 0) otherFolders.RemoveAt(i1);
 		
 		int i = popupMenu.showSimple(otherFolders, owner: this, rawText: true) - 1; if (i < 0) return;
@@ -1070,10 +1070,10 @@ class DNuget : KDialogWindow {
 			if (filesystem.exists(cacheDir, true).Directory) {
 				if (useCache) {
 					var df = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-					foreach (var v in filesystem.enumFiles(cacheDir, "**m *.png||*.jpg||*.ico||*.a")) df[pathname.getNameNoExt(v.Name)] = v.FullPath;
+					foreach (var v in filesystem.enumFiles(cacheDir, "**m *.png||*.jpg||*.ico||*.a")) df[Path2.GetNameNoExt(v.Name)] = v.FullPath;
 					for (int i = a.Count; --i >= 0;) {
 						if (df.TryGetValue(a[i].Name, out string file)) {
-							var ext = pathname.getExtension(file);
+							var ext = Path.GetExtension(file);
 							a[i].Icon = ext.Eqi(".a") ? c_defaultIcon : ext.Eqi(".ico") ? file : "imagefile:" + file;
 							a.RemoveAt(i);
 						}
@@ -1100,7 +1100,7 @@ class DNuget : KDialogWindow {
 							[0x89, 0x50, 0x4E, 0x47, ..] => ".png",
 							[0xFF, 0xD8, 0xFF, ..] => ".jpg",
 							[0, 0, 1, 0, ..] => ".ico",
-							_ => ".a" //no icon or unsupported filetype. Why ".a": if will be "file.a" and "file.png", the `df[pathname.getNameNoExt(v.Name)] = v.FullPath` will choose "file.png".
+							_ => ".a" //no icon or unsupported filetype. Why ".a": if will be "file.a" and "file.png", the `df[Path2.GetNameNoExt(v.Name)] = v.FullPath` will choose "file.png".
 						};
 						var file = $@"{cacheDir}\{t.Name}{fileType}";
 						filesystem.saveBytes(file, bytes);

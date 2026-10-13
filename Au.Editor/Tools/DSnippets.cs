@@ -676,7 +676,7 @@ class DSnippets : KDialogWindow {
 		var xRoot = new XElement("snippets");
 		foreach (var f in files) {
 			try { _AddFile(f); }
-			catch (Exception ex) { print.it($"Failed to convert {pathname.getName(f)}. {ex}"); }
+			catch (Exception ex) { print.it($"Failed to convert {Path2.GetName(f)}. {ex}"); }
 		}
 		return xRoot;
 		

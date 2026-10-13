@@ -14,7 +14,7 @@ unsafe struct ProcessStarter_ {
 	/// Prepares parameters for API <ms>CreateProcess</ms> and similar.
 	/// </summary>
 	/// <param name="exe">
-	/// Full path of program file. If not full path, uses <see cref="folders.ThisApp"/>. Uses <see cref="pathname.normalize"/>.
+	/// Full path of program file. If not full path, uses <see cref="folders.ThisApp"/>. Uses <see cref="Path2.Normalize"/>.
 	/// If <i>rawExe</i> <c>true</c>, does not use <c>Normalize</c>/<c>ThisApp</c>.
 	/// </param>
 	/// <param name="args"><c>null</c> or command line arguments.</param>
@@ -22,18 +22,18 @@ unsafe struct ProcessStarter_ {
 	/// Initial current directory of the new process.
 	/// - If <c>null</c>, uses <c>Directory.GetCurrentDirectory()</c>.
 	/// - Else if <i>rawCurDir</i>==<c>true</c>, uses raw <i>curDir</i> value.
-	/// - Else if <c>""</c>, calls <c>pathname.getDirectory(exe)</c>.
-	/// - Else calls <see cref="pathname.expand"/>.
+	/// - Else if <c>""</c>, calls <c>Path2.GetDirectory(exe)</c>.
+	/// - Else calls <see cref="Path2.Expand"/>.
 	/// </param>
 	/// <param name="envVar"><c>null</c> or environment variables to pass to the new process together with variables of this process. Format: <c>"var1=value1\0var2=value2\0"</c>. If ends with <c>"\0\0"</c>, will pass only these variables.</param>
 	/// <param name="rawExe">Don't normalize <i>exe</i>.</param>
 	/// <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
 	public ProcessStarter_(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) {
-		if (!rawExe) exe = pathname.normalize(exe, folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
+		if (!rawExe) exe = Path2.Normalize(exe, folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
 		_exe = exe;
 		cl = (args == null ? ("\"" + exe + "\"" + "\0") : ("\"" + exe + "\" " + args + "\0")).ToCharArray();
 		if (curDir == null) this.curDir = Directory.GetCurrentDirectory(); //if null passed to CreateProcessWithTokenW, the new process does not inherit current directory of this process
-		else this.curDir = rawCurDir ? curDir : (curDir.Length == 0 ? pathname.getDirectory(exe) : pathname.expand(curDir));
+		else this.curDir = rawCurDir ? curDir : (curDir.Length == 0 ? Path2.GetDirectory(exe) : Path2.Expand(curDir));
 		
 		si.cb = Api.SizeOf<Api.STARTUPINFO>();
 		si.dwFlags = Api.STARTF_FORCEOFFFEEDBACK;

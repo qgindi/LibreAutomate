@@ -176,7 +176,7 @@ public static class ScriptEditor {
 		if (!w.Is0 && WndCopyData.SendReceive<char>(w, 14, file != null ? flags + " " + file : flags, out byte[] r)) {
 			var x = Serializer_.Deserialize(r);
 			string path = x[0];
-			return new EFileInfo(pathname.getName(path), path, x[1], (EFileKind)(int)x[2], (uint)(int)x[3], x[4], x[5]);
+			return new EFileInfo(Path2.GetName(path), path, x[1], (EFileKind)(int)x[2], (uint)(int)x[3], x[4], x[5]);
 		}
 		return null;
 	}

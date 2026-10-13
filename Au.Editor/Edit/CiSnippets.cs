@@ -137,10 +137,10 @@ static class CiSnippets {
 			
 			void _LoadFile(string file, bool custom) {
 				try {
-					var hidden = DSnippets.GetHiddenSnippets(custom ? pathname.getName(file) : "default");
+					var hidden = DSnippets.GetHiddenSnippets(custom ? Path2.GetName(file) : "default");
 					if (hidden?.Contains("") == true) return;
 					
-					var customFile = custom ? pathname.getName(file) : null;
+					var customFile = custom ? Path2.GetName(file) : null;
 					var xroot = LoadSnippetsFile_(file);
 					if (xroot == null) return;
 					foreach (var xs in xroot.Elements("snippet")) {

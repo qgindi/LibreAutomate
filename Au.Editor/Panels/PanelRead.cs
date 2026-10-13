@@ -180,7 +180,7 @@ class PanelRead {
 			if (preText != null) {
 				mCC.CustomItemSelected += (_, __) => { clipboard.text = preText; };
 				mNS.CustomItemSelected += (_, __) => {
-					var name = pathname.getNameNoExt(Uri.UnescapeDataString(_wv.Source.AbsolutePath));
+					var name = Path2.GetNameNoExt(Uri.UnescapeDataString(_wv.Source.AbsolutePath));
 					App.Model.NewItem("Script.cs", null, name + ".cs", true, new(true, preText));
 				};
 			} else {
@@ -401,7 +401,7 @@ class DocsHttpServer : HttpServerSession {
 			using var db = new sqlite(folders.ThisAppBS + "doc-html.db", SLFlags.SQLITE_OPEN_READONLY); //fast, don't keep open
 			if (db.Get(out byte[] content, "SELECT text FROM doc WHERE name=?", path)) {
 				r.Content = content;
-				var ext = pathname.getExtension(path).Lower();
+				var ext = Path.GetExtension(path).Lower();
 				var ct = ext switch {
 					".html" => "text/html; charset=utf-8",
 					".css" => "text/css",

@@ -326,7 +326,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <summary>
 	/// Gets the filename extension of the target file, like ".cs". Returns "" if folder.
 	/// </summary>
-	public string FileExt => IsFolder ? "" : pathname.getExtension(IsLink ? LinkTarget : Name);
+	public string FileExt => IsFolder ? "" : Path.GetExtension(IsLink ? LinkTarget : Name);
 	
 	/// <summary>
 	/// Gets or sets custom icon name (like "*Pack.Icon color") or null.
@@ -1046,7 +1046,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 		if (syncing) {
 			_SetName(name);
 		} else {
-			name = pathname.correctName(name);
+			name = Path2.MakeValidName(name);
 			if (!IsFolder) {
 				var ext = FileExt;
 				if (ext.Length > 0) if (name.IndexOf('.') < 0 || (IsCodeFile && !name.Ends(ext, true))) name += ext;
@@ -1199,7 +1199,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			if (s.Eqi(oldPath)) {
 				v._linkTarget = path;
 				if (renamed) {
-					string oldName = pathname.getName(oldPath);
+					string oldName = Path2.GetName(oldPath);
 					if (v.Name.Ends(oldName, true)) {
 						v._SetName(v.Name[..^oldName.Length] + _name);
 						FilesModel.Redraw(v, remeasure: true, renamed: true);

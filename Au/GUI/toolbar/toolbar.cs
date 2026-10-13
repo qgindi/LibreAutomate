@@ -108,7 +108,7 @@ public partial class toolbar : MTBase {
 	/// </remarks>
 	public static string getSettingsFilePath(string toolbarName) {
 		if (toolbarName.NE()) throw new ArgumentException("Empty name");
-		if (pathname.isFullPath(toolbarName)) return toolbarName;
+		if (Path2.IsFullPath(toolbarName)) return toolbarName;
 		string s = folders.Workspace.Path;
 		if (s != null) return s + @"\.toolbars\" + toolbarName + ".json";
 		s = s_settingsDir;

@@ -291,7 +291,7 @@ partial class Compiler {
 				if (_meta.Role == MCRole.classLibrary) {
 					MetaReferences.UncacheOldFiles();
 					if (MetaReferences.IsDefaultRef(_meta.Name)
-						&& _meta.References.Refs.Any(o => _meta.Name.Eqi(o.Display.Contains('\\') ? pathname.getNameNoExt(o.Display) : o.Display))) //may be removed with meta noRef
+						&& _meta.References.Refs.Any(o => _meta.Name.Eqi(o.Display.Contains('\\') ? Path2.GetNameNoExt(o.Display) : o.Display))) //may be removed with meta noRef
 						print.warning($"Library name '{_meta.Name}' should not be used. Rename the C# file.", -1);
 				}
 				
@@ -421,7 +421,7 @@ partial class Compiler {
 					}
 					
 					var path = refs[k].FilePath;
-					_Add(ref dr, pathname.getName(path), path);
+					_Add(ref dr, Path2.GetName(path), path);
 					
 					//add managed dlls used by that dll but not specified in meta
 					_Deps(path);
@@ -434,7 +434,7 @@ partial class Compiler {
 							var an = mr.GetString(ar.Name);
 							if (MetaReferences.IsDefaultRef(an)) continue;
 							if (dr2?.ContainsKey(an) ?? false) continue;
-							dir ??= pathname.getDirectory(path, withSeparator: true);
+							dir ??= Path2.GetDirectory(path, withSeparator: true);
 							var path2 = dir + an + ".dll";
 							if (!filesystem.exists(path2, useRawPath: true).File) continue;
 							(dr2 ??= new()).Add(an, path2);
@@ -449,7 +449,7 @@ partial class Compiler {
 				foreach (var (package, _) in m.NugetPackages) {
 					var xp = xn.Elem("package", "path", package, true);
 					if (xp != null) {
-						var dir = App.Model.NugetDirectoryBS + pathname.getDirectory(package);
+						var dir = App.Model.NugetDirectoryBS + Path2.GetDirectory(package);
 						if (xp.Attr(out int format, "format")) {
 							foreach (var f in xp.Elements()) {
 								switch (f.Name.LocalName) { //see DNuget._Build
@@ -542,7 +542,7 @@ partial class Compiler {
 		}
 		
 		void _Add(ref Dictionary<string, string> d, string s, string path, bool isDll = true) {
-			if (isDll && _meta.Role == MCRole.exeProgram && _meta.Name.Eqi(pathname.getNameNoExt(s)))
+			if (isDll && _meta.Role == MCRole.exeProgram && _meta.Name.Eqi(Path2.GetNameNoExt(s)))
 				throw new InvalidOperationException($@"The program uses a dll file with the same name. Rename C# file {_meta.Name}");
 			
 			d ??= new(StringComparer.OrdinalIgnoreCase);

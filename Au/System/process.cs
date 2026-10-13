@@ -245,7 +245,7 @@ namespace Au {
 		/// </param>
 		/// <param name="fullPath">
 		/// <i>processName</i> is full path.
-		/// If <c>null</c>, calls <see cref="pathname.isFullPathExpand(ref string, bool?)"/>.
+		/// If <c>null</c>, calls <see cref="Path2.IsFullPathExpand(ref string, bool?)"/>.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
 		/// <param name="ofThisSession">Get processes only of this user session.</param>
@@ -264,8 +264,8 @@ namespace Au {
 			if (processName.NE()) throw new ArgumentException();
 			return fullPath switch {
 				false => false,
-				true => pathname.isFullPathExpand(ref processName, strict: false) | true,
-				_ => pathname.isFullPathExpand(ref processName, strict: false)
+				true => Path2.IsFullPathExpand(ref processName, strict: false) | true,
+				_ => Path2.IsFullPathExpand(ref processName, strict: false)
 			};
 		}
 		
@@ -683,7 +683,7 @@ namespace Au {
 		/// <summary>
 		/// Gets file name of the program file of this process, like <c>"name.exe"</c>.
 		/// </summary>
-		public static string thisExeName => s_exeName ??= pathname.getName(thisExePath);
+		public static string thisExeName => s_exeName ??= Path2.GetName(thisExePath);
 		static string s_exeName;
 		
 		/// <summary>

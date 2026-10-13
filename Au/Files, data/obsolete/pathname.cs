@@ -7,6 +7,9 @@ namespace Au;
 /// In new code use <see cref="Path2"/> instead; most methods of this class just call methods of <c>Path2</c>.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
+#if DEBUG
+[Obsolete]
+#endif
 public static unsafe class pathname {
 	/// <inheritdoc cref="Path2.Expand"/>
 	public static string expand(string path, bool? strict = null)
@@ -65,9 +68,9 @@ public static unsafe class pathname {
 	public static string prefixLongPathIfNeed(string path)
 		=> Path2.PrefixLongPathIfNeed(path);
 	
-	/// <inheritdoc cref="Path2.UnprefixLongPath"/>
+	/// <inheritdoc cref="Path2.RemoveLongPathPrefix"/>
 	public static string unprefixLongPath(string path)
-		=> Path2.UnprefixLongPath(path);
+		=> Path2.RemoveLongPathPrefix(path);
 	
 	/// <inheritdoc cref="Path2.MakeValidName"/>
 	public static string correctName(string name, string invalidCharReplacement = "-")
@@ -85,15 +88,17 @@ public static unsafe class pathname {
 	public static bool isInvalidPathChar(char c)
 		=> Path2.IsInvalidPathChar(c);
 	
+	/// <inheritdoc cref="Path2.GetDirectory"/>
+	public static string getDirectory(string path, bool withSeparator = false)
+		=> Path2.GetDirectory(path, withSeparator);
+	
 	/// <inheritdoc cref="Path2.GetName"/>
 	public static string getName(string path)
 		=> Path2.GetName(path);
 	
-	/// <summary>
-	/// Gets filename without extension.
-	/// </summary>
+	/// <inheritdoc cref="Path2.GetNameNoExt"/>
 	public static string getNameNoExt(string path)
-		=> Path.EndsInDirectorySeparator(path) ? Path.GetFileName(Path.TrimEndingDirectorySeparator(path)) : Path.GetFileNameWithoutExtension(path);
+		=> Path2.GetNameNoExt(path);
 	
 	/// <inheritdoc cref="Path.GetExtension"/>
 	public static string getExtension(string path)
@@ -127,10 +132,6 @@ public static unsafe class pathname {
 		}
 		return i;
 	}
-	
-	/// <inheritdoc cref="Path2.GetDirectory"/>
-	public static string getDirectory(string path, bool withSeparator = false)
-		=> Path2.GetDirectory(path, withSeparator);
 	
 	/// <inheritdoc cref="Path2.MakeUnique"/>
 	public static string makeUnique(string path, bool isDirectory)

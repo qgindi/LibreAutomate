@@ -18,7 +18,7 @@ ChromeOptions options = new();
 //options.AddArguments($"user-data-dir={folders.LocalAppData + @"Google\Chrome\User Data"}", "profile-directory=Profile 1");
 
 //Start new Chrome instance.
-var service = ChromeDriverService.CreateDefaultService(pathname.getDirectory(typeof(ChromeDriver).Assembly.Location));
+var service = ChromeDriverService.CreateDefaultService(Path2.GetDirectory(typeof(ChromeDriver).Assembly.Location));
 service.HideCommandPromptWindow = true;
 using var driver = new ChromeDriver(service, options);
 driver.Manage().Window.Maximize();

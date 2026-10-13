@@ -55,7 +55,7 @@ string _CreateDllMap(int flags) {
 		
 		Parallel.ForEach(files, path => {
 			path = path.Lower();
-			var fn = pathname.getName(path);
+			var fn = Path2.GetName(path);
 			if (fn.Starts("api-ms-")) return;
 			if (!fn.Ends(".lib")) { dDllOfLib.TryAdd(path, fn); return; }
 			if (0 != fn.Like(false, "ntstc_*", "mspbase.lib", "strmbase.lib", "uuid.lib", "dnslib.lib", "netlib.lib", "dnsrpc.lib", "clfsmgmt.lib", "icu*.lib", "lz32.lib")) return; //large, no dll func, or no public/useful dll func

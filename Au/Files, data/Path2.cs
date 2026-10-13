@@ -436,7 +436,7 @@ public static unsafe class Path2 {
 	/// Path. Can be <c>null</c>.
 	/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="Expand"/>.
 	/// </param>
-	public static string UnprefixLongPath(string path) {
+	public static string RemoveLongPathPrefix(string path) {
 		if (!path.NE()) {
 			switch (_GetPrefixLength(path)) {
 			case 4: return path[4..];
@@ -515,21 +515,6 @@ public static unsafe class Path2 {
 		=> c is < ' ' or '"' or '<' or '>' or '|' or '*' or '?';
 	
 	/// <summary>
-	/// Gets the filename from <i>path</i>.
-	/// Examples: <c>@"C:\path\name.ext"</c> -> <c>@"name.ext"</c>; <c>@"C:\path\name\"</c> -> <c>@"name"</c>; <c>@"name.ext"</c> -> <c>@"name.ext"</c>.
-	/// </summary>
-	/// <param name="path">Path or filename. Can be <c>null</c>.</param>
-	/// <returns>Returns <i>path</i> if there is no directory separator.</returns>
-	/// <remarks>
-	/// Calls <see cref="Path.GetFileName"/>, after removing trailing directory separators from <i>path</i>.
-	/// </remarks>
-	public static string GetName(string path) {
-		if (Path.EndsInDirectorySeparator(path)) return Path.GetFileName(path.AsSpan().TrimEnd(['/', '\\'])).ToString();
-		return Path.GetFileName(path);
-	}
-	//note: don't need GetNameNoExt. For file paths, Path.GetFileNameWithoutExtension is good. For directory paths, GetName is good.
-	
-	/// <summary>
 	/// Gets the parent directory path from <i>path</i>.
 	/// Examples: <c>@"C:\path\name.ext"</c> -> <c>@"C:\path"</c>; <c>@"C:\path\name\"</c> -> <c>@"C:\path"</c>; <c>@"C:\path"</c> -> <c>@"C:\"</c>; <c>@"name.ext"</c> -> <c>null</c>.
 	/// </summary>
@@ -540,11 +525,37 @@ public static unsafe class Path2 {
 	/// Calls <see cref="Path.GetDirectoryName(ReadOnlySpan{char})"/>, after removing trailing directory separators from <i>path</i>.
 	/// </remarks>
 	public static string GetDirectory(string path, bool withSeparator = false) {
-		var s = path.AsSpan().TrimEnd(['/', '\\']);
+		var s = path.AsSpan().TrimEnd(@"\/");
 		var r = Path.GetDirectoryName(s);
 		if (r.IsEmpty) return null;
 		if (withSeparator) while (r.Length < s.Length && IsSepChar_(s[r.Length])) r = s.Slice(0, r.Length + 1);
 		return r.ToString();
+	}
+	
+	/// <summary>
+	/// Gets the filename from <i>path</i>.
+	/// Examples: <c>@"C:\path\name.ext"</c> -> <c>@"name.ext"</c>; <c>@"C:\path\name\"</c> -> <c>@"name"</c>; <c>@"name.ext"</c> -> <c>@"name.ext"</c>.
+	/// </summary>
+	/// <param name="path">Path or filename. Can be <c>null</c>.</param>
+	/// <returns>Returns <i>path</i> if there is no directory separator.</returns>
+	/// <remarks>
+	/// Calls <see cref="Path.GetFileName"/>, after removing trailing directory separators from <i>path</i>.
+	/// </remarks>
+	public static string GetName(string path) {
+		RStr s1 = path, s2 = s1.TrimEnd(@"\/");
+		return s1.Length == s2.Length ? Path.GetFileName(path) : Path.GetFileName(s2).ToString();
+	}
+	
+	/// <summary>
+	/// Gets filename without extension.
+	/// </summary>
+	/// <param name="path">Path or filename. Can be <c>null</c>.</param>
+	/// <remarks>
+	/// If <i>path</i> ends with a directory separator, removes it and calls <see cref="Path.GetFileName"/>. Else calls <see cref="Path.GetFileNameWithoutExtension"/>.
+	/// </remarks>
+	public static string GetNameNoExt(string path) {
+		RStr s1 = path, s2 = s1.TrimEnd(@"\/");
+		return s1.Length == s2.Length ? Path.GetFileNameWithoutExtension(path) : Path.GetFileName(s2).ToString();
 	}
 	
 	/// <summary>

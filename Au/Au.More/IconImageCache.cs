@@ -98,7 +98,7 @@ public sealed class IconImageCache : IDisposable {
 		if (imageSize < 16 || imageSize > 256) throw new ArgumentOutOfRangeException(nameof(imageSize));
 		_imageSize = imageSize;
 		//directory = null; //test memory-only cache
-		if (directory != null) _dir = pathname.normalize(directory);
+		if (directory != null) _dir = Path2.Normalize(directory);
 		
 		lock (s_caches) s_caches.Add(new(this));
 		
@@ -153,7 +153,7 @@ public sealed class IconImageCache : IDisposable {
 		bool isXaml = isImage && (imageSource.Starts('<') || imageSource.Ends(".xaml", true));
 		bool isStore = !isImage && imageSource.Starts(@"shell:AppsFolder\"); //compare case-sensitive. Then users can pass eg "shell:appsFolder..." to display white icons in blue background.
 		bool ofWorkspaceFile = false;
-		if (!isImage && !isStore && imageSource.Ends(".cs", true) && !pathname.isFullPath(imageSource, orEnvVar: true)) { //eg `script.run(@"x.cs");`
+		if (!isImage && !isStore && imageSource.Ends(".cs", true) && !Path2.IsFullPath(imageSource, orEnvVar: true)) { //eg `script.run(@"x.cs");`
 			imageSource = ScriptEditor.GetIcon(imageSource, EGetIcon.PathToIconName);
 			if (imageSource == null) return null;
 			isImage = ofWorkspaceFile = true;
@@ -220,8 +220,8 @@ public sealed class IconImageCache : IDisposable {
 							return b;
 						}
 						catch (Exception e1) { Debug_.PrintIf(filesystem.exists(path), e1); }
-					} else if (!useExt && !isImage && !isStore && !imageKey.Ends(".exe") && !imageKey.Ends(".lnk") && pathname.isFullPath(imageSource) && filesystem.exists(imageSource, useRawPath: true).File) {
-						var ext = pathname.getExtension(imageKey);
+					} else if (!useExt && !isImage && !isStore && !imageKey.Ends(".exe") && !imageKey.Ends(".lnk") && Path2.IsFullPath(imageSource) && filesystem.exists(imageSource, useRawPath: true).File) {
+						var ext = Path.GetExtension(imageKey);
 						bool noExt = ext.Length == 0;
 						if (noExt) ext = ".#"; //will get the icon of unknown file types
 						if (dd.dNameBitmap.TryGetValue(ext, out var b1)) return b1;

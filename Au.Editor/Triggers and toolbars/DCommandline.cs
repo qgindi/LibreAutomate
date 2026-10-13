@@ -152,7 +152,7 @@ Or color, like #c0ff80");
 				
 				var sImage = tImage.Text;
 				if (!sImage.NE()) {
-					if (pathname.isFullPath(sImage, orEnvVar: true) || sImage.RxIsMatch(@"\.\w{3}(?:, *-?\d+)?$")) {
+					if (Path2.IsFullPath(sImage, orEnvVar: true) || sImage.RxIsMatch(@"\.\w{3}(?:, *-?\d+)?$")) {
 						sImage = _SA("image", sImage);
 					} else {
 						if (sImage.RxMatch(@"(?i)^(\\u)?([[:xdigit:]]{4})$", out var m)) {
@@ -247,7 +247,7 @@ foreach (string path in args.Skip(1)) {
 					if (text.RxFindAll(@"(?m)^\h*import +'(?!imports[/\\])(.+?)'", 1, out string[] a)) {
 						nssFile = a[0];
 						if (a.Length > 1) {
-							int i = dialog.showList(a.Select(o => pathname.getName(o)).ToArray(), owner: this) - 1;
+							int i = dialog.showList(a.Select(o => Path2.GetName(o)).ToArray(), owner: this) - 1;
 							if (i < 0) return;
 							nssFile = a[i];
 						}

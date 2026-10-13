@@ -187,7 +187,7 @@ public enum FEFlags {
 	OnlyFiles = 0x20,
 	
 	/// <summary>
-	/// Don't call <see cref="pathname.normalize"/> and don't throw exception for non-full path.
+	/// Don't call <see cref="Path2.Normalize"/> and don't throw exception for non-full path.
 	/// </summary>
 	UseRawPath = 0x40,
 	
@@ -285,7 +285,7 @@ public class FEFile {
 	/// <summary>
 	/// Gets filename extension. Returns <c>""</c> if directory.
 	/// </summary>
-	public string Extension => IsDirectory ? "" : pathname.getExtension(Name); //note: if null for directory, then OrderBy throws exception
+	public string Extension => IsDirectory ? "" : Path.GetExtension(Name); //note: if null for directory, then OrderBy throws exception
 	
 	/// <summary>
 	/// Returns file size. For directories it is usually 0.
@@ -521,14 +521,14 @@ public enum SCNFlags {
 #pragma warning restore CS1591 //Missing XML comment for publicly visible type or member
 
 /// <summary>
-/// Flags for <see cref="pathname.normalize"/>.
+/// Flags for <see cref="Path2.Normalize"/>.
 /// </summary>
 [Flags]
 public enum PNFlags {
 	/// <summary>Don't call API <ms>GetLongPathName</ms>.</summary>
 	DontExpandDosPath = 1,
 	
-	/// <summary>Don't call <see cref="pathname.prefixLongPathIfNeed"/>.</summary>
+	/// <summary>Don't call <see cref="Path2.PrefixLongPathIfNeed"/>.</summary>
 	DontPrefixLongPath = 2,
 	
 	/// <summary>Don't remove <c>\</c> character at the end.</summary>

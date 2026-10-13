@@ -108,9 +108,9 @@ class PathInfo {
 		
 		static string _Name(string path) {
 			if (path.Starts("shell:") || path.Starts("::")) return "";
-			var s = pathname.getNameNoExt(path);
+			var s = Path2.GetNameNoExt(path);
 			if (s.Length == 0) {
-				s = pathname.getName(path); //eg some folders are like ".name"
+				s = Path2.GetName(path); //eg some folders are like ".name"
 				if (s.Length == 0 && path.Like("?:\\")) s = path[..2]; //eg "C:\"
 			}
 			return s;
@@ -148,7 +148,7 @@ class PathInfo {
 					&& path[..^8].Eqi(folders.System)
 					&& s.RxMatch($@"^("".+?\.msc""|\S+\.msc)(?: (.+))?$", out RXMatch m)) {
 					s = m[1].Value.Trim('"');
-					if (!pathname.isFullPath(s)) s = filesystem.searchPath(s);
+					if (!Path2.IsFullPath(s)) s = filesystem.searchPath(s);
 					else if (!filesystem.exists(s)) s = null;
 					if (s != null) { path = s; args = m[2].Value; name = w.Name; }
 					;

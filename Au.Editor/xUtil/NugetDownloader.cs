@@ -63,7 +63,7 @@ static class NugetDownloader {
 	/// <param name="rxPath">If not null, extracts only files whose relative path matches this regex. Final path will be the matched part; eg can be used <c>\K</c> to remove part of path (flatten).</param>
 	/// <exception cref="Exception">Failed.</exception>
 	public static void Extract(string nupkgPath, string extractDir, regexp rxPath = null) {
-		print.it($"Extracting NuGet package: {pathname.getName(nupkgPath)}");
+		print.it($"Extracting NuGet package: {Path2.GetName(nupkgPath)}");
 		filesystem.createDirectory(extractDir);
 		using var z = ZipFile.OpenRead(nupkgPath);
 		foreach (var e in z.Entries) {

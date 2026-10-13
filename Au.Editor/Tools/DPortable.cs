@@ -59,7 +59,7 @@ class DPortable : KDialogWindow {
 		b.R.StartGrid().Span(2).Columns(0, -1);
 		b.R.Add<TextBlock>("Copy folder").Font(bold: true).Add<TextBlock>("Skip subfolders").Font(bold: true);
 		_dApp = _AddDir(folders.ThisApp, "", "Program files (LA, .NET)", skipAlways: [@"\SDK"]);
-		_dWs = _AddDir(App.Model.WorkspaceDirectory, @"data\doc\" + pathname.getName(App.Model.WorkspaceDirectory), "Workspace (scripts etc)");
+		_dWs = _AddDir(App.Model.WorkspaceDirectory, @"data\doc\" + Path2.GetName(App.Model.WorkspaceDirectory), "Workspace (scripts etc)");
 		_dSett = _AddDir(folders.ThisAppDocuments + ".settings", @"data\doc\.settings", @"Settings");
 		_dScript = _AddDir(folders.ThisAppDocuments + "_script", @"data\doc\_script", @"Script data");
 		_dDoc = _AddDir(folders.ThisAppDocuments, @"data\doc", @"Documents (except the above 3 subfolders)");
@@ -140,7 +140,7 @@ class DPortable : KDialogWindow {
 			filesystem.delete(toDotnet);
 			_Copy2(_dirNet, toDotnet + @"\shared\Microsoft.NETCore.App\" + version, "/e");
 			_Copy2(_dirNetDesktop, toDotnet + @"\shared\Microsoft.WindowsDesktop.App\" + version, "/e");
-			_Copy2(pathname.normalize($@"{_dirNet}\..\..\..\host\fxr\{version}"), toDotnet + @"\host\fxr\" + version, "/e");
+			_Copy2(Path2.Normalize($@"{_dirNet}\..\..\..\host\fxr\{version}"), toDotnet + @"\host\fxr\" + version, "/e");
 			
 			//download .NET runtime for other CPU architecture
 			try {
@@ -206,7 +206,7 @@ class DPortable : KDialogWindow {
 			
 			return () => {
 				var j = filesystem.exists(file) ? JsonNode.Parse(filesystem.loadBytes(file)) : new JsonObject();
-				j["workspace"] = wsPath ?? $@"%folders.ThisAppDocuments%\{pathname.getName(_dWs.local)}";
+				j["workspace"] = wsPath ?? $@"%folders.ThisAppDocuments%\{Path2.GetName(_dWs.local)}";
 				filesystem.saveText(file, j.ToJsonString());
 			};
 		}
@@ -227,8 +227,8 @@ class DPortable : KDialogWindow {
 	}
 	
 	static string _RobocopyArgs(bool log, string dir, string dirTo, string how, string skipDirs) {
-		dir = pathname.unprefixLongPath(dir); //robocopy unaware about "\\?\"
-		dirTo = pathname.unprefixLongPath(dirTo);
+		dir = Path2.RemoveLongPathPrefix(dir); //robocopy unaware about "\\?\"
+		dirTo = Path2.RemoveLongPathPrefix(dirTo);
 		
 		StringBuilder b = new($"""
 "{dir}" "{dirTo}" {how} /xj /r:0 /w:1 /np /mt

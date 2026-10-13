@@ -61,7 +61,7 @@ static class CommandLine {
 						WndCopyData.Send<char>(w, 9, s.AsSpan(8));
 					}
 					return true;
-				} else if (!pathname.isFullPath(s)) {
+				} else if (!Path2.IsFullPath(s)) {
 					exitCode = _LetEditorRunScript(args, argN);
 					return true;
 				}

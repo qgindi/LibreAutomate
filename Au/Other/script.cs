@@ -175,7 +175,7 @@ public static partial class script {
 				var b = new StringBuilder(text + "\n");
 				for (int i = 0; i < st.FrameCount; i++) {
 					var f = st.GetFrame(i);
-					if (f.HasSource()) b.Append($"\n<a href=\"{i}\">{f.GetMethod()?.Name}</a> in {pathname.getName(f.GetFileName())}:{f.GetFileLineNumber()}");
+					if (f.HasSource()) b.Append($"\n<a href=\"{i}\">{f.GetMethod()?.Name}</a> in {Path2.GetName(f.GetFileName())}:{f.GetFileLineNumber()}");
 				}
 				text = b.ToString();
 				d.HyperlinkClicked += e => {

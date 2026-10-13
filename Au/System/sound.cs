@@ -34,7 +34,7 @@ namespace Au {
 		/// <param name="async">Don't wait until the sound ends. Note: the sound ends when this process exits.</param>
 		/// <param name="system">Use the sound volume channel "System Sounds". Then <see cref="volume"/> isn't used.</param>
 		public static bool playWav(string wavFile, bool async = false, bool system = false) {
-			var s = wavFile.NE() ? null : pathname.expand(wavFile);
+			var s = wavFile.NE() ? null : Path2.Expand(wavFile);
 			var f = Api.SND_FILENAME | Api.SND_NODEFAULT;
 			if (async) f |= Api.SND_ASYNC;
 			if (system) f |= Api.SND_SYSTEM;
@@ -302,7 +302,7 @@ namespace Au.More {
 		/// <param name="text">Text to speak.</param>
 		/// <param name="flags"></param>
 		public void Speak(string text, SVFlags flags) {
-			if (flags.Has(SVFlags.IS_FILENAME)) text = pathname.expand(text);
+			if (flags.Has(SVFlags.IS_FILENAME)) text = Path2.Expand(text);
 			_v.Speak(text, (uint)flags);
 			GC.KeepAlive(this);
 			if (flags.Has(SVFlags.ASYNC)) { //protect from GC while speaking

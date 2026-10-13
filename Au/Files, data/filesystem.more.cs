@@ -8,8 +8,8 @@ partial class filesystem {
 		/// <summary>
 		/// Returns <c>true</c> if two paths are of the same existing file, regardless of path format etc.
 		/// </summary>
-		/// <param name="path1">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
-		/// <param name="path2">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
+		/// <param name="path1">Path of a file or directory. Supports environment variables (see <see cref="Path2.Expand"/>) and paths relative to current directory.</param>
+		/// <param name="path2">Path of a file or directory. Supports environment variables (see <see cref="Path2.Expand"/>) and paths relative to current directory.</param>
 		/// <param name="useSymlink">If a path is of a symbolic link, use the link. If <c>false</c>, uses its target; for example, returns <c>false</c> if the target doesn't exist.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <seealso cref="comparePaths(string, string, bool, bool)"/>
@@ -25,7 +25,7 @@ partial class filesystem {
 		/// Gets <see cref="FileId"/> of a file or directory.
 		/// </summary>
 		/// <returns><c>false</c> if failed. Supports <see cref="lastError"/>.</returns>
-		/// <param name="path">Path of a file or directory. Supports environment variables (see <see cref="pathname.expand"/>) and paths relative to current directory.</param>
+		/// <param name="path">Path of a file or directory. Supports environment variables (see <see cref="Path2.Expand"/>) and paths relative to current directory.</param>
 		/// <param name="fileId"></param>
 		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get <see cref="FileId"/> of the link, not of its target.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
@@ -53,7 +53,7 @@ partial class filesystem {
 		/// Gets full normalized path of an existing file or directory or symbolic link target.
 		/// </summary>
 		/// <returns><c>false</c> if failed. For example if the path does not point to an existing file or directory. Supports <see cref="lastError"/>.</returns>
-		/// <param name="path">Full or relative path. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+		/// <param name="path">Full or relative path. Supports environment variables (see <see cref="Path2.Expand"/>).</param>
 		/// <param name="result">Receives full path, or <c>null</c> if failed.</param>
 		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get final path of the link, not of its target.</param>
 		/// <param name="format">Result format.</param>
@@ -61,7 +61,7 @@ partial class filesystem {
 		/// <remarks>
 		/// Calls API <ms>GetFinalPathNameByHandle</ms>.
 		/// 
-		/// Unlike <see cref="pathname.normalize"/>, this function works with existing files and directories, not any strings.
+		/// Unlike <see cref="Path2.Normalize"/>, this function works with existing files and directories, not any strings.
 		/// </remarks>
 		/// <seealso cref="shortcutFile.getTarget(string)"/>
 		public static bool getFinalPath(string path, out string result, bool ofSymlink = false, FPFormat format = FPFormat.PrefixIfLong) {
@@ -69,7 +69,7 @@ partial class filesystem {
 			using var h = _OpenFileHandleForFileInfo(path, ofSymlink);
 			if (h.Is0 || !Api.GetFinalPathNameByHandle(h, out var s, format == FPFormat.VolumeGuid ? 1u : 0u)) return false;
 			if (format == FPFormat.PrefixNever || (format == FPFormat.PrefixIfLong && s.Length <= Path2.MaxSafeDirectoryPathLength))
-				s = pathname.unprefixLongPath(s);
+				s = Path2.RemoveLongPathPrefix(s);
 			result = s;
 			return true;
 			
@@ -80,8 +80,8 @@ partial class filesystem {
 		/// <summary>
 		/// Compares final paths of two existing files or directories to determine equality or relationship.
 		/// </summary>
-		/// <param name="pathA">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="pathname.expand"/>).</param>
-		/// <param name="pathB">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="pathname.expand"/>).</param>
+		/// <param name="pathA">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="Path2.Expand"/>).</param>
+		/// <param name="pathB">Full or relative path of an existing file or directory, in any format. Supports environment variables (see <see cref="Path2.Expand"/>).</param>
 		/// <param name="ofSymlinkA">If <i>pathA</i> is of a symbolic link, get final path of the link, not of its target.</param>
 		/// <param name="ofSymlinkB">If <i>pathB</i> is of a symbolic link, get final path of the link, not of its target.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
@@ -153,9 +153,9 @@ partial class filesystem {
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		public static void createSymbolicLink(string linkPath, string targetPath, CSLink type, bool elevate = false, bool deleteOld = false) {
-			linkPath = pathname.normalize(linkPath);
+			linkPath = Path2.Normalize(linkPath);
 			if (type is CSLink.Junction) {
-				targetPath = pathname.normalize(targetPath); //junctions don't support relative path
+				targetPath = Path2.Normalize(targetPath); //junctions don't support relative path
 			} else { //symlinks support relative path
 				targetPath = targetPath.Replace('/', '\\'); //rumors: the link may not work if with /
 			}
@@ -166,7 +166,7 @@ partial class filesystem {
 					bool ok = deleteOld && (e.IsNtfsLink || (e.Directory && Api.RemoveDirectory(linkPath))); //info: remove empty dir because eg Explorer does not copy links, but istead creates empty dir
 					if (!ok) throw new AuException(Api.ERROR_ALREADY_EXISTS, "*to create symbolic link.");
 					trueLinkPath = linkPath;
-					linkPath = pathname.makeUnique(linkPath, true);
+					linkPath = Path2.MakeUnique(linkPath, true);
 				} else createDirectoryFor(linkPath);
 				
 				if (type is CSLink.Junction or CSLink.JunctionOrSymlink) {
@@ -288,7 +288,7 @@ partial class filesystem {
 					if(path == "shell") return null; //eg "shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"
 					isProtocol = true;
 				} else {
-					path = pathname.getExtension(path);
+					path = Path.GetExtension(path);
 					if(path.NE()) return null;
 				}
 			}
@@ -301,7 +301,7 @@ partial class filesystem {
 	public static void renameFileOrDirectory(string path, string newName)
 	{
 		perf.first();
-		if(pathname.isInvalidName(newName)) throw new ArgumentException("Invalid filename.", nameof(newName));
+		if(Path2.IsInvalidName(newName)) throw new ArgumentException("Invalid filename.", nameof(newName));
 		path = _PreparePath(path, nameof(path));
 
 		perf.next();
@@ -455,7 +455,7 @@ partial class filesystem {
 		
 		//	int hr = Api.FindMimeFromData(default, file, null, 0, null, 0, out contentType, 0);
 		//	if(hr != 0 && canAnalyseData) {
-		//		file = pathname.normalize(file);
+		//		file = Path2.Normalize(file);
 		//		using(var stream = File.OpenRead(file)) {
 		//			var data = new byte[256];
 		//			int n = stream.Read(data, 0, 256);

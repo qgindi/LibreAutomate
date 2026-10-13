@@ -137,7 +137,7 @@ static class DotnetUtil {
 				if (filesystem.searchPath("dotnet.exe") is string dotnetExe) {
 					try {
 						if (0 == run.console(out string v, dotnetExe, "--version", curDir: folders.ThisApp)) { //fast. Use `curDir: folders.ThisApp` because it searches for global.json (and SDK version in it) in this and ancestor dirs.
-							var dir = pathname.getDirectory(dotnetExe) + @"\sdk\" + v.Trim();
+							var dir = Path2.GetDirectory(dotnetExe) + @"\sdk\" + v.Trim();
 							if (filesystem.exists(dir, true).Directory) (s_fullDotnetExe, s_fullSdkDir) = (dotnetExe, dir);
 							Debug_.PrintIf(s_fullSdkDir is null, dir);
 						}

@@ -271,7 +271,7 @@ public abstract class MTItem {
 				extractIconPath = 3;
 			} else {
 				image ??= file;
-				bool cs = file.Ends(".cs", true) && !pathname.isFullPath(file, orEnvVar: true);
+				bool cs = file.Ends(".cs", true) && !Path2.IsFullPath(file, orEnvVar: true);
 				extractIconPath = (byte)(cs ? 4 : 2);
 			}
 		}

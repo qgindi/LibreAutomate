@@ -93,7 +93,7 @@ public static partial class ImageUtil {
 		if (ResourceUtil.HasResourcePrefix(image))
 			return ResourceUtil.GetGdipBitmap(image);
 		if (image.Starts("imagefile:")) image = image[10..];
-		image = pathname.normalize(image, folders.ThisAppImages);
+		image = Path2.Normalize(image, folders.ThisAppImages);
 		//return new(image); //no, the file remains locked until the Bitmap is disposed (documented, tested)
 		using var fs = File.OpenRead(image);
 		return new(fs);
@@ -113,7 +113,7 @@ public static partial class ImageUtil {
 		if (HasImageStringPrefix(image)) return _LoadWpfImageFromString(image);
 		if (ResourceUtil.HasResourcePrefix(image)) return ResourceUtil.GetWpfImage(image);
 		if (image.Starts("imagefile:")) image = image[10..];
-		image = pathname.normalize(image, folders.ThisAppImages, flags: PNFlags.CanBeUrlOrShell); //CanBeUrlOrShell: support "pack:"
+		image = Path2.Normalize(image, folders.ThisAppImages, flags: PNFlags.CanBeUrlOrShell); //CanBeUrlOrShell: support "pack:"
 		return BitmapFrame.Create(new Uri(image));
 		//rejected: support XAML and "*iconName". Possible but not easy. Probably would be blurred when autoscaled.
 	}
@@ -123,7 +123,7 @@ public static partial class ImageUtil {
 	/// </summary>
 	/// <param name="image">
 	/// Can be:
-	/// <br/>• file path. Can be <c>.xaml</c>, <c>.png</c> etc. Supports environment variables etc, see <see cref="pathname.expand"/>. Can have prefix <c>"imagefile:"</c>.
+	/// <br/>• file path. Can be <c>.xaml</c>, <c>.png</c> etc. Supports environment variables etc, see <see cref="Path2.Expand"/>. Can have prefix <c>"imagefile:"</c>.
 	/// <br/>• resource path that starts with <c>"resources/"</c> or has prefix <c>"resource:"</c>. This function calls <see cref="ResourceUtil.GetXamlObject"/> if ends with <c>".xaml"</c>, else <see cref="ResourceUtil.GetWpfImage"/>.
 	/// <br/>• Base64 encoded image with prefix <c>"image:"</c>. See <see cref="LoadImageStreamFromString"/>.
 	/// <br/>• XAML string that starts with <c>"&lt;"</c>. For example from the <b>Icons</b> tool of LibreAutomate.

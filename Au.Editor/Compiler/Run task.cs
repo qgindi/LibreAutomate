@@ -606,7 +606,7 @@ class RunningTasks {
 		//waits until the new process reads the shared memory
 		if (1 == WaitHandle.WaitAny([event1, r.hProcess])) {
 			Api.GetExitCodeProcess(r.hProcess.SafeWaitHandle.DangerousGetHandle(), out int ec);
-			var se = $"Process `{pathname.getName(exeFile)}` ended before starting to execute managed code.\r\n\tExit code: {ec}";
+			var se = $"Process `{Path2.GetName(exeFile)}` ended before starting to execute managed code.\r\n\tExit code: {ec}";
 			if (App.IsPortable && exeProgram) portable.Failed(ref se, cr.platform, uac);
 			print.warning(se, -1);
 			r.hProcess.Dispose();

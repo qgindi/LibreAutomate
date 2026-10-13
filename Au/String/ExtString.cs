@@ -12,7 +12,7 @@ namespace Au.Types;
 /// See also <see cref="process.thisProcessCultureIsInvariant"/>.
 /// 
 /// This class also adds more methods.
-/// You also can find string functions in other classes of this library, including <see cref="StringUtil"/>, <see cref="regexp"/>, <see cref="pathname"/>, <see cref="csvTable"/>, <see cref="keys.more"/>, <see cref="Convert2"/>, <see cref="Hash"/>.
+/// You also can find string functions in other classes of this library, including <see cref="StringUtil"/>, <see cref="regexp"/>, <see cref="Path2"/>, <see cref="csvTable"/>, <see cref="keys.more"/>, <see cref="Convert2"/>, <see cref="Hash"/>.
 /// </remarks>
 public static unsafe partial class ExtString {
 	/// <summary>

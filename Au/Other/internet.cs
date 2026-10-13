@@ -239,7 +239,7 @@ namespace Au.Types {
 		public static MultipartFormDataContent AddFile(this MultipartFormDataContent t, string name, string file, string contentType = null, string fileName = null) {
 			var k = new StreamContent(filesystem.loadStream(file));
 			if (contentType != null) k.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-			t.Add(k, name, fileName ?? pathname.getName(file));
+			t.Add(k, name, fileName ?? Path2.GetName(file));
 			return t;
 		}
 		
@@ -360,7 +360,7 @@ namespace Au.Types {
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="url">URL. To create URL with urlencoded parameters you can use <see cref="internet.urlAppend"/>.</param>
-		/// <param name="resultFile">File path. The function uses <see cref="pathname.normalize"/>. Creates parent directory if need.</param>
+		/// <param name="resultFile">File path. The function uses <see cref="Path2.Normalize"/>. Creates parent directory if need.</param>
 		/// <inheritdoc cref="Get(HttpClient, string, bool, IEnumerable{string}, string, Action{HttpRequestMessage})" path="/param"/>
 		/// <returns>An <c>HttpResponseMessage</c> object that contains response headers etc. Rarely used.</returns>
 		/// <exception cref="Exception">
@@ -508,7 +508,7 @@ namespace Au.Types {
 		/// Saves content in a file. Downloads if need.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="file">File path. The function uses <see cref="pathname.normalize"/>. Creates parent directory if need.</param>
+		/// <param name="file">File path. The function uses <see cref="Path2.Normalize"/>. Creates parent directory if need.</param>
 		/// <returns>This.</returns>
 		/// <exception cref="HttpRequestException">Failed HTTP request.</exception>
 		/// <exception cref="ArgumentException">Not full path.</exception>
@@ -519,7 +519,7 @@ namespace Au.Types {
 		/// <seealso cref="Get(HttpClient, string, string, IEnumerable{string}, string, Action{HttpRequestMessage})"/>
 		public static HttpResponseMessage Save(this HttpResponseMessage t, string file) {
 			t.EnsureSuccessStatusCode();
-			filesystem.createDirectoryFor(file = pathname.normalize(file));
+			filesystem.createDirectoryFor(file = Path2.Normalize(file));
 			using var s1 = t.Content.ReadAsStream();
 			using var s2 = File.Create(file);
 			_GetDecompressStream(t, s1).CopyTo(s2);
@@ -578,7 +578,7 @@ namespace Au.Types {
 				string filename = null;
 				string _DialogText(long bytes) => $"{filename}\n{bytes / 1048576d:0.#} MB";
 				if (progress == null) {
-					filename = pathname.getName(t.RequestMessage.RequestUri.AbsolutePath);
+					filename = Path2.GetName(t.RequestMessage.RequestUri.AbsolutePath);
 					pd = dialog.showProgress(size == 0, progressText1 ?? "Downloading", _DialogText(size));
 				}
 				
@@ -643,7 +643,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Downloads content to file and provides the progress.
 		/// </summary>
-		/// <param name="file">File path. The function uses <see cref="pathname.normalize"/>. Creates parent directory if need.</param>
+		/// <param name="file">File path. The function uses <see cref="Path2.Normalize"/>. Creates parent directory if need.</param>
 		/// <inheritdoc cref="Download(HttpResponseMessage, Stream, Action{ProgressArgs}, CancellationToken, bool, string)"/>
 		/// <example>
 		/// <code><![CDATA[
@@ -652,7 +652,7 @@ namespace Au.Types {
 		/// </example>
 		public static bool Download(this HttpResponseMessage t, string file, Action<ProgressArgs> progress = null, CancellationToken cancel = default, string progressText1 = null) {
 			t.EnsureSuccessStatusCode();
-			filesystem.createDirectoryFor(file = pathname.normalize(file));
+			filesystem.createDirectoryFor(file = Path2.Normalize(file));
 			return Download(t, File.Create(file), progress, cancel, disposeStream: true, progressText1);
 		}
 		
@@ -692,7 +692,7 @@ namespace Au.Types {
 		/// <inheritdoc cref="Download(HttpResponseMessage, string, Action{ProgressArgs}, CancellationToken, string)"/>
 		public static Task<bool> DownloadAsync(this HttpResponseMessage t, string file, Action<ProgressArgs> progress = null, CancellationToken cancel = default) {
 			t.EnsureSuccessStatusCode();
-			filesystem.createDirectoryFor(file = pathname.normalize(file));
+			filesystem.createDirectoryFor(file = Path2.Normalize(file));
 			var stream = File.Create(file);
 			return DownloadAsync(t, stream, progress, cancel, disposeStream: true);
 		}

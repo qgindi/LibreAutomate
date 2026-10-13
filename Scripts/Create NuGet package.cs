@@ -9,7 +9,7 @@ using System.Xml.XPath;
 
 if (script.testing) print.clear();
 
-var outDir = pathname.normalize(folders.Editor + $@"..\Au\bin\Release");
+var outDir = Path2.Normalize(folders.Editor + $@"..\Au\bin\Release");
 var nupkg = $@"{outDir}\LibreAutomate.{Au_.Version}.nupkg";
 
 //rejected. The API key expires in max 30 days. Also API keys may be not supported in the future. The other way is too difficult.

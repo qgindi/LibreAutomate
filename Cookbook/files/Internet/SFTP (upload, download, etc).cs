@@ -18,12 +18,12 @@ using (var client = new SftpClient(host, port, user, password)) {
 	
 	//upload
 	using (var stream = File.OpenRead(file)) {
-		client.UploadFile(stream, pathname.getName(file));
+		client.UploadFile(stream, Path2.GetName(file));
 	}
 	
 	//download
 	using (var stream = File.Create(file2)) {
-		client.DownloadFile(pathname.getName(file), stream);
+		client.DownloadFile(Path2.GetName(file), stream);
 	}
 	
 	//Also there are functions to create, delete, rename, exists, get/set attributes, get times, get list, change permissions, synchronize directories. More info on the internet.
