@@ -63,6 +63,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Readme", "Readme", "{55B5FC6E-66E7-4CC7-AB6A-BAEDAA2480E2}"
 	ProjectSection(SolutionItems) = preProject
 		Readme\App files.md = Readme\App files.md
+		Readme\code-signing-policy.md = Readme\code-signing-policy.md
 		Readme\Misc.md = Readme\Misc.md
 		Readme\netcoredbg.md = Readme\netcoredbg.md
 		Readme\Projects.md = Readme\Projects.md

@@ -34,3 +34,8 @@ You need Visual Studio 2026. When installing, select these workloads: .NET deskt
 4. Switch to platform ARM64. Build solution.
 5. Switch to platform AnyCPU. Build solution.
 6. Run `Au.Editor` project. It should open the editor window.
+
+## Code signing
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+
+[Code signing policy](Readme/code-signing-policy.md)

@@ -23,23 +23,22 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Install dependencies
-        run: dotnet restore
-
       - name: Build solution
         run: |
           $msbuild = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-          & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal
+          & $msbuild Au.sln -t:restore -t:build -p:Configuration=Release -p:Platform="Any CPU" -verbosity:minimal
           & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=ARM64 -verbosity:minimal
           & $msbuild Au.sln -t:build -p:Configuration=Release -p:Platform=x86 -verbosity:minimal
 
       - name: Install Master Packager Dev
         run: |
           winget install --id=MasterPackager.MasterPackagerDev -e --accept-source-agreements --accept-package-agreements --skip-dependencies
+          # Master Packager Dev will create our MSI installer.
 
       - name: Create installer
         run: |
           Other\BuildEvents\bin\Debug\BuildEvents.exe createInstaller
+          # BuildEvents.exe creates/copies a list of files to add to the MSI package, executes mpdev (Master Packager Dev) which creates `LibreAutomate.msi`, and adds some MSI options that are unsupported by mpdev directly.
   
       - name: upload unsigned artifact
         id: upload-unsigned-artifact
@@ -55,11 +54,13 @@ jobs:
           organization-id: '07d655b1-2c96-4986-a3f0-5f43d7e86ec1'
           project-slug: 'LibreAutomate'
           signing-policy-slug: 'test-signing'
+          # signing-policy-slug: 'release-signing'
           github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
-          wait-for-completion: true
           output-artifact-directory: '_\signed'
+          wait-for-completion: true
           wait-for-completion-timeout-in-seconds: 3600
           skip-decompress: true
 
-       # note: known bug in `upload-artifact`: fails to upload again if `archive: false` and the same filename. Then ignores `name` and `overwrite: true`.
-       #   If need the signed artifact, download it from the SignPath account.
+      # Now the signed `LibreAutomate.msi` can be found in the SignPath account. Don't use `upload-artifact` again, it will fail.
+
+      # TODO: restore the release step when signing is OK. Also nuget pack.
