@@ -24,16 +24,13 @@ public static unsafe partial class ExtString {
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
-	/// <seealso cref="Eq(RStr, RStr)"/>
-	/// <seealso cref="Eqi(RStr, RStr)"/>
-	/// <seealso cref="string.Compare"/>
-	/// <seealso cref="string.CompareOrdinal"/>
 	public static bool Eq(this string t, string s, bool ignoreCase = false) {
 		return ignoreCase ? string.Equals(t, s, StringComparison.OrdinalIgnoreCase) : string.Equals(t, s);
 	}
+	//note: using both `this string` and `this RStr`, because RStr.Equals says null and "" are equal.
 
 	/// <summary>
-	/// Compares this strings with multiple strings.
+	/// Compares this string with multiple strings.
 	/// Returns 1-based index of the matching string, or 0 if none.
 	/// </summary>
 	/// <param name="t">This string. Can be <c>null</c>.</param>
@@ -1480,8 +1477,7 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if equals to string <i>s</i>, case-sensitive.
 	/// </summary>
-	/// <param name="t">This span.</param>
-	/// <param name="s">Other string. Can be <c>null</c>.</param>
+	/// <param name="s">Other string.</param>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
@@ -1490,17 +1486,31 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if equals to string <i>s</i>, case-insensitive.
 	/// </summary>
-	/// <param name="t">This span.</param>
-	/// <param name="s">Other string. Can be <c>null</c>.</param>
+	/// <param name="s">Other string.</param>
 	/// <remarks>
 	/// Uses ordinal comparison (does not depend on current culture/locale).
 	/// </remarks>
 	public static bool Eqi(this RStr t, RStr s) => t.Equals(s, StringComparison.OrdinalIgnoreCase);
 
 	/// <summary>
+	/// Compares this span with multiple strings.
+	/// Returns 1-based index of the matching string, or 0 if none.
+	/// </summary>
+	/// <param name="ignoreCase">Case-insensitive.</param>
+	/// <param name="strings">Other strings.</param>
+	/// <remarks>
+	/// Uses ordinal comparison (does not depend on current culture/locale).
+	/// </remarks>
+	public static int Eq(this RStr t, bool ignoreCase, params ReadOnlySpan<string> strings) {
+		for (int i = 0; i < strings.Length; i++)
+			if (t.Equals(strings[i], ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+				return i + 1;
+		return 0;
+	}
+
+	/// <summary>
 	/// Compares part of this span with string <i>s</i>. Returns <c>true</c> if equal.
 	/// </summary>
-	/// <param name="t">This span.</param>
 	/// <param name="startIndex">Offset in this span. If invalid, returns <c>false</c>.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
@@ -1520,7 +1530,6 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if the specified character is at the specified position in this span.
 	/// </summary>
-	/// <param name="t">This span.</param>
 	/// <param name="index">Offset in this span. If invalid, returns <c>false</c>.</param>
 	/// <param name="c">Character.</param>
 	public static bool Eq(this RStr t, int index, char c) {
@@ -1531,7 +1540,6 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if starts with string <i>s</i>.
 	/// </summary>
-	/// <param name="t">This span.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <remarks>
@@ -1544,7 +1552,6 @@ public static unsafe partial class ExtString {
 	/// <summary>
 	/// Returns <c>true</c> if ends with string <i>s</i>.
 	/// </summary>
-	/// <param name="t">This span.</param>
 	/// <param name="s">Other string.</param>
 	/// <param name="ignoreCase">Case-insensitive.</param>
 	/// <remarks>
@@ -1722,6 +1729,22 @@ public static unsafe partial class ExtString {
 	/// If <i>index</i> is in this string span, returns character at <i>index</i>. Else <c>'\0'</c>.
 	/// </summary>
 	internal static char At_(this RStr t, int index) => (uint)index < t.Length ? t[index] : default;
+	
+	/// <summary>
+	/// Returns <c>true</c> if this string starts with directory path <i>dir</i> and then follows '\\' or '/'.
+	/// </summary>
+	/// <param name="dir">A directory path. Case-insensitive.</param>
+	/// <param name="orEquals">Also return <c>true</c> if this string equals <i>dir</i> (ignoring separators at the end of strings).</param>
+	/// <remarks>
+	/// Before comparing, trims the end separator(s) from both strings.
+	/// </remarks>
+	public static bool PathStarts_(this RStr t, RStr dir, bool orEquals = false) {
+		t = t.TrimEnd("\\/");
+		dir = dir.TrimEnd("\\/");
+		if (!t.Starts(dir, true)) return false;
+		if (t.Length == dir.Length) return orEquals;
+		return t[dir.Length] is '\\' or '/';
+	}
 }
 
 /// <summary>

@@ -228,7 +228,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		void _AddContentFile(string path, string to) {
 			var x = _AddAttr(xig, "Content", "Include", path);
 			_Add(x, "CopyToOutputDirectory", "PreserveNewest");
-			if (to.PathStarts(_csprojDir)) to = to[(_csprojDir.Length + 1)..];
+			if (to.PathStarts_(_csprojDir)) to = to[(_csprojDir.Length + 1)..];
 			_Add(x, "Link", to); //note: TargetPath should be the same, but somehow ignores files in subfolders (meta file x /sub) if single-file, unless the folder exists.
 		}
 		

@@ -2598,7 +2598,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// Returns <c>true</c> if the class name of this window matches <i>cn</i>. Else returns <c>false</c>.
 	/// Also returns <c>false</c> when fails (probably window closed or 0 handle). Supports <see cref="lastError"/>.
 	/// </summary>
-	/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. Cannot be <c>null</c>.</param>
+	/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="ExtString.Like(RStr, RStr, bool)"/>. Cannot be <c>null</c>.</param>
 	/// <seealso cref="IsMatch"/>
 	public bool ClassNameIs(string cn) => ClassName.Like(cn, true);
 	
@@ -2606,7 +2606,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// If window class name matches one of strings in <i>classNames</i>, returns 1-based string index. Else returns 0.
 	/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="lastError"/>.
 	/// </summary>
-	/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be <c>null</c>.</param>
+	/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="ExtString.Like(RStr, RStr, bool)"/>. The array and strings cannot be <c>null</c>.</param>
 	public int ClassNameIs(params ReadOnlySpan<string> classNames) {
 		string s = ClassName; if (s == null) return 0;
 		return s.Like(true, classNames);
@@ -2632,7 +2632,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// If window name matches one of strings in <i>names</i>, returns 1-based string index. Else returns 0.
 	/// Also returns 0 if fails to get name (probably window closed or 0 handle). Supports <see cref="lastError"/>.
 	/// </summary>
-	/// <param name="names">Window names. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be <c>null</c>.</param>
+	/// <param name="names">Window names. Case-insensitive wildcard. See <see cref="ExtString.Like(RStr, RStr, bool)"/>. The array and strings cannot be <c>null</c>.</param>
 	public int NameIs(params ReadOnlySpan<string> names) {
 		string s = Name; if (s == null) return 0;
 		return s.Like(true, names);
@@ -2810,7 +2810,7 @@ public unsafe partial struct wnd : IEquatable<wnd>, IComparable<wnd> {
 	/// If window program name matches one of strings in <i>programNames</i>, returns 1-based string index. Else returns 0.
 	/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="lastError"/>.
 	/// </summary>
-	/// <param name="programNames">Program names, like <c>"abc.exe"</c>. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be <c>null</c>.</param>
+	/// <param name="programNames">Program names, like <c>"abc.exe"</c>. Case-insensitive wildcard. See <see cref="ExtString.Like(RStr, RStr, bool)"/>. The array and strings cannot be <c>null</c>.</param>
 	public int ProgramNameIs(params ReadOnlySpan<string> programNames) {
 		string s = ProgramName; if (s == null) return 0;
 		return s.Like(true, programNames);

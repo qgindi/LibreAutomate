@@ -1007,6 +1007,7 @@ class MetaComments {
 		else if (_flags.Has(MCFlags.ForCodeInfoInEditor) || XmlDoc) docMode = DocumentationMode.Diagnose;
 		
 		return new(LanguageVersion.Preview, docMode, SourceCodeKind.Regular, Defines);
+		//return new(LanguageVersion.Preview, docMode, SourceCodeKind.Regular, [.. Defines], new Dictionary<string, string> { ["FileBasedProgram"] = "" });
 	}
 	
 	/// <summary>

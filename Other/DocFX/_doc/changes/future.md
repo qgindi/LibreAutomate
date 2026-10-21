@@ -16,7 +16,8 @@ Fixed bugs:
 ## Library
 
 New classes:
-- .
+- `Path2`. Replaces `pathname`.
+- `Glob`. Path glob wildcard matching.
 
 New members:
 - .
@@ -25,6 +26,7 @@ New parameters:
 - .
 
 Improved:
+- .
 
 Fixed bugs:
 

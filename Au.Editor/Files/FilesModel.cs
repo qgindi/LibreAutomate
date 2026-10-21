@@ -329,7 +329,7 @@ partial class FilesModel {
 		path = path.Replace('/', '\\');
 		
 		var d = FilesDirectory;
-		if (path.PathStarts(d)) { //is in workspace folder
+		if (path.PathStarts_(d)) { //is in workspace folder
 			var r = Root.FindDescendant(path[d.Length..], kind);
 			if (r != null) {
 				if (all is null) return r;
@@ -344,7 +344,7 @@ partial class FilesModel {
 					if (KindFilter_(f, kind)) r = f;
 				} else if (f.IsFolder) {
 					d = f.LinkTarget;
-					if (path.PathStarts(d)) r = f.FindDescendant(path[d.Length..], kind);
+					if (path.PathStarts_(d)) r = f.FindDescendant(path[d.Length..], kind);
 				}
 				if (r != null) {
 					if (all is null) return r;
@@ -1371,13 +1371,13 @@ partial class FilesModel {
 					print.it($"<>Cannot import files directly from Recycle Bin.");
 					return null;
 				}
-				if (wsDirs.FirstOrDefault(o => o.PathStarts(path, orEquals: true)) is { } s2) {
+				if (wsDirs.FirstOrDefault(o => o.PathStarts_(path, orEquals: true)) is { } s2) {
 					print.it($"<>The folder {(s2.Eqi(path) ? "already is" : "contains a folder that is")} in the workspace. {FindByFilePath(s2)?.SciLink(true)}");
 					return null;
 				}
 				
 				//trying to import a file/folder that already is in the workspace?
-				if (wsDirs.Any(o => path.PathStarts(o))) {
+				if (wsDirs.Any(o => path.PathStarts_(o))) {
 					if (FindByFilePath(path) is { } f1) {
 						if (f1.IsFolder) {
 							print.it($"<>The folder already is in the workspace. {f1.SciLink(true)}");

@@ -1,5 +1,3 @@
-//TODO: test all. Test doc generation.
-
 namespace Au;
 
 /// <summary>

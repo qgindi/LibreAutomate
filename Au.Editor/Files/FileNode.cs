@@ -141,7 +141,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 			x.WriteAttributeString("n", _name);
 			if (_id != 0) x.WriteAttributeString("i", _id.ToString());
 			if (_flags != 0) x.WriteAttributeString("f", ((int)_flags).ToString());
-			if (IsLink) x.WriteAttributeString("path", _model != null && _linkTarget.PathStarts(_model.WorkspaceDirectory) ? @"." + _linkTarget[_model.WorkspaceDirectory.Length..] : _linkTarget);
+			if (IsLink) x.WriteAttributeString("path", _model != null && _linkTarget.PathStarts_(_model.WorkspaceDirectory) ? @"." + _linkTarget[_model.WorkspaceDirectory.Length..] : _linkTarget);
 			if (CustomIconName is { } ico) x.WriteAttributeString("icon", ico);
 			if (_testScriptId != 0) x.WriteAttributeString("run", _testScriptId.ToString());
 			
@@ -311,7 +311,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 	/// <summary>
 	/// <c>true</c> if this is a link to an external file or folder (not in the workspace folder).
 	/// </summary>
-	public bool IsLinkExternal => _linkTarget is string s && !s.PathStarts(Model.WorkspaceDirectory);
+	public bool IsLinkExternal => _linkTarget is string s && !s.PathStarts_(Model.WorkspaceDirectory);
 	
 	/// <summary>
 	/// <c>true</c> if this or an ancestor is <see cref="IsLinkExternal"/> (its target is not in the workspace folder).
@@ -1206,7 +1206,7 @@ partial class FileNode : TreeBase<FileNode>, ITreeViewItem {
 						Compiler.Uncache(v, andDescendants: true);
 					}
 				}
-			} else if (IsFolder && s.PathStarts(oldPath, orEquals: true)) {
+			} else if (IsFolder && s.PathStarts_(oldPath, orEquals: true)) {
 				v._linkTarget = path + v._linkTarget[oldPath.Length..];
 			}
 		}

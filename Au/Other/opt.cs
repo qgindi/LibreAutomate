@@ -899,7 +899,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Disables one or more run-time warnings.
 		/// </summary>
-		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="ExtString.Like(string, string, bool)"/>.</param>
+		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="ExtString.Like(RStr, RStr, bool)"/>.</param>
 		/// <remarks>
 		/// Adds the strings to an internal list. When <see cref="print.warning"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
 		/// It's easy to auto-restore warnings with <c>using</c>, like in the second example. Restoring is optional.

@@ -89,7 +89,7 @@ public static partial class filesystem {
 		properties.LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime);
 		properties.CreationTimeUtc = DateTime.FromFileTimeUtc(d.ftCreationTime);
 		properties.LastAccessTimeUtc = DateTime.FromFileTimeUtc(d.ftLastAccessTime);
-		if (d.dwFileAttributes.Has(FileAttributes.ReparsePoint)) properties.IsNtfsLink = 0 != IsNtfsLink_(path);
+		if (d.dwFileAttributes.Has(FileAttributes.ReparsePoint)) properties.IsNtfsLink = IsNtfsLink_(path);
 		return true;
 	}
 	
@@ -135,7 +135,7 @@ public static partial class filesystem {
 					p->ftLastAccessTime = d.ftLastAccessTime;
 					p->ftLastWriteTime = d.ftLastWriteTime;
 				}
-				ntfsLink = 0 != d.IsNtfsLink;
+				ntfsLink = d.IsNtfsLink;
 				return true;
 			}
 			lastError.code = ec;
@@ -158,7 +158,7 @@ public static partial class filesystem {
 		//note: NormalizeMinimally_ does not remove \ at the end. The API succeeds if "C:\x\dir\" but fails if "C:\x\file\" (it's good).
 		
 		attr = Api.GetFileAttributes(path);
-		if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && 0 != IsNtfsLink_(path);
+		if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && IsNtfsLink_(path);
 		else if (!_GetAttributesOnError(path, FAFlags.DontThrow, out attr, out ntfsLink)) return false;
 		
 		if (!useRawPath && !Path2.IsFullPath(path)) { lastError.code = Api.ERROR_FILE_NOT_FOUND; return false; }
@@ -197,12 +197,11 @@ public static partial class filesystem {
 	/// </summary>
 	/// <param name="path">Raw path (does not normalize).</param>
 	/// <returns>-1 failed, 0 no, 1 symlink, 2 mount, 3 other.</returns>
-	internal static int IsNtfsLink_(string path) {
+	internal static bool IsNtfsLink_(string path) {
 		var hfind = Api.FindFirstFile(path, out var fd);
-		if (hfind == -1) return -1;
-		int R = fd.IsNtfsLink;
+		if (hfind == -1) return false;
 		Api.FindClose(hfind);
-		return R;
+		return fd.IsNtfsLink;
 	}
 	
 	/// <summary>
@@ -359,15 +358,10 @@ public static partial class filesystem {
 		Func<FEFile, int> dirFilter = null,
 		Action<string> errorHandler = null
 		) {
-		//tested 2021-04-30: much faster than Directory.EnumerateX in .NET 5. Faster JIT, and then > 2 times faster.
-		//tested 2022-01-31: ~20% slower than Directory.EnumerateX in .NET 6. Not tested JIT. Never mind.
-		//tested 2025-06-20: ~1% slower than Directory.EnumerateX in .NET 9.
-		//	It seems .NET uses undocumented API NtQueryDirectoryFile.
-		//rejected: in this func use .NET FileSystemEnumerable.
-		//	Good: faster; familiar types.
-		//	Bad: something we need is missing or difficult to return or need a workaround. Eg easily detect NTFS links, get relative path, prevent recursion to NTFS link target.
+		//tested 2021-04-30 with .NET 5: much faster than Directory.EnumerateX. Faster JIT, and then > 2 times faster.
+		//tested later with .NET 6-10: ~20% slower than Directory.EnumerateX. Now .NET uses NtQueryDirectoryFile.
 		
-		//TODO2: stuck at ~340000 files when recursively enumerating C:\ProgramData\Microsoft\Windows\Containers\Layers.
+		//note: stuck at ~340000 files when recursively enumerating C:\ProgramData\Microsoft\Windows\Containers\Layers.
 		//	Even can't end the task process normally (access denied error).
 		//	Actually it just becomes very slow, and maybe would complete if I waited long enough. 
 		//	Directory.EnumerateFileSystemEntries stuck at ~61000 files.
@@ -481,7 +475,7 @@ public static partial class filesystem {
 					int inc = dirFilter != null ? dirFilter(r) : (flags.Has(FEFlags.OnlyFiles) ? 0 : 1) | (flags.Has(FEFlags.AllDescendants) ? 2 : 0);
 					if (0 != (1 & inc)) yield return r;
 					if (0 == (2 & inc)) continue;
-					if (!flags.Has(FEFlags.RecurseNtfsLinks) && 0 != d.IsNtfsLink) continue;
+					if (!flags.Has(FEFlags.RecurseNtfsLinks) && d.IsNtfsLink) continue;
 					
 					stack.Push(new _EDStackEntry() { hfind = hfind, path = path });
 					hfind = default; path = fullPath;

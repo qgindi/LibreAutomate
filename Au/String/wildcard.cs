@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Buffers;
 
 namespace Au {
 	/// <summary>
@@ -41,7 +42,7 @@ namespace Au {
 		/// <c>""</c> will match <c>""</c>.
 		/// </param>
 		/// <param name="matchCase">Case-sensitive even if there is no <c>**c</c>.</param>
-		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(string)"/> always return <c>false</c>.</param>
+		/// <param name="noException">If <i>wildcardExpression</i> is invalid, don't throw exception; let <see cref="Match(RStr)"/> always return <c>false</c>.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
 		public wildex([ParamString(PSFormat.Wildex)] string wildcardExpression, bool matchCase = false, bool noException = false) {
@@ -114,52 +115,51 @@ namespace Au {
 			return new wildex(wildcardExpression);
 		}
 		
-		//rejected: ReadOnlySpan<char>. Then cannot use eg .NET Regex.
-		
 		/// <summary>
 		/// Compares a string with the [wildcard expression](xref:wildcard_expression) used to create this <see cref="wildex"/>. Returns <c>true</c> if they match.
 		/// </summary>
 		/// <param name="s">String. If <c>null</c>, returns <c>false</c>. If <c>""</c>, returns <c>true</c> if it was <c>""</c> or <c>"*"</c> or a regular expression that matches <c>""</c>.</param>
-		public bool Match(string s) {
-			if (s == null) return false;
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		public bool Match(RStr s) {
+			if (s.IsNull()) return false;
 			
-			bool R = false;
-			switch (_type) {
-			case WXType.Wildcard:
-				R = s.Like(_o as string, _ignoreCase);
-				break;
-			case WXType.Text:
-				R = s.Eq(_o as string, _ignoreCase);
-				break;
-			case WXType.RegexPcre:
-				R = (_o as regexp).IsMatch(s);
-				break;
-			case WXType.RegexNet:
-				R = (_o as Regex).IsMatch(s);
-				break;
-			case WXType.Multi:
-				var multi = _o as wildex[];
-				//[n] parts: all must match (with their option n applied)
-				int nNot = 0;
-				for (int i = 0; i < multi.Length; i++) {
-					var v = multi[i];
-					if (v.Not) {
-						if (!v.Match(s)) return _not; //!v.Match(s) means 'matches if without option n applied'
-						nNot++;
+			if (_o is string s1) {
+				if (_type == WXType.Wildcard) return s.Like(s1, _ignoreCase) ^ _not;
+				return s.Equals(s1, _ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ^ _not;
+			}
+			
+			return _Slow(s);
+			
+			//move slower code to a separate function. Else somehow the fast code becomes much slower.
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			bool _Slow(RStr s) {
+				switch (_type) {
+				case WXType.RegexPcre:
+					return (_o as regexp).IsMatch(s) ^ _not;
+				case WXType.RegexNet:
+					return (_o as Regex).IsMatch(s) ^ _not;
+				case WXType.Multi:
+					var multi = _o as wildex[];
+					//[n] parts: all must match (with their option n applied)
+					int nNot = 0;
+					for (int i = 0; i < multi.Length; i++) {
+						var v = multi[i];
+						if (v.Not) {
+							if (!v.Match(s)) return _not; //!v.Match(s) means 'matches if without option n applied'
+							nNot++;
+						}
 					}
+					if (nNot == multi.Length) return !_not; //there are no parts without option n
+					
+					//non-[n] parts: at least one must match
+					for (int i = 0; i < multi.Length; i++) {
+						var v = multi[i];
+						if (!v.Not && v.Match(s)) return !_not;
+					}
+					break;
 				}
-				if (nNot == multi.Length) return !_not; //there are no parts without option n
-				
-				//non-[n] parts: at least one must match
-				for (int i = 0; i < multi.Length; i++) {
-					var v = multi[i];
-					if (!v.Not && v.Match(s)) return !_not;
-				}
-				break;
-			default: //Error
 				return false;
 			}
-			return R ^ _not;
 		}
 		
 		/// <summary>
@@ -210,10 +210,9 @@ namespace Au {
 		/// Returns <c>true</c> if string contains wildcard characters: <c>'*'</c>, <c>'?'</c>.
 		/// </summary>
 		/// <param name="s">Can be <c>null</c>.</param>
-		public static bool hasWildcardChars(RStr s) {
-			foreach (var c in s) if (c is '*' or '?') return true;
-			return false;
-		}
+		public static bool hasWildcardChars(RStr s) => s.ContainsAny(s_svWild);
+		
+		static readonly SearchValues<char> s_svWild = SearchValues.Create('*', '?');
 	}
 }
 
@@ -255,35 +254,10 @@ namespace Au.Types {
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="wildex"/>
-#if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
-		public static bool Like(this string t, string pattern, bool ignoreCase = false)
-		{
-			if(t == null) return false;
-			fixed (char* pt = t, pw = pattern)
-				return Cpp.Cpp_StringLike(pt, t.Length, pw, pattern.Length, ignoreCase);
-		}
-#else
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool Like(this string t, string pattern, bool ignoreCase = false) {
-			Not_.Null(pattern);
-			int patLen = pattern.Length;
-			if (t == null) return false;
-			if (patLen == 0) return t.Length == 0;
-			if (patLen == 1 && pattern[0] == '*') return true;
-			if (t.Length == 0) return false;
-			
-			fixed (char* str = t, pat = pattern) {
-				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
-			}
-			
-			//Microsoft.VisualBasic.CompilerServices.Operators.LikeString() supports more wildcard characters etc. Depends on current culture, has bugs, slower 6-250 times.
-			//System.IO.Enumeration.FileSystemName.MatchesSimpleExpression supports \escaping. Slower 2 - 100 times.
-		}
-		
-		/// <inheritdoc cref="Like(string, string, bool)" path="//summary|//param|//exception"/>
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool Like(this RStr t, string pattern, bool ignoreCase = false) {
-			Not_.Null(pattern);
+		public static bool Like(this RStr t, RStr pattern, bool ignoreCase = false) {
+			if (pattern.IsNull()) throw new ArgumentNullException(nameof(pattern));
+			if (t.IsNull()) return false;
 			int patLen = pattern.Length;
 			if (patLen == 0) return t.Length == 0;
 			if (patLen == 1 && pattern[0] == '*') return true;
@@ -321,7 +295,7 @@ namespace Au.Types {
 			}
 			
 			//Algorithm by Alessandro Felice Cantatore, http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
-			//Changes: supports '\0' in string; case-sensitive or not; restructured, in many cases faster.
+			//Changes: supports '\0' in string; case-sensitive or not; in many cases faster.
 			
 			int i = 0;
 			gStar: //info: goto used because C# compiler makes the loop faster when it contains less code
@@ -353,20 +327,19 @@ namespace Au.Types {
 			
 			//The first two loops are fast, but Eq much faster when !ignoreCase. We cannot use such optimizations that it can.
 			//The slowest case is "*substring*", because then the first two loops don't help.
-			//	Then similar speed as string.IndexOf(ordinal) and API <ms>FindStringOrdinal</ms>.
-			//	Possible optimization, but need to add much code, and makes not much faster, and makes other cases slower, difficult to avoid it.
+			//	Then similar speed as string.IndexOf(ordinal) and API <ms>FindStringOrdinal</ms>. Tested many years ago.
+			//	Possible optimization, but need to add much code, and makes not much faster, and makes other cases slower.
 		}
-#endif
 		
 		/// <summary>
-		/// Calls <see cref="Like(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns <c>true</c>.
+		/// Calls <see cref="Like(RStr, RStr, bool)"/> for each wildcard pattern specified in the argument list until it returns <c>true</c>.
 		/// Returns 1-based index of the matching pattern, or 0 if none.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <param name="patterns">One or more wildcard strings. The strings cannot be <c>null</c>.</param>
 		/// <exception cref="ArgumentNullException">A string in <i>patterns</i> is <c>null</c>.</exception>
-		public static int Like(this string t, bool ignoreCase = false, params ReadOnlySpan<string> patterns) {
+		public static int Like(this RStr t, bool ignoreCase, params ReadOnlySpan<string> patterns) {
 			for (int i = 0; i < patterns.Length; i++) if (t.Like(patterns[i], ignoreCase)) return i + 1;
 			return 0;
 		}
@@ -388,7 +361,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// Wildcard (has <c>*?</c> characters and no <c>t</c>, <c>r</c>, <c>R</c> options).
-		/// <see cref="wildex.Match"/> calls <see cref="ExtString.Like(string, string, bool)"/>.
+		/// <see cref="wildex.Match"/> calls <see cref="ExtString.Like(RStr, RStr, bool)"/>.
 		/// </summary>
 		Wildcard,
 		
@@ -400,7 +373,7 @@ namespace Au.Types {
 		
 		/// <summary>
 		/// .NET regular expression (option <c>R</c>).
-		/// <see cref="wildex.Match"/> calls <see cref="Regex.IsMatch(string)"/>.
+		/// <see cref="wildex.Match"/> calls <see cref="Regex.IsMatch(RStr)"/>.
 		/// </summary>
 		RegexNet,
 		

@@ -587,7 +587,7 @@ public static unsafe class Path2 {
 	/// </summary>
 	/// <param name="path">Full path.</param>
 	/// <param name="isDirectory">The path is for a directory. Appends the number at the very end, not before <c>.extension</c>.</param>
-	public static string MakeUnique(string path, bool isDirectory) { //TODO: test
+	public static string MakeUnique(string path, bool isDirectory) {
 		if (!filesystem.exists(path)) return path;
 		string ext = null;
 		if (!isDirectory && Path.GetExtension(path.AsSpan()) is { Length: > 0 } ext2) (ext, path) = (ext2.ToString(), path[..^ext2.Length]);

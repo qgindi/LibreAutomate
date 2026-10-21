@@ -673,12 +673,18 @@ static unsafe partial class Api {
 		}
 		
 		/// <summary>
-		/// Returns nonzero if this is a NTFS link: 1 symlink, 2 mount, 3 other.
+		/// Returns true if this is a NTFS link (symlink, 2 mount, etc).
 		/// </summary>
-		public int IsNtfsLink
-			=> dwFileAttributes.Has(FileAttributes.ReparsePoint) && 0 != (dwReserved0 & 0x20000000)
-			? dwReserved0 switch { 0xA000000C => 1, 0xA0000003 => 2, _ => 3 }
-			: 0;
+		public bool IsNtfsLink
+			=> dwFileAttributes.Has(FileAttributes.ReparsePoint) && 0 != (dwReserved0 & 0x20000000);
+		
+		///// <summary>
+		///// Returns nonzero if this is a NTFS link: 1 symlink, 2 mount, 3 other.
+		///// </summary>
+		//public int NtfsLinkKind
+		//	=> dwFileAttributes.Has(FileAttributes.ReparsePoint) && 0 != (dwReserved0 & 0x20000000)
+		//	? dwReserved0 switch { 0xA000000C => 1, 0xA0000003 => 2, _ => 3 }
+		//	: 0;
 	}
 	
 	[DllImport("kernel32.dll", EntryPoint = "FindFirstFileW", SetLastError = true)]
