@@ -6,7 +6,7 @@ namespace Au.More;
 /// Filters file paths based on glob patterns.
 /// </summary>
 /// <remarks>
-/// A glob pattern is a string with wildcard characters to match multiple file paths.
+/// A glob pattern is a string with wildcard characters to match multiple file paths in a directory.
 /// <para/>
 /// Glob pattern syntax:
 /// <br/>• A glob pattern consists of one or more parts separated by <c>/</c>, like <c>"dir1/dir2/*.txt"</c>. The parts match path components separated by <c>\</c> or <c>/</c>.
@@ -32,6 +32,24 @@ public class Glob {
 	
 	List<(bool include, _Segment[] segments)> _rules = [];
 	bool _hasIncludes;
+	
+	///
+	public Glob() { }
+	
+	/// <summary>
+	/// This constructor calls <see cref="Include"/> and <see cref="Exclude"/>.
+	/// </summary>
+	/// <param name="include">One or more include patterns. See <see cref="Glob"/>.</param>
+	/// <param name="exclude">One or more exclude patterns. See <see cref="Glob"/>.</param>
+	public Glob(string[] include, string[] exclude = null) { Include(include).Exclude(exclude); }
+	
+	//rejected. Makes code less readable. Two kinds of separators in single string (| and /).
+	///// <summary>
+	///// This constructor calls <see cref="Strings.ToArray"/>, <see cref="Include"/> and <see cref="Exclude"/>.
+	///// </summary>
+	///// <param name="include">One or more include patterns. See <see cref="Glob"/>. Can be a string like <c>"pattern1|pattern2"</c> or collection like <c>["pattern1", "pattern2"]</c>.</param>
+	///// <param name="exclude">One or more exclude patterns. See <see cref="Glob"/>. Can be a string like <c>"pattern1|pattern2"</c> or collection like <c>["pattern1", "pattern2"]</c>.</param>
+	//public Glob(Strings include, Strings exclude = default) : this(include.ToArray(), exclude.ToArray()) { }
 	
 	/// <summary>
 	/// Adds one or more include patterns.
@@ -77,56 +95,58 @@ public class Glob {
 		return this;
 	}
 	
-	static readonly char[] s_sep = ['\\', '/'];
+	/// <summary>
+	/// Filters a sequence of file info objects. Returns only those whose paths match glob patterns added with <see cref="Include"/> and/or <see cref="Exclude"/>.
+	/// </summary>
+	/// <param name="paths">Results of <see cref="DirectoryInfo.EnumerateFiles()"/> or similar method.</param>
+	/// <param name="rootDir">The directory in which the enumeration is performed. Glob patterns are relative to this directory.</param>
+	public IEnumerable<FileSystemInfo> Filter(IEnumerable<FileSystemInfo> paths, string rootDir)
+		=> Filter(paths, static f => f.FullName, rootDir);
 	
 	/// <summary>
 	/// Filters a sequence of paths. Returns only those that match glob patterns added with <see cref="Include"/> and/or <see cref="Exclude"/>.
 	/// </summary>
-	/// <param name="paths">Paths. If glob patterns specify relative paths (recommended), then paths here must be relative paths too, unless <i>rootDirectory</i> is specified.</param>
-	/// <param name="rootDir">Root directory path. Glob patterns are relative to this directory. <i>paths</i> are full paths starting with this directory.</param>
-	public IEnumerable<string> Filter(IEnumerable<string> paths, string rootDir = null)
+	/// <param name="paths">Paths. Paths can be full (then use <i>rootDir</i>) or relative (<i>rootDir</i> <c>null</c>).</param>
+	/// <param name="rootDir">The directory in which the enumeration is performed. Glob patterns are relative to this directory. Must be <c>null</c> if paths are relative.</param>
+	public IEnumerable<string> Filter(IEnumerable<string> paths, string rootDir)
 		=> Filter(paths, static f => f, rootDir);
 	
 	/// <summary>
-	/// Filters a sequence of file info objects. Returns only those whose paths match glob patterns added with <see cref="Include"/> and/or <see cref="Exclude"/>.
+	/// Filters a sequence of objects of any type that can provide a path. Returns only those whose paths match glob patterns added with <see cref="Include"/> and/or <see cref="Exclude"/>.
 	/// </summary>
-	/// <param name="rootDir">The directory in which the enumeration is performed. Glob patterns are relative to this directory.</param>
-	/// <param name="paths">Results of <see cref="filesystem.enumerate"/> or similar method.</param>
-	public IEnumerable<FEFile> Filter(string rootDir, IEnumerable<FEFile> paths)
-		=> Filter(paths, static f => f.FullPath, rootDir);
-	
-	/// <summary>
-	/// Filters a sequence of file info objects. Returns only those whose paths match glob patterns added with <see cref="Include"/> and/or <see cref="Exclude"/>.
-	/// </summary>
-	/// <param name="rootDir">The directory in which the enumeration is performed. Glob patterns are relative to this directory.</param>
-	/// <param name="paths">Results of <see cref="DirectoryInfo.EnumerateFiles()"/> or similar method.</param>
-	public IEnumerable<FileSystemInfo> Filter(string rootDir, IEnumerable<FileSystemInfo> paths)
-		=> Filter(paths, static f => f.FullName, rootDir);
-	
-	
-	/// <summary>
-	/// This public but hidden method can be used for other file system info object types.
-	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
+	/// <param name="paths">Objects of a type that can provide a path.</param>
+	/// <param name="getPath">Provides paths. Paths can be full (then use <i>rootDir</i>) or relative (<i>rootDir</i> <c>null</c>).</param>
+	/// <param name="rootDir">The directory in which the enumeration is performed. Glob patterns are relative to this directory. Must be <c>null</c> if paths are relative.</param>
+	/// <exception cref="ArgumentException">paths not in <i>rootDir</i>.</exception>
 	public IEnumerable<T> Filter<T>(IEnumerable<T> paths, Func<T, string> getPath, string rootDir) {
 		ArgumentNullException.ThrowIfNull(paths);
 		
 		var aSeg = new Range[100];
 		List<bool> aBool = [];
+		int rootLen = 0;
 		
 		foreach (var obj in paths) {
 			string path = getPath(obj);
 			if (path.NE()) continue;
-			int rootLen = 0;
 			if (!rootDir.NE()) {
-				if (!path.PathStarts_(rootDir)) continue;
-				rootLen = rootDir.Length; while (rootDir[rootLen - 1] is '\\' or '/') rootLen--;
-				rootLen++;
+				if (rootLen == 0) {
+					if (path.PathStarts_(rootDir)) {
+						rootLen = rootDir.Length; while (rootDir[rootLen - 1] is '\\' or '/') rootLen--;
+					} else {
+						var rp = Path.GetRelativePath(rootDir, path);
+						if (rp.Length >= path.Length || rp is "." or ".." || rp.Starts(@"..\")) throw new ArgumentException("paths not in rootDir");
+						rootDir = path[..^(rp.Length + 1)];
+						rootLen = rootDir.Length;
+					}
+					rootLen++;
+				} else {
+					if (!path.PathStarts_(rootDir)) throw new ArgumentException("paths not in rootDir");
+				}
 			}
 			
 			RStr relPath = path.AsSpan(rootLen);
 			retry:
-			int nSeg = relPath.SplitAny(aSeg, s_sep, StringSplitOptions.RemoveEmptyEntries);
+			int nSeg = relPath.SplitAny(aSeg, @"\/", StringSplitOptions.RemoveEmptyEntries);
 			if (nSeg == aSeg.Length) { aSeg = new Range[nSeg * 2]; goto retry; }
 			var segments = aSeg.AsSpan(0, nSeg);
 			
@@ -143,7 +163,7 @@ public class Glob {
 		}
 	}
 	
-	//The algorithm is AI-created.
+	//The algorithm is mostly AI-created.
 	
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	static bool _Match(_Segment[] pattern, RStr path, ReadOnlySpan<Range> segments, List<bool> a) {

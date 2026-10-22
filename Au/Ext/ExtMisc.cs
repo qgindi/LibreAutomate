@@ -787,10 +787,24 @@ public static unsafe partial class ExtMisc {
 	internal static T Result_<T>(this Task<T> t) => t.GetAwaiter().GetResult();
 	
 	/// <summary>
+	/// Returns formatted JSON.
+	/// </summary>
+	public static string ToJsonStringPretty(this System.Text.Json.Nodes.JsonNode j)
+		 => j.ToJsonString(new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+	
+	/// <summary>
 	/// Prints formatted JSON.
 	/// </summary>
 	public static void Print(this System.Text.Json.Nodes.JsonNode j) {
-		print.it(j.ToJsonString(new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+		print.it(j.ToJsonStringPretty());
 	}
+	
+	/// <summary>
+	/// Gets path relative to <i>relativeTo</i>. See <see cref="Path.GetRelativePath"/>.
+	/// </summary>
+	/// <inheritdoc cref="Path.GetRelativePath"/>
+	public static string GetRelativePath(this FileSystemInfo t, string relativeTo)
+		=> Path.GetRelativePath(relativeTo, t.FullName);
+	
 	#endregion
 }

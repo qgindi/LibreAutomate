@@ -148,65 +148,6 @@ public record struct FileProperties {
 }
 
 /// <summary>
-/// flags for <see cref="filesystem.enumerate"/>.
-/// </summary>
-[Flags]
-public enum FEFlags {
-	/// <summary>
-	/// Enumerate all descendants, not only direct children. Also known as "recurse subdirectories".
-	/// </summary>
-	AllDescendants = 1,
-	
-	/// <summary>
-	/// Also enumerate target directories of NTFS links, such as symbolic links and mount points. Use with <c>AllDescendants</c>.
-	/// </summary>
-	RecurseNtfsLinks = 2,
-	
-	/// <summary>
-	/// Skip files and subdirectories that have <c>Hidden</c> attribute.
-	/// </summary>
-	SkipHidden = 4,
-	
-	/// <summary>
-	/// Skip files and subdirectories that have <c>Hidden</c> and <c>System</c> attributes (both).
-	/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
-	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for <c>D</c> drive.
-	/// </summary>
-	SkipHiddenSystem = 8, //note: must match FCFlags
-	
-	/// <summary>
-	/// If fails to get the contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
-	/// Without this flag then throws exception or calls <i>errorHandler</i>.
-	/// </summary>
-	IgnoreInaccessible = 0x10, //note: must match FCFlags
-	
-	/// <summary>
-	/// Get only files and not subdirectories.
-	/// Note: the <i>dirFilter</i> callback function is called just to ask whether to include children.
-	/// </summary>
-	OnlyFiles = 0x20,
-	
-	/// <summary>
-	/// Don't call <see cref="Path2.Normalize"/> and don't throw exception for non-full path.
-	/// </summary>
-	UseRawPath = 0x40,
-	
-	/// <summary>
-	/// Let <see cref="FEFile.Name"/> be path relative to the specified directory path. Like <c>@"\name.txt"</c> or <c>@"\subdirectory\name.txt"</c> instead of <c>"name.txt"</c>.
-	/// </summary>
-	NeedRelativePaths = 0x80,
-	
-	//rejected. Rarely used. Can use FileSystemRedirection, it's public.
-	///// <summary>
-	///// Temporarily disable file system redirection in this thread of this 32-bit process running on 64-bit Windows.
-	///// Then you can enumerate the 64-bit System32 folder in your 32-bit process.
-	///// Uses API <ms>Wow64DisableWow64FsRedirection</ms>.
-	///// For vice versa (in 64-bit process enumerate the 32-bit System folder), instead use path <c>folders.SystemX86</c>.
-	///// </summary>
-	//DisableRedirection = 0x100,
-}
-
-/// <summary>
 /// flags for <see cref="filesystem.copy"/> and some other similar functions.
 /// Used only when copying directory.
 /// </summary>
@@ -255,87 +196,6 @@ public enum FDFlags {
 	///// Fail if has read-only attribute.
 	///// </summary>
 	//ReadonlyFail = 4,
-}
-
-/// <summary>
-/// Contains name and other main properties of a file or subdirectory retrieved by <see cref="filesystem.enumerate"/>.
-/// The values are not changed after creating the variable.
-/// </summary>
-public class FEFile {
-	internal FEFile(string name, string fullPath, in Api.WIN32_FIND_DATA d, int level) {
-		Name = name; FullPath = fullPath;
-		Attributes = d.dwFileAttributes;
-		Size = (long)d.nFileSizeHigh << 32 | d.nFileSizeLow;
-		LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime); //fast, sizeof 8
-		CreationTimeUtc = DateTime.FromFileTimeUtc(d.ftCreationTime);
-		_level = (short)level;
-		ReparseTag = d.dwReserved0;
-	}
-	
-	/// <summary>
-	/// Gets file name. Or relative path if used <see cref="FEFlags.NeedRelativePaths"/>.
-	/// </summary>
-	public string Name { get; }
-	
-	/// <summary>
-	/// Gets full path.
-	/// </summary>
-	public string FullPath { get; }
-	
-	/// <summary>
-	/// Gets filename extension. Returns <c>""</c> if directory.
-	/// </summary>
-	public string Extension => IsDirectory ? "" : Path.GetExtension(Name); //note: if null for directory, then OrderBy throws exception
-	
-	/// <summary>
-	/// Returns file size. For directories it is usually 0.
-	/// </summary>
-	public long Size { get; }
-	
-	///
-	public DateTime LastWriteTimeUtc { get; }
-	
-	///
-	public DateTime CreationTimeUtc { get; }
-	
-	///
-	public FileAttributes Attributes { get; }
-	
-	/// <summary>
-	/// It is a directory. Or a NTFS link to a directory (see <see cref="IsNtfsLink"/>).
-	/// </summary>
-	public bool IsDirectory { get { return (Attributes & FileAttributes.Directory) != 0; } }
-	
-	/// <summary>
-	/// Descendant level.
-	/// 0 if direct child of the directory (<i>directoryPath</i>), 1 if child of child, and so on.
-	/// </summary>
-	public int Level {
-		get => _level;
-		internal set { _level = (short)value; }
-	}
-	short _level;
-	
-	/// <summary>
-	/// It is a NTFS link, such as symbolic link or mount point. Don't confuse with shell links (shortcuts).
-	/// </summary>
-	public bool IsNtfsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (ReparseTag & 0x20000000);
-	
-	/// <summary>
-	/// <ms>WIN32_FIND_DATA</ms><c>.dwReserved0</c>.
-	/// </summary>
-	public uint ReparseTag { get; }
-	
-	/// <summary>
-	/// Returns <see cref="FullPath"/>.
-	/// </summary>
-	public override string ToString() => FullPath;
-	
-	//This could be more dangerous than useful.
-	///// <summary>
-	///// Returns <c>FullPath</c>.
-	///// </summary>
-	//public static implicit operator string(FEFile f) { return f?.FullPath; }
 }
 
 /// <summary>
@@ -520,6 +380,8 @@ public enum SCNFlags {
 }
 #pragma warning restore CS1591 //Missing XML comment for publicly visible type or member
 
+#region Path2
+
 /// <summary>
 /// Flags for <see cref="Path2.Normalize"/>.
 /// </summary>
@@ -537,3 +399,49 @@ public enum PNFlags {
 	/// <summary>If path is not a file-system path but looks like URI (eg <c>"http:..."</c> or <c>"file:..."</c> or <c>"shell:..."</c>) or starts with <c>"::"</c>, don't throw exception and don't process more (only expand environment variables).</summary>
 	CanBeUrlOrShell = 8,
 }
+
+#endregion
+
+#region list
+
+/// <summary>
+/// Flags for file system enumeration methods.
+/// </summary>
+[Flags]
+public enum FLFlags {
+	/// <summary>
+	/// Don't throw exception when fails to enumerate the directory or a subdirectory because of its security settings.
+	/// </summary>
+	IgnoreInaccessible = 1, //note: must match FCFlags (TODO)
+	
+	/// <summary>
+	/// Also enumerate target directories of NTFS links (symbolic links, mount points etc).
+	/// </summary>
+	RecurseLinks = 2,
+	
+	/// <summary>
+	/// Skip files and subdirectories that have <c>Hidden</c> attribute.
+	/// </summary>
+	SkipHidden = 4,
+	
+	/// <summary>
+	/// Skip files and subdirectories that have <c>Hidden</c> and <c>System</c> attributes (both).
+	/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
+	/// Without this flag the function skips descendants of <c>$Recycle.Bin</c> and some protected hidden-system directories when enumerating a root directory like <c>@"C:\"</c> (but not like <c>@"\\localhost\C$\"</c> etc).
+	/// </summary>
+	SkipHiddenSystem = 8, //note: must match FCFlags
+}
+
+/// <summary>
+/// Specifies the format of paths returned by some file system enumeration methods.
+/// </summary>
+public enum FLReturn {
+	/// <summary>Return full paths.</summary>
+	Paths,
+	/// <summary>Return filenames.</summary>
+	Names,
+	/// <summary>Return relative paths.</summary>
+	RelativePaths
+}
+
+#endregion

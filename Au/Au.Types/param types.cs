@@ -438,7 +438,7 @@ public union Strings(string, IEnumerable<string>) : IEnumerable<string> {
 	public string[] ToArray() {
 		return Value switch {
 			string[] a => a,
-			string s => s.Split('|'),
+			string s => s.Length == 0 ? [] : s.Split('|'),
 			List<string> a => a.ToArray(),
 			IEnumerable<string> a => a.ToArray(),
 			_ => [], //null
