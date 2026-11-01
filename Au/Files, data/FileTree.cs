@@ -4,6 +4,7 @@ namespace Au.More;
 /// Contains file infos of this and descendant folders and files retrieved by <see cref="filesystem.enumerate"/>.
 /// Can print a formatted list of descendant sizes.
 /// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)] //uses deprecated types and methods. And rarely used. Created for LA Git UI.
 public class FileTree : TreeBase<FileTree> {
 	FEFile _f;
 	
@@ -51,17 +52,18 @@ public class FileTree : TreeBase<FileTree> {
 	/// <exception cref="Exception">Exceptions of <see cref="filesystem.enumerate"/>.</exception>
 	public static FileTree Create(string path, bool onlyDirectories = false, long minSize = 0, bool ignoreInaccessible = true, bool recurseNtfsLinks = false, Func<FEFile, bool> dirFilter = null, Func<FEFile, bool> fileFilter = null) {
 		var flags = ignoreInaccessible ? FEFlags.IgnoreInaccessible : 0;
-		if (recurseNtfsLinks) flags |= FEFlags.RecurseNtfsLinks;
 		
 		FileTree root = new(null);
 		_Dir(path, root, 0, false, flags);
 		return root;
 		
 		void _Dir(string path, FileTree x, int level, bool skipDescendants, FEFlags flags) {
+#pragma warning disable AU1 //Type or member is obsolete
 			foreach (var f in filesystem.enumerate(path, flags)) {
+#pragma warning restore AU1 //Type or member is obsolete
 				f.Level = level;
 				if (f.IsDirectory) {
-					bool skip = skipDescendants || (dirFilter != null && !dirFilter(f));
+					bool skip = skipDescendants || (!recurseNtfsLinks && f.IsNtfsLink) || (dirFilter != null && !dirFilter(f));
 					var y = new FileTree(f);
 					_Dir(f.FullPath, y, level + 1, skip, flags | FEFlags.UseRawPath);
 					x.Size += y.Size;

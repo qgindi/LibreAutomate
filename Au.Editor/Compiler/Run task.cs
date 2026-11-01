@@ -10,7 +10,7 @@ namespace LA;
 static class CompileRun {
 	/// <summary>
 	/// Compiles and/or executes C# file or its project.
-	/// If <paramref name="run"/> is false, returns 1 if compiled, 0 if failed to compile.
+	/// If <i>run</i> is false, returns 1 if compiled, 0 if failed to compile.
 	/// Else returns: process id if started now, 0 if failed, (int)script.RunResult_.deferred if scheduled to run later, (int)script.RunResult_.editorThread if runs in editor thread.
 	/// </summary>
 	/// <param name="run">If true, compiles if need and executes. If false, always compiles and does not execute.</param>

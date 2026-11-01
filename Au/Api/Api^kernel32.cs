@@ -759,10 +759,10 @@ static unsafe partial class Api {
 	internal static extern bool RemoveDirectory(string lpPathName);
 	
 	[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryW", SetLastError = true)]
-	internal static extern bool CreateDirectory(string lpPathName, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES
+	internal static extern bool CreateDirectory(string lpPathName, IntPtr lpSecurityAttributes = 0); //ref SECURITY_ATTRIBUTES
 	
 	[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryExW", SetLastError = true)]
-	internal static extern bool CreateDirectoryEx(string lpTemplateDirectory, string lpNewDirectory, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES
+	internal static extern bool CreateDirectoryEx(string lpTemplateDirectory, string lpNewDirectory, IntPtr lpSecurityAttributes = 0); //ref SECURITY_ATTRIBUTES
 	
 	[DllImport("kernel32.dll", EntryPoint = "ReplaceFileW", SetLastError = true)]
 	internal static extern bool ReplaceFile(string lpReplacedFileName, string lpReplacementFileName, string lpBackupFileName, uint dwReplaceFlags, IntPtr lpExclude = default, IntPtr lpReserved = default);

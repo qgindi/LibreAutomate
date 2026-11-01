@@ -454,7 +454,7 @@ class DSnippets : KDialogWindow {
 		}
 		_files = new();
 		
-		foreach (var f in filesystem.enumFiles(snippetsDir, "*Snippets.xml")) _File(f.FullPath, f.Name, false);
+		foreach (var f in filesystem.list(snippetsDir, "*Snippets.xml").Files) _File(f, f.Name, false);
 		_File(defSnippets, "default", true);
 		
 		_tv.SetItems(_files);

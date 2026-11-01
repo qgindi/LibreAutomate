@@ -12,7 +12,7 @@ if (script.testing) print.clear();
 var outDir = Path2.Normalize(folders.Editor + $@"..\Au\bin\Release");
 var nupkg = $@"{outDir}\LibreAutomate.{Au_.Version}.nupkg";
 
-//rejected. The API key expires in max 30 days. Also API keys may be not supported in the future. The other way is too difficult.
+//rejected. The API key expires in max 30 days. Also API keys may be not supported in the future.
 //if (args is ["/upload"]) {
 //	var apiKey = Environment.GetEnvironmentVariable("API_NUGET") ?? throw new Exception("no env var API_NUGET");
 
@@ -29,7 +29,7 @@ var x = XElement.Load(auDir + @"\Au.csproj");
 var tf = x.XPathSelectElement("/PropertyGroup/TargetFramework");
 tf.ReplaceWith(new XElement("TargetFrameworks", tf.Value + ";net9.0-windows"));
 x.XPathSelectElement("/PropertyGroup/Version").Value = Au_.Version;
-//x.XPathSelectElement("/Target[@Name='PreBuild']/Exec").Remove();
+x.XPathSelectElement(@"/ItemGroup/ProjectReference[@Include='..\Cpp\Cpp.vcxproj']").Remove();
 //print.it(x);
 //return;
 filesystem.saveText(auProj_nuget, x.ToString()); //not x.Save, it adds xml decl

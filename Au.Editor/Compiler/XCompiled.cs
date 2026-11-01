@@ -268,8 +268,8 @@ s - sign
 			if (_data == null) return false; //empty file
 			
 			//delete temp files
-			foreach (var f in filesystem.enumerate(CacheDirectory, FEFlags.UseRawPath | FEFlags.IgnoreInaccessible)) {
-				if (f.Name.Like("*'*")) Api.DeleteFile(f.FullPath);
+			foreach (var f in filesystem.list(CacheDirectory).Files) {
+				if (f.NameSpan.Like("*'*")) Api.DeleteFile(f);
 			}
 			
 			return true;

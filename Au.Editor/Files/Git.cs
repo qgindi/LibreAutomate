@@ -318,18 +318,16 @@ This tool modifies only the .git folder, not workspace files.
 		
 		void _Info() {
 			int nFiles = 0, nDirs = 0;
-			long size = filesystem.enumerate(_dir + "\\.git", FEFlags.AllDescendants | FEFlags.IgnoreInaccessible).Sum(o => { if (o.IsDirectory) { nDirs++; return 0; } nFiles++; return o.Size; });
+			long size = filesystem.list(_dir / ".git", flags: FLFlags.Recurse | FLFlags.IgnoreInaccessible).AllInfos
+				.Sum(o => { if (o is FileInfo f) { nFiles++; return f.Length; } nDirs++; return 0; });
 			gits("rev-list --count HEAD");
 			info.Text = $"Size {size / 1024 / 1024} MB. Contains {nFiles} files and {nDirs} folders.\nThe main branch contains {_go} commits.";
 		}
 		
 		static void _Gc() {
 			//something adds readonly attribute to many dirs in .git/objects. Then git gc cannot delete them.
-			foreach (var v in filesystem.enumDirectories(_dir + @"\.git\objects")) {
-				//print.it(v.Attributes, v.Name);
-				if (v.Attributes.Has(FileAttributes.ReadOnly)) {
-					try { File.SetAttributes(v.FullPath, FileAttributes.Directory); } catch { }
-				}
+			foreach (var v in filesystem.list(_dir + @"\.git\objects").Directories) {
+				if (v.Attributes.Has(FileAttributes.ReadOnly)) Api.SetFileAttributes(v.Path, v.Attributes & ~FileAttributes.ReadOnly);
 			}
 			git("reflog expire --all --expire=now"); //need after deleting old commits, else does not make smaller
 			git("gc --aggressive --prune=now");
@@ -664,9 +662,9 @@ This tool modifies only the .git folder, not workspace files.
 				for (int i = 0; i < a.Length; i++) {
 					var s2 = a[i][..2];
 					string s = s2 switch {
-					[_, 'D'] or ['D', ' '] => "  deleted:  ",
-					[_, '?'] or ['A', _] => "  added:    ",
-					[_, 'M'] or ['M', ' '] => "  modified: ",
+						[_, 'D'] or ['D', ' '] => "  deleted:  ",
+						[_, '?'] or ['A', _] => "  added:    ",
+						[_, 'M'] or ['M', ' '] => "  modified: ",
 						_ => "  " + s2 + ":       "
 					};
 					a[i] = s + a[i][2..];

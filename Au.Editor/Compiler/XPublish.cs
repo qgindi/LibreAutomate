@@ -72,7 +72,7 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 	static void _PrepareOutDir(string outDir, string outFile) {
 		if (filesystem.exists(outDir).Directory) {
 			CompilerUtil.DeleteExeFile(outFile);
-			foreach (var v in filesystem.enumerate(outDir)) filesystem.delete(v.FullPath, FDFlags.CanFail);
+			foreach (var v in filesystem.list(outDir).All) filesystem.delete(v, FDFlags.CanFail);
 		}
 	}
 	
@@ -88,9 +88,8 @@ Indeterminate - use <IncludeNativeLibrariesForSelfExtract>. Adds all dlls to exe
 		filesystem.delete(buildDir, FDFlags.CanFail);
 		
 		int nFiles = 0;
-		foreach (var v in filesystem.enumerate(outDir)) {
-			var path = v.FullPath;
-			if (!v.IsDirectory && path.Ends(".pdb", true)) filesystem.delete(path, FDFlags.CanFail); //probably Au.pdb (at home only)
+		foreach (var v in filesystem.list(outDir).All) {
+			if (!v.IsDirectory && v.Path.Ends(".pdb", true)) filesystem.delete(v, FDFlags.CanFail); //probably Au.pdb (at home only)
 			else nFiles++;
 		}
 		

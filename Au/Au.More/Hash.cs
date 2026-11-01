@@ -242,7 +242,6 @@ public static unsafe class Hash {
 		/// <returns><c>false</c> if <i>encoded</i> is invalid.</returns>
 		public static bool FromString(RStr encoded, out MD5Result r) => Convert2.HexDecode(encoded, out r);
 		
-#if NET9_0_OR_GREATER
 		/// <summary>
 		/// Converts this to Base64url string (URL-safe Base64).
 		/// </summary>
@@ -257,7 +256,6 @@ public static unsafe class Hash {
 		}
 		
 		Span<byte> _AsSpan() => MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref this, 1));
-#endif
 	}
 	
 	/// <summary>

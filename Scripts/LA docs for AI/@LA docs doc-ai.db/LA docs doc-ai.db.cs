@@ -106,7 +106,7 @@ class HtmlToMarkdown(bool step, string startFrom) {
 		foreach (var subDir in _subDirs) {
 			_subDir = subDir;
 			_isApiDir = _subDir is "api";
-			foreach (var f in filesystem.enumFiles(c_rootDir + subDir, "*.html")) {
+			foreach (var f in filesystem.listFiles(c_rootDir + subDir, 0, "*.html")) {
 				_name = f.Name[..^5];
 				if (_name is "toc" or "index") continue;
 				if (_isApiDir) {
@@ -123,9 +123,9 @@ class HtmlToMarkdown(bool step, string startFrom) {
 				_pause = false;
 				_isApi = _isApiDir && _name.Starts("Au.");
 				
-				string html = _LoadHtmlArticle(f.FullPath), html1 = html;
+				string html = _LoadHtmlArticle(f.FullName), html1 = html;
 				
-				html = _PreprocessHtml(html, f.FullPath, out HtmlNode doc);
+				html = _PreprocessHtml(html, f.FullName, out HtmlNode doc);
 				if (html is null) continue;
 				
 				string markdown;
@@ -134,7 +134,7 @@ class HtmlToMarkdown(bool step, string startFrom) {
 				}
 				catch (UnknownTagException ex) {
 					print.it(ex);
-					OpenInBrowser(f.FullPath);
+					OpenInBrowser(f.FullName);
 					return;
 				}
 				

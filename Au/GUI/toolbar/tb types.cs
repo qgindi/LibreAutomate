@@ -190,14 +190,16 @@ public enum TBAnchor {
 }
 
 static partial class TBExt_ {
-	internal static bool HasTop(this TBAnchor a) => 0 != ((int)a & 1);
-	internal static bool HasBottom(this TBAnchor a) => 0 != ((int)a & 2);
-	internal static bool HasLeft(this TBAnchor a) => 0 != ((int)a & 4);
-	internal static bool HasRight(this TBAnchor a) => 0 != ((int)a & 8);
-	internal static bool OppositeX(this TBAnchor a) => 0 != ((int)a & 32);
-	internal static bool OppositeY(this TBAnchor a) => 0 != ((int)a & 64);
-	internal static bool OfScreen(this TBAnchor a) => 0 != ((int)a & 128);
-	internal static TBAnchor WithoutFlags(this TBAnchor a) => a & TBAnchor.All;
+	extension(TBAnchor a) {
+		internal bool HasTop() => 0 != ((int)a & 1);
+		internal bool HasBottom() => 0 != ((int)a & 2);
+		internal bool HasLeft() => 0 != ((int)a & 4);
+		internal bool HasRight() => 0 != ((int)a & 8);
+		internal bool OppositeX() => 0 != ((int)a & 32);
+		internal bool OppositeY() => 0 != ((int)a & 64);
+		internal bool OfScreen() => 0 != ((int)a & 128);
+		internal TBAnchor WithoutFlags() => a & TBAnchor.All;
+	}
 }
 
 //rejected. Instead use System.Windows.Size. It loads 1 assembly in 1.5 ms and does not add much process memory.

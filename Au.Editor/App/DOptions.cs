@@ -459,7 +459,7 @@ Example:
 		void _ThemesButtonClicked(WBButtonClickArgs e) {
 			var m = new popupMenu();
 			_Add("LA.csv");
-			foreach (var v in filesystem.enumFiles(SciTheme.ThemesDirDefaultBS, "*.csv")) _Add(v.Name);
+			foreach (var v in filesystem.list(SciTheme.ThemesDirDefaultBS, "*.csv").FileNames) _Add(v);
 			
 			void _Add(string fn) {
 				var s = fn[..^4];

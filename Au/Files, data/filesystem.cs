@@ -76,7 +76,7 @@ public static partial class filesystem {
 	/// <remarks>
 	/// Calls API <ms>GetFileAttributesEx</ms>. Supports <see cref="lastError"/> (useful with flag <c>DontThrow</c>).
 	/// For NTFS links, gets properties of the link, not of its target.
-	/// You can also get most of these properties with <see cref="enumerate"/>.
+	/// You can also get these properties with <see cref="list"/>.
 	/// </remarks>
 	public static unsafe bool getProperties(string path, out FileProperties properties, FAFlags flags = 0) {
 		properties = new();
@@ -141,9 +141,9 @@ public static partial class filesystem {
 			lastError.code = ec;
 			attr = (FileAttributes)(-1);
 			break;
-		//default:
-		//	Debug_.Print(lastError.messageFor(ec));
-		//	break;
+			//default:
+			//	Debug_.Print(lastError.messageFor(ec));
+			//	break;
 		}
 		if (0 != (flags & FAFlags.DontThrow)) return false;
 		throw new AuException(ec, $"*get file attributes: '{path}'");
@@ -255,7 +255,22 @@ public static partial class filesystem {
 	
 	#endregion
 	
-	#region search
+	#region list, search
+	
+	/// <summary>
+	/// Returns an object that can enumerate files and/or directories in the specified directory.
+	/// Use like <c>var paths = filesystem.list(@"C:\path").Files;</c>.
+	/// </summary>
+	/// <param name="directory">Directory path. Must be full path without environment variables; see <see cref="Path2.Normalize"/>.</param>
+	/// <param name="filter">
+	/// Can be used to specify what to include or/and exclude. Glob patterns must be relative to <i>directory</i>.
+	/// <br/>• Example: <c>new(["*.txt", "**/*.cs"], ["notThisDir/", "**/*.tmp"])</c>.
+	/// <br/>• Example: <c>new("*.txt|**/*.cs", "notThisDir/|**/*.tmp")</c>.
+	/// <br/>• Example: <c>"*.txt|**/*.cs||notThisDir/|**/*.tmp"</c>.
+	/// <br/>• Example: <c>new() { MaxRecursionDepth = 1 }</c>.
+	/// </param>
+	/// <param name="flags">Whether to enumerate subdirectories too, enumerate link targets, ignore inaccessible directories (avoid exceptions), skip hidden files.</param>
+	public static FLQuery list(string directory, PathFilter filter = null, FLFlags flags = 0) => new(directory, filter, flags);
 	
 	/// <summary>
 	/// Finds file or directory and returns full path.
@@ -319,9 +334,9 @@ public static partial class filesystem {
 	
 	enum _FileOp { Rename, Move, Copy, }
 	
-	static unsafe void _FileOperation(_FileOp op, bool into, string path1, string path2, FIfExists ifExists,
-		FCFlags copyFlags = 0, Func<FEFile, bool> copyFileFilter = null, Func<FEFile, int> copyDirFilter = null
-		) {
+	record class _CopyParams(FCFlags flags, PathFilter filter, (Func<FEFile, bool> fileFilter, Func<FEFile, int> dirFilter) deprecated = default);
+	
+	static unsafe void _FileOperation(_FileOp op, bool into, string path1, string path2, FIfExists ifExists, _CopyParams cp = null) {
 		string opName = (op == _FileOp.Rename) ? "rename" : ((op == _FileOp.Move) ? "move" : "copy");
 		path1 = _PreparePath(path1);
 		var type1 = ExistsAs_(path1, true);
@@ -346,142 +361,145 @@ public static partial class filesystem {
 			}
 		}
 		
-		bool ok = false, copy = op == _FileOp.Copy, deleteSource = false, mergeDirectory = false;
-		var del = new _SafeDeleteExistingDirectory();
-		try {
+		bool ok = false, copy = op == _FileOp.Copy, mergeDirectory = false;
+		
+		_CheckIfDestinationExists();
+		
+		void _CheckIfDestinationExists() {
 			if (ifExists == FIfExists.MergeDirectory && type1 != FileIs_.Directory) ifExists = FIfExists.Fail;
 			
-			if (ifExists == FIfExists.Fail) {
-				//API will fail if exists. We don't use API flags 'replace existing'.
+			var type2 = ExistsAs_(path2, true);
+			if (type2 is FileIs_.NotFound) return;
+			if (ifExists == FIfExists.Fail) throw new AuException($"*{opName} '{path1}' to '{path2}'. The destination exists.");
+			if (type2 != type1) throw new AuException($"*{opName} '{path1}' to '{path2}'. The source is {type1}, and the destination exists as {type2}.");
+			
+			switch (more.comparePaths(path1, path2, true, true)) {
+			case CPResult.Failed: return;
+			case CPResult.Same when copy: throw new AuException("The destination is the same as the source.");
+			case CPResult.Same: return; //eg renaming "file.txt" to "FILE.txt"
+			case CPResult.AContainsB or CPResult.BContainsA: throw new AuException("The source and destination overlap.");
+			}
+			
+			bool isDir = type2 is FileIs_.Directory or FileIs_.NtfsLinkDirectory;
+			
+			if (ifExists == FIfExists.MergeDirectory) {
+				mergeDirectory = copy = true;
+			} else if (ifExists == FIfExists.RenameNew) {
+				path2 = Path2.MakeUnique(path2, isDir);
+			} else if (ifExists == FIfExists.RenameExisting) {
+				var path3 = Path2.MakeUnique(path2, isDir);
+				if (!_Move(path2, path3)) throw new AuException(0, $"*{opName} '{path1}' to '{path2}'. The destination exists. Failed to rename.");
 			} else {
-				//Delete, RenameExisting, MergeDirectory
-				//bool deleted = false;
-				var existsAs = ExistsAs_(path2, true);
-				bool existsAsDir = existsAs is FileIs_.Directory or FileIs_.NtfsLinkDirectory;
-				switch (existsAs) {
-				case FileIs_.NotFound:
-					//deleted = true;
-					break;
-				case FileIs_.AccessDenied:
-					break;
-				default:
-					if (more.isSameFile(path1, path2, useSymlink: true)) {
-						//eg renaming "file.txt" to "FILE.txt"
-						Debug_.Print("same file");
-						//deleted = true;
-						//copy will fail, move will succeed
-					} else if (ifExists == FIfExists.RenameNew) {
-						path2 = Path2.MakeUnique(path2, existsAsDir);
-					} else if (ifExists == FIfExists.MergeDirectory && existsAsDir) {
-						if (type1 is FileIs_.Directory or FileIs_.NtfsLinkDirectory) {
-							//deleted = true;
-							mergeDirectory = true;
-							if (!copy) { copy = true; deleteSource = true; }
-						} // else API will fail. We refuse to replace a directory with a file.
-					} else if (ifExists == FIfExists.RenameExisting || existsAs == FileIs_.Directory) {
-						//deleted = 
-						del.Rename(path2, ifExists == FIfExists.RenameExisting);
-						//Rename to a temp name. Finally delete if ok (if !RenameExisting), undo if failed.
-						//It also solves this problem: if we delete the directory now, need to ensure that it does not delete the source directory, which is quite difficult.
-					} else {
-						//deleted = 0 ==
-						_DeleteL(path2, existsAs == FileIs_.NtfsLinkDirectory);
-					}
-					break;
-				}
-				//if(!deleted) throw new AuException(Api.ERROR_FILE_EXISTS, $"*{opName}"); //don't need, later API will fail
-			}
-			
-			if (!copy) {
-				//note: don't use MOVEFILE_COPY_ALLOWED, because then moving directory to another drive fails with ERROR_ACCESS_DENIED and we don't know that the reason is different drive
-				if (ok = Api.MoveFileEx(path1, path2, 0)) return;
-				if (lastError.code == Api.ERROR_NOT_SAME_DEVICE) {
-					copy = true;
-					deleteSource = true;
-				}
-			}
-			
-			if (copy) {
-				if (type1 == FileIs_.Directory) {
-					try {
-						_CopyDirectory(path1, path2, mergeDirectory, copyFlags, copyFileFilter, copyDirFilter);
-						ok = true;
-					}
-					catch (Exception ex) when (op != _FileOp.Copy) {
-						throw new AuException($"*{opName} '{path1}' to '{path2}'", ex);
-					}
-				} else {
-					if (type1 == FileIs_.NtfsLinkDirectory)
-						ok = Api.CreateDirectoryEx(path1, path2, default);
-					else
-						ok = Api.CopyFileEx(path1, path2, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
-				}
-			}
-			
-			if (!ok) throw new AuException(0, $"*{opName} '{path1}' to '{path2}'");
-			
-			if (deleteSource) {
-				try {
-					_Delete(path1);
-				}
-				catch (Exception ex) {
-					if (!path1.Ends(':')) //moving drive contents. Deleted contents but cannot delete drive.
-						print.warning($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
-					//throw new AuException("*move", ex); //don't. MoveFileEx also succeeds even if fails to delete source.
-				}
+				_Delete(path2);
 			}
 		}
-		finally {
-			//dialog.show();
-			del.Finally(ok);
+		
+		if (!copy) {
+			//note: don't use MOVEFILE_COPY_ALLOWED, because then moving directory to another drive fails with ERROR_ACCESS_DENIED and we don't know that the reason is different drive
+			if (_Move(path1, path2)) return;
+			if (lastError.code == Api.ERROR_NOT_SAME_DEVICE) copy = true;
+		}
+		
+		if (copy) {
+			if (type1 == FileIs_.Directory) {
+				try {
+					_CopyDirectory(path1, path2, mergeDirectory, cp);
+					ok = true;
+				}
+				catch (Exception ex) when (op != _FileOp.Copy) {
+					throw new AuException($"*{opName} '{path1}' to '{path2}'", ex);
+				}
+			} else {
+				if (type1 == FileIs_.NtfsLinkDirectory)
+					ok = Api.CreateDirectoryEx(path1, path2, default);
+				else
+					ok = Api.CopyFileEx(path1, path2, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
+			}
+		}
+		
+		if (!ok) throw new AuException(0, $"*{opName} '{path1}' to '{path2}'");
+		
+		if (copy && op != _FileOp.Copy) {
+			try {
+				_Delete(path1);
+			}
+			catch (Exception ex) {
+				print.warning($"Failed to delete '{path1}' after copying it. {ex.Message}");
+			}
 		}
 	}
 	
+	/// <summary>
+	/// Calls <c>MoveFileEx</c>. If fails, and it's a directory, tries <c>SHFileOperation</c>.
+	/// If fails, in any case <c>lastError.code</c> is the code set by <c>MoveFileEx</c>.
+	/// No exceptions.
+	/// </summary>
+	static bool _Move(string path1, string path2) {
+		if (Api.MoveFileEx(path1, path2, 0)) return true;
+		var ec = lastError.code;
+		if (ec is Api.ERROR_ACCESS_DENIED /*or Api.ERROR_SHARING_VIOLATION*/ && filesystem.exists(path1).Directory) {
+			//The shell API often can move folders locked in explorer process.
+			//But fails eg if ERROR_SHARING_VIOLATION after showing Properties for something inside.
+			
+			Debug_.Print("MoveFileEx failed. Trying SHFileOperation.");
+			
+			var x = new Api.SHFILEOPSTRUCT() { wFunc = Api.FO_MOVE };
+			uint f = Api.FOF_NO_UI | Api.FOF_NORECURSION | Api.FOF_NO_CONNECTED_ELEMENTS; //info: FOF_NO_UI includes 4 flags - noerrorui, silent, noconfirm, noconfirmmkdir
+			x.fFlags = (ushort)f;
+			x.pFrom = path1 + "\0";
+			x.pTo = path2 + "\0";
+			x.hwnd = wnd.getwnd.root;
+			
+			run.thread(() => { Api.SHFileOperation(x); }).Join();
+			
+			if (filesystem.exists(path2).Directory && !filesystem.exists(path1).Directory) return true;
+		}
+		lastError.code = ec;
+		return false;
+	}
+	
+	struct _CDItem(FLPath p, FEFile dep) {
+		public string FullPath => dep?.FullPath ?? p.Path;
+		public int RelativeOffset => dep is { } d ? (d.FullPath.Length - d.Name.Length + 1) : p.RelativeOffset_; //d.Name is @"\relative\path" (FEFlags.NeedRelativePaths)
+		public bool IsDirectory => dep?.IsDirectory ?? p.IsDirectory;
+		public bool IsLink => dep?.IsNtfsLink ?? p.IsNtfsLink;
+	}
+	
+	//note: cp is null when moving (copy + delete)
 	//note: if merge, the destination directory must exist
-	static unsafe void _CopyDirectory(string path1, string path2, bool merge, FCFlags copyFlags,
-		Func<FEFile, bool> fileFilter, Func<FEFile, int> dirFilter
-		) {
-		//FUTURE: add progressInterface parameter. Create a default interface implementation class that supports progress dialog and/or progress in taskbar button. Or instead create a ShellCopy function.
-		//FUTURE: maybe add errorHandler parameter. Call it here when fails to copy, and also pass to Enumerate which calls it when fails to enum.
-		
-		//use intermediate array, and get it before creating path2 directory. It requires more memory, but is safer. Without it, eg bad things happen when copying a directory into itself.
-		var edFlags = FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath | (FEFlags)copyFlags;
-		var a = enumerate(path1, edFlags, fileFilter, dirFilter).ToArray();
-		
-		if (copyFlags.Has(FCFlags.NoEmptyDirectories)) {
-			for (int i = a.Length; --i >= 0;) {
-				var f = a[i];
-				if (!f.IsDirectory) continue;
-				if (i < a.Length - 1 && a[i + 1] is FEFile ff) {
-					if (ff.Name.Starts(f.Name) && ff.Name.Eq(f.Name.Length, '\\')) continue;
-				}
-				a[i] = null;
-			}
+	static unsafe void _CopyDirectory(string path1, string path2, bool merge, _CopyParams cp) {
+		var flags = cp?.flags ?? 0;
+		_CDItem[] a;
+		if (cp != null && cp.deprecated != default) { //the user code called the deprecated `copy` overload with some parameters (filter functions) that are used only by the deprecated `enumerate` method. To support it, several ways can be used. Using `enumerate` and _CDItem.
+			var eFlags = FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath;
+			if (flags.Has(FCFlags.IgnoreInaccessible)) eFlags |= FEFlags.IgnoreInaccessible;
+			if (flags.Has(FCFlags.SkipHiddenSystem)) eFlags |= FEFlags.SkipHiddenSystem;
+#pragma warning disable AU1 //Type or member is obsolete
+			var e1 = enumerate(path1, eFlags, cp.deprecated.fileFilter, cp.deprecated.dirFilter);
+#pragma warning restore AU1 //Type or member is obsolete
+			if (flags.Has(FCFlags.NoEmptyDirectories)) e1 = e1.Where(o => !o.IsDirectory); //FEFlags.OnlyFiles is ignored if using dirFilter
+			a = e1.Select(static o => new _CDItem(default, o)).ToArray();
+		} else {
+			var lFlags = FLFlags.Recurse;
+			if (flags.Has(FCFlags.IgnoreInaccessible)) lFlags |= FLFlags.IgnoreInaccessible;
+			if (flags.Has(FCFlags.SkipHiddenSystem)) lFlags |= FLFlags.SkipHiddenSystem;
+			bool? filesOnly = flags.Has(FCFlags.NoEmptyDirectories) ? true : null;
+			a = list(path1, cp?.filter, lFlags).Enumerate(static (ref e) => new _CDItem(FLPath.Transform_(ref e), null), filesOnly).ToArray();
 		}
 		
+		if (!merge) _CreateDirectoryLL(path2, path1);
+		
+		if (a.Length == 0) return;
 		bool ok = false;
 		string s1 = null, s2 = null;
-		if (!merge) {
-			if (!path1.Ends(@":\")) ok = Api.CreateDirectoryEx(path1, path2, default);
-			if (!ok) ok = Api.CreateDirectory(path2, default);
-			if (!ok) goto ge;
-		}
+		int relOffset = a[0].RelativeOffset;
 		
-		string prevParentDir = null;
 		foreach (var f in a) {
-			if (f == null) continue;
-			s1 = f.FullPath; s2 = Path2.PrefixLongPathIfNeed(path2 + f.Name);
-			//print.it(s2);
+			s1 = f.FullPath;
+			RStr relPath = s1.AsSpan(relOffset);
+			s2 = Path2.PrefixLongPathIfNeed(Path.Join(path2, relPath));
 			
-			//create intermediate dirs if need, eg if dirFilter returned 2 (don't include the dir but include its children)
-			//TODO3: CreateDirectoryEx
-			if (f.Level > 0 && (fileFilter != null || dirFilter != null)) {
-				int ifn = _FindFilename(s2) - 1;
-				if (prevParentDir == null || !s2.AsSpan(0, ifn).Eq(prevParentDir)) { //optimize to avoid this code for each file
-					prevParentDir = s2[..ifn];
-					_CreateDirectory(prevParentDir, pathIsPrepared: true);
-				}
-			}
+			_CreateDirectoryForCopy(s1, s2, relPath.Count('\\'));
 			
 			if (f.IsDirectory) {
 				if (merge) switch (exists(s2, true)) {
@@ -489,8 +507,8 @@ public static partial class filesystem {
 					case 1: _DeleteL(s2, false); break;
 					}
 				
-				ok = Api.CreateDirectoryEx(s1, s2, default);
-				if (!ok && !f.IsNtfsLink) ok = Api.CreateDirectory(s2, default);
+				ok = Api.CreateDirectoryEx(s1, s2);
+				if (!ok && !f.IsLink) ok = Api.CreateDirectory(s2);
 			} else {
 				if (merge && getAttributes(s2, out var attr, FAFlags.DontThrow | FAFlags.UseRawPath)) {
 					const FileAttributes badAttr = FileAttributes.ReadOnly | FileAttributes.Hidden;
@@ -502,13 +520,13 @@ public static partial class filesystem {
 				ok = Api.CopyFileEx(s1, s2, fl);
 			}
 			if (!ok) {
-				if (f.IsNtfsLink) {
+				if (f.IsLink) {
 					//To create or copy NTFS links, need SeCreateSymbolicLinkPrivilege privilege.
 					//Admins have it, else this process cannot get it.
 					//Debug_.Print($"failed to copy NTFS link '{s1}'. It's OK, skipped it. Error: {lastError.messageFor()}");
 					continue;
 				}
-				if (0 != (copyFlags & FCFlags.IgnoreInaccessible)) {
+				if (flags.Has(FCFlags.IgnoreInaccessible)) {
 					if (lastError.code == Api.ERROR_ACCESS_DENIED) continue;
 				}
 				goto ge;
@@ -519,40 +537,6 @@ public static partial class filesystem {
 		string se = $"*copy directory '{path1}' to '{path2}'";
 		if (s1 != null) se += $" ('{s1}' to '{s2}')";
 		throw new AuException(0, se);
-		//never mind: wrong API error code if path1 and path2 is the same directory.
-	}
-	
-	struct _SafeDeleteExistingDirectory {
-		string _oldPath, _tempPath;
-		bool _dontDelete;
-		
-		/// <summary>
-		/// note: path must be normalized.
-		/// </summary>
-		internal bool Rename(string path, bool dontDelete = false) {
-			if (path.Length > Path2.MaxSafeDirectoryPathLength - 10) path = Path2.PrefixLongPath(path);
-			string tempPath = null;
-			int iFN = _FindFilename(path);
-			string s1 = path[..iFN] + "old", s2 = " " + path[iFN..];
-			for (int i = 1; ; i++) {
-				tempPath = s1 + i + s2;
-				if (!exists(tempPath, true)) break;
-			}
-			if (!Api.MoveFileEx(path, tempPath, 0)) return false;
-			_oldPath = path; _tempPath = tempPath; _dontDelete = dontDelete;
-			return true;
-		}
-		
-		internal bool Finally(bool succeeded) {
-			if (_tempPath == null) return true;
-			if (!succeeded) {
-				if (!Api.MoveFileEx(_tempPath, _oldPath, 0)) return false;
-			} else if (!_dontDelete) {
-				try { _Delete(_tempPath); } catch { return false; }
-			}
-			_oldPath = _tempPath = null;
-			return true;
-		}
 	}
 	
 	/// <summary>
@@ -605,7 +589,7 @@ public static partial class filesystem {
 	/// <param name="ifExists"></param>
 	/// <exception cref="ArgumentException">
 	/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="Path2.IsFullPath"/>).
-	/// - <i>path</i> is drive. To move drive content, use <see cref="move"/>.
+	/// - <i>path</i> is drive.
 	/// </exception>
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
@@ -628,9 +612,8 @@ public static partial class filesystem {
 	/// <para>NOTE: It is not the new parent directory. See <see cref="copyTo"/>.</para>
 	/// </param>
 	/// <param name="ifExists"></param>
-	/// <param name="copyFlags">Options used when copying directory.</param>
-	/// <param name="fileFilter">Callback function that decides which files to copy when copying directory. See <see cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>. Note: this function uses <see cref="FEFlags.NeedRelativePaths"/>.</param>
-	/// <param name="dirFilter">Callback function that decides which subdirectories to copy when copying directory. See <see cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>. Note: this function uses <see cref="FEFlags.NeedRelativePaths"/>.</param>
+	/// <param name="copyFlags">Options used when copying a directory.</param>
+	/// <param name="filter"><inheritdoc cref="list" path="/param[@name='filter']/node()"/></param>
 	/// <exception cref="ArgumentException"><i>path</i> or <i>newPath</i> is not full path (see <see cref="Path2.IsFullPath"/>).</exception>
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
@@ -640,10 +623,8 @@ public static partial class filesystem {
 	/// Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
 	/// Creates the destination directory if does not exist (see <see cref="createDirectory"/>).
 	/// </remarks>
-	public static void copy(string path, string newPath, FIfExists ifExists = FIfExists.Fail,
-		FCFlags copyFlags = 0, Func<FEFile, bool> fileFilter = null, Func<FEFile, int> dirFilter = null
-		) {
-		_FileOperation(_FileOp.Copy, false, path, newPath, ifExists, copyFlags, fileFilter, dirFilter);
+	public static void copy(string path, string newPath, FIfExists ifExists = FIfExists.Fail, FCFlags copyFlags = 0, PathFilter filter = null) {
+		_FileOperation(_FileOp.Copy, false, path, newPath, ifExists, new(copyFlags, filter));
 	}
 	
 	/// <summary>
@@ -652,16 +633,34 @@ public static partial class filesystem {
 	/// <param name="newDirectory">Full path of the new parent directory.</param>
 	/// <exception cref="ArgumentException">
 	/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="Path2.IsFullPath"/>).
-	/// - <i>path</i> is drive. To copy drive content, use <see cref="copy"/>.
+	/// - <i>path</i> is drive.
 	/// </exception>
 	/// <exception cref="FileNotFoundException"><i>path</i> not found.</exception>
 	/// <exception cref="AuException">Failed.</exception>
 	/// <inheritdoc cref="copy"/>
+	public static void copyTo(string path, string newDirectory, FIfExists ifExists = FIfExists.Fail, FCFlags copyFlags = 0, PathFilter filter = null) {
+		_FileOperation(_FileOp.Copy, true, path, newDirectory, ifExists, new(copyFlags, filter));
+	}
+	
+	#region deprecated
+	/// <inheritdoc cref="copy"/>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[OverloadResolutionPriority(-1)]
+	public static void copy(string path, string newPath, FIfExists ifExists = FIfExists.Fail,
+		FCFlags copyFlags = 0, Func<FEFile, bool> fileFilter = null, Func<FEFile, int> dirFilter = null
+		) {
+		_FileOperation(_FileOp.Copy, false, path, newPath, ifExists, new(copyFlags, null, (fileFilter, dirFilter)));
+	}
+	
+	/// <inheritdoc cref="copyTo"/>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[OverloadResolutionPriority(-1)]
 	public static void copyTo(string path, string newDirectory, FIfExists ifExists = FIfExists.Fail,
 		FCFlags copyFlags = 0, Func<FEFile, bool> fileFilter = null, Func<FEFile, int> dirFilter = null
 		) {
-		_FileOperation(_FileOp.Copy, true, path, newDirectory, ifExists, copyFlags, fileFilter, dirFilter);
+		_FileOperation(_FileOp.Copy, true, path, newDirectory, ifExists, new(copyFlags, null, (fileFilter, dirFilter)));
 	}
+	#endregion
 	
 	/// <summary>
 	/// Deletes file or directory if exists.
@@ -748,13 +747,12 @@ public static partial class filesystem {
 		
 		int ec = 0;
 		if (type == FileIs_.Directory) {
-			var a = enumerate(path, FEFlags.AllDescendants | FEFlags.UseRawPath | FEFlags.IgnoreInaccessible).ToArray();
+			var a = list(path, null, FLFlags.Recurse | FLFlags.IgnoreInaccessible).All;
 			//print.it(a);
 			for (int i = a.Length; --i >= 0;) { //directories always are before their files, and will be empty when deleting in reverse
 				var f = a[i];
-				var at = f.Attributes;
-				if (at.Has(FileAttributes.ReadOnly)) Api.SetFileAttributes(path, at & ~FileAttributes.ReadOnly);
-				_DeleteL(f.FullPath, f.IsDirectory, canFail); //delete as many as possible
+				if (f.Attributes.Has(FileAttributes.ReadOnly)) Api.SetFileAttributes(f, f.Attributes & ~FileAttributes.ReadOnly);
+				_DeleteL(f, f.IsDirectory, canFail); //delete as many as possible
 			}
 			ec = _DeleteL(path, true, canFail);
 			if (ec == 0) {
@@ -773,6 +771,7 @@ public static partial class filesystem {
 		}
 		
 		if (exists(path, true)) return canFail ? false : throw new AuException(ec, $"*delete '{path}'");
+		return true;
 		
 		//info:
 		//RemoveDirectory fails if not empty.
@@ -780,7 +779,6 @@ public static partial class filesystem {
 		//Also both fail if a [now deleted] subfolder containing files was open in Explorer. Workaround: sleep/retry.
 		//_DeleteShell usually does not have these problems. But it is very slow.
 		//But all fail if it is current directory in any process. If in current process, _DeleteShell succeeds; it makes current directory = its parent.
-		return true;
 	}
 	
 	static int _DeleteL(string path, bool dir, bool canFail = false) {
@@ -806,7 +804,7 @@ public static partial class filesystem {
 		}
 		if (ec is Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND) return 0;
 		Debug_.Print("_DeleteL failed. " + lastError.messageFor(ec) + "  " + path
-			+ (dir ? ("   Children: " + string.Join(" | ", enumerate(path).Select(f => f.Name))) : null));
+			+ (dir ? ("   Children: " + string.Join(" | ", list(path).AllNames)) : null));
 		return ec;
 		
 		//never mind: .NET also calls DeleteVolumeMountPoint if it is a mount point. Somehow only for recursed dirs.
@@ -818,7 +816,7 @@ public static partial class filesystem {
 		if (a != null) path = string.Join("\0", a);
 		if (wildex.hasWildcardChars(path)) throw new ArgumentException("*? not supported.");
 		var x = new Api.SHFILEOPSTRUCT() { wFunc = Api.FO_DELETE };
-		uint f = Api.FOF_NO_UI; //info: FOF_NO_UI includes 4 flags - noerrorui, silent, noconfirm, noconfirmmkdir
+		uint f = Api.FOF_NO_UI | Api.FOF_NORECURSION; //info: FOF_NO_UI includes 4 flags - noerrorui, silent, noconfirm, noconfirmmkdir
 		if (recycle) f |= Api.FOF_ALLOWUNDO; else f |= Api.FOF_NO_CONNECTED_ELEMENTS;
 		x.fFlags = (ushort)f;
 		x.pFrom = path + "\0";
@@ -828,11 +826,11 @@ public static partial class filesystem {
 		//	However .NET wait methods pump messages too, although less. To reproduce, try to delete eg 10 files.
 		//int r = Api.SHFileOperation(x);
 		//int r = Task.Run(() => Api.SHFileOperation(x)).Result_(); //slower
-		//int r = Task.Factory.StartNew(() => Api.SHFileOperation(x), default, 0, StaTaskScheduler_.Default).Result_();
-		//run.thread(() => { Api.SHFileOperation(x); }).Join();
+		run.thread(() => { Api.SHFileOperation(x); }).Join();
 		
-		using var wh = run.thread(out _, out _, () => { try { Api.SHFileOperation(x); } catch (Exception ex) { Debug_.Print(ex); } });
-		wait.forHandle(0, 0, wh.DangerousGetHandle());
+		//note: don't use a blocking wait (eg wait.forHandle). Sometimes hangs. Probably SHFileOperation sends messages to this thread. To repro, lock a file in the directory being deleted.
+		//using var wh = run.thread(out _, out _, () => { Api.SHFileOperation(x); });
+		//wait.forHandle(0, 0, wh.DangerousGetHandle());
 		
 		//if(r != 0 || x.fAnyOperationsAborted) return false; //do not use fAnyOperationsAborted, it can be true even if finished to delete. Also, I guess it cannot be aborted because there is no UI, because we use FOF_SILENT to avoid deactivating the active window even when the UI is not displayed.
 		//if(r != 0) return false; //after all, I don't trust this too
@@ -884,24 +882,31 @@ public static partial class filesystem {
 	/// File.WriteAllText(path, "text"); //would fail if directory @"D:\Test\new" does not exist
 	/// ]]></code>
 	/// </example>
-	public static bool createDirectoryFor(string filePath) {
-		filePath = _PreparePath(filePath);
+	public static bool createDirectoryFor(string filePath)
+		=> _CreateDirectoryFor(_PreparePath(filePath));
+	
+	/// <summary>
+	/// Same as <see cref="createDirectoryFor"/>, but <i>filePath</i> must be prepared (<c>_PreparePath</c> or normalize).
+	/// </summary>
+	/// <exception cref="AuException"></exception>
+	static bool _CreateDirectoryFor(string filePath) {
 		var path = _RemoveFilename(filePath);
 		return _CreateDirectory(path, pathIsPrepared: true);
 	}
 	
 	/// <summary>
-	/// Same as <see cref="createDirectoryFor"/>, but <i>filePath</i> must be prepared (<c>_PreparePath</c> or normalize).
+	/// If directory does not exist, creates it and its missing ancestors.
 	/// </summary>
-	static bool _createDirectoryForPrepared(string filePath) {
-		var path = _RemoveFilename(filePath);
-		return _CreateDirectory(path, pathIsPrepared: true);
-	}
-	
-	static bool _CreateDirectory(string path, bool pathIsPrepared = false, string templateDirectory = null) {
+	/// <param name="path"></param>
+	/// <param name="pathIsPrepared">Don't call <c>_PreparePath(path)</c>.</param>
+	/// <param name="templateDirectory">If used, calls <c>CreateDirectoryEx</c>. If not null or fails, calls <c>CreateDirectory</c>.</param>
+	/// <param name="templatePathIsPrepared">Don't call <c>_PreparePath(templateDirectory)</c>.</param>
+	/// <returns>true if created, false if exists.</returns>
+	/// <exception cref="AuException"></exception>
+	static bool _CreateDirectory(string path, bool pathIsPrepared = false, string templateDirectory = null, bool templatePathIsPrepared = false) {
 		if (exists(path, pathIsPrepared).Directory) return false;
 		if (!pathIsPrepared) path = _PreparePath(path);
-		if (templateDirectory != null) templateDirectory = _PreparePath(templateDirectory);
+		if (templateDirectory != null && !templatePathIsPrepared) templateDirectory = _PreparePath(templateDirectory);
 		
 		var stack = new Stack<string>();
 		var s = path;
@@ -912,20 +917,50 @@ public static partial class filesystem {
 		} while (!exists(s, true).Directory);
 		
 		while (stack.Count > 0) {
-			s = stack.Pop();
-			int retry = 0;
-			g1:
-			bool ok = (templateDirectory == null || stack.Count > 0)
-				? Api.CreateDirectory(s, default)
-				: Api.CreateDirectoryEx(templateDirectory, s, default);
-			if (!ok) {
-				int ec = lastError.code;
-				if (ec == Api.ERROR_ALREADY_EXISTS) continue;
-				if (ec == Api.ERROR_ACCESS_DENIED && ++retry < 5) { Thread.Sleep(15); goto g1; } //sometimes access denied briefly, eg immediately after deleting the folder while its parent is open in Explorer. Now could not reproduce on Win10.
-				throw new AuException(0, $@"*create directory '{path}'");
-			}
+			_CreateDirectoryLL(stack.Pop(), stack.Count == 0 ? templateDirectory : null);
 		}
 		return true;
+	}
+	
+	/// <summary>
+	/// Used by <c>_CopyDirectory</c>.
+	/// Creates missing ancestor directories of <i>path2</i>.
+	/// Uses <c>CreateDirectoryEx</c> with templates from corresponding ancestors of <i>path1</i>.
+	/// </summary>
+	/// <param name="path1">Source.</param>
+	/// <param name="path2">Destination.</param>
+	/// <param name="maxLevels">Number of directory separators in relative path.</param>
+	/// <exception cref="AuException"></exception>
+	static void _CreateDirectoryForCopy(string path1, string path2, int maxLevels) {
+		Stack<(string, string)> stack = null;
+		while (maxLevels-- > 0) {
+			path2 = _RemoveFilename(path2, true);
+			if (exists(path2, true).Directory) break;
+			path1 = _RemoveFilename(path1, true);
+			(stack ??= []).Push((path2, path1));
+		}
+		
+		while (stack?.Count > 0) {
+			var (p1, p2) = stack.Pop();
+			_CreateDirectoryLL(p1, p2);
+		}
+	}
+	
+	/// <summary>
+	/// Calls <c>CreateDirectoryEx</c> if <i>templateDirectory</i> not null.
+	/// Calls <c>CreateDirectory</c> if <i>templateDirectory</i> null or if <c>CreateDirectoryEx</c> fails.
+	/// Does not do anything else (preparing paths, create missing ancestors, checking whether already exists).
+	/// </summary>
+	/// <exception cref="AuException">Failed, and last error is not <c>ERROR_ALREADY_EXISTS</c>.</exception>
+	static bool _CreateDirectoryLL(string path, string templateDirectory = null, bool noException = false) {
+		int retry = 0;
+		g1:
+		if (templateDirectory != null) if (Api.CreateDirectoryEx(templateDirectory, path, default) || lastError.code == Api.ERROR_ALREADY_EXISTS) return true;
+		if (Api.CreateDirectory(path, default) || lastError.code == Api.ERROR_ALREADY_EXISTS) return true;
+		
+		if (lastError.code == Api.ERROR_ACCESS_DENIED && ++retry < 5) { Thread.Sleep(15); goto g1; } //sometimes access denied briefly, eg immediately after deleting the folder while its parent is open in Explorer. Now could not reproduce on Win10.
+		if (!noException) throw new AuException(0, $@"*create directory '{path}'");
+		return false;
 	}
 	
 	/// <summary>
@@ -1182,7 +1217,7 @@ public static partial class filesystem {
 			s1 = s1 / Path2.GetName(file);
 		}
 		
-		_createDirectoryForPrepared(file);
+		_CreateDirectoryFor(file);
 		
 		string temp = s1 + "~temp~";
 		string back = s1 + "~backup~"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc

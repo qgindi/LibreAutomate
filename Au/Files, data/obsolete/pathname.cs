@@ -2,12 +2,9 @@ namespace Au;
 
 /// <summary>
 /// File path string functions.
-/// In new code use <see cref="Path2"/> instead; most methods of this class just call methods of <c>Path2</c>.
+/// <para>NOTE: In new code use <see cref="Path"/> and <see cref="Path2"/> instead; most methods of this class just call their methods.</para>
 /// </summary>
-[EditorBrowsable(EditorBrowsableState.Never)]
-#if DEBUG
-[Obsolete]
-#endif
+[ObsoleteInDebug, EditorBrowsable(EditorBrowsableState.Never)]
 public static unsafe class pathname {
 	/// <inheritdoc cref="Path2.Expand"/>
 	public static string expand(string path, bool? strict = null)
@@ -29,9 +26,6 @@ public static unsafe class pathname {
 	/// Gets the length of the drive or network folder part in <i>path</i>, like <c>@"C:\"</c>, <c>@"\\server\share\"</c>, <c>@"\\?\C:\"</c>, <c>@"\\?\UNC\server\share\"</c>, etc.
 	/// </summary>
 	/// <param name="path">Full path or any string. Can be <c>null</c>. Should not be <c>@"%environmentVariable%\..."</c>.</param>
-	/// <remarks>
-	/// See <see cref="Path.GetPathRoot"/>.
-	/// </remarks>
 	public static int getRootLength(RStr path) {
 		int i = Path.GetPathRoot(path).Length; //Span, no alloc
 		if (i > 0 && i < path.Length && !Path2.IsSepChar_(path[i - 1]) && Path2.IsSepChar_(path[i])) i++; //@"\\server\share" -> @"\\server\share\"
@@ -98,7 +92,9 @@ public static unsafe class pathname {
 	public static string getNameNoExt(string path)
 		=> Path2.GetNameNoExt(path);
 	
-	/// <inheritdoc cref="Path.GetExtension"/>
+	/// <summary>
+	/// Gets file name extension like <c>".txt"</c>.
+	/// </summary>
 	public static string getExtension(string path)
 		=> Path.GetExtension(path);
 	

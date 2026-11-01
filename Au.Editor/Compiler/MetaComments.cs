@@ -203,9 +203,13 @@ class MetaComments {
 	public List<string> NoWarnings { get; private set; }
 	
 	/// <summary>
-	/// Gets or sets default meta option 'noWarnings' value. Initially CS1701,CS1702 (from default VS project properties) and CS8981 (lowercase typename).
+	/// Gets or sets default meta option 'noWarnings' value.
+	/// Initially:
+	/// <br/>• CS1701, CS1702 - from default VS project properties.
+	/// <br/>• CS8981 - lowercase typename.
+	/// <br/>• AU1 - Au [Obsolete] without warnings.
 	/// </summary>
-	public static string[] DefaultNoWarnings { get; set; } = ["CS1701", "CS1702", "CS8981"];
+	public static string[] DefaultNoWarnings { get; set; } = ["CS1701", "CS1702", "CS8981", "AU1"];
 	
 	/// <summary>
 	/// Meta 'testInternal'.

@@ -398,9 +398,9 @@ public sealed class IconImageCache : IDisposable {
 				Debug.Assert(s1.Ends(@"\iconCache"));
 				s1 = s1.ReplaceAt(^9.., "_script");
 				//clear caches of all image sizes
-				var a = filesystem.enumDirectories(s1, "iconCache*").ToArray();
+				var a = filesystem.list(s1, "iconCache*").Directories;
 				foreach (var f in a) {
-					_ClearFiles(f.FullPath);
+					_ClearFiles(f);
 				}
 			}
 			

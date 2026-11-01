@@ -17,10 +17,11 @@ Fixed bugs:
 
 New classes:
 - `Path2`. Replaces `pathname`.
-- `Glob`. Path glob wildcard matching.
+- `PathFilter`. Path glob matching etc.
 
 New members:
-- .
+- `filesystem.list`. Replaces the `enumX` methods. Supports glob patterns, more options, faster, and can return familiar .NET types.
+- New overloads of `filesystem.copy` and some other methods have the same improvements as in `filesystem.list`.
 
 New parameters:
 - .

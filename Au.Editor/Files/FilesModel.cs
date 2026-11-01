@@ -1587,12 +1587,11 @@ partial class FilesModel {
 	}
 	
 	void _AddDir(string path, FileNode parent) {
-		foreach (var u in filesystem.enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+		foreach (var u in filesystem.list(path, flags: FLFlags.SkipHiddenSystem).All) {
 			if (_IsPathIgnored(parent.ItemPath + "\\" + u.Name)) continue;
-			bool isDir = u.IsDirectory;
-			var k = new FileNode(this, u.Name, u.FullPath, isDir);
+			var k = new FileNode(this, u.Name, u.Path, u.IsDirectory);
 			parent.AddChild(k);
-			if (isDir) _AddDir(u.FullPath, k);
+			if (u.IsDirectory /*&& !u.IsNtfsLink*/) _AddDir(u.Path, k);
 		}
 	}
 	

@@ -316,12 +316,6 @@ public unsafe class regexp {
 	/// print.it(x.IsMatch(s));
 	/// ]]></code>
 	/// </example>
-	public bool IsMatch(string s, Range? range = null, RXMatchFlags matchFlags = 0) {
-		int start = _GetSpan(s, range, out var span);
-		return _PcreMatch(span, start, matchFlags, rawFlags: false, out _, needM: false) >= 0;
-	}
-	
-	/// <inheritdoc cref="IsMatch(string, Range?, RXMatchFlags)"/>
 	public bool IsMatch(RStr s, Range? range = null, RXMatchFlags matchFlags = 0) {
 		int start = _GetSpan(ref s, range);
 		return _PcreMatch(s, start, matchFlags, rawFlags: false, out _, needM: false) >= 0;

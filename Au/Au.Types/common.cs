@@ -1,3 +1,9 @@
+#if DEBUG
+global using ObsoleteInDebug = System.ObsoleteAttribute;
+#else
+global using ObsoleteInDebug = Au.Types.NotObsoleteInRelease;
+#endif
+
 using System.Diagnostics.CodeAnalysis;
 using static Au.More.Serializer_;
 
@@ -8,6 +14,10 @@ namespace Au.Types {
 	[EditorBrowsable(EditorBrowsableState.Never), AttributeUsage(AttributeTargets.All)]
 	public sealed class NoDoc : Attribute { }
 	//tested: the DocFX /// <exclude /> removes the member from the compilation, not just prevents creating the doc article. Then may be error; don't use it. See https://dotnet.github.io/docfx/docs/dotnet-api-docs.html
+	
+	///
+	[EditorBrowsable(EditorBrowsableState.Never), AttributeUsage(AttributeTargets.All)]
+	public sealed class NotObsoleteInRelease : Attribute { }
 	
 	/// <summary>
 	/// If a class is derived from this class, editor adds undeclared Windows API to its completion list.

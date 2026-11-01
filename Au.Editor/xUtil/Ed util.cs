@@ -231,10 +231,10 @@ static class DotnetUtil {
 		void _ClearOld() {
 			try {
 				var rx = new regexp(@"(?i)^(?:dotnet|windowsdesktop)-runtime-(.+?)-.+\.zip$");
-				foreach (var f in filesystem.enumFiles(folders.ThisAppTemp + "download")) {
+				foreach (var f in filesystem.list(folders.ThisAppTemp + "download").Files) {
 					if (!rx.Match(f.Name, out var m)) continue;
 					if (m[1].Value.Eqi(version)) continue;
-					Api.DeleteFile(f.FullPath);
+					Api.DeleteFile(f);
 				}
 			}
 			catch { }
@@ -446,7 +446,7 @@ static class EdComUtil {
 /// <summary>
 /// Gets relative path from full path when recursively enumerating a directory. Optionally with a prefix. Almost no garbage.
 /// </summary>
-class RelativePath {
+class RelativePath { //TODO
 	char[] _a;
 	int _fullPathBaseLen;
 	string _prefix;

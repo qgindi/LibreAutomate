@@ -764,11 +764,9 @@ static unsafe partial class Api {
 					}
 				}
 #else
-		private int fAnyOperationsAborted;
+		int fAnyOperationsAborted;
 #endif
-		private IntPtr hNameMappings;
-		private string lpszProgressTitle;
-		//these are private and not used, because would be at invalid offsets on 32-bit
+		nint hNameMappings, lpszProgressTitle; //these are private and not used. They would be at invalid offsets in 32-bit.
 	}
 	
 	//internal struct SHFILEOPSTRUCT

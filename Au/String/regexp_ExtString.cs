@@ -12,7 +12,7 @@ public static partial class ExtString {
 	/// <example></example>
 	/// <inheritdoc cref="regexp.IsMatch"/>
 	/// <inheritdoc cref="regexp(string, RXFlags)" path="/param"/>
-	public static bool RxIsMatch(this string t,
+	public static bool RxIsMatch(this RStr t,
 		[ParamString(PSFormat.Regexp)] string rx,
 		RXFlags flags = 0, Range? range = null) {
 		var x = _cache.AddOrGet(rx, flags);

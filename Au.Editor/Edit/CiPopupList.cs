@@ -148,7 +148,7 @@ class CiPopupList {
 		if (text == null) return;
 		_textPopup.Text = text;
 		_textPopup.OnLinkClick = (ph, e) => {
-			if (e.ToInt(1) is int i && i != 0) {
+			if (e.ToInt(out int i, 1)) {
 				ph.Text = _compl.GetDescriptionDoc(ci, e.ToInt(1));
 			} else if (e.Starts("^snippet ")) {
 				DSnippets.ShowSingle(e[9..]);

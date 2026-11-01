@@ -148,19 +148,12 @@ public record struct FileProperties {
 }
 
 /// <summary>
-/// flags for <see cref="filesystem.copy"/> and some other similar functions.
-/// Used only when copying directory.
+/// Flags for <see cref="filesystem.copy"/>.
+/// Used only when copying a directory.
 /// </summary>
 [Flags]
 public enum FCFlags {
-	//note: these values must match the corresponding FEFlags values.
-	
-	/// <summary>
-	/// Skip descendant files and directories that have <c>Hidden</c> and <c>System</c> attributes (both).
-	/// They usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
-	/// They often are protected and would fail to copy, ruining whole copy operation.
-	/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>.
-	/// </summary>
+	/// <inheritdoc cref="FLFlags.SkipHiddenSystem"/>
 	SkipHiddenSystem = 8,
 	
 	/// <summary>
@@ -180,7 +173,7 @@ public enum FCFlags {
 [Flags]
 public enum FDFlags {
 	/// <summary>
-	/// Send to the Recycle Bin. If not possible, delete anyway, unless used <c>CanFail</c>.
+	/// Send to the Recycle Bin. If not possible, delete anyway.
 	/// Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
 	/// Note: it is much slower. To delete multiple, use <see cref="filesystem.delete(IEnumerable{string}, FDFlags)"/>.
 	/// </summary>
@@ -398,50 +391,6 @@ public enum PNFlags {
 	
 	/// <summary>If path is not a file-system path but looks like URI (eg <c>"http:..."</c> or <c>"file:..."</c> or <c>"shell:..."</c>) or starts with <c>"::"</c>, don't throw exception and don't process more (only expand environment variables).</summary>
 	CanBeUrlOrShell = 8,
-}
-
-#endregion
-
-#region list
-
-/// <summary>
-/// Flags for file system enumeration methods.
-/// </summary>
-[Flags]
-public enum FLFlags {
-	/// <summary>
-	/// Don't throw exception when fails to enumerate the directory or a subdirectory because of its security settings.
-	/// </summary>
-	IgnoreInaccessible = 1, //note: must match FCFlags (TODO)
-	
-	/// <summary>
-	/// Also enumerate target directories of NTFS links (symbolic links, mount points etc).
-	/// </summary>
-	RecurseLinks = 2,
-	
-	/// <summary>
-	/// Skip files and subdirectories that have <c>Hidden</c> attribute.
-	/// </summary>
-	SkipHidden = 4,
-	
-	/// <summary>
-	/// Skip files and subdirectories that have <c>Hidden</c> and <c>System</c> attributes (both).
-	/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
-	/// Without this flag the function skips descendants of <c>$Recycle.Bin</c> and some protected hidden-system directories when enumerating a root directory like <c>@"C:\"</c> (but not like <c>@"\\localhost\C$\"</c> etc).
-	/// </summary>
-	SkipHiddenSystem = 8, //note: must match FCFlags
-}
-
-/// <summary>
-/// Specifies the format of paths returned by some file system enumeration methods.
-/// </summary>
-public enum FLReturn {
-	/// <summary>Return full paths.</summary>
-	Paths,
-	/// <summary>Return filenames.</summary>
-	Names,
-	/// <summary>Return relative paths.</summary>
-	RelativePaths
 }
 
 #endregion

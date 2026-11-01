@@ -1,7 +1,8 @@
 namespace Au {
-	partial class filesystem {
+	public static partial class filesystem {
 		/// <summary>
 		/// Gets names and other info of files and subdirectories in the specified directory.
+		/// <para>NOTE: In new code use <see cref="list"/> instead.</para>
 		/// </summary>
 		/// <returns>An enumerable collection of <see cref="FEFile"/> objects.</returns>
 		/// <param name="directoryPath">Full path of the directory.</param>
@@ -40,12 +41,12 @@ namespace Au {
 		/// 
 		/// Enumeration of a subdirectory starts immediately after the subdirectory itself is retrieved.
 		/// </remarks>
-		[Obsolete]
+		[Obsolete("Not obsolete, but `filesystem.list` is better.", DiagnosticId = "AU1")]
 		public static IEnumerable<FEFile> enumerate(string directoryPath, FEFlags flags = 0,
-					Func<FEFile, bool> fileFilter = null,
-					Func<FEFile, int> dirFilter = null,
-					Action<string> errorHandler = null
-					) {
+								Func<FEFile, bool> fileFilter = null,
+								Func<FEFile, int> dirFilter = null,
+								Action<string> errorHandler = null
+								) {
 			//tested 2021-04-30 with .NET 5: much faster than Directory.EnumerateX. Faster JIT, and then > 2 times faster.
 			//tested later with .NET 6-10: ~20% slower than Directory.EnumerateX. Now .NET uses NtQueryDirectoryFile.
 			
@@ -185,6 +186,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Gets names and other info of matching files in the specified directory.
+		/// <para>NOTE: In new code use <see cref="list"/> instead.</para>
 		/// </summary>
 		/// <param name="directoryPath">Full path of the directory.</param>
 		/// <param name="pattern">
@@ -203,7 +205,7 @@ namespace Au {
 		/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
 		/// <exception cref="AuException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
 		/// <inheritdoc cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>
-		[Obsolete]
+		[Obsolete("Not obsolete, but `filesystem.list` is better.", DiagnosticId = "AU1")]
 		public static IEnumerable<FEFile> enumFiles(string directoryPath, string pattern = null, FEFlags flags = 0) {
 			flags |= FEFlags.OnlyFiles;
 			if (pattern == null) return enumerate(directoryPath, flags);
@@ -213,6 +215,7 @@ namespace Au {
 		
 		/// <summary>
 		/// Gets names and other info of matching subdirectories in the specified directory.
+		/// <para>NOTE: In new code use <see cref="list"/> instead.</para>
 		/// </summary>
 		/// <param name="directoryPath">Full path of the directory.</param>
 		/// <param name="pattern">
@@ -226,6 +229,7 @@ namespace Au {
 		/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
 		/// <exception cref="AuException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
 		/// <inheritdoc cref="enumerate(string, FEFlags, Func{FEFile, bool}, Func{FEFile, int}, Action{string})"/>
+		[Obsolete("Not obsolete, but `filesystem.list` is better.", DiagnosticId = "AU1")]
 		public static IEnumerable<FEFile> enumDirectories(string directoryPath, string pattern = null, FEFlags flags = 0) {
 			if (pattern == null) return filesystem.enumerate(directoryPath, flags, _ => false);
 			wildex w = pattern;
@@ -239,7 +243,7 @@ namespace Au.Types {
 	/// <summary>
 	/// flags for <see cref="filesystem.enumerate"/>.
 	/// </summary>
-	[Obsolete]
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	[Flags]
 	public enum FEFlags {
 		/// <summary>
@@ -262,13 +266,13 @@ namespace Au.Types {
 		/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
 		/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>$Recycle.Bin</c>, <c>System Volume Information</c>, <c>Recovery</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for <c>D</c> drive.
 		/// </summary>
-		SkipHiddenSystem = 8, //note: must match FCFlags
+		SkipHiddenSystem = 8,
 		
 		/// <summary>
 		/// If fails to get the contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
 		/// Without this flag then throws exception or calls <i>errorHandler</i>.
 		/// </summary>
-		IgnoreInaccessible = 0x10, //note: must match FCFlags
+		IgnoreInaccessible = 0x10,
 		
 		/// <summary>
 		/// Get only files and not subdirectories.
@@ -300,10 +304,11 @@ namespace Au.Types {
 	/// Contains name and other main properties of a file or subdirectory retrieved by <see cref="filesystem.enumerate"/>.
 	/// The values are not changed after creating the variable.
 	/// </summary>
-	[Obsolete]
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class FEFile {
 		internal FEFile(string name, string fullPath, in Api.WIN32_FIND_DATA d, int level) {
-			Name = name; FullPath = fullPath;
+			Name = name;
+			FullPath = fullPath;
 			Attributes = d.dwFileAttributes;
 			Size = (long)d.nFileSizeHigh << 32 | d.nFileSizeLow;
 			LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime); //fast, sizeof 8

@@ -239,9 +239,7 @@ public class wpfBuilder {
 			if (_p.parent != null) {
 				_p = _p.parent;
 			} else {
-#if NET9_0_OR_GREATER
 				if (_unGray && _window is { } w && w.ThemeMode != ThemeMode.None && w.Background == SystemColors.ControlBrush) w.Background = null;
-#endif
 			}
 		}
 		return this;
@@ -378,11 +376,9 @@ public class wpfBuilder {
 					_unGray = true;
 					
 					//rejected: remove this background brush when _window.ThemeMode property changed. Slow. Instead remove in End(), if _unGray still true.
-					//#if NET9_0_OR_GREATER
 					//					DependencyPropertyDescriptor.FromProperty(Window.OverridesDefaultStyleProperty, typeof(Window)).AddValueChanged(_window, static (o, _) => {
 					//						if (o is Window w && w.ThemeMode != ThemeMode.None && w.Background == SystemColors.ControlBrush) w.Background = null;
 					//					});
-					//#endif
 				}
 			}
 		}
@@ -918,7 +914,7 @@ public class wpfBuilder {
 		return this.LabeledBy(var1);
 	}
 	
-#if !DEBUG && NET9_0_OR_GREATER
+#if !DEBUG
 #pragma warning disable CS1591 //Missing XML comment for publicly visible type or member
 	//[Obsolete("Instead of flags use: b.Child().Add(...)")]
 	[EditorBrowsable(EditorBrowsableState.Never)]
@@ -2770,10 +2766,8 @@ public class wpfBuilder {
 	/// </summary>
 	static _Themed _GetThemed(wpfBuilder b = null) {
 		var a = Application.Current;
-#if NET9_0_OR_GREATER
 		if (a != null && a.ThemeMode != ThemeMode.None) return _Themed.Wpf;
 		if (b?._GetOrFindWindow() is { } w && w.ThemeMode != ThemeMode.None) return _Themed.Wpf;
-#endif
 		if (a != null && a.Resources.MergedDictionaries.Count > 0) return _Themed.Other;
 		return 0;
 	}

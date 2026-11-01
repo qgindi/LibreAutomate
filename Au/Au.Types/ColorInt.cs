@@ -31,14 +31,12 @@ public record struct ColorInt {
 	/// Converts from an <c>int</c> color value in <c>0xRRGGBB</c> or <c>0xAARRGGBB</c> format.
 	/// Sets alpha = 0xFF if it is 0 in <i>color</i>.
 	/// </summary>
-	//[Obsolete] //to find all references
 	public static implicit operator ColorInt(int color) => new(color);
 	
 	/// <summary>
 	/// Converts from an <c>uint</c> color value in <c>0xRRGGBB</c> or <c>0xAARRGGBB</c> format.
 	/// Sets alpha = 0xFF if it is 0 in <i>color</i>.
 	/// </summary>
-	//[Obsolete] //to find all references
 	public static implicit operator ColorInt(uint color) => new((int)color);
 	
 	/// <summary>

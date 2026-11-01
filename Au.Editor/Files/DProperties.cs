@@ -436,8 +436,8 @@ class Class1 {
 		var dir = folders.Workspace + @".interop";
 		if (filesystem.exists(dir)) {
 			m.Submenu("Use converted", m => {
-				foreach (var f in filesystem.enumFiles(dir, "*.dll")) {
-					m[f.Name] = o => {
+				foreach (var fn in filesystem.list(dir, "*.dll").FileNames) {
+					m[fn] = o => {
 						var s = o.Text;
 						if (!_meta.com.Contains(s)) _meta.com.Add(s);
 						_ShowInfo_Added(e.Button, _meta.com);

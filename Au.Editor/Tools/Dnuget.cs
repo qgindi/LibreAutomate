@@ -61,7 +61,7 @@ class DNuget : KDialogWindow {
 		_cbFolder.MaxDropDownHeight = 600;
 		_cbFolder.ShouldPreserveUserEnteredPrefix = true;
 		filesystem.createDirectory(_nugetDir);
-		_folders = new(filesystem.enumDirectories(_nugetDir).Select(o => o.Name));
+		_folders = new(filesystem.list(_nugetDir).DirectoryNames);
 		if (_folders.Count == 0) _folders.Add("-");
 		_cbFolder.ItemsSource = _folders;
 		_cbFolder.SelectedIndex = 0; //probably "-"
@@ -271,9 +271,9 @@ class DNuget : KDialogWindow {
 			}
 			filesystem.createDirectory(_folderPath);
 			if (_dirExists) {
-				foreach (var v in filesystem.enumerate(_undoPath)) {
-					if (v.Attributes.Has(FileAttributes.ReadOnly) /*user-added files*/ || (!v.IsDirectory && v.Name.Ends(".csproj", true))) {
-						filesystem.copyTo(v.FullPath, _folderPath);
+				foreach (var v in filesystem.list(_undoPath).All) {
+					if (v.Attributes.Has(FileAttributes.ReadOnly) /*user-added files*/ || (!v.IsDirectory && v.Path.Ends(".csproj", true))) {
+						filesystem.copyTo(v, _folderPath);
 					}
 				}
 			}
@@ -347,10 +347,10 @@ class DNuget : KDialogWindow {
 			void _DeleteOtherRuntimes(string dir) {
 				dir += @"\runtimes";
 				if (filesystem.exists(dir)) {
-					foreach (var v in filesystem.enumDirectories(dir)) {
+					foreach (var v in filesystem.list(dir).Directories) {
 						var n = v.Name;
 						if (!n.Starts("win", true) || (n.Contains('-') && 0 == n.Ends(true, "-x64", "-x86", "-arm64"))) {
-							filesystem.delete(v.FullPath);
+							filesystem.delete(v);
 						}
 					}
 				}
@@ -370,20 +370,19 @@ class DNuget : KDialogWindow {
 			var dCompile = _GetCompileAssembliesFromAssetsJson(dirProj2 + @"\obj\project.assets.json", folderPath);
 			
 			//get lists of .NET dlls, native dlls and other files
-			List<(FEFile f, int r)> aDllNet = new(); //r: 0 r (ref and run time), 1 ro (ref only), 2 rt (run time only)
-			List<FEFile> aDllNative = new(), aOther = new();
-			var feFlags = FEFlags.AllDescendants | FEFlags.OnlyFiles | FEFlags.UseRawPath | FEFlags.NeedRelativePaths;
-			foreach (var f in filesystem.enumFiles(dirBin2, flags: feFlags).OrderBy(o => o.Level)) {
-				var s = f.Name; //like @"\file" or @"\dir\file"
+			List<(FLPath f, int r)> aDllNet = new(); //r: 0 r (ref and run time), 1 ro (ref only), 2 rt (run time only)
+			List<FLPath> aDllNative = new(), aOther = new();
+			foreach (var f in filesystem.list(dirBin2, flags: FLFlags.Recurse).Files.OrderBy(o => o.RelativeDepth)) {
+				var relPath = f.RelativePath;
 				bool runtimes = false;
-				if (f.Level == 0) {
-					if (s.Starts(@"\___.")) continue;
+				if (f.RelativeDepth == 0) {
+					if (relPath.Starts("___.")) continue;
 				} else {
-					runtimes = s.Starts(@"\runtimes\win", true);
-					Debug_.PrintIf(!(runtimes || s.Ends(".resources.dll") || 0 != s.Starts(false, @"\ref\", @"\.playwright\")), s); //ref is used by Microsoft.PowerShell.SDK as data files
+					runtimes = relPath.Starts(@"runtimes\win", true);
+					Debug_.PrintIf(!(runtimes || relPath.Ends(".resources.dll") || 0 != relPath.Starts(false, @"ref\", @".playwright\")), relPath); //ref is used by Microsoft.PowerShell.SDK as data files
 				}
-				if (s.Ends(".dll", true) && (f.Level == 0 || runtimes)) {
-					if (CompilerUtil.IsNetAssembly(f.FullPath, out bool refOnly)) {
+				if (relPath.Ends(".dll", true) && (f.RelativeDepth == 0 || runtimes)) {
+					if (CompilerUtil.IsNetAssembly(f, out bool refOnly)) {
 						aDllNet.Add((f, refOnly ? 1 : runtimes ? 2 : 0));
 					} else {
 						aDllNative.Add(f);
@@ -395,7 +394,7 @@ class DNuget : KDialogWindow {
 			
 			//.NET dlls
 			HashSet<string> hsLib = new(StringComparer.OrdinalIgnoreCase);
-			foreach (var group in aDllNet.ToLookup(o => Path2.GetName(o.f.Name), StringComparer.OrdinalIgnoreCase)) {
+			foreach (var group in aDllNet.ToLookup(o => o.f.Name, StringComparer.OrdinalIgnoreCase)) {
 				//print.it($"<><lc #BBE3FF>{group.Key}<>");
 				var filename = group.Key;
 				int count = group.Count();
@@ -403,20 +402,20 @@ class DNuget : KDialogWindow {
 				if (haveRO) xx.Add(new XElement("ro", @"\_ref\" + filename));
 				XElement xGroup = null;
 				foreach (var (f, r) in group) {
-					var s = f.Name; //like @"\file" or @"\dir\file"
-					hsLib.Add(s);
-					bool refOnly = r == 1 || (r == 0 && f.Level == 0 && count > 1); //if count>1, this is X.dll from [X.dll, sub\X.dll, ...]
+					var relPath = string.Concat("\\", f.RelativePathSpan); //fbc: \relative-path
+					hsLib.Add(relPath);
+					bool refOnly = r == 1 || (r == 0 && f.RelativeDepth == 0 && count > 1); //if count>1, this is X.dll from [X.dll, sub\X.dll, ...]
 					if (refOnly) {
 						if (haveRO) continue;
-						xx.Add(new XElement("ro", s));
+						xx.Add(new XElement("ro", relPath));
 					} else {
-						if (r == 2 && s[13] != '\\') { //\runtimes\win... but not \runtimes\win\...
+						if (r == 2 && relPath[13] != '\\') { //\runtimes\win... but not \runtimes\win\...
 							if (xGroup == null) xx.Add(xGroup = new("group"));
-							xGroup.Add(new XElement("rt", s));
+							xGroup.Add(new XElement("rt", relPath));
 						} else if (!haveRO && r == 0) {
-							xx.Add(new XElement("r", s));
+							xx.Add(new XElement("r", relPath));
 						} else {
-							xx.Add(new XElement("rt", s));
+							xx.Add(new XElement("rt", relPath));
 						}
 					}
 					//print.it(s, f.Size, refOnly, haveRO);
@@ -441,15 +440,15 @@ class DNuget : KDialogWindow {
 			}
 			
 			//native dlls
-			foreach (var group in aDllNative.ToLookup(o => Path2.GetName(o.Name), StringComparer.OrdinalIgnoreCase)) {
+			foreach (var group in aDllNative.ToLookup(o => o.Name, StringComparer.OrdinalIgnoreCase)) {
 				XElement xGroup = null;
 				foreach (var f in group) {
-					var s = f.Name;
-					if (f.Level > 0 && s[13] != '\\') {
+					var relPath = string.Concat("\\", f.RelativePathSpan); //fbc: \relative-path
+					if (f.RelativeDepth > 0 && relPath[13] != '\\') {
 						if (xGroup == null) xx.Add(xGroup = new("natives"));
-						xGroup.Add(new XElement("native", s));
+						xGroup.Add(new XElement("native", relPath));
 					} else {
-						xx.Add(new XElement("native", s));
+						xx.Add(new XElement("native", relPath));
 					}
 				}
 			}
@@ -458,12 +457,12 @@ class DNuget : KDialogWindow {
 			
 			//other files
 			foreach (var f in aOther) {
-				var s = f.Name;
+				var relPath = string.Concat("\\", f.RelativePathSpan); //fbc: \relative-path
 				
 				//skip XML doc. When compiling exeProgram, other xml files will be copied to the output.
-				if (s.Ends(".xml", true) && hsLib.Contains(s.ReplaceAt(^3..^1, "dl"))) continue;
+				if (relPath.Ends(".xml", true) && hsLib.Contains(relPath.ReplaceAt(^3..^1, "dl"))) continue;
 				
-				xx.Add(new XElement("other", s));
+				xx.Add(new XElement("other", relPath));
 			}
 			
 			xn.SaveElem(npath, backup: true);
@@ -676,8 +675,8 @@ class DNuget : KDialogWindow {
 			bool _CanDeleteFolder() {
 				if (t.HasChildren) return false;
 				if (!filesystem.exists(path).Directory) return false;
-				var a = filesystem.enumerate(path, FEFlags.UseRawPath).ToArray();
-				if (a.Length > 1 || (a.Length == 1 && (a[0].IsDirectory || !a[0].Name.Ends(".csproj", true)))) return false;
+				var a = filesystem.list(path).All;
+				if (a.Length > 1 || (a.Length == 1 && (a[0].IsDirectory || !a[0].Path.Ends(".csproj", true)))) return false;
 				return true;
 			}
 		}
@@ -1070,7 +1069,7 @@ class DNuget : KDialogWindow {
 			if (filesystem.exists(cacheDir, true).Directory) {
 				if (useCache) {
 					var df = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-					foreach (var v in filesystem.enumFiles(cacheDir, "**m *.png||*.jpg||*.ico||*.a")) df[Path2.GetNameNoExt(v.Name)] = v.FullPath;
+					foreach (var v in filesystem.list(cacheDir, "*.png|*.jpg|*.ico|*.a").Files) df[Path2.GetNameNoExt(v)] = v;
 					for (int i = a.Count; --i >= 0;) {
 						if (df.TryGetValue(a[i].Name, out string file)) {
 							var ext = Path.GetExtension(file);

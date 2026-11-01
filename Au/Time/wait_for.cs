@@ -25,10 +25,7 @@ namespace Au {
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns a value other than <c>default(T)</c>. The calling period depends on <i>options</i>.</param>
 		/// <param name="options">Options. If <c>null</c>, uses <c>opt.wait</c>.</param>
 		/// <returns>Returns the value returned by the callback function. On timeout returns <c>default(T)</c> if <i>secondsTimeout</i> is negative; else exception.</returns>
-#if DEBUG
-		[Obsolete]
-#endif
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[ObsoleteInDebug, EditorBrowsable(EditorBrowsableState.Never)]
 		public static T forCondition<T>(double secondsTimeout, Func<T> condition, OWait options = null) {
 #pragma warning disable CS0612 // Type or member is obsolete
 			var loop = new WaitLoop(secondsTimeout, options);
@@ -271,10 +268,7 @@ namespace Au {
 		/// Obsolete. Use <c>wait.doEventsUntil</c>.
 		/// </summary>
 		/// <inheritdoc cref="doEventsUntil"/>
-#if DEBUG
-		[Obsolete] //just renamed
-#endif
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[ObsoleteInDebug, EditorBrowsable(EditorBrowsableState.Never)]
 		public static bool forMessagesAndCondition(double secondsTimeout, Func<bool> condition) => doEventsUntil(secondsTimeout, condition);
 		
 		//rejected. Rarely used; type-limited. Let use wait.until.

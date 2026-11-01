@@ -124,7 +124,7 @@ static class CiSnippets {
 		
 		if (s_items == null) {
 			var a = new List<_CiComplItemSnippet>();
-			foreach (var f in filesystem.enumFiles(AppSettings.DirBS, "*Snippets.xml")) _LoadFile(f.FullPath, true);
+			foreach (var f in filesystem.list(AppSettings.DirBS, "*Snippets.xml").Files) _LoadFile(f, true);
 			_LoadFile(DefaultFile, false);
 			if (a.Count == 0) return;
 			a.Sort((x, y) => { //for the surround list
