@@ -233,7 +233,7 @@ static partial class App {
 #endif
 	}
 
-	private static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
+	static Assembly _Assembly_Resolving(AssemblyLoadContext alc, AssemblyName an) {
 		var dlls = _arRoslynDlls ??= filesystem.list(folders.ThisAppBS + "Roslyn", "*.dll").Files
 				.ToDictionary(o => o.NameSpan[..^4].ToString(), o => o.Path);
 		if (dlls.TryGetValue(an.Name, out var path)) return alc.LoadFromAssemblyPath(path);

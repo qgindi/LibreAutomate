@@ -24,7 +24,7 @@ New members:
 - New overloads of `filesystem.copy` and some other methods have the same improvements as in `filesystem.list`.
 
 New parameters:
-- .
+- `EnumUI` callback function for filtering and setting text/tooltip.
 
 Improved:
 - .
