@@ -27,7 +27,7 @@ New parameters:
 - `EnumUI` callback function for filtering and setting text/tooltip.
 
 Improved:
-- .
+- Can use `using` with `wpfBuilder` panels: `using (b.R.StartGrid()) { /*auto-indented code*/ } //don't need b.End()`.
 
 Fixed bugs:
 

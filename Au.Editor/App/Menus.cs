@@ -471,7 +471,7 @@ More info in app help topic "Code editor".
 		public static void ocr() { ToolProcess.StartDocr(); }
 		
 		[Command(image = "*Material.FolderOutline" + blue)]
-		public static void Get_files_in_folder() { DEnumDir.Dialog(); }
+		public static void Get_files_in_folder() { DEnumFiles.Dialog(); }
 		
 		[Command(keysText = "Ctrl+Space in string", image = EdIcons.Keys)]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }

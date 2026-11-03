@@ -36,6 +36,8 @@ namespace Au;
 /// WPF has many control types, for example <see cref="Button"/>, <see cref="CheckBox"/>, <see cref="TextBox"/>, <see cref="ComboBox"/>, <see cref="Label"/>. Most are in namespaces <c>System.Windows.Controls</c> and <c>System.Windows.Controls.Primitives</c>. Also on the internet you can find many libraries containing WPF controls and themes. For example, search for <i>github awesome dotnet C#</i>. Many libraries are open-source, and most can be found in GitHub (source, info and sometimes compiled files). Compiled files usually can be found in <see href="https://www.nuget.org/"/> as packages. Use menu <b>Tools > NuGet</b>.
 /// 
 /// By default don't need XAML. When need, you can load XAML strings and files with <see cref="System.Windows.Markup.XamlReader"/>.
+/// 
+/// This class implements <c>IDisposable</c>. The only purpose is to auto-indent and auto-end panels, like <c>using (b.R.StartGrid()) { /*auto-indented code*/ } //don't need b.End()</c>.
 /// </remarks>
 /// <example>
 /// Dialog window with several controls for data input.
@@ -50,7 +52,7 @@ namespace Au;
 /// print.it(text1.Text, combo1.SelectedIndex, c1.IsChecked == true); //get user input from control variables
 /// ]]></code>
 /// </example>
-public class wpfBuilder {
+public class wpfBuilder : IDisposable {
 	//readonly FrameworkElement _container; //now used only in ctor
 	readonly Window _window; //= _container or null
 	_PanelBase _p; //current grid/stack/dock/canvas panel, either root or nested
@@ -232,7 +234,36 @@ public class wpfBuilder {
 	/// </summary>
 	/// <remarks>
 	/// Always call this method to end a nested panel. For root panel it is optional if using <see cref="ShowDialog"/>.
+	/// 
+	/// You can use code like <c>using (b.R.StartGrid()) { /*auto-indented code*/ } //don't need b.End()</c>. However then control variables must be declared outside (in most cases).
 	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// var b = new wpfBuilder("Window"); //creates the outermost grid panel
+	/// b.WinSize(400);
+	/// 
+	/// b.R.Add("Text", out TextBox _);
+	/// 
+	/// CheckBox c1, c2, c3, c4;
+	/// 
+	/// b.StartGrid();
+	/// b.R.Panel.Background = Brushes.Aqua;
+	/// b.R.Add(out c1, "Check1");
+	/// b.R.Add(out c2, "Check2");
+	/// b.End(); //end the grid panel
+	/// 
+	/// //the same with `using` block
+	/// using (b.R.StartGrid()) {
+	/// 	b.R.Panel.Background = Brushes.PaleGreen;
+	/// 	b.R.Add(out c3, "Check3");
+	/// 	b.R.Add(out c4, "Check4");
+	/// } //end the grid panel (don't need b.End();)
+	/// 
+	/// b.End(); //finally end the outermost grid panel added by the constructor. This is optional.
+	/// 
+	/// if (!b.ShowDialog()) return;
+	/// ]]></code>
+	/// </example>
 	public wpfBuilder End() {
 		if (!_p.ended) {
 			_p.End();
@@ -2805,4 +2836,13 @@ public class wpfBuilder {
 	}
 	
 	#endregion
+	
+	//IDisposable
+	
+	/// <summary>
+	/// Calls <see cref="End"/>.
+	/// </summary>
+	void IDisposable.Dispose() {
+		End();
+	}
 }

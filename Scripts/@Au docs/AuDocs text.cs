@@ -110,14 +110,15 @@ partial class AuDocs {
 		if (isApi) {
 			//In class member pages, in title insert a link to the type.
 			nr = s.RxReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|More\.)?+([\w\.`]+))\.#?\w+\*?""[^>]*>\K(Method|Property|Field|Event|Operator|Constructor) (\w+)",
-				m => {
+				static m => {
 					string fileName = m[1].Value, className = m[2].Value, memberName = m[4].Value;
 					if (className.Contains('`')) { //generic
 						fileName = fileName.Replace("`", "-");
-						if (className.Ends("`1")) className = className.ReplaceAt(^2.., "&lt;T&gt;");
-						else if (className.Ends("`2")) className = className.ReplaceAt(^2.., "&lt;T1, T2&gt;");
-						else if (className.Ends("`3")) className = className.ReplaceAt(^2.., "&lt;T1, T2, T3&gt;");
-						else throw new NotImplementedException();
+						if (0 == className.RxReplace(@"`\d+\b", static mm => {
+							int n = mm.Value.ToInt(1);
+							if (n == 1) return "&lt;T&gt;";
+							return $"&lt;{string.Join(", ", Enumerable.Range(1, n).Select(i => $"T{i}"))}&gt;";
+						}, out className)) throw null;
 					}
 					if (m.Subject[m[1].End + 1] == '#') return $@"Constructor of <a href=""{fileName}.html"">{className}</a>"; //ctor
 					if (memberName == "this") return $@"Indexer of <a href=""{fileName}.html"">{className}</a>"; //indexer

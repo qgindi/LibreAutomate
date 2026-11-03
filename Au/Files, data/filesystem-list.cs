@@ -65,8 +65,9 @@ public class FLQuery {
 		
 		bool skipHiddenSystem = _flags.Has(FLFlags.SkipHiddenSystem),
 			skipSome = recurse && !skipHiddenSystem && _directory is [.., ':', '\\' or '/'],
+			followLinks = _flags.Has(FLFlags.RecurseFollowLinks),
 			useShouldInclude = files != null || skipHiddenSystem || _filter != null,
-			useShouldRecurse = recurse && (skipHiddenSystem || skipSome || !_flags.Has(FLFlags.RecurseLinks) || _filter != null);
+			useShouldRecurse = recurse && (skipHiddenSystem || skipSome || !followLinks || _filter != null);
 		
 		bool _ShouldInclude(ref FileSystemEntry e) {
 			if (e.IsDirectory == files) return false;
@@ -77,7 +78,7 @@ public class FLQuery {
 		
 		bool _ShouldRecurse(ref FileSystemEntry e) {
 			if (skipHiddenSystem && e.Attributes.Has(FileAttributes.Hidden | FileAttributes.System)) return false;
-			if (!_flags.Has(FLFlags.RecurseLinks) && e.Attributes.Has(FileAttributes.ReparsePoint) && filesystem.IsNtfsLink_(e.ToFullPath())) return false;
+			if (!followLinks && e.Attributes.Has(FileAttributes.ReparsePoint) && filesystem.IsNtfsLink_(e.ToFullPath())) return false;
 			
 			//skip ?:\$Recycle.Bin
 			if (skipSome && e.Attributes.Has(FileAttributes.Hidden | FileAttributes.System) && e.IsDirectory && e.Directory.SequenceEqual(e.RootDirectory))
@@ -297,14 +298,15 @@ public struct FLPath {
 [Flags]
 public enum FLFlags {
 	/// <summary>
-	/// Get all descendants, not just direct children.
+	/// Get all descendants, not just direct children. Don't follow NTFS directory links.
 	/// </summary>
 	Recurse = 1,
 	
 	/// <summary>
-	/// Also enumerate target directories of NTFS links (symbolic links, mount points etc). Use with <c>Recurse</c>.
+	/// Get all descendants, not just direct children. Follow NTFS directory links (symbolic links, mount points etc).
+	/// Includes flag <c>Recurse</c>.
 	/// </summary>
-	RecurseLinks = 2,
+	RecurseFollowLinks = 3,
 	
 	/// <summary>
 	/// Skip files and subdirectories that have <c>Hidden</c> attribute.
