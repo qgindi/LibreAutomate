@@ -20,8 +20,9 @@ New classes:
 - `PathFilter`. Path glob matching etc.
 
 New members:
-- `filesystem.list`. Replaces the `enumX` methods. Supports glob patterns, more options, faster, and can return familiar .NET types.
-- New overloads of `filesystem.copy` and some other methods have the same improvements as in `filesystem.list`.
+- `filesystem.list`. Replaces the `enumX` methods. Glob patterns, faster, can return .NET types.
+- `filesystem.copy` supports glob patterns.
+- `string` extension operator `/` joins paths.
 
 New parameters:
 - `EnumUI` callback function for filtering and setting text/tooltip.

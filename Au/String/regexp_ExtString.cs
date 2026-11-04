@@ -293,7 +293,8 @@ public static partial class ExtString {
 	
 	//Cache of compiled regular expressions.
 	//Can make ~10 times faster when the subject string is short.
-	//The algorithm is from .NET Regex source code.
+	//The algorithm is from old .NET Regex source code.
+	//TODO: support more items. Some scripts use more than 15 regexes in a loop. Try ConcurrentDictionary (like the new .NET code in `Regex.Cache.cs`). Maybe possible with ConditionalWeakTable.
 	class _RegexCache {
 		struct _RXCode {
 			public string regex;

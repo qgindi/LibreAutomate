@@ -8,7 +8,7 @@ var c = new DriveInfo("C");
 print.it(c.TotalSize, c.AvailableFreeSpace);
 foreach (var d in c.RootDirectory.EnumerateDirectories()) print.it(d.FullName);
 //or
-foreach (var d in filesystem.enumDirectories(c.Name)) print.it(d.FullPath);
+foreach (var d in filesystem.list(c.Name).Directories) print.it(d);
 
 /// Get home drive name and its type (fixed/removable/network).
 

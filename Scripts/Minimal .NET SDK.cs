@@ -194,8 +194,8 @@ static class MiscScripts {
 	public static void CreateListOfMinSdkFilesForDiff(string dirName) {
 		var dir = folders.ThisAppBS + dirName;
 		List<string> a = [];
-		foreach (var f in filesystem.enumerate(dir, FEFlags.AllDescendants | FEFlags.NeedRelativePaths)) {
-			a.Add(f.Name);
+		foreach (var f in filesystem.list(dir, flags: FLFlags.Recurse).All) {
+			a.Add(f.RelativePath);
 		}
 		var s = string.Join('\n', a);
 		dirName = dirName[..dirName.IndexOf('\\')];

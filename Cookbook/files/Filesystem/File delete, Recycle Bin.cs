@@ -7,14 +7,14 @@ filesystem.delete(@"C:\Temp\file.txt", FDFlags.RecycleBin); //move to the Recycl
 
 /// Delete everything from the Temp folder, except locked files/folders.
 
-foreach (var f in filesystem.enumerate(folders.Temp)) {
-	filesystem.delete(f.FullPath, FDFlags.CanFail);
+foreach (var f in filesystem.list(folders.Temp).All) {
+	filesystem.delete(f, FDFlags.CanFail);
 }
 
 /// Delete all `.txt` files from folder. Not from subfolders.
 
-foreach (var f in filesystem.enumFiles(@"C:\Temp", "*.txt"))
-	filesystem.delete(f.FullPath);
+foreach (var f in filesystem.list(@"C:\Temp", "*.txt").Files)
+	filesystem.delete(f);
 
 /// Empty the Recycle Bin.
 

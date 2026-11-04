@@ -1,7 +1,7 @@
 /// Use class <see cref="ZipFile"/>.
 using System.IO.Compression;
 
-string zipFile = @"C:\Test\Z.zip";
+string zipFile = @"C:\Test\test.zip";
 //filesystem.delete(zipFile);
 
 /// Create zip file from folder.
@@ -29,9 +29,9 @@ using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
 /// Create zip file from folder. Don't include subfolders `protected` and `ico`.
 
 using (var z = ZipFile.Open(zipFile, ZipArchiveMode.Create)) {
-	foreach (var f in filesystem.enumerate(@"C:\Test\Folder", FEFlags.NeedRelativePaths, dirFilter: d => d.Name.Ends(true, @"\protected", @"\ico") > 0 ? 0 : 2)) {
+	foreach (var f in filesystem.list(@"C:\Test\c", "||/protected/|/ico/", FLFlags.Recurse).Files) {
 		//print.it(f.Name);
-		z.CreateEntryFromFile(f.FullPath, f.Name[1..].Replace('\\', '/'));
+		z.CreateEntryFromFile(f, f.RelativePath.Replace('\\', '/'));
 	}
 }
 

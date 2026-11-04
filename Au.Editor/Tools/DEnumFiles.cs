@@ -29,7 +29,7 @@ class DEnumFiles : KDialogWindow {
 		InitWinProp("Get files in folder", App.Wmain);
 		
 		_noeventValueChanged = true;
-		var b = new wpfBuilder(this).WinSize(600);
+		var b = new wpfBuilder(this).WinSize(600).Columns(-1);
 		
 		//top
 		using (b.R.StartGrid().Columns(76, 76, -1)) {
@@ -58,18 +58,19 @@ class DEnumFiles : KDialogWindow {
 		}
 		b.R.AddSeparator();
 		
-		b.R.Add("Folder", out _tFolder, initFolder).Tooltip("Folder path.\nPaste, drop or right-click.").Focus();
-		_tFolder.IsFolder = true;
-		_tFolder.Unexpand = App.Settings.tools_pathUnexpand;
-		
-		b.StartDock();
-		b.Add("Get", out _cbGet).Items("Files|Folders|All").Width(100, "L");
-		b.Add("As", out _cbResult)
-			.Items("FLPath[]  (path, name, attributes)|IEnumerable<FLPath>|string[]  (names)|string[]  (paths)|FileSystemInfo[]  (all properties)|IEnumerable<FileSystemInfo>")
-			.Tooltip("If array, stores results in an array variable before starting to use them.\nThen it is safe to delete/rename/move/copy the files.\nBut then cannot start using results until all retrieved from the file system.\nUse IEnumerable if going to search in a potentially large directory.");
-		b.End();
-		
-		b.R.Add(out _filter).Margin(0);
+		//folder, kind/type, filter
+		using (b.R.StartGrid().Columns(48, 100, 0, 250, -1)) {
+			b.R.Add("Folder", out _tFolder, initFolder).Tooltip("Folder path.\nPaste, drop or right-click.").Focus();
+			_tFolder.IsFolder = true;
+			_tFolder.Unexpand = App.Settings.tools_pathUnexpand;
+			
+			b.R.Add("Get", out _cbGet).Items("Files|Folders|All");
+			b.Add("As", out _cbResult).Span(1)
+				.Items("FLPath[]  (path, name, attributes)|IEnumerable<FLPath>|string[]  (names)|string[]  (paths)|FileSystemInfo[]  (all properties)|IEnumerable<FileSystemInfo>|(tuple)[]  (selected properties)|IEnumerable<(tuple)>")
+				.Tooltip("If array, stores results in an array variable before starting to use them.\nThen it is safe to delete/rename/move/copy the files.\nBut then cannot start using results until all retrieved from the file system.\nUse IEnumerable if going to search in a potentially large directory.");
+			
+			b.R.Add(out _filter).Margin(0);
+		}
 		
 		//flags and results
 		using (b.R.StartGrid().Columns(-1, -1)) {
@@ -157,13 +158,16 @@ class DEnumFiles : KDialogWindow {
 		b.Append(").");
 		
 		int iFunc = forTest ? 1 : _cbResult.SelectedIndex;
+		const string c_transform = "(ref e) => (first: e.EditMe, second: e.EditMe)";
 		string sFunc = iFunc switch {
 			0 => getWhat switch { 0 => "Files", 1 => "Directories", _ => "All" },
-			1 => getWhat switch { 0 => "EnumerateFiles()", 1 => "EnumerateDirectories()", _ => "EnumerateAll()" },
+			1 => getWhat switch { 0 => "Enumerate(true)", 1 => "Enumerate(false)", _ => "Enumerate()" },
 			2 => getWhat switch { 0 => "FileNames", 1 => "DirectoryNames", _ => "AllNames" },
 			3 => getWhat switch { 0 => "FilePaths", 1 => "DirectoryPaths", _ => "AllPaths" },
 			4 => getWhat switch { 0 => "FileInfos", 1 => "DirectoryInfos", _ => "AllInfos" },
-			_ => getWhat switch { 0 => "EnumerateFileInfos()", 1 => "EnumerateDirectoryInfos()", _ => "EnumerateAllInfos()" },
+			5 => getWhat switch { 0 => "EnumerateInfos(true)", 1 => "EnumerateInfos(false)", _ => "EnumerateInfos()" },
+			6 => getWhat switch { 0 => $"Enumerate({c_transform}, true).ToArray()", 1 => $"Enumerate({c_transform}, false).ToArray()", _ => $"Enumerate({c_transform}).ToArray()" },
+			_ => getWhat switch { 0 => $"Enumerate({c_transform}, true)", 1 => $"Enumerate({c_transform}, false)", _ => $"Enumerate({c_transform})" },
 		};
 		b.Append(sFunc);
 		

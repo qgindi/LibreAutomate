@@ -139,7 +139,7 @@ void _Other(string dir, string docKind) {
 	static void _AddItems(string dir, JsonObject jp, string hrefPath = null) {
 		var ja = new JsonArray();
 		jp.Add("items", ja);
-		foreach (var f in filesystem.enumerate(dir)) {
+		foreach (var f in filesystem.list(dir).All) {
 			string name = f.Name;
 			if (!f.IsDirectory) {
 				if (!name.Ends(".html")) continue;
@@ -151,7 +151,7 @@ void _Other(string dir, string docKind) {
 			ja.Add(j);
 			var href = Uri.EscapeDataString(f.Name);
 			if (f.IsDirectory) {
-				_AddItems(f.FullPath, j, hrefPath + href + "/");
+				_AddItems(f, j, hrefPath + href + "/");
 			} else {
 				j.Add("href", hrefPath + href);
 			}

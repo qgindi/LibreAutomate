@@ -205,6 +205,18 @@ public static unsafe class Path2 {
 		}
 	}
 	
+	extension(RStr) {
+		/// <summary>
+		/// Calls <see cref="Path.Join(RStr, RStr)"/> and <see cref="PrefixLongPathIfNeed"/>.
+		/// </summary>
+		/// <exception cref="ArgumentException"><i>s1</i> is empty.</exception>
+		public static string operator /(RStr s1, RStr s2) {
+			if (s1.IsEmpty) throw new ArgumentException("s1 is empty");
+			string r = Path.Join(s1, s2);
+			return PrefixLongPathIfNeed(r);
+		}
+	}
+	
 	/// <summary>
 	/// Combines two path parts. Also calls <c>PrefixLongPathIfNeed</c>.
 	/// Unlike <see cref="Join"/>, fails if some part is empty or <c>@"\"</c> or if <i>s2</i> is <c>@"\\"</c>. Also does not check <i>s2</i> full path.

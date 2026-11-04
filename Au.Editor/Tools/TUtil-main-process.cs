@@ -229,7 +229,7 @@ class PathInfo {
 		var R = (PathCode)m.Show(owner: owner);
 		
 		if (R is PathCode.EnumDir) {
-			//TODO: once: white-only window, LA hung
+			//TODO2: once: white-only window, LA hung
 			DEnumFiles.Dialog(paths[0]);
 			return 0;
 		}

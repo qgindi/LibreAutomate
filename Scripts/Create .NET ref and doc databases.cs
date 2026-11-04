@@ -30,8 +30,7 @@ static class RefAndDoc {
 		List<string> a = [];
 		List<SemanticVersion> asv = [];
 		var verNow = SemanticVersion.Parse(Environment.Version.ToString());
-		foreach (var f in filesystem.enumDirectories(dirCore)) { //for each version
-			var s = f.Name;
+		foreach (var s in filesystem.list(dirCore).DirectoryNames) { //for each version
 			var v = SemanticVersion.Parse(s);
 			if (v >= verNow) { a.Add(s); asv.Add(v); }
 		}

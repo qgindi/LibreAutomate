@@ -446,7 +446,7 @@ static class EdComUtil {
 /// <summary>
 /// Gets relative path from full path when recursively enumerating a directory. Optionally with a prefix. Almost no garbage.
 /// </summary>
-class RelativePath { //TODO
+class RelativePath {
 	char[] _a;
 	int _fullPathBaseLen;
 	string _prefix;

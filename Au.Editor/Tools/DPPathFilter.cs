@@ -29,8 +29,8 @@ class DPPathFilter : UserControl {
 		exp1.ExpandDirection = ExpandDirection.Left;
 		
 		b.StartStack();
-		b.Add(out _cShouldInclude, "Include func").Tooltip("Callback function that decides what to include");
-		b.Add(out _cShouldRecurse, "Recurse func").Tooltip("Callback function that decides which folders to enumerate when enumerating all descendants");
+		b.Add(out _cShouldInclude, "IncludeFunc").Tooltip("Callback function that decides what to include");
+		b.Add(out _cShouldRecurse, "RecurseFunc").Tooltip("Callback function that decides which folders to enumerate when enumerating all descendants");
 		b.End();
 		
 		b.StartGrid().Columns(0, 50, -1, 30);

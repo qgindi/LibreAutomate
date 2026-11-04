@@ -36,8 +36,8 @@ static class NugetDownloader {
 		if (!exists) {
 			//delete old
 			try {
-				foreach (var v in filesystem.enumFiles(tempDir, $"{package}.*.nupkg")) {
-					filesystem.delete(v.FullPath, FDFlags.CanFail);
+				foreach (var v in filesystem.list(tempDir, $"{package}.*.nupkg").Files) {
+					filesystem.delete(v, FDFlags.CanFail);
 				}
 			}
 			catch { } //eg the dir still does not exist

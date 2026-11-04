@@ -64,24 +64,23 @@ partial class AuDocs {
 		var trees = new List<CSharpSyntaxTree>();
 		var files = new List<(string path, string code)>();
 		
-		foreach (var f in filesystem.enumerate(sourceDir, FEFlags.NeedRelativePaths, dirFilter: o => o.Level == 0 && 0 != o.Name.Eq(true, @"\obj", @"\bin", @"\docfx_project") ? 0 : 2)) {
-			var path = f.FullPath;
+		foreach (var f in filesystem.list(sourceDir, "||obj/|bin/|docfx_project/", FLFlags.Recurse).Files) {
 			if (f.Name.Ends(".cs", true)) {
-				if (testSmall && f.Name == @"\_Aaa.cs") continue;
-				var code = filesystem.loadText(path);
-				code = _PreprocessFileAsText(path, code);
+				if (testSmall && f.Name == "_Aaa.cs") continue;
+				var code = filesystem.loadText(f);
+				code = _PreprocessFileAsText(f, code);
 				var tree = CSharpSyntaxTree.ParseText(code, parseOpt, f.Name) as CSharpSyntaxTree;
 				trees.Add(tree);
 				files.Add((f.Name, code));
-			} else if (f.Name.Eqi(@"\Au.csproj")) {
-				var s = filesystem.loadText(path);
+			} else if (f.Name.Eqi("Au.csproj")) {
+				var s = filesystem.loadText(f);
 				//s = s.RxReplace(@"(?ms)^\h*<COMReference\b.+?</COMReference>", "", 1); //mute docfx warning
 				s = s.RxReplace(@"(?ms)^\h*<ProjectReference\b.+?</ProjectReference>", "", 1); //mute docfx warning for C++ project references
 				s = s.Replace("<SignAssembly>true</SignAssembly>", "");
 				s = s.RxReplace("<AssemblyOriginatorKeyFile>.+?</AssemblyOriginatorKeyFile>", "");
-				filesystem.saveText(destDir + f.Name, s);
+				filesystem.saveText(destDir / f.Name, s);
 			} else {
-				filesystem.copy(path, destDir + f.Name);
+				filesystem.copy(f, destDir / f.Name);
 			}
 		}
 		
@@ -106,11 +105,11 @@ partial class AuDocs {
 			_PreprocessFile(tree);
 			_bFile.Append(f.code, _filePos, f.code.Length - _filePos);
 			var s = _bFile.ToString();
-			filesystem.saveText(destDir + f.path, s);
+			filesystem.saveText(destDir / f.path, s);
 			
 			//print.it($"<><lc green>{f.path}<>");
 			//print.it(s);
-			//if(f.path.Ends("param types.cs")) print.it(s);
+			//if(f.path.Eqi("param types.cs")) print.it(s);
 		}
 		
 		_analyze.Finally();

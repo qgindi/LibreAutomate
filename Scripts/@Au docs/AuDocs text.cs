@@ -84,26 +84,26 @@ partial class AuDocs {
 		
 		filesystem.delete(siteDir);
 		filesystem.createDirectory(siteDir);
-		var files = filesystem.enumFiles(siteDirTemp, flags: FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath).ToArray();
+		var files = filesystem.list(siteDirTemp, flags: FLFlags.Recurse).Files;
 		Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount - 2 }, f => { //faster: 26 s -> 11 s; without code styling 8 s -> 3 s; however without MaxDegreeOfParallelism very slow (creates too many threads).
-			var name = f.Name;
-			var file2 = siteDir + name;
-			if (name.Ends(".html") && !name.Ends(@"\toc.html")) {
-				_PostprocessFile(f, file2, siteDirTemp);
-			} else if (name.Eqi(@"\styles\docfx.js")) {
-				_ProcessJs(f.FullPath, file2);
+			var relPath = f.RelativePath;
+			var file2 = siteDir / relPath;
+			if (relPath.Ends(".html") && f.Name != "toc.html") {
+				_PostprocessFile(relPath, f, file2, siteDirTemp);
+			} else if (relPath.Eqi(@"styles\docfx.js")) {
+				_ProcessJs(f, file2);
 			} else {
-				filesystem.copy(f.FullPath, file2);
-				if (name.Eqi(@"\xrefmap.yml")) _XrefMap(f.FullPath);
+				filesystem.copy(f, file2);
+				if (relPath.Eqi("xrefmap.yml")) _XrefMap(f);
 			}
 		});
 		filesystem.saveText(siteDir + @"\styles\code.css", ADL.AuDocsShared.CreateCodeCss());
 	}
 	
-	void _PostprocessFile(FEFile f, string file2, string siteDirTemp) {
+	void _PostprocessFile(string name, string path, string file2, string siteDirTemp) {
 		//print.it($"<><lc green>{f.Name}<>");
-		string name = f.Name, s = filesystem.loadText(f.FullPath);
-		bool isApi = name.Starts(@"\api") && name != @"\api\index.html";
+		string s = filesystem.loadText(path);
+		bool isApi = name.Starts("api") && name != @"api\index.html";
 		//print.it(name, isApi);
 		
 		int nr;
@@ -198,7 +198,7 @@ partial class AuDocs {
 			s = ADL.AuDocsShared.PostprocessHtmlNonApi(name, s);
 		}
 		
-		s = ADL.AuDocsShared.PostprocessHtmlCommon(f.Name, s, isApi);
+		s = ADL.AuDocsShared.PostprocessHtmlCommon(name, s, isApi);
 		
 #if DISQUS
 		//TODO3: Now shows Disqus content when page loaded (if small) or scrolled to the bottom. Should show only when clicked <h2>User comments</h2>.
