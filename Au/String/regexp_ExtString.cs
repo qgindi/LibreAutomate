@@ -15,7 +15,7 @@ public static partial class ExtString {
 	public static bool RxIsMatch(this RStr t,
 		[ParamString(PSFormat.Regexp)] string rx,
 		RXFlags flags = 0, Range? range = null) {
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.IsMatch(t, range);
 	}
 	
@@ -34,7 +34,7 @@ public static partial class ExtString {
 	public static bool RxMatch(this string t,
 		[ParamString(PSFormat.Regexp)] string rx,
 		out RXMatch result, RXFlags flags = 0, Range? range = null) {
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.Match(t, out result, range);
 	}
 	
@@ -53,7 +53,7 @@ public static partial class ExtString {
 	public static bool RxMatch(this string t,
 		[ParamString(PSFormat.Regexp)] string rx,
 		int group, out string result, RXFlags flags = 0, Range? range = null) {
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.Match(t, group, out result, range);
 	}
 	
@@ -72,7 +72,7 @@ public static partial class ExtString {
 	public static bool RxMatch(this string t,
 		[ParamString(PSFormat.Regexp)] string rx,
 		int group, out RXGroup result, RXFlags flags = 0, Range? range = null) {
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.Match(t, group, out result, range);
 	}
 	
@@ -91,7 +91,7 @@ public static partial class ExtString {
 		[ParamString(PSFormat.Regexp)] string rx,
 		RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.FindAll(t, range);
 	}
 	
@@ -110,7 +110,7 @@ public static partial class ExtString {
 		[ParamString(PSFormat.Regexp)] string rx,
 		out RXMatch[] result, RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.FindAll(t, out result, range);
 	}
 	
@@ -129,7 +129,7 @@ public static partial class ExtString {
 		[ParamString(PSFormat.Regexp)] string rx,
 		int group, RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.FindAll(t, group, range);
 	}
 	
@@ -148,7 +148,7 @@ public static partial class ExtString {
 		[ParamString(PSFormat.Regexp)] string rx,
 		int group, out string[] result, RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.FindAll(t, group, out result, range);
 	}
 	
@@ -193,7 +193,7 @@ public static partial class ExtString {
 		[ParamString(PSFormat.RegexpReplacement)] string repl,
 		int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.Replace(t, repl, maxCount, range);
 	}
 	
@@ -218,7 +218,7 @@ public static partial class ExtString {
 		[ParamString(PSFormat.RegexpReplacement)] string repl,
 		out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.Replace(t, repl, out result, maxCount, range);
 	}
 	
@@ -242,7 +242,7 @@ public static partial class ExtString {
 		[ParamString(PSFormat.Regexp)] string rx,
 		Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.Replace(t, replFunc, maxCount, range);
 	}
 	
@@ -266,7 +266,7 @@ public static partial class ExtString {
 		[ParamString(PSFormat.Regexp)] string rx,
 		Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.Replace(t, replFunc, out result, maxCount, range);
 	}
 	
@@ -285,56 +285,74 @@ public static partial class ExtString {
 		[ParamString(PSFormat.Regexp)] string rx,
 		int maxCount = 0, RXFlags flags = 0, Range? range = null) {
 		if (t == null) throw new NullReferenceException();
-		var x = _cache.AddOrGet(rx, flags);
+		var x = _RegexpCache.AddOrGet(rx, flags);
 		return x.Split(t, maxCount, range);
 	}
 	
-	static _RegexCache _cache = new();
-	
-	//Cache of compiled regular expressions.
-	//Can make ~10 times faster when the subject string is short.
-	//The algorithm is from old .NET Regex source code.
-	//TODO: support more items. Some scripts use more than 15 regexes in a loop. Try ConcurrentDictionary (like the new .NET code in `Regex.Cache.cs`). Maybe possible with ConditionalWeakTable.
-	class _RegexCache {
-		struct _RXCode {
-			public string regex;
-			public regexp code; //note: could instead cache only PCRE code (nint), but it makes quite difficult
-			public RXFlags flags;
+	struct _RegexpCache {
+		class _Item(string rx, RXFlags flags) {
+			public _Item next;
+			public regexp obj;
+			readonly string _rx = rx;
+			readonly RXFlags _flags = flags;
+			public ulong accessed;
+			
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			internal bool Equals_(string rx, RXFlags flags) => _rx == rx && _flags == flags;
 		}
 		
-		LinkedList<_RXCode> _list = new();
-		const int c_maxCount = 15;
+		volatile _Item _first;
+		ulong _accessCounter;
+		const int c_maxCount = 20;
+		
+		static _RegexpCache[] _buckets = new _RegexpCache[32];
 		
 		/// <summary>
-		/// If <i>rx</i>/<i>flags</i> is in the cache, returns the cached code.
-		/// Else compiles <i>rx</i>/<i>flags</i>, adds to the cache and returns the code.
+		/// If <i>rx</i>/<i>flags</i> is in the cache, returns the cached object.
+		/// Else compiles <i>rx</i>/<i>flags</i>, adds to the cache and returns the object.
 		/// </summary>
-		/// <param name="rx"></param>
-		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or failed to compile it for some other reason.</exception>
-		public regexp AddOrGet(string rx, RXFlags flags) {
-			lock (this) {
-				int len = rx.Length;
-				for (var x = _list.First; x != null; x = x.Next) {
-					var v = x.Value.regex;
-					if (v.Length == len && v == rx && x.Value.flags == flags) {
-						if (x != _list.First) {
-							_list.Remove(x);
-							_list.AddFirst(x);
-						}
-						return x.Value.code;
-					}
+		public static regexp AddOrGet(string rx, RXFlags flags) {
+			int k = rx?.Length ?? throw new ArgumentNullException();
+			if (k > 0) k ^= (int)rx[k / 2];
+			return _buckets[k & 31]._AddOrGet(rx, flags);
+		}
+		
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		regexp _AddOrGet(string rx, RXFlags flags) {
+			//this loop must be as fast as possible
+			for (_Item x = _first; x != null; x = x.next) {
+				if (x.Equals_(rx, flags)) {
+					x.accessed = _accessCounter++; //another way would be to move x to the start of the linked list, but it makes this loop much slower
+					return x.obj;
 				}
-				{
-					var code = new regexp(rx, flags);
-					
-					var x = new _RXCode() { code = code, regex = rx, flags = flags };
-					_list.AddFirst(x);
-					if (_list.Count > c_maxCount) _list.RemoveLast();
-					//note: now cannot free the PCRE code, because another thread may be using it. GC will do it safely.
-					
-					return code;
+			}
+			
+			var r = new regexp(rx, flags);
+			
+			_RemoveOld();
+			
+			//add y to the start of the linked list
+			var y = new _Item(rx, flags) { obj = r, next = _first, accessed = _accessCounter++ };
+			_first = y;
+			
+			return r;
+			
+			//not thread-perfect (may not cache some), but thread-safe (no exceptions or something bad that really matters)
+		}
+		
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		void _RemoveOld() {
+			int n = 0;
+			for (_Item x = _first; x != null; x = x.next) n++;
+			for (; n >= c_maxCount; n--) {
+				_Item xOldest = null, xOldestPrev = null;
+				ulong accessedOldest = ulong.MaxValue;
+				for (_Item x = _first, xp = null; x != null; xp = x, x = x.next) {
+					if (x.accessed < accessedOldest) { accessedOldest = x.accessed; xOldest = x; xOldestPrev = xp; }
 				}
+				if (xOldest == null) return;
+				if (xOldestPrev != null) xOldestPrev.next = xOldest.next; else _first = xOldest.next;
 			}
 		}
 	}

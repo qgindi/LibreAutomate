@@ -1,5 +1,3 @@
-//#define FSI_EXTRA
-
 using System.IO.Enumeration;
 
 namespace Au.Types;
@@ -100,18 +98,11 @@ public class FLQuery {
 	/// </summary>
 	/// <returns>Enumerable collection. The file system enumeration starts each time when the caller starts to enumerate the collection, and ends when the caller ends to enumerate it.</returns>
 	/// <inheritdoc cref="Enumerate{TResult}"/>
-	public IEnumerable<FLPath> Enumerate(bool? files = null) => Enumerate(FLPath.Transform_, files);
+	public IEnumerable<FLPath> Enumerate(bool? files = null) => Enumerate(static (ref e) => new FLPath(e), files);
 	
 	/// <returns>Array. Unlike <see cref="Enumerate"/>, this function returns when the file system enumeration ends.</returns>
 	/// <inheritdoc cref="Enumerate"/>
-	//public FLPath[] All => EnumerateAll().ToArray();
-	public FLPath[] All {
-		get {
-			var a = Enumerate().ToArray();
-			if (_flags.Has(FLFlags.OrderDepthFirst)) a = _ToDepthFirst(a);
-			return a;
-		}
-	}
+	public FLPath[] All => Enumerate().ToArray();
 	
 	/// <summary>
 	/// Enumerates files in the directory. Gets their paths and some other properties.
@@ -132,18 +123,11 @@ public class FLQuery {
 	/// </summary>
 	/// <returns>Enumerable collection of <see cref="FileInfo"/> and <see cref="DirectoryInfo"/> objects. The file system enumeration starts each time when the caller starts to enumerate the collection, and ends when the caller ends to enumerate it.</returns>
 	/// <inheritdoc cref="Enumerate{TResult}"/>
-	public IEnumerable<FileSystemInfo> EnumerateInfos(bool? files = null) => Enumerate(_CreateFSI<FileSystemInfo>, files);
+	public IEnumerable<FileSystemInfo> EnumerateInfos(bool? files = null) => Enumerate(static (ref e) => e.ToFileSystemInfo(), files);
 	
 	/// <returns>Array of <see cref="FileInfo"/> and <see cref="DirectoryInfo"/> objects. Unlike <see cref="EnumerateInfos"/>, this function returns when the file system enumeration ends.</returns>
 	/// <inheritdoc cref="EnumerateInfos"/>
-	//public FileSystemInfo[] AllInfos => EnumerateAllInfos().ToArray();
-	public FileSystemInfo[] AllInfos {
-		get {
-			var a = EnumerateInfos().ToArray();
-			if (_flags.Has(FLFlags.OrderDepthFirst)) a = _ToDepthFirst(a);
-			return a;
-		}
-	}
+	public FileSystemInfo[] AllInfos => EnumerateInfos().ToArray();
 	
 	/// <summary>
 	/// Enumerates files in the directory. Gets their properties.
@@ -158,13 +142,6 @@ public class FLQuery {
 	/// <returns>Array. Unlike <see cref="EnumerateInfos"/>, this function returns when the file system enumeration ends.</returns>
 	/// <inheritdoc cref="AllInfos"/>
 	public DirectoryInfo[] DirectoryInfos => EnumerateInfos(false).Cast<DirectoryInfo>().ToArray();
-	
-	static T _CreateFSI<T>(ref FileSystemEntry e) where T : FileSystemInfo
-#if FSI_EXTRA
-		=> (T)FSIExtra_.CreateFSI(ref e);
-#else
-		=> (T)e.ToFileSystemInfo();
-#endif
 	#endregion
 	
 	#region paths
@@ -210,90 +187,24 @@ public class FLQuery {
 	
 	private static string _GetName(ref FileSystemEntry entry) => entry.FileName.ToString();
 	#endregion
-	
-	#region depth-first
-	
-	// created by Claude AI
-	static FLPath[] _ToDepthFirst(FLPath[] a) {
-		// ToLookup preserves the original order within each group.
-		var children = a.ToLookup(x => {
-			int i = x.RelativePathSpan.LastIndexOf('\\');
-			return i < 0 ? "" : x.RelativePathSpan[0..i].ToString();
-		}, StringComparer.OrdinalIgnoreCase);
-		
-		var result = new FLPath[a.Length];
-		var stack = new Stack<IEnumerator<FLPath>>();
-		stack.Push(children[""].GetEnumerator());
-		
-		int i = 0;
-		while (stack.Count > 0) {
-			var e = stack.Peek();
-			if (!e.MoveNext()) {
-				stack.Pop();
-				continue;
-			}
-			
-			FLPath p = e.Current;
-			result[i++] = p;
-			
-			if (p.IsDirectory)
-				stack.Push(children[p.RelativePath].GetEnumerator());
-		}
-		
-		return result;
-	}
-	
-	static FileSystemInfo[] _ToDepthFirst(FileSystemInfo[] a) {
-		if (a.Length < 2) return a;
-		
-		// ToLookup preserves the original order within each group.
-		var children = a.ToLookup(x => Path.GetDirectoryName(x.FullName)!, StringComparer.OrdinalIgnoreCase);
-		
-		// All items are descendants of one directory, so the shortest parent path is that directory.
-		var root = children.MinBy(g => g.Key.Length)!.Key;
-		
-		var result = new FileSystemInfo[a.Length];
-		var stack = new Stack<IEnumerator<FileSystemInfo>>();
-		stack.Push(children[root].GetEnumerator());
-		
-		int i = 0;
-		while (stack.Count > 0) {
-			var e = stack.Peek();
-			if (!e.MoveNext()) {
-				stack.Pop();
-				continue;
-			}
-			
-			var f = e.Current;
-			result[i++] = f;
-			
-			if (f is DirectoryInfo)
-				stack.Push(children[f.FullName].GetEnumerator());
-		}
-		
-		return result;
-	}
-	#endregion
 }
 
 /// <summary>
 /// The return type of some file system enumeration functions.
-/// This lightweight type contains a file path and also provides some other commonly used properties. Has implicit conversion to string (path).
+/// Provides a file path and several other commonly used properties. Has implicit conversion to string (path).
 /// Can be used like <c>foreach (var v in filesystem.list(directory).All) print.it(v, v.Name, v.IsDirectory);</c>.
 /// </summary>
-public struct FLPath {
-	string _path, _name;
+public class FLPath {
+	string _path, _name, _relativePath;
 	ushort _nameOffset, _relativeOffset;
 	FileAttributes _attr;
 	
-	internal static FLPath Transform_(ref FileSystemEntry e) {
-		var path = e.ToFullPath();
-		return new FLPath {
-			_path = path,
-			_nameOffset = checked((ushort)(path.Length - e.FileName.Length)),
-			_relativeOffset = checked((ushort)(e.RelativeOffset_)),
-			_attr = e.Attributes
-		};
+	///
+	public FLPath(in FileSystemEntry e) {
+		_path = e.ToFullPath();
+		_nameOffset = checked((ushort)(_path.Length - e.FileName.Length));
+		_relativeOffset = checked((ushort)(e.RelativeOffset_));
+		_attr = e.Attributes;
 	}
 	
 	/// <summary>
@@ -308,9 +219,8 @@ public struct FLPath {
 	
 	/// <summary>
 	/// Relative path.
-	/// Performance note: <c>creates</c> new string each time (takes from full path).
 	/// </summary>
-	public string RelativePath => _relativeOffset == _nameOffset ? Name : _path[_relativeOffset..];
+	public string RelativePath => _relativePath ??= _relativeOffset == _nameOffset ? Name : _path[_relativeOffset..];
 	
 	internal int RelativeOffset_ => _relativeOffset;
 	
@@ -331,13 +241,13 @@ public struct FLPath {
 	
 	/// <summary>
 	/// Name as span.
-	/// Can be used to avoid creating new <c>string</c> (<c>Name</c> creates once, when used the first time).
+	/// Use when you avoid creating a new <c>string</c> (<c>Name</c> creates once, when used the first time).
 	/// </summary>
 	public RStr NameSpan => _path.AsSpan(_nameOffset);
 	
 	/// <summary>
 	/// Relative path as span.
-	/// Can be used to avoid creating new <c>string</c> (<c>RelativePath</c> creates each time).
+	/// Use when you avoid creating a new <c>string</c> (<c>RelativePath</c> creates once, when used the first time).
 	/// </summary>
 	public RStr RelativePathSpan => _path.AsSpan(_relativeOffset);
 	
@@ -389,68 +299,10 @@ public enum FLFlags {
 	/// Don't throw exception when fails to enumerate the directory or a subdirectory because of its security settings.
 	/// </summary>
 	IgnoreInaccessible = 16,
-	
-	/// <summary>
-	/// Return results in depth-first order (each directory is immediately followed by all its descendants).
-	/// Supported only by <see cref="FLQuery.All"/> and <see cref="FLQuery.AllInfos"/>.
-	/// </summary>
-	OrderDepthFirst = 32,
 }
-
-//Probably not useful when we have FLPath.
-#if FSI_EXTRA
-/// <summary>
-/// Extra properties attached to a <c>FileSystemInfo</c>.
-/// </summary>
-internal class FSIExtra_(int relOffset) {
-	int _relOffset = relOffset;
-	string _relPath;
-	
-	static ConditionalWeakTable<FileSystemInfo, FSIExtra_> s_listCWT = new();
-	
-	public static FileSystemInfo CreateFSI(ref FileSystemEntry e) {
-		var r = e.ToFileSystemInfo();
-		s_listCWT.Add(r, new FSIExtra_(e.RelativeOffset_));
-		return r;
-	}
-	
-	static FSIExtra_ _Get(FileSystemInfo f) {
-		if (!s_listCWT.TryGetValue(f, out var x)) throw new InvalidOperationException("This property is available only for objects created by `FLQuery`.");
-		return x;
-	}
-	
-	public static int RelativeOffset(FileSystemInfo f) => _Get(f)._relOffset;
-	
-	public static string RelativePath(FileSystemInfo f) {
-		var x = _Get(f);
-		return x._relPath ??= f.FullName[x._relOffset..];
-	}
-	
-	public static int RelativeDepth(FileSystemInfo f) {
-		var x = _Get(f);
-		return f.FullName.AsSpan(x._relOffset).Count('\\');
-	}
-}
-#endif
 
 public static partial class ExtMisc {
 	extension(FileSystemInfo t) {
-#if FSI_EXTRA
-		internal int RelativeOffset_ => FSIExtra_.RelativeOffset(t);
-		
-		/// <summary>
-		/// Gets the path relative to the directory passed to <c>filesystem.list</c>.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">This object was not created by <c>FLQuery</c>.</exception>
-		public string RelativePath => FSIExtra_.RelativePath(t);
-		
-		/// <summary>
-		/// Gets the number of intermediate directories between this object's path and the path of the directory passed to <c>filesystem.list</c>.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">This object was not created by <c>FLQuery</c>.</exception>
-		public int RelativeDepth => FSIExtra_.RelativeDepth(t);
-#endif
-		
 		/// <summary>
 		/// Returns <c>true</c> if this is a <c>DirectoryInfo</c>.
 		/// </summary>
@@ -460,25 +312,9 @@ public static partial class ExtMisc {
 		/// Returns <c>true</c> if this is a NTFS link, eg symbolic link or mount point.
 		/// </summary>
 		public bool IsNtfsLink => t.Attributes.Has(FileAttributes.ReparsePoint) && filesystem.IsNtfsLink_(t.FullName);
-		
-		///// <summary>
-		///// Gets path relative to <i>relativeTo</i>. See <see cref="Path.GetRelativePath"/>.
-		///// </summary>
-		///// <param name="relativeTo">A directory path.</param>
-		//public string GetRelativePath(string relativeTo) {
-		//	var path = t.ToString(); //documented: returns original path. However .NET file enum methods create FileSystemInfo with normalized path as original. FileName returns normalized path.
-		//	var dir = relativeTo.AsSpan().TrimEnd("\\/");
-		//	if (path.PathStarts_(dir)) { //try fast
-		//		int i = dir.Length; while (i < path.Length && path[i] is '\\' or '/') i++;
-		//		return path[i..];
-		//	}
-		//	Debug_.Print("path does not start with relativeTo");
-		
-		//	return Path.GetRelativePath(relativeTo, t.FullName);
-		//}
 	}
 	
-	extension(ref FileSystemEntry t) {
+	extension(in FileSystemEntry t) {
 		/// <summary>
 		/// Gets relative path.
 		/// </summary>
@@ -500,5 +336,70 @@ public static partial class ExtMisc {
 		/// Returns <c>true</c> if this is a NTFS link, eg symbolic link or mount point.
 		/// </summary>
 		public bool IsNtfsLink => t.Attributes.Has(FileAttributes.ReparsePoint) && filesystem.IsNtfsLink_(t.ToFullPath());
+	}
+	
+	extension(FLQuery t) {
+		/// <summary>
+		/// Calls <see cref="FLQuery.All"/> and reorders results. Return results in depth-first order (each directory is immediately followed by all its descendants).
+		/// </summary>
+		/// <remarks>
+		/// Directories must not be excluded without also excluding all their descendants.
+		/// </remarks>
+		/// <inheritdoc cref="FLQuery.All"/>
+		public FLPath[] AllDepthFirst()
+			=> _ToDepthFirst(t.All, static o => o.Path);
+		
+		/// <summary>
+		/// Calls <see cref="FLQuery.AllInfos"/> and reorders results. Return results in depth-first order (each directory is immediately followed by all its descendants).
+		/// </summary>
+		/// <remarks>
+		/// Directories must not be excluded without also excluding all their descendants.
+		/// </remarks>
+		/// <inheritdoc cref="FLQuery.AllInfos"/>
+		public FileSystemInfo[] AllInfosDepthFirst()
+			=> _ToDepthFirst(t.AllInfos, static o => o.FullName);
+		
+		/// <summary>
+		/// Calls <see cref="FLQuery.Enumerate{TResult}(FileSystemEnumerable{TResult}.FindTransform, bool?)"/> and reorders results. Return results in depth-first order (each directory is immediately followed by all its descendants).
+		/// </summary>
+		/// <param name="getPath">Callback function that returns path. Can be full or relative path. Must be normal path that came from a file system enumeration function: separator character <c>\</c>, no <c>\..</c> etc.</param>
+		/// <returns>Array.</returns>
+		/// <remarks>
+		/// Directories must not be excluded without also excluding all their descendants.
+		/// </remarks>
+		/// <inheritdoc cref="FLQuery.Enumerate{TResult}(FileSystemEnumerable{TResult}.FindTransform, bool?)"/>
+		public TResult[] AllDepthFirst<TResult>(FileSystemEnumerable<TResult>.FindTransform transform, Func<TResult, string> getPath)
+			=> _ToDepthFirst(t.Enumerate(transform).ToArray(), getPath);
+	}
+	
+	static T[] _ToDepthFirst<T>(T[] a, Func<T, string> getPath) {
+		if (a.Length < 2) return a;
+		
+		// ToLookup preserves the original order within each group.
+		var children = a.ToLookup(x => Path.GetDirectoryName(getPath(x))!, StringComparer.OrdinalIgnoreCase);
+		
+		// All items are descendants of one directory, so the shortest parent path is that directory.
+		var root = children.MinBy(g => g.Key.Length)!.Key;
+		
+		var result = new T[a.Length];
+		var stack = new Stack<IEnumerator<T>>();
+		stack.Push(children[root].GetEnumerator());
+		
+		int i = 0;
+		while (stack.Count > 0) {
+			var e = stack.Peek();
+			if (!e.MoveNext()) {
+				stack.Pop();
+				continue;
+			}
+			
+			var f = e.Current;
+			result[i++] = f;
+			
+			// Files have no group, so this yields an empty sequence for them.
+			stack.Push(children[getPath(f)].GetEnumerator());
+		}
+		
+		return result.ToArray();
 	}
 }

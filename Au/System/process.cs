@@ -89,7 +89,7 @@ namespace Au {
 			internal string ProgramName, ProgramPath;
 			
 			internal void Begin(wnd w) {
-				var t = Api.GetTickCount64();
+				var t = Environment.TickCount64;
 				if (w != _w || t - _time > 300) { _w = w; ProgramName = ProgramPath = null; }
 				_time = t;
 			}

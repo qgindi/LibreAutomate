@@ -243,7 +243,6 @@ namespace Au.Types {
 	/// <summary>
 	/// flags for <see cref="filesystem.enumerate"/>.
 	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	[Flags]
 	public enum FEFlags {
 		/// <summary>
@@ -304,7 +303,6 @@ namespace Au.Types {
 	/// Contains name and other main properties of a file or subdirectory retrieved by <see cref="filesystem.enumerate"/>.
 	/// The values are not changed after creating the variable.
 	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class FEFile {
 		internal FEFile(string name, string fullPath, in Api.WIN32_FIND_DATA d, int level) {
 			Name = name;

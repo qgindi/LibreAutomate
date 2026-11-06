@@ -265,7 +265,7 @@ public static partial class print {
 		if (opt.warnings.IsDisabled(text)) return;
 		
 		if (!opt.warnings.Verbose) {
-			var t = Api.GetTickCount64();
+			var t = Environment.TickCount64;
 			if (t - s_warningTime < 1000) return;
 			s_warningTime = t;
 		}

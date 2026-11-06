@@ -742,7 +742,7 @@ namespace Au.Types {
 					_w = w;
 				}
 			} else {
-				var t = Api.GetTickCount64();
+				var t = Environment.TickCount64;
 				if (w != _w || t - _time > 2500) {
 					Clear();
 					if (w.IsAlive) { _w = w; _time = t; }

@@ -10,7 +10,7 @@ foreach (var f in filesystem.list(dirPath).FilePaths) print.it(f); //files, get 
 foreach (var f in filesystem.list(dirPath).FileInfos) print.it($"{f.Name,-30}  {f.Length,-10}  {f.LastWriteTime}"); //files, get more properties
 
 //all descendant files and directories
-foreach (var f in filesystem.list(dirPath, flags: FLFlags.Recurse | FLFlags.OrderDepthFirst).All) {
+foreach (var f in filesystem.list(dirPath, flags: FLFlags.Recurse).AllDepthFirst()) {
 	print.it($"{new string(' ', f.RelativeDepth * 2)}{f.Name}");
 }
 

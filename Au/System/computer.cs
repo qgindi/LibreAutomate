@@ -18,7 +18,7 @@ namespace Au {
 		/// </remarks>
 		public static long tickCountWithoutSleep {
 			get {
-				if (!Api.QueryUnbiasedInterruptTime(out long t)) return Api.GetTickCount64();
+				if (!Api.QueryUnbiasedInterruptTime(out long t)) return Environment.TickCount64;
 				return t / 10000;
 			}
 		}

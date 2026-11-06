@@ -484,7 +484,7 @@ public static partial class filesystem {
 			if (flags.Has(FCFlags.IgnoreInaccessible)) lFlags |= FLFlags.IgnoreInaccessible;
 			if (flags.Has(FCFlags.SkipHiddenSystem)) lFlags |= FLFlags.SkipHiddenSystem;
 			bool? filesOnly = flags.Has(FCFlags.NoEmptyDirectories) ? true : null;
-			a = list(path1, cp?.filter, lFlags).Enumerate(static (ref e) => new _CDItem(FLPath.Transform_(ref e), null), filesOnly).ToArray();
+			a = list(path1, cp?.filter, lFlags).Enumerate(static (ref e) => new _CDItem(new(e), null), filesOnly).ToArray();
 		}
 		
 		if (!merge) _CreateDirectoryLL(path2, path1);

@@ -1,5 +1,8 @@
 namespace Au.Types;
 
+//TODO: [SuppressGCTransition]
+//TODO: [LibraryImport]?
+
 static unsafe partial class Api {
 	[DllImport("kernel32.dll", SetLastError = true)] //note: without `SetLastError = true` Marshal.GetLastWin32Error is unaware that we set the code to 0 etc and returns old captured error code
 	internal static extern void SetLastError(int errCode);
@@ -23,12 +26,6 @@ static unsafe partial class Api {
 	
 	[DllImport("kernel32.dll")]
 	internal static extern bool QueryUnbiasedInterruptTime(out long UnbiasedTime);
-	
-	[DllImport("kernel32.dll")]
-	internal static extern long GetTickCount64();
-	
-	[DllImport("kernel32.dll")]
-	internal static extern int GetTickCount();
 	
 	internal struct SYSTEMTIME {
 		public ushort wYear;
