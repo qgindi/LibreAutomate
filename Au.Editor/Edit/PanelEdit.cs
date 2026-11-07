@@ -160,10 +160,19 @@ class PanelEdit {
 	void _Close(SciCode doc) {
 		ClosingDoc?.Invoke(doc);
 		if (doc.IsFocused) doc.IsEnabled = false; //prevent focusing the scintilla control after hiding/parking
-		P.Children.Remove(doc);
+		
+		//TODO2: watch this for some time.
+		//2026-11-07 moved `doc.Dispose();` from the below.
+		//When removing from panel before disposing, WPF reparents the control to a parking window. I don't like it. I suspect it may cause the rare crash after closing a document, when some COM RPC message received.
+		if (doc is System.Windows.Interop.IKeyboardInputSink iks) iks.KeyboardInputSite?.Unregister(); //see KScintilla.DestroyWindowCore
+		doc.Dispose();
+		
 		//CodeInfo.FileClosed(doc);
 		doc.EFile.OpenDoc = null;
-		doc.Dispose();
+		
+		P.Children.Remove(doc);
+		
+		//doc.Dispose();
 	}
 	
 	/// <summary>

@@ -164,6 +164,8 @@ partial class Compiler {
 		_compilation = CSharpCompilation.Create(asmName, trees, _meta.References.Refs, cOpt);
 		//p1.Next('c');
 		
+		//_TestLibraryImportSourceGenerator(trees[0].Options);
+		
 		if (canCompile != null && !canCompile(new(_meta, trees, _compilation))) return false;
 		
 		string xdFile = null;
@@ -936,6 +938,28 @@ partial class Compiler {
 		}
 		if (a.Count == 0) timer?.Stop();
 	}
+	
+	//Enables [LibraryImport].
+	//https://claude.ai/share/a40e05ea-5b12-4dd4-8b27-b02e0fcba57b
+	//Setup: copy 2 dlls from SDK to the Roslyn folder.
+	//TODO2: this works, but not very useful. Maybe add an option, or call when found [LibraryImport] in code.
+	//void _TestLibraryImportSourceGenerator(CSharpParseOptions parseOptions) {
+	//	// 1. Load the generator assembly and instantiate it
+	//	var asm = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(folders.ThisAppBS + @"Roslyn\Microsoft.Interop.LibraryImportGenerator.dll");
+	//	var genType = asm.GetType("Microsoft.Interop.LibraryImportGenerator");
+	//	var generator = (IIncrementalGenerator)Activator.CreateInstance(genType);
+		
+	//	// 2. Build the driver
+	//	GeneratorDriver driver = CSharpGeneratorDriver.Create(
+	//		new[] { generator.AsSourceGenerator() },
+	//		parseOptions: parseOptions /* the same ParseOptions as your syntax trees */);
+		
+	//	// 3. Run it against your compilation (before emitting)
+	//	driver = driver.RunGeneratorsAndUpdateCompilation(
+	//		_compilation, out var newCompilation, out var diagnostics);
+		
+	//	_compilation = newCompilation as CSharpCompilation;
+	//}
 	
 	public static void Warmup(CAW::Microsoft.CodeAnalysis.Document document) {
 		//using var p1 = perf.local();

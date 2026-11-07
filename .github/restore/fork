@@ -1,5 +1,5 @@
-2026-10-16
-aa13a7a187f21a1b3a06f9892dabf7af6e92527e9cc58123057f003af0bb08dd
+2026-11-07
+bf86a0e600edc5b3fec9ba6dd80435d730b646624aecaf81b5e421b1254776cd
 Debugger\ManagedPart.dll
 Debugger\arm64\dbgshim.dll
 Debugger\arm64\netcoredbg.exe
@@ -15,6 +15,8 @@ Roslyn\Microsoft.CodeAnalysis.Features.dll
 Roslyn\Microsoft.CodeAnalysis.Scripting.dll
 Roslyn\Microsoft.CodeAnalysis.Workspaces.dll
 Roslyn\Microsoft.DiaSymReader.dll
+Roslyn\Microsoft.Interop.LibraryImportGenerator.dll
+Roslyn\Microsoft.Interop.SourceGeneration.dll
 Roslyn\System.Composition.AttributedModel.dll
 Roslyn\System.Composition.Convention.dll
 Roslyn\System.Composition.Hosting.dll

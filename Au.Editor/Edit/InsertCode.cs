@@ -290,7 +290,9 @@ static class InsertCode {
 			foreach (var v in cu.GetLeadingTrivia()) if (v.IsDirective) end2 = v.FullSpan.End; //skip directives
 			if (end2 < 0) {
 				end2 = k.meta.end; //skip meta
-				if (end2 == 0) if (k.code.RxMatch(@"^(///.*\R)+(?=\R|$)", 0, out RXGroup g1)) end2 = g1.End; //skip ///comments
+				if (end2 > 0) end2 = CiUtil.SkipNewline(k.code, end2);
+				else if (k.code.RxMatch(@"^(///.*\R)+(?=\R|$)", 0, out RXGroup g1)) end2 = g1.End; //skip ///comments
+				
 				if (k.code.RxMatch(@"\s*//\.(?: .*)?\R", 0, out RXGroup g2, RXFlags.ANCHORED, end2..)) end2 = g2.End; //skip //. used for folding
 			}
 			end = end2;

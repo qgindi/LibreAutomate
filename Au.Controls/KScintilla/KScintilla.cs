@@ -139,7 +139,7 @@ public unsafe partial class KScintilla : HwndHost {
 		_sciPtr = 0;
 		_acc?.Dispose(); _acc = null;
 		
-		//workaround for: never GC-collected if disposed before removing from parent WPF element (shouldn't do it).
+		//workaround for: never GC-collected if disposed before removing from parent WPF element.
 		if (this is IKeyboardInputSink iks) {
 			Debug_.PrintIf(iks.KeyboardInputSite != null);
 			iks.KeyboardInputSite?.Unregister();

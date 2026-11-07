@@ -538,7 +538,6 @@ class CiErrors {
 		return t;
 	}
 	
-	//TODO: now adds in the same line as meta comments, eg /*/ optimize true; /*/using System.Runtime.CompilerServices;
 	bool _PastedWithUsings(CodeInfo.Context cd, ImmutableArray<Diagnostic> aDiag, ref int start16, ref int end16) {
 		int firstStart = int.MaxValue, lastEnd = 0;
 		foreach (var d in aDiag) {
