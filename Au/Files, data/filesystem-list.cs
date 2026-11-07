@@ -39,13 +39,7 @@ public class FLQuery {
 	/// 
 	/// The order of results probably is breadth-first, but it's not documented.
 	/// 
-	/// The returned paths are normalized, ie may not start with exact <i>directory</i> string. If you need relative path, use property <see cref="FLPath.RelativePath"/>.
-	/// 
-	/// For NTFS links (symbolic links, mount points) gets link info, not target info.
-	/// 
-	/// These errors are ignored (the function works as if the [sub]directory is empty):
-	/// 1. Missing target directory of a NTFS link.
-	/// 2. If used flag <see cref="FLFlags.IgnoreInaccessible"/> - access denied.
+	/// For NTFS links (symbolic links, mount points etc) gets link info, not target info.
 	/// </remarks>
 	public IEnumerable<TResult> Enumerate<TResult>(FileSystemEnumerable<TResult>.FindTransform transform, bool? files = null) {
 		if (!Path.IsPathFullyQualified(_directory))
@@ -148,22 +142,25 @@ public class FLQuery {
 	/// <summary>
 	/// Enumerates files and directories in the directory. Gets their paths as string.
 	/// </summary>
+	/// <returns>Array. All paths start with exact <i>directory</i> string (not normalized).</returns>
 	/// <inheritdoc cref="Enumerate" path="/exception"/>
 	public string[] AllPaths => Enumerate(_GetPath, null).ToArray();
 	
 	/// <summary>
 	/// Enumerates files in the directory. Gets their paths as string.
 	/// </summary>
+	/// <inheritdoc cref="AllPaths" path="/returns"/>
 	/// <inheritdoc cref="Enumerate" path="/exception"/>
 	public string[] FilePaths => Enumerate(_GetPath, true).ToArray();
 	
 	/// <summary>
 	/// Enumerates directories in the directory. Gets their paths as string.
 	/// </summary>
+	/// <inheritdoc cref="AllPaths" path="/returns"/>
 	/// <inheritdoc cref="Enumerate" path="/exception"/>
 	public string[] DirectoryPaths => Enumerate(_GetPath, false).ToArray();
 	
-	private static string _GetPath(ref FileSystemEntry entry) => entry.ToFullPath();
+	private static string _GetPath(ref FileSystemEntry entry) => entry.ToSpecifiedFullPath();
 	#endregion
 	
 	#region names
@@ -210,6 +207,9 @@ public class FLPath {
 	/// <summary>
 	/// Full path.
 	/// </summary>
+	/// <remarks>
+	/// The paths are normalized, ie may not start with exact <i>directory</i> string. If you need relative path, use property <see cref="RelativePath"/>.
+	/// </remarks>
 	public string Path => _path;
 	
 	/// <summary>

@@ -1730,21 +1730,8 @@ public static unsafe partial class ExtString {
 	/// </summary>
 	internal static char At_(this RStr t, int index) => (uint)index < t.Length ? t[index] : default;
 	
-	/// <summary>
-	/// Returns <c>true</c> if this string starts with directory path <i>dir</i> and then follows '\\' or '/'.
-	/// </summary>
-	/// <param name="dir">A directory path. Case-insensitive.</param>
-	/// <param name="orEquals">Also return <c>true</c> if this string equals <i>dir</i> (ignoring separators at the end of strings).</param>
-	/// <remarks>
-	/// Before comparing, trims the end separator(s) from both strings.
-	/// </remarks>
-	public static bool PathStarts_(this RStr t, RStr dir, bool orEquals = false) {
-		t = t.TrimEnd("\\/");
-		dir = dir.TrimEnd("\\/");
-		if (!t.Starts(dir, true)) return false;
-		if (t.Length == dir.Length) return orEquals;
-		return t[dir.Length] is '\\' or '/';
-	}
+	/// <inheritdoc cref="Path2.IsInDirectory"/>
+	internal static bool PathStarts_(this RStr t, RStr dir, bool orEquals = false) => Path2.IsInDirectory(t, dir, orEquals);
 }
 
 /// <summary>

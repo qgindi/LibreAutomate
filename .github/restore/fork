@@ -1,5 +1,5 @@
-2026-11-07
-4e511ed26d8a510a85eb14b0da2e5cacce9035c118e18466a8b5eaa6a283b430
+2026-11-08
+e72eca23a4cc39479a7d3bc95b6a98999e95175cfe7315f8b047e462e907bb95
 Debugger\ManagedPart.dll
 Roslyn\Humanizer.dll
 Roslyn\Microsoft.CodeAnalysis.CSharp.dll
@@ -11,8 +11,6 @@ Roslyn\Microsoft.CodeAnalysis.Features.dll
 Roslyn\Microsoft.CodeAnalysis.Scripting.dll
 Roslyn\Microsoft.CodeAnalysis.Workspaces.dll
 Roslyn\Microsoft.DiaSymReader.dll
-Roslyn\Microsoft.Interop.LibraryImportGenerator.dll
-Roslyn\Microsoft.Interop.SourceGeneration.dll
 Roslyn\System.Composition.AttributedModel.dll
 Roslyn\System.Composition.Convention.dll
 Roslyn\System.Composition.Hosting.dll

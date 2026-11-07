@@ -123,7 +123,7 @@ public class PathFilter {
 		}
 		if (_hasIncludes) {
 			if (_rules.Count == 1 && _rules[0].parts is [ { kind: _GPKind.Star }]) print.warning("Glob pattern * is unnecessary. Use no patterns instead.");
-			else if (recursive && !_rules.Any(static o => o.include && o.parts.Length > 1)) print.warning("Possibly incorrect glob pattern(s). The enumeration is recursive (all descendants), but the include patterns match only immediate children.");
+			//else if (recursive && !_rules.Any(static o => o.include && o.parts.Length > 1)) print.warning("Possibly incorrect glob pattern(s). The enumeration is recursive (all descendants), but the include patterns match only immediate children."); //no, there are cases when code uses the Recurse flag but does not control the input, which may specify multi-part patterns in some cases but only single-part patterns in other cases, and it is valid
 		}
 		return true;
 	}

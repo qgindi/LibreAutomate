@@ -2,9 +2,7 @@
 
 using Vestris.ResourceLib;
 
-//TODO
-print.qm2.use = true;
-print.it(Environment.CommandLine);
+//print.ignoreConsole = true; print.qm2.use = true;
 
 string solutionDirBS = folders.ThisAppBS[..^22];
 

@@ -6,7 +6,6 @@ var dirPath = @"C:\Test";
 foreach (var f in filesystem.list(dirPath).All) print.it(f.IsDirectory, f); //files and directories
 foreach (var f in filesystem.list(dirPath).Files) print.it(f.Name, f.Attributes); //files
 foreach (var f in filesystem.list(dirPath).Directories) print.it(f.Name); //directories
-foreach (var f in filesystem.list(dirPath).FilePaths) print.it(f); //files, get paths as string
 foreach (var f in filesystem.list(dirPath).FileInfos) print.it($"{f.Name,-30}  {f.Length,-10}  {f.LastWriteTime}"); //files, get more properties
 
 //all descendant files and directories
@@ -42,7 +41,7 @@ foreach (var v in filesystem.list(dirPath, flags: FLFlags.Recurse).Enumerate((re
 	print.it(v);
 
 //example with IncludeFunc: get only readonly files
-var array3 = filesystem.list(dirPath, new() { IncludeFunc = (ref f) => f.Attributes.Has(FileAttributes.ReadOnly) }).FilePaths.ToArray();
+var array3 = filesystem.list(dirPath, new() { IncludeFunc = (ref f) => f.Attributes.Has(FileAttributes.ReadOnly) }).FilePaths;
 
 //example with IncludeFunc: get .txt files modified in last 30 days
 var date = DateTime.UtcNow.Subtract(TimeSpan.FromDays(30));

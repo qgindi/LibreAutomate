@@ -608,4 +608,21 @@ public static unsafe class Path2 {
 			if (!filesystem.exists(s)) return s;
 		}
 	}
+	
+	/// <summary>
+	/// Returns <c>true</c> if <i>path</i> is inside directory <i>directory</i>.
+	/// </summary>
+	/// <param name="path">A path. Can end in a directory separator; it's ignored.</param>
+	/// <param name="directory">A directory path. Can end in a directory separator; it's ignored. Case-insensitive.</param>
+	/// <param name="orEquals">Also return <c>true</c> if <i>path</i> equals <i>directory</i> (ignoring trailing separators).</param>
+	/// <remarks>
+	/// Does not normalize paths before comparing. For example, different directory separators don't match. Just trims trailing separator(s) from both strings.
+	/// </remarks>
+	public static bool IsInDirectory(RStr path, RStr directory, bool orEquals = false) {
+		path = path.TrimEnd("\\/");
+		directory = directory.TrimEnd("\\/");
+		if (!path.Starts(directory, true)) return false;
+		if (path.Length == directory.Length) return orEquals;
+		return path[directory.Length] is '\\' or '/';
+	}
 }
