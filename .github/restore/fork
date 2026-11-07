@@ -1,10 +1,6 @@
 2026-11-07
-bf86a0e600edc5b3fec9ba6dd80435d730b646624aecaf81b5e421b1254776cd
+4e511ed26d8a510a85eb14b0da2e5cacce9035c118e18466a8b5eaa6a283b430
 Debugger\ManagedPart.dll
-Debugger\arm64\dbgshim.dll
-Debugger\arm64\netcoredbg.exe
-Debugger\x64\dbgshim.dll
-Debugger\x64\netcoredbg.exe
 Roslyn\Humanizer.dll
 Roslyn\Microsoft.CodeAnalysis.CSharp.dll
 Roslyn\Microsoft.CodeAnalysis.CSharp.Features.dll
@@ -23,3 +19,7 @@ Roslyn\System.Composition.Hosting.dll
 Roslyn\System.Composition.Runtime.dll
 Roslyn\System.Composition.TypedParts.dll
 Roslyn\System.Diagnostics.EventLog.dll
+Debugger\arm64\dbgshim.dll
+Debugger\arm64\netcoredbg.exe
+Debugger\x64\dbgshim.dll
+Debugger\x64\netcoredbg.exe

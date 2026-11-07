@@ -23,7 +23,7 @@ namespace other {
 
 		//After unhooking, this dll remains loaded until hooked threads receive messages.
 		//	To unload when [un]installing, installer broadcastss WM_NULL to all top-level and message-only windows.
-		//	To unload when building this project, the pre-link event runs BuildEvents.exe which calls Cpp_Unload.
+		//	When building, BuildEvents.exe exits editor and unloads the dll before copying new.
 	}
 
 	EXPORT HHOOK Cpp_Clipboard(HHOOK hh) {

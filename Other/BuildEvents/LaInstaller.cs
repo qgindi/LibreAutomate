@@ -1,5 +1,4 @@
 /*/ define SCRIPT; nuget -\Microsoft.Extensions.FileSystemGlobbing; /*/
-using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Win32;
 
 #if SCRIPT
@@ -13,7 +12,7 @@ x.Create();
 //run.selectInExplorer(x.MsiFile);
 //run.it("msiexec.exe", $@"/i ""{x.MsiFile}"""); //note: not as admin, it's not good for testing
 #else
-int r = run.console(folders.Editor + @"..\Other\BuildEvents\bin\Debug\BuildEvents.exe", "createInstaller");
+int r = run.console(folders.Editor + @"..\Other\BuildEvents\bin\BuildEvents.exe", "createInstaller");
 print.it(r);
 #endif
 #endif
@@ -32,7 +31,7 @@ class LaInstaller(string outDir, bool inCI, bool testUpgrade = false) {
 		
 		_CopyFiles();
 		
-		string solDir = pathname.getDirectory(outDir);
+		string solDir = Path2.GetDirectory(outDir);
 		string jsonFile = solDir + @"\Other\MsiCA\msi.json";
 		Environment.SetEnvironmentVariable("_MSI_SOLUTION_DIR", solDir);
 		
@@ -80,7 +79,7 @@ xrefmap.yml
 
 runtimes\win-*64\native\WebView2Loader.dll
 
-Default\**.xml
+Default\**\*.xml
 Default\Themes\*.csv
 Default\Workspace\files\**
 
@@ -96,14 +95,13 @@ Roslyn\*.dll
 	
 		*/
 		
-		string to = c_tempDir + @"\_";
-		filesystem.delete(to);
-		Matcher matcher = new();
-		matcher.AddIncludePatterns(list.Lines(noEmpty: true));
-		foreach (var s1 in matcher.GetResultsInFullPath(outDir)) {
-			var s2 = to + s1[outDir.Length..];
-			filesystem.copy(s1, s2);
-		}
+		//string to = c_tempDir / "_";
+		//filesystem.delete(to);
+		//foreach (var f in filesystem.list(outDir, new(list.Lines(noEmpty: true))).Files) {
+		//	filesystem.copy(f, to / f.RelativePath);
+		//}
+		filesystem.copyTo(outDir, c_tempDir, FIfExists.Delete, filter: new(list.Lines(noEmpty: true)));
+		//TODO: test this new code
 	}
 	
 	void _PatchMsi() {

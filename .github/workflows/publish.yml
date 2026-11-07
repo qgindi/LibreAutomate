@@ -37,7 +37,7 @@ jobs:
 
       - name: Create installer
         run: |
-          Other\BuildEvents\bin\Debug\BuildEvents.exe createInstaller
+          Other\BuildEvents\bin\BuildEvents.exe createInstaller
           # BuildEvents.exe creates/copies a list of files to add to the MSI package, executes mpdev (Master Packager Dev) which creates `LibreAutomate.msi`, and adds some MSI options that are unsupported by mpdev directly.
   
       - name: upload unsigned artifact

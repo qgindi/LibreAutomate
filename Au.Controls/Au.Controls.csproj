@@ -19,21 +19,25 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <DebugType>embedded</DebugType>
-	  <DefineConstants>$(DefineConstants);CONTROLS</DefineConstants>
+		<DebugType>embedded</DebugType>
+		<DefineConstants>$(DefineConstants);CONTROLS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <DebugType>embedded</DebugType>
-	  <DefineConstants>$(DefineConstants);CONTROLS</DefineConstants>
+		<DebugType>embedded</DebugType>
+		<DefineConstants>$(DefineConstants);CONTROLS</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
+		<Compile Include="..\Au\Resources\global2.cs" Link="resources\global2.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Au\Au.csproj" />
+		<ProjectReference Include="..\Au\Au.csproj" />
+		<ProjectReference Include="..\Libraries\scintilla\win32\Scintilla.vcxproj">
+			<Private>False</Private>
+			<ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+		</ProjectReference>
 	</ItemGroup>
 
 </Project>

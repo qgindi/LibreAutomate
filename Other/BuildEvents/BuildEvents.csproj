@@ -6,6 +6,7 @@
 		<Configurations>Debug</Configurations>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<OutputPath>bin</OutputPath>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<LangVersion>preview</LangVersion>
@@ -27,9 +28,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="LibreAutomate" Version="1.16.0" />
-	  <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.12" />
 	  <PackageReference Include="Vestris.ResourceLib" Version="2.2.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Au\Au.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Cpp\Cpp.vcxproj" Private="false" ReferenceOutputAssembly="false" />
+	</ItemGroup>
 </Project>

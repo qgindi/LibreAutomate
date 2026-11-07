@@ -152,7 +152,10 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
+      <Command>if exist "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" (
+    "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" cppPostBuild $(Configuration) $(Platform)
+)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -170,7 +173,10 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
+      <Command>if exist "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" (
+    "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" cppPostBuild $(Configuration) $(Platform)
+)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -188,7 +194,10 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
+      <Command>if exist "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" (
+    "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" cppPostBuild $(Configuration) $(Platform)
+)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -212,7 +221,10 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
+      <Command>if exist "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" (
+    "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" cppPostBuild $(Configuration) $(Platform)
+)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -236,7 +248,10 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
+      <Command>if exist "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" (
+    "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" cppPostBuild $(Configuration) $(Platform)
+)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -260,7 +275,10 @@
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)</Command>
+      <Command>if exist "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" (
+    "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" cppPostBuild $(Configuration) $(Platform)
+)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

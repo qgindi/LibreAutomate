@@ -45,9 +45,6 @@ using Au.More;
 
 #if AU
 namespace Au.More;
-#elif CONTROLS
-namespace Au.Controls;
-#endif //else project BuildEvents uses this instead of that of the NuGet library (possibly older)
 
 ///
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -55,3 +52,4 @@ public class Au_ {
 	///
 	public const string Version = "1.16.7"; //Don't edit here. Run script "LA version.cs". It changes version everywhere.
 }
+#endif

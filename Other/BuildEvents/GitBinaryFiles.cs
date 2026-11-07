@@ -1,5 +1,3 @@
-using Microsoft.Extensions.FileSystemGlobbing;
-
 class GitBinaryFiles(string repoDir) {
 #if REPO2
 	const string c_ghRepoName = "test-git";
@@ -55,22 +53,22 @@ File like `net-10.7z`.
 		new("net", Environment.Version.ToString(2), """
 doc.db
 ref.db
-32\apphost.exe
-64\apphost.exe
-64\ARM\apphost.exe
+32/apphost.exe
+64/apphost.exe
+64/ARM/apphost.exe
 """),
 		/*
 Upload new 7z file whenever the files change. Normally 1-3 times/year.
 File like `fork-2026-10-15.7z`
 		*/
 		new("fork", null, """
-Debugger\**
-Roslyn\*.dll
+Debugger/**
+Roslyn/*.dll
 """),
 		];
 	
 	public int PreCommitHook() {
-		//print.it("pre-commit hook");
+		print.it("pre-commit hook");
 		
 		var g = new GitRepo(repoDir) { Print = true };
 		
@@ -179,9 +177,7 @@ Roslyn\*.dll
 		public string GroupInfoFile { get; private set; }
 		
 		public string GetGroupInfoIfFilesChanged() {
-			Matcher matcher = new();
-			matcher.AddIncludePatterns(filePatterns.Lines(noEmpty: true));
-			var files = matcher.GetResultsInFullPath(_laDirBS);
+			var files = filesystem.list(_laDirBS, new(filePatterns.Lines(noEmpty: true)), FLFlags.Recurse).FilePaths;
 			var hash = System.Security.Cryptography.SHA256.HashFiles(files);
 			
 			if (filesystem.exists(GroupInfoFile)) {
@@ -190,7 +186,7 @@ Roslyn\*.dll
 			}
 			
 			return $"""
-{DateTime.UtcNow.ToString("yyyy-MM-dd")}
+{DateTime.UtcNow:yyyy-MM-dd}
 {hash}
 {string.Join("\r\n", files.Select(o => o[_laDirBS.Length..]))}
 """;
@@ -291,14 +287,6 @@ class GitRepo(string repoDir) {
 }
 
 static class Ext_ {
-	//TODO: remove after updating the used LA NuGet package
-	extension(string) {
-		public static string operator /(string s1, string s2) {
-			if (s2 is ['\\' or '/', ..] && s2 is not [_, '\\' or '/', ..]) s2 = s2[1..];
-			return Path.Combine(s1, s2);
-		}
-	}
-	
 	extension(System.Security.Cryptography.SHA256) {
 		/// <summary>
 		/// Computes a SHA-256 hash of one or more files (file content).

@@ -4,8 +4,6 @@ namespace Au.Types;
 
 [DebuggerStepThrough]
 static unsafe partial class Cpp {
-	static List<(string dll, nint h)> _dlls = [];
-
 	static Cpp() {
 		LoadAuNativeDll("AuCpp.dll");
 

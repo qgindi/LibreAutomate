@@ -130,10 +130,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Au.Controls\Au.Controls.csproj" />
 		<ProjectReference Include="..\Au\Au.csproj" />
-		<ProjectReference Include="..\Libraries\scintilla\win32\Scintilla.vcxproj">
-		  <Private>False</Private>
-		  <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-		</ProjectReference>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -179,11 +175,11 @@
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)" />
+		<Exec Command="$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe preBuild $(Configuration)" />
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="$(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)" />
+		<Exec Command="$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe postBuild $(Configuration)" />
 	</Target>
 
 	<Target Name="DeleteUnwantedFiles" AfterTargets="Build">

@@ -2,19 +2,25 @@
 
 using Vestris.ResourceLib;
 
-string solutionDirBS = folders.ThisAppBS[..^28];
+//TODO
+print.qm2.use = true;
+print.it(Environment.CommandLine);
+
+string solutionDirBS = folders.ThisAppBS[..^22];
 
 bool atHome = solutionDirBS.Eqi(@"C:\code\au\") && Environment.GetEnvironmentVariable("Au.Home<PC>") == "1";
 bool inCI = !atHome && Environment.GetEnvironmentVariable("CI") == "true";
 //bool inGithubActions = !atHome && Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true"; //inCI true too
 
+_LoadAuCppDll();
+
 script.setup();
 
 return args[0] switch {
-	"cppPostBuild" => CppPostBuild(), //project Cpp: $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
-	"dllPostBuild" => DllPostBuild(), //other C++ dll projects (Scintilla): $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
-	"preBuild" => EditorPreBuild(), //project Au.Editor: $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe preBuild $(Configuration)
-	"postBuild" => EditorPostBuild(), //project Au.Editor: $(SolutionDir)Other\BuildEvents\bin\Debug\BuildEvents.exe postBuild $(Configuration)
+	"cppPostBuild" => CppPostBuild(), //project Cpp: $(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe cppPostBuild $(Configuration) $(Platform)
+	"dllPostBuild" => DllPostBuild(), //other C++ dll projects (Scintilla): $(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe dllPostBuild "$(TargetPath)" $(Platform)
+	"preBuild" => EditorPreBuild(), //project Au.Editor: $(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe preBuild $(Configuration)
+	"postBuild" => EditorPostBuild(), //project Au.Editor: $(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe postBuild $(Configuration)
 	"roslynPostBuild" => RoslynPostBuild(),
 	"createInstaller" => CreateInstaller(),
 	"gitPreCommitHook" => atHome ? new GitBinaryFiles(solutionDirBS).PreCommitHook() : 0,
@@ -23,6 +29,13 @@ return args[0] switch {
 };
 
 /// Exits editor. Copies AuCpp.dll and unloads the old dll from processes.
+/// Useful only when building the Cpp project alone. Else EditorPreBuild will do the same.
+/// Not called (and not useful) when building solution if BuildEvents.exe still does not exist. Cannot auto-build BuildEvents before Cpp, because it would be a circular dependency.
+/// <code><![CDATA[
+/// if exist "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" (
+///     "$(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe" cppPostBuild $(Configuration) $(Platform)
+/// )
+/// ]]></code>
 int CppPostBuild() {
 	_ExitEditor();
 	if (!_CopyAuCppDllIfNeed(args[2], false)) return 1;
@@ -187,14 +200,11 @@ int RoslynPostBuild() {
 	var from = args[1].Trim();
 	var to = $@"{solutionDirBS}_\Roslyn";
 
-	foreach (var f in filesystem.enumFiles(to)) {
-		filesystem.delete(f.FullPath, FDFlags.CanFail);
+	filesystem.delete(filesystem.list(to).FilePaths, FDFlags.CanFail);
+	foreach (var f in filesystem.list(from, "*.dll|*.xml||System.Configuration.*|System.Security.*").Files) {
+		filesystem.copyTo(f, to);
 	}
-	foreach (var f in filesystem.enumFiles(from)) {
-		if (0 == f.Name.Ends(true, ".dll", ".xml")) continue;
-		if (0 != f.Name.Starts(true, "System.Configuration.", "System.Security.")) continue;
-		filesystem.copyTo(f.FullPath, to);
-	}
+	//TODO: test the new code
 	return 0;
 }
 
@@ -207,6 +217,12 @@ int CreateInstaller() {
 		print.it("Failed to create installer. " + ex);
 		return 1;
 	}
+}
+
+void _LoadAuCppDll() {
+	bool auIsDebug = typeof(folders).Assembly.GetCustomAttribute<DebuggableAttribute>()?.IsJITTrackingEnabled ?? false;
+	var path = $@"{solutionDirBS}Cpp\bin\{(auIsDebug ? "Debug" : "Release")}\{RuntimeInformation.RuntimeIdentifier[4..]}\AuCpp.dll";
+	NativeLibrary.Load(path);
 }
 
 class ExeResources(string exe, string solutionDirBS) {
@@ -242,7 +258,7 @@ class ExeResources(string exe, string solutionDirBS) {
 		v.LoadFrom(process.thisExePath);
 		var k = (StringFileInfo)v["StringFileInfo"];
 		k["FileDescription"] = description + "\0";
-		string fn = pathname.getName(exe);
+		string fn = Path2.GetName(exe);
 		k["InternalName"] = k["OriginalFilename"] = fn + "\0";
 		v.SaveTo(exe);
 	}

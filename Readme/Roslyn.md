@@ -108,7 +108,7 @@ In `Microsoft.CodeAnalysis.CSharp.Features.csproj`:
 - Add post-build event:
 ```
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="C:\code\au\Other\BuildEvents\bin\Debug\BuildEvents.exe roslynPostBuild $(OutDir)" />
+    <Exec Command="C:\code\au\Other\BuildEvents\bin\BuildEvents.exe roslynPostBuild $(OutDir)" />
   </Target>
 ```
 
