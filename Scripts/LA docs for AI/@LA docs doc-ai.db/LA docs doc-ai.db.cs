@@ -106,8 +106,8 @@ class HtmlToMarkdown(bool step, string startFrom) {
 		foreach (var subDir in _subDirs) {
 			_subDir = subDir;
 			_isApiDir = _subDir is "api";
-			foreach (var f in filesystem.listFiles(c_rootDir + subDir, 0, "*.html")) {
-				_name = f.Name[..^5];
+			foreach (var f in filesystem.list(c_rootDir + subDir, "*.html").Files) {
+				_name = Path2.GetNameNoExt(f);
 				if (_name is "toc" or "index") continue;
 				if (_isApiDir) {
 					if (_name is "Au" or "Au.Types" or "Au.More" or "Au.Triggers") continue;
@@ -123,9 +123,9 @@ class HtmlToMarkdown(bool step, string startFrom) {
 				_pause = false;
 				_isApi = _isApiDir && _name.Starts("Au.");
 				
-				string html = _LoadHtmlArticle(f.FullName), html1 = html;
+				string html = _LoadHtmlArticle(f), html1 = html;
 				
-				html = _PreprocessHtml(html, f.FullName, out HtmlNode doc);
+				html = _PreprocessHtml(html, f, out HtmlNode doc);
 				if (html is null) continue;
 				
 				string markdown;
@@ -134,7 +134,7 @@ class HtmlToMarkdown(bool step, string startFrom) {
 				}
 				catch (UnknownTagException ex) {
 					print.it(ex);
-					OpenInBrowser(f.FullName);
+					OpenInBrowser(f);
 					return;
 				}
 				
@@ -165,7 +165,7 @@ class HtmlToMarkdown(bool step, string startFrom) {
 					void _Link(DEventArgs e) {
 						int link = e.LinkHref.ToInt();
 						if (link == 3) {
-							OpenInBrowser(f.FullPath);
+							OpenInBrowser(f);
 						} else {
 							SaveAndOpenInEditor(link == 4 ? markdown : link == 1 ? html1 : html, e.LinkHref + (link == 4 ? ".md" : ".html"));
 						}
@@ -861,7 +861,7 @@ class HtmlToMarkdown(bool step, string startFrom) {
 		stream.Add(new YamlDocument(yConcept));
 		foreach (var subDir in _subDirs.Skip(1)) {
 			var yList = new YamlSequenceNode();
-			foreach (var f in filesystem.enumFiles(c_rootDir + subDir, "*.html")) {
+			foreach (var f in filesystem.list(c_rootDir + subDir, "*.html").Files) {
 				var name = f.Name[..^5];
 				if (name is "index" or "toc") continue;
 				//print.it(name);

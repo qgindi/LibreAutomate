@@ -5,10 +5,10 @@ class GitBinaryFiles(string repoDir) {
 #else
 	const string c_ghRepoName = "LA-downloads";
 #endif
-	
+
 	public void SetHooks() {
 		var relPath = Path.GetRelativePath(repoDir, process.thisExePath);
-		
+
 		var preCommit = repoDir / @".git\hooks\pre-commit";
 		if (!filesystem.exists(preCommit, true)) filesystem.saveText(preCommit, $"""
 #!/bin/sh
@@ -16,7 +16,7 @@ class GitBinaryFiles(string repoDir) {
 "{relPath}" "gitPreCommitHook"
 exit $?
 """);
-		
+
 		var prePush = repoDir / @".git\hooks\pre-push";
 		if (!filesystem.exists(prePush, true)) filesystem.saveText(prePush, $"""
 #!/bin/sh
@@ -25,7 +25,7 @@ exit $?
 exit $?
 """);
 	}
-	
+
 	_Group[] _Groups => [
 		/*
 Format-versioned, large, rarely changes. The newest version can be used by older LA versions if the same package format (same filenames, same DB tables, etc).
@@ -67,23 +67,23 @@ Debugger/**
 Roslyn/*.dll
 """),
 		];
-	
+
 	public int PreCommitHook() {
 		print.it("pre-commit hook");
-		
+
 		var g = new GitRepo(repoDir) { Print = true };
-		
+
 		//exit if nothing to commit
 		if (g.gitOut("status --porcelain").Count == 0) return 0;
-		
+
 		foreach (var group in _Groups) {
 			group.Init(repoDir);
-			
+
 			if (group.GetGroupInfoIfFilesChanged() is not string versionData) continue;
-			
+
 			filesystem.saveText(group.GroupInfoFile, versionData);
 			filesystem.setAttributes(group.GroupInfoFile, FileAttributes.Hidden, false);
-			
+
 			try {
 				g.git($"add {group.GroupInfoFileRel}");
 			}
@@ -92,51 +92,51 @@ Roslyn/*.dll
 				return 1;
 			}
 		}
-		
+
 		return 0;
 	}
-	
+
 	public int PrePushHook() {
 		//print.it("pre-push hook");
-		
+
 		//exit if nothing to push
 		string commits = Console.In.ReadToEnd();
 		if (commits.NE()) return 0;
-		
+
 		foreach (var group in _Groups) {
 			group.Init(repoDir);
-			
+
 			//is the group info file updated?
 			var fileAttr = File.GetAttributes(group.GroupInfoFile);
 			if (fileAttr.Has(FileAttributes.Hidden)) continue;
-			
+
 			group.Upload();
-			
+
 			File.SetAttributes(group.GroupInfoFile, fileAttr | FileAttributes.Hidden);
 		}
-		
+
 		return 0;
 	}
-	
+
 	public int Restore(bool test = false) {
 		string laDirBS = repoDir / @"_\";
 		if (test) {
 			laDirBS += @"test\";
 			filesystem.createDirectory(laDirBS);
 		}
-		
+
 		bool once = false;
 		foreach (var group in _Groups) {
 			group.Init(repoDir);
-			
+
 			//is any file missing or possibly modified?
 			var v = _GroupInfo.Load(group.GroupInfoFile);
 			var date = v.GetDateTime();
 			if (!v.files.Any(f => File.GetLastWriteTimeUtc(laDirBS + f) != date)) continue;
-			
+
 			//is really missing/modified, of just changed the last-write-time?
 			var hash = filesystem.more.HashFiles_(v.files, laDirBS);
-			
+
 			if (v.hash != hash) {
 				if (!once) {
 					once = true;
@@ -144,70 +144,70 @@ Roslyn/*.dll
 				}
 				group.Restore(laDirBS, v);
 			}
-			
+
 			foreach (var f in v.files) {
 				File.SetLastWriteTimeUtc(laDirBS + f, date);
 			}
 		}
-		
+
 		if (once) print.it("    Done");
-		
+
 		return 0;
 	}
-	
+
 	record class _GroupInfo(string date, string hash, string[] files) {
 		public static _GroupInfo Load(string file) {
 			var a = File.ReadAllLines(file);
 			return new(a[0], a[1], a.RemoveAt(0, 2));
 		}
-		
+
 		public DateTime GetDateTime() => DateTime.ParseExact(date, "yyyy-MM-dd", null, 0);
 	}
-	
+
 	record class _Group(string groupName, string packageVersion, string filePatterns) {
 		string _laDirBS;
-		
+
 		public void Init(string repoDir) {
 			_laDirBS = repoDir / @"_\";
 			GroupInfoFileRel = $@".github\restore\{groupName}";
 			GroupInfoFile = repoDir / GroupInfoFileRel;
 		}
-		
+
 		public string GroupInfoFileRel { get; private set; }
-		
+
 		public string GroupInfoFile { get; private set; }
-		
+
 		public string GetGroupInfoIfFilesChanged() {
 			var files = filesystem.list(_laDirBS, new(filePatterns.Lines(noEmpty: true)), FLFlags.Recurse).FilePaths;
 			var hash = filesystem.more.HashFiles_(files, _laDirBS);
-			
+
 			if (filesystem.exists(GroupInfoFile)) {
 				var a = File.ReadAllLines(GroupInfoFile);
 				if (a[1] == hash) return null;
 			}
-			
+
 			return $"""
 {DateTime.UtcNow:yyyy-MM-dd}
 {hash}
 {string.Join("\r\n", files.Select(o => o[_laDirBS.Length..]))}
 """;
 		}
-		
+
 		public void Upload() {
 			var v = _GroupInfo.Load(GroupInfoFile);
-			
+
 			using var listFile = new TempFile();
 			filesystem.saveText(listFile, string.Join('\n', v.files));
-			
+
 			string zipFilename = _ZipFilename(v), zipFile = folders.ThisAppTemp + zipFilename;
 			filesystem.delete(zipFile);
-			
+
 			var d = dialog.showProgress(true, "Updating LA binary files", zipFilename, footer: "Compressing...");
 			try {
 				if (0 != run.console(out string s1, _laDirBS + @"32\7za.exe", $@"a ""{zipFile}"" @""{listFile}""", _laDirBS))
 					throw new AuException(s1);
 				//run.it(zipFile); dialog.show("zip OK");
-				
+
 				d.Send.ChangeFooterText("Uploading...", false);
 				var rm = new GithubReleaseManager(c_ghRepoName, "bin");
 				rm.AddOrReplaceAsset(zipFile, "application/x-compressed");
@@ -217,18 +217,30 @@ Roslyn/*.dll
 				filesystem.delete(zipFile, FDFlags.CanFail);
 			}
 		}
-		
+
 		string _ZipFilename(_GroupInfo v) => $"{groupName}-{packageVersion ?? v.date}.7z";
-		
+
 		public void Restore(string laDirBS, _GroupInfo v) {
 			string zipFilename = _ZipFilename(v);
 			print.it($"    Downloading {zipFilename} from https://github.com/qgindi/{c_ghRepoName}/releases/bin"); //the page URL for web browsers
 			var url = $"https://github.com/qgindi/{c_ghRepoName}/releases/download/bin/{zipFilename}";
 			using TempFile zipFile = new(".7z");
-			internet.http.Get(url, true).Download(zipFile, p => {
-				//Console.Write($"\r{p.Percent}%"); //no, VS does not support overwriting the same line in the output window
-			});
-			
+			for (int i = 0; ; i++) {
+				try {
+					internet.http.Get(url, true).Download(zipFile, p => {
+						//print.it($"\r{p.Percent}%"); //no, VS does not support overwriting the same line in the output window
+					});
+					break;
+				}
+				catch (Exception e1) when (i < 3) {
+					print.it(e1.ToStringWithoutStack());
+					print.it(url);
+					print.it("Sleep-retry...");
+					5.s();
+					//if (!dialog.showOkCancel("Failed", "Retry?")) throw;
+				}
+			}
+
 			print.it($"    Extracting {zipFilename}");
 			int r = run.console(out string so, _laDirBS / @"32\7za.exe", $@"x ""{zipFile}"" -aoa", laDirBS);
 			if (r != 0) throw new AuException($"Failed to extract {zipFilename}. " + so);
@@ -248,12 +260,12 @@ Roslyn/*.dll
 /// </remarks>
 class GitRepo(string repoDir) {
 	static string s_git;
-	
+
 	/// <summary>
 	/// Print the Git command (blue text) and its output.
 	/// </summary>
 	public bool Print;
-	
+
 	/// <summary>
 	/// Executes a Git command.
 	/// </summary>
@@ -262,7 +274,7 @@ class GitRepo(string repoDir) {
 	/// <returns><c>true</c>, unless failed with <i>softError</i>.</returns>
 	/// <exception cref="Exception"><c>git.exe</c> returned not 0.</exception>
 	public bool git(string args, string softError = null) => _Git(args, softError);
-	
+
 	/// Executes a Git command and returns the output lines.
 	/// <param name="args">Command line arguments for <c>git.exe</c>.</param>
 	/// <exception cref="Exception"><c>git.exe</c> returned not 0.</exception>
@@ -271,7 +283,7 @@ class GitRepo(string repoDir) {
 		_Git(args, null, a);
 		return a;
 	}
-	
+
 	bool _Git(string args, string softError = null, List<string> output = null) {
 		s_git ??= filesystem.searchPath("git.exe") ?? throw new FileNotFoundException("git.exe");
 		if (Print) print.it($"<><c blue>git {args}<>");

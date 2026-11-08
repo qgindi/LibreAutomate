@@ -64,7 +64,7 @@ static class RefAndDoc {
 		d.Execute("CREATE TABLE ref (name TEXT PRIMARY KEY, data BLOB)");
 		using var statInsert = d.Statement("INSERT OR REPLACE INTO ref VALUES (?, ?)");
 		
-		_AddDir(dir1, "WindowsBase", "System.Drawing");
+		_AddDir(dir1, "WindowsBase.dll", "System.Drawing.dll");
 		_AddDir(dir2);
 		
 		trans.Commit();
@@ -73,12 +73,8 @@ static class RefAndDoc {
 		print.it("Created " + dbFile);
 		
 		void _AddDir(string dir, params string[] skip) {
-			foreach (var f in filesystem.enumFiles(dir)) {
-				if (!f.Name.Ends(".dll", true)) continue;
-				var asmName = f.Name[..^4];
-				if (skip.Contains(asmName)) continue;
-				_AddFile(asmName, f.FullPath);
-				//break;
+			foreach (var f in filesystem.list(dir, new("*.dll", skip)).Files) {
+				_AddFile(f.Name[..^4], f);
 			}
 		}
 		
@@ -114,19 +110,17 @@ static class RefAndDoc {
 		print.it("Created " + dbFile);
 		
 		void _AddDir(string dir, ReadOnlySpan<string> skip = default, string coreDir = null) {
-			foreach (var f in filesystem.enumFiles(dir)) {
-				if (!f.Name.Ends(".xml", true)) continue;
+			foreach (var f in filesystem.list(dir, "*.xml").Files) {
 				var asmName = f.Name[..^4];
 				if (skip.Contains(asmName)) continue;
 				if (!File.Exists(dir + asmName + ".dll")) {
 					if (coreDir != null) { //in 10+ SDKs, the desktop dir also contains copies of core xml files. Skip them silently.
-						if (new FileInfo(coreDir + f.Name) is { Exists: true } fi && fi.Length == new FileInfo(f.FullPath).Length) continue;
+						if (new FileInfo(coreDir + f.Name) is { Exists: true } fi && fi.Length == new FileInfo(f).Length) continue;
 					}
 					print.it("<><c 0x808080>" + f.Name + "</c>");
 					continue;
 				}
-				_AddFile(asmName, f.FullPath);
-				//break;
+				_AddFile(asmName, f);
 			}
 		}
 		

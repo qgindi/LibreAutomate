@@ -69,7 +69,8 @@ NuGet.*.dll
 64\**
 32\*
 
-Au*.json
+Au.Editor*.deps.json
+Au.Editor*.runtimeconfig.json
 Au*.xml
 
 default.exe.manifest
@@ -91,17 +92,8 @@ Templates\files\**
 Debugger\**
 Roslyn\*.dll
 """;
-		/*
-	
-		*/
 		
-		//string to = c_tempDir / "_";
-		//filesystem.delete(to);
-		//foreach (var f in filesystem.list(outDir, new(list.Lines(noEmpty: true))).Files) {
-		//	filesystem.copy(f, to / f.RelativePath);
-		//}
 		filesystem.copyTo(outDir, c_tempDir, FIfExists.Delete, filter: new(list.Lines(noEmpty: true)));
-		//TODO: test this new code
 	}
 	
 	void _PatchMsi() {

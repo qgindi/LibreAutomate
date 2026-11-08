@@ -39,10 +39,10 @@ print.scrollToTop();
 void _Convert() {
 	List<_FileHtml> a = [];
 	foreach (var subDir in subDirs) {
-		foreach (var f in filesystem.enumFiles(c_rootDir + subDir, "*.html", FEFlags.AllDescendants | FEFlags.NeedRelativePaths)) {
-			var name = f.Name[1..];
+		foreach (var f in filesystem.list(c_rootDir + subDir, "**/*.html", FLFlags.Recurse).Files) {
+			var name = f.RelativePath;
 			if (name is "toc.html") continue;
-			a.Add(new() { name = $"{subDir}/{name.Replace('\\', '/')}", html = f.FullPath });
+			a.Add(new() { name = $"{subDir}/{name.Replace('\\', '/')}", html = f });
 		}
 	}
 	//perf.next();
@@ -67,9 +67,8 @@ void _AddRow(string name, object data) {
 }
 
 void _AddOtherFiles() {
-	foreach (var f in filesystem.enumFiles(c_rootDir + "styles")) {
-		var path = f.FullPath;
-		object data = Path.GetExtension(f.Name) switch { ".css" => filesystem.loadText(path), ".eot" => filesystem.loadBytes(path), _ => null };
+	foreach (var f in filesystem.list(c_rootDir + "styles").Files) {
+		object data = Path.GetExtension(f.Name) switch { ".css" => filesystem.loadText(f), ".eot" => filesystem.loadBytes(f), _ => null };
 		
 #if IEWB
 		if (f.Name == "docfx.vendor.min.css") { //fix the hidden scrollbar issue
@@ -131,8 +130,8 @@ document.addEventListener('click', function(e) {
 """);
 #endif
 	
-	foreach (var f in filesystem.enumFiles(c_rootDir + "images", "*.png")) {
-		_AddRow($"images/{f.Name}", filesystem.loadBytes(f.FullPath));
+	foreach (var f in filesystem.list(c_rootDir + "images", "*.png").Files) {
+		_AddRow($"images/{f.Name}", filesystem.loadBytes(f));
 	}
 }
 

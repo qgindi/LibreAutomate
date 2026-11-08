@@ -20,7 +20,7 @@ b.Row(-1).Add(C.CreateFlowDocumentControl(w, out var fd));
 b.FormatText($"""
 The #links here run a script. Ctrl+click to open the script instead.
 
-<a {() => _Script("LA version and resources.cs")}>#Change version</a> if need.
+<a {() => _Script("LA version.cs")}>#Change version</a> if need.
 
 Review all TODO. Occasionally review TODO2, FUTURE, CONSIDER.
 	TODO2 means "low priority TODO". If after a long time it still seems low priority, delete the comment or replace with TODO3.

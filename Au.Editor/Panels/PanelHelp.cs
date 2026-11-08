@@ -334,7 +334,11 @@ class PanelHelp {
 							: 2;
 						var ns = s[..i];
 						r = r.Children().First(o => o.name == ns);
-						r = r.Descendants().First(o => o.ApiFullNameEquals(s));
+						r = r.Descendants().FirstOrDefault(o => o.ApiFullNameEquals(s));
+						if (r == null) {
+							Debug_.Print($"{s}. Possibly recently hidden or removed. Run script <open>LA docs doc-ai.db.cs<> to update the AI database.");
+							return;
+						}
 						s = s[(i + 1)..];
 						r = r.Clone(s, notDir: true);
 					} else {

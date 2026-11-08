@@ -49,6 +49,7 @@ int DllPostBuild() {
 }
 
 /// Exits editor. If need, copies AuCpp.dll and unloads the old dll from processes.
+/// Note: careful about project references. When building with msbuild (eg GitHub Actions), it may call this at the very start, depending on project references. Workaround - when need a reference just too set the build order, don't add the reference to the project, but instead use the solution's Project Build Dependencies dialog.
 int EditorPreBuild() {
 	_ExitEditor();
 	_CopyAuCppDllIfNeed("Win32", true);
@@ -199,10 +200,9 @@ int RoslynPostBuild() {
 	var to = $@"{solutionDirBS}_\Roslyn";
 
 	filesystem.delete(filesystem.list(to).FilePaths, FDFlags.CanFail);
-	foreach (var f in filesystem.list(from, "*.dll|*.xml||System.Configuration.*|System.Security.*").Files) {
+	foreach (var f in filesystem.list(from, "*.dll|*.xml||System.Configuration.*|System.Security.*").FilePaths) {
 		filesystem.copyTo(f, to);
 	}
-	//TODO: test the new code
 	return 0;
 }
 

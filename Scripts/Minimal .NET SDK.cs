@@ -1,6 +1,6 @@
 /// Creates minimal .NET SDK for LA NuGet and Publish features.
 /// Downloads full SDK to a temp folder, and gets only folders used by these features (tested).
-/// Each platform folder is less than 100 MB; compressed less than 30 MB (full SDK is 200).
+/// Each platform folder is less than 100 MB; compressed less than 30 MB (full SDK is ~300).
 /// Finally prints an Upload link, which runs this script with command line `upload`. It uploads to https://github.com/qgindi/LA-downloads/releases.
 /// LA on user computers will auto-download when need.
 /// Also installs the minimal SDK in `folders.Editor + "SDK"`. Must be x64 computer.
@@ -117,19 +117,18 @@ class MinimalSDK {
 		
 		filesystem.delete(_dirDotnet2);
 		
-		long size = 0;
-		var a1 = filesystem.enumFiles(dirSdk1, flags: FEFlags.AllDescendants | FEFlags.NeedRelativePaths).ToArray();
+		var a1 = filesystem.list(dirSdk1, flags: FLFlags.Recurse).Files;
 		foreach (var f in a1) {
-			var path = f.FullPath;
-			var rel = f.Name;
+			var path = f.Path;
+			var rel = f.RelativePath;
 			
 			if (rel.Ends(".resources.dll", true)) continue;
 			if (rel.Find(@"\net4", true) > 0) continue;
 			if (rel.Find(@"\netframework", true) > 0) continue;
-			if (rel.Find("FSharp", true) > 0) continue;
-			if (rel.Find("VisualBasic", true) > 0) continue;
+			if (rel.Find("FSharp", true) >= 0) continue;
+			if (rel.Find("VisualBasic", true) >= 0) continue;
 			
-			var a = rel.Lower().Split('\\', StringSplitOptions.RemoveEmptyEntries);
+			var a = rel.Lower().Split('\\');
 			if (a.Length > 1) {
 				switch (a[0]) {
 				case "dotnettools" or "extensions" or "fsharp" or "testhostnetframework": continue; //not used, big
@@ -160,21 +159,12 @@ class MinimalSDK {
 				//print.it(a[0]);
 			}
 			
-			filesystem.copy(path, dirSdk2 + rel);
-			
-			size += f.Size;
+			filesystem.copy(path, dirSdk2 / rel);
 		}
-		print.it($"Folder size: {double.Round(size / (1024 * 1024d), 1)}");
+		print.it($"Folder size: {double.Round(filesystem.more.calculateDirectorySize(dirSdk2) / (1024 * 1024d), 1)}");
 	}
 	
 	void _CopyRootFiles() {
-		////copy dotnet.exe and license txt files.
-		//foreach (var f in filesystem.enumFiles(_dirDotnet1)) {
-		//	var path = f.FullPath;
-		//	//print.it(path);
-		//	filesystem.copyTo(path, _dirDotnet2);
-		//}
-		
 		filesystem.copyTo(_dirDotnet1 + @"\dotnet.exe", _dirDotnet2);
 	}
 	
