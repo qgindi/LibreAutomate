@@ -471,18 +471,19 @@ file class _EmStorageFile(string file, AiEmbeddingModel model) {
 	}
 	
 	public bool TryDownload(_EmHash hash) {
-		if (TryGetZipName(hash) is not { } zipName) return false;
-		string zipFile = file + ".7z";
-		try {
-			var r = internet.http.Get($"https://github.com/qgindi/LA-downloads/releases/download/AI-embedding/{zipName}", dontWait: true);
-			if (!r.IsSuccessStatusCode) return false;
-			r.Download(zipFile, progressText1: "Downloading data for AI search");
-			var dir = Path2.GetDirectory(file);
-			if (!SevenZip.Extract(out var errors, zipFile, dir)) { Debug_.Print(errors); return false; }
+		if (TryGetZipName(hash) is { } zipName) {
+			string zipFile = file + ".7z";
+			try {
+				if (LA.Shared.LaCloudStorage.Download("AI-embedding", zipName, zipFile, progressText1: "Downloading data for AI search", returnFalseIfNotFound: true)) {
+					var dir = Path2.GetDirectory(file);
+					if (!SevenZip.Extract(out var errors, zipFile, dir)) { Debug_.Print(errors); return false; }
+					return true;
+				}
+			}
+			catch (Exception ex) { Debug_.Print(ex); }
+			finally { filesystem.delete(zipFile, FDFlags.CanFail); }
 		}
-		catch (Exception ex) { Debug_.Print(ex); }
-		finally { filesystem.delete(zipFile, FDFlags.CanFail); }
-		return true;
+		return false;
 	}
 	
 	public string TryGetZipName(_EmHash hash) {

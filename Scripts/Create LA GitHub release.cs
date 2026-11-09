@@ -1,4 +1,4 @@
-/*/ c GithubReleaseManager.cs; /*/
+/*/ c LaCloudGithub.cs; /*/
 
 print.clear();
 
@@ -13,7 +13,7 @@ string[] assets = [
 	folders.Editor + "LibreAutomate.msi"
 ];
 
-var grm = new GithubReleaseManager(repo, $"v{Au_.Version}");
+var grm = new LaCloudGithub(repo, $"v{Au_.Version}");
 grm.CreateNewRelease($"LibreAutomate {Au_.Version}", _ReleaseNotes(), assets);
 
 string _ReleaseNotes() {

@@ -96,7 +96,7 @@ partial class MainWindow : Window {
 		
 		App.Loaded = AppState.LoadedUI;
 		
-		//workaround for WPF bug: on Environment.Exit its "process exit" event handler creates chaoss, eg pumps messages, including wmtimer, and app crashes.
+		//workaround for WPF bug: on Environment.Exit its "process exit" event handler creates chaos, eg pumps messages, including wmtimer, and app crashes.
 		process.thisProcessExitDone_ += () => { //after calling all process.thisProcessExit event handlers
 			if (App.Loaded == AppState.LoadedUI) Api.ExitProcess(Environment.ExitCode);
 		};

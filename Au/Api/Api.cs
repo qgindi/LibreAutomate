@@ -22,14 +22,14 @@ static unsafe partial class Api {
 	internal static int SizeOf<T>() => Marshal.SizeOf<T>();
 	
 	/// <summary>
-	/// Gets dll module handle (<c>GetModuleHandle</c>) or loads dll (<c>NativeLibrary.TryLoad</c>), and returns unmanaged exported function address (<c>GetProcAddress</c>).
+	/// Gets dll module handle (<c>GetModuleHandle</c>) or loads dll (<c>NativeLibrary.TryLoad</c>), and returns unmanaged exported function address (<c>NativeLibrary.TryGetExport</c>).
 	/// See also: <c>GetDelegate</c>.
 	/// </summary>
 	internal static IntPtr GetProcAddress(string dllName, string funcName) {
 		IntPtr hmod = GetModuleHandle(dllName);
 		if (hmod == default && !NativeLibrary.TryLoad(dllName, out hmod)) return default;
 		
-		return GetProcAddress(hmod, funcName);
+		return NativeLibrary.TryGetExport(hmod, funcName, out nint r) ? r : 0;
 	}
 	
 	/// <summary>
@@ -42,11 +42,11 @@ static unsafe partial class Api {
 	}
 	
 	/// <summary>
-	/// Calls API <see cref="GetProcAddress(IntPtr, string)"/> and <see cref="Marshal.GetDelegateForFunctionPointer{TDelegate}(IntPtr)"/>.
+	/// Calls API <c>NativeLibrary.TryGetExport</c> and <see cref="Marshal.GetDelegateForFunctionPointer{TDelegate}(IntPtr)"/>.
 	/// </summary>
 	internal static bool GetDelegate<T>(out T deleg, IntPtr hModule, string funcName) where T : class {
 		deleg = null;
-		IntPtr fa = GetProcAddress(hModule, funcName); if (fa == default) return false;
+		if (!NativeLibrary.TryGetExport(hModule, funcName, out var fa)) return false;
 		deleg = Marshal.GetDelegateForFunctionPointer<T>(fa);
 		return deleg != null;
 	}

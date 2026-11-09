@@ -1,11 +1,7 @@
 
-class GitBinaryFiles(string repoDir) {
-#if REPO2
-	const string c_ghRepoName = "test-git";
-#else
-	const string c_ghRepoName = "LA-downloads";
-#endif
+using LA.Shared;
 
+class BinaryFiles(string repoDir) {
 	public void SetHooks() {
 		var relPath = Path.GetRelativePath(repoDir, process.thisExePath);
 
@@ -100,8 +96,10 @@ Roslyn/*.dll
 		//print.it("pre-push hook");
 
 		//exit if nothing to push
-		string commits = Console.In.ReadToEnd();
-		if (commits.NE()) return 0;
+		if (null == Environment.GetEnvironmentVariable("test-BinaryFiles")) {
+			string commits = Console.In.ReadToEnd();
+			if (commits.NE()) return 0;
+		}
 
 		foreach (var group in _Groups) {
 			group.Init(repoDir);
@@ -209,8 +207,7 @@ Roslyn/*.dll
 				//run.it(zipFile); dialog.show("zip OK");
 
 				d.Send.ChangeFooterText("Uploading...", false);
-				var rm = new GithubReleaseManager(c_ghRepoName, "bin");
-				rm.AddOrReplaceAsset(zipFile, "application/x-compressed");
+				LaCloudStorage.Upload("bin", [zipFile]);
 			}
 			finally {
 				d.Send.Close();
@@ -221,80 +218,14 @@ Roslyn/*.dll
 		string _ZipFilename(_GroupInfo v) => $"{groupName}-{packageVersion ?? v.date}.7z";
 
 		public void Restore(string laDirBS, _GroupInfo v) {
-			string zipFilename = _ZipFilename(v);
-			print.it($"    Downloading {zipFilename} from https://github.com/qgindi/{c_ghRepoName}/releases/bin"); //the page URL for web browsers
-			var url = $"https://github.com/qgindi/{c_ghRepoName}/releases/download/bin/{zipFilename}";
-			using TempFile zipFile = new(".7z");
-			for (int i = 0; ; i++) {
-				try {
-					internet.http.Get(url, true).Download(zipFile, p => {
-						//print.it($"\r{p.Percent}%"); //no, VS does not support overwriting the same line in the output window
-					});
-					break;
-				}
-				catch (Exception e1) when (i < 3) {
-					print.it(e1.ToStringWithoutStack());
-					print.it(url);
-					print.it("Sleep-retry...");
-					5.s();
-					//if (!dialog.showOkCancel("Failed", "Retry?")) throw;
-				}
-			}
+			string zipName = _ZipFilename(v);
+			print.it($"    Downloading {zipName} from cloud");
+			using TempFile tempFile = new(".7z");
+			LaCloudStorage.Download("bin", zipName, tempFile, o => { });
 
-			print.it($"    Extracting {zipFilename}");
-			int r = run.console(out string so, _laDirBS / @"32\7za.exe", $@"x ""{zipFile}"" -aoa", laDirBS);
-			if (r != 0) throw new AuException($"Failed to extract {zipFilename}. " + so);
+			print.it($"    Extracting {zipName}");
+			int r = run.console(out string so, _laDirBS / @"32\7za.exe", $@"x ""{tempFile}"" -aoa", laDirBS);
+			if (r != 0) throw new AuException($"Failed to extract {zipName}. " + so);
 		}
-	}
-}
-
-/// <summary>
-/// Executes Git commands for the specified repository.
-/// </summary>
-/// <param name="repoDir">Folder containing a Git repository.</param>
-/// <remarks>
-/// Git must be installed. To find it, uses environment variable <c>PATH</c>. Ctor throws exception if not found.
-/// <para/>
-/// When connecting to GitHub first time, shows a sign-in dialog (Git Credential Manager).
-/// If later shows a "select account" dialog, need to logout some users. In cmd run: <c>git credential-manager github --help</c>
-/// </remarks>
-class GitRepo(string repoDir) {
-	static string s_git;
-
-	/// <summary>
-	/// Print the Git command (blue text) and its output.
-	/// </summary>
-	public bool Print;
-
-	/// <summary>
-	/// Executes a Git command.
-	/// </summary>
-	/// <param name="args">Command line arguments for <c>git.exe</c>.</param>
-	/// <param name="softError">If an output line matches this wildcard and <c>git.exe</c> returns not 0, this function returns <c>false</c> instead of throwing exception.</param>
-	/// <returns><c>true</c>, unless failed with <i>softError</i>.</returns>
-	/// <exception cref="Exception"><c>git.exe</c> returned not 0.</exception>
-	public bool git(string args, string softError = null) => _Git(args, softError);
-
-	/// Executes a Git command and returns the output lines.
-	/// <param name="args">Command line arguments for <c>git.exe</c>.</param>
-	/// <exception cref="Exception"><c>git.exe</c> returned not 0.</exception>
-	public List<string> gitOut(string args) {
-		List<string> a = [];
-		_Git(args, null, a);
-		return a;
-	}
-
-	bool _Git(string args, string softError = null, List<string> output = null) {
-		s_git ??= filesystem.searchPath("git.exe") ?? throw new FileNotFoundException("git.exe");
-		if (Print) print.it($"<><c blue>git {args}<>");
-		bool failed = false;
-		int r = run.console(s => {
-			if (Print) print.it(s);
-			output?.Add(s);
-			failed |= !softError.NE() && s.Like(softError);
-		}, s_git, args, repoDir);
-		if (r == 0) return true;
-		if (failed) return false;
-		throw new Exception($"git {args}");
 	}
 }

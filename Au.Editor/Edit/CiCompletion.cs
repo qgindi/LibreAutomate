@@ -396,21 +396,21 @@ partial class CiCompletion {
 						case SymbolKind.NamedType when sym.DeclaredAccessibility != Microsoft.CodeAnalysis.Accessibility.Public && !sym.IsInSource() && !model.IsAccessible(0, sym):
 							//ci.DebugPrint();
 							continue;
-						case SymbolKind.Namespace:
-							//print.it(sym, sym.ContainingAssembly?.Name, sym.IsInSource());
-							switch (sym.Name) {
-							case "Internal" when sym.ContainingAssembly?.Name == "System.Core":
-							case "Windows" when sym.ContainingAssembly?.Name == "mscorlib":
-							case "MS" when sym.ContainingAssembly?.Name == null:
-							case "FxResources" when sym.ContainingAssembly?.Name == "System.Resources.Extensions":
-								continue;
-							}
-							break;
+							//never mind: also several system internal namespaces
 						}
 					} else if (nativeApiClass != null && sym.ContainingType == nativeApiClass) {
 						//d.items.Add(new CiComplItem(provider, ci) { moveDown = CiComplItemMoveDownBy.Name });
 						d.items.Add(new CiComplItem(provider, ci) { hidden = CiComplItemHiddenBy.Always });
 						continue;
+					}
+					
+					if (!isDot && App.IsAtHome && sym is INamedTypeSymbol && sym.ContainingNamespace.IsGlobalNamespace && !sym.IsInSource() && sym.ContainingAssembly?.Name is { } can2) {
+						//some Roslyn internal types are not in namespaces
+						if (can2.Starts("Microsoft.CodeAnalysis")) continue;
+						//forgot to put some type in a namespace?
+						if (can2 is "Au" or "Au.Controls" or "Au.Editor") {
+							if (!(sym.Name is "EditorExtension")) Debug_.Print($"LA type not in a namespace: {sym}");
+						}
 					}
 				}
 				

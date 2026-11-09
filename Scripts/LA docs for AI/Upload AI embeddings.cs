@@ -1,15 +1,13 @@
-/// If need, uploads an AI embeddings storage file to https://github.com/qgindi/LA-downloads/releases.
+/// If need, uploads an AI embeddings storage file to the LA cloud storage.
 
-/*/ testInternal Au,Au.Editor; c AI script common.cs; c GithubReleaseManager.cs; /*/
+/*/ testInternal Au,Au.Editor; c AI script common.cs; c LaCloudStorage.cs; /*/
 using AI;
 if (script.testing) print.clear();
 print.it("<><lc yellowgreen>Ensuring AI embedding downloads are up to date. Wait until DONE.<>");
 
 AiModel.ApiKeys = App.Settings.ai_ak;
 
-var m = new GithubReleaseManager("LA-downloads", "AI-embedding");
-var assets = m.Assets;
-//assets.Print();
+var existing = LA.Shared.LaCloudStorage.List("AI-embedding");
 
 foreach (var model in (AiEmbeddingModel[])[new ModelVoyageEmbed(), new ModelGeminiEmbed(), new ModelMistralEmbed(), new ModelVoyageEmbedM()]) {
 	print.it(model.GetType());
@@ -24,7 +22,7 @@ foreach (var model in (AiEmbeddingModel[])[new ModelVoyageEmbed(), new ModelGemi
 	//print.it(file, zipName);
 	if (zipName is null) throw new Exception("Vectors of this model are not downloadable. See `TryGetZipName` in `AI search.cs`.");
 	
-	if (assets.Any(o => (string)o["name"] == zipName)) continue;
+	if (existing.Any(o => o == zipName)) continue;
 	
 	string zipFile = folders.ThisAppTemp + zipName;
 	try {
@@ -33,11 +31,10 @@ foreach (var model in (AiEmbeddingModel[])[new ModelVoyageEmbed(), new ModelGemi
 		//run.selectInExplorer(zipFile);
 		
 		print.it("Uploading...");
-		m.AddOrReplaceAsset(zipFile, "application/x-compressed");
+		LA.Shared.LaCloudStorage.Upload("AI-embedding", [zipFile]);
 	}
 	finally { filesystem.delete(zipFile, FDFlags.CanFail); }
 }
 print.it("""
-<>DONE: <link>https://github.com/qgindi/LA-downloads/releases/tag/AI-embedding<>
-	Now optionally <script GitHub push LA docs for AI.cs>upload md files for AI<>
+<>DONE. Now optionally <script GitHub push LA docs for AI.cs>upload md files for AI<>.
 """);

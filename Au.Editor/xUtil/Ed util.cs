@@ -69,7 +69,7 @@ static class DotnetUtil {
 			var window = Window.GetWindow(progress);
 			
 			string filename = $"sdk-{Environment.Version.ToString(2)}-{(osVersion.isArm64OS ? "arm64" : "x64")}.7z";
-			string url = $"https://github.com/qgindi/LA-downloads/releases/download/v1.0.0/{filename}";
+			string url = LA.Shared.LaCloudStorage.GetDownloadUrl("lib", filename); //TODO: create GitHub release, if will use GitHub
 			string dotnetDir = folders.ThisAppBS + "SDK";
 			using var dl = new Downloader();
 			if (!dl.PrepareDirectory(dotnetDir, failedWarningPrefix: c_errorInstallMinimalSDK)) return false;
@@ -167,7 +167,7 @@ static class DotnetUtil {
 	}
 	static string s_minimalDotnetExe, s_fullDotnetExe, s_minimalSdkDir, s_fullSdkDir;
 	static bool s_fullSdkDirOnce;
-	const string c_errorInstallMinimalSDK = "<>Failed to install required component (minimal .NET SDK). You can retry, or manually install the full .NET 10 SDK (~200 MB download). See also Options > Other > Use minimal SDK. Issues: https://github.com/qgindi/LibreAutomate/issues.";
+	const string c_errorInstallMinimalSDK = "<>Failed to install required component (minimal .NET SDK). You can retry, or manually install the full .NET 10 SDK (~300 MB download). See also Options > Other > Use minimal SDK. Issues: https://github.com/qgindi/LibreAutomate/issues.";
 	
 	/// <summary>
 	/// Path of "dotnet.exe" set by <see cref="EnsureSdkAsync"/>. Full or minimal SDK.

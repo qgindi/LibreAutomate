@@ -1,11 +1,11 @@
 /// Creates minimal .NET SDK for LA NuGet and Publish features.
 /// Downloads full SDK to a temp folder, and gets only folders used by these features (tested).
 /// Each platform folder is less than 100 MB; compressed less than 30 MB (full SDK is ~300).
-/// Finally prints an Upload link, which runs this script with command line `upload`. It uploads to https://github.com/qgindi/LA-downloads/releases.
+/// Finally prints an Upload link, which runs this script with command line `upload`. It uploads to the LA cloud storage.
 /// LA on user computers will auto-download when need.
 /// Also installs the minimal SDK in `folders.Editor + "SDK"`. Must be x64 computer.
 
-/*/ c GithubReleaseManager.cs; /*/
+/*/ c LaCloudStorage.cs; /*/
 
 //#define DEV
 
@@ -56,16 +56,14 @@ class MinimalSDK {
 	}
 	
 	public void Finally() {
-		print.it($"<>-- DONE --\r\n<script {script.name}.cs|upload>Upload<> to <link>https://github.com/qgindi/LA-downloads/releases<> and delete temp folder <link {_TempDirBS}>net-sdk-script-data<>.");
+		print.it($"<>-- DONE --\r\n<script {script.name}.cs|upload>Upload<> to cloud and delete temp folder <link {_TempDirBS}>net-sdk-script-data<>.");
 	}
 	
 	public static void Upload() {
 		print.it("Uploading. Wait until DONE.");
 		var zip1 = $"{_TempDirBS}sdk-{Environment.Version.ToString(2)}-x64.7z";
 		var zip2 = $"{_TempDirBS}sdk-{Environment.Version.ToString(2)}-arm64.7z";
-		var m = new GithubReleaseManager("LA-downloads", "v1.0.0");
-		m.AddOrReplaceAsset(zip1, "application/x-compressed");
-		m.AddOrReplaceAsset(zip2, "application/x-compressed");
+		LA.Shared.LaCloudStorage.Upload("lib", [zip1, zip2]);
 		print.it("DONE");
 		if (dialog.showYesNo("Delete temp folder?", _TempDirBS)) filesystem.delete(_TempDirBS);
 	}

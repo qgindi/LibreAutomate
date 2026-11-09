@@ -194,4 +194,6 @@
 		<RemoveDir Directories="$(TargetDir)runtimes\win-x86" />
 	</Target>
 
+	<Import Project="..\Other\Shared\Shared.projitems" Label="Shared" />
+
 </Project>

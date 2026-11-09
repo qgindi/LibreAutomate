@@ -21,8 +21,8 @@ return args[0] switch {
 	"postBuild" => EditorPostBuild(), //project Au.Editor: $(SolutionDir)Other\BuildEvents\bin\BuildEvents.exe postBuild $(Configuration)
 	"roslynPostBuild" => RoslynPostBuild(),
 	"createInstaller" => CreateInstaller(),
-	"gitPreCommitHook" => atHome ? new GitBinaryFiles(solutionDirBS).PreCommitHook() : 0,
-	"gitPrePushHook" => atHome ? new GitBinaryFiles(solutionDirBS).PrePushHook() : 0,
+	"gitPreCommitHook" => atHome ? new BinaryFiles(solutionDirBS).PreCommitHook() : 0,
+	"gitPrePushHook" => atHome ? new BinaryFiles(solutionDirBS).PrePushHook() : 0,
 	_ => 1
 };
 
@@ -55,8 +55,8 @@ int EditorPreBuild() {
 	_CopyAuCppDllIfNeed("Win32", true);
 	_CopyAuCppDllIfNeed("x64", true);
 	_CopyAuCppDllIfNeed("ARM64", true);
-	//return new GitBinaryFiles(solutionDirBS).Restore(test: true);
-	return atHome ? 0 : new GitBinaryFiles(solutionDirBS).Restore();
+	//return new BinaryFiles(solutionDirBS).Restore(test: true);
+	return atHome ? 0 : new BinaryFiles(solutionDirBS).Restore();
 }
 
 void _ExitEditor() {
@@ -115,7 +115,7 @@ int EditorPostBuild() {
 
 	_AddResourcesToExe(dirOut + "Au.Editor.exe", true);
 
-	if (atHome) new GitBinaryFiles(solutionDirBS).SetHooks();
+	if (atHome) new BinaryFiles(solutionDirBS).SetHooks();
 
 	return 0;
 

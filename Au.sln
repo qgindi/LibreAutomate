@@ -65,6 +65,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Readme", "Readme", "{55B5FC
 		Readme\Updating libraries.md = Readme\Updating libraries.md
 	EndProjectSection
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared", "Other\Shared\Shared.shproj", "{0E88937D-5C00-4C9F-AA15-907611BFB44B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -223,8 +225,14 @@ Global
 		{1738F59B-58F7-9CE7-1DDC-456F6CF9E9B8} = {4B65F34E-129D-46F9-9464-25737BC43029}
 		{7C875859-304E-4632-BF6D-473FECB591F6} = {2C03BC9E-C857-44FF-8585-08DF42C687A3}
 		{55B5FC6E-66E7-4CC7-AB6A-BAEDAA2480E2} = {2C03BC9E-C857-44FF-8585-08DF42C687A3}
+		{0E88937D-5C00-4C9F-AA15-907611BFB44B} = {4B65F34E-129D-46F9-9464-25737BC43029}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4DC626A-22DF-4C8A-9686-8A694050B23E}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Other\Shared\Shared.projitems*{0e88937d-5c00-4c9f-aa15-907611bfb44b}*SharedItemsImports = 13
+		Other\Shared\Shared.projitems*{4b47a184-5cb7-4e78-8ead-e458fb11a7ef}*SharedItemsImports = 5
+		Other\Shared\Shared.projitems*{8662df62-3b21-4d23-806d-4590f6091918}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

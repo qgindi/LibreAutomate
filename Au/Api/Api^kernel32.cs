@@ -180,8 +180,9 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll")]
 	internal static extern bool FreeLibrary(IntPtr hLibModule);
 	
-	[DllImport("kernel32.dll", BestFitMapping = false, SetLastError = true)]
-	internal static extern IntPtr GetProcAddress(IntPtr hModule, [MarshalAs(UnmanagedType.LPStr)] string lpProcName);
+	//[DllImport("kernel32.dll", BestFitMapping = false, SetLastError = true)]
+	//internal static extern IntPtr GetProcAddress(IntPtr hModule, [MarshalAs(UnmanagedType.LPStr)] string lpProcName);
+	//NativeLibrary.TryGetExport faster. Probably optimizes string marshaling.
 	
 	internal const uint PROCESS_TERMINATE = 0x0001;
 	internal const uint PROCESS_CREATE_THREAD = 0x0002;

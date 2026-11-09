@@ -38,4 +38,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\Cpp\Cpp.vcxproj" Private="false" ReferenceOutputAssembly="false" />
 	</ItemGroup>
+
+	<Import Project="..\Shared\Shared.projitems" Label="Shared" />
 </Project>
