@@ -255,13 +255,18 @@ class UacDragDrop {
 		
 		class _DropTarget : Api.IDropTarget {
 			void Api.IDropTarget.DragEnter(IDataObject d, int grfKeyState, POINT pt, ref int effect) {
+				DDData r = default;
+				
 				if (_enteredOnce) {
+					if (Marshal.IsComObject(d)) Marshal.FinalReleaseComObject(d);
 					(this as Api.IDropTarget).DragOver(grfKeyState, pt, ref effect);
 					return;
 				}
 				
-				DDData r = default;
-				if (_enteredOnce = r.GetData(d)) {
+				_enteredOnce = r.GetData(d);
+				if (Marshal.IsComObject(d)) Marshal.FinalReleaseComObject(d);
+				
+				if (_enteredOnce) {
 					var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y, r.files, r.shell, r.text, r.linkName);
 					effect = (int)WndCopyData.Send<byte>(_msgWnd, 110, b, (int)DDEvent.Enter);
 				} else {
@@ -276,6 +281,7 @@ class UacDragDrop {
 			}
 			
 			void Api.IDropTarget.Drop(IDataObject d, int grfKeyState, POINT pt, ref int effect) {
+				if (Marshal.IsComObject(d)) Marshal.FinalReleaseComObject(d);
 				if (!_enteredOnce) { effect = 0; return; }
 				_Exit();
 				var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y);
@@ -301,16 +307,20 @@ struct DDData {
 			FORMATETC fHdrop = default, fShell = default, fText = default, fDesc = default;
 			var afe = new FORMATETC[1]; var fe = new int[1];
 			var e = d.EnumFormatEtc(DATADIR.DATADIR_GET);
-			while (e.Next(1, afe, fe) == 0 && fe[0] == 1) {
-				//print.it(ClipFormats.GetName((ushort)afe[0].cfFormat));
-				if (afe[0].tymed != TYMED.TYMED_HGLOBAL) continue;
-				int cf = (ushort)afe[0].cfFormat;
-				if (cf == Api.CF_HDROP) fHdrop = afe[0];
-				else if (cf == ClipFormats.ShellIDListArray_) fShell = afe[0];
-				else if (cf == Api.CF_UNICODETEXT) fText = afe[0];
-				else if (cf == ClipFormats.FileGroupDescriptorW_) fDesc = afe[0];
-				else if (getFileNodes && cf >= 0xC000 && ClipFormats.GetName(cf) == "LA.FileNode[]") return scripts = true;
+			try {
+				while (e.Next(1, afe, fe) == 0 && fe[0] == 1) {
+					//print.it(ClipFormats.GetName((ushort)afe[0].cfFormat));
+					if (afe[0].tymed != TYMED.TYMED_HGLOBAL) continue;
+					int cf = (ushort)afe[0].cfFormat;
+					if (cf == Api.CF_HDROP) fHdrop = afe[0];
+					else if (cf == ClipFormats.ShellIDListArray_) fShell = afe[0];
+					else if (cf == Api.CF_UNICODETEXT) fText = afe[0];
+					else if (cf == ClipFormats.FileGroupDescriptorW_) fDesc = afe[0];
+					else if (getFileNodes && cf >= 0xC000 && ClipFormats.GetName(cf) == "LA.FileNode[]") return scripts = true;
+				}
 			}
+			finally { if (Marshal.IsComObject(e)) Marshal.FinalReleaseComObject(e); }
+			
 			if (fHdrop.cfFormat != 0) files = _GetFiles(ref fHdrop);
 			else if (fShell.cfFormat != 0) shell = _GetBytes(ref fShell);
 			else if (fText.cfFormat != 0) {

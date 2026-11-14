@@ -14,6 +14,7 @@ Improved:
 - .
 
 Fixed bugs:
+- Sometimes LA crashes after closing a file.
 - Output tag `<image>` may not work.
 
 ## Library

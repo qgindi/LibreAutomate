@@ -21,12 +21,15 @@ partial class SciCode {
 		public _DragDrop(SciCode sci) { _sci = sci; }
 		
 		void Api.IDropTarget.DragEnter(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect) {
-			_data = default;
-			_justText = false;
-			if (_canDrop = _data.GetData(d, getFileNodes: true)) {
-				_justText = _data.text != null && _data.linkName == null;
+			try {
+				_data = default;
+				_justText = false;
+				if (_canDrop = _data.GetData(d, getFileNodes: true)) {
+					_justText = _data.text != null && _data.linkName == null;
+				}
+				effect = _GetEffect(effect, grfKeyState);
 			}
-			effect = _GetEffect(effect, grfKeyState);
+			finally { if (Marshal.IsComObject(d)) Marshal.FinalReleaseComObject(d); } //need to release now. Else app sometimes crashes soon after closing the document: GC calls d.Release, but the Scintilla's COM object is freed because it is not ref-counted.
 			CodeInfo.Cancel();
 		}
 		
@@ -46,7 +49,11 @@ partial class SciCode {
 		}
 		
 		void Api.IDropTarget.Drop(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect) {
-			if ((effect = _GetEffect(effect, grfKeyState)) != 0) _Drop(pt, effect);
+			if (Marshal.IsComObject(d)) Marshal.FinalReleaseComObject(d);
+			if ((effect = _GetEffect(effect, grfKeyState)) != 0) {
+				_GetDropPos(ref pt, out _);
+				_sci._Drop(pt, effect, _justText, _data);
+			}
 			_canDrop = false;
 		}
 		
@@ -76,182 +83,181 @@ partial class SciCode {
 				p.y = _sci.Call(SCI_POINTYFROMPOSITION, 0, pos);
 			} else pos = 0;
 		}
+	}
+	
+	void _Drop(POINT xy, int effect, bool justText, DDData data) {
+		//activate the window. Most apps activate self on drop. Also eg the Windows 11 Drag Tray may activate it and close the menu.
+		var wAct = AaWnd.Window;
+		if (!wAct.IsActive) {
+			wAct.ActivateL();
+			wait.doEvents(30); //less chances that something will close the menu
+		}
 		
-		void _Drop(POINT xy, int effect) {
-			//activate the window. Most apps activate self on drop. Also eg the Windows 11 Drag Tray may activate it and close the menu.
-			var wAct = _sci.AaWnd.Window;
-			if (!wAct.IsActive) {
-				wAct.ActivateL();
-				wait.doEvents(30); //less chances that something will close the menu
-			}
+		var z = new Sci_DragDropData { x = xy.x, y = xy.y };
+		string s = null;
+		var b = new StringBuilder();
+		bool isCodeFile = EFile.IsCodeFile;
+		Action finalAction = null;
+		
+		if (justText) {
+			s = data.text;
+		} else {
+			unsafe { Call(SCI_DRAGDROP, 2, &z); } //just hides the drag indicator and sets caret position
 			
-			_GetDropPos(ref xy, out _);
-			var z = new Sci_DragDropData { x = xy.x, y = xy.y };
-			string s = null;
-			var b = new StringBuilder();
-			bool isCodeFile = _sci.EFile.IsCodeFile;
-			Action finalAction = null;
-			
-			if (_justText) {
-				s = _data.text;
-			} else {
-				unsafe { _sci.Call(SCI_DRAGDROP, 2, &z); } //just hides the drag indicator and sets caret position
-				
-				if (_data.scripts) {
-					if (Panels.Files.TreeControl.DragDropFiles is { } a) {
-						int what = 0;
-						if (isCodeFile) {
-							var sm = "1 string s = name;|2 string s = path;";
-							if (a.All(o => o.IsCodeFile)) {
-								sm += "|3 script.run(name);|4 t[name] = o => script.run(name);";
-								if (a.All(o => o.IsClass)) {
-									sm += a.All(o => o.GetClassFileRole() == FNClassFileRole.Library) ? "|101 /* pr name; */" : "|100 /* c name; */";
-								}
-							} else {
-								sm += "|102 /* resource path; */";
-								sm += "|103 /* file path; */";
-							}
-							what = popupMenu.showSimple(sm);
-							if (what == 0) return;
-						}
-						if (what >= 100) { //meta comment
-							MetaCommentsParser m = new(_sci.EFile) { };
-							var list = what switch { 100 => m.c, 101 => m.pr, 102 => m.resource, _ => m.file };
-							foreach (var v in a) list.Add(v.ItemPathOrName(relativeTo: _sci.EFile));
-							m.Apply();
-							return;
-						}
-						for (int i = 0; i < a.Length; i++)
-							_AppendScriptOrLink(what, what is 3 or 4 ? a[i].ItemPathOrName() : a[i].ItemPath, a[i].Name, i + 1, a[i]);
-					}
-				} else if (_data.files != null || _data.shell != null) {
-					string[] files = null, names = null;
-					files = _data.shell != null ? _GetShell(_data.shell, out names) : _data.files;
-					if (isCodeFile) {
-						var what = PathInfo.InsertCodeMenu(files, _sci.AaWnd);
-						if (what == 0) return;
-						for (int i = 0; i < files.Length; i++) {
-							if (i > 0) b.AppendLine();
-							var k = new PathInfo(files[i], names?[i]);
-							b.Append(k.FormatCode(what, i + 1));
-						}
-					} else {
-						for (int i = 0; i < files.Length; i++) {
-							if (i > 0) b.AppendLine();
-							b.Append(files[i]);
-						}
-					}
-				} else if (_data.linkName != null) {
+			if (data.scripts) {
+				if (Panels.Files.TreeControl.DragDropFiles is { } a) {
 					int what = 0;
 					if (isCodeFile) {
-						what = popupMenu.showSimple("11 string s = URL;|12 run.it(URL);|13 t[name] = o => run.it(URL);");
+						var sm = "1 string s = name;|2 string s = path;";
+						if (a.All(o => o.IsCodeFile)) {
+							sm += "|3 script.run(name);|4 t[name] = o => script.run(name);";
+							if (a.All(o => o.IsClass)) {
+								sm += a.All(o => o.GetClassFileRole() == FNClassFileRole.Library) ? "|101 /* pr name; */" : "|100 /* c name; */";
+							}
+						} else {
+							sm += "|102 /* resource path; */";
+							sm += "|103 /* file path; */";
+						}
+						what = popupMenu.showSimple(sm);
 						if (what == 0) return;
 					}
-					finalAction = _AppendScriptOrLink(what, _data.text, _GetLinkName(_data.linkName));
-				}
-				s = b.ToString();
-			}
-			
-			if (!s.NE()) {
-				if (_justText) { //a simple drag-drop inside scintilla or text-only from outside
-					var s8 = Encoding.UTF8.GetBytes(s);
-					unsafe {
-						fixed (byte* p8 = s8) {
-							z.text = p8;
-							z.len = s8.Length;
-							if (0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
-							using (new CodeInfo.PastingEtc(_sci))
-								_sci.Call(SCI_DRAGDROP, 2, &z);
-						}
+					if (what >= 100) { //meta comment
+						MetaCommentsParser m = new(EFile) { };
+						var list = what switch { 100 => m.c, 101 => m.pr, 102 => m.resource, _ => m.file };
+						foreach (var v in a) list.Add(v.ItemPathOrName(relativeTo: EFile));
+						m.Apply();
+						return;
 					}
-				} else { //file, script or URL
-					if (isCodeFile) InsertCode.Statements(new(s, noFocus: true));
-					else if (!_sci.aaaIsReadonly) _sci.aaaReplaceSel(s + "\r\n");
-					else print.it(s);
+					for (int i = 0; i < a.Length; i++)
+						_AppendScriptOrLink(what, what is 3 or 4 ? a[i].ItemPathOrName() : a[i].ItemPath, a[i].Name, i + 1, a[i]);
 				}
-				if (!_sci.IsFocused && _sci.AaWnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
-					_sci._noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
-					_sci.Focus();
-					_sci._noModelEnsureCurrentSelected = false;
-				}
-			} else {
-				if (_justText) _sci.Call(SCI_DRAGDROP, 3);
-			}
-			
-			finalAction?.Invoke();
-			
-			Action _AppendScriptOrLink(int what, string path, string name, int index = 0, FileNode fn = null) {
-				if (b.Length > 0) b.AppendLine();
-				if (what == 0) {
-					b.Append(path);
+			} else if (data.files != null || data.shell != null) {
+				string[] files = null, names = null;
+				files = data.shell != null ? _GetShell(data.shell, out names) : data.files;
+				if (isCodeFile) {
+					var what = PathInfo.InsertCodeMenu(files, AaWnd);
+					if (what == 0) return;
+					for (int i = 0; i < files.Length; i++) {
+						if (i > 0) b.AppendLine();
+						var k = new PathInfo(files[i], names?[i]);
+						b.Append(k.FormatCode(what, i + 1));
+					}
 				} else {
-					if (what == 4) name = name.RemoveSuffix(".cs");
-					name = name.Escape();
-					
-					if (what is 4 or 13) {
-						var t = CiUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
-						b.Append($"{t?.Name ?? "t"}[\"{name}\"] = o => ");
-					} else if (what is 1 or 2 or 11) {
-						b.Append($"string s{index} = ");
-					}
-					
-					b.Append(what switch {
-						1 => $"\"{name}\";",
-						2 or 11 => $"@\"{path}\";",
-						3 or 4 => $"script.run(@\"{path}\");",
-						_ => $"run.it(@\"{path}\");"
-					});
-					
-					if (what == 13) { //favicon
-						int dropPos = _sci.aaaCurrentPos16;
-						return async () => { //this code will run after inserting the statement
-							string text1 = _sci.aaaText, url = $"https://www.google.com/s2/favicons?domain={path}";
-							var pngBytes = await Task.Run(() => internet.http.TryGet(out var r, url) && r.Content.Headers.ContentType.MediaType == "image/png" ? r.Bytes() : null);
-							if (pngBytes != null && Panels.Editor.ActiveDoc == _sci && _sci.aaaText == text1 && text1.RxMatch(@"\G.+?""(\]) = o => run\.it\(", 1, out RXGroup g, range: dropPos..)) {
-								_sci.aaaInsertText(true, g.Start, $", @\"image:{Convert.ToBase64String(pngBytes)}\"");
-							}
-						};
+					for (int i = 0; i < files.Length; i++) {
+						if (i > 0) b.AppendLine();
+						b.Append(files[i]);
 					}
 				}
-				return null;
+			} else if (data.linkName != null) {
+				int what = 0;
+				if (isCodeFile) {
+					what = popupMenu.showSimple("11 string s = URL;|12 run.it(URL);|13 t[name] = o => run.it(URL);");
+					if (what == 0) return;
+				}
+				finalAction = _AppendScriptOrLink(what, data.text, _GetLinkName(data.linkName));
 			}
-			
-			static unsafe string[] _GetShell(byte[] b, out string[] names) {
-				fixed (byte* p = b) {
-					int* pi = (int*)p;
-					int n = *pi++;
-					var paths = new string[n];
-					names = new string[n];
-					if (n > 0) {
-						IntPtr pidlFolder = (IntPtr)(p + *pi++);
-						for (int i = 0; i < n; i++) {
-							using var pidl = new Pidl(pidlFolder, (IntPtr)(p + pi[i]));
-							//if from Winstore apps folder, get "shell:..."
-							if (folders.shell.pidlApps_Win8.ValueEquals(pidlFolder)) {
-								//var s11 = pidl.ToShellString(SIGDN.DESKTOPABSOLUTEPARSING); //same as PARENTRELATIVEPARSING, not full
-								var s1 = pidl.ToShellString(SIGDN.PARENTRELATIVEPARSING);
-								if (s1 != null && !s1.Starts('{') && s1.Contains('!')) paths[i] = @"shell:AppsFolder\" + s1;
-								//if (s1 != null) {
-								//	if (s1.Starts('{')) paths[i] = s1; //like "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\charmap.exe". run.it fails etc. Cannot get path. The ITEMIDLIST is insanely long.
-								//	else if (s1.Contains('!')) paths[i] = @"shell:AppsFolder\" + s1;
-								//}
-							}
-							paths[i] ??= pidl.ToString();
-							names[i] = pidl.ToShellString(SIGDN.NORMALDISPLAY);
+			s = b.ToString();
+		}
+		
+		if (!s.NE()) {
+			if (justText) { //a simple drag-drop inside scintilla or text-only from outside
+				var s8 = Encoding.UTF8.GetBytes(s);
+				unsafe {
+					fixed (byte* p8 = s8) {
+						z.text = p8;
+						z.len = s8.Length;
+						if (0 == ((DragDropEffects)effect & DragDropEffects.Move)) z.copy = 1;
+						using (new CodeInfo.PastingEtc(this))
+							Call(SCI_DRAGDROP, 2, &z);
+					}
+				}
+			} else { //file, script or URL
+				if (isCodeFile) InsertCode.Statements(new(s, noFocus: true));
+				else if (!aaaIsReadonly) aaaReplaceSel(s + "\r\n");
+				else print.it(s);
+			}
+			if (!IsFocused && AaWnd.Window.IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
+				_noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
+				Focus();
+				_noModelEnsureCurrentSelected = false;
+			}
+		} else {
+			if (justText) Call(SCI_DRAGDROP, 3);
+		}
+		
+		finalAction?.Invoke();
+		
+		Action _AppendScriptOrLink(int what, string path, string name, int index = 0, FileNode fn = null) {
+			if (b.Length > 0) b.AppendLine();
+			if (what == 0) {
+				b.Append(path);
+			} else {
+				if (what == 4) name = name.RemoveSuffix(".cs");
+				name = name.Escape();
+				
+				if (what is 4 or 13) {
+					var t = CiUtil.GetNearestLocalVariableOfType("Au.toolbar", "Au.popupMenu");
+					b.Append($"{t?.Name ?? "t"}[\"{name}\"] = o => ");
+				} else if (what is 1 or 2 or 11) {
+					b.Append($"string s{index} = ");
+				}
+				
+				b.Append(what switch {
+					1 => $"\"{name}\";",
+					2 or 11 => $"@\"{path}\";",
+					3 or 4 => $"script.run(@\"{path}\");",
+					_ => $"run.it(@\"{path}\");"
+				});
+				
+				if (what == 13) { //favicon
+					int dropPos = aaaCurrentPos16;
+					return async () => { //this code will run after inserting the statement
+						string text1 = aaaText, url = $"https://www.google.com/s2/favicons?domain={path}";
+						var pngBytes = await Task.Run(() => internet.http.TryGet(out var r, url) && r.Content.Headers.ContentType.MediaType == "image/png" ? r.Bytes() : null);
+						if (pngBytes != null && Panels.Editor.ActiveDoc == this && aaaText == text1 && text1.RxMatch(@"\G.+?""(\]) = o => run\.it\(", 1, out RXGroup g, range: dropPos..)) {
+							aaaInsertText(true, g.Start, $", @\"image:{Convert.ToBase64String(pngBytes)}\"");
 						}
-					}
-					return paths;
+					};
 				}
 			}
-			
-			static unsafe string _GetLinkName(byte[] b) {
-				if (b.Length != 596) return null; //sizeof(FILEGROUPDESCRIPTORW) with 1 FILEDESCRIPTORW
-				fixed (byte* p = b) { //FILEGROUPDESCRIPTORW
-					if (*(int*)p != 1) return null; //count of FILEDESCRIPTORW
-					var s = new string((char*)(p + 76));
-					if (!s.Ends(".url", true)) return null;
-					return s[..^4];
+			return null;
+		}
+		
+		static unsafe string[] _GetShell(byte[] b, out string[] names) {
+			fixed (byte* p = b) {
+				int* pi = (int*)p;
+				int n = *pi++;
+				var paths = new string[n];
+				names = new string[n];
+				if (n > 0) {
+					IntPtr pidlFolder = (IntPtr)(p + *pi++);
+					for (int i = 0; i < n; i++) {
+						using var pidl = new Pidl(pidlFolder, (IntPtr)(p + pi[i]));
+						//if from Winstore apps folder, get "shell:..."
+						if (folders.shell.pidlApps_Win8.ValueEquals(pidlFolder)) {
+							//var s11 = pidl.ToShellString(SIGDN.DESKTOPABSOLUTEPARSING); //same as PARENTRELATIVEPARSING, not full
+							var s1 = pidl.ToShellString(SIGDN.PARENTRELATIVEPARSING);
+							if (s1 != null && !s1.Starts('{') && s1.Contains('!')) paths[i] = @"shell:AppsFolder\" + s1;
+							//if (s1 != null) {
+							//	if (s1.Starts('{')) paths[i] = s1; //like "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\charmap.exe". run.it fails etc. Cannot get path. The ITEMIDLIST is insanely long.
+							//	else if (s1.Contains('!')) paths[i] = @"shell:AppsFolder\" + s1;
+							//}
+						}
+						paths[i] ??= pidl.ToString();
+						names[i] = pidl.ToShellString(SIGDN.NORMALDISPLAY);
+					}
 				}
+				return paths;
+			}
+		}
+		
+		static unsafe string _GetLinkName(byte[] b) {
+			if (b.Length != 596) return null; //sizeof(FILEGROUPDESCRIPTORW) with 1 FILEDESCRIPTORW
+			fixed (byte* p = b) { //FILEGROUPDESCRIPTORW
+				if (*(int*)p != 1) return null; //count of FILEDESCRIPTORW
+				var s = new string((char*)(p + 76));
+				if (!s.Ends(".url", true)) return null;
+				return s[..^4];
 			}
 		}
 	}

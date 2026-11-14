@@ -245,7 +245,7 @@ namespace Au.More {
 			var bytes = MemoryMarshal.AsBytes(data);
 			long end = _pos + bytes.Length;
 			if (end > int.MaxValue) throw new OutOfMemoryException();
-			if (end > _n) More((int)Math.Min(end * 2, int.MaxValue), preserve: true);
+			if (end > _n) More((int)Math.Min(end + _n, int.MaxValue), preserve: true);
 			bytes.CopyTo(new((byte*)_p + _pos, bytes.Length));
 			_pos = (int)end;
 		}
