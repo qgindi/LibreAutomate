@@ -24,7 +24,6 @@ r MSTSCLib.dll
 r NuGet.Configuration.dll
 r NuGet.Versioning.dll
 nuget webview\Microsoft.Web.WebView2
-c LaCloudStorage.cs
 resource app\app-resources.xaml /path
 resource resources\ci /path
 file .\Default

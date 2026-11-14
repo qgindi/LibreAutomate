@@ -5,7 +5,6 @@ global using ObsoleteInDebug = Au.Types.NotObsoleteInRelease;
 #endif
 
 using System.Diagnostics.CodeAnalysis;
-using static Au.More.Serializer_;
 
 namespace Au.Types {
 	/// <summary>

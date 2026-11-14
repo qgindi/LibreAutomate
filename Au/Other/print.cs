@@ -71,6 +71,49 @@ public static partial class print {
 		}
 	}
 	
+	/// <summary>
+	/// Scrolls the output window to the start of the last mark with the specified name.
+	/// </summary>
+	/// <param name="mark">Mark name.</param>
+	/// <example>
+	/// <code><![CDATA[
+	/// print.it("text\nbefore");
+	/// print.it("<><mark start>Numbers:<>");
+	/// for (int i = 0; i < 100; i++) { print.it(i); }
+	/// print.scrollTo("start");
+	/// ]]></code>
+	/// </example>
+	public static void scrollTo(string mark) {
+		ArgumentNullException.ThrowIfNullOrEmpty(mark);
+		if (logFile != null) {
+		} else if (isWritingToConsole) {
+		} else if (qm2.use) {
+		} else {
+			_ServerAction(PrintServerMessageType.ScrollTo, mark);
+		}
+	}
+	
+	/// <summary>
+	/// Replaces text in the output window in the range of the last mark with the specified name.
+	/// </summary>
+	/// <param name="mark">Mark name.</param>
+	/// <param name="newText">The replacement text. Tags not supported.</param>
+	/// <example>
+	/// <code><![CDATA[
+	/// print.it("<>Progress: <mark progress><> (example)");
+	/// for (int i = 0; i <= 100; i += 5) { print.replace("progress", $"{i}%"); 100.ms(); }
+	/// ]]></code>
+	/// </example>
+	public static void replace(string mark, string newText) {
+		ArgumentException.ThrowIfNullOrEmpty(mark);
+		if (logFile != null) {
+		} else if (isWritingToConsole) {
+		} else if (qm2.use) {
+		} else {
+			_ServerAction(PrintServerMessageType.Replace, mark, newText ?? "");
+		}
+	}
+	
 	[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Console.dll
 	static void _ConsoleAction(PrintServerMessageType action) {
 		try {

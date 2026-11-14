@@ -33,19 +33,20 @@ internal static unsafe class Serializer_ {
 	public enum VType { Null, Int, String, StringArray, ByteArray }
 	
 	/// <summary>
-	/// Serializes multiple values of types <c>int</c>, <c>string</c>, <c>string[]</c> and <c>null</c>.
+	/// Serializes multiple values of types <c>int</c>, <c>string</c>, <c>string[]</c>, <c>byte[]</c> and <c>null</c>.
 	/// The returned array can be passed to <see cref="Deserialize"/>.
 	/// </summary>
-	public static byte[] Serialize(params Value[] a) => _Serialize(false, a);
+	public static byte[] Serialize(params ReadOnlySpan<Value> a) => _Serialize(false, a);
 	
 	/// <summary>
-	/// Serializes multiple values of types <c>int</c>, <c>string</c>, <c>string[]</c> and <c>null</c>.
+	/// Serializes multiple values of types <c>int</c>, <c>string</c>, <c>string[]</c>, <c>byte[]</c> and <c>null</c>.
 	/// Unlike <see cref="Serialize"/>, in the first 4 bytes writes the size of data that follows.
 	/// Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass <c>b</c> to <see cref="Deserialize"/>. 
 	/// </summary>
-	public static byte[] SerializeWithSize(params Value[] a) => _Serialize(true, a);
+	public static byte[] SerializeWithSize(params ReadOnlySpan<Value> a) => _Serialize(true, a);
 	
-	static byte[] _Serialize(bool withSize, Value[] a) {
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	static byte[] _Serialize(bool withSize, ReadOnlySpan<Value> a) {
 		int size = 4;
 		if (withSize) size += 4;
 		for (int i = 0; i < a.Length; i++) {
@@ -110,6 +111,8 @@ internal static unsafe class Serializer_ {
 	/// Deserializes values serialized by <see cref="Serialize"/>.
 	/// Returns array of values passed to <c>Serialize</c>.
 	/// </summary>
+	/// <exception cref="InvalidDataException"></exception>
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public static Value[] Deserialize(RByte serialized) {
 		fixed (byte* b0 = serialized) {
 			byte* b = b0;
@@ -135,10 +138,12 @@ internal static unsafe class Serializer_ {
 					a[i] = serialized.Slice((int)(b - b0), len).ToArray();
 					b += len;
 					break;
-				default: throw new ArgumentException();
+				default: throw new InvalidDataException();
 				}
 			}
 			return a;
+			
+			//TODO2: when reading, check whether size is OK. Maybe read from RByte.
 			
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			string _GetString() {

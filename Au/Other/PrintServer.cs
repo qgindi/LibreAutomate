@@ -254,35 +254,40 @@ namespace Au.More {
 			using FastBuffer<byte> b = new(size + 4); //+4 for "\r\n"
 			var p = b.p;
 			bool ok = Api.ReadFile(_mailslot, p, size, out var readSize) && readSize == size;
-			if (ok) {
-				long time = 0; string s = null, caller = null;
-				var mtype = (PrintServerMessageType)(*p++);
+			if (ok && b.TryRead(out PrintServerMessageType mtype)) {
+				long time = 0; string s = null, caller = null, mark = null;
 				switch (mtype) {
 				case PrintServerMessageType.Write or PrintServerMessageType.TaskEvent:
-					if (size < 10) { ok = false; break; } //type, time(8), lenCaller
-					time = *(long*)p; p += 8;
-					int lenCaller = *p++;
-					if (lenCaller > 0) {
-						if (10 + lenCaller * 2 > size) { ok = false; break; }
-						caller = new string((char*)p, 0, lenCaller);
-						p += lenCaller * 2;
+					ok = false;
+					if (!b.TryRead(out time)) break;
+					if (!b.TryRead(out byte lenCaller)) break;
+					if (lenCaller > 0 && !b.TryRead(lenCaller, out caller)) break;
+					bool appendRN = !NoNewline && mtype == PrintServerMessageType.Write;
+					int len = (size - b.Position) / 2;
+					if (len > 0) {
+						if (appendRN) {
+							char* r = (char*)(b.p + size);
+							r[0] = '\r'; r[1] = '\n';
+							len += 2;
+						}
+						if (!b.TryRead(len, out s)) break;
+					} else {
+						s = appendRN ? "\r\n" : "";
 					}
-					int len = (size - (int)(p - b.p)) / 2;
-					if (!NoNewline && mtype == PrintServerMessageType.Write) {
-						char* r = (char*)(b.p + size);
-						r[0] = '\r'; r[1] = '\n';
-						len += 2;
-					}
-					s = new string((char*)p, 0, len);
+					ok = true;
 					break;
-				case PrintServerMessageType.Clear or PrintServerMessageType.ScrollToTop when size == 1:
+				case PrintServerMessageType.Clear or PrintServerMessageType.ScrollToTop:
+					break;
+				case PrintServerMessageType.ScrollTo or PrintServerMessageType.Replace:
+					ok = b.TryRead(out mark);
+					if (mtype == PrintServerMessageType.Replace) ok = ok && b.TryRead(out s);
 					break;
 				default:
 					ok = false;
 					break;
 				}
 				Debug.Assert(ok);
-				if (ok) _AddMessage(new PrintServerMessage(mtype, s, time, caller));
+				if (ok) _AddMessage(new(mtype, s, time, caller, mark));
 			}
 		}
 		
@@ -296,8 +301,8 @@ namespace Au.More {
 		/// </summary>
 		internal void LocalWrite_(string s, long time = 0, string caller = null) {
 			//Debug.Assert(!_isGlobal);
-			if (!NoNewline && s != null) s += "\r\n";
-			var m = new PrintServerMessage(s == null ? PrintServerMessageType.Clear : PrintServerMessageType.Write, s, time, caller);
+			if (!NoNewline) s += "\r\n";
+			var m = new PrintServerMessage(PrintServerMessageType.Write, s, time, caller);
 			_AddMessage(m, true);
 		}
 		
@@ -305,9 +310,10 @@ namespace Au.More {
 		/// Adds action directly to <c>_messages</c> and sets timer.
 		/// Used with local server; also with global server when writes the server's process.
 		/// </summary>
-		internal void LocalAction_(PrintServerMessageType action) {
+		internal void LocalAction_(PrintServerMessageType action, string mark, string text) {
 			//Debug.Assert(!_isGlobal);
-			_AddMessage(new(action), true);
+			var m = new PrintServerMessage(action, text, mark: mark);
+			_AddMessage(m, true);
 		}
 		
 		void _AddMessage(PrintServerMessage m, bool setTimer = false) {
@@ -429,11 +435,10 @@ namespace Au {
 			else s_client.WriteLine(s, PrintServerMessageType.Write, caller, time);
 		}
 		
-		static void _ServerAction(PrintServerMessageType action) {
+		static void _ServerAction(PrintServerMessageType action, string mark = null, string text = null) {
 			var loc = s_localServer;
-			if (loc == null) s_client.AddAction(action);
-			else if (action == PrintServerMessageType.Clear) loc.LocalWrite_(null);
-			else loc.LocalAction_(action);
+			if (loc == null) s_client.AddAction(action, mark, text);
+			else loc.LocalAction_(action, mark, text);
 		}
 		
 		static readonly _ClientOfGlobalServer s_client = new();
@@ -472,29 +477,15 @@ namespace Au {
 					int lenS = s.Length, lenCaller = (caller != null) ? Math.Min(caller.Length, 255) : 0;
 					int lenAll = 1 + 8 + 1 + lenCaller * 2 + lenS * 2; //type, time, lenCaller, caller, s
 					using FastBuffer<byte> b = new(lenAll);
-					byte* p = b.p;
-					//type
-					*p++ = (byte)mtype;
-					//time
-					*(long*)p = time; p += 8;
-					//caller
-					*p++ = (byte)lenCaller;
-					if (lenCaller != 0) {
-						fixed (char* k = caller) MemoryUtil.Copy(k, p, lenCaller * 2);
-						p += lenCaller * 2;
-					}
-					//s
-					if (lenS != 0) fixed (char* k = s) MemoryUtil.Copy(k, p, lenS * 2); //s
-					
-					//if (s == "\0DNl08ISh30Kbt6ekJV3VvA") { //JIT //now not used
-					//									   //_SetTimer();
-					//	Jit_.Compile(typeof(WaitableTimer), nameof(WaitableTimer.Set));
-					//	Jit_.Compile(typeof(Api), nameof(Api.WriteFile), nameof(Api.SetWaitableTimer)); //slow JIT SetWaitableTimer
-					//	return;
-					//}
+					b.Write(mtype);
+					b.Write(time);
+					b.Write((byte)lenCaller);
+					if (lenCaller != 0) b.Write(caller);
+					if (lenS != 0) b.Write(s);
+					Debug_.PrintIf(b.Position != lenAll);
 					
 					g1:
-					bool ok = Api.WriteFile(_mailslot, b.p, lenAll, out _);
+					bool ok = Api.WriteFile(_mailslot, b.p, b.Position, out _);
 					if (!ok && _ReopenMailslot()) goto g1;
 					
 					if (ok) {
@@ -510,13 +501,20 @@ namespace Au {
 				}
 			}
 			
-			public void AddAction(PrintServerMessageType action) {
+			[SkipLocalsInit]
+			public void AddAction(PrintServerMessageType action, string mark, string text) {
 				lock (_lockObj1) {
 					if (!_Connect()) return;
 					
+					using var b = new FastBuffer<byte>();
+					b.Write(action);
+					if (mark != null) {
+						b.Write(mark, true);
+						if (text != null) b.Write(text, true);
+					}
+					
 					g1:
-					byte b = (byte)action;
-					bool ok = Api.WriteFile(_mailslot, &b, 1, out _);
+					bool ok = Api.WriteFile(_mailslot, b.p, b.Position, out _);
 					if (!ok && _ReopenMailslot()) goto g1;
 					Debug.Assert(ok);
 					
@@ -594,7 +592,7 @@ namespace Au.Types {
 	/// <summary>
 	/// See <see cref="PrintServerMessage.Type"/>.
 	/// </summary>
-	public enum PrintServerMessageType {
+	public enum PrintServerMessageType : byte {
 		/// <summary>
 		/// Add line to the output window.
 		/// All <see cref="PrintServerMessage"/> members can be used.
@@ -617,6 +615,16 @@ namespace Au.Types {
 		/// Only <see cref="PrintServerMessage.Type"/> is used.
 		/// </summary>
 		ScrollToTop,
+		
+		/// <summary>
+		/// Scroll the output window to the start of the last <see cref="PrintServerMessage.Mark"/> range.
+		/// </summary>
+		ScrollTo,
+		
+		/// <summary>
+		/// Replace the text of the last <see cref="PrintServerMessage.Mark"/> range with <see cref="PrintServerMessage.Text"/>.
+		/// </summary>
+		Replace,
 	}
 	
 	/// <summary>
@@ -630,10 +638,14 @@ namespace Au.Types {
 		public PrintServerMessageType Type { get; }
 		
 		/// <summary>
-		/// Message text.
-		/// Used with <see cref="PrintServerMessageType.Write"/>.
+		/// Message text used with <see cref="PrintServerMessageType.Write"/>, or replacement text used with <see cref="PrintServerMessageType.Replace"/>.
 		/// </summary>
 		public string Text { get; set; }
+		
+		/// <summary>
+		/// Mark name used with <see cref="PrintServerMessageType.ScrollTo"/> and <see cref="PrintServerMessageType.Replace"/>.
+		/// </summary>
+		public string Mark { get; }
 		
 		/// <summary>
 		/// Message time in <ms>FILETIME</ms> format, UTC.
@@ -664,11 +676,12 @@ namespace Au.Types {
 		/// </summary>
 		public string Caller { get; }
 		
-		internal PrintServerMessage(PrintServerMessageType type, string text = null, long time = 0, string caller = null) {
+		internal PrintServerMessage(PrintServerMessageType type, string text = null, long time = 0, string caller = null, string mark = null) {
 			Type = type;
 			Text = text;
 			TimeUtc = time;
 			Caller = caller;
+			Mark = mark;
 		}
 #endif
 		

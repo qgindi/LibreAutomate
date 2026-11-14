@@ -127,21 +127,65 @@ public partial class KScintilla {
 	}
 	
 	/// <summary>
-	/// Finds the first range of the specified indicator.
+	/// Finds the first range where indicator <i>indic</i> has value <i>value</i>.
 	/// </summary>
-	/// <param name="indic"></param>
-	/// <param name="r">UTF-8.</param>
-	/// <returns>false if not found.</returns>
-	public bool aaaIndicatorFindFirst(int indic, out StartEnd r) {
+	/// <param name="indic">Indicator.</param>
+	/// <param name="r">Found range.</param>
+	/// <param name="value">Indicator value in the range.</param>
+	/// <param name="start">Position (UTF-8) from where to start searching. Note: if <c>start</c> is in a matching range, <c>r.start</c> will be less or equal.</param>
+	/// <returns><c>false</c> if not found.</returns>
+	public bool aaaIndicatorFindFirst(int indic, out StartEnd r, int value = 1, int start = 0) {
 		r = default;
-		int start = Call(SCI_INDICATOREND, indic);
-		if (start <= 0) {
-			if (start < 0 || aaaIndicatorGetValue(indic, 0) == 0) return false;
+		if (start < 0) start = 0;
+		
+		//SCI_INDICATOREND finds the end of indicator range containing the specified position (lParam).
+		//An indicator range is a range where the indicator has one value.
+		//If the indicator value in the range is 0, it's a range without the indicator.
+		//SCI_INDICATORSTART finds the start of the indicator range (searches backwards).
+		
+		for (bool knowStart = start == 0; ; knowStart = true) {
+			int end = Call(SCI_INDICATOREND, indic, start);
+			if (end <= start) return false;
+			
+			if (aaaIndicatorGetValue(indic, start) == value) {
+				if (!knowStart) start = Call(SCI_INDICATORSTART, indic, start);
+				r = new(start, end);
+				return true;
+			}
+			
+			start = end;
 		}
-		int end = Call(SCI_INDICATOREND, indic, start);
-		if (end <= start) return false;
-		r = new(start, end);
-		return true;
+	}
+	
+	/// <summary>
+	/// Finds the last range where indicator <i>indic</i> has value <i>value</i>.
+	/// </summary>
+	/// <param name="indic">Indicator.</param>
+	/// <param name="r">Found range.</param>
+	/// <param name="value">Indicator value in the range.</param>
+	/// <param name="start">Position (UTF-8) from where to start searching backwards, inclusive. Default: end of document. Note: if <c>start</c> is in a matching range, <c>r.end</c> will be greater than <c>start</c>.</param>
+	/// <returns><c>false</c> if not found.</returns>
+	public bool aaaIndicatorFindLast(int indic, out StartEnd r, int value = 1, int start = -1) {
+		r = default;
+		
+		int length = aaaLen8;
+		if (length == 0) return false;
+		
+		int end = start >= 0 && start < length ? start + 1 : length;
+		
+		for (bool knowEnd = end == length; ; knowEnd = true) {
+			start = Call(SCI_INDICATORSTART, indic, end - 1);
+			if (start < 0 || start >= end) return false; //never seen
+			
+			if (aaaIndicatorGetValue(indic, start) == value) {
+				if (!knowEnd) end = Call(SCI_INDICATOREND, indic, start);
+				r = new(start, end);
+				return true;
+			}
+			
+			if (start == 0) return false;
+			end = start;
+		}
 	}
 	
 	#endregion

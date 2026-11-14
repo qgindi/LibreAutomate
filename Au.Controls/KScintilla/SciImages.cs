@@ -220,16 +220,14 @@ public unsafe class SciImages {
 			} //else case 1
 			
 			//print.it($"NEW: '{new string((sbyte*)b0.p)}'");
-			//perf.first();
 			if (!annotAdded) {
 				annotAdded = true;
 				if (allText) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN);
 			}
 			_c.Call(SCI_ANNOTATIONSETTEXT, iLine, buffer.p);
-			//perf.nw();
 		}
 		
-		if (annotAdded && allText) {
+		if (annotAdded) {
 			_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_STANDARD);
 		}
 	}

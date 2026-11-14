@@ -373,6 +373,7 @@ class MetaComments {
 	
 	readonly MCFlags _flags;
 	readonly Dictionary<FileNode, string> _fileTextCache;
+	FileNode _projFolder;
 	
 	/// <param name="fileTextCache">
 	/// If not null, tries to get file text from it; if not found, loads and adds to it.
@@ -393,10 +394,11 @@ class MetaComments {
 	public bool Parse(FileNode f, FileNode projFolder) {
 		if (!_flags.Has(MCFlags.ForCodeInfo)) Errors = new ErrBuilder();
 		if (_flags.Has(MCFlags.Publish)) Optimize = true;
+		_projFolder = projFolder;
 		
 		if (_ParseFile(f, true, false)) {
-			if (projFolder != null) {
-				foreach (var ff in projFolder.EnumProjectClassFiles(f)) _ParseFile(ff, false, false);
+			if (_projFolder != null) {
+				foreach (var ff in _projFolder.EnumProjectClassFiles(f)) _ParseFile(ff, false, false);
 			}
 			
 			//print.it(GlobalCount, CodeFiles);
@@ -568,7 +570,10 @@ class MetaComments {
 			return;
 		case "c":
 			if (_GetFile(value, FNFind.Any) is FileNode ff) {
+				if (_projFolder != null && ff.IsDescendantOf(_projFolder)) return;
+				
 				if (forExport) (ExportC_ ??= new()).Add(ff);
+				
 				if (ff.IsFolder) {
 					foreach (var v in ff.Descendants()) if (v.IsClass) _ParseFile(v, false, true);
 				} else {

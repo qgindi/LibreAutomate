@@ -20,59 +20,60 @@ namespace Au.More {
 	/// }
 	/// ]]></code>
 	/// </example>
-	[StructLayout(LayoutKind.Sequential, Size = 16 + StackSize + 16)] //16 for other fields + 16 for safety
+	[StructLayout(LayoutKind.Sequential, Size = 24 + StackSize + 16)] //24 for other fields + 16 for safety
 	public unsafe ref struct FastBuffer<T> where T : unmanaged {
 		T* _p; //buffer pointer (on stack or native heap)
 		int _n; //buffer length (count of T elements)
+		int _pos; //for Write and TryRead
 		bool _free; //if false, buffer is on stack in this variable (_p=&_stack). If true, buffer is allocated with MemoryUtil.Alloc.
 		long _stack; //start of buffer of StackSize size
-
+		
 		/// <summary>
 		/// A <see cref="FastBuffer{T}"/> variable contains a field of this size. It is a memory buffer on stack.
 		/// It is a byte count and does not depend on <c>T</c>. To get count of <c>T</c> elements on stack: <c>StackSize/sizeof(T)</c>.
 		/// </summary>
 		public const int StackSize = 2048;
 		//const int StackSize = 16; //test More() and GetString()
-
+		
 		//Also tested:
 		//	1. Struct of normal size, when caller passes stackalloc'ed Span<T>. Slow in Debug. And more caling code.
 		//	2. See the commented out Buffer_.
 		//	3. Callback. Good: easy to use, less calling code, don't need [SkipLocalsInit]. Bad: problem with captured variables (garbage, slow); slower in any case.
 		//	4. foreach. Nothing good.
-
+		
 		/// <summary>
 		/// Memory buffer pointer.
 		/// </summary>
 		public T* p => _p;
-
+		
 		/// <summary>
 		/// Returns memory buffer pointer (<see cref="p"/>).
 		/// </summary>
 		public static implicit operator T*(in FastBuffer<T> b) => b._p;
-
+		
 		/// <summary>
 		/// Gets reference to <c>p[i]</c>. Does not check bounds.
 		/// </summary>
 		public ref T this[int i] => ref _p[i];
-
+		
 		/// <summary>
 		/// Memory buffer length as number of elements of type <c>T</c>.
 		/// </summary>
 		public int n => _n;
-
+		
 		/// <summary>
 		/// Allocates first buffer of default size. It is on stack (in this variable), and its length is <c>StackSize/sizeof(T)</c> elements of type <c>T</c> (2048 bytes or 1024 chars or 512 ints...).
 		/// </summary>
 		public FastBuffer() {
 			//With this overload slightly faster. Also, the int overload is confusing when need buffer of default size.
-
+			
 			_stack = 0;
 			fixed (long* t = &_stack) { _p = (T*)t; }
 			//_p = (T*)Unsafe.AsPointer(ref _stack); //slower in Debug, same speed in Release
 			_n = StackSize / sizeof(T);
 			_free = false;
 		}
-
+		
 		/// <summary>
 		/// Allocates first buffer of specified size.
 		/// </summary>
@@ -91,7 +92,7 @@ namespace Au.More {
 				fixed (long* t = &_stack) { _p = (T*)t; }
 				//_p = (T*)Unsafe.AsPointer(ref _stack);
 			}
-
+			
 			//rejected: for medium-size buffers use ArrayPool.
 			//	It is usually much faster than MemoryUtil, but getting pinned pointer from array is slow.
 			//	To get pinned pointer, I know 3 ways.
@@ -99,10 +100,10 @@ namespace Au.More {
 			//		2. GCHandle. Makes 3 times slower than just ArrayPool Rent/Return. Then MemoryUtil is only 50% slower. With this buffer size it does not matter.
 			//		3. Memory<T>/MemoryHandle. Same speed as GCHandle. MemoryHandle is bigger and managed.
 			//	Tested: MemoryPool is slower than ArrayPool and creates garbage.
-
+			
 			//tested: heap memory allocation becomes much slower starting from 1 MB. Then virtual memory is several times faster (else much slower). But with this buffer size it does not matter.
 		}
-
+		
 		/// <summary>
 		/// Allocates new bigger buffer of specified length. Frees old buffer if need.
 		/// </summary>
@@ -125,13 +126,13 @@ namespace Au.More {
 			_n = n;
 			_free = true;
 		}
-
+		
 		/// <summary>
 		/// Allocates new bigger buffer of at least <c>n*2</c> length. Frees old buffer if need.
 		/// </summary>
 		/// <param name="preserve">Copy previous buffer contents to the new buffer.</param>
 		public void More(bool preserve = false) => More(Math.Max(checked(_n * 2), 0x4000 / sizeof(T)), preserve); //16 KB = StackSize * 8
-
+		
 		/// <summary>
 		/// Frees allocated memory if need.
 		/// </summary>
@@ -139,7 +140,7 @@ namespace Au.More {
 		public void Dispose() {
 			if (_free) { MemoryUtil.Free(_p); _p = null; _n = 0; }
 		}
-
+		
 		/// <summary>
 		/// Gets API result as string, or allocates bigger buffer if old buffer was too small.
 		/// This function can be used when <c>T</c> is <c>char</c>.
@@ -160,7 +161,7 @@ namespace Au.More {
 		public bool GetString(int r, out string s, BSFlags flags = 0, string sDefault = null) {
 			if (sizeof(T) != 2) throw new InvalidOperationException(); //cannot use extension method that would be added only to FastBuffer<char>. See GetString2 comments below.
 			s = sDefault;
-
+			
 			if (r >= _n - 1) {
 				if (0 != (flags & BSFlags.Truncates)) {
 					if (r >= (0 != (flags & BSFlags.ReturnsLengthWith0) ? _n : _n - 1)) {
@@ -172,15 +173,15 @@ namespace Au.More {
 					return false;
 				}
 			}
-
+			
 			if (r > 0) {
 				if (0 != (flags & BSFlags.ReturnsLengthWith0)) r--;
 				if (sDefault == null || !new Span<char>(_p, r).SequenceEqual(sDefault)) s = new string((char*)_p, 0, r);
 			}
-
+			
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Finds length of <c>'\0'</c>-terminated UTF-16 string in buffer and converts to C# string.
 		/// This function can be used when <c>T</c> is <c>char</c>. Use when length is unknown.
@@ -191,7 +192,7 @@ namespace Au.More {
 		public string GetStringFindLength() {
 			return new((char*)_p, 0, FindStringLength());
 		}
-
+		
 		/// <summary>
 		/// Finds length of <c>'\0'</c>-terminated <c>char</c> string in buffer.
 		/// Returns <see cref="n"/> if there is no <c>'\0'</c> character.
@@ -200,7 +201,7 @@ namespace Au.More {
 			if (sizeof(T) != 2) throw new InvalidOperationException();
 			return Ptr_.Length((char*)_p, _n);
 		}
-
+		
 		/// <summary>
 		/// Finds length of <c>'\0'</c>-terminated <c>byte</c> string in buffer.
 		/// Returns <see cref="n"/> if there is no <c>'\0'</c> character.
@@ -208,6 +209,126 @@ namespace Au.More {
 		public int FindByteStringLength() {
 			if (sizeof(T) != 1) throw new InvalidOperationException();
 			return Ptr_.Length((byte*)_p, _n);
+		}
+		
+		/// <summary>
+		/// Gets the position used for next <see cref="Write"/> or <see cref="TryRead"/>.
+		/// Note: the write/read methods update the position.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">The setter throws if the value is negative or > <see cref="n"/>.</exception>
+		public int Position => _pos;
+		
+		/// <summary>
+		/// Sets the position for next <see cref="Write"/> or <see cref="TryRead"/>.
+		/// Note: the write/read methods update the position.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">The setter throws if the value is negative or > <see cref="n"/>.</exception>
+		public void SetPosition(int value) { //use method, because C# does not allow caling setters on a struct used with `using`
+			_pos = (uint)value <= _n ? value : throw new ArgumentOutOfRangeException();
+		}
+		
+		/// <summary>
+		/// Copies <i>data</i> to the buffer at <see cref="Position"/>. Resizes the buffer if need.
+		/// </summary>
+		/// <param name="data"></param>
+		/// <param name="andLength">At first write <c>data.Length</c> as <c>int</c>.</param>
+		/// <exception cref="InvalidOperationException">The generic type of this is not <c>byte</c>.</exception>
+		/// <remarks>
+		/// The generic type of this must be <c>byte</c>.
+		/// 
+		/// Finally sets <see cref="Position"/> = the end of the requested data.
+		/// </remarks>
+		public void Write<TElem>(ReadOnlySpan<TElem> data, bool andLength = false) where TElem : unmanaged {
+			if (andLength) Write(data.Length);
+			
+			if (sizeof(T) != 1) throw new InvalidOperationException();
+			var bytes = MemoryMarshal.AsBytes(data);
+			long end = _pos + bytes.Length;
+			if (end > int.MaxValue) throw new OutOfMemoryException();
+			if (end > _n) More((int)Math.Min(end * 2, int.MaxValue), preserve: true);
+			bytes.CopyTo(new((byte*)_p + _pos, bytes.Length));
+			_pos = (int)end;
+		}
+		
+		/// <inheritdoc cref="Write{TElem}(ReadOnlySpan{TElem}, bool)"/>
+		public void Write<TData>(in TData data) where TData : unmanaged
+			=> Write(MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1));
+		
+		/// <inheritdoc cref="Write{TElem}(ReadOnlySpan{TElem}, bool)"/>
+		public void Write(string data, bool andLength = false) => Write(data.AsSpan(), andLength);
+		
+		/// <summary>
+		/// Gets a read-only span whose memory is in the buffer at <see cref="Position"/>. No copying.
+		/// </summary>
+		/// <param name="nElem">Number of elements of type <i>TElem</i> in the returned span.</param>
+		/// <param name="data">Read-only span to return.</param>
+		/// <returns><c>false</c> if there is not enough memory in the buffer at <see cref="Position"/> for the the requested data size.</returns>
+		/// <exception cref="InvalidOperationException">The generic type of this is not <c>byte</c>.</exception>
+		/// <remarks>
+		/// The generic type of this must be <c>byte</c>.
+		/// 
+		/// If successful, finally sets <see cref="Position"/> = the end of the requested data.
+		/// </remarks>
+		public bool TryRead<TElem>(int nElem, out ReadOnlySpan<TElem> data) where TElem : unmanaged {
+			if (sizeof(T) != 1) throw new InvalidOperationException();
+			long nBytes = (long)(uint)nElem * sizeof(TElem);
+			long r = (long)(uint)_pos + nBytes;
+			if (r > _n) { data = default; return false; }
+			data = new(_p + _pos, nElem);
+			_pos = (int)r;
+			return true;
+		}
+		
+		/// <summary>
+		/// Gets a read-only span whose memory is in the buffer at <see cref="Position"/>. No copying.
+		/// At first reads its length as <c>int</c>.
+		/// </summary>
+		/// <inheritdoc cref="TryRead{TElem}(int, out ReadOnlySpan{TElem})"/>
+		public bool TryRead<TElem>(out ReadOnlySpan<TElem> data) where TElem : unmanaged {
+			if (TryRead(out int len)) return TryRead(len, out data);
+			data = default;
+			return false;
+		}
+		
+		/// <summary>
+		/// Reads a struct from the buffer at <see cref="Position"/>.
+		/// </summary>
+		/// <param name="data"></param>
+		/// <inheritdoc cref="TryRead{TElem}(int, out ReadOnlySpan{TElem})"/>
+		public bool TryRead<TData>(out TData data) where TData : unmanaged {
+			if (sizeof(T) != 1) throw new InvalidOperationException();
+			long end = (long)(uint)_pos + sizeof(TData);
+			if (end > _n) { data = default; return false; }
+			data = Unsafe.Read<TData>(_p + _pos);
+			_pos = (int)end;
+			return true;
+		}
+		
+		/// <summary>
+		/// Reads a string of specified length from the buffer at <see cref="Position"/>.
+		/// </summary>
+		/// <param name="nChars">Requested string length.</param>
+		/// <param name="data"></param>
+		/// <inheritdoc cref="TryRead{TElem}(int, out ReadOnlySpan{TElem})"/>
+		public bool TryRead(int nChars, out string data) {
+			if (TryRead(nChars, out RStr span)) {
+				data = span.ToString();
+				return true;
+			} else {
+				data = null;
+				return false;
+			}
+		}
+		
+		/// <summary>
+		/// Reads a string from the buffer at <see cref="Position"/>.
+		/// At first reads its length as <c>int</c>.
+		/// </summary>
+		/// <inheritdoc cref="TryRead(int, out string)"/>
+		public bool TryRead(out string data) {
+			if (TryRead(out int nChars)) return TryRead(nChars, out data);
+			data = null;
+			return false;
 		}
 	}
 }
@@ -221,7 +342,7 @@ namespace Au.Types {
 	//		...
 	//	}
 	//}
-
+	
 	/// <summary>
 	/// Flags for <see cref="FastBuffer{T}.GetString"/>.
 	/// </summary>
@@ -231,7 +352,7 @@ namespace Au.Types {
 		/// If buffer too small, the API gets part of string instead of returning required buffer length.
 		/// </summary>
 		Truncates = 1,
-
+		
 		/// <summary>
 		/// The API returns string length including the terminating <c>'\0'</c> character.
 		/// </summary>

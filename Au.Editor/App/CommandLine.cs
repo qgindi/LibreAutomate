@@ -456,29 +456,24 @@ static class CommandLine {
 	//This process is started by the Task Scheduler task. The task started by App._RestartAsAdmin.
 	[MethodImpl(MethodImplOptions.NoOptimization)]
 	static unsafe int _RunEditorAsAdmin() {
-		var s1 = Api.GetCommandLine();
-		//_MBox(new string(s1));
 		//Normally it is like "C:\...\Au.Editor.exe /s sessionId" or "C:\...\Au.Editor.exe /s sessionId arguments",
-		//	but if started from Task Scheduler it is "C:\...\Au.Editor.exe /s $(Arg0)".
+		//	but if started from Task Scheduler, it is "C:\...\Au.Editor.exe /s $(Arg0)".
+		string s = new(Api.GetCommandLine());
+		var b = new StringBuilder(s.Length);
 		
-		int len = Ptr_.Length(s1) + 1;
-		var span = new Span<char>(s1, len);
-		var s2 = span.ToArray();
-		int i = span.IndexOf("/s") + 1; //info: it's safe. Can't be "C:/s/..." because the scheduled task wasn't created like this.
-		s2[i++] = 'n'; // /n - don't try to restart as admin
+		int i = s.IndexOf("/s") + 1;
+		b.Append(s, 0, i).Append('n');
 		
 		//get session id
-		char* se = null;
-		int sesId = Api.strtoi(s1 + i, &se);
-		if (se != s1 + i) { //remove the session id argument
-			if (*se == 0) s2[i] = '\0'; //no more arguments
-			else for (int j = (int)(se - s1); j < len;) s2[i++] = s2[j++];
+		if (s.ToInt(out int sesId, i += 2, out int iEnd)) { //remove the session id argument
+			b.Append(s, iEnd, s.Length - iEnd);
 		} else { //$(Arg0) not replaced. Probably started from Task Scheduler.
-			s2[i] = '\0';
 			sesId = Api.WTSGetActiveConsoleSessionId();
 			if (sesId < 1) return 1;
 		}
-		//_MBox(new string(s2));
+		var a = new char[b.Length + 1];
+		b.CopyTo(0, a, 0, b.Length);
+		//_MBox($"{sesId}, {print.util.toString(a)}");
 		
 		if (!_Api.WTSQueryUserToken(sesId, out var hToken)) return 2;
 		if (_Api.GetTokenInformation(hToken, Api.TOKEN_INFORMATION_CLASS.TokenLinkedToken, out var hToken2, sizeof(nint), out _)) { //fails if non-admin user or if UAC turned off
@@ -505,7 +500,7 @@ static class CommandLine {
 		var desktop = stackalloc char[] { 'w', 'i', 'n', 's', 't', 'a', '0', '\\', 'd', 'e', 'f', 'a', 'u', 'l', 't', '\0' }; //"winsta0\\default"
 		si.lpDesktop = desktop;
 		
-		if (!_Api.CreateProcessAsUser(hToken, null, s2, null, null, false, Api.CREATE_UNICODE_ENVIRONMENT, eb, null, si, out var pi)) {
+		if (!_Api.CreateProcessAsUser(hToken, null, a, null, null, false, Api.CREATE_UNICODE_ENVIRONMENT, eb, null, si, out var pi)) {
 			_MBox("CreateProcessAsUserW: " + lastError.message);
 			return 4;
 		}

@@ -622,7 +622,7 @@ public unsafe partial class KScintilla {
 	public void aaaInsertText(bool utf16, int pos, string s, bool addUndoPointBefore = false, bool addUndoPointAfter = false, bool restoreFolding = false) {
 		if (addUndoPointBefore) aaaAddUndoPoint();
 		using (new _NoReadonly(this))
-		using (new aaaFoldingRestorer(restoreFolding ? this : null, pos))
+		using (new aaaFoldingRestorer(restoreFolding ? this : null, pos, utf16))
 			aaaSetString(SCI_INSERTTEXT, _ParamPos(utf16, pos), s ?? "");
 		if (addUndoPointAfter) aaaAddUndoPoint();
 	}
@@ -637,12 +637,11 @@ public unsafe partial class KScintilla {
 		//tested: temp setting SCI_SETAUTOMATICFOLD does not work. If restoring async, does not expand, but draws incorrectly.
 		
 		/// <param name="sci">Can be null, then does nothing.</param>
-		/// <param name="pos"></param>
-		public aaaFoldingRestorer(KScintilla sci, int pos) {
+		public aaaFoldingRestorer(KScintilla sci, int pos, bool utf16) {
 			_sci = sci;
 			_foldLine = -1;
 			if (sci != null) {
-				int line = sci.aaaLineFromPos(true, pos);
+				int line = sci.aaaLineFromPos(utf16, pos);
 				if (0 == sci.Call(SCI_GETLINEVISIBLE, line)) _foldLine = sci.Call(SCI_GETFOLDPARENT, line);
 			}
 		}

@@ -52,7 +52,8 @@ print.it("<>Code example:\r\n<code>mouse.click(10, 20); //comments</code>");
 | `<code>var s="example";</code>` | Colored C# code. Tags in it are ignored.
 | `<fold>text</fold>` | Folded (hidden) lines. Adds a link to unfold (show).
 | `<fold link text>text</fold>` | Folded lines with custom link text.
-| `<nonl>` | No new line. Next time will write in the same line.<br>Must be at the end of string.
+| `<nonl>` | No new line. Next time will write in the same line.<br>Note: must be at the end of string.
+| `<mark name>marked<>`<br>`<mark name><>` | Mark some text or position for [print.scrollTo]() or [print.replace]().<br>Note: nested mark tags not supported.
 
 ### Images
 Images are displayed below current line. Examples:
