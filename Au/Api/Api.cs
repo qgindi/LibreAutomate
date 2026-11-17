@@ -1399,6 +1399,7 @@ static unsafe partial class Api {
 #pragma warning restore 169
 	
 	internal const int STATUS_INFO_LENGTH_MISMATCH = unchecked((int)0xC0000004);
+	internal const int STATUS_NO_MORE_FILES = unchecked((int)0x80000006);
 	
 	[DllImport("ntdll.dll")]
 	internal static extern int NtQuerySystemInformation(int five, SYSTEM_PROCESS_INFORMATION* SystemInformation, int SystemInformationLength, out int ReturnLength);
@@ -1409,6 +1410,34 @@ static unsafe partial class Api {
 	[DllImport("ntdll.dll")]
 	internal static extern int NtResumeProcess(IntPtr handle);
 	
+	[DllImport("ntdll.dll")]
+	internal static extern int NtCreateFile(out IntPtr FileHandle, uint DesiredAccess, in OBJECT_ATTRIBUTES ObjectAttributes, out IO_STATUS_BLOCK IoStatusBlock, long* AllocationSize, uint FileAttributes, CFShare ShareAccess, uint CreateDisposition, uint CreateOptions, void* EaBuffer = null, uint EaLength = 0);
+	
+	internal struct IO_STATUS_BLOCK {
+		public _Anonymous_e__Union u_;
+		public nuint Information;
+		
+		[StructLayout(LayoutKind.Explicit)]
+		public struct _Anonymous_e__Union {
+			[FieldOffset(0)] public int Status;
+			[FieldOffset(0)] public void* Pointer;
+		}
+	}
+	
+	internal struct OBJECT_ATTRIBUTES {
+		public uint Length;
+		public IntPtr RootDirectory;
+		public UNICODE_STRING* ObjectName;
+		public uint Attributes;
+		public void* SecurityDescriptor;
+		public void* SecurityQualityOfService;
+	}
+	
+	[DllImport("ntdll.dll")]
+	internal static extern int NtQueryDirectoryFile(nint handle, nint u1, nint u2, nint u3, out IO_STATUS_BLOCK status, void* data, int size, int infoClass, bool single, nint pattern, bool restart);
+	
+	[DllImport("ntdll.dll")]
+	internal static extern int RtlNtStatusToDosError(int Status);
 	
 	
 	

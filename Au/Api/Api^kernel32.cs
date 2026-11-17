@@ -383,46 +383,32 @@ static unsafe partial class Api {
 	[DllImport("kernel32.dll")]
 	internal static extern int WideCharToMultiByte(uint CodePage, uint dwFlags, char* lpWideCharStr, int cchWideChar, byte* lpMultiByteStr, int cbMultiByte, IntPtr lpDefaultChar = default, int* lpUsedDefaultChar = null);
 	
-	[Flags]
-	internal enum Access : uint { }
+	internal const uint FILE_READ_DATA = 0x1;
+	internal const uint FILE_LIST_DIRECTORY = 0x1;
+	internal const uint FILE_WRITE_DATA = 0x2;
+	internal const uint FILE_ADD_FILE = 0x2;
+	internal const uint FILE_APPEND_DATA = 0x4;
+	internal const uint FILE_ADD_SUBDIRECTORY = 0x4;
+	internal const uint FILE_CREATE_PIPE_INSTANCE = 0x4;
+	internal const uint FILE_READ_EA = 0x8;
+	internal const uint FILE_WRITE_EA = 0x10;
+	internal const uint FILE_EXECUTE = 0x20;
+	internal const uint FILE_TRAVERSE = 0x20;
+	internal const uint FILE_DELETE_CHILD = 0x40;
+	internal const uint FILE_READ_ATTRIBUTES = 0x80;
+	internal const uint FILE_WRITE_ATTRIBUTES = 0x100;
+	internal const uint FILE_ALL_ACCESS = 0x1F01FF;
+	internal const uint FILE_GENERIC_READ = 0x120089;
+	internal const uint FILE_GENERIC_WRITE = 0x120116;
+	internal const uint FILE_GENERIC_EXECUTE = 0x1200A0;
 	
-	internal const Access FILE_READ_DATA = (Access)0x1;
-	internal const Access FILE_LIST_DIRECTORY = (Access)0x1;
-	internal const Access FILE_WRITE_DATA = (Access)0x2;
-	internal const Access FILE_ADD_FILE = (Access)0x2;
-	internal const Access FILE_APPEND_DATA = (Access)0x4;
-	internal const Access FILE_ADD_SUBDIRECTORY = (Access)0x4;
-	internal const Access FILE_CREATE_PIPE_INSTANCE = (Access)0x4;
-	internal const Access FILE_READ_EA = (Access)0x8;
-	internal const Access FILE_WRITE_EA = (Access)0x10;
-	internal const Access FILE_EXECUTE = (Access)0x20;
-	internal const Access FILE_TRAVERSE = (Access)0x20;
-	internal const Access FILE_DELETE_CHILD = (Access)0x40;
-	internal const Access FILE_READ_ATTRIBUTES = (Access)0x80;
-	internal const Access FILE_WRITE_ATTRIBUTES = (Access)0x100;
-	internal const Access FILE_ALL_ACCESS = (Access)0x1F01FF;
-	internal const Access FILE_GENERIC_READ = (Access)0x120089;
-	internal const Access FILE_GENERIC_WRITE = (Access)0x120116;
-	internal const Access FILE_GENERIC_EXECUTE = (Access)0x1200A0;
+	internal const uint GENERIC_READ = 0x80000000;
+	internal const uint GENERIC_WRITE = 0x40000000;
 	
-	internal const Access GENERIC_READ = (Access)0x80000000;
-	internal const Access GENERIC_WRITE = (Access)0x40000000;
-	
-	internal enum CfCreation { }
-	
-	internal const CfCreation CREATE_NEW = (CfCreation)1;
-	internal const CfCreation CREATE_ALWAYS = (CfCreation)2;
-	internal const CfCreation OPEN_EXISTING = (CfCreation)3;
-	internal const CfCreation OPEN_ALWAYS = (CfCreation)4;
-	internal const CfCreation TRUNCATE_EXISTING = (CfCreation)5;
+	internal enum CF { CREATE_NEW = 1, CREATE_ALWAYS, OPEN_EXISTING, OPEN_ALWAYS, TRUNCATE_EXISTING }
 	
 	[Flags]
-	internal enum CfShare : uint { }
-	
-	internal const CfShare FILE_SHARE_READ = (CfShare)0x1;
-	internal const CfShare FILE_SHARE_WRITE = (CfShare)0x2;
-	internal const CfShare FILE_SHARE_DELETE = (CfShare)0x4;
-	internal const CfShare FILE_SHARE_ALL = (CfShare)0x7;
+	internal enum CFShare : uint { READ = 1, WRITE = 2, DELETE = 4, ALL = 7 }
 	
 	//the commented out attributes are not documented for CreateFile
 	internal const uint FILE_ATTRIBUTE_READONLY = 0x1;
@@ -458,9 +444,9 @@ static unsafe partial class Api {
 	internal const uint FILE_FLAG_OPEN_REQUIRING_OPLOCK = 0x40000;
 	
 	[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
-	static extern IntPtr _CreateFile(string lpFileName, Access dwDesiredAccess, CfShare dwShareMode, SECURITY_ATTRIBUTES lpSecurityAttributes, CfCreation creationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+	static extern IntPtr _CreateFile(string lpFileName, uint dwDesiredAccess, CFShare dwShareMode, SECURITY_ATTRIBUTES lpSecurityAttributes, CF creationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
 	
-	internal static Handle_ CreateFile(string lpFileName, Access dwDesiredAccess, CfShare dwShareMode, CfCreation creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default, SECURITY_ATTRIBUTES lpSecurityAttributes = null)
+	internal static Handle_ CreateFile(string lpFileName, uint dwDesiredAccess, CFShare dwShareMode, CF creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default, SECURITY_ATTRIBUTES lpSecurityAttributes = null)
 		=> new Handle_(_CreateFile(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, creationDisposition, dwFlagsAndAttributes, hTemplateFile));
 	//note: cannot return Handle_ directly from API because returns -1 if failed. The ctor then makes 0.
 	
@@ -479,7 +465,7 @@ static unsafe partial class Api {
 	}
 	
 	//internal static byte[] ReadFileArr(string file) {
-	//	using var h = CreateFile(file, Api.GENERIC_READ, FILE_SHARE_ALL, OPEN_EXISTING);
+	//	using var h = CreateFile(file, Api.GENERIC_READ, CFShare.ALL, OPEN_EXISTING);
 	//	if (h.Is0 || !GetFileSizeEx(h, out long size) || !ReadFileArr(h, out var a, (int)size, out _)) throw new AuException(0);
 	//	return a;
 	//}

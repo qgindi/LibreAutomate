@@ -45,7 +45,7 @@ public static partial class filesystem {
 		
 		static Handle_ _OpenFileHandleForFileInfo(string path, bool ofSymlink = false) {
 			path = Path2.NormalizeMinimally_(path, throwIfNotFullPath: false);
-			return Api.CreateFile(path, 0, Api.FILE_SHARE_ALL, Api.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
+			return Api.CreateFile(path, 0, Api.CFShare.ALL, Api.CF.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
 			//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
 		}
 		
@@ -238,7 +238,7 @@ public static partial class filesystem {
 			}
 			catch { return false; }
 			
-			using var h = Api.CreateFile(path, 0, Api.FILE_SHARE_READ | Api.FILE_SHARE_WRITE, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
+			using var h = Api.CreateFile(path, 0, Api.CFShare.READ | Api.CFShare.WRITE, Api.CF.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
 			if (h.Is0) return false;
 			var query = new Api.STORAGE_PROPERTY_QUERY { PropertyId = 7 };
 			Api.DEVICE_SEEK_PENALTY_DESCRIPTOR spt = default;

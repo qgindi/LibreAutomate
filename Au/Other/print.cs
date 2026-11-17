@@ -530,7 +530,7 @@ public static partial class print {
 	/// <param name="name">File path or mailslot name.</param>
 	/// <param name="openExisting">Use <c>OPEN_EXISTING</c>. If <c>false</c>, uses <c>CREATE_ALWAYS</c>.</param>
 	internal static Handle_ CreateFile_(string name, bool openExisting) {
-		return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
+		return Api.CreateFile(name, Api.GENERIC_WRITE, Api.CFShare.READ, openExisting ? Api.CF.OPEN_EXISTING : Api.CF.CREATE_ALWAYS);
 		
 		//tested: CREATE_ALWAYS works with mailslot too. Does not erase messages. Undocumented what to use.
 	}

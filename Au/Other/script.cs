@@ -756,7 +756,7 @@ public static partial class script {
 		if (s_wrPipeName == null) return false;
 		if (s.NE()) return true;
 		if (Api.WaitNamedPipe(s_wrPipeName, 3000)) { //15 mcs
-			using var pipe = Api.CreateFile(s_wrPipeName, Api.GENERIC_WRITE, 0, Api.OPEN_EXISTING, 0); //7 mcs
+			using var pipe = Api.CreateFile(s_wrPipeName, Api.GENERIC_WRITE, 0, Api.CF.OPEN_EXISTING, 0); //7 mcs
 			if (!pipe.Is0) {
 				fixed (char* p = s) if (Api.WriteFile(pipe, p, s.Length * 2, out _)) return true; //17 mcs
 			}

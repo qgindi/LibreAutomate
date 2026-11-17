@@ -347,12 +347,12 @@ public static unsafe class Path2 {
 	/// Calls <c>Expand</c>, <c>_AddSepToDrive</c>, <see cref="PrefixLongPathIfNeed"/>. By default throws exception if <c>!IsFullPath(path)</c>.
 	/// </summary>
 	/// <exception cref="ArgumentException">Not full path (only if <i>throwIfNotFullPath</i> is <c>true</c>).</exception>
-	internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath = true) {
+	internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath = true, bool dontPrefix = false) {
 		var s = Expand(path);
 		Debug_.PrintIf(IsShellPathOrUri_(s), s);
 		if (throwIfNotFullPath && !IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
 		s = _AddSepToDrive(s);
-		s = PrefixLongPathIfNeed(s);
+		if (!dontPrefix) s = PrefixLongPathIfNeed(s);
 		return s;
 	}
 	

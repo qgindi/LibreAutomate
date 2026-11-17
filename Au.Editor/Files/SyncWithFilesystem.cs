@@ -276,7 +276,7 @@ partial class FilesModel {
 		
 		void _CreateSyncFile() {
 			if (_hSyncFile.Is0) {
-				_hSyncFile = Api.CreateFile(_syncFilePath, Api.GENERIC_WRITE, Api.FILE_SHARE_DELETE | Api.FILE_SHARE_READ, Api.CREATE_NEW, Api.FILE_ATTRIBUTE_TEMPORARY | Api.FILE_FLAG_DELETE_ON_CLOSE | Api.FILE_ATTRIBUTE_HIDDEN | Api.FILE_ATTRIBUTE_SYSTEM);
+				_hSyncFile = Api.CreateFile(_syncFilePath, Api.GENERIC_WRITE, Api.CFShare.READ | Api.CFShare.DELETE, Api.CF.CREATE_NEW, Api.FILE_ATTRIBUTE_TEMPORARY | Api.FILE_FLAG_DELETE_ON_CLOSE | Api.FILE_ATTRIBUTE_HIDDEN | Api.FILE_ATTRIBUTE_SYSTEM);
 			}
 		}
 		
