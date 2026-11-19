@@ -1436,6 +1436,27 @@ static unsafe partial class Api {
 	[DllImport("ntdll.dll")]
 	internal static extern int NtQueryDirectoryFile(nint handle, nint u1, nint u2, nint u3, out IO_STATUS_BLOCK status, void* data, int size, int infoClass, bool single, nint pattern, bool restart);
 	
+	internal ref struct FILE_FULL_DIR_INFORMATION {
+		public uint NextEntryOffset;
+		uint FileIndex;
+		public long CreationTime;
+		public long LastAccessTime;
+		public long LastWriteTime;
+		public long ChangeTime;
+		public long EndOfFile;
+		public long AllocationSize;
+		public FileAttributes Attributes;
+		int nameLength;
+		public uint EaSize;
+		char name_0;
+		
+		public RStr Name => MemoryMarshal.CreateSpan(ref name_0, nameLength / 2);
+		
+		public bool IsDirectory => Attributes.Has(FileAttributes.Directory);
+		
+		public bool IsLink => Attributes.Has(FileAttributes.ReparsePoint) && 0 != (EaSize & 0x20000000);
+	}
+	
 	[DllImport("ntdll.dll")]
 	internal static extern int RtlNtStatusToDosError(int Status);
 	

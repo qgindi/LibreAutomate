@@ -17,7 +17,7 @@ if (filesystem.getAttributes(filePath, out var attr)) print.it(attr, attr.Has(Fi
 
 if (filesystem.getProperties(filePath, out var p)) print.it(p.LastWriteTimeUtc, p.Size, p.Attributes);
 
-foreach (var f in filesystem.list(dirPath).FileInfos) print.it(f.FullName, f.IsDirectory, f.Length);
+foreach (var f in filesystem.list(dirPath).Files) print.it(f.Path, f.IsDirectory, f.Size);
 
 /// Also can be used .NET classes <see cref="File"/>, <see cref="Directory"/>, <see cref="FileInfo"/> and <see cref="DirectoryInfo"/>. They provide the same info.
 

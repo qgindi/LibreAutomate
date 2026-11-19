@@ -6,24 +6,25 @@ var dirPath = @"C:\Test";
 foreach (var f in filesystem.list(dirPath).All) print.it(f.IsDirectory, f); //files and directories
 foreach (var f in filesystem.list(dirPath).Files) print.it(f.Name, f.Attributes); //files
 foreach (var f in filesystem.list(dirPath).Directories) print.it(f.Name); //directories
-foreach (var f in filesystem.list(dirPath).FileInfos) print.it($"{f.Name,-30}  {f.Length,-10}  {f.LastWriteTime}"); //files, get more properties
 
-//all descendant files and directories
-foreach (var f in filesystem.list(dirPath, flags: FLFlags.Recurse).AllDepthFirst()) {
-	print.it($"{new string(' ', f.RelativeDepth * 2)}{f.Name}");
+//print file properties formatted as table
+foreach (var f in filesystem.list(dirPath).Files) {
+	print.it($"{f.Name,-30}  {f.Size,-10}  {f.LastWriteTimeUtc.ToLocalTime():yyyy-MM-dd HH:mm}");
 }
 
-var array = filesystem.list(dirPath, "*.txt").FileInfos; //.txt files as FileInfo[] (file properties)
-var arrayS = filesystem.list(dirPath).FilePaths; //all files as string[] (paths)
+//all descendant files and directories
+foreach (var f in filesystem.list(dirPath, flags: FLFlags.Recurse).All) {
+	print.it($"{new string(' ', f.Depth * 2)}{f.Name}");
+}
 
-array = filesystem.list(dirPath, "*.png|*.bmp").FileInfos; //.png and .bmp files
-array = filesystem.list(dirPath, "**/*.png|**/*.bmp", FLFlags.Recurse).FileInfos; //all descendant .png and .bmp files
-array = filesystem.list(dirPath, "||*.png|*.bmp").FileInfos; //all files except .png and .bmp
-array = filesystem.list(dirPath, @"**r \.html?$").FileInfos; //.htm and .html files (use regex)
+var array2 = filesystem.list(dirPath).FilePaths; //files as string[] (paths)
 
-foreach (var f in filesystem.list(dirPath).FileInfos.OrderBy(o => o.Length)) print.it(f.Name, f.Length); //sort by size
-array = filesystem.list(dirPath).FileInfos.OrderByDescending(o => o.LastWriteTimeUtc).ToArray(); //sort by time, newest first
-var array2 = filesystem.list(dirPath).AllInfos.OrderBy(o => !o.IsDirectory).ThenBy(o => o.Extension, StringComparer.OrdinalIgnoreCase).ToArray(); //sort by file type, directories first
+//include/exclude files using glob patterns
+var array = filesystem.list(dirPath, "*.txt").Files; //.txt files
+array = filesystem.list(dirPath, "*.png|*.bmp").Files; //.png and .bmp files
+array = filesystem.list(dirPath, "**/*.png|**/*.bmp", FLFlags.Recurse).Files; //all descendant .png and .bmp files
+array = filesystem.list(dirPath, "||*.png|*.bmp").Files; //all files except .png and .bmp
+array = filesystem.list(dirPath, @"**r \.html?$").Files; //.htm and .html files (use regex)
 
 //all descendant files and directories; skip directories named "bin" or "obj" anywhere
 foreach (var f in filesystem.list(dirPath, "||**/bin/|**/obj/", FLFlags.Recurse | FLFlags.IgnoreInaccessible).All) {
@@ -36,19 +37,30 @@ foreach (var f in filesystem.list(dirPath, "||skip/", FLFlags.Recurse).All) {
 	print.it(f);
 }
 
-//get all properties and relative paths
-foreach (var v in filesystem.list(dirPath, flags: FLFlags.Recurse).Enumerate((ref e) => (info: e.ToFileSystemInfo(), relativePath: e.ToRelativePath())))
+//sorting
+foreach (var f in filesystem.list(dirPath).Files.OrderBy(o => o.Size)) print.it(f.Name, f.Size); //sort by size
+array = filesystem.list(dirPath).Files
+	.OrderByDescending(o => o.LastWriteTimeUtc) //sort by time, newest first
+	.ToArray();
+array = filesystem.list(dirPath).All
+	.OrderBy(o => !o.IsDirectory).ThenBy(o => o.Extension, StringComparer.OrdinalIgnoreCase) //sort by file type, directories first
+	.ToArray();
+
+//get only some properties
+foreach (var v in filesystem.list(dirPath, flags: FLFlags.Recurse)
+	.Enumerate(e => (path: e.Path.ToString(), size: e.Size), files: true))
 	print.it(v);
 
-//example with IncludeFunc: get only readonly files
-var array3 = filesystem.list(dirPath, new() { IncludeFunc = (ref f) => f.Attributes.Has(FileAttributes.ReadOnly) }).FilePaths;
+//example with a filter function: get only readonly files
+PathFilter filter = new() { FileFilter = e => e.Attributes.Has(FileAttributes.ReadOnly) };
+var array3 = filesystem.list(dirPath, filter, FLFlags.Recurse).FilePaths;
 
-//example with IncludeFunc: get .txt files modified in last 30 days
-var date = DateTime.UtcNow.Subtract(TimeSpan.FromDays(30));
-var filter = new PathFilter { IncludeFunc = (ref f) => f.FileName.Ends(".txt", true) && f.LastWriteTimeUtc.DateTime >= date };
-foreach (var f in filesystem.list(dirPath, filter).FilePaths) print.it(f);
+//example with a filter function: get .txt files modified in last 30 days
+var date = DateTime.UtcNow.Subtract(TimeSpan.FromDays(30)).ToFileTimeUtc();
+PathFilter filter2 = new() { FileFilter = e => e.Name.Ends(".txt", true) && e.LastWriteTimeUtc >= date };
+foreach (var f in filesystem.list(dirPath, filter2).FilePaths) print.it(f);
 
-/// Also can be used .NET classes <see cref="Directory"/> (when need only paths), <see cref="DirectoryInfo"/> (when also need properties) or namespace <see cref="System.IO.Enumeration"/> (when need custom filtering). Their default options are different, for example skips hidden and system files, recurses NTFS links. Also they don't support glob patterns, but support * wildcard in filenames only.
+/// Also can be used .NET classes <see cref="Directory"/> (when need only paths), <see cref="DirectoryInfo"/> (when also need properties) or namespace <see cref="System.IO.Enumeration"/> (when need custom filtering). Their default options are different, for example skips hidden and system files, recurses NTFS links. They don't support glob patterns, but support * wildcard in filenames only. They order results differently.
 
 var array10 = Directory.GetFiles(dirPath, "*.htm"); //files as string[]
 var array11 = Directory.GetDirectories(dirPath); //directories as string[]

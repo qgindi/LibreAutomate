@@ -148,20 +148,54 @@ namespace Au.Types {
 		public PSFormat Format { get; set; }
 	}
 	
-	///// <summary>
-	///// Specifies whether to set, add or remove flags.
-	///// </summary>
-	//public enum SetAddRemove
-	//{
-	//	/// <summary>Set flags = the specified value.</summary>
-	//	Set = 0,
-	//	/// <summary>Add the specified flags, don't change others.</summary>
-	//	Add = 1,
-	//	/// <summary>Remove the specified flags, don't change others.</summary>
-	//	Remove = 2,
-	//	/// <summary>Toggle the specified flags, don't change others.</summary>
-	//	Xor = 3,
-	//}
+#if false //not used
+	/// <summary>
+	/// A union that can contain either a <c>bool</c> or <c>int</c> value. No boxing.
+	/// </summary>
+	[Union]
+	public struct BoolOrInt : IUnion {
+		readonly int _intValue;
+		readonly bool _boolValue;
+		readonly byte _type; // 0 = none, 1 = int, 2 = bool
+		
+		///
+		public BoolOrInt(int value) {
+			_intValue = value;
+			_type = 1;
+		}
+		
+		///
+		public BoolOrInt(bool value) {
+			_boolValue = value;
+			_type = 2;
+		}
+		
+		///
+		[Obsolete, EditorBrowsable(EditorBrowsableState.Never)]
+		public object Value => _type switch { 1 => _intValue, 2 => _boolValue, _ => null };
+		
+		///
+		public bool HasValue => _type != 0;
+		
+		///
+		public bool IsInt => _type == 1;
+		
+		///
+		public bool IsBool => _type == 2;
+		
+		///
+		public bool TryGetValue(out int value) {
+			value = _intValue;
+			return _type == 1;
+		}
+		
+		///
+		public bool TryGetValue(out bool value) {
+			value = _boolValue;
+			return _type == 2;
+		}
+	}
+#endif
 }
 
 #pragma warning disable CS1591 //Missing XML comment for publicly visible type or member

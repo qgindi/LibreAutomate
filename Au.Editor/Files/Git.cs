@@ -318,8 +318,9 @@ This tool modifies only the .git folder, not workspace files.
 		
 		void _Info() {
 			int nFiles = 0, nDirs = 0;
-			long size = filesystem.list(_dir / ".git", flags: FLFlags.Recurse | FLFlags.IgnoreInaccessible).AllInfos
-				.Sum(o => { if (o is FileInfo f) { nFiles++; return f.Length; } nDirs++; return 0; });
+			long size = filesystem.list(_dir / ".git", flags: FLFlags.Recurse | FLFlags.IgnoreInaccessible)
+				.Enumerate(e => { if (e.IsDirectory) nDirs++; else nFiles++; return e.Size; })
+				.Sum();
 			gits("rev-list --count HEAD");
 			info.Text = $"Size {size / 1024 / 1024} MB. Contains {nFiles} files and {nDirs} folders.\nThe main branch contains {_go} commits.";
 		}

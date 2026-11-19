@@ -258,18 +258,20 @@ public static partial class filesystem {
 	#region list, search
 	
 	/// <summary>
-	/// Returns an object that can enumerate files and/or directories in the specified directory.
-	/// Use like <c>var paths = filesystem.list(@"C:\path").Files;</c>.
+	/// Use this method to enumerate files and/or directories and get their paths and other properties.
+	/// <para/>Use like <c>foreach (var f in filesystem.list(@"C:\path").Files) { print.it(f, f.Size); }</c>.
 	/// </summary>
-	/// <param name="directory">Directory path. Must be full path without environment variables; see <see cref="Path2.Normalize"/>.</param>
+	/// <param name="directory">Directory path. Must be full path.</param>
 	/// <param name="filter">
 	/// Can be used to specify what to include or/and exclude. Glob patterns must be relative to <i>directory</i>.
 	/// <br/>• Example: <c>new(["*.txt", "**/*.cs"], ["notThisDir/", "**/*.tmp"])</c>.
 	/// <br/>• Example: <c>new("*.txt|**/*.cs", "notThisDir/|**/*.tmp")</c>.
 	/// <br/>• Example: <c>"*.txt|**/*.cs||notThisDir/|**/*.tmp"</c>.
-	/// <br/>• Example: <c>new() { MaxRecursionDepth = 1 }</c>.
+	/// <br/>• Example: <c>new() { DirectoryFilter = e => e.Name.Like("abc*") }</c>.
 	/// </param>
-	/// <param name="flags">Whether to enumerate subdirectories too, enumerate link targets, ignore inaccessible directories (avoid exceptions), skip hidden files.</param>
+	/// <param name="flags">Specifies whether to enumerate subdirectories too, enumerate link targets, ignore inaccessible directories (avoid exceptions), skip hidden files.</param>
+	/// <returns>An object that performs the enumeration when a method or property is called.</returns>
+	/// <exception cref="ArgumentException">Not full path.</exception>
 	public static FLQuery list(string directory, PathFilter filter = null, FLFlags flags = 0) => new(directory, filter, flags);
 	
 	/// <summary>
@@ -458,11 +460,24 @@ public static partial class filesystem {
 		return false;
 	}
 	
-	struct _CDItem(FLPath p, FEFile dep) {
-		public string FullPath => dep?.FullPath ?? p.Path;
-		public int RelativeOffset => dep is { } d ? (d.FullPath.Length - d.Name.Length + 1) : p.RelativeOffset_; //d.Name is @"\relative\path" (FEFlags.NeedRelativePaths)
-		public bool IsDirectory => dep?.IsDirectory ?? p.IsDirectory;
-		public bool IsLink => dep?.IsNtfsLink ?? p.IsNtfsLink;
+	struct _CDItem {
+		public string path;
+		public int relativeOffset;
+		public bool isDirectory, isLink;
+		
+		public _CDItem(FLEntry e) {
+			path = e.Path.ToString();
+			relativeOffset = e.Path.Length - e.RelativePath.Length;
+			isDirectory = e.IsDirectory;
+			isLink = e.IsLink;
+		}
+		
+		public _CDItem(FEFile e) {
+			path = e.FullPath;
+			relativeOffset = e.FullPath.Length - e.Name.Length + 1; //dep.Name is @"\relative\path" (FEFlags.NeedRelativePaths)
+			isDirectory = e.IsDirectory;
+			isLink = e.IsNtfsLink;
+		}
 	}
 	
 	//note: cp is null when moving (copy + delete)
@@ -470,7 +485,7 @@ public static partial class filesystem {
 	static unsafe void _CopyDirectory(string path1, string path2, bool merge, _CopyParams cp) {
 		var flags = cp?.flags ?? 0;
 		_CDItem[] a;
-		if (cp != null && cp.deprecated != default) { //the user code called the deprecated `copy` overload with some parameters (filter functions) that are used only by the deprecated `enumerate` method. To support it, several ways can be used. Using `enumerate` and _CDItem.
+		if (cp != null && cp.deprecated != default) { //the user code called the deprecated `copy` overload with some parameters (filter functions) that are used only by the deprecated `enumerate` method
 			var eFlags = FEFlags.AllDescendants | FEFlags.NeedRelativePaths | FEFlags.UseRawPath;
 			if (flags.Has(FCFlags.IgnoreInaccessible)) eFlags |= FEFlags.IgnoreInaccessible;
 			if (flags.Has(FCFlags.SkipHiddenSystem)) eFlags |= FEFlags.SkipHiddenSystem;
@@ -478,13 +493,13 @@ public static partial class filesystem {
 			var e1 = enumerate(path1, eFlags, cp.deprecated.fileFilter, cp.deprecated.dirFilter);
 #pragma warning restore AU1 //Type or member is obsolete
 			if (flags.Has(FCFlags.NoEmptyDirectories)) e1 = e1.Where(o => !o.IsDirectory); //FEFlags.OnlyFiles is ignored if using dirFilter
-			a = e1.Select(static o => new _CDItem(default, o)).ToArray();
+			a = e1.Select(static e => new _CDItem(e)).ToArray();
 		} else {
 			var lFlags = FLFlags.Recurse;
 			if (flags.Has(FCFlags.IgnoreInaccessible)) lFlags |= FLFlags.IgnoreInaccessible;
 			if (flags.Has(FCFlags.SkipHiddenSystem)) lFlags |= FLFlags.SkipHiddenSystem;
 			bool? filesOnly = flags.Has(FCFlags.NoEmptyDirectories) ? true : null;
-			a = list(path1, cp?.filter, lFlags).Enumerate(static (ref e) => new _CDItem(new(e), null), filesOnly).ToArray();
+			a = list(path1, cp?.filter, lFlags).Enumerate(static e => new _CDItem(e), filesOnly).ToArray();
 		}
 		
 		if (!merge) _CreateDirectoryLL(path2, path1);
@@ -492,23 +507,23 @@ public static partial class filesystem {
 		if (a.Length == 0) return;
 		bool ok = false;
 		string s1 = null, s2 = null;
-		int relOffset = a[0].RelativeOffset;
+		int relOffset = a[0].relativeOffset;
 		
 		foreach (var f in a) {
-			s1 = f.FullPath;
+			s1 = f.path;
 			RStr relPath = s1.AsSpan(relOffset);
 			s2 = Path2.PrefixLongPathIfNeed(Path.Join(path2, relPath));
 			
 			_CreateDirectoryForCopy(s1, s2, relPath.Count('\\'));
 			
-			if (f.IsDirectory) {
+			if (f.isDirectory) {
 				if (merge) switch (exists(s2, true)) {
 					case 2: continue; //never mind: check NTFS link mismatch
 					case 1: _DeleteL(s2, false); break;
 					}
 				
 				ok = Api.CreateDirectoryEx(s1, s2);
-				if (!ok && !f.IsLink) ok = Api.CreateDirectory(s2);
+				if (!ok && !f.isLink) ok = Api.CreateDirectory(s2);
 			} else {
 				if (merge && getAttributes(s2, out var attr, FAFlags.DontThrow | FAFlags.UseRawPath)) {
 					const FileAttributes badAttr = FileAttributes.ReadOnly | FileAttributes.Hidden;
@@ -520,7 +535,7 @@ public static partial class filesystem {
 				ok = Api.CopyFileEx(s1, s2, fl);
 			}
 			if (!ok) {
-				if (f.IsLink) {
+				if (f.isLink) {
 					//To create or copy NTFS links, need SeCreateSymbolicLinkPrivilege privilege.
 					//Admins have it, else this process cannot get it.
 					//Debug_.Print($"failed to copy NTFS link '{s1}'. It's OK, skipped it. Error: {lastError.messageFor()}");

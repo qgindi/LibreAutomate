@@ -1,20 +1,22 @@
-using System.IO.Enumeration;
-
 namespace Au.Types;
 
 /// <summary>
 /// The return type of <see cref="filesystem.list"/>.
-/// Use like <c>var paths = filesystem.list(@"C:\path").All;</c>.
+/// Use like <c>var a = filesystem.list(@"C:\path").All;</c>.
 /// </summary>
 public class FLQuery {
-	string _directory;
-	PathFilter _filter;
-	FLFlags _flags;
+	readonly string _directory;
+	readonly PathFilter _filter;
+	readonly FLFlags _flags;
 	
-	///
+	/// <exception cref="ArgumentException">
+	/// <br/>• <i>directory</i> - not full path.
+	/// <br/>• <i>filter</i> - a glob pattern is empty or contains an empty part or invalid wildcard expression.
+	/// </exception>
 	public FLQuery(string directory, PathFilter filter = null, FLFlags flags = 0) {
-		if (filter != null && !filter.CheckPatterns_(flags.Has(FLFlags.Recurse))) filter = null;
-		_directory = directory;
+		if (filter?.IsEmpty() == true) filter = null;
+		
+		_directory = Path2.NormalizeMinimally_(directory, dontPrefix: true);
 		_filter = filter;
 		_flags = flags;
 	}
@@ -22,194 +24,529 @@ public class FLQuery {
 	/// <summary>
 	/// Enumerates files and/or directories in the directory, using a callback function to create objects of desired type.
 	/// </summary>
-	/// <param name="transform">A function that converts <see cref="FileSystemEntry"/> to <c>TResult</c>. See <see cref="FileSystemEnumerable{TResult}"/>.</param>
+	/// <param name="transform">A function that creates objects of desired type.</param>
 	/// <param name="files">
 	/// Get files, directories or both:
 	/// <br/>• <c>true</c> - files only.
 	/// <br/>• <c>false</c> - directories only.
 	/// <br/>• <c>null</c> - all.
 	/// </param>
-	/// <returns>An enumerable collection of objects created by the <c>transform</c> function. The file system enumeration starts each time when the caller starts to enumerate the collection, and ends when the caller ends to enumerate it.</returns>
+	/// <returns>An enumerable collection of objects created by the <c>transform</c> function. The file system enumeration starts when the caller starts to enumerate the collection, and ends when the caller ends to enumerate it.</returns>
 	/// <exception cref="ArgumentException"><i>directory</i> is not full path.</exception>
 	/// <exception cref="DirectoryNotFoundException">The specified directory does not exist.</exception>
-	/// <exception cref="IOException">Failed. For example <i>directory</i> is a file.</exception>
 	/// <exception cref="UnauthorizedAccessException">A directory is inaccessible. See <see cref="FLFlags.IgnoreInaccessible"/>.</exception>
+	/// <exception cref="IOException">Failed.</exception>
 	/// <remarks>
-	/// Uses <see cref="FileSystemEnumerable{TResult}"/>.
-	/// 
-	/// The order of results probably is breadth-first, but it's not documented.
-	/// 
 	/// For NTFS links (symbolic links, mount points etc) gets link info, not target info.
+	/// 
+	/// When enumerating recursively, the order of results is depth-first (each directory is immediately followed by all its descendants).
 	/// </remarks>
-	public IEnumerable<TResult> Enumerate<TResult>(FileSystemEnumerable<TResult>.FindTransform transform, bool? files = null) {
-		if (!Path.IsPathFullyQualified(_directory))
-			throw new ArgumentException(_directory is [_, ':'] ? $@"Must be {_directory}\" : "Not full path");
+	public IEnumerable<TResult> Enumerate<TResult>(Func<FLEntry, TResult> transform, bool? files = null) {
+		ArgumentNullException.ThrowIfNull(transform);
 		
-		bool recurse = _flags.Has(FLFlags.Recurse);
+		PathStack_ pathStack = new(_directory);
+		FLEntry.Data_ entryData = new(pathStack);
+		bool hasFilterFunctions = _filter is { FileFilter: not null } or { DirectoryFilter: not null };
 		
-		var enOpt = new EnumerationOptions {
-			AttributesToSkip = (_flags.Has(FLFlags.SkipHidden) ? FileAttributes.Hidden : 0) | (_filter?.AttributesToSkip ?? 0), //default Hidden|System
-			BufferSize = 10000, //faster than the default 4K
-			IgnoreInaccessible = _flags.Has(FLFlags.IgnoreInaccessible), //default true
-			RecurseSubdirectories = recurse,
-		};
-		if (_filter != null) enOpt.MaxRecursionDepth = _filter.MaxRecursionDepth;
-		
-		bool skipHiddenSystem = _flags.Has(FLFlags.SkipHiddenSystem),
-			skipSome = recurse && !skipHiddenSystem && _directory is [.., ':', '\\' or '/'],
-			followLinks = _flags.Has(FLFlags.RecurseFollowLinks),
-			useShouldInclude = files != null || skipHiddenSystem || _filter != null,
-			useShouldRecurse = recurse && (skipHiddenSystem || skipSome || !followLinks || _filter != null);
-		
-		bool _ShouldInclude(ref FileSystemEntry e) {
-			if (e.IsDirectory == files) return false;
-			if (skipHiddenSystem && e.Attributes.Has(FileAttributes.Hidden | FileAttributes.System)) return false;
-			if (_filter?.ShouldInclude(ref e) == false) return false;
-			return true;
-		}
-		
-		bool _ShouldRecurse(ref FileSystemEntry e) {
-			if (skipHiddenSystem && e.Attributes.Has(FileAttributes.Hidden | FileAttributes.System)) return false;
-			if (!followLinks && e.IsNtfsLink) return false;
+		if (_flags.Has(FLFlags.Recurse)) {
+			var stack = new _DirectoryEnumerator[10];
+			int depth = 0, stackMax = 0;
+			bool skipSome = !_flags.Has(FLFlags.SkipHiddenSystem) && _directory is [.., ':', '\\' or '/'];
 			
-			//skip ?:\$Recycle.Bin
-			if (skipSome && e.Attributes.Has(FileAttributes.Hidden | FileAttributes.System) && e.IsDirectory && e.Directory.SequenceEqual(e.RootDirectory))
-				if (e.FileName.Eqi("$Recycle.Bin")) return false;
-			
-			if (_filter?.ShouldRecurse(ref e) == false) return false;
-			return true;
+			try {
+				if (!stack[0].Init(_directory, _flags, pathStack)) yield break;
+				for (; ; ) {
+					if (!stack[depth].MoveNext()) {
+						if (--depth < 0) break;
+						pathStack.Pop();
+						continue;
+					}
+					
+					ref var f = ref stack[depth].Current;
+					
+					bool isDir = f.IsDirectory;
+					bool include = isDir != files;
+					bool recurse = isDir;
+					if (recurse) {
+						if (!_flags.Has(FLFlags.RecurseFollowLinks) && f.IsLink) recurse = false;
+						else if (skipSome && depth == 0 && f.Attributes.Has(FileAttributes.Hidden | FileAttributes.System) && f.Name.Eqi("$Recycle.Bin")) recurse = false;
+					}
+					
+					if (!(include | recurse)) continue;
+					
+					pathStack.Push(f.Name);
+					
+					if (_filter != null) {
+						if (include) include = _filter.ShouldInclude(pathStack.RelativePath, isDir);
+						if (recurse) recurse = _filter.ShouldRecurse(pathStack.RelativePath);
+						if (!(include | recurse)) { pathStack.Pop(); continue; }
+					}
+					
+					FLEntry e = (include || hasFilterFunctions)
+						? new(entryData, ref f, depth, recurse, include)
+						: default;
+					
+					if (hasFilterFunctions) _CallFilterFunc(ref include, ref recurse, e);
+					
+					if (include)
+						yield return transform(e);
+					
+					if (recurse) {
+						if (depth + 1 == stack.Length) Array.Resize(ref stack, stack.Length * 2);
+						ref var v = ref stack[depth];
+#if true
+						recurse = stack[++depth].Init(v.Handle, _flags, pathStack);
+#else //compare speed
+						recurse = stack[++depth].Init(Path.Join(pathStack.Path.ToString()), _flags, pathStack);
+#endif
+						if (recurse) stackMax = Math.Max(stackMax, depth); else depth--;
+					}
+					
+					if (!recurse) pathStack.Pop();
+				}
+			}
+			finally {
+				while (stackMax >= 0) stack[stackMax--].Dispose();
+			}
+		} else {
+			using var de = new _DirectoryEnumerator();
+			if (!de.Init(_directory, _flags, pathStack)) yield break;
+			while (de.MoveNext()) {
+				ref var f = ref de.Current;
+				
+				if (f.IsDirectory == files) continue;
+				if (_filter?.ShouldInclude(f.Name, f.IsDirectory) == false) continue;
+				
+				pathStack.Push(f.Name);
+				
+				FLEntry e = new(entryData, ref f);
+				
+				bool include = true, recurse = false;
+				if (hasFilterFunctions) _CallFilterFunc(ref include, ref recurse, e);
+				
+				if (include)
+					yield return transform(e);
+				
+				pathStack.Pop();
+			}
 		}
-		
-		return new FileSystemEnumerable<TResult>(_directory, transform, enOpt) {
-			ShouldIncludePredicate = useShouldInclude ? _ShouldInclude : null,
-			ShouldRecursePredicate = useShouldRecurse ? _ShouldRecurse : null
-		};
 	}
 	
-	#region FLPath
+	void _CallFilterFunc(ref bool include, ref bool recurse, FLEntry e) {
+		if (!e.IsDirectory) {
+			if (include && _filter.FileFilter is { } fif) include = fif(e);
+		} else if (_filter.DirectoryFilter is { } dif) {
+			if (dif(e)) (include, recurse) = (e.DirInclude, e.DirRecurse); //info: the property setters allow only to set = false
+			else include = recurse = false;
+		}
+	}
+	
+	#region FLFile
 	/// <summary>
-	/// Enumerates files and directories in the directory. Gets their paths and some other properties.
+	/// Enumerates files and directories in the directory. Gets their paths and other properties.
 	/// </summary>
-	/// <returns>Enumerable collection. The file system enumeration starts each time when the caller starts to enumerate the collection, and ends when the caller ends to enumerate it.</returns>
+	/// <returns>Enumerable collection. The file system enumeration starts when the caller starts to enumerate the collection, and ends when the caller ends to enumerate it.</returns>
 	/// <inheritdoc cref="Enumerate{TResult}"/>
-	public IEnumerable<FLPath> Enumerate(bool? files = null) => Enumerate(static (ref e) => new FLPath(e), files);
+	public IEnumerable<FLFile> Enumerate(bool? files = null) => Enumerate(static e => new FLFile(e), files);
 	
-	/// <returns>Array. Unlike <see cref="Enumerate"/>, this function returns when the file system enumeration ends.</returns>
-	/// <inheritdoc cref="Enumerate"/>
-	public FLPath[] All => Enumerate().ToArray();
+	/// <returns>Array. Unlike <see cref="Enumerate(bool?)"/>, this function returns when the file system enumeration ends.</returns>
+	/// <inheritdoc cref="Enumerate{TResult}(Func{FLEntry, TResult}, bool?)"/>
+	public FLFile[] All => Enumerate().ToArray();
 	
 	/// <summary>
-	/// Enumerates files in the directory. Gets their paths and some other properties.
+	/// Enumerates files in the directory. Gets their paths and other properties.
 	/// </summary>
 	/// <inheritdoc cref="All"/>
-	public FLPath[] Files => Enumerate(true).ToArray();
+	public FLFile[] Files => Enumerate(true).ToArray();
 	
 	/// <summary>
-	/// Enumerates directories in the directory. Gets their paths and some other properties.
+	/// Enumerates directories in the directory. Gets their paths and other properties.
 	/// </summary>
 	/// <inheritdoc cref="All"/>
-	public FLPath[] Directories => Enumerate(false).ToArray();
-	#endregion
-	
-	#region infos
-	/// <summary>
-	/// Enumerates files and directories in the directory. Gets their properties.
-	/// </summary>
-	/// <returns>Enumerable collection of <see cref="FileInfo"/> and <see cref="DirectoryInfo"/> objects. The file system enumeration starts each time when the caller starts to enumerate the collection, and ends when the caller ends to enumerate it.</returns>
-	/// <inheritdoc cref="Enumerate{TResult}"/>
-	public IEnumerable<FileSystemInfo> EnumerateInfos(bool? files = null) => Enumerate(static (ref e) => e.ToFileSystemInfo(), files);
-	
-	/// <returns>Array of <see cref="FileInfo"/> and <see cref="DirectoryInfo"/> objects. Unlike <see cref="EnumerateInfos"/>, this function returns when the file system enumeration ends.</returns>
-	/// <inheritdoc cref="EnumerateInfos"/>
-	public FileSystemInfo[] AllInfos => EnumerateInfos().ToArray();
-	
-	/// <summary>
-	/// Enumerates files in the directory. Gets their properties.
-	/// </summary>
-	/// <returns>Array. Unlike <see cref="EnumerateInfos"/>, this function returns when the file system enumeration ends.</returns>
-	/// <inheritdoc cref="AllInfos"/>
-	public FileInfo[] FileInfos => EnumerateInfos(true).Cast<FileInfo>().ToArray();
-	
-	/// <summary>
-	/// Enumerates directories in the directory. Gets their properties.
-	/// </summary>
-	/// <returns>Array. Unlike <see cref="EnumerateInfos"/>, this function returns when the file system enumeration ends.</returns>
-	/// <inheritdoc cref="AllInfos"/>
-	public DirectoryInfo[] DirectoryInfos => EnumerateInfos(false).Cast<DirectoryInfo>().ToArray();
+	public FLFile[] Directories => Enumerate(false).ToArray();
 	#endregion
 	
 	#region paths
 	/// <summary>
-	/// Enumerates files and directories in the directory. Gets their paths as string.
+	/// Enumerates files and directories in the directory. Gets their paths and returns <c>string[]</c>.
 	/// </summary>
-	/// <returns>Array. All paths start with exact <i>directory</i> string (not normalized).</returns>
-	/// <inheritdoc cref="Enumerate" path="/exception"/>
-	public string[] AllPaths => Enumerate(_GetPath, null).ToArray();
+	/// <inheritdoc cref="Enumerate(bool?)" path="/exception"/>
+	public string[] AllPaths => Enumerate(static e => e.Path.ToString(), null).ToArray();
 	
 	/// <summary>
-	/// Enumerates files in the directory. Gets their paths as string.
+	/// Enumerates files in the directory. Gets their paths and returns <c>string[]</c>.
 	/// </summary>
-	/// <inheritdoc cref="AllPaths" path="/returns"/>
-	/// <inheritdoc cref="Enumerate" path="/exception"/>
-	public string[] FilePaths => Enumerate(_GetPath, true).ToArray();
+	/// <inheritdoc cref="Enumerate(bool?)" path="/exception"/>
+	public string[] FilePaths => Enumerate(static e => e.Path.ToString(), true).ToArray();
 	
 	/// <summary>
-	/// Enumerates directories in the directory. Gets their paths as string.
+	/// Enumerates directories in the directory. Gets their paths and returns <c>string[]</c>.
 	/// </summary>
-	/// <inheritdoc cref="AllPaths" path="/returns"/>
-	/// <inheritdoc cref="Enumerate" path="/exception"/>
-	public string[] DirectoryPaths => Enumerate(_GetPath, false).ToArray();
-	
-	private static string _GetPath(ref FileSystemEntry entry) => entry.ToSpecifiedFullPath();
+	/// <inheritdoc cref="Enumerate(bool?)" path="/exception"/>
+	public string[] DirectoryPaths => Enumerate(static e => e.Path.ToString(), false).ToArray();
 	#endregion
 	
 	#region names
 	/// <summary>
-	/// Enumerates files and directories in the directory. Gets their filenames.
+	/// Enumerates files and directories in the directory. Gets their filenames and returns <c>string[]</c>.
 	/// </summary>
-	/// <inheritdoc cref="Enumerate" path="/exception"/>
-	public string[] AllNames => Enumerate(_GetName, null).ToArray();
+	/// <inheritdoc cref="Enumerate(bool?)" path="/exception"/>
+	public string[] AllNames => Enumerate(static e => e.Name.ToString(), null).ToArray();
 	
 	/// <summary>
-	/// Enumerates files in the directory. Gets their filenames.
+	/// Enumerates files in the directory. Gets their filenames and returns <c>string[]</c>.
 	/// </summary>
-	/// <inheritdoc cref="Enumerate" path="/exception"/>
-	public string[] FileNames => Enumerate(_GetName, true).ToArray();
+	/// <inheritdoc cref="Enumerate(bool?)" path="/exception"/>
+	public string[] FileNames => Enumerate(static e => e.Name.ToString(), true).ToArray();
 	
 	/// <summary>
-	/// Enumerates directories in the directory. Gets their filenames.
+	/// Enumerates directories in the directory. Gets their filenames and returns <c>string[]</c>.
 	/// </summary>
-	/// <inheritdoc cref="Enumerate" path="/exception"/>
-	public string[] DirectoryNames => Enumerate(_GetName, false).ToArray();
-	
-	private static string _GetName(ref FileSystemEntry entry) => entry.FileName.ToString();
+	/// <inheritdoc cref="Enumerate(bool?)" path="/exception"/>
+	public string[] DirectoryNames => Enumerate(static e => e.Name.ToString(), false).ToArray();
 	#endregion
+	
+	unsafe struct _DirectoryEnumerator : IDisposable {
+		const int c_bufSize = 10000; //tested: bigger buffer does not make faster. It seems the API even does not use most of a large buffer eg 64K.
+		byte* _b;
+		Handle_ _hDir;
+		Api.FILE_FULL_DIR_INFORMATION* _f;
+		FLFlags _flags;
+		PathStack_ _pathStack;
+		
+		public nint Handle => _hDir;
+		
+		public bool Init(string directory, FLFlags flags, PathStack_ pathStack) {
+			_pathStack = pathStack;
+			var s = Path2.PrefixLongPathIfNeed(directory);
+			var h = Api.CreateFile(s, Api.FILE_LIST_DIRECTORY, Api.CFShare.READ | Api.CFShare.WRITE | Api.CFShare.DELETE, Api.CF.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
+			return _Init(true, h, flags);
+		}
+		
+		public bool Init(nint hParent, FLFlags flags, PathStack_ pathStack) {
+			_pathStack = pathStack;
+			var h = _OpenSubdirectory(hParent, pathStack.Name);
+			return _Init(false, h, flags);
+		}
+		
+		bool _Init(bool isRoot, Handle_ h, FLFlags flags) {
+			Debug.Assert(_hDir.Is0);
+			_f = null;
+			_flags = flags;
+			if (h.Is0) {
+				var error = lastError.code;
+				switch (error) {
+				case Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND or Api.ERROR_BAD_NET_NAME or Api.ERROR_BAD_NETPATH:
+					if (!isRoot) return false;
+					throw new DirectoryNotFoundException($"Directory not found: {_pathStack.Path}") { HResult = unchecked((int)0x80070000 | (error & 0xFFFF)) };
+				case Api.ERROR_DIRECTORY or Api.ERROR_NOT_READY when !isRoot:
+					return false;
+				}
+				_ThrowIfCannotContinue(error);
+				return false;
+			}
+			_hDir = h;
+			if (_b == null) _b = (byte*)NativeMemory.Alloc((nuint)c_bufSize);
+			return true;
+		}
+		
+		void _ThrowIfCannotContinue(int error) {
+			if (error != Api.ERROR_ACCESS_DENIED) throw new IOException($"{lastError.messageFor(error)}  Directory: {_pathStack.Path}", error);
+			if (!_flags.Has(FLFlags.IgnoreInaccessible)) throw new UnauthorizedAccessException($"Access denied to directory: {_pathStack.Path}");
+		}
+		
+		public bool MoveNext() {
+			next:
+			if (_f == null || _f->NextEntryOffset == 0) {
+				//if (_f != null) { //makes slightly faster, but unsafe. Tested: the API does not fill full buffer. The unused size is unpredictable and depends on buffer size.
+				//	long nextOffset = ((byte*)_f - _b) + sizeof(Api.FILE_FULL_DIR_INFORMATION) + _f->nameLength;
+				//	if (nextOffset < 5000) return ref Unsafe.NullRef<Api.FILE_FULL_DIR_INFORMATION>();
+				//	//print.it($"<><c blue>new<>");
+				//}
+				int r = Api.NtQueryDirectoryFile(_hDir, 0, 0, 0, out var status, _b, c_bufSize, 2, false, 0, false);
+				//print.it((uint)r, (int)status.information);
+				if (r != 0) {
+					_hDir.Dispose();
+					_f = null;
+					if (r != Api.STATUS_NO_MORE_FILES) _ThrowIfCannotContinue(Api.RtlNtStatusToDosError(r));
+					return false;
+				}
+				_f = (Api.FILE_FULL_DIR_INFORMATION*)_b;
+			} else {
+				_f = (Api.FILE_FULL_DIR_INFORMATION*)((byte*)_f + _f->NextEntryOffset);
+			}
+			
+			if (_f->IsDirectory && _f->Name is "." or "..") goto next;
+			if (_flags.Has(FLFlags.SkipHidden) && _f->Attributes.Has(FileAttributes.Hidden)) goto next;
+			if (_flags.Has(FLFlags.SkipHiddenSystem) && _f->Attributes.Has(FileAttributes.Hidden | FileAttributes.System)) goto next;
+			
+			return true;
+		}
+		
+		public ref Api.FILE_FULL_DIR_INFORMATION Current => ref *_f;
+		
+		public void Dispose() {
+			_hDir.Dispose();
+			NativeMemory.Free(_b);
+			_b = null;
+		}
+		
+		static Handle_ _OpenSubdirectory(nint parentDirHandle, ReadOnlySpan<char> name) {
+			//if (parentDirHandle == 0 || name.IsEmpty || name.Length > ushort.MaxValue / sizeof(char) - 1) throw new ArgumentException();
+			
+			fixed (char* p = name) {
+				var us = new Api.UNICODE_STRING {
+					Length = (ushort)(name.Length * sizeof(char)),
+					MaximumLength = (ushort)(name.Length * sizeof(char)),
+					Buffer = p
+				};
+				
+				var oa = new Api.OBJECT_ATTRIBUTES {
+					Length = (uint)sizeof(Api.OBJECT_ATTRIBUTES),
+					RootDirectory = parentDirHandle,
+					ObjectName = &us,
+					Attributes = 0,
+				};
+				
+				const uint FILE_DIRECTORY_FILE = 0x00000001;
+				const uint FILE_SYNCHRONOUS_IO_NONALERT = 0x00000020;
+				const uint FILE_OPEN_FOR_BACKUP_INTENT = 0x00004000;
+				//const uint FILE_OPEN_REPARSE_POINT = 0x00200000; //don't follow symlinks/junctions
+				
+				int status = Api.NtCreateFile(
+					out nint h,
+					Api.FILE_LIST_DIRECTORY | Api.SYNCHRONIZE,
+					in oa,
+					out _,
+					null,
+					0,
+					Api.CFShare.ALL,
+					1, //FILE_OPEN
+					FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
+				
+				if (status < 0) {
+					lastError.code = Api.RtlNtStatusToDosError(status);
+					return default;
+				}
+				
+				return new(h);
+			}
+		}
+	}
+	
+	/// <summary>
+	/// Contains current path in char[]. Appends and removes filenames.
+	/// </summary>
+	internal class PathStack_ {
+		char[] _a;
+		int _len;
+		internal int nameOffset;
+		internal readonly int relativeOffset;
+		
+		public PathStack_(string directory) {
+			var d = directory.AsSpan().TrimEnd("\\/");
+			_a = new char[d.Length + 255];
+			d.CopyTo(_a);
+			_len = d.Length;
+			relativeOffset = _len + 1;
+		}
+		
+		/// <summary>
+		/// Appends filename.
+		/// Sets current <see cref="Path"/> etc.
+		/// </summary>
+		public void Push(RStr name) {
+			nameOffset = _len + 1;
+			int n = _len + 1 + name.Length;
+			if (_a.Length < n + 1) Array.Resize(ref _a, _a.Length + n + 1);
+			_a[_len++] = '\\';
+			name.CopyTo(_a.AsSpan(_len));
+			_a[_len = n] = '\0';
+		}
+		
+		/// <summary>
+		/// Removes filename from current path.
+		/// </summary>
+		public void Pop() { //path -> parentPath\
+			_len = nameOffset - 1;
+			_a[_len] = '\0';
+			nameOffset = nameOffset > relativeOffset ? Path.LastIndexOf('\\') + 1 : 0;
+		}
+		
+		public RStr Path => _a.AsSpan(0, _len);
+		
+		public RStr RelativePath => _a.AsSpan(relativeOffset, _len - relativeOffset);
+		
+		public RStr Name => _a.AsSpan(nameOffset, _len - nameOffset);
+		
+		public RStr DirectoryBS => _a.AsSpan(0, nameOffset);
+		
+		public RStr RootDirectoryBS => _a.AsSpan(0, relativeOffset);
+	}
 }
 
 /// <summary>
-/// The return type of some file system enumeration functions.
-/// Provides a file path and several other commonly used properties. Has implicit conversion to string (path).
-/// Can be used like <c>foreach (var v in filesystem.list(directory).All) print.it(v, v.Name, v.IsDirectory);</c>.
+/// Provides information about a file or directory. Used in callback functions of file system enumeration methods.
 /// </summary>
-public class FLPath {
-	string _path, _name, _relativePath;
-	ushort _nameOffset, _relativeOffset;
-	FileAttributes _attr;
+public unsafe ref struct FLEntry {
+	/// <summary>
+	/// A FLEntry keeps its data in single Data_ instance (local var of Enumerate).
+	/// Because FLEntry must be a small ref struct that can change its data even when copied.
+	/// Why ref struct: compiler won't allow its copies to escape the callback.
+	/// </summary>
+	internal class Data_ {
+		internal readonly FLQuery.PathStack_ ps;
+		internal int depth;
+		internal bool recurse, include;
+		internal Api.FILE_FULL_DIR_INFORMATION* f;
+		
+		internal Data_(FLQuery.PathStack_ pathStack) {
+			ps = pathStack;
+		}
+	}
 	
-	///
-	public FLPath(in FileSystemEntry e) {
-		_path = e.ToFullPath();
-		_nameOffset = checked((ushort)(_path.Length - e.FileName.Length));
-		_relativeOffset = checked((ushort)(e.RelativeOffset_));
-		_attr = e.Attributes;
+	internal readonly Data_ d;
+	
+	internal FLEntry(Data_ data, ref Api.FILE_FULL_DIR_INFORMATION f, int depth = 0, bool recurse = false, bool include = true) {
+		d = data;
+		d.depth = depth;
+		d.recurse = recurse;
+		d.include = include;
+		d.f = (Api.FILE_FULL_DIR_INFORMATION*)Unsafe.AsPointer(ref f);
 	}
 	
 	/// <summary>
 	/// Full path.
 	/// </summary>
+	public RStr Path => d.ps.Path;
+	
+	/// <summary>
+	/// Filename.
+	/// </summary>
+	public RStr Name => d.ps.Name;
+	
+	/// <summary>
+	/// Relative path.
+	/// </summary>
+	public RStr RelativePath => d.ps.RelativePath;
+	
+	/// <summary>
+	/// Parent directory path. Ends with backslash (<c>\</c>).
+	/// </summary>
+	public RStr Directory => d.ps.DirectoryBS;
+	
+	/// <summary>
+	/// Root directory path. It's the value passed to <see cref="filesystem.list"/>. Ends with backslash (<c>\</c>).
+	/// </summary>
+	public RStr RootDirectory => d.ps.RootDirectoryBS;
+	
+	/// <summary>
+	/// Recursion depth, starting from 0. In other words - the number of <c>\</c> in the relative path.
+	/// </summary>
+	public int Depth => d.depth;
+	
+	/// <summary>
+	/// <c>true</c> if it's a directory.
+	/// </summary>
+	public bool IsDirectory => d.f->IsDirectory;
+	
+	/// <summary>
+	/// <c>true</c> if it's a file system link (symbolic link, junction or mount point) to a file or directory.
+	/// </summary>
 	/// <remarks>
-	/// The paths are normalized, ie may not start with exact <i>directory</i> string. If you need relative path, use property <see cref="RelativePath"/>.
+	/// To get the link target: <see cref="filesystem.more.getFinalPath"/>.
 	/// </remarks>
+	public bool IsLink => d.f->IsLink;
+	
+	/// <summary>
+	/// Attributes.
+	/// </summary>
+	public FileAttributes Attributes => d.f->Attributes;
+	
+	/// <summary>
+	/// File size.
+	/// </summary>
+	public long Size => d.f->EndOfFile;
+	
+	/// <summary>
+	/// The number of bytes allocated for the file on the storage device. Aka "Size on disk".
+	/// </summary>
+	public long SizeAllocated => d.f->AllocationSize;
+	
+	/// <summary>
+	/// Size of extended attributes, or reparse point tag (if <see cref="FileAttributes.ReparsePoint"/>).
+	/// </summary>
+	public uint EaInfo => d.f->EaSize;
+	
+	/// <summary>
+	/// Time when the file was created. See <see cref="DateTime.FromFileTimeUtc"/>.
+	/// </summary>
+	public long CreationTimeUtc => d.f->CreationTime;
+	
+	/// <summary>
+	/// Last time data was written to the file. See <see cref="DateTime.FromFileTimeUtc"/>.
+	/// </summary>
+	public long LastWriteTimeUtc => d.f->LastWriteTime;
+	
+	/// <summary>
+	/// Last time the file was accessed. See <see cref="DateTime.FromFileTimeUtc"/>.
+	/// </summary>
+	public long LastAccessTimeUtc => d.f->LastAccessTime;
+	
+	/// <summary>
+	/// Last time the file was changed (data or properties). See <see cref="DateTime.FromFileTimeUtc"/>.
+	/// </summary>
+	public long LastAnyChangeTimeUtc => d.f->ChangeTime;
+	
+	/// <summary>
+	/// <c>true</c> if descendants of this directory will be enumerated (when enumerating recursively).
+	/// The directory filter function can exclude descendants only: set this property = <c>false</c> and return <c>true</c>.
+	/// </summary>
+	public bool DirRecurse {
+		get => d.recurse;
+		set { d.recurse &= value; }
+	}
+	
+	/// <summary>
+	/// <c>true</c> if this directory entry is included in results.
+	/// The directory filter function can exclude this entry only: set this property = <c>false</c> and return <c>true</c>.
+	/// </summary>
+	public bool DirInclude {
+		get => d.include;
+		set { d.include &= value; }
+	}
+}
+
+/// <summary>
+/// Contains file or directory properties retrieved by a file system enumeration function.
+/// </summary>
+/// <remarks>
+/// Has implicit conversion to string (full path).
+/// 
+/// Can be used like <c>foreach (var v in filesystem.list(directory).All) print.it(v, v.Name, v.IsDirectory);</c>.
+/// </remarks>
+public class FLFile {
+	string _path, _name, _relativePath;
+	ushort _nameOffset, _relativeOffset, _depth;
+	bool _isLink;
+	FileAttributes _attr;
+	
+	///
+	public FLFile(in FLEntry e) {
+		_path = e.Path.ToString();
+		_nameOffset = checked((ushort)e.d.ps.nameOffset);
+		_relativeOffset = checked((ushort)e.d.ps.relativeOffset);
+		_depth = checked((ushort)e.d.depth);
+		_isLink = e.IsLink;
+		_attr = e.Attributes;
+		Size = e.Size;
+		CreationTimeUtc = DateTime.FromFileTimeUtc(e.CreationTimeUtc);
+		LastWriteTimeUtc = DateTime.FromFileTimeUtc(e.LastWriteTimeUtc);
+	}
+	
+	/// <summary>
+	/// Full path.
+	/// </summary>
 	public string Path => _path;
 	
 	/// <summary>
@@ -221,8 +558,11 @@ public class FLPath {
 	/// Relative path.
 	/// </summary>
 	public string RelativePath => _relativePath ??= _relativeOffset == _nameOffset ? Name : _path[_relativeOffset..];
-	
-	internal int RelativeOffset_ => _relativeOffset;
+
+	/// <summary>
+	/// File name extension, like ".txt". Returns "" if no extension.
+	/// </summary>
+	public string Extension => IsDirectory ? "" : System.IO.Path.GetExtension(_path);
 	
 	/// <summary>
 	/// Attributes.
@@ -237,7 +577,7 @@ public class FLPath {
 	/// <summary>
 	/// Returns <c>true</c> if it's a NTFS link (symbolic link, mount point etc).
 	/// </summary>
-	public bool IsNtfsLink => _attr.Has(FileAttributes.ReparsePoint) && filesystem.IsNtfsLink_(_path);
+	public bool IsLink => _isLink;
 	
 	/// <summary>
 	/// Name as span.
@@ -252,14 +592,29 @@ public class FLPath {
 	public RStr RelativePathSpan => _path.AsSpan(_relativeOffset);
 	
 	/// <summary>
-	/// The number of intermediate directories from <c>filesystem.list</c> <i>directory</i>.
+	/// Recursion depth, starting from 0. In other words - the number of <c>\</c> in the relative path.
 	/// </summary>
-	public int RelativeDepth => RelativePathSpan.Count('\\');
+	public int Depth => _depth;
+	
+	/// <summary>
+	/// File size.
+	/// </summary>
+	public long Size { get; }
+	
+	/// <summary>
+	/// Time when the file was created.
+	/// </summary>
+	public DateTime CreationTimeUtc { get; }
+	
+	/// <summary>
+	/// Last time data was written to the file.
+	/// </summary>
+	public DateTime LastWriteTimeUtc { get; }
 	
 	/// <summary>
 	/// Implicit conversion to string. Returns full path.
 	/// </summary>
-	public static implicit operator string(FLPath p) => p._path;
+	public static implicit operator string(FLFile p) => p._path;
 	
 	/// <summary>
 	/// Returns full path.
@@ -273,23 +628,23 @@ public class FLPath {
 [Flags]
 public enum FLFlags {
 	/// <summary>
-	/// Get all descendants, not just direct children. Don't follow NTFS directory links.
+	/// Get all descendants, not just direct children. Don't follow file system links.
 	/// </summary>
 	Recurse = 1,
 	
 	/// <summary>
-	/// Get all descendants, not just direct children. Follow NTFS directory links (symbolic links, mount points etc).
+	/// Get all descendants, not just direct children. Follow file system links (symbolic links, junctions, mount points) to directories.
 	/// Includes flag <c>Recurse</c>.
 	/// </summary>
 	RecurseFollowLinks = 3,
 	
 	/// <summary>
-	/// Skip files and subdirectories that have <c>Hidden</c> attribute.
+	/// Skip files and subdirectories (and their descendants) that have <c>Hidden</c> attribute.
 	/// </summary>
 	SkipHidden = 4,
 	
 	/// <summary>
-	/// Skip files and subdirectories that have <c>Hidden</c> and <c>System</c> attributes (both).
+	/// Skip files and subdirectories (and their descendants) that have <c>Hidden</c> and <c>System</c> attributes (both).
 	/// These files/directories usually are created and used only by the operating system.
 	/// Without this flag, skips only the hidden-system directory <c>$Recycle.Bin</c> when enumerating a root directory like <c>@"C:\"</c>.
 	/// </summary>
@@ -299,107 +654,4 @@ public enum FLFlags {
 	/// Don't throw exception when fails to enumerate the directory or a subdirectory because of its security settings.
 	/// </summary>
 	IgnoreInaccessible = 16,
-}
-
-public static partial class ExtMisc {
-	extension(FileSystemInfo t) {
-		/// <summary>
-		/// Returns <c>true</c> if this is a <c>DirectoryInfo</c>.
-		/// </summary>
-		public bool IsDirectory => t is DirectoryInfo;
-		
-		/// <summary>
-		/// Returns <c>true</c> if this is a NTFS link, eg symbolic link or mount point.
-		/// </summary>
-		public bool IsNtfsLink => t.Attributes.Has(FileAttributes.ReparsePoint) && filesystem.IsNtfsLink_(t.FullName);
-	}
-	
-	extension(in FileSystemEntry t) {
-		/// <summary>
-		/// Gets relative path.
-		/// </summary>
-		public string ToRelativePath() {
-			int i = t.RootDirectory.Length;
-			if (i >= t.Directory.Length) return t.FileName.ToString();
-			if (t.Directory[i] is '\\' or '/') i++; //root is C:\dir, else C:\
-			return Path.Join(t.Directory[i..], t.FileName);
-		}
-		
-		internal int RelativeOffset_ => t.RootDirectory.Length + (t.RootDirectory[^1] is '\\' or '/' ? 0 : 1);
-		
-		/// <summary>
-		/// The number of intermediate directories from <c>filesystem.list</c> <i>directory</i>.
-		/// </summary>
-		public int RelativeDepth => t.Directory.Length <= t.RootDirectory.Length ? 0 : t.Directory[t.RelativeOffset_..].Count('\\') + 1;
-		
-		/// <summary>
-		/// Returns <c>true</c> if this is a NTFS link, eg symbolic link or mount point.
-		/// </summary>
-		public bool IsNtfsLink => t.Attributes.Has(FileAttributes.ReparsePoint) && filesystem.IsNtfsLink_(t.ToFullPath());
-	}
-	
-	extension(FLQuery t) {
-		/// <summary>
-		/// Calls <see cref="FLQuery.All"/> and reorders results. Return results in depth-first order (each directory is immediately followed by all its descendants).
-		/// </summary>
-		/// <remarks>
-		/// Directories must not be excluded without also excluding all their descendants.
-		/// </remarks>
-		/// <inheritdoc cref="FLQuery.All"/>
-		public FLPath[] AllDepthFirst()
-			=> _ToDepthFirst(t.All, static o => o.Path);
-		
-		/// <summary>
-		/// Calls <see cref="FLQuery.AllInfos"/> and reorders results. Return results in depth-first order (each directory is immediately followed by all its descendants).
-		/// </summary>
-		/// <remarks>
-		/// Directories must not be excluded without also excluding all their descendants.
-		/// </remarks>
-		/// <inheritdoc cref="FLQuery.AllInfos"/>
-		public FileSystemInfo[] AllInfosDepthFirst()
-			=> _ToDepthFirst(t.AllInfos, static o => o.FullName);
-		
-		/// <summary>
-		/// Calls <see cref="FLQuery.Enumerate{TResult}(FileSystemEnumerable{TResult}.FindTransform, bool?)"/> and reorders results. Return results in depth-first order (each directory is immediately followed by all its descendants).
-		/// </summary>
-		/// <param name="getPath">Callback function that returns path. Can be full or relative path. Must be normal path that came from a file system enumeration function: separator character <c>\</c>, no <c>\..</c> etc.</param>
-		/// <returns>Array.</returns>
-		/// <remarks>
-		/// Directories must not be excluded without also excluding all their descendants.
-		/// </remarks>
-		/// <inheritdoc cref="FLQuery.Enumerate{TResult}(FileSystemEnumerable{TResult}.FindTransform, bool?)"/>
-		public TResult[] AllDepthFirst<TResult>(FileSystemEnumerable<TResult>.FindTransform transform, Func<TResult, string> getPath)
-			=> _ToDepthFirst(t.Enumerate(transform).ToArray(), getPath);
-	}
-	
-	static T[] _ToDepthFirst<T>(T[] a, Func<T, string> getPath) {
-		if (a.Length < 2) return a;
-		
-		// ToLookup preserves the original order within each group.
-		var children = a.ToLookup(x => Path.GetDirectoryName(getPath(x))!, StringComparer.OrdinalIgnoreCase);
-		
-		// All items are descendants of one directory, so the shortest parent path is that directory.
-		var root = children.MinBy(g => g.Key.Length)!.Key;
-		
-		var result = new T[a.Length];
-		var stack = new Stack<IEnumerator<T>>();
-		stack.Push(children[root].GetEnumerator());
-		
-		int i = 0;
-		while (stack.Count > 0) {
-			var e = stack.Peek();
-			if (!e.MoveNext()) {
-				stack.Pop();
-				continue;
-			}
-			
-			var f = e.Current;
-			result[i++] = f;
-			
-			// Files have no group, so this yields an empty sequence for them.
-			stack.Push(children[getPath(f)].GetEnumerator());
-		}
-		
-		return result.ToArray();
-	}
 }

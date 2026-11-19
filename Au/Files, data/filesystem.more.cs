@@ -122,7 +122,8 @@ public static partial class filesystem {
 		/// For drives use <see cref="DriveInfo"/> instead; it's fast and includes sizes of Recycle Bin and other protected hidden system directories.
 		/// </remarks>
 		public static long calculateDirectorySize(string path, FLFlags flags = FLFlags.Recurse | FLFlags.IgnoreInaccessible) {
-			return list(path, null, flags).Enumerate(static (ref e) => e.Length, true).Sum();
+			return list(path, null, flags).Enumerate(static e => e.Size, true).Sum();
+			//rejected: an overload to get both size and sizeAllocated. If somebody needs it, it it's easy to call Enumerate (FLEntry provides SizeAllocated).
 		}
 		
 		///

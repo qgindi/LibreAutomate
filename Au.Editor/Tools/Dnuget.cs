@@ -370,18 +370,18 @@ class DNuget : KDialogWindow {
 			var dCompile = _GetCompileAssembliesFromAssetsJson(dirProj2 + @"\obj\project.assets.json", folderPath);
 			
 			//get lists of .NET dlls, native dlls and other files
-			List<(FLPath f, int r)> aDllNet = new(); //r: 0 r (ref and run time), 1 ro (ref only), 2 rt (run time only)
-			List<FLPath> aDllNative = new(), aOther = new();
-			foreach (var f in filesystem.list(dirBin2, flags: FLFlags.Recurse).Files.OrderBy(o => o.RelativeDepth)) {
+			List<(FLFile f, int r)> aDllNet = new(); //r: 0 r (ref and run time), 1 ro (ref only), 2 rt (run time only)
+			List<FLFile> aDllNative = new(), aOther = new();
+			foreach (var f in filesystem.list(dirBin2, flags: FLFlags.Recurse).Files.OrderBy(o => o.Depth)) {
 				var relPath = f.RelativePath;
 				bool runtimes = false;
-				if (f.RelativeDepth == 0) {
+				if (f.Depth == 0) {
 					if (relPath.Starts("___.")) continue;
 				} else {
 					runtimes = relPath.Starts(@"runtimes\win", true);
 					Debug_.PrintIf(!(runtimes || relPath.Ends(".resources.dll") || 0 != relPath.Starts(false, @"ref\", @".playwright\")), relPath); //ref is used by Microsoft.PowerShell.SDK as data files
 				}
-				if (relPath.Ends(".dll", true) && (f.RelativeDepth == 0 || runtimes)) {
+				if (relPath.Ends(".dll", true) && (f.Depth == 0 || runtimes)) {
 					if (CompilerUtil.IsNetAssembly(f, out bool refOnly)) {
 						aDllNet.Add((f, refOnly ? 1 : runtimes ? 2 : 0));
 					} else {
@@ -404,7 +404,7 @@ class DNuget : KDialogWindow {
 				foreach (var (f, r) in group) {
 					var relPath = string.Concat("\\", f.RelativePathSpan); //fbc: \relative-path
 					hsLib.Add(relPath);
-					bool refOnly = r == 1 || (r == 0 && f.RelativeDepth == 0 && count > 1); //if count>1, this is X.dll from [X.dll, sub\X.dll, ...]
+					bool refOnly = r == 1 || (r == 0 && f.Depth == 0 && count > 1); //if count>1, this is X.dll from [X.dll, sub\X.dll, ...]
 					if (refOnly) {
 						if (haveRO) continue;
 						xx.Add(new XElement("ro", relPath));
@@ -444,7 +444,7 @@ class DNuget : KDialogWindow {
 				XElement xGroup = null;
 				foreach (var f in group) {
 					var relPath = string.Concat("\\", f.RelativePathSpan); //fbc: \relative-path
-					if (f.RelativeDepth > 0 && relPath[13] != '\\') {
+					if (f.Depth > 0 && relPath[13] != '\\') {
 						if (xGroup == null) xx.Add(xGroup = new("natives"));
 						xGroup.Add(new XElement("native", relPath));
 					} else {

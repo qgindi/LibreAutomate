@@ -1,9 +1,7 @@
-using System.IO.Enumeration;
-
 namespace Au.More;
 
 /// <summary>
-/// Performs file system enumeration include/exclude and recurse/skip filtering using glob patterns or/and callback functions or/and options.
+/// Performs file system enumeration include/exclude/recurse filtering using glob patterns or/and callback functions.
 /// </summary>
 /// <remarks>
 /// A glob pattern is a string with wildcard characters to match multiple file paths in a directory.
@@ -29,14 +27,18 @@ namespace Au.More;
 /// <br/>• <c>**/abc/</c> matches directory <c>abc</c> (which can be anywhere) and everything in it. Note the <c>/</c> at the end.
 /// <para/>
 /// The glob part separator character is <c>/</c>, but also can be used <c>\</c> if the pattern does not contain regular expressions containing <c>\</c>. All separators in a pattern must be the same character. It does not have to mach separators in paths.
-/// 
+/// <para/>
 /// The glob matching is performed on path strings only, without accessing the file system.
+/// <para/>
+/// When used with methods that know whether a path is a file or directory (eg <c>filesystem.list</c>, <c>filesystem.copy</c>), you can specify whether a pattern must match only files or only directories:
+/// <br/>• pattern starts with prefix <c>f:</c> - match only files.
+/// <br/>• pattern starts with prefix <c>d:</c> - match only directories.
 /// </remarks>
 public class PathFilter {
 	enum _GPKind { Globstar, Star, Text, Ends, Wildcard, Wildex }
 	record struct _GlobPart(_GPKind kind, string s = null, wildex w = null);
 	
-	List<(bool include, _GlobPart[] parts)> _rules = [];
+	List<(bool include, bool? isDir, _GlobPart[] parts)> _rules = [];
 	bool _hasIncludes;
 	
 	///
@@ -66,97 +68,103 @@ public class PathFilter {
 	}
 	
 	/// <summary>
-	/// Adds one or more include patterns.
+	/// Adds include patterns.
 	/// </summary>
-	/// <param name="patterns">One or more glob paterns. See <see cref="PathFilter"/>.</param>
-	/// <exception cref="ArgumentException">An invalid glob pattern. Empty or contains an invalid wildcard expression.</exception>
+	/// <param name="patterns">Zero or more glob paterns. See <see cref="PathFilter"/>.</param>
+	/// <exception cref="ArgumentException">A pattern is empty or contains an empty part or invalid wildcard expression.</exception>
 	/// <remarks>
 	/// It is not possible to re-include a file if a parent directory of that file is excluded (see <see cref="AddExcludePatterns"/>).
 	/// 
 	/// If no include patterns are specified, will be included everything that is not excluded (see <see cref="AddExcludePatterns"/>).
 	/// </remarks>
-	public void AddIncludePatterns(params ReadOnlySpan<string> patterns) => _AddRule(true, patterns);
+	public void AddIncludePatterns(params ReadOnlySpan<string> patterns) => _AddPatterns(true, patterns);
 	
 	/// <summary>
-	/// Adds one or more exclude patterns.
+	/// Adds exclude patterns.
 	/// </summary>
-	/// <param name="patterns">One or more glob paterns. See <see cref="PathFilter"/>.</param>
-	/// <exception cref="ArgumentException">An invalid glob pattern. Empty or contains an invalid wildcard expression.</exception>
-	public void AddExcludePatterns(params ReadOnlySpan<string> patterns) => _AddRule(false, patterns);
+	/// <param name="patterns">Zero or more glob paterns. See <see cref="PathFilter"/>.</param>
+	/// <exception cref="ArgumentException">A pattern is empty or contains an empty part or invalid wildcard expression.</exception>
+	public void AddExcludePatterns(params ReadOnlySpan<string> patterns) => _AddPatterns(false, patterns);
 	
-	void _AddRule(bool include, ReadOnlySpan<string> patterns) {
+	void _AddPatterns(bool include, ReadOnlySpan<string> patterns) {
 		if (patterns.IsEmpty) return;
-		foreach (var p in patterns) {
-			char splitChar = '/'; //prefer /, because \ can be used in wildex regex. But allow \, because users will wonder why does not work with \.
-			if (!p.Contains('/') && p.Contains('\\') && p is not ['*', '*', not '\\', ..] /*not wildex*/) splitChar = '\\';
-			
-			var parts = p.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
-			if (parts is []) throw new ArgumentException("Empty glob pattern.");
-			var a = new _GlobPart[parts.Length];
-			for (int i = 0; i < parts.Length; i++) {
-				_GlobPart g;
-				string s = parts[i];
-				if (s[0] != '*') g = new(wildex.hasWildcardChars(s) ? _GPKind.Wildcard : _GPKind.Text, s);
-				else if (s.Length == 1) g = new(_GPKind.Star);
-				else if (s == "**") g = new(_GPKind.Globstar);
-				else if (s[1] == '*') g = new(_GPKind.Wildex, null, new wildex(s));
-				else if (wildex.hasWildcardChars(s.AsSpan(1))) g = new(_GPKind.Wildcard, s);
-				else g = new(_GPKind.Ends, s[1..]);
-				a[i] = g;
-			}
-			_rules.Add((include, a));
-			if (p[^1] == splitChar) //"dir/" = "dir" + "dir/**"
-				_rules.Add((include, [.. a, new(_GPKind.Globstar)]));
+		foreach (string p in patterns) _AddPattern(include, p);
+	}
+	
+	void _AddPattern(bool include, RStr p) {
+		bool? isDir = null;
+		if (!FilePrefix.NE() && p.Starts(FilePrefix)) {
+			isDir = false;
+			p = p[FilePrefix.Length..];
+		} else if (!DirectoryPrefix.NE() && p.Starts(DirectoryPrefix)) {
+			isDir = true;
+			p = p[DirectoryPrefix.Length..];
 		}
+		
+		if (p.IsEmpty) throw new ArgumentException("Empty glob pattern.");
+		
+		char splitChar = '/'; //prefer /, because \ can be used in wildex regex. But allow \, because users will wonder why does not work with \.
+		if (!p.Contains('/') && p.Contains('\\') && p is not ['*', '*', not '\\', ..] /*not wildex*/) splitChar = '\\';
+		
+		var a = new _GlobPart[p.Count(splitChar) + 1];
+		int i = 0;
+		foreach (var range in p.Split(splitChar)) {
+			_GlobPart g;
+			RStr s = p[range];
+			if (s.IsEmpty) {
+				if (i < a.Length - 1) throw new ArgumentException("Empty part of glob pattern");
+				if (isDir != false) _rules.Add((include, true, a[..^1])); //"dir/" = "dir" + "dir/**"
+				g = new(_GPKind.Globstar);
+			} else if (s[0] == '*') {
+				if (s.Length == 1) g = new(_GPKind.Star);
+				else if (s is "**") g = new(_GPKind.Globstar);
+				else if (s[1] == '*') g = new(_GPKind.Wildex, null, new wildex(s.ToString()));
+				else if (wildex.hasWildcardChars(s[1..])) g = new(_GPKind.Wildcard, s.ToString());
+				else g = new(_GPKind.Ends, s[1..].ToString());
+			} else {
+				g = new(wildex.hasWildcardChars(s) ? _GPKind.Wildcard : _GPKind.Text, s.ToString());
+			}
+			a[i++] = g;
+		}
+		Debug.Assert(i == a.Length);
+		
+		_rules.Add((include, isDir, a));
+		
 		if (include) _hasIncludes = true;
 	}
 
+	///
+	protected virtual string FilePrefix => "f:";
+	
+	///
+	protected virtual string DirectoryPrefix => "d:";
+	
 	/// <summary>
-	/// Returns <c>false</c> if the filter is empty (no patterns, and all propery values are default).
-	/// Else prints a warning if the glob patterns are possibly incorrect or unnecessary.
+	/// Returns <c>true</c> if the filter is empty (no patterns or filter functions).
 	/// </summary>
-	/// <param name="recursive">Recursive enumeration.</param>
-	internal bool CheckPatterns_(bool recursive) {
-		if (this is { _rules.Count: 0, IncludeFunc: null, RecurseFunc: null, AttributesToSkip: 0, MaxRecursionDepth: int.MaxValue }) {
-			Debug_.Print("empty PathFilter");
-			return false;
-		}
+	public virtual bool IsEmpty() {
+		if (this is { _rules.Count: 0, FileFilter: null, DirectoryFilter: null }) return true;
 		if (_hasIncludes) {
-			if (_rules.Count == 1 && _rules[0].parts is [ { kind: _GPKind.Star }]) print.warning("Glob pattern * is unnecessary. Use no patterns instead.");
+			if (_rules.Count == 1 && _rules[0].parts is [{ kind: _GPKind.Star }]) print.warning("Glob pattern * is unnecessary. Use no patterns instead.");
 			//else if (recursive && !_rules.Any(static o => o.include && o.parts.Length > 1)) print.warning("Possibly incorrect glob pattern(s). The enumeration is recursive (all descendants), but the include patterns match only immediate children."); //no, there are cases when code uses the Recurse flag but does not control the input, which may specify multi-part patterns in some cases but only single-part patterns in other cases, and it is valid
 		}
-		return true;
+		return false;
 	}
 	
 	/// <summary>
-	/// Filters a sequence of file info objects. Returns only those whose paths match the glob patterns.
+	/// Filters a sequence of objects of any type that can provide a path (for example <c>FileSystemInfo</c> or <c>string</c>).
+	/// Returns only objects whose paths match the glob patterns.
 	/// </summary>
-	/// <param name="paths">Results of <see cref="DirectoryInfo.EnumerateFiles()"/> or similar method.</param>
-	/// <param name="rootDir">The directory in which the enumeration is performed. The glob patterns are relative to this directory.</param>
-	public IEnumerable<FileSystemInfo> Filter(IEnumerable<FileSystemInfo> paths, string rootDir)
-		=> Filter(paths, static f => f.FullName, rootDir);
-	
-	/// <summary>
-	/// Filters a sequence of paths. Returns only those that match the glob patterns.
-	/// </summary>
-	/// <param name="paths">Paths. Paths can be full (then use <i>rootDir</i>) or relative (<i>rootDir</i> <c>null</c>).</param>
+	/// <param name="source">The input.</param>
+	/// <param name="getPath">A function that provides paths. Paths can be full (then use <i>rootDir</i>) or relative (<i>rootDir</i> <c>null</c>).</param>
 	/// <param name="rootDir">The directory in which the enumeration is performed. The glob patterns are relative to this directory. Must be <c>null</c> if paths are relative.</param>
-	public IEnumerable<string> Filter(IEnumerable<string> paths, string rootDir)
-		=> Filter(paths, static f => f, rootDir);
-	
-	/// <summary>
-	/// Filters a sequence of objects of any type that can provide a path. Returns only those whose paths match the glob patterns.
-	/// </summary>
-	/// <param name="paths">Objects of a type that can provide a path.</param>
-	/// <param name="getPath">Provides paths. Paths can be full (then use <i>rootDir</i>) or relative (<i>rootDir</i> <c>null</c>).</param>
-	/// <param name="rootDir">The directory in which the enumeration is performed. The glob patterns are relative to this directory. Must be <c>null</c> if paths are relative.</param>
-	/// <exception cref="ArgumentException">paths not in <i>rootDir</i>.</exception>
-	public IEnumerable<T> Filter<T>(IEnumerable<T> paths, Func<T, string> getPath, string rootDir) {
-		ArgumentNullException.ThrowIfNull(paths);
+	/// <exception cref="ArgumentException">Some paths are not in <i>rootDir</i>.</exception>
+	public IEnumerable<T> Filter<T>(IEnumerable<T> source, Func<T, string> getPath, string rootDir) {
+		ArgumentNullException.ThrowIfNull(source);
 		
 		int rootLen = 0;
 		
-		foreach (var obj in paths) {
+		foreach (var obj in source) {
 			string path = getPath(obj);
 			if (path.NE()) continue;
 			if (!rootDir.NE()) {
@@ -183,9 +191,14 @@ public class PathFilter {
 	/// Returns <c>true</c> if the path matches the glob patterns.
 	/// </summary>
 	/// <param name="relativePath">Relative path.</param>
+	/// <param name="isDirectory">
+	/// If not <c>null</c>:
+	/// <br/>• <c>true</c> - the path is a directory. It will not match patterns that start with suffix <c>"f:"</c>.
+	/// <br/>• <c>false</c> - the path is a file. It will not match patterns that start with suffix <c>"d:"</c>.
+	/// </param>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	[SkipLocalsInit]
-	public bool ShouldInclude(RStr relativePath) {
+	public bool ShouldInclude(RStr relativePath, bool? isDirectory = null) {
 		Span<Range> parts = stackalloc Range[500];
 		split:
 		int n = relativePath.SplitAny(parts, @"\/", StringSplitOptions.RemoveEmptyEntries);
@@ -194,7 +207,9 @@ public class PathFilter {
 		parts = parts[..n];
 		
 		bool included = !_hasIncludes;
-		foreach (var (include, pattern) in _rules) {
+		foreach (var (include, isDir, pattern) in _rules) {
+			if (isDirectory.HasValue && isDir.HasValue && isDir != isDirectory) continue;
+			
 			if (include && !included && _MatchParts(pattern, relativePath, parts)) included = true;
 			else if (!include && _MatchParts(pattern, relativePath, parts)) return false;
 		}
@@ -265,7 +280,7 @@ public class PathFilter {
 		parts = parts[..n];
 		
 		// 1. Whole directory excluded?
-		foreach (var (include, p) in _rules) {
+		foreach (var (include, isDir, p) in _rules) {
 			if (include) continue;
 			if (p[^1].kind == _GPKind.Globstar) {
 				if (p.Length == 1) return false;
@@ -275,7 +290,7 @@ public class PathFilter {
 		
 		// 2. Can some include pattern still match something deeper?
 		if (!_hasIncludes) return true;
-		foreach (var (include, p) in _rules) {
+		foreach (var (include, isDir, p) in _rules) {
 			if (include && _CanMatchDeeper(p, relativeDirPath, parts)) return true;
 		}
 		return false;
@@ -311,80 +326,36 @@ public class PathFilter {
 	}
 	
 	/// <summary>
-	/// Decides whether to include the file or directory when using <see cref="FileSystemEnumerable{T}.ShouldIncludePredicate"/>.
-	/// </summary>
-	/// <remarks>
-	/// If glob patterns specified, calls <see cref="ShouldInclude(ReadOnlySpan{char})"/>.
-	/// Then calls <see cref="IncludeFunc"/> if specified, unless the former returned <c>false</c>.
-	/// Returns <c>false</c> if either returned <c>false</c>.
-	/// </remarks>
-	public bool ShouldInclude(ref FileSystemEntry e) => _FseShouldIncludeRecurse(ref e, false) && (IncludeFunc?.Invoke(ref e) != false);
-	
-	/// <summary>
-	/// Decides whether to recurse the directory when using <see cref="FileSystemEnumerable{T}.ShouldRecursePredicate"/>.
-	/// </summary>
-	/// <remarks>
-	/// If glob patterns specified, calls <see cref="ShouldRecurse(ReadOnlySpan{char})"/>.
-	/// Then calls <see cref="RecurseFunc"/> if specified, unless the former returned <c>false</c>.
-	/// Returns <c>false</c> if either returned <c>false</c>.
-	/// Assumes top-down enumeration, i.e. parent directories were already checked.
-	/// </remarks>
-	public bool ShouldRecurse(ref FileSystemEntry e) => _FseShouldIncludeRecurse(ref e, true) && (RecurseFunc?.Invoke(ref e) != false);
-	
-	bool _FseShouldIncludeRecurse(ref FileSystemEntry e, bool recurse) {
-		if (_rules.Count == 0) return true;
-		var dir = e.Directory;
-		int i = e.RootDirectory.Length;
-		if (i < dir.Length) { //get relative path without garbage
-			if (dir[i] is '\\' or '/') i++; //root is C:\dir, else C:\
-			dir = dir[i..];
-			int n = dir.Length + 1 + e.FileName.Length;
-			var p = n <= 8000 ? stackalloc char[n] : new char[n];
-			dir.CopyTo(p);
-			p[dir.Length] = '\\';
-			e.FileName.CopyTo(p[(dir.Length + 1)..]);
-			return recurse ? ShouldRecurse(p) : ShouldInclude(p);
-		} else {
-			return recurse ? ShouldRecurse(e.FileName) : ShouldInclude(e.FileName);
-		}
-	}
-	
-	/// <summary>
-	/// The delegate type of <see cref="IncludeFunc"/> and <see cref="RecurseFunc"/>.
-	/// </summary>
-	public delegate bool FilterFunc(ref FileSystemEntry e);
-	
-	/// <summary>
-	/// This callback function is called for each file and directory that isn't excluded by glob patters etc. Return <c>true</c> to include it in results.
+	/// This callback function is called for each file (and not directory) that would be included in results.
+	/// Return <c>true</c> to confirm, or <c>false</c> to exclude it.
 	/// </summary>
 	/// <remarks>
 	/// Called by methods that enumerate files/directories.
+	/// 
+	/// Not called for files excluded by the specified flags or glob patterns.
 	/// </remarks>
-	public FilterFunc IncludeFunc { get; set; }
+	public Func<FLEntry, bool> FileFilter { get; set; }
 	
 	/// <summary>
-	/// When enumerating recursively (all descendants), this callback function is called for each directory whose descendants aren't excluded by glob patters etc. Return <c>true</c> to enumerate its descendants.
+	/// This callback function is called for each directory (and not file) that would be included in results.
+	/// Return:
+	/// <br/>• <c>true</c> - include the directory (if not already excluded) and its descendants (if enumerating recursively and descendants would be included). See also: <see cref="FLEntry.DirInclude"/>, <see cref="FLEntry.DirRecurse"/>.
+	/// <br/>• <c>false</c> - exclude the directory and its descendants.
 	/// </summary>
 	/// <remarks>
 	/// Called by methods that enumerate files/directories.
+	/// 
+	/// When enumerating recursively, called even if the directory entry is excluded, to determine whether its descendands can be included.
+	/// 
+	/// Called only when the directory or its descendants would be included, after passing other filters (flags, file/directory, glob patterns).
+	/// 
+	/// Cannot re-include anything that is excluded. For example, when getting only files, returning <c>true</c> includes descendant files but not the directory.
 	/// </remarks>
-	public FilterFunc RecurseFunc { get; set; }
+	public Func<FLEntry, bool> DirectoryFilter { get; set; }
 	
-	/// <summary>
-	/// The maximum directory depth to recurse when enumerating recursively.
-	/// </summary>
-	/// <value>Default: <c>int.MaxValue</c>.</value>
-	/// <remarks>
-	/// Used by methods that enumerate files/directories.
-	/// </remarks>
-	public int MaxRecursionDepth { get; set; } = int.MaxValue;
+	//rejected. Rarely used. Can instead use filter functions.
+	//public int MaxRecursionDepth { get; set; } = int.MaxValue;
 	
-	/// <summary>
-	/// Files/directories that have at least one of these attributes will not be included/recursed.
-	/// </summary>
-	/// <value>Default: 0.</value>
-	/// <remarks>
-	/// Used by methods that enumerate files/directories.
-	/// </remarks>
-	public FileAttributes AttributesToSkip { get; set; }
+	//rejected. Rarely used. Can instead use flags SkipHidden and SkipHiddenSystem, can use filter functions.
+	//public FileAttributes AttributesToSkip { get; set; }
 }

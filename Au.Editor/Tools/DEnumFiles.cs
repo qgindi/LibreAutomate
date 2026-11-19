@@ -58,7 +58,7 @@ class DEnumFiles : KDialogWindow {
 		}
 		b.R.AddSeparator();
 		
-		//folder, kind/type, filter
+		//folder, kind, type, filter
 		using (b.R.StartGrid().Columns(48, 100, 0, 250, -1)) {
 			b.R.Add("Folder", out _tFolder, initFolder).Tooltip("Folder path.\nPaste, drop or right-click.").Focus();
 			_tFolder.IsFolder = true;
@@ -66,7 +66,7 @@ class DEnumFiles : KDialogWindow {
 			
 			b.R.Add("Get", out _cbGet).Items("Files|Folders|All");
 			b.Add("As", out _cbResult).Span(1)
-				.Items("FLPath[]  (path, name, attributes)|IEnumerable<FLPath>|string[]  (names)|string[]  (paths)|FileSystemInfo[]  (all properties)|IEnumerable<FileSystemInfo>|(tuple)[]  (selected properties)|IEnumerable<(tuple)>")
+				.Items("FLFile[]  (all properties)|IEnumerable<FLFile>|string[]  (names)|string[]  (paths)|(tuple)[]  (selected properties)|IEnumerable<(tuple)>")
 				.Tooltip("If array, stores results in an array variable before starting to use them.\nThen it is safe to delete/rename/move/copy the files.\nBut then cannot start using results until all retrieved from the file system.\nUse IEnumerable if going to search in a potentially large directory.");
 			
 			b.R.Add(out _filter).Margin(0);
@@ -141,9 +141,13 @@ class DEnumFiles : KDialogWindow {
 		bool hasFilter = filter != null;
 		
 		var b = new StringBuilder();
-		b.AppendLine($"var folder = {_tFolder.GetCode()};");
+		b.AppendLine($"string dir = {_tFolder.GetCode()};");
+		if (hasFilter && (filter.Length > 50 || filter.Contains("Filter = e => true"))) {
+			b.AppendLine($"PathFilter filter = {filter};");
+			filter = "filter";
+		}
 		b.Append("var a = ");
-		b.Append("filesystem.list(folder");
+		b.Append("filesystem.list(dir");
 		if (hasFilter) b.AppendOtherArg(filter);
 		bool rec = _cRecurse.IsChecked;
 		if (rec || _cIgnore.IsChecked || _cSkipHidden.IsChecked || _cSkipHiddenSystem.IsChecked) {
@@ -155,18 +159,16 @@ class DEnumFiles : KDialogWindow {
 				(_cSkipHiddenSystem.IsChecked, FLFlags.SkipHiddenSystem)
 				)) b.AppendOtherArg(s1, hasFilter ? null : "flags");
 		}
-		b.Append(").");
 		
+		const string c_transform = "e => (path: e.Path.ToString(), name: e.Name.ToString())";
 		int iFunc = forTest ? 1 : _cbResult.SelectedIndex;
-		const string c_transform = "(ref e) => (first: e.EditMe, second: e.EditMe)";
+		b.Append(iFunc >= 4 ? ")\r\n\t." : ").");
 		string sFunc = iFunc switch {
 			0 => getWhat switch { 0 => "Files", 1 => "Directories", _ => "All" },
 			1 => getWhat switch { 0 => "Enumerate(true)", 1 => "Enumerate(false)", _ => "Enumerate()" },
 			2 => getWhat switch { 0 => "FileNames", 1 => "DirectoryNames", _ => "AllNames" },
 			3 => getWhat switch { 0 => "FilePaths", 1 => "DirectoryPaths", _ => "AllPaths" },
-			4 => getWhat switch { 0 => "FileInfos", 1 => "DirectoryInfos", _ => "AllInfos" },
-			5 => getWhat switch { 0 => "EnumerateInfos(true)", 1 => "EnumerateInfos(false)", _ => "EnumerateInfos()" },
-			6 => getWhat switch { 0 => $"Enumerate({c_transform}, true).ToArray()", 1 => $"Enumerate({c_transform}, false).ToArray()", _ => $"Enumerate({c_transform}).ToArray()" },
+			4 => getWhat switch { 0 => $"Enumerate({c_transform}, true).ToArray()", 1 => $"Enumerate({c_transform}, false).ToArray()", _ => $"Enumerate({c_transform}).ToArray()" },
 			_ => getWhat switch { 0 => $"Enumerate({c_transform}, true)", 1 => $"Enumerate({c_transform}, false)", _ => $"Enumerate({c_transform})" },
 		};
 		b.Append(sFunc);
