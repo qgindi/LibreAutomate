@@ -79,8 +79,8 @@ public static partial class filesystem {
 	/// You can also get these properties with <see cref="list"/>.
 	/// </remarks>
 	public static unsafe bool getProperties(string path, out FileProperties properties, FAFlags flags = 0) {
-		properties = new();
-		if (0 == (flags & FAFlags.UseRawPath)) path = Path2.NormalizeMinimally_(path); //the API supports .. etc
+		properties = default;
+		path = Path2.NormalizeMinimally_(flags.Has(FAFlags.UseRawPath), path);
 		if (!Api.GetFileAttributesEx(path, 0, out var d)) {
 			if (!_GetAttributesOnError(path, flags, out _, out _, &d)) return false;
 		}
@@ -107,19 +107,16 @@ public static partial class filesystem {
 	/// For NTFS links, gets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool getAttributes(string path, out FileAttributes attributes, FAFlags flags = 0) {
-		if (0 == (flags & FAFlags.UseRawPath)) path = Path2.NormalizeMinimally_(path); //the API supports .. etc
-		var a = Api.GetFileAttributes(path);
-		if (a == (FileAttributes)(-1)) return _GetAttributesOnError(path, flags, out attributes, out _);
-		attributes = a;
-		return true;
+		path = Path2.NormalizeMinimally_(flags.Has(FAFlags.UseRawPath), path);
+		if (Api.GetFileAttributes(path, out attributes)) return true;
+		return _GetAttributesOnError(path, flags, out attributes, out _);
 	}
 	
 	static unsafe bool _GetAttributesOnError(string path, FAFlags flags, out FileAttributes attr, out bool ntfsLink, Api.WIN32_FILE_ATTRIBUTE_DATA* p = null) {
 		attr = 0; ntfsLink = false;
 		var ec = lastError.code;
+		if (lastError.IsFileNotFoundError_(ec) || ec is Api.ERROR_NOT_READY) return false;
 		switch (ec) {
-		case Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND or Api.ERROR_BAD_NET_NAME or Api.ERROR_NOT_READY:
-			return false;
 		case Api.ERROR_SHARING_VIOLATION: //eg c:\pagefile.sys. GetFileAttributes fails, but FindFirstFile succeeds.
 		case Api.ERROR_ACCESS_DENIED: //probably in a protected directory. Then FindFirstFile fails, but try anyway. Or a file marked for deletion.
 			var d = new Api.WIN32_FIND_DATA();
@@ -145,8 +142,7 @@ public static partial class filesystem {
 			//	Debug_.Print(lastError.messageFor(ec));
 			//	break;
 		}
-		if (0 != (flags & FAFlags.DontThrow)) return false;
-		throw new AuException(ec, $"*get file attributes: '{path}'");
+		return flags.Has(FAFlags.DontThrow) ? false : throw new AuException(ec, $"*get file attributes: '{path}'");
 	}
 	
 	/// <summary>
@@ -154,11 +150,10 @@ public static partial class filesystem {
 	/// Returns <c>false</c> if INVALID_FILE_ATTRIBUTES or if relative path. No exceptions.
 	/// </summary>
 	static unsafe bool _GetAttributes(string path, out FileAttributes attr, out bool ntfsLink, bool useRawPath) {
-		if (!useRawPath) path = Path2.NormalizeMinimally_(path, throwIfNotFullPath: false);
+		path = Path2.NormalizeMinimally_(useRawPath, path, throwIfNotFullPath: false);
 		//note: NormalizeMinimally_ does not remove \ at the end. The API succeeds if "C:\x\dir\" but fails if "C:\x\file\" (it's good).
 		
-		attr = Api.GetFileAttributes(path);
-		if (attr != (FileAttributes)(-1)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && IsNtfsLink_(path);
+		if (Api.GetFileAttributes(path, out attr)) ntfsLink = attr.Has(FileAttributes.ReparsePoint) && IsNtfsLink_(path);
 		else if (!_GetAttributesOnError(path, FAFlags.DontThrow, out attr, out ntfsLink)) return false;
 		
 		if (!useRawPath && !Path2.IsFullPath(path)) { lastError.code = Api.ERROR_FILE_NOT_FOUND; return false; }
@@ -180,16 +175,16 @@ public static partial class filesystem {
 	/// For NTFS links, sets attributes of the link, not of its target.
 	/// </remarks>
 	public static unsafe bool setAttributes(string path, FileAttributes attributes, bool? add = null, FAFlags flags = 0) {
-		if (0 == (flags & FAFlags.UseRawPath)) path = Path2.NormalizeMinimally_(path); //the API supports .. etc
+		path = Path2.NormalizeMinimally_(flags.Has(FAFlags.UseRawPath), path);
 		var a = attributes;
 		if (add != null) {
-			var v = Api.GetFileAttributes(path);
+			if (!Api.GetFileAttributes(path, out var v)) goto ge;
 			if (add.Value) a = v | attributes; else a = v & ~attributes;
 			if (a == attributes) return true;
 		}
 		if (Api.SetFileAttributes(path, a)) return true;
-		if (0 != (flags & FAFlags.DontThrow)) return false;
-		throw new AuException(0, $"*set file attributes: '{path}'");
+		ge:
+		return flags.Has(FAFlags.DontThrow) ? false : throw new AuException(0, $"*set file attributes: '{path}'");
 	}
 	
 	/// <summary>
@@ -205,14 +200,14 @@ public static partial class filesystem {
 	}
 	
 	/// <summary>
-	/// Gets file or directory attributes as <see cref="FAttr"/> that tells whether it exists, is directory, readonly, hidden, system, NTFS link. See examples.
+	/// Gets file or directory attributes as <see cref="FAttr"/> that tells whether it exists, is directory, readonly, hidden, system, link. See examples.
 	/// </summary>
 	/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If <i>useRawPath</i> is <c>false</c> (default), supports environment variables (see <see cref="Path2.Expand"/>). Can be <c>null</c>.</param>
 	/// <param name="useRawPath">Pass <i>path</i> to the API as it is, without any normalizing and full-path checking.</param>
 	/// <remarks>
 	/// Supports <see cref="lastError"/>. If you need exception when fails, instead call <see cref="getAttributes"/>.
 	/// Always use full path. If not full path: if <i>useRawPath</i> is <c>false</c> (default), can't find the file; if <i>useRawPath</i> is <c>true</c>, searches in "current directory".
-	/// For NTFS links gets attributes of the link, not of the target; does not care whether its target exists.
+	/// For file system links gets attributes of the link, not of the target; does not care whether its target exists.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -229,12 +224,12 @@ public static partial class filesystem {
 	/// ]]></code>
 	/// </example>
 	public static FAttr exists(string path, bool useRawPath = false) {
-		if (_GetAttributes(path, out var a, out bool ntfsLink, useRawPath)) return new(a, true, ntfsLink);
-		return new(0, (a == (FileAttributes)(-1)) ? null : false, false);
+		if (_GetAttributes(path, out var a, out bool isLink, useRawPath)) return new(a, true, isLink);
+		return new(0, ((int)a == -1) ? null : false, false);
 	}
 	
 	/// <summary>
-	/// Gets file system entry type - file, directory, NTFS link, whether it exists and is accessible.
+	/// Gets file system entry type - file, directory, link, whether it exists and is accessible.
 	/// Returns <c>NotFound</c> (0) if does not exist. Returns <c>AccessDenied</c> (&lt; 0) if exists but this process cannot access it and get attributes.
 	/// Calls API <ms>GetFileAttributes</ms>.
 	/// </summary>
@@ -246,7 +241,7 @@ public static partial class filesystem {
 	/// </remarks>
 	internal static unsafe FileIs_ ExistsAs_(string path, bool useRawPath = false) {
 		if (!_GetAttributes(path, out var a, out bool ntfsLink, useRawPath)) {
-			return (a == (FileAttributes)(-1)) ? FileIs_.AccessDenied : FileIs_.NotFound;
+			return ((int)a == -1) ? FileIs_.AccessDenied : FileIs_.NotFound;
 		}
 		var R = a.Has(FileAttributes.Directory) ? FileIs_.Directory : FileIs_.File;
 		if (ntfsLink) R |= (FileIs_)4;
@@ -292,7 +287,7 @@ public static partial class filesystem {
 		if (path.NE()) return null;
 		
 		if (Path2.IsFullPathExpand(path, out string s, strict: false)) {
-			if (exists(s)) return Path2.Normalize_(s, noExpandEV: true);
+			if (exists(s)) return Path2.NormalizeFullPath_(s, noExpandEV: true);
 			return null;
 		}
 		
@@ -300,12 +295,12 @@ public static partial class filesystem {
 			foreach (var d in dirs) {
 				if (!Path2.IsFullPathExpand(d, out s)) continue;
 				s /= path;
-				if (exists(s)) return Path2.Normalize_(s, noExpandEV: true);
+				if (exists(s)) return Path2.NormalizeFullPath_(s, noExpandEV: true);
 			}
 		}
 		
 		s = folders.ThisApp + path;
-		if (exists(s)) return Path2.Normalize_(s, noExpandEV: true);
+		if (exists(s)) return Path2.NormalizeFullPath_(s, noExpandEV: true);
 		
 		if ((s = Api.SearchPath(null, path)) != null) return s;
 		
@@ -801,8 +796,7 @@ public static partial class filesystem {
 		if (dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
 		var ec = lastError.code;
 		if (ec == Api.ERROR_ACCESS_DENIED) {
-			var a = Api.GetFileAttributes(path);
-			if (a != (FileAttributes)(-1) && 0 != (a & FileAttributes.ReadOnly)) {
+			if (Api.GetFileAttributes(path, out var a) && a.Has(FileAttributes.ReadOnly)) {
 				Api.SetFileAttributes(path, a & ~FileAttributes.ReadOnly);
 				if (dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
 				ec = lastError.code;
@@ -985,7 +979,7 @@ public static partial class filesystem {
 	/// <exception cref="ArgumentException">Not full path.</exception>
 	static string _PreparePath(string path) {
 		if (!Path2.IsFullPathExpand(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
-		return Path2.Normalize_(path, noExpandEV: true);
+		return Path2.NormalizeFullPath_(path, noExpandEV: true);
 	}
 	
 	/// <summary>

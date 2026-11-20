@@ -663,7 +663,7 @@ More info in app help topic "Code editor".
 				//var e = Keyboard.FocusedElement as FrameworkElement;
 				
 			} else if (Panels.Editor.ActiveDoc is SciCode doc && w == doc.AaWnd) {
-				CiUtil.OpenSymbolEtcFromPosHelp();
+				CiHelp.OpenSymbolEtcFromPosHelp();
 			}
 		}
 		

@@ -45,23 +45,34 @@ public static partial class filesystem {
 		
 		static Handle_ _OpenFileHandleForFileInfo(string path, bool ofSymlink = false) {
 			path = Path2.NormalizeMinimally_(path, throwIfNotFullPath: false);
-			return Api.CreateFile(path, 0, Api.CFShare.ALL, Api.CF.OPEN_EXISTING, ofSymlink ? Api.FILE_FLAG_BACKUP_SEMANTICS | Api.FILE_FLAG_OPEN_REPARSE_POINT : Api.FILE_FLAG_BACKUP_SEMANTICS);
-			//info: need FILE_FLAG_BACKUP_SEMANTICS for directories. Ignored for files.
+			retry:
+			uint flags = Api.FILE_FLAG_BACKUP_SEMANTICS; //need for directories
+			if (ofSymlink) flags |= Api.FILE_FLAG_OPEN_REPARSE_POINT;
+			var r = Api.CreateFile(path, 0, Api.CFShare.ALL, Api.CF.OPEN_EXISTING, flags);
+			
+			if (r.Is0 && !ofSymlink) {
+				var ec = lastError.code;
+				if (Api.GetFileAttributes(path, out var at) && at.Has(FileAttributes.ReparsePoint) && !filesystem.IsNtfsLink_(path)) {
+					Debug_.Print($"failed to open a non-link reparse-point: {path}. Retrying with FILE_FLAG_OPEN_REPARSE_POINT.  {lastError.messageFor(ec)}");
+					ofSymlink = true;
+					goto retry;
+				}
+				lastError.code = ec;
+			}
+			return r;
 		}
 		
 		/// <summary>
 		/// Gets full normalized path of an existing file or directory or symbolic link target.
 		/// </summary>
-		/// <returns><c>false</c> if failed. For example if the path does not point to an existing file or directory. Supports <see cref="lastError"/>.</returns>
+		/// <returns><c>false</c> if failed. For example, the file/directory does not exist, or link target does not exist (then succeeds only with <c>ofSymlink: true</c>). Supports <see cref="lastError"/>.</returns>
 		/// <param name="path">Full or relative path. Supports environment variables (see <see cref="Path2.Expand"/>).</param>
 		/// <param name="result">Receives full path, or <c>null</c> if failed.</param>
-		/// <param name="ofSymlink">If <i>path</i> is of a symbolic link, get final path of the link, not of its target.</param>
+		/// <param name="ofSymlink">If <i>path</i> is of a link (symbolic link, junction, mount point), get final path of the link, not of its target.</param>
 		/// <param name="format">Result format.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <remarks>
 		/// Calls API <ms>GetFinalPathNameByHandle</ms>.
-		/// 
-		/// Unlike <see cref="Path2.Normalize"/>, this function works with existing files and directories, not any strings.
 		/// </remarks>
 		/// <seealso cref="shortcutFile.getTarget(string)"/>
 		public static bool getFinalPath(string path, out string result, bool ofSymlink = false, FPFormat format = FPFormat.PrefixIfLong) {

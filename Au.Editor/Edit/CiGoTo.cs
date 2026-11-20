@@ -453,9 +453,9 @@ class CiGoTo {
 			}
 		} else if (cd.sci.aaaHasSelection) {
 			_Open(cd.sci.aaaSelectedText());
-		} else if (helpKind == CiUtil.HelpKind.String && token.Parent.IsKind(SyntaxKind.StringLiteralExpression)) {
+		} else if (helpKind == HelpKind.String && token.Parent.IsKind(SyntaxKind.StringLiteralExpression)) {
 			_Open(token.ValueText, token);
-		} else if (helpKind == CiUtil.HelpKind.None && cd != null) { //maybe path in comments or disabled code
+		} else if (helpKind == HelpKind.None && cd != null) { //maybe path in comments or disabled code
 			int pos = cd.pos;
 			if (pos < cd.meta.end && pos > cd.meta.start) {
 				foreach (var t in MetaComments.EnumOptions(cd.code, cd.meta)) {

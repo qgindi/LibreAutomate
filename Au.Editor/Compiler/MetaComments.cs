@@ -847,7 +847,7 @@ class MetaComments {
 			if (s.Starts('\\')) s = App.Model.FilesDirectory + s;
 			else s = Path2.GetDirectory(_f.f.FilePath) / s;
 		}
-		return Path2.Normalize_(s, noExpandEV: true);
+		return Path2.NormalizeFullPath_(s, noExpandEV: true);
 	}
 	
 	bool _CodeFilesContains(FileNode f) {

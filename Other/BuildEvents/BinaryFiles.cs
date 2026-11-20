@@ -219,7 +219,7 @@ Roslyn/*.dll
 
 		public void Restore(string laDirBS, _GroupInfo v) {
 			string zipName = _ZipFilename(v);
-			print.it($"    Downloading {zipName} from cloud");
+			print.it($"    Downloading {zipName}");
 			using TempFile tempFile = new(".7z");
 			LaCloudStorage.Download("bin", zipName, tempFile, o => { });
 

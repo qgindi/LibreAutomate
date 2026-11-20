@@ -309,7 +309,7 @@ public static unsafe class Path2 {
 			if (!IsFullPath(path)) goto ge;
 		}
 		
-		return Normalize_(path, flags, noExpandEV: true);
+		return NormalizeFullPath_(path, flags, noExpandEV: true);
 		ge:
 		throw new ArgumentException($"Not full path: '{path}'.");
 	}
@@ -318,7 +318,7 @@ public static unsafe class Path2 {
 	/// Same as <see cref="Normalize"/>, but skips full-path checking.
 	/// <i>s</i> should be full path. If not full and not <c>null</c>/<c>""</c>, combines with current directory.
 	/// </summary>
-	internal static string Normalize_(string s, PNFlags flags = 0, bool noExpandEV = false) {
+	internal static string NormalizeFullPath_(string s, PNFlags flags = 0, bool noExpandEV = false) {
 		if (!s.NE()) {
 			if (!noExpandEV) s = Expand(s);
 			Debug_.PrintIf(IsShellPathOrUri_(s), s);
@@ -334,7 +334,7 @@ public static unsafe class Path2 {
 			
 			if (0 == (flags & PNFlags.DontRemoveEndSeparator) && IsSepChar_(s[^1]) && s.Length > 4) {
 				var s2 = s[..^1];
-				if (Api.GetFileAttributes(s2).Has(FileAttributes.Directory)) s = s2; //if does not exist as file
+				if (!Api.GetFileAttributes(s2, out var at) || at.Has(FileAttributes.Directory)) s = s2; //if does not exist as file
 			}
 			
 			if (0 == (flags & PNFlags.DontPrefixLongPath)) s = PrefixLongPathIfNeed(s);
@@ -354,6 +354,20 @@ public static unsafe class Path2 {
 		s = _AddSepToDrive(s);
 		if (!dontPrefix) s = PrefixLongPathIfNeed(s);
 		return s;
+	}
+	
+	/// <summary>
+	/// Use in methods that have option "use raw path".
+	/// If the option is set, just calls <see cref="PrefixLongPathIfNeed"/>.
+	/// Else calls <see cref="NormalizeMinimally_"/>, which calls <c>Expand</c>, <c>_AddSepToDrive</c>, <see cref="PrefixLongPathIfNeed"/>, exception if <c>!IsFullPath(path)</c>.
+	/// </summary>
+	/// <exception cref="ArgumentException">Not full path (only if <i>throwIfNotFullPath</i> is <c>true</c>).</exception>
+	internal static string NormalizeMinimally_(bool useRawPath, string path, bool throwIfNotFullPath = true) {
+		if (useRawPath) {
+			return PrefixLongPathIfNeed(path);
+		} else {
+			return NormalizeMinimally_(path, throwIfNotFullPath);
+		}
 	}
 	
 	/// <summary>

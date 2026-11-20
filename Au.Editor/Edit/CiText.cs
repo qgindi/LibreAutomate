@@ -762,7 +762,7 @@ class CiText {
 	//}
 	
 	public bool AppendSymbolLinks(ISymbol sym) {
-		string helpUrl = CiUtil.GetSymbolHelpUrl(sym, out _);
+		string helpUrl = CiHelp.GetSymbolHelpUrl(sym, out _);
 		string sourceUrl = CiGoTo.GetLinkData(sym);
 		if (helpUrl == null && sourceUrl == null) return false;
 		AppendSymbolLinks(helpUrl, sourceUrl);

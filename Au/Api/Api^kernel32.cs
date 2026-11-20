@@ -296,7 +296,17 @@ static unsafe partial class Api {
 	internal static extern bool VirtualFreeEx(HandleRef hProcess, IntPtr lpAddress, nint dwSize = 0, uint dwFreeType = MEM_RELEASE);
 	
 	[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesW", SetLastError = true)]
-	internal static extern FileAttributes GetFileAttributes(string lpFileName);
+	static extern FileAttributes _GetFileAttributes(string lpFileName);
+	
+	/// <summary>
+	/// Calls API <c>GetFileAttributes</c>. If it returns -1, sets <c>r = 0</c> and returns <c>false</c>.
+	/// </summary>
+	public static bool GetFileAttributes(string lpFileName, out FileAttributes r) {
+		r = _GetFileAttributes(lpFileName);
+		if ((int)r != -1) return true;
+		r = 0;
+		return false;
+	}
 	
 	[DllImport("kernel32.dll", EntryPoint = "SetFileAttributesW", SetLastError = true)]
 	internal static extern bool SetFileAttributes(string lpFileName, FileAttributes dwFileAttributes);
@@ -722,7 +732,7 @@ static unsafe partial class Api {
 		
 		//Workaround for: when copying in Vmware virtual PC from host path like @"\\vmware-host\Shared Folders\...", adds Readonly attribute.
 		//	Also GetFileAttributes[Ex] for the source adds Readonly. But FindFirstFile[Ex] doesn't.
-		if (GetFileAttributes(lpNewFileName) is var a1 && a1.Has(FileAttributes.ReadOnly) && a1 != (FileAttributes)(-1)) {
+		if (GetFileAttributes(lpNewFileName, out var a1) && a1.Has(FileAttributes.ReadOnly)) {
 			var h = FindFirstFile(lpExistingFileName, out var d);
 			if (h != -1) {
 				FindClose(h);

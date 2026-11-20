@@ -24,7 +24,7 @@ New classes:
 - `PathFilter`. Path glob matching etc.
 
 New members:
-- `filesystem.list`. Replaces the `enumX` methods. Glob patterns, faster, can return .NET types.
+- `filesystem.list`. Replaces the `enumX` methods. Glob patterns, faster.
 - `filesystem.copy` supports glob patterns.
 - `string` extension operator `/` joins paths.
 - `print.scrollTo`, `print.replace`. Used with the new output tag `<mark>`.

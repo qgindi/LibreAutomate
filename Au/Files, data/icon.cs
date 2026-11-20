@@ -132,7 +132,7 @@ namespace Au {
 
 					if (!searchPath) {
 						if (!Path2.IsFullPath(file)) file = folders.ThisAppImages + file;
-						file = Path2.Normalize_(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
+						file = Path2.NormalizeFullPath_(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
 					}
 				}
 			}

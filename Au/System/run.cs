@@ -229,7 +229,7 @@ namespace Au {
 			if (runConsole || !(isShellPath = Path2.IsShellPath_(file))) {
 				if (isFullPath = Path2.IsFullPath(file)) {
 					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;
-					file = Path2.Normalize_(file, fl, true);
+					file = Path2.NormalizeFullPath_(file, fl, true);
 					
 					//ShellExecuteEx supports long path prefix for exe but not for documents.
 					//Process.Start supports long path prefix, except when the exe is .NET.

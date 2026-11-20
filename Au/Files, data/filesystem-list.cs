@@ -235,13 +235,10 @@ public class FLQuery {
 			_flags = flags;
 			if (h.Is0) {
 				var error = lastError.code;
-				switch (error) {
-				case Api.ERROR_FILE_NOT_FOUND or Api.ERROR_PATH_NOT_FOUND or Api.ERROR_BAD_NET_NAME or Api.ERROR_BAD_NETPATH:
+				if (lastError.IsFileNotFoundError_(error)) {
 					if (!isRoot) return false;
 					throw new DirectoryNotFoundException($"Directory not found: {_pathStack.Path}") { HResult = unchecked((int)0x80070000 | (error & 0xFFFF)) };
-				case Api.ERROR_DIRECTORY or Api.ERROR_NOT_READY when !isRoot:
-					return false;
-				}
+				} else if (!isRoot && error is Api.ERROR_DIRECTORY or Api.ERROR_NOT_READY) return false;
 				_ThrowIfCannotContinue(error);
 				return false;
 			}
