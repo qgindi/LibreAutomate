@@ -683,7 +683,7 @@ Can use global usings and classes/functions from file ""global.cs"".";
 	/// </summary>
 	public static void InfoTooltip(ref KPopup p, UIElement e, string text, Dock side = Dock.Bottom) {
 		if (p == null) {
-			p = new(WS.POPUP | WS.BORDER, shadow: true) { Content = new Label(), ClickClose = KPopup.CC.Anywhere };
+			p = new(WS.BORDER, shadow: true) { Content = new Label(), ClickClose = KPopup.CC.Anywhere };
 			p.Border.Background = SystemColors.InfoBrush;
 		}
 		(p.Content as Label).Content = text;

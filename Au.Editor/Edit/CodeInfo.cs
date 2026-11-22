@@ -600,7 +600,7 @@ static class CodeInfo {
 	
 	static void _ShowTextPopup(SciCode doc, int pos16, System.Windows.Documents.Section text, Action<CiPopupText, string> onLinkClick = null) {
 		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Info, onHiddenOrDestroyed: (_, _) => _tpVisible = false);
-		_textPopup.Text = text;
+		_textPopup.SetContent(text);
 		_textPopup.OnLinkClick = onLinkClick;
 		_textPopup.Show(doc, pos16, hideIfOutside: true);
 		_tpVisible = true;

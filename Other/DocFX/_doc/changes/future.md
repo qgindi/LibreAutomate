@@ -11,10 +11,10 @@ New cookbook recipes:
 - .
 
 Improved:
-- .
+- Auto-sized intellisense popups.
 
 Fixed bugs:
-- Sometimes LA crashes after closing a file.
+- Sometimes crashes after closing a file.
 - Output tag `<image>` may not work.
 
 ## Library

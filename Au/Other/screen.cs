@@ -316,7 +316,7 @@ namespace Au {
 		/// <remarks>
 		/// If this variable holds a callback function, this function calls it to get screen handle. See also <see cref="Now"/>.
 		/// </remarks>
-		public unsafe (RECT rect, RECT workArea, bool isPrimary, bool isAlive) Info {
+		public (RECT rect, RECT workArea, bool isPrimary, bool isAlive) Info {
 			get {
 				var h = _func != null ? _Handle() : _h;
 				for (int i = h != default ? 0 : 1; i < 10; i++, h = primary._h) { //retry if fails

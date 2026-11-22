@@ -135,7 +135,7 @@ class CiPopupList {
 			if (ci.Provider == CiComplProvider.XmlDoc) return;
 			_tpTimer.Tag = ci;
 			_tpTimer.After(300);
-			_textPopup.Text = null;
+			_textPopup.SetContent(null);
 		} else {
 			_textPopup.Hide();
 			_tpTimer.Stop();
@@ -146,10 +146,10 @@ class CiPopupList {
 		var ci = t.Tag as CiComplItem;
 		var text = _compl.GetDescriptionDoc(ci, 0);
 		if (text == null) return;
-		_textPopup.Text = text;
+		_textPopup.SetContent(text);
 		_textPopup.OnLinkClick = (ph, e) => {
 			if (e.ToInt(out int i, 1)) {
-				ph.Text = _compl.GetDescriptionDoc(ci, e.ToInt(1));
+				ph.SetContent(_compl.GetDescriptionDoc(ci, e.ToInt(1)), updateRect: true);
 			} else if (e.Starts("^snippet ")) {
 				DSnippets.ShowSingle(e[9..]);
 			}

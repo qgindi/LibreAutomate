@@ -114,6 +114,7 @@ class DOptions : KDialogWindow {
 		
 		//right column
 		b.Skip().StartStack(vertical: true);
+		//TODO: support `glob:...`. Also in other places where now wildcard supported (meta, portable, maybe more).
 		b.Add("Hide/ignore files and folders", out TextBox tSyncFsSkip, App.Model.WSSett.syncfs_skip).Multiline(110, TextWrapping.NoWrap)
 			.Tooltip(@"Hide and don't use files and folders whose paths in workspace would match a wildcard from this list.
 Example:

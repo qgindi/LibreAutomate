@@ -11,11 +11,12 @@ namespace Au.More;
 /// <br/>• Character <c>?</c> matches any single character except <c>\</c> and <c>/</c>.
 /// <br/>• Character <c>*</c> matches zero or more characters except <c>\</c> and <c>/</c>.
 /// <br/>• Pattern that ends like <c>abc</c> matches file or directory <c>abc</c>, but not its descendants.
-/// <br/>• Pattern that ends like <c>abc/**</c> matches only descendants of directory <c>abc</c> (everything in it and its subdirectories), but not <c>abc</c> itself.
-/// <br/>• Pattern that ends like <c>abc/</c> (with a trailing separator) matches directory <c>abc</c> and all its descendants.
+/// <br/>• Pattern that ends like <c>abc/</c> matches directory <c>abc</c> and its descendants.
+/// <br/>• Pattern that ends like <c>abc/**</c> matches only descendants of directory <c>abc</c>.
 /// <br/>• <c>**/</c> in patterns like <c>**/abc</c> and <c>ab/**/cd</c> matches zero or more path components (directory names), including their trailing separators.
 /// <br/>• A pattern part starting with <c>**</c> is a [wildcard expression](xref:wildcard_expression).
 /// <br/>• Case-insensitive.
+/// <br/>• Pattern with prefix <c>f:</c> matches only files. Prefix <c>d:</c> - only directories. This is supported only by methods that know whether a path is a file or directory, eg <c>filesystem.list</c> and <c>filesystem.copy</c>. The prefix is case-sensitive, and is ignored if followed by <c>/</c> or <c>\</c>.
 /// <para/>
 /// Examples:
 /// <br/>• <c>*.txt</c> matches txt files, except those in subdirectories.
@@ -24,15 +25,12 @@ namespace Au.More;
 /// <br/>• <c>abc/**/*.txt</c> matches txt files in directory <c>abc</c> and its subdirectories.
 /// <br/>• <c>abc/**</c> matches everything in directory <c>abc</c>.
 /// <br/>• <c>abc/</c> matches directory <c>abc</c> and everything in it. Note the <c>/</c> at the end.
-/// <br/>• <c>**/abc/</c> matches directory <c>abc</c> (which can be anywhere) and everything in it. Note the <c>/</c> at the end.
+/// <br/>• <c>**/abc/</c> matches directory <c>abc</c> (which can be anywhere) and everything in it.
 /// <para/>
 /// The glob part separator character is <c>/</c>, but also can be used <c>\</c> if the pattern does not contain regular expressions containing <c>\</c>. All separators in a pattern must be the same character. It does not have to mach separators in paths.
 /// <para/>
 /// The glob matching is performed on path strings only, without accessing the file system.
 /// <para/>
-/// When used with methods that know whether a path is a file or directory (eg <c>filesystem.list</c>, <c>filesystem.copy</c>), you can specify whether a pattern must match only files or only directories:
-/// <br/>• pattern starts with prefix <c>f:</c> - match only files.
-/// <br/>• pattern starts with prefix <c>d:</c> - match only directories.
 /// </remarks>
 public class PathFilter {
 	enum _GPKind { Globstar, Star, Text, Ends, Wildcard, Wildex }
@@ -92,16 +90,10 @@ public class PathFilter {
 	}
 	
 	void _AddPattern(bool include, RStr p) {
-		bool? isDir = null;
-		if (!FilePrefix.NE() && p.Starts(FilePrefix)) {
-			isDir = false;
-			p = p[FilePrefix.Length..];
-		} else if (!DirectoryPrefix.NE() && p.Starts(DirectoryPrefix)) {
-			isDir = true;
-			p = p[DirectoryPrefix.Length..];
-		}
-		
 		if (p.IsEmpty) throw new ArgumentException("Empty glob pattern.");
+		
+		bool? isDir = null;
+		if (p is ['d' or 'f', ':', not ('/' or '\\'), ..]) { isDir = p[0] == 'd'; p = p[2..]; }
 		
 		char splitChar = '/'; //prefer /, because \ can be used in wildex regex. But allow \, because users will wonder why does not work with \.
 		if (!p.Contains('/') && p.Contains('\\') && p is not ['*', '*', not '\\', ..] /*not wildex*/) splitChar = '\\';
@@ -132,12 +124,6 @@ public class PathFilter {
 		
 		if (include) _hasIncludes = true;
 	}
-
-	///
-	protected virtual string FilePrefix => "f:";
-	
-	///
-	protected virtual string DirectoryPrefix => "d:";
 	
 	/// <summary>
 	/// Returns <c>true</c> if the filter is empty (no patterns or filter functions).
@@ -193,8 +179,8 @@ public class PathFilter {
 	/// <param name="relativePath">Relative path.</param>
 	/// <param name="isDirectory">
 	/// If not <c>null</c>:
-	/// <br/>• <c>true</c> - the path is a directory. It will not match patterns that start with suffix <c>"f:"</c>.
-	/// <br/>• <c>false</c> - the path is a file. It will not match patterns that start with suffix <c>"d:"</c>.
+	/// <br/>• <c>true</c> - it's a directory. It will not match patterns with prefix <c>f:</c>.
+	/// <br/>• <c>false</c> - it's a file. It will not match patterns with prefix <c>d:</c>.
 	/// </param>
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	[SkipLocalsInit]

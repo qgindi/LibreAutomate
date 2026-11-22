@@ -1,13 +1,5 @@
 extern alias CAW;
 
-using System.Windows.Documents;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Controls;
-using System.Windows.Navigation;
-using System.Windows.Input;
-using System.Collections.Immutable;
-
 using Microsoft.CodeAnalysis;
 using CAW::Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -17,6 +9,12 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using CAW::Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.DocumentationComments;
 using Microsoft.CodeAnalysis.SignatureHelp;
+using System.Collections.Immutable;
+
+using System.Windows.Documents;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Controls;
 
 namespace LA;
 
@@ -801,53 +799,5 @@ class CiText {
 		x.Append("Label "); x.Bold(name);
 		x.EndParagraph();
 		return x.Result;
-	}
-	
-	public static FlowDocumentControl CreateControl(int colorRGB = 0xfffff0) {
-		var ff = App.Wmain.FontFamily;
-		double fs = App.Wmain.FontSize;
-		if (ff.Source == "Segoe UI") { ff = new("Calibri"); fs += 2; }
-		var d = new FlowDocument {
-			FontFamily = ff,
-			FontSize = fs,
-			Background = ColorInt.WpfBrush_(colorRGB),
-			PagePadding = default,
-			TextAlignment = TextAlignment.Left,
-		};
-		TextOptions.SetTextFormattingMode(d, TextFormattingMode.Display);
-		var c = new FlowDocumentControl {
-			Document = d,
-			FocusVisualStyle = null,
-			VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-			IsInactiveSelectionHighlightEnabled = true,
-		};
-		return c;
-	}
-}
-
-class FlowDocumentControl : FlowDocumentScrollViewer {
-	public event Action<FlowDocumentControl, string> LinkClicked;
-	
-	internal static void OnLinkClicked_(Hyperlink h, RequestNavigateEventArgs e) {
-		var s = e.Uri.OriginalString;
-		//print.it(s);
-		DependencyObject d = h;
-		while (null != (d = LogicalTreeHelper.GetParent(d))) if (d is FlowDocumentControl c) {
-				c.LinkClicked?.Invoke(c, s);
-				break;
-			}
-	}
-	
-	/// <summary>
-	/// Clears text (removes all blocks) and applies a workaround for a WPF bug.
-	/// </summary>
-	public void Clear() {
-		Document.Blocks.Clear();
-		_ = Selection?.IsEmpty; //workaround for WPF bug: if some text was selected, would select all new text
-	}
-	
-	protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e) {
-		if (!Selection.IsEmpty) this.Hwnd().ActivateL(); //user may want to copy text with Ctrl+C
-		base.OnPreviewMouseLeftButtonUp(e);
 	}
 }

@@ -199,9 +199,9 @@ class CiSignature {
 		rect.left -= 6;
 		
 		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
-			OnLinkClick = (ph, e) => ph.Text = _FormatText(e.ToInt(1), userSelected: true)
+			OnLinkClick = (ph, e) => ph.SetContent(_FormatText(e.ToInt(1), userSelected: true), updateRect: true)
 		};
-		_textPopup.Text = _FormatText(iSel, userSelected: false);
+		_textPopup.SetContent(_FormatText(iSel, userSelected: false));
 		
 		if (!_textPopup.IsVisible) {
 			CodeInfo.HideTextPopupAndTempWindows();
@@ -368,7 +368,7 @@ class CiSignature {
 				} else {
 					if (--i < 0) i = n - 1;
 				}
-				if (i != _data.iSelected) _textPopup.Text = _FormatText(i, userSelected: true);
+				if (i != _data.iSelected) _textPopup.SetContent(_FormatText(i, userSelected: true), updateRect: true);
 				return true;
 			}
 		}

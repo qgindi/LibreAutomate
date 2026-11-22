@@ -2,6 +2,7 @@ using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Au.Controls;
 
@@ -21,9 +22,15 @@ public class KPopup {
 	wnd _w;
 	bool _inSizeMove;
 	
-	///
-	public KPopup(WS style = WS.POPUP | WS.THICKFRAME, WSE exStyle = WSE.TOOLWINDOW | WSE.NOACTIVATE, bool shadow = false, SizeToContent sizeToContent = default) {
-		_style = style;
+	/// <summary>
+	/// Sets window style.
+	/// </summary>
+	/// <param name="style">Style. Always adds <c>POPUP</c>.</param>
+	/// <param name="exStyle"></param>
+	/// <param name="shadow"></param>
+	/// <param name="sizeToContent"></param>
+	public KPopup(WS style = WS.THICKFRAME, WSE exStyle = WSE.TOOLWINDOW | WSE.NOACTIVATE, bool shadow = false, SizeToContent sizeToContent = default) {
+		_style = style | WS.POPUP;
 		_exStyle = exStyle;
 		_shadow = shadow;
 		_sizeToContent = sizeToContent;
@@ -41,7 +48,9 @@ public class KPopup {
 				//TreatAsInputRoot = false,
 				HwndSourceHook = _Hook
 			};
-			_hs = new _HwndSource(p) { kpopup = this, RootVisual = Border, SizeToContent = default };
+			_hs = new _HwndSource(p) { kpopup = this, SizeToContent = 0 };
+			_hs.RootVisual = Border; //after setting properties
+			
 			//print.it(_hs.AcquireHwndFocusInMenuMode, _hs.RestoreFocusMode, p.TreatAsInputRoot); //True, Auto, True
 			
 			OnHandleCreated();
@@ -89,14 +98,14 @@ public class KPopup {
 	/// <summary>
 	/// Gets or sets WPF content. It is child of <see cref="Border"/>.
 	/// </summary>
-	public UIElement Content {
+	public FrameworkElement Content {
 		get => _content;
 		set {
 			_content = value;
 			if (_border != null) _border.Child = value;
 		}
 	}
-	UIElement _content;
+	FrameworkElement _content;
 	
 	/// <summary>
 	/// Gets the WPF root object (<see cref="HwndSource.RootVisual"/>) of the popup window. Its child is <see cref="Content"/>.
@@ -119,100 +128,105 @@ public class KPopup {
 	}
 	SIZE _size;
 	
+#if false //not used. If will use, test more.
 	/// <summary>
 	/// Set <see cref="HwndSource.SizeToContent"/>.
 	/// If false (default), this class calculates content size when showing, and does not update while showing. If true, may align incorrectly.
 	/// </summary>
 	public bool WpfSizeToContent { get; set; }
+#endif
+	
+	/// <summary>
+	/// Calls <c>Border.Measure, Border.UpdateLayout, Border.DesiredSize</c>.
+	/// </summary>
+	protected virtual Size MeasureContent(Size availableSize) {
+		_border.Measure(availableSize);
+		_border.UpdateLayout();
+		return _border.DesiredSize;
+	}
+	
+	SIZE _DpiScale(Size size) {
+		var m = _hs.CompositionTarget.TransformToDevice;
+		return new((int)Math.Ceiling(size.Width * m.M11), (int)Math.Ceiling(size.Height * m.M22));
+	}
+	
+	Size _DpiUnscale(SIZE size) {
+		var m = _hs.CompositionTarget.TransformFromDevice;
+		return new(size.width * m.M11, size.height * m.M22);
+	}
 	
 	/// <summary>
 	/// Shows the popup window by a window, WPF element or rectangle.
 	/// </summary>
 	/// <param name="owner">Provides owner window and optionally rectangle. Can be <b>FrameworkElement</b>, <b>KPopup</b>, <b>wnd</b> or null.</param>
 	/// <param name="side">Show at this side of rectangle, or opposite side if does not fit in screen. If null, shows in rectangle.</param>
-	/// <param name="rScreen">Rectangle in screen (physical pixels). If null, uses owner's rectangle. Cannot be both null.</param>
+	/// <param name="rAnchor">Rectangle in screen (physical pixels). If null, uses owner's rectangle. Cannot be both null.</param>
 	/// <param name="exactSize">If does not fit in screen, cover part of rectangle but don't make smaller.</param>
-	/// <param name="exactSide">Never show at opposite side.</param>
 	/// <exception cref="NotSupportedException">Unsupported <i>owner</i> type.</exception>
 	/// <exception cref="ArgumentException">Both owner and rScreen are null. Or owner handle not created.</exception>
 	/// <remarks>
 	/// If <see cref="Size"/> not set, uses <see cref="SizeToContent.WidthAndHeight"/>.
 	/// </remarks>
-	public void ShowByRect(object owner, Dock? side, RECT? rScreen = null, bool exactSize = false, bool exactSide = false) {
-		//CloseHides = true; //print.it(_w); //18 -> 5 ms
-		//perf.first(); if(owner is FrameworkElement test) test.Dispatcher.InvokeAsync(() => perf.nw());
-		
-		wnd ow = default;
-		switch (owner) {
-		case null:
-			if (rScreen == null) throw new ArgumentException("owner and rScreen are null");
-			break;
-		case FrameworkElement e:
-			ow = e.Hwnd().Window;
-			rScreen ??= e.RectInScreen();
-			break;
-		case KPopup p:
-			ow = p._w;
-			rScreen ??= ow.Rect;
-			break;
-		case wnd w:
-			ow = w;
-			rScreen ??= ow.Rect;
-			break;
-		default: throw new NotSupportedException("owner type");
-		}
-		if (owner != null && ow.Is0) throw new ArgumentException("owner window not created");
-		if (_size == default) _sizeToContent = SizeToContent.WidthAndHeight;
-		
+	public void ShowByRect(object owner, Dock? side, RECT? rAnchor = null, bool exactSize = false) {
 		_Create();
 		
-		//could use API CalculatePopupWindowPosition instead of this code, but it is not exactly what need here.
-		RECT r = rScreen.Value;
+		wnd ow = owner switch { null => default, FrameworkElement e => e.Hwnd().Window, KPopup p => p._w, wnd w => w, _ => throw new NotSupportedException("owner type") };
+		if (owner != null && ow.Is0) throw new ArgumentException("owner window not created");
+		
+		var r = rAnchor ?? owner switch { FrameworkElement e => e.RectInScreen(), KPopup or wnd => ow.Rect, _ => throw new ArgumentException("owner and rAnchor are null") };
+		
+		if (_size == default) _sizeToContent = SizeToContent.WidthAndHeight;
+		
 		var scrn = screen.of(r);
-		var rs = scrn.WorkArea;
-		int dpi = scrn.Dpi;
-		SIZE size = Dpi.Scale(Size, dpi);
+		RECT rwa = scrn.WorkArea;
+		SIZE size = _sizeToContent == SizeToContent.WidthAndHeight ? default : _DpiScale(Size);
+		
+		if (screen.of(_w) != scrn)
+			_w.MoveL(rwa.left, rwa.top, 1, 1);
 		
 		if (_sizeToContent != default) {
 			RECT nc = default;
+			int dpi = (int)VisualTreeHelper.GetDpi(Border).PixelsPerInchX;
 			Dpi.AdjustWindowRectEx(dpi, ref nc, _style, _exStyle);
-			rs.left -= nc.left; rs.right -= nc.right; rs.top -= nc.top; rs.bottom -= nc.bottom;
+			var rwa2 = RECT.FromLTRB(rwa.left - nc.left, rwa.top - nc.top, rwa.right - nc.right, rwa.bottom - nc.bottom);
 			
-			if (_sizeToContent.Has(SizeToContent.Width)) size.width = rs.Width; else size.width = Math.Min(size.width, rs.Width);
-			if (_sizeToContent.Has(SizeToContent.Height)) size.height = rs.Height; else size.height = Math.Min(size.height, rs.Height);
-			_border.Measure(Dpi.Unscale(size, dpi));
-			//never mind: it seems FlowDocument measures only height.
-			//	If need width, could instead use TextBlock. It does not support paragraph etc, but we can use multiple TextBlock etc in StackPanel.
-			//	But then no select/copy, not so easy scrolling, etc.
-			_border.UpdateLayout();
-			var ds = _border.DesiredSize;
-			ds.Width = Math.Ceiling(ds.Width + .5); ds.Height = Math.Ceiling(ds.Height + .5); //avoid scrollbars
-			size = Dpi.Scale(ds, dpi);
+			RECT rSide = side == null ? r
+				: _GetBiggestAreaByAnchorRect(side.Value, r, rwa2); //when measuring, as the available size use the bigger part of the work area at the specified or opposite side from the anchor rect
+			
+			SIZE area = new(Math.Max(rSide.Width, rwa2.Width / 4), Math.Max(rSide.Height, rwa2.Height / 3));
+			area.width--; area.height--; //because DPI-scaling may add 1 pixel when rounding double to int
+			
+			if (_sizeToContent.Has(SizeToContent.Width)) size.width = area.width; else size.width = Math.Min(size.width, area.width);
+			if (_sizeToContent.Has(SizeToContent.Height)) size.height = area.height; else size.height = Math.Min(size.height, area.height);
+			
+			var ds = MeasureContent(_DpiUnscale(size));
+			
+			size = _DpiScale(ds);
 			size.width += nc.Width; size.height += nc.Height;
 		}
-		size.width = Math.Min(size.width, rs.Width);
-		size.height = Math.Min(size.height, rs.Height);
+		size.width = Math.Min(size.width, rwa.Width);
+		size.height = Math.Min(size.height, rwa.Height);
 		
-		_hs.SizeToContent = WpfSizeToContent ? _sizeToContent : default;
+		//_hs.SizeToContent = WpfSizeToContent ? _sizeToContent : 0;
 		
 		if (side != null) {
-			int spaceT = r.top - rs.top, spaceB = rs.bottom - r.bottom, spaceL = r.left - rs.left, spaceR = rs.right - r.right;
-			if (!exactSide) {
-				switch (side) {
-				case Dock.Left:
-					if (size.width > spaceL && spaceR > spaceL) side = Dock.Right;
-					break;
-				case Dock.Right:
-					if (size.width > spaceR && spaceL > spaceR) side = Dock.Left;
-					break;
-				case Dock.Top:
-					if (size.height > spaceT && spaceB > spaceT) side = Dock.Bottom;
-					break;
-				case Dock.Bottom:
-					if (size.height > spaceB && spaceT > spaceB) side = Dock.Top;
-					break;
-				}
+			int spaceT = r.top - rwa.top, spaceB = rwa.bottom - r.bottom, spaceL = r.left - rwa.left, spaceR = rwa.right - r.right;
+			
+			switch (side) {
+			case Dock.Left:
+				if (size.width > spaceL && spaceR > spaceL) side = Dock.Right;
+				break;
+			case Dock.Right:
+				if (size.width > spaceR && spaceL > spaceR) side = Dock.Left;
+				break;
+			case Dock.Top:
+				if (size.height > spaceT && spaceB > spaceT) side = Dock.Bottom;
+				break;
+			case Dock.Bottom:
+				if (size.height > spaceB && spaceT > spaceB) side = Dock.Top;
+				break;
 			}
+			
 			if (!exactSize) {
 				switch (side) {
 				case Dock.Left:
@@ -229,6 +243,7 @@ public class KPopup {
 					break;
 				}
 			}
+			
 			switch (side) {
 			case Dock.Left: r.left -= size.width; break;
 			case Dock.Right: r.left = r.right; break;
@@ -237,14 +252,68 @@ public class KPopup {
 			}
 		}
 		
-		r.left = Math.Clamp(r.left, rs.left, rs.right - size.width);
-		r.top = Math.Clamp(r.top, rs.top, rs.bottom - size.height);
+		r.left = Math.Clamp(r.left, rwa.left, rwa.right - size.width);
+		r.top = Math.Clamp(r.top, rwa.top, rwa.bottom - size.height);
 		r.Width = size.width; r.Height = size.height;
 		
 		_inSizeMove = false;
-		_w.MoveL(r);
+		if (_sizeToContent != default && _RemeasureIfSameWindowSize(size)) {
+			_w.MoveL(r.left, r.top);
+		} else {
+			_w.MoveL(r);
+		}
+		
+		static RECT _GetBiggestAreaByAnchorRect(Dock side, RECT rAnchor, RECT r /*work area*/) {
+			if (side is Dock.Left or Dock.Right) {
+				int atLeft = rAnchor.left - r.left, atRight = r.right - rAnchor.right;
+				if (atLeft > atRight) r.right = rAnchor.left; else r.left = rAnchor.right;
+			} else {
+				int atTop = rAnchor.top - r.top, atBottom = r.bottom - rAnchor.bottom;
+				if (atTop > atBottom) r.bottom = rAnchor.top; else r.top = rAnchor.bottom;
+			}
+			return r;
+		}
+		
 		if (_w.Get.Owner != ow) WndUtil.SetOwnerWindow(_w, ow);
 		if (!IsVisible) _w.SetWindowPos(SWPFlags.SHOWWINDOW | SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE | SWPFlags.NOOWNERZORDER);
+	}
+	
+	/// <summary>
+	/// Resizes the window for new content. Does not move.
+	/// Used when selecting overloads in signature info or completion item info. Not tested with others.
+	/// </summary>
+	public void ResizeForNewContent() {
+		if (!_w.GetWindowAndClientRectInScreen(out var rw, out var rc)) return;
+		var scrn = screen.of(_w);
+		var rwa = scrn.WorkArea;
+		
+		var r = RECT.FromLTRB(rc.left, rc.top, rwa.right - (rw.right - rc.right), rwa.bottom - (rw.bottom - rc.bottom)); //workarea size available for resizing _w without moving
+		if (r.NoArea) return;
+		SIZE size = new(r.Width, r.Height);
+		
+		var ds = MeasureContent(_DpiUnscale(size));
+		size = _DpiScale(ds);
+		
+		size.width += rw.Width - rc.Width;
+		size.height += rw.Height - rc.Height;
+		
+		if (_RemeasureIfSameWindowSize(size)) return;
+		
+		_inSizeMove = false;
+		_w.ResizeL_(size);
+	}
+	
+	//If FlowDocumentScrollViewer, need to measure second time with the final available size.
+	//Else it's layout is not complete. Then does not display the scrollbar, does not set the separator width, etc.
+	//If window size changed, WPF remeasures. Else let's do it now.
+	bool _RemeasureIfSameWindowSize(SIZE size) {
+		var r = _w.Rect;
+		if (r.Width == size.width && r.Height == size.height && _w.GetClientRect(out var rc)) {
+			_border.Measure(_DpiUnscale(new(rc.Width, rc.Height)));
+			_border.UpdateLayout();
+			return true;
+		}
+		return false;
 	}
 	
 	/// <summary>
@@ -252,7 +321,7 @@ public class KPopup {
 	/// </summary>
 	public void Close() {
 		if (_hs == null) return;
-		if (CloseHides) _w.ShowL(false);
+		if (CloseHides) _w.SetWindowPos(SWPFlags.HIDEWINDOW | SWPFlags.NOSIZE | SWPFlags.NOMOVE | SWPFlags.NOACTIVATE | SWPFlags.NOZORDER | SWPFlags.NOOWNERZORDER);
 		else _hs.Dispose();
 	}
 	
@@ -286,7 +355,7 @@ public class KPopup {
 	/// Close when mouse clicked.
 	/// </summary>
 	public CC ClickClose { get; set; }
-
+	
 	/// <summary>
 	/// Activate the owner window when clicked, if this and owner both are inactive. Only if has <b>WS_EX_NOACTIVATE</b> style.
 	/// </summary>
@@ -411,7 +480,7 @@ public class KPopup {
 				if (lParam == 1) _w.ShowL(false); //minimizing owner. Prevent showing again when restoring.
 				else if (w.IsActive) {
 					var ow = w.Get.Owner;
-					_hs.Dispatcher.InvokeAsync(() => { if(w.IsActive && ow.IsVisible && !ow.IsMinimized) ow.ActivateL(); });
+					_hs.Dispatcher.InvokeAsync(() => { if (w.IsActive && ow.IsVisible && !ow.IsMinimized) ow.ActivateL(); });
 				}
 			}
 			break;

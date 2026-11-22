@@ -16,7 +16,7 @@ namespace Au.More {
 				if (_systemDPI == 0) {
 					using var dcs = new ScreenDC_();
 					_systemDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
-
+					
 					//could use GetDpiForSystem instead (Windows 10 1607).
 					//	Normally the same result (tested), but probably not if thread awareness context is Unaware (not tested).
 				}
@@ -24,7 +24,7 @@ namespace Au.More {
 			}
 		}
 		static int _systemDPI;
-
+		
 		/// <summary>
 		/// Gets the DPI of a window, as used in the window's process. It never changes for that window instance.
 		/// </summary>
@@ -59,20 +59,20 @@ namespace Au.More {
 			}
 			return R != 0 ? R : System;
 		}
-
+		
 		/// <summary>
 		/// Returns <c>OfWindow(w.Hwnd())</c>.
 		/// </summary>
 		/// <param name="w">A Winforms window or control.</param>
 		public static int OfWindow(System.Windows.Forms.Control w) => OfWindow(w.Hwnd());
 		//rejected: supportWin81
-
+		
 		/// <summary>
 		/// Returns <c>OfWindow(w.Hwnd())</c>.
 		/// </summary>
 		/// <param name="w">A WPF window or element.</param>
 		public static int OfWindow(System.Windows.DependencyObject w) => OfWindow(w.Hwnd());
-
+		
 		/// <summary>
 		/// Gets DPI of a screen.
 		/// </summary>
@@ -87,27 +87,27 @@ namespace Au.More {
 			bool os = supportWin81 ? osVersion.minWin8_1 : osVersion.minWin10_1607;
 			return os && 0 == Api.GetDpiForMonitor(hMonitor, 0, out int R, out _) ? R : System;
 		}
-
+		
 		/////
 		//public static int OfScreen(screen s, bool supportWin81 = false) => OfScreen(s.Now, supportWin81);
-
+		
 		/// <summary>
 		/// Scales <c>int</c> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static int Scale(int i, DpiOf dpiOf) => Math2.MulDiv(i, dpiOf, 96);
-
+		
 		//no. Eg also would be used for uint, long... Or name eg ScaleD. Or add double extension method.
 		///// <summary>
 		///// Scales <c>int</c> if the specified DPI isn't 96 (100%).
 		///// </summary>
 		//public static int Scale(double i, DpiOf dpiOf) => (i*(int)dpiOf/96).ToInt();
-
+		
 		/// <summary>
 		/// Unscales <c>int</c> if the specified DPI isn't 96 (100%).
 		/// </summary>
 		public static double Unscale(int i, DpiOf dpiOf) => i * (96d / dpiOf);
 		//Unscaling sometimes useful with WPF. Unscale to double, not int, else result often incorrect.
-
+		
 		/// <summary>
 		/// Scales <see cref="SIZE"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
@@ -117,17 +117,28 @@ namespace Au.More {
 			z.height = Math2.MulDiv(z.height, dpi, 96);
 			return z;
 		}
-
+		
+		/// <summary>
+		/// Scales <c>double</c> if the specified DPI isn't 96 (100%).
+		/// </summary>
+		/// <param name="roundUp">When converting to <c>int</c>, round up. If <c>false</c>, rounds up or down, to the nearest integer.</param>
+		public static int Scale(double d, DpiOf dpiOf, bool roundUp = false) {
+			d = d * ((int)dpiOf / 96d);
+			return roundUp ? (int)Math.Ceiling(d) : d.ToInt();
+		}
+		
 		/// <summary>
 		/// Scales <see cref="System.Windows.Size"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
-		public static SIZE Scale(System.Windows.Size z, DpiOf dpiOf) {
+		/// <param name="roundUp">When converting to <c>int</c>, round up. If <c>false</c>, rounds up or down, to the nearest integer.</param>
+		public static SIZE Scale(System.Windows.Size z, DpiOf dpiOf, bool roundUp = false) {
 			double f = (int)dpiOf / 96d;
 			z.Width *= f;
 			z.Height *= f;
+			if (roundUp) return new((int)Math.Ceiling(z.Width), (int)Math.Ceiling(z.Height));
 			return new(z.Width.ToInt(), z.Height.ToInt());
 		}
-
+		
 		/// <summary>
 		/// Unscales <see cref="SIZE"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
@@ -135,7 +146,7 @@ namespace Au.More {
 			double f = 96d / dpiOf;
 			return new(z.width * f, z.height * f);
 		}
-
+		
 		/// <summary>
 		/// Scales <see cref="RECT"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
@@ -147,7 +158,7 @@ namespace Au.More {
 			r.bottom = Math2.MulDiv(r.bottom, dpi, 96);
 			return r;
 		}
-
+		
 		/// <summary>
 		/// Unscales <see cref="RECT"/> if the specified DPI isn't 96 (100%).
 		/// </summary>
@@ -155,7 +166,7 @@ namespace Au.More {
 			double f = 96d / dpiOf;
 			return new(r.left * f, r.top * f, r.Width * f, r.Height * f);
 		}
-
+		
 		/// <summary>
 		/// Calls API <ms>GetSystemMetricsForDpi</ms> if available, else <ms>GetSystemMetrics</ms>.
 		/// </summary>
@@ -163,7 +174,7 @@ namespace Au.More {
 			=> osVersion.minWin10_1607
 			? Api.GetSystemMetricsForDpi(nIndex, dpiOf)
 			: Api.GetSystemMetrics(nIndex);
-
+		
 		/// <summary>
 		/// Calls API <ms>SystemParametersInfoForDpi</ms> if available, else <ms>SystemParametersInfo</ms>.
 		/// Use only with <i>uiAction</i> = <ms>SPI_GETICONTITLELOGFONT</ms>, <ms>SPI_GETICONMETRICS</ms>, <ms>SPI_GETNONCLIENTMETRICS</ms>.
@@ -172,7 +183,7 @@ namespace Au.More {
 			=> osVersion.minWin10_1607
 			? Api.SystemParametersInfoForDpi(uiAction, uiParam, pvParam, 0, dpiOf)
 			: Api.SystemParametersInfo(uiAction, uiParam, pvParam);
-
+		
 		/// <summary>
 		/// Calls API <ms>AdjustWindowRectExForDpi</ms> if available, else <ms>AdjustWindowRectEx</ms>.
 		/// </summary>
@@ -190,10 +201,10 @@ namespace Au.More {
 			}
 			return ok;
 		}
-
+		
 		internal static int ScrollbarV_(int dpi) => GetSystemMetrics(Api.SM_CXVSCROLL, dpi);
 		internal static int ScrollbarH_(int dpi) => GetSystemMetrics(Api.SM_CYHSCROLL, dpi);
-
+		
 		/// <summary>
 		/// DPI awareness of a window or process.
 		/// </summary>
@@ -207,7 +218,7 @@ namespace Au.More {
 			///
 			PerMonitor
 		}
-
+		
 		/// <summary>
 		/// Gets DPI awareness of a window.
 		/// </summary>
@@ -230,7 +241,7 @@ namespace Au.More {
 				//could use, IsWindowVirtualized (except if of this process), but slow and unreliable.
 			}
 		}
-
+		
 		/// <summary>
 		/// Detects whether the window is DPI-scaled/virtualized.
 		/// </summary>
@@ -253,17 +264,17 @@ namespace Au.More {
 		public static bool IsWindowVirtualized(wnd w) {
 			if (GetScalingInfo_(w, out bool scaled, out _, out _)) return scaled;
 			return IsWindowVirtualizedLegacy_(w);
-
+			
 			//note: child windows can have different DPI awareness (minWin10_1607). See GetWindowDpiHostingBehavior. Not tested, not seen.
-
+			
 			//Also tested detecting with GDI. GDI functions return logical (not DPI-scaled) offsets/rectangles/etc. Works, but much slower.
 		}
-
+		
 		/// <summary>
 		/// On Win10+ returns <see cref="IsWindowVirtualized"/>. Else <c>false</c>.
 		/// </summary>
 		internal static bool IsWindowVirtualizedWin10_(wnd w) => osVersion.minWin10_1607 && IsWindowVirtualized(w);
-
+		
 		/// <summary>
 		/// If possible, gets whether the window is DPI-scaled/virtualized, and gets physical and logical rects if scaled.
 		/// Returns <c>false</c> if <c>!osVersion.minWin10_1607</c> or if cannot get that info.
@@ -300,7 +311,7 @@ namespace Au.More {
 					rLogical = r2;
 					break;
 				}
-
+				
 				static bool _GetRect(wnd w, out RECT r) {
 					using (var u2 = new AwarenessContext(-4)) { //per-monitor-v2
 						if (u2.Previous_ == 0) { r = default; return false; } //API failed. Unlikely. Works even if this process is Unaware.
@@ -311,13 +322,13 @@ namespace Au.More {
 			}
 			return true;
 		}
-
+		
 		internal static bool IsWindowVirtualizedLegacy_(wnd w) {
 			//less reliable if control.
 			//	LogicalToPhysicalPoint fails if not in top-level window rect.
 			//	It seems PhysicalToLogicalPointForPerMonitorDPI doesn't fail, but it fails if not in that screen.
 			w = w.Window;
-
+			
 			RECT rPrev = default;
 			for (int i = 0; i < 5; i++) {
 				if (!Api.GetWindowRect(w, out var r)) break; //Win10 1 mcs hot, 20 cold, old OS fast
@@ -326,11 +337,11 @@ namespace Au.More {
 				if (i == 1) p.y = r.bottom - 1; else if (i == 2) p.y = r.top; else if (i == 3) p.x = r.right - 1; else if (i == 4) p.x = r.left; //and p must be in correct screen, which is unknown and therefore we use this code to guess. Normally succeeds at i==0, but may fail when the window is more than in 1 screen.
 				POINT k = p;
 				if (osVersion.minWin8_1 ? Api.PhysicalToLogicalPointForPerMonitorDPI(w, ref p) : Api.LogicalToPhysicalPoint(w, ref p)) { //Win10 3 mcs hot, old OS fast
-
+					
 					//API bug: may scale the point although the window isn't scaled. Never mind.
 					//	When window's center is between 2 screens and at the same time half of the window is offscreen. The area is several pixels wide.
 					//if (p != k) print.it(k, p);
-
+					
 					if (p != k) return true;
 					break;
 				}
@@ -340,7 +351,7 @@ namespace Au.More {
 			//tested: works even if this process is DPI System or Unaware. Tested on Win10.
 			//speed on Win10 when not PM-aware: 4 mcs hot, 40 mcs cold. All API much faster on old OS (tested on Vmware).
 		}
-
+		
 		//No. In some cases (window positions) screen.of(w) does not match scaling. Not much faster.
 		//public static bool IsWindowVirtualized2(wnd w) {
 		//	if (osVersion.minWin10_1607) {
@@ -356,7 +367,7 @@ namespace Au.More {
 		//		return false;
 		//	}
 		//}
-
+		
 		/// <summary>
 		/// Can be used to temporarily change thread's DPI awareness context with API <ms>SetThreadDpiAwarenessContext</ms>.
 		/// Does nothing if the API is unavailable (added in Windows 10 version 1607).
@@ -371,7 +382,7 @@ namespace Au.More {
 		/// </example>
 		public struct AwarenessContext : IDisposable {
 			nint _dac;
-
+			
 			/// <summary>
 			/// If <see cref="Available"/>, calls API <ms>SetThreadDpiAwarenessContext</ms>.
 			/// </summary>
@@ -380,12 +391,12 @@ namespace Au.More {
 				_dac = osVersion.minWin10_1607 ? Api.SetThreadDpiAwarenessContext(dpiContext) : default;
 			}
 			//rejected: enum dpiContext.
-
+			
 			/// <summary>
 			/// If <see cref="Available"/>, calls API <ms>GetWindowDpiAwarenessContext</ms> and <ms>SetThreadDpiAwarenessContext</ms>. Sets the awareness context of this thread equal to that of the window.
 			/// </summary>
 			public AwarenessContext(wnd w) : this(Available ? Api.GetWindowDpiAwarenessContext(w) : 0) { }
-
+			
 			/// <summary>
 			/// Restores previous DPI awareness context.
 			/// </summary>
@@ -394,15 +405,15 @@ namespace Au.More {
 				Api.SetThreadDpiAwarenessContext(_dac);
 				_dac = default;
 			}
-
+			
 			///
 			internal nint Previous_ => _dac;
-
+			
 			/// <summary>
 			/// Returns <c>true</c> if thread DPI awareness contexts are available on this Windows version (Windows 10 1607 and later).
 			/// </summary>
 			public static bool Available => osVersion.minWin10_1607;
-
+			
 			/////
 			//public const nint DPI_AWARENESS_CONTEXT_UNAWARE = -1;
 			/////
@@ -435,60 +446,60 @@ namespace Au.Types {
 	/// </remarks>
 	public struct DpiOf {
 		readonly int _dpi;
-
+		
 		///
 		public DpiOf(int dpi) { _dpi = dpi; }
-
+		
 		/// <exception cref="AuWndException">Invalid window handle.</exception>
 		public DpiOf(wnd w) {
 			w.ThrowIfInvalid();
 			_dpi = More.Dpi.OfWindow(w);
 		}
 		//rejected: parameter supportWin81. Rarely used. Can use Dpi functions when need.
-
+		
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="AuWndException">Invalid window handle.</exception>
 		public DpiOf(System.Windows.Forms.Control c) : this(Not_.NullRet(c).Hwnd()) { }
-
+		
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="AuWndException">Invalid window handle.</exception>
 		public DpiOf(System.Windows.DependencyObject c) : this(Not_.NullRet(c).Hwnd()) { }
-
+		
 		///
 		public DpiOf(IntPtr hMonitor) { _dpi = More.Dpi.OfScreen(hMonitor); }
-
+		
 		///
 		public DpiOf(POINT screenOf) : this(screen.of(screenOf).Handle) { }
-
+		
 		///
 		public DpiOf(RECT screenOf) : this(screen.of(screenOf).Handle) { }
-
+		
 		///
 		public static implicit operator DpiOf(int dpi) => new(dpi);
-
+		
 		/// <exception cref="AuWndException">Invalid window handle.</exception>
 		public static implicit operator DpiOf(wnd w) => new(w);
-
+		
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="AuWndException">Invalid window handle.</exception>
 		public static implicit operator DpiOf(System.Windows.Forms.Control c) => new(c);
-
+		
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="AuWndException">Invalid window handle.</exception>
 		public static implicit operator DpiOf(System.Windows.DependencyObject c) => new(c);
-
+		
 		///
 		public static implicit operator DpiOf(IntPtr hMonitor) => new(hMonitor);
-
+		
 		///
 		public static implicit operator DpiOf(POINT screenOf) => new(screenOf);
-
+		
 		///
 		public static implicit operator DpiOf(RECT screenOf) => new(screenOf);
-
+		
 		///
 		public int Dpi => _dpi;
-
+		
 		///
 		public static implicit operator int(DpiOf d) => d._dpi;
 	}

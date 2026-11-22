@@ -35,6 +35,7 @@ static unsafe partial class Cpp {
 		if (asm.Location is [_, ..] s1) {
 			s1 = s1[..(s1.LastIndexOf('\\') + 1)] + rel;
 			if (NativeLibrary.TryLoad(s1, out h)) return h;
+			//print.qm2.write("failed", s1, filesystem.exists(s1), Api.LoadLibraryEx(s1, 0, 0), lastError.message);
 		}
 
 		//like [DllImport]. It uses NATIVE_DLL_SEARCH_DIRECTORIES, which was built at startup by apphost, eg from deps.json.
