@@ -202,7 +202,7 @@ public static class AuDocsShared {
 		if (node != null) {
 			var semo = document.GetSemanticModelAsync().Result_();
 			if (semo.GetSymbolInfo(node).GetAnySymbol() is ISymbol sym)
-				return LA.CiUtil.GetSymbolHelpUrl(sym, out isAu);
+				return LA.CiHelp.GetSymbolHelpUrl(sym, out isAu);
 		}
 		return null;
 	}

@@ -62,25 +62,26 @@ partial class AuDocs {
 		
 		var parseOpt = new CSharpParseOptions(LanguageVersion.Preview, preprocessorSymbols: [..LA.MetaComments.DefaultDefines, "AU"]);
 		var trees = new List<CSharpSyntaxTree>();
-		var files = new List<(string path, string code)>();
+		var files = new List<(string rpath, string code)>();
 		
 		foreach (var f in filesystem.list(sourceDir, "||obj/|bin/|docfx_project/", FLFlags.Recurse).Files) {
-			if (f.Name.Ends(".cs", true)) {
-				if (testSmall && f.Name == "_Aaa.cs") continue;
+			var rpath = f.RelativePath;
+			if (rpath.Ends(".cs", true)) {
+				if (testSmall && rpath == "_Aaa.cs") continue;
 				var code = filesystem.loadText(f);
 				code = _PreprocessFileAsText(f, code);
-				var tree = CSharpSyntaxTree.ParseText(code, parseOpt, f.Name) as CSharpSyntaxTree;
+				var tree = CSharpSyntaxTree.ParseText(code, parseOpt, rpath) as CSharpSyntaxTree;
 				trees.Add(tree);
-				files.Add((f.Name, code));
-			} else if (f.Name.Eqi("Au.csproj")) {
+				files.Add((f.RelativePath, code));
+			} else if (rpath.Eqi("Au.csproj")) {
 				var s = filesystem.loadText(f);
 				//s = s.RxReplace(@"(?ms)^\h*<COMReference\b.+?</COMReference>", "", 1); //mute docfx warning
 				s = s.RxReplace(@"(?ms)^\h*<ProjectReference\b.+?</ProjectReference>", "", 1); //mute docfx warning for C++ project references
 				s = s.Replace("<SignAssembly>true</SignAssembly>", "");
 				s = s.RxReplace("<AssemblyOriginatorKeyFile>.+?</AssemblyOriginatorKeyFile>", "");
-				filesystem.saveText(destDir / f.Name, s);
+				filesystem.saveText(destDir / rpath, s);
 			} else {
-				filesystem.copy(f, destDir / f.Name);
+				filesystem.copy(f, destDir / rpath);
 			}
 		}
 		
@@ -105,11 +106,11 @@ partial class AuDocs {
 			_PreprocessFile(tree);
 			_bFile.Append(f.code, _filePos, f.code.Length - _filePos);
 			var s = _bFile.ToString();
-			filesystem.saveText(destDir / f.path, s);
+			filesystem.saveText(destDir / f.rpath, s);
 			
-			//print.it($"<><lc green>{f.path}<>");
+			//print.it($"<><lc green>{f.rpath}<>");
 			//print.it(s);
-			//if(f.path.Eqi("param types.cs")) print.it(s);
+			//if(f.rpath.Ends("param types.cs")) print.it(s);
 		}
 		
 		_analyze.Finally();
@@ -599,6 +600,6 @@ partial class AuDocs {
 	
 	public static string LaGoto(ISymbol sym) {
 		var loc = sym.Locations[0];
-		return $@"<open C:\code\au\Au{loc.SourceTree.FilePath}||{loc.SourceSpan.Start}>{sym}<>";
+		return $@"<open C:\code\au\Au\{loc.SourceTree.FilePath}||{loc.SourceSpan.Start}>{sym}<>";
 	}
 }

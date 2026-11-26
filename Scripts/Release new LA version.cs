@@ -39,6 +39,8 @@ May need to add new OS version to class osVersion. Usually once/year.
 
 Build solution in config Release, all platforms.
 	NOTE: use the "Rebuild solution" command, else VS may not update something.
+	
+Run script <a {() => _Script("msbuild Au.sln.cs")}>#msbuild Au.sln</a> to test whether msbuild succeeds too.
 
 Review menu <a {() => ScriptEditor.InvokeCommand("About")}>Help -> About</a>. May need to update C# version, used libraries.
 

@@ -6,7 +6,7 @@ filesystem.delete(Directory.EnumerateFileSystemEntries(dir));
 
 using var db = new sqlite(folders.Editor + "doc-ai.db", SLFlags.SQLITE_OPEN_READONLY);
 using var sta = db.Statement("SELECT name,text FROM doc");
-int n1 = 0, n2 = 0;
+//int n1 = 0, n2 = 0;
 while (sta.Step()) {
 	string name = sta.GetText(0), text = sta.GetText(1);
 	

@@ -685,7 +685,7 @@ More info in app help topic "Code editor".
 		[Command]
 		public static void About() {
 			var sUses = $"""
-C# 14
+C# 15
 <link https://dotnet.microsoft.com/download>.NET {Environment.Version}<>
 <link https://github.com/dotnet/roslyn>Roslyn<>
 <link https://www.scintilla.org/>Scintilla 5.5.7<>

@@ -254,7 +254,8 @@ public static partial class filesystem {
 	
 	/// <summary>
 	/// Use this method to enumerate files and/or directories and get their paths and other properties.
-	/// <para/>Use like <c>foreach (var f in filesystem.list(@"C:\path").Files) { print.it(f, f.Size); }</c>.
+	/// <para/>
+	/// Use like <c>foreach (var f in filesystem.list(@"C:\path").Files) { print.it(f, f.Size); }</c>.
 	/// </summary>
 	/// <param name="directory">Directory path. Must be full path.</param>
 	/// <param name="filter">

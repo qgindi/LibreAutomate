@@ -48,6 +48,7 @@ jobs:
           archive: false
     
       - name: submit signing request
+        if: false # TODO
         uses: signpath/github-action-submit-signing-request@v3
         with:
           api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -63,4 +64,39 @@ jobs:
 
       # Now the signed `LibreAutomate.msi` can be found in the SignPath account. Don't use `upload-artifact` again, it will fail.
 
-      # TODO: restore the release step when signing is OK. Also nuget pack.
+      - name: Get release version vX.X
+        if: github.ref_type == 'tag'
+        id: version
+        run: |
+          $vXX = '${{ github.ref_name }}' -replace '\.\d+$', ''
+          "vXX=$vXX" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
+        with:
+          draft: true # TODO
+          #files: _\signed\LibreAutomate.msi
+          files: _\LibreAutomate.msi
+          body: |
+            [What's new in ${{ steps.version.outputs.vXX }}](https://github.com/qgindi/LibreAutomate/blob/master/Other/DocFX/_doc/changes/${{ steps.version.outputs.vXX }}.md)
+
+            <details>
+            <summary>System requirements</summary>
+
+            - Windows 10 (x64) and 11 (x64, Arm64)
+            - Windows 7 and 8.1 - see [installing .NET](https://learn.microsoft.com/en-us/dotnet/core/install/windows)
+
+            LibreAutomate uses the .NET 10 Desktop Runtime. Will prompt to install it if missing.
+            </details>
+
+            <details>
+            <summary>How to install</summary>
+
+            Download and run `LibreAutomate.msi`.
+
+            Need more options? Run [msiexec](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/msiexec) instead. Examples:
+            - Run the installer in reduced UI mode: `msiexec /i "C:\Downloads\LibreAutomate.msi" /qr`
+            - Change the app folder: `msiexec /i "C:\Downloads\LibreAutomate.msi" INSTALLDIR="app folder path"`
+
+            </details>

@@ -2,8 +2,7 @@
 
 Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
-## What will be signed
-LibreAutomate releases starting with v1.17.0.
+Currently LibreAutomate files are not signed. Waiting for the certificate.
 
 ## Roles
 

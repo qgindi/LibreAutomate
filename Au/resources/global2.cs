@@ -50,6 +50,6 @@ namespace Au.More;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class Au_ {
 	///
-	public const string Version = "1.16.7"; //Don't edit here. Run script "LA version.cs". It changes version everywhere.
+	public const string Version = "1.17.0"; //Don't edit here. Run script "LA version.cs". It changes version everywhere.
 }
 #endif

@@ -60,7 +60,7 @@ var date = DateTime.UtcNow.Subtract(TimeSpan.FromDays(30)).ToFileTimeUtc();
 PathFilter filter2 = new() { FileFilter = e => e.Name.Ends(".txt", true) && e.LastWriteTimeUtc >= date };
 foreach (var f in filesystem.list(dirPath, filter2).FilePaths) print.it(f);
 
-/// Also can be used .NET classes <see cref="Directory"/> (when need only paths), <see cref="DirectoryInfo"/> (when also need properties) or namespace <see cref="System.IO.Enumeration"/> (when need custom filtering). Their default options are different, for example skips hidden and system files, recurses NTFS links. They don't support glob patterns, but support * wildcard in filenames only. They order results differently.
+/// Also can be used .NET classes <see cref="Directory"/> (when need only paths), <see cref="DirectoryInfo"/> (when also need properties) or namespace <see cref="System.IO.Enumeration"/> (when need custom filtering). Their default options are different, for example skips hidden and system files, recurses NTFS links. They don't support glob patterns, but support `*` wildcard in filenames only. They order results differently.
 
 var array10 = Directory.GetFiles(dirPath, "*.htm"); //files as string[]
 var array11 = Directory.GetDirectories(dirPath); //directories as string[]

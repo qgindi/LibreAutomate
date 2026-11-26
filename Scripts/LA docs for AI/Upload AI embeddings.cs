@@ -1,6 +1,6 @@
 /// If need, uploads an AI embeddings storage file to the LA cloud storage.
 
-/*/ testInternal Au,Au.Editor; c AI script common.cs; c LaCloudStorage.cs; /*/
+/*/ testInternal Au,Au.Editor; c AI script common.cs; /*/
 using AI;
 if (script.testing) print.clear();
 print.it("<><lc yellowgreen>Ensuring AI embedding downloads are up to date. Wait until DONE.<>");

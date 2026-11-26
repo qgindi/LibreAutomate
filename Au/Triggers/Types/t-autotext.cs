@@ -411,7 +411,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 		if (isPK) {
 			postfixType = _DetectedPostfix.Key;
 		} else {
-			//print.it((int)c);
+			//print.it(c, (int)c);
 			
 			if (c < ' ' || c == 127) {
 				switch (c) {
@@ -449,7 +449,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 			_len = nc + 1;
 			if (isWordChar) nc++; else postfixChar = c;
 			
-			//DebugPrintText();
+			//_DebugPrintText();
 		}
 		
 		if (nc == 0) return;
@@ -466,7 +466,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 					var s = x.Text;
 					int i = nc - s.Length;
 					if (i < 0) continue;
-					if (i > 0 && _text[i - 1].isWordChar) continue;
+					if (i > 0 && _text[i - 1].isWordChar && _IsWordChar(s[0])) continue;
 					
 					if (0 != (x.Flags & TAFlags.MatchCase)) {
 						for (int j = 0; i < nc; i++, j++) if (_text[i].c != s[j]) break;
@@ -502,7 +502,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 					
 					if (!x.MatchScopeWindowAndFunc_(thc)) continue;
 					
-					_Reset(); //CONSIDER: flag DontReset. If the action generates keyboard events or mouse clicks, our kooks will reset.
+					_Reset(); //CONSIDER: flag DontReset. If the action generates keyboard events or mouse clicks, our hooks will reset.
 					
 					thc.trigger = x;
 					return;
@@ -580,7 +580,7 @@ public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger> {
 	
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	bool _IsWordChar(char c) {
-		if (char.IsLetterOrDigit(c)) return true; //speed: 4 times faster than Api.IsCharAlphaNumeric. Tested with a string containing 90% ASCII chars.
+		if (char.IsLetterOrDigit(c)) return true;
 		var v = WordCharsPlus;
 		return v != null && v.Contains(c);
 	}

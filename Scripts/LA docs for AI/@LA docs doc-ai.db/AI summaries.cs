@@ -158,7 +158,7 @@ filesystem.copyTo(dbFile, @"C:\code\Au.Editor", FIfExists.Delete);
 
 print.it("""
 <>DONE. Added summaries to doc-ai.db.
-	Now <script Upload AI embeddings.cs>upload vectors to GitHub<>
+	Now <script Upload AI embeddings.cs>upload vectors to cloud<>
 """);
 
 #endif
