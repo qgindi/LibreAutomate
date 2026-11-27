@@ -3,9 +3,10 @@
 print.clear();
 
 bool debug = false;
+string tag = $"v{Au_.Version}";
 
 if (!debug) {
-	int button = dialog.show("Create new LA release on GitHub", null, "1 Build/release with GitHub Actions\nWill push new commit+tag, it triggers `publish.yml`|2 From local build\nUse only if can't use GitHub actions|0 Cancel", flags: DFlags.CommandLinks);
+	int button = dialog.show("Create new LA release on GitHub", tag, "1 Build/release with GitHub Actions\nWill push new commit+tag, it triggers `publish.yml`|2 From local build\nUse only if can't use GitHub actions|0 Cancel", flags: DFlags.CommandLinks);
 	switch (button) {
 	case 1: CreateReleaseWithGithubActions(); break;
 	case 2: CreateReleaseDirectly(); break;
@@ -48,7 +49,6 @@ void CreateReleaseWithGithubActions() {
 	//GitRepo g = new(@"C:\code\Test\GitHub-actions");
 	GitRepo g = new(folders.Editor) { Print = true };
 	
-	string tag = $"v{Au_.Version}";
 	//string tag = $"v1.16.7-test";
 #if true
 	g.git($"add -A");
