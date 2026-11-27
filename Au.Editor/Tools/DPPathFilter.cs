@@ -57,7 +57,7 @@ class DPPathFilter : UserControl {
 			}
 			
 			bool hasMore = _cFileFunc.IsChecked == true || _cDirFunc.IsChecked == true;
-			if (hasMore || (s.Length > 0 && (s[0] != '\"' || s[endOfFirstArg + 2] != '\"' || incl.Starts("@@") || excl.Starts("@@")))) {
+			if (hasMore || (s.Length > 0 && (s[0] != '\"' || s[endOfFirstArg + 2] != '\"' || incl.Starts("@@") || excl.Starts("@@") || incl.Contains("||") || excl.Contains("||") || incl.Ends('|')))) {
 				s.Insert(0, "new(").Append(')');
 				if (hasMore) {
 					s.Append(" { ");

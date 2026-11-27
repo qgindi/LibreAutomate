@@ -1,5 +1,7 @@
-//TODO2: multiple output controls in the Output panel. Eg compiler output should be separated, and cleared without clearing common output text.
+//TODO: multiple output channels (like in VS/VSCode). Eg compiler output should be separated, and cleared without clearing common output text.
 //	Alternatively, allow to clear certain parts of output text, eg compiler output.
+//	Also need an option to not show the Output panel when adding new lines. Just indicate that there is new text.
+//		Eg now often I work with the Found panel, and an unattended script switches to the Output panel in the same tab group.
 
 using System.Windows.Controls;
 using Au.Controls;

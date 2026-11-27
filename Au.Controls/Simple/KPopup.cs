@@ -20,7 +20,6 @@ public class KPopup {
 	bool _shadow;
 	HwndSource _hs;
 	wnd _w;
-	bool _inSizeMove;
 	
 	/// <summary>
 	/// Sets window style.
@@ -102,7 +101,7 @@ public class KPopup {
 		get => _content;
 		set {
 			_content = value;
-			if (_border != null) _border.Child = value;
+			_border?.Child = value;
 		}
 	}
 	FrameworkElement _content;
@@ -110,7 +109,7 @@ public class KPopup {
 	/// <summary>
 	/// Gets the WPF root object (<see cref="HwndSource.RootVisual"/>) of the popup window. Its child is <see cref="Content"/>.
 	/// </summary>
-	public Border Border => _border ??= new Border { Child = _content, SnapsToDevicePixels = true };
+	public Border Border => _border ??= new Border { SnapsToDevicePixels = true, Child = _content };
 	Border _border;
 	//workaround for: if content is eg FlowDocumentScrollViewer, it has focus problems if it is RootVisual.
 	//	Eg context menu items disabled. Need a container, eg Border or Panel.
@@ -123,7 +122,7 @@ public class KPopup {
 		get => _size;
 		set {
 			_size = value;
-			if (IsVisible) _w.ResizeL_(Dpi.Scale(_size, _w));
+			if (IsVisible) _w.ResizeL_(_DpiScale(_size));
 		}
 	}
 	SIZE _size;
@@ -179,10 +178,11 @@ public class KPopup {
 		
 		var scrn = screen.of(r);
 		RECT rwa = scrn.WorkArea;
-		SIZE size = _sizeToContent == SizeToContent.WidthAndHeight ? default : _DpiScale(Size);
 		
 		if (screen.of(_w) != scrn)
 			_w.MoveL(rwa.left, rwa.top, 1, 1);
+		
+		SIZE size = _sizeToContent == SizeToContent.WidthAndHeight ? default : _DpiScale(_size);
 		
 		if (_sizeToContent != default) {
 			RECT nc = default;
@@ -256,12 +256,14 @@ public class KPopup {
 		r.top = Math.Clamp(r.top, rwa.top, rwa.bottom - size.height);
 		r.Width = size.width; r.Height = size.height;
 		
-		_inSizeMove = false;
 		if (_sizeToContent != default && _RemeasureIfSameWindowSize(size)) {
 			_w.MoveL(r.left, r.top);
 		} else {
 			_w.MoveL(r);
 		}
+		
+		if (_w.Get.Owner != ow) WndUtil.SetOwnerWindow(_w, ow);
+		if (!IsVisible) _w.SetWindowPos(SWPFlags.SHOWWINDOW | SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE | SWPFlags.NOOWNERZORDER);
 		
 		static RECT _GetBiggestAreaByAnchorRect(Dock side, RECT rAnchor, RECT r /*work area*/) {
 			if (side is Dock.Left or Dock.Right) {
@@ -273,9 +275,6 @@ public class KPopup {
 			}
 			return r;
 		}
-		
-		if (_w.Get.Owner != ow) WndUtil.SetOwnerWindow(_w, ow);
-		if (!IsVisible) _w.SetWindowPos(SWPFlags.SHOWWINDOW | SWPFlags.NOMOVE | SWPFlags.NOSIZE | SWPFlags.NOACTIVATE | SWPFlags.NOOWNERZORDER);
 	}
 	
 	/// <summary>
@@ -289,7 +288,7 @@ public class KPopup {
 		
 		var r = RECT.FromLTRB(rc.left, rc.top, rwa.right - (rw.right - rc.right), rwa.bottom - (rw.bottom - rc.bottom)); //workarea size available for resizing _w without moving
 		if (r.NoArea) return;
-		SIZE size = new(r.Width, r.Height);
+		SIZE size = r.Size;
 		
 		var ds = MeasureContent(_DpiUnscale(size));
 		size = _DpiScale(ds);
@@ -299,7 +298,6 @@ public class KPopup {
 		
 		if (_RemeasureIfSameWindowSize(size)) return;
 		
-		_inSizeMove = false;
 		_w.ResizeL_(size);
 	}
 	
@@ -307,8 +305,7 @@ public class KPopup {
 	//Else it's layout is not complete. Then does not display the scrollbar, does not set the separator width, etc.
 	//If window size changed, WPF remeasures. Else let's do it now.
 	bool _RemeasureIfSameWindowSize(SIZE size) {
-		var r = _w.Rect;
-		if (r.Width == size.width && r.Height == size.height && _w.GetClientRect(out var rc)) {
+		if (_w.Rect.Size == size && _w.GetClientRect(out var rc)) {
 			_border.Measure(_DpiUnscale(new(rc.Width, rc.Height)));
 			_border.UpdateLayout();
 			return true;
@@ -418,8 +415,6 @@ public class KPopup {
 			break;
 		case Api.WM_WINDOWPOSCHANGED:
 			var wp = (Api.WINDOWPOS*)lParam;
-			//print.it(wp->flags & SWPFlags._KNOWNFLAGS, IsVisible);
-			if (!wp->flags.Has(SWPFlags.NOSIZE) && _inSizeMove) _size = SIZE.From(Dpi.Unscale((wp->cx, wp->cy), w), true);
 			if (wp->flags.Has(SWPFlags.SHOWWINDOW)) {
 				UserClosed = false;
 				_ClickCloseTimer(true);
@@ -430,11 +425,8 @@ public class KPopup {
 				Hidden?.Invoke(this, EventArgs.Empty);
 			}
 			break;
-		case Api.WM_ENTERSIZEMOVE:
-			_inSizeMove = true;
-			break;
 		case Api.WM_EXITSIZEMOVE:
-			_inSizeMove = false;
+			_size = SIZE.From(_DpiUnscale(w.Rect.Size), true);
 			break;
 		case Api.WM_MOUSEACTIVATE:
 			//OS ignores WS_EX_NOACTIVATE if the active window is of this thread. Workaround: on WM_MOUSEACTIVATE return MA_NOACTIVATE.
@@ -469,7 +461,6 @@ public class KPopup {
 			if (CloseHides) { _w.ShowL(false); return 0; }
 			break;
 		case Api.WM_DPICHANGED:
-			if (!_inSizeMove) *(RECT*)lParam = _w.Rect; //prevent changing rect, it's already calculated for the DPI
 			_hs.DpiChangedWorkaround();
 			break;
 		case Api.WM_TIMER when wParam == c_ccTimer:

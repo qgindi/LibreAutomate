@@ -127,7 +127,7 @@ class CiPopupText {
 		if (_section != null) _c.Document.Blocks.Add(_section);
 	}
 	
-	class _KPopup(bool usedByInfo) : KPopup(usedByInfo ? WS.BORDER : WS.THICKFRAME, shadow: usedByInfo) {
+	class _KPopup(bool usedByInfo) : KPopup(usedByInfo ? WS.BORDER : WS.THICKFRAME, shadow: usedByInfo, sizeToContent: SizeToContent.WidthAndHeight) {
 		public bool autoWidth = true;
 		
 		protected override Size MeasureContent(Size availableSize) {
@@ -156,8 +156,12 @@ class CiPopupText {
 			}
 			
 			ds.Width = widest.Right
-				+ Math.Max(widest.Left, 4) //some paddings. When testing, k.Left was 4 or 3, depending on text. I don't know how to get exact value.
-				+ (availableSize.Width - sv.ViewportWidth); //scrollbar
+				+ Math.Max(widest.Left, 4); //some paddings. When testing, widest.Left was 3-4. I don't know how to get exact value.
+			
+			if (sv.ExtentHeight > ds.Height) { //will be scrollbar
+				ds.Width += SystemParameters.VerticalScrollBarWidth;
+			}
+			
 			ds.Width = Math.Min(ds.Width, availableSize.Width);
 			
 			//_Test(sv);
